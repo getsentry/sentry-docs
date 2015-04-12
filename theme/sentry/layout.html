@@ -1,0 +1,79 @@
+<!doctype html>
+{%- set url_root = pathto('', 1) %}
+{%- if url_root == '#' %}{% set url_root = '' %}{% endif %}
+<meta charset="{{ encoding }}">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{{ metatags }}
+
+{%- block htmltitle %}
+<title>{{ title|striptags|e }}</title>
+{%- endblock %}
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}" type="text/css">
+<link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}" type="text/css">
+
+<script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+    URL_ROOT:    '{{ url_root }}',
+    VERSION:     '{{ release|e }}',
+    COLLAPSE_INDEX: false,
+    FILE_SUFFIX: '{{ '' if no_search_suffix else file_suffix }}',
+    HAS_SOURCE:  {{ has_source|lower }}
+  };
+</script>
+{%- for scriptfile in script_files %}
+<script type="text/javascript" src="{{ pathto(scriptfile, 1) }}"></script>
+{%- endfor %}
+{%- if use_opensearch %}
+<link rel="search" type="application/opensearchdescription+xml"
+      title="{% trans docstitle=docstitle|e %}Search within {{ docstitle }}{% endtrans %}"
+      href="{{ pathto('_static/opensearch.xml', 1) }}"/>
+{%- endif %}
+{%- if favicon %}
+<link rel="shortcut icon" href="{{ pathto('_static/' + favicon, 1) }}">
+{%- endif %}
+{%- block extrahead %} {% endblock %}
+
+<header>
+  <div class="container">
+    <h1><span class="icon-logo"></span><span class="text">Documentation</span></h1>
+  </div>
+</header>
+
+<div class="body">
+  <div class="container page">
+    <div class="sidebar col-md-3">
+      <h3>Related</h3>
+      <ul>
+        <li><a href="{{ pathto(master_doc) }}">Documentation overview</a><ul>
+          {%- for parent in parents %}
+          <li><a href="{{ parent.link|e }}">{{ parent.title }}</a><ul>
+          {%- endfor %}
+            {%- if prev %}
+              <li>Previous: <a href="{{ prev.link|e }}">{{ prev.title }}</a></li>
+            {%- endif %}
+            {%- if next %}
+              <li>Next: <a href="{{ next.link|e }}">{{ next.title }}</a></li>
+            {%- endif %}
+          {%- for parent in parents %}
+          </ul></li>
+          {%- endfor %}
+        </ul></li>
+      </ul>
+      <h3>Table of Contents</h3>
+      {{ toc }}
+    </div>
+
+    <section class="document col-md-9">
+      {% block body %} {% endblock %}
+    </section>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    Copyright 2015 by the Sentry Team.
+  </div>
+</footer>

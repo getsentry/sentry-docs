@@ -1,0 +1,94 @@
+{% macro render_gcs(cx) %}
+  <div id="search-results">
+    <script>
+      (function() {
+        var cx = '{{ cx }}';
+        var gcse = document.createElement('script');
+        gcse.type = 'text/javascript';
+        gcse.async = true;
+        gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+            '//www.google.com/cse/cse.js?cx=' + cx;
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(gcse, s);
+      })();
+
+      function processGCSSearchTitle(title) {
+        return title.replace(/ —[^—]*?$/, '');
+      }
+    </script>
+    <gcse:search linktarget="_self"></gcse:search>
+  </div>
+
+  <div style="display: none">
+    <div id="base_webResult">
+      <div class="gs-webResult gs-result">
+        <div class="gs-title">
+          <a class="gs-title" data-attr="{href:unescapedUrl,target:target}"
+            data-body="html(processGCSSearchTitle(title))"></a>
+        </div>
+        <div class="gs-snippet" data-body="html(content)"></div>
+      </div>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro render_gcs_style(font_family='serif', font_size='17px', primary_color='blue',
+                          secondary_color='#336F88', highlight_color='#FCCA46',
+                          highlight_text_color='#444', link_hover_color='green') %}
+  <style type="text/css">
+    .gsc-result-info, .gsc-results *, .gsc-input, .gsc-orderby-label {
+        font-family: {{ font_family }};
+        font-size: {{ font_size }};
+    }
+    .gsc-result-info, .gsc-orderby-label {
+        font-size: 13px;
+    }
+    input.gsc-search-button {
+        background: {{ primary_color }};
+        border: 1px solid {{ secondary_color }};
+        margin-top: 0px;
+    }
+    input.gsc-search-button:hover {
+        background: {{ secondary_color }};
+    }
+    .gsc-orderby {
+        text-align: right;
+    }
+    .gsc-input-box-focus {
+        border-color: {{ primary_color }}!important;
+    }
+    .gs-result a, .gs-result a *, .gs-result .gs-title,
+    .gsc-results .gsc-cursor-box .gsc-cursor-page {
+        color: {{ primary_color }}!important;
+        text-decoration: none;
+    }
+    .gs-result a:hover, .gs-result a:hover *, .gs-result .gs-title:hover,
+    .gsc-results .gsc-cursor-box .gsc-cursor-page:hover {
+        color: {{ link_hover_color }}!important;
+    }
+    .gs-result .gs-snippet {
+        margin: 5px 0 10px 20px;
+    }
+    .gs-result b {
+        font-weight: normal;
+        color: {{ highlight_text_color }};
+        background: {{ highlight_color }};
+    }
+    .gs-result .gs-title {
+        text-decoration: underline;
+    }
+    .gsc-cursor-box {
+        text-align: center;
+    }
+
+    .gsc-results .gsc-cursor-box .gsc-cursor-page {
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    .gsc-results .gsc-cursor-box .gsc-cursor-current-page {
+        color: #111!important;
+        text-decoration: none;
+    }
+  </style>
+{% endmacro %}
