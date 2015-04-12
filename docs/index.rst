@@ -50,8 +50,8 @@ this documentation:
 
    platforms/index
 
-Administration
---------------
+Administrative Tasks
+--------------------
 
 Depending on the edition of Sentry you are using, the administrative tasks
 might differ.  All this information is available here for you:
@@ -62,3 +62,14 @@ might differ.  All this information is available here for you:
    cloud/index
    community/index
    enterprise/index
+
+Internals
+---------
+
+If you want to extend Sentry, write your own Raven client or understand
+the internals of the system, this is the documentation you need to study:
+
+.. toctree::
+   :maxdepth: 2
+
+   internals/index
