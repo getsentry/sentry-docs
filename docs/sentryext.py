@@ -1,8 +1,40 @@
 from docutils import nodes
 from docutils.statemachine import ViewList
 
+from sphinx import addnodes
 from sphinx.domains import Domain
 from sphinx.util.compat import Directive
+
+
+def html_page_context(app, pagename, templatename, context, doctree):
+    rendered_toc = get_rendered_toctree(app.builder, pagename)
+    context['full_toc'] = rendered_toc
+
+
+def get_rendered_toctree(builder, docname, prune=False, collapse=True):
+    fulltoc = build_full_toctree(builder, docname, prune=prune,
+                                 collapse=collapse)
+    rendered_toc = builder.render_partial(fulltoc)['fragment']
+    return rendered_toc
+
+
+def build_full_toctree(builder, docname, prune=False, collapse=True):
+    env = builder.env
+    doctree = env.get_doctree(env.config.master_doc)
+    toctrees = []
+    for toctreenode in doctree.traverse(addnodes.toctree):
+        toctrees.append(env.resolve_toctree(docname, builder, toctreenode,
+                                            collapse=collapse,
+                                            titles_only=True,
+                                            prune=prune))
+    if not toctrees:
+        return None
+    result = toctrees[0]
+    for toctree in toctrees[1:]:
+        if toctree:
+            result.extend(toctree.children)
+    env.resolve_references(result, docname, builder)
+    return result
 
 
 def parse_rst(state, content_offset, doc):
@@ -53,3 +85,4 @@ class SentryDomain(Domain):
 
 def setup(app):
     app.add_domain(SentryDomain)
+    app.connect('html-page-context', html_page_context)
