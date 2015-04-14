@@ -48,9 +48,10 @@ Source Project <http://www.getsentry.org/>`_.
 *   **Sentry Community Edition**
 
     The Sentry Community Edition is a distribution of the Sentry Open Source
-    Project supported by the community.  You can find more information about
-    the community edition on `our github page
-    <https://github.com/getsentry/sentry>`_.
+    Project supported by the community.  You can download the community
+    edition on `our github page <https://github.com/getsentry/sentry>`_.
+
+    Documentation is available here: :doc:`community/index`.
 
 
 .. _pick-a-client-integration:
