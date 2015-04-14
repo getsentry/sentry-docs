@@ -50,18 +50,16 @@ this documentation:
 
    platforms/index
 
-Administrative Tasks
---------------------
+Edition Specifics
+-----------------
 
-Depending on the edition of Sentry you are using, the administrative tasks
-might differ.  All this information is available here for you:
+Depending on the edition of Sentry you are using there will be some
+differences.  All the relevant information is available here for you:
 
 .. toctree::
    :maxdepth: 2
 
-   cloud/index
    community/index
-   enterprise/index
 
 Internals
 ---------
