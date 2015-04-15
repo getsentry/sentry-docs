@@ -1,6 +1,20 @@
+function sentryEscape(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function sentryDsnToHtml(dsn) {
+  console.log(dsn);
+  var match = dsn.match(/^(.*?\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
   return '<span class="dsn">' +
-    dsn.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+    sentryEscape(match[1]) +
+    '<span class="dsn-key">' + sentryEscape(match[2]) + '</span>' +
+    ':' +
+    '<span class="dsn-secret" title="Secret is hidden for security reasons, ' +
+      ' but you can copy paste the entire DSN and it will be included.">' +
+      sentryEscape(match[3]) + '</span>' +
+    '@' +
+    sentryEscape(match[4]) +
+    sentryEscape(match[5]) +
   '</span>';
 }
 
@@ -68,11 +82,11 @@ $(function() {
   // XXX: grab from other domain and remember selection somewhere (cookie?)
   var projects = [
     {
-      dsn: 'https://<auth>@app.getsentry.com/<project>',
+      dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
       name: 'DSN for Examples'
     },
     {
-      dsn: 'https://07296760-af31-4561-a31a-45bc3eeddaf6:84dae058-1f68-4950-b366-2fcb11787fa1@app.getsentry.com/42',
+      dsn: 'https://f99d4658379541d7bb7e29a5a28909d2:ca359f0cadc4ef6aeb7b3087232473a3@app.getsentry.com/12345',
       name: 'foo/example'
     }
   ];
