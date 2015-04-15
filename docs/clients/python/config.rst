@@ -82,135 +82,120 @@ Client Arguments
 
 The following are valid arguments which may be passed to the Raven client:
 
-dsn
-~~~
+.. describe:: dsn
 
-A sentry compatible DSN::
+    A sentry compatible DSN::
 
-    dsn = 'http://public:secret@example.com/1'
+        dsn = 'http://public:secret@example.com/1'
 
-project
-~~~~~~~
+.. describe:: project
 
-Set this to your Sentry project ID. The default value for installations is
-``1``::
+    Set this to your Sentry project ID. The default value for installations is
+    ``1``::
 
-    project = 1
+        project = 1
 
 
-public_key
-~~~~~~~~~~
+.. describe:: public_key
 
-Set this to the public key of the project member which will authenticate
-as the client. You can find this information on the member details page of
-your project within Sentry::
+    Set this to the public key of the project member which will
+    authenticate as the client. You can find this information on the
+    member details page of your project within Sentry::
 
-    public_key = 'fb9f9e31ea4f40d48855c603f15a2aa4'
-
-
-secret_key
-~~~~~~~~~~
-
-Set this to the secret key of the project member which will authenticate
-as the client. You can find this information on the member details page of
-your project within Sentry::
-
-    secret_key = '6e968b3d8ba240fcb50072ad9cba0810'
-
-site
-~~~~
-
-An optional, arbitrary string to identify this client installation::
-
-    site = 'my site name'
+        public_key = 'fb9f9e31ea4f40d48855c603f15a2aa4'
 
 
-name
-~~~~
+.. describe:: secret_key
 
-This will override the ``server_name`` value for this installation.
-Defaults to ``socket.gethostname()``::
+    Set this to the secret key of the project member which will
+    authenticate as the client. You can find this information on the
+    member details page of your project within Sentry::
 
-    name = 'sentry_rocks_' + socket.gethostname()
+        secret_key = '6e968b3d8ba240fcb50072ad9cba0810'
 
+.. describe:: site
 
-release
-~~~~~~~~
+    An optional, arbitrary string to identify this client installation::
 
-The version of your application. This will map up into a Release in Sentry::
+        site = 'my site name'
 
-    release = '1.0.3'
+.. describe:: name
 
+    This will override the ``server_name`` value for this installation.
+    Defaults to ``socket.gethostname()``::
 
-exclude_paths
-~~~~~~~~~~~~~
+        name = 'sentry_rocks_' + socket.gethostname()
 
-Extending this allow you to ignore module prefixes when we attempt to
-discover which function an error comes from (typically a view)::
+.. describe:: release
 
-    exclude_paths = [
-        'django',
-        'sentry',
-        'raven',
-        'lxml.objectify',
-    ]
+    The version of your application. This will map up into a Release in
+    Sentry::
 
-include_paths
-~~~~~~~~~~~~~
-
-For example, in Django this defaults to your list of ``INSTALLED_APPS``,
-and is used for drilling down where an exception is located::
-
-    include_paths = [
-        'django',
-        'sentry',
-        'raven',
-        'lxml.objectify',
-    ]
-
-list_max_length
-~~~~~~~~~~~~~~~
-
-The maximum number of items a list-like container should store.
-
-If an iterable is longer than the specified length, the left-most elements
-up to length will be kept.
-
-.. note:: This affects sets as well, which are unordered.
-
-::
-
-    list_max_length = 50
-
-string_max_length
-~~~~~~~~~~~~~~~~~
-
-The maximum characters of a string that should be stored.
-
-If a string is longer than the given length, it will be truncated down to
-the specified size::
-
-    string_max_length = 200
-
-auto_log_stacks
-~~~~~~~~~~~~~~~
-
-Should Raven automatically log frame stacks (including locals) for all
-calls as it would for exceptions::
-
-    auto_log_stacks = True
+        release = '1.0.3'
 
 
-processors
-~~~~~~~~~~
+.. describe:: exclude_paths
 
-A list of processors to apply to events before sending them to the Sentry
-server. Useful for sending additional global state data or sanitizing data
-that you want to keep off of the server::
+    Extending this allow you to ignore module prefixes when we attempt to
+    discover which function an error comes from (typically a view)::
 
-    processors = (
-        'raven.processors.SanitizePasswordsProcessor',
-    )
+        exclude_paths = [
+            'django',
+            'sentry',
+            'raven',
+            'lxml.objectify',
+        ]
+
+.. describe:: include_paths
+
+    For example, in Django this defaults to your list of ``INSTALLED_APPS``,
+    and is used for drilling down where an exception is located::
+
+        include_paths = [
+            'django',
+            'sentry',
+            'raven',
+            'lxml.objectify',
+        ]
+
+.. describe:: max_list_length
+
+    The maximum number of items a list-like container should store.
+
+    If an iterable is longer than the specified length, the left-most
+    elements up to length will be kept.
+
+    .. note:: This affects sets as well, which are unordered.
+
+    ::
+
+        list_max_length = 50
+
+.. describe:: string_max_length
+
+    The maximum characters of a string that should be stored.
+
+    If a string is longer than the given length, it will be truncated down
+    to the specified size::
+
+        string_max_length = 200
+
+.. describe:: auto_log_stacks
+
+    Should Raven automatically log frame stacks (including locals) for all
+    calls as it would for exceptions::
+
+        auto_log_stacks = True
+
+.. describe:: processors
+
+    A list of processors to apply to events before sending them to the
+    Sentry server. Useful for sending additional global state data or
+    sanitizing data that you want to keep off of the server::
+
+        processors = (
+            'raven.processors.SanitizePasswordsProcessor',
+        )
 
 Sanitizing Data
 ---------------
@@ -219,18 +204,21 @@ Several processors are included with Raven to assist in data
 sanitiziation. These are configured with the ``processors`` value.
 
 .. data:: raven.processors.SanitizePasswordsProcessor
+   :noindex:
 
    Removes all keys which resemble ``password``, ``secret``, or
    ``api_key`` within stacktrace contexts, HTTP bits (such as cookies,
    POST data, the querystring, and environment), and extra data.
 
 .. data:: raven.processors.RemoveStackLocalsProcessor
+   :noindex:
 
    Removes all stacktrace context variables. This will cripple the
    functionality of Sentry, as you'll only get raw tracebacks, but it will
    ensure no local scoped information is available to the server.
 
 .. data:: raven.processors.RemovePostDataProcessor
+   :noindex:
 
    Removes the ``body`` of all HTTP data.
 
