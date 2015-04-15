@@ -192,3 +192,15 @@ Data Sampling
     ::
 
         SENTRY_SAMPLE_DATA = False
+
+Beacon
+------
+
+.. data:: SENTRY_BEACON
+    :noindex:
+ 
+    Controls the :doc:`beacon`.
+
+    ::
+
+        SENTRY_SAMPLE_DATA = True

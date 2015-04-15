@@ -9,7 +9,8 @@ Dependencies
 
 Some basic prerequisites which you'll need in order to run Sentry:
 
-* A UNIX-based operating system. We test on Ubuntu.
+* A UNIX-based operating system. We test on Ubuntu and this documentation
+  assumes an ubuntu based system.
 * Python 2.7
 * ``python-setuptools``, ``python-pip``, ``python-dev``, ``libxslt1-dev``,
   ``libxml2-dev``, ``libz-dev``, ``libffi-dev``, ``libssl-dev``
@@ -62,17 +63,20 @@ Setting up an Environment
 The first thing you'll need is the Python ``virtualenv`` package. You
 probably already have this, but if not, you can install it with::
 
-  pip install -U virtualenv
+    pip install -U virtualenv
+
+It's also available as ``python-virtualenv`` on ubuntu in the package
+manager.
 
 Once that's done, choose a location for the environment, and create it
 with the ``virtualenv`` command. For our guide, we're going to choose
 ``/www/sentry/``::
 
-  virtualenv /www/sentry/
+    virtualenv /www/sentry/
 
 Finally, activate your virtualenv::
 
-  source /www/sentry/bin/activate
+    source /www/sentry/bin/activate
 
 .. note:: Activating the environment adjusts your ``PATH``, so that things
           like pip now install into the virtualenv by default.
@@ -98,7 +102,7 @@ via ``sentry``, and get something like the following:
   usage: sentry [--config=/path/to/settings.py] [command] [options]
 
 
-Using MySQL or Postgres
+Using Postgres or MySQL
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 We **highly** recommend using PostgreSQL for your database, or MySQL if
@@ -111,18 +115,18 @@ of meta packages to make things easier:
 
 ::
 
-  # install sentry and its postgresql dependencies
-  pip install -U sentry[postgres]
+    # install sentry and its postgresql dependencies
+    pip install -U sentry[postgres]
 
-  # or if you choose, mysql
-  pip install -U sentry[mysql]
+    # or if you choose, mysql
+    pip install -U sentry[mysql]
 
 
 Installing from Source
 ~~~~~~~~~~~~~~~~~~~~~~
 
 If you're installing the Sentry source (e.g. from git), you'll also need
-to install **npm**.
+to install ``npm``.
 
 Once your system is prepared, symlink your source into the virtualenv:
 
@@ -318,7 +322,8 @@ Technically there is a way to run sentry without the queues by setting
 ``CELERY_ALWAYS_EAGER`` to `True` but this is heavily discouraged and not
 supported.
 
-.. note:: `Celery <http://celeryproject.org/>`_ is an open source task framework for Python.
+.. note:: `Celery <http://celeryproject.org/>`_ is an open source task
+          framework for Python.
 
 Setup a Reverse Proxy
 ---------------------

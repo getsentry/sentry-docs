@@ -18,8 +18,8 @@ Pick a Sentry Edition
 ---------------------
 
 Sentry comes in different variations tailored towards customer's
-individual requirements.  All editions are based on our `Sentry Open
-Source Project <http://www.getsentry.org/>`_.
+individual requirements.  All editions are based on our :doc:`Sentry Open
+Source Project <community/index>`.
 
 *   **Sentry Cloud**
 
@@ -28,11 +28,12 @@ Source Project <http://www.getsentry.org/>`_.
     of Sentry Cloud <https://www.getsentry.com/signup/>`_ on getsentry.com.
 
     Sentry Cloud is the most popular edition of Sentry which is used by hobby
-    developers and large corporations alike.  Sentry Cloud is hosted on our
+    developers and large corporations alike.  It is hosted on our
     dedicated cloud infrastructure and automatically scales with your
-    requirements and gives you access to your event data from anywhere in the
-    world.  We keep it running for you and you can get started working with it
-    right away.
+    requirements and gives you access to your event data from anywhere in
+    the world.  We keep it running for you and you can get started working
+    with it right away without having to spend time with installation or
+    maintenance.
 
 *   **Sentry Enterprise Edition**
 

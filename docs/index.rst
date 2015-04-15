@@ -1,10 +1,11 @@
-Sentry
-======
+Sentry Documentation
+====================
 
 Welcome to the documentation of Sentry — the modern error logging and
-aggregation platform.  This documentation covers the use of Sentry as well
-as all officially supported client integrations.  To keep things easy we
-cover all different editions of the sentry server here.
+aggregation platform.  This documentation covers the use of Sentry (The
+Sentry Server) as well as all officially supported client integrations
+(The Raven Clients).  To keep things easy we cover all different editions
+of the sentry server here.
 
 Introduction
 ------------
@@ -25,6 +26,18 @@ configure the UI and how to configure the clients.
    ssl
    support
 
+Client Libraries
+----------------
+
+To report to Sentry you need a client integration.  The official
+integrations are called “raven clients”.  Clients exist for all popular
+programming languages and platforms.
+
+.. toctree::
+   :maxdepth: 2
+
+   clients/index
+
 Event Reporting
 ---------------
 
@@ -37,18 +50,6 @@ part about how the low-level concepts map to client libraries.
    :maxdepth: 3
 
    events/index
-
-Platform Specifics
-------------------
-
-Depending on the programming language or platform you are using, there
-might be some specifics to keep in mind.  These are all covered as part of
-this documentation:
-
-.. toctree::
-   :maxdepth: 3
-
-   platforms/index
 
 Edition Specifics
 -----------------

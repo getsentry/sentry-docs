@@ -1,4 +1,0 @@
-Platforms
-=========
-
-Bla bla bla
