@@ -4,13 +4,11 @@ function sentryEscape(text) {
 
 function sentryDsnToHtml(dsn) {
   console.log(dsn);
-  var match = dsn.match(/^(.*?\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
+  var match = dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
   return '<span class="dsn">' +
     sentryEscape(match[1]) +
-    '<span class="dsn-key">' + sentryEscape(match[2]) + '</span>' +
-    ':' +
-    '<span class="dsn-secret" title="Secret is hidden for security reasons, ' +
-      ' but you can copy paste the entire DSN and it will be included.">' +
+    '<span class="dsn-auth" title="Copy paste includes key and secret.">' +
+      sentryEscape(match[2]) + ':' +
       sentryEscape(match[3]) + '</span>' +
     '@' +
     sentryEscape(match[4]) +
