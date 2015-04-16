@@ -17,13 +17,20 @@ function sentryParseDsn(dsn) {
   }
 }
 
-function sentryDsnToHtml(parsedDsn) {
+function sentryDsnToHtml(parsedDsn, pub) {
+  var auth;
+  if (pub) {
+    auth = sentryEscape(parsedDsn.publicKey);
+  } else {
+    auth =
+      '<span class="dsn-auth" title="Copy paste includes key and secret.">' +
+      sentryEscape(parsedDsn.publicKey) + ':' + 
+      sentryEscape(parsedDsn.secretKey) + '</span>';
+  }
+
   return '<span class="dsn">' +
     sentryEscape(parsedDsn.scheme) +
-    '<span class="dsn-auth" title="Copy paste includes key and secret.">' +
-      sentryEscape(parsedDsn.publicKey) + ':' +
-      sentryEscape(parsedDsn.secretKey) + '</span>' +
-    '@' +
+    auth + '@' +
     sentryEscape(parsedDsn.host) +
     sentryEscape(parsedDsn.pathSection) +
   '</span>';
@@ -38,10 +45,12 @@ function sentryRewriteCodeBlocks(initialDsn) {
     function setDsn(dsn) {
       var parsedDsn = sentryParseDsn(dsn);
       var replaced = false;
-      var contents = originalContents.replace(/___(DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g, function(match) {
+      var contents = originalContents.replace(/___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g, function(match) {
         replaced = true;
         if (match === '___DSN___') {
           return sentryDsnToHtml(parsedDsn);
+        } else if (match === '___PUBLIC_DSN___') {
+          return sentryDsnToHtml(parsedDsn, true);
         } else if (match === '___PUBLIC_KEY___') {
           return sentryEscape(parsedDsn.publicKey);
         } else if (match === '___SECRET_KEY___') {
