@@ -11,6 +11,7 @@ different frameworks which can be optionally installed as well.
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
 
    installation
    config

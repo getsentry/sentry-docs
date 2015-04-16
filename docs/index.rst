@@ -7,24 +7,20 @@ Sentry Server) as well as all officially supported client integrations
 (The Raven Clients).  To keep things easy we cover all different editions
 of the sentry server here.
 
-Introduction
+Using Sentry
 ------------
 
 No matter which edition of Sentry you are using, the basics or reporting
 and using are exactly the same.  This gives you an introduction to how to
-configure the UI and how to configure the clients.
+use the UI and how to configure the clients.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
+   :titlesonly:
 
    quickstart
-   organizations
-   teams
-   projects
-   quotas
-   sampling
-   ssl
    support
+   using/index
 
 Client Libraries
 ----------------

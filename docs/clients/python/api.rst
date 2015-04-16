@@ -1,5 +1,5 @@
-Raven Python API
-================
+API Reference
+=============
 
 This gives you an overview of the public API that raven-python exposes.
 
