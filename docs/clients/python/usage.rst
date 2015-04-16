@@ -18,30 +18,38 @@ The most basic use for raven is to record one specific error that occurs::
     except ZeroDivisionError:
         client.captureException()
 
+Reporting an Event
+------------------
+
+To report an arbitrary event you can use the
+:py:meth:`~raven.Client.capture` method.  This is the most low-level
+method available.  In most cases you would want to use the
+:py:meth:`~raven.Client.captureMessage` method instead however which
+directly reports a message::
+
+    client.captureMessage('Something went fundamentally wrong')
+
 
 Adding Context
 --------------
 
-A few helpers exist for adding context to a request. These are most useful
-within a middleware, or some kind of context wrapper::
+The raven client internally keeps a thread local mapping that can carry
+additional information.  Whenever a message is submitted to Sentry that
+additional data will be passed along.
 
-    # If you're using the Django client, we already deal with this for you.
-    class DjangoUserContext(object):
-        def process_request(self, request):
-            client.user_context({
-                'email': request.user.email,
-            })
+For instance if you use a web framework, you can use this to inject
+additional information into the context.  The basic primitive for this is
+the :py:attr:`~raven.Client.context` attribute.  It provides a `merge()`
+and `clear()` function that can be used::
 
-        def process_response(self, request):
+    def handle_request(request):
+        client.context.merge({'user': {
+            'email': request.user.email
+        }})
+        try:
+            ...
+        finally:
             client.context.clear()
-
-
-See also:
-
-- Client.extra_context
-- Client.http_context
-- Client.tags_context
-
 
 Testing the Client
 ------------------
@@ -69,10 +77,3 @@ You should get something like the following, assuming you're configured everythi
       secret_key     : ___SECRET_KEY___
 
     Sending a test message... success!
-
-
-Client API
-----------
-
-.. autoclass:: raven.base.Client
-   :members:

@@ -1,12 +1,17 @@
 Integrations
 ============
 
-.. note:: Some integrations allow specifying these in a standard
-          configuration, otherwise they are generally passed upon
-          instantiation of the Sentry client.
+The Raven Python module also comes with integration for some commonly used
+libraries to automatically capture errors from common environments.  This
+means that once you have such an integration configured you typically do
+not need to report errors manually.
+
+Some integrations allow specifying these in a standard configuration,
+otherwise they are generally passed upon instantiation of the Sentry
+client.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    bottle
    celery

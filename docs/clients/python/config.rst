@@ -6,10 +6,16 @@ client for the use with Sentry.  It also covers some other important parts
 about configuring the environment.
 
 
+.. _python-client-config:
+
 Configuring the Client
 ----------------------
 
-Settings are specified as part of the initialization of the client.
+Settings are specified as part of the initialization of the client.  The
+client is a class that can be instanciated with a specific configuration
+and all reporting can then happen from the instance of that object.
+Typically an instance is created somewhere globally and then imported as
+necessary.
 
 As of Raven 1.2.0, you can now configure all clients through a standard DSN
 string. This can be specified as a default using the ``SENTRY_DSN`` environment
@@ -26,7 +32,8 @@ variable, as well as passed to all clients by using the ``dsn`` argument.
     client = Client('___DSN___')
 
 
-A reasonably configured client should generally include a few additional settings:
+A reasonably configured client should generally include a few additional
+settings:
 
 .. code-block:: python
 
@@ -52,30 +59,18 @@ A reasonably configured client should generally include a few additional setting
 The Sentry DSN
 --------------
 
-The DSN can be found in Sentry by navigation to Account -> Projects ->
-[Project Name] -> [Member Name]. Its template resembles the following::
+The most important information is the Sentry DSN.  For information about
+it see :ref:`configure-the-dsn` in the general Sentry docs.
 
-    '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+The Python client supports one additional modification to the regular DSN
+values which is the choice of the transport.  To select a specific
+transport, the DSN needs to be prepended with the name of the transport.
+For instance to select the ``gevent`` transport, the following DSN would
+be used::
 
-It is composed of six important pieces:
+    'gevent+___DSN___'
 
-* The Protocol used. This can be one of the following: http or https.
-
-* The public and secret keys to authenticate the client.
-
-* The hostname of the Sentry server.
-
-* An optional path if Sentry is not located at the webserver root. This is
-  specific to HTTP requests.
-
-* The project ID which the authenticated user is bound to.
-
-.. note::
-
-   Protocol may also contain transporter type: gevent+http, gevent+https,
-   twisted+http, tornado+http, eventlet+http, eventlet+https
-
-   For *Python 3.3+* also available: aiohttp+http and aiohttp+https
+For more information see :doc:`transports`.
 
 Client Arguments
 ----------------
@@ -84,34 +79,9 @@ The following are valid arguments which may be passed to the Raven client:
 
 .. describe:: dsn
 
-    A sentry compatible DSN::
+    A Sentry compatible DSN as mentioned before::
 
         dsn = '___DSN___'
-
-.. describe:: project
-
-    Set this to your Sentry project ID. The default value for installations is
-    ``1``::
-
-        project = ___PROJECT_ID___
-
-
-.. describe:: public_key
-
-    Set this to the public key of the project member which will
-    authenticate as the client. You can find this information on the
-    member details page of your project within Sentry::
-
-        public_key = '___PUBLIC_KEY___'
-
-
-.. describe:: secret_key
-
-    Set this to the secret key of the project member which will
-    authenticate as the client. You can find this information on the
-    member details page of your project within Sentry::
-
-        secret_key = '___SECRET_KEY___'
 
 .. describe:: site
 
@@ -132,7 +102,6 @@ The following are valid arguments which may be passed to the Raven client:
     Sentry::
 
         release = '1.0.3'
-
 
 .. describe:: exclude_paths
 
@@ -227,5 +196,5 @@ A Note on uWSGI
 ---------------
 
 If you're using uWSGI you will need to add ``enable-threads`` to the
-default invocation, or you will need to switch off of the threaded
+default invocation, or you will need to switch off of the threaded default
 transport.

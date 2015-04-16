@@ -15,3 +15,11 @@ repository <https://github.com/getsentry/raven-python>`_::
 
     git clone https://github.com/getsentry/raven-python
     pip install raven-python
+
+Certain additional features can be installed by defining the feature when
+``pip`` installing it.  For instance to install all dependencies needed to
+use the Flask integration, you can depend on ``raven[flask]``::
+
+    pip install raven[flask]
+
+For more information refer to the individual integration documentation.

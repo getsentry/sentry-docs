@@ -21,7 +21,7 @@ Sentry comes in different variations tailored towards customer's
 individual requirements.  All editions are based on our :doc:`Sentry Open
 Source Project <community/index>`.
 
-*   **Sentry Cloud**
+*   **Sentry Cloud** (*getsentry.com*)
 
     If you are new to Sentry and you have not used it before, you can get
     started started by signing up for a `free trial account
@@ -67,13 +67,16 @@ very specific, you can also directly report to the underlying REST API.
 
 The most popular clients are:
 
-*   `raven-python <https://github.com/getsentry/raven-python>`_
+*   :doc:`raven-python <clients/python/index>`
 *   `raven-ruby <https://github.com/getsentry/raven-ruby>`_
 *   `raven-php <https://github.com/getsentry/raven-php>`_
 *   `raven-js <https://github.com/getsentry/raven-js>`_
 *   `raven-objc <https://github.com/getsentry/raven-objc>`_
 *   `raven-java <https://github.com/getsentry/raven-java>`_
 *   `raven-csharp <https://github.com/getsentry/raven-csharp>`_
+
+For exact configuration for the clients consult the corresponding
+documentation.  For all clients however, the basics are the same.
 
 
 .. _configure-the-dsn:
@@ -88,10 +91,40 @@ required by the Raven clients.  It consists of a few pieces, including the
 protocol, public and secret keys, the server address, and the project
 identifier.
 
+The DSN can be found in Sentry by navigation to Account -> Projects ->
+[Project Name] -> [Member Name]. Its template resembles the following::
+
+    '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+
+If you use the Sentry Cloud Edition and you are signed into your account,
+the documentation will refer to your actual DSNs and you can select the
+correct one, on the top right of this page for adjusting the examples for
+easy copy pasting::
+
+    '___DSN___'
+
+It is composed of six important pieces:
+
+* The Protocol used. This can be one of the following: http or https.
+
+* The public and secret keys to authenticate the client.
+
+* The hostname of the Sentry server.
+
+* An optional path if Sentry is not located at the webserver root. This is
+  specific to HTTP requests.
+
+* The project ID which the authenticated user is bound to.
+
 You'll have a few options for plugging the DSN into the client, depending
 on what it supports. At the very least, most clients will allow you to set
 it up as the ``SENTRY_DSN`` environment variable or by passing it into the
 client constructor.
+
+For example for the Python client it works roughly like this::
+
+    from raven import Client
+    client = Client('___DSN___')
 
 Note: If you're using Heroku, and you've added Sentry Cloud via the
 standard addon hooks, most clients will automatically pick up the

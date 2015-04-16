@@ -11,6 +11,7 @@ function sentryParseDsn(dsn) {
     secretKey: match[3],
     host: match[4],
     pathSection: match[5],
+    // XXX: support path here
     project: parseInt(urlPieces[0].substring(1), 10) || 1,
     query: urlPieces[1] || ''
   }

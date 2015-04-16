@@ -12,3 +12,4 @@ The official clients are named "raven clients".
    :maxdepth: 1
 
    python/index
+   javascript/index
