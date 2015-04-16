@@ -11,7 +11,7 @@ The most basic use for raven is to record one specific error that occurs::
 
     from raven import Client
 
-    client = Client('$$$DSN$$$')
+    client = Client('___DSN___')
 
     try:
         1 / 0
@@ -49,7 +49,7 @@ Testing the Client
 Once you've got your server configured, you can test the Raven client by
 using its CLI::
 
-    raven test $$$DSN$$$
+    raven test ___DSN___
 
 If you've configured your environment to have ``SENTRY_DSN`` available, you
 can simply drop the optional DSN argument::
@@ -58,20 +58,17 @@ can simply drop the optional DSN argument::
 
 You should get something like the following, assuming you're configured everything correctly::
 
-    $ raven test sync+$$$DSN$$$
+    $ raven test sync+___DSN___
     Using DSN configuration:
-      sync+$$$DSN$$$
+      sync+___DSN___
 
     Client configuration:
-      servers        : ['<URL>']
-      project        : 1
-      public_key     : <PUBLIC KEY>
-      secret_key     : <SECRET KEY>
+      servers        : ['___API_URL___/api/store/']
+      project        : ___PROJECT_ID___
+      public_key     : ___PUBLIC_KEY___
+      secret_key     : ___SECRET_KEY___
 
     Sending a test message... success!
-
-    The test message can be viewed at the following URL:
-      $$$DSN$$$
 
 
 Client API

@@ -23,7 +23,7 @@ variable, as well as passed to all clients by using the ``dsn`` argument.
     client = Client()
 
     # Manually specify a DSN
-    client = Client('$$$DSN$$$')
+    client = Client('___DSN___')
 
 
 A reasonably configured client should generally include a few additional settings:
@@ -33,7 +33,7 @@ A reasonably configured client should generally include a few additional setting
     import raven
 
     client = raven.Client(
-        dsn='$$$DSN$$$'
+        dsn='___DSN___'
 
         # inform the client which parts of code are yours
         # include_paths=['my.app']
@@ -86,14 +86,14 @@ The following are valid arguments which may be passed to the Raven client:
 
     A sentry compatible DSN::
 
-        dsn = 'http://public:secret@example.com/1'
+        dsn = '___DSN___'
 
 .. describe:: project
 
     Set this to your Sentry project ID. The default value for installations is
     ``1``::
 
-        project = 1
+        project = ___PROJECT_ID___
 
 
 .. describe:: public_key
@@ -102,7 +102,7 @@ The following are valid arguments which may be passed to the Raven client:
     authenticate as the client. You can find this information on the
     member details page of your project within Sentry::
 
-        public_key = 'fb9f9e31ea4f40d48855c603f15a2aa4'
+        public_key = '___PUBLIC_KEY___'
 
 
 .. describe:: secret_key
@@ -111,7 +111,7 @@ The following are valid arguments which may be passed to the Raven client:
     authenticate as the client. You can find this information on the
     member details page of your project within Sentry::
 
-        secret_key = '6e968b3d8ba240fcb50072ad9cba0810'
+        secret_key = '___SECRET_KEY___'
 
 .. describe:: site
 

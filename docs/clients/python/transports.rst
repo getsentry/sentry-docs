@@ -24,7 +24,7 @@ All transports should support at least the following options:
 
 For example, to increase the timeout and to disable SSL verification::
 
-	SENTRY_DSN = '$$$DSN$$$?timeout=5&verify_ssl=0'
+	SENTRY_DSN = '___DSN___?timeout=5&verify_ssl=0'
 
 
 aiohttp
@@ -35,7 +35,7 @@ Should only be used within a :pep:`3156` compatible event loops
 
 ::
 
-    SENTRY_DSN = 'aiohttp+$$$DSN$$$'
+    SENTRY_DSN = 'aiohttp+___DSN___'
 
 Eventlet
 --------
@@ -44,7 +44,7 @@ Should only be used within an Eventlet IO loop.
 
 ::
 
-    SENTRY_DSN = 'eventlet+$$$DSN$$$'
+    SENTRY_DSN = 'eventlet+___DSN___'
 
 
 Gevent
@@ -54,7 +54,7 @@ Should only be used within a Gevent IO loop.
 
 ::
 
-    SENTRY_DSN = 'gevent+$$$DSN$$$'
+    SENTRY_DSN = 'gevent+___DSN___'
 
 
 Requests
@@ -64,7 +64,7 @@ Requires the ``requests`` library. Synchronous.
 
 ::
 
-    SENTRY_DSN = 'requests+$$$DSN$$$'
+    SENTRY_DSN = 'requests+___DSN___'
 
 
 Sync
@@ -74,7 +74,7 @@ A synchronous blocking transport.
 
 ::
 
-    SENTRY_DSN = 'sync+$$$DSN$$$'
+    SENTRY_DSN = 'sync+___DSN___'
 
 
 Threaded (Default)
@@ -84,7 +84,7 @@ Spawns an async worker for processing messages.
 
 ::
 
-    SENTRY_DSN = 'threaded+$$$DSN$$$'
+    SENTRY_DSN = 'threaded+___DSN___'
 
 
 Tornado
@@ -94,7 +94,7 @@ Should only be used within a Tornado IO loop.
 
 ::
 
-    SENTRY_DSN = 'tornado+$$$DSN$$$'
+    SENTRY_DSN = 'tornado+___DSN___'
 
 
 Twisted
@@ -104,4 +104,4 @@ Should only be used within a Twisted event loop.
 
 ::
 
-    SENTRY_DSN = 'twisted+$$$DSN$$$'
+    SENTRY_DSN = 'twisted+___DSN___'

@@ -2,17 +2,29 @@ function sentryEscape(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function sentryDsnToHtml(dsn) {
-  console.log(dsn);
+function sentryParseDsn(dsn) {
   var match = dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
+  var urlPieces = match[5].split(/\?/, 2);
+  return {
+    scheme: match[1],
+    publicKey: match[2],
+    secretKey: match[3],
+    host: match[4],
+    pathSection: match[5],
+    project: parseInt(urlPieces[0].substring(1), 10) || 1,
+    query: urlPieces[1] || ''
+  }
+}
+
+function sentryDsnToHtml(parsedDsn) {
   return '<span class="dsn">' +
-    sentryEscape(match[1]) +
+    sentryEscape(parsedDsn.scheme) +
     '<span class="dsn-auth" title="Copy paste includes key and secret.">' +
-      sentryEscape(match[2]) + ':' +
-      sentryEscape(match[3]) + '</span>' +
+      sentryEscape(parsedDsn.publicKey) + ':' +
+      sentryEscape(parsedDsn.secretKey) + '</span>' +
     '@' +
-    sentryEscape(match[4]) +
-    sentryEscape(match[5]) +
+    sentryEscape(parsedDsn.host) +
+    sentryEscape(parsedDsn.pathSection) +
   '</span>';
 }
 
@@ -23,10 +35,21 @@ function sentryRewriteCodeBlocks(initialDsn) {
     var originalContents = block.innerHTML;
 
     function setDsn(dsn) {
+      var parsedDsn = sentryParseDsn(dsn);
       var replaced = false;
-      var contents = originalContents.replace(/\$\$\$DSN\$\$\$/, function(match) {
+      var contents = originalContents.replace(/___(DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g, function(match) {
         replaced = true;
-        return sentryDsnToHtml(dsn);
+        if (match === '___DSN___') {
+          return sentryDsnToHtml(parsedDsn);
+        } else if (match === '___PUBLIC_KEY___') {
+          return sentryEscape(parsedDsn.publicKey);
+        } else if (match === '___SECRET_KEY___') {
+          return '<span class="dsn-secret-key">' + sentryEscape(parsedDsn.secretKey) + '</span>';
+        } else if (match === '___API_URL___') {
+          return sentryEscape(parsedDsn.scheme + parsedDsn.host);
+        } else if (match === '___PROJECT_ID___') {
+          return sentryEscape('' + parsedDsn.project);
+        }
       });
       if (!replaced) {
         return false;
@@ -90,4 +113,12 @@ $(function() {
   ];
   var dsnSelectBar = sentryCreateDsnBar(projects);
   dsnSelectBar.onDsnSelect(sentryRewriteCodeBlocks(projects[0].dsn));
+
+
+  $('body').on('dblclick', 'span.dsn', function(evt) {
+    evt.preventDefault();
+    var rng = document.createRange();
+    rng.selectNode(this);
+    window.getSelection().addRange(rng);
+  });
 });
