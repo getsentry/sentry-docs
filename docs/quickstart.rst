@@ -70,7 +70,7 @@ The most popular clients are:
 *   :doc:`raven-python <clients/python/index>` for Python
 *   :doc:`raven.js <clients/javascript/index>` for JavaScript
 *   :doc:`raven-php <clients/php/index>` for PHP
-*   `raven-ruby <https://github.com/getsentry/raven-ruby>`_
+*   :doc:`raven-ruby <clients/ruby/index>` for all variations of Ruby
 *   `raven-objc <https://github.com/getsentry/raven-objc>`_
 *   `raven-java <https://github.com/getsentry/raven-java>`_
 *   `raven-csharp <https://github.com/getsentry/raven-csharp>`_
