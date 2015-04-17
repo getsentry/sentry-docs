@@ -16,3 +16,9 @@ from.
    usage
    sourcemaps
    tips
+
+Resources:
+
+* `Downloads and CDN <http://ravenjs.com/>`_
+* `Bug Tracker <http://github.com/getsentry/raven-js/issues>`_
+* `Github Project <http://github.com/getsentry/raven-js>`_

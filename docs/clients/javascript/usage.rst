@@ -7,13 +7,13 @@ meaningful stack traces, but browsers make it pretty difficult.
 The easiest solution is to prevent an error from bubbling all of the way
 up the stack to ``window``.
 
-How to actually capture an error correctly
-------------------------------------------
+Reporting Errors Correctly
+--------------------------
 
 There are different methods to report errors and this all depends a little
 bit on circumstances.
 
-try...catch
+try … catch
 ```````````
 
 The simplest way, is to try and explicitly capture and report potentially
@@ -64,8 +64,8 @@ especially useful when passing around a callback.
 
     setTimeout(Raven.wrap(doIt), 1000)
 
-Tracking authenticated users
-----------------------------
+Tracking Users
+--------------
 
 While a user is logged in, you can tell Sentry to associate errors with
 user data.
@@ -82,14 +82,14 @@ If at any point, the user becomes unauthenticated, you can call
 would only really be useful in a large web app where the user logs in/out
 without a page reload.*
 
-Capturing a specific message
-----------------------------
+Capturing Messages
+------------------
 
 .. code-block:: javascript
 
     Raven.captureMessage('Broken!')
 
-Passing additional data
+Passing Additional Data
 -----------------------
 
 ``captureException``, ``context``, ``wrap``, and ``captureMessage``
@@ -117,7 +117,7 @@ exceptions with ``setExtraContext`` and ``setTagsContext``.
     Raven.setTagsContext({ key: "value" })
 
 
-Getting back an event id
+Getting Back an Event ID
 ------------------------
 
 An event id is a globally unique id for the event that was just sent. This
@@ -139,8 +139,12 @@ event is sent, it will contain the string id.
     alert(Raven.lastEventId())
 
 
-Check if Raven is setup and ready to go
----------------------------------------
+Verify Raven Setup
+------------------
+
+If you need to conditionally check if raven needs to be initialized or
+not, you can use the `isSetup` function.  It will return `true` if Raven
+is already initialized:
 
 .. code-block:: javascript
 

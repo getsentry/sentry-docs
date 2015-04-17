@@ -6,9 +6,6 @@ for Sentry.  It can be used with any modern Python interpreter be it
 CPython 2.x or 3.x, PyPy or Jython.  It's an Open Source project and
 available under a very liberal BSD license.
 
-It comes with a basic reporting system as well as integration for
-different frameworks which can be optionally installed as well.
-
 .. toctree::
    :maxdepth: 2
    :titlesonly:
@@ -20,3 +17,8 @@ different frameworks which can be optionally installed as well.
    transports
    platform-support
    api
+
+Resources:
+
+* `Bug Tracker <http://github.com/getsentry/raven-python/issues>`_
+* `Github Project <http://github.com/getsentry/raven-python>`_

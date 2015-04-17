@@ -84,5 +84,9 @@ class SentryDomain(Domain):
 
 
 def setup(app):
+    from sphinx.highlighting import lexers
+    from pygments.lexers.web import PhpLexer
+    lexers['php'] = PhpLexer(startinline=True)
+
     app.add_domain(SentryDomain)
     app.connect('html-page-context', html_page_context)
