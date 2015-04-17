@@ -14,4 +14,5 @@ from.
    plugins
    config
    usage
+   sourcemaps
    tips

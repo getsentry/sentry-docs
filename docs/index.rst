@@ -56,6 +56,7 @@ differences.  All the relevant information is available here for you:
 .. toctree::
    :maxdepth: 2
 
+   cloud/index
    community/index
 
 Internals
