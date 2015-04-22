@@ -1,5 +1,5 @@
 Attributes
-----------
+==========
 
 Attributes are simple data that Sentry understands to provide the most
 basic information about events.  These are things like the unique ID of an
@@ -9,7 +9,7 @@ Attributes are separate from :doc:`interfaces` which provide very specific
 and tailored data such as exception data, stacktraces etc.
 
 Required Attributes
-```````````````````
+-------------------
 
 The following attributes are required for all events:
 
@@ -84,7 +84,7 @@ The following attributes are required for all events:
         }
 
 Optional Attributes
-```````````````````
+-------------------
 
 Additionally, there are several optional values which Sentry recognizes and are
 highly encouraged:
@@ -184,3 +184,27 @@ highly encouraged:
             "some_other_value": "foo bar"
           }
         }
+
+Custom Grouping
+---------------
+
+A feature that clients should not be using, but exists anyways for very
+specialized cases is the `checksum`.  If supplied then Sentry will not
+group by its own rules but purely by the supplied `checksum` value.
+
+.. describe:: checksum
+
+    A hash value that is used as grouping identifier.  It should not be
+    supplied by clients unless they have a very specialized usecase where
+    they need to override the default grouping that sentry performs.
+
+    It's a 32 character checksum.  Typically it can be implemented as an
+    MD5 hash.
+
+    .. sourcecode:: json
+
+        {
+          "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+        }
+
+For information about overriding grouping see :ref:`custom-grouping`.

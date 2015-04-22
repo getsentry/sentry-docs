@@ -1,5 +1,5 @@
-Raven for PHP
-=============
+PHP
+===
 
 Raven-PHP is a PHP client for Sentry supporting PHP 5.3 or higher.  It'a
 available as a BSD licensed Open Source library.

@@ -1,5 +1,5 @@
-Raven for Python
-================
+Python
+======
 
 Raven for Python (raven-python) is the official standalone Python client
 for Sentry.  It can be used with any modern Python interpreter be it

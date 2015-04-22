@@ -1,3 +1,5 @@
+.. _sourcemaps:
+
 Source Maps
 ===========
 
