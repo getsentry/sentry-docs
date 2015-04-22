@@ -73,7 +73,7 @@ function sentryRewriteCodeBlocks(initialDsn) {
     }
   }
 
-  $('div.highlight pre').each(function() {
+  $('div.highlight pre,code').each(function() {
     rewriteCodeBlock(this);
   });
 
@@ -102,6 +102,7 @@ function sentryCreateDsnBar(projects) {
   });
 
   return {
+    selectBox: selectBox,
     onDsnSelect: function(callback) {
       onDsnChangeFunc = callback;
     }
@@ -110,8 +111,16 @@ function sentryCreateDsnBar(projects) {
 
 
 $(function() {
+  var dummyDsn = {
+    dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
+    name: 'Example DSN'
+  };
+  var lastBox = sentryCreateDsnBar([dummyDsn]).selectBox;
+
   function initInterface(projects) {
     var dsnSelectBar = sentryCreateDsnBar(projects);
+    lastBox.remove();
+    lastBox = dsnSelectBar.selectBox;
     dsnSelectBar.onDsnSelect(sentryRewriteCodeBlocks(projects[0].dsn));
     $('body').on('dblclick', 'span.dsn', function(evt) {
       evt.preventDefault();
@@ -123,7 +132,7 @@ $(function() {
 
   $.ajax({
     type: 'GET',
-    url: 'http://www.dev.getsentry.net:8000/docs/api/dsns/',
+    url: 'https://www.getsentry.com/docs/api/dsns/',
     crossDomain: true,
     xhrFields: {
       withCredentials: true
@@ -133,13 +142,11 @@ $(function() {
         return {
           dsn: 'https://' + item.public_key + ':' + item.secret_key +
             '@app.getsentry.com/' + item.project_id,
-          name: item.organization_name + '/' + item.project_name
+          name: item.organization_name + '/' + item.project_name +
+            (item.is_user_key ? ' (User Key)' : '')
         };
       });
-      projects.unshift({
-        dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
-        name: 'Example DSN'
-      });
+      projects.unshift(dummyDsn);
       initInterface(projects);
     }
   });

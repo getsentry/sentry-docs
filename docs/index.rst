@@ -22,8 +22,8 @@ use the UI and how to configure the clients.
    support
    using/index
 
-Client Libraries
-----------------
+Client Documentation
+--------------------
 
 To report to Sentry you need a client integration.  The official
 integrations are called “raven clients”.  Clients exist for all popular
@@ -31,8 +31,10 @@ programming languages and platforms.
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
 
    clients/index
+   clientdev/index
 
 Event Reporting
 ---------------
@@ -59,13 +61,15 @@ differences.  All the relevant information is available here for you:
    cloud/index
    community/index
 
-Internals
----------
+API
+---
 
 If you want to extend Sentry, write your own Raven client or understand
-the internals of the system, this is the documentation you need to study:
+the internals of the system, this is the documentation you need to
+reference.  It does not just cover event reporting but also management
+APIs.
 
 .. toctree::
    :maxdepth: 2
 
-   internals/index
+   api/index
