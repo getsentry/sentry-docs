@@ -5,7 +5,7 @@ Attributes are simple data that Sentry understands to provide the most
 basic information about events.  These are things like the unique ID of an
 event, the human readable message etc.
 
-Attributes are separate from :ref:`interfaces` which provide very specific
+Attributes are separate from :doc:`interfaces` which provide very specific
 and tailored data such as exception data, stacktraces etc.
 
 Required Attributes
