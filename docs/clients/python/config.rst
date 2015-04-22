@@ -1,6 +1,8 @@
 Configuration
 =============
 
+.. default-domain:: py
+
 This document describes configuration options available to the Raven
 client for the use with Sentry.  It also covers some other important parts
 about configuring the environment.

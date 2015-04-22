@@ -9,12 +9,30 @@ licenses.
 The official clients are named "raven clients".
 
 .. toctree::
-   :maxdepth: 1
+   :hidden:
 
    python/index
    javascript/index
    php/index
    ruby/index
+
+.. class:: platformlink
+
+*   .. class:: platformlink-python
+
+    :doc:`python/index` — including Django, Flask etc.
+
+*   .. class:: platformlink-js
+
+    :doc:`javascript/index` — including Node, Browser environments etc.
+
+*   .. class:: platformlink-php
+
+    :doc:`php/index` — including PHP applications
+
+*   .. class:: platformlink-ruby
+
+    :doc:`ruby/index` — including Rails, Sinatra, Rack and other environments.
 
 Some of these clients are not yet documented here, but separately.  We're
 working hard on consolidating the documentation.  Until then you can find

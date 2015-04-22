@@ -17,18 +17,15 @@ Sentry includes several plugins by default. Builtin plugins are controlled via t
       'sentry.plugins.sentry_useragents',
     ]
 
-.. data:: sentry.plugins.sentry_urls
-    :noindex:
+.. describe:: sentry.plugins.sentry_urls
 
     Enables auto tagging of urls based on the Http interface contents.
 
-.. data:: sentry.plugins.sentry_mail
-    :noindex:
+.. describe:: sentry.plugins.sentry_mail
 
     Enables email notifications when new events or regressions happen.
 
-.. data:: sentry.plugins.sentry_useragents
-    :noindex:
+.. describe:: sentry.plugins.sentry_useragents
 
     Enables auto tagging of browsers and operating systems based on the
     'User-Agent' header in the HTTP interface.

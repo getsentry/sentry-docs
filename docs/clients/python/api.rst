@@ -1,6 +1,8 @@
 API Reference
 =============
 
+.. default-domain:: py
+
 This gives you an overview of the public API that raven-python exposes.
 
 

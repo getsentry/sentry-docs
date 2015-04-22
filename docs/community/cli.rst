@@ -17,7 +17,7 @@ For a list of commands, you can also use ``sentry help``, or ``sentry
 Builtin Commands
 ----------------
 
-.. data:: init [config]
+.. describe:: init [config]
 
     Initializes the configuration file for Sentry.
 
@@ -31,7 +31,7 @@ Builtin Commands
               value as the parameter whereas other commands require you
               to use --config for passing the location of this file.
 
-.. data:: start [service]
+.. describe:: start [service]
 
     Starts a Sentry service. By default this value is 'http'.
 
@@ -39,16 +39,16 @@ Builtin Commands
 
         sentry start
 
-.. data:: upgrade
+.. describe:: upgrade
 
     Performs any needed database migrations. This is similar to running
     ``django-admin.py syncdb --migrate``.
 
-.. data:: cleanup
+.. describe:: cleanup
 
     Performs all trim operations based on your configuration.
 
-.. data:: repair
+.. describe:: repair
 
     Performs any needed repair against the Sentry database. This will attempt to correct
     things like missing teams, project keys, etc.

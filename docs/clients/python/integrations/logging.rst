@@ -1,8 +1,10 @@
 Logging
 =======
 
-Sentry supports the ability to directly tie into the :mod:`logging` module.  To
-use it simply add :class:`SentryHandler` to your logger.
+.. default-domain:: py
+
+Sentry supports the ability to directly tie into the :mod:`logging`
+module.  To use it simply add :class:`SentryHandler` to your logger.
 
 First you'll need to configure a handler::
 

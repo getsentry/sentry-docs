@@ -4,8 +4,7 @@ Configuring Sentry
 This document describes additional configuration options available to the
 Sentry server itself.
 
-.. data:: SENTRY_URL_PREFIX
-    :noindex:
+.. describe:: SENTRY_URL_PREFIX
 
     Absolute URL to the sentry root directory. Should not include a
     trailing slash.
@@ -23,8 +22,7 @@ Authentication
 The following keys control the authentication support.
 
 
-.. data:: SENTRY_FEATURES['auth:register']
-    :noindex:
+.. describe:: SENTRY_FEATURES['auth:register']
 
     Should Sentry allow users to create new accounts?
 
@@ -34,8 +32,7 @@ The following keys control the authentication support.
 
         SENTRY_FEATURES['auth:register'] = True
 
-.. data:: SENTRY_PUBLIC
-    :noindex:
+.. describe:: SENTRY_PUBLIC
 
     Should Sentry make all data publicly accessible? This should **only**
     be used if you're installing Sentry behind your company's firewall.
@@ -48,8 +45,7 @@ The following keys control the authentication support.
 
         SENTRY_PUBLIC = True
 
-.. data:: SENTRY_ALLOW_PUBLIC_PROJECTS
-    :noindex:
+.. describe:: SENTRY_ALLOW_PUBLIC_PROJECTS
 
     Should Sentry allow users without the 'sentry.change_project'
     permission to make projects globally public?
@@ -61,8 +57,7 @@ The following keys control the authentication support.
         SENTRY_ALLOW_PUBLIC_PROJECTS = False
 
 
-.. data:: SENTRY_ALLOW_ORIGIN
-    :noindex:
+.. describe:: SENTRY_ALLOW_ORIGIN
 
     If provided, Sentry will set the Access-Control-Allow-Origin header to
     this value on /api/store/ responses. In addition, the
@@ -85,8 +80,7 @@ Web Server
 
 The following settings are available for the built-in webserver:
 
-.. data:: SENTRY_WEB_HOST
-    :noindex:
+.. describe:: SENTRY_WEB_HOST
 
     The hostname which the webserver should bind to.
 
@@ -96,8 +90,7 @@ The following settings are available for the built-in webserver:
 
         SENTRY_WEB_HOST = '0.0.0.0'  # bind to all addresses
 
-.. data:: SENTRY_WEB_PORT
-    :noindex:
+.. describe:: SENTRY_WEB_PORT
 
     The port which the webserver should listen on.
 
@@ -108,8 +101,7 @@ The following settings are available for the built-in webserver:
         SENTRY_WEB_PORT = 9000
 
 
-.. data:: SENTRY_WEB_OPTIONS
-    :noindex:
+.. describe:: SENTRY_WEB_OPTIONS
 
     A dictionary of additional configuration options to pass to gunicorn.
 
@@ -134,8 +126,7 @@ SMTP Server
 
 The following settings are available for the built-in SMTP mail server:
 
-.. data:: SENTRY_SMTP_HOST
-    :noindex:
+.. describe:: SENTRY_SMTP_HOST
 
     The hostname which the smtp server should bind to.
 
@@ -145,8 +136,7 @@ The following settings are available for the built-in SMTP mail server:
 
         SENTRY_SMTP_HOST = '0.0.0.0'  # bind to all addresses
 
-.. data:: SENTRY_SMTP_PORT
-    :noindex:
+.. describe:: SENTRY_SMTP_PORT
 
     The port which the smtp server should listen on.
 
@@ -156,8 +146,7 @@ The following settings are available for the built-in SMTP mail server:
 
         SENTRY_SMTP_PORT = 1025
 
-.. data:: SENTRY_SMTP_HOSTNAME
-    :noindex:
+.. describe:: SENTRY_SMTP_HOSTNAME
 
     The hostname which matches the server's MX record.
 
@@ -170,8 +159,7 @@ The following settings are available for the built-in SMTP mail server:
 Data Sampling
 -------------
 
-.. data:: SENTRY_SAMPLE_DATA
-    :noindex:
+.. describe:: SENTRY_SAMPLE_DATA
 
     .. versionadded:: 1.10.0
 
@@ -196,8 +184,7 @@ Data Sampling
 Beacon
 ------
 
-.. data:: SENTRY_BEACON
-    :noindex:
+.. describe:: SENTRY_BEACON
  
     Controls the :doc:`beacon`.
 
