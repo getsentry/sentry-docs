@@ -6,10 +6,10 @@ raven clients.  These libraries exist for a wide range of programming
 languages and runtime environments and are available under Open Source
 licenses.
 
-The official clients are named "raven clients".
+.. class:: hiddentoc
 
 .. toctree::
-   :hidden:
+   :maxdepth: 1
 
    python/index
    javascript/index

@@ -32,7 +32,6 @@ programming languages and platforms.
 
 .. toctree::
    :maxdepth: 2
-   :titlesonly:
 
    clients/index
    clientdev/index
