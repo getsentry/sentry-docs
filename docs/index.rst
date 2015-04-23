@@ -7,6 +7,23 @@ Sentry Server) as well as all officially supported client integrations
 (The Raven Clients).  To keep things easy we cover all different editions
 of the sentry server here.
 
+If you are completely new to Sentry give the :doc:`quickstart` a read.
+
+Client Documentation
+--------------------
+
+To report to Sentry you need a client integration.  The :doc:`official
+integrations <clients/index>` are called “raven clients”.  Clients exist
+for all popular programming languages and platforms.
+
+.. include:: clients/table.rst.inc
+
+.. toctree::
+   :hidden:
+   :includehidden:
+
+   clients/index
+
 Using Sentry
 ------------
 
@@ -23,19 +40,22 @@ use the UI and how to configure the clients.
    using/index
    events/index
 
-Client Documentation
---------------------
+Development Documentation
+-------------------------
 
-To report to Sentry you need a client integration.  The official
-integrations are called “raven clients”.  Clients exist for all popular
-programming languages and platforms.
+If you want to extend Sentry, write your own Raven client or understand
+the internals of the system, this is the documentation you need to
+reference.  It does not just cover event reporting but also management
+APIs.
+
+This covers the protocol, how clients are supposed to work and some
+general guidelines.
 
 .. toctree::
    :maxdepth: 2
-   :includehidden:
 
-   clients/index
    clientdev/index
+   api/index
 
 Edition Specifics
 -----------------
@@ -44,20 +64,7 @@ Depending on the edition of Sentry you are using there will be some
 differences.  All the relevant information is available here for you:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    cloud/index
    community/index
-
-API
----
-
-If you want to extend Sentry, write your own Raven client or understand
-the internals of the system, this is the documentation you need to
-reference.  It does not just cover event reporting but also management
-APIs.
-
-.. toctree::
-   :maxdepth: 2
-
-   api/index

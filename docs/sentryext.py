@@ -26,6 +26,7 @@ def build_full_toctree(builder, docname, prune=False, collapse=True):
         toctrees.append(env.resolve_toctree(docname, builder, toctreenode,
                                             collapse=collapse,
                                             titles_only=True,
+                                            includehidden=True,
                                             prune=prune))
     if not toctrees:
         return None
