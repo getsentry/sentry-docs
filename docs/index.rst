@@ -12,8 +12,8 @@ If you are completely new to Sentry give the :doc:`quickstart` a read.
 Client Documentation
 --------------------
 
-To report to Sentry you need a client integration.  The :doc:`official
-integrations <clients/index>` are called “raven clients”.  Clients exist
+To report to Sentry you need a client integration.  The :doc:`Official
+Integrations <clients/index>` are called “raven clients”.  Clients exist
 for all popular programming languages and platforms.
 
 .. include:: clients/table.rst.inc
