@@ -1,3 +1,5 @@
+.. class:: platform-objc
+
 Objective-C
 ===========
 
