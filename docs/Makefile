@@ -61,6 +61,9 @@ dirhtml:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
 
+upload: dirhtml
+	s3cmd sync --delete-removed $(BUILDDIR)/dirhtml/ s3://getsentry-docs/
+
 singlehtml:
 	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
 	@echo
