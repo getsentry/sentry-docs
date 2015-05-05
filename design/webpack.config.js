@@ -11,7 +11,7 @@ module.exports = {
     ]
   },
   output: {
-    path: __dirname + "/gen",
+    path: __dirname + "/../theme/sentry/static",
     publicPath: "/static/",
     filename: '[name].js'
   },
