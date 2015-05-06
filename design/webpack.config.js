@@ -48,7 +48,7 @@ module.exports = {
       $: 'jquery',
       jQuery: 'jquery',
     }),
-    new ExtractTextPlugin('styles.css', {
+    new ExtractTextPlugin('sentry.css', {
       allChunks: true
     })
   ],
