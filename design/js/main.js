@@ -93,7 +93,7 @@ function sentryCreateDsnBar(projects) {
     });
   var bar = $('<div class="dsn"></div>')
     .append(selectBox);
-  $('.dsn-container').prepend(bar);
+  $('.dsn-container').append(bar);
 
   projects.forEach(function(proj) {
     selectBox.append($('<option></option>')
