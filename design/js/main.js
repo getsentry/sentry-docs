@@ -24,7 +24,7 @@ function sentryDsnToHtml(parsedDsn, pub) {
   } else {
     auth =
       '<span class="dsn-auth" title="Copy paste includes key and secret.">' +
-      sentryEscape(parsedDsn.publicKey) + ':' + 
+      sentryEscape(parsedDsn.publicKey) + ':' +
       sentryEscape(parsedDsn.secretKey) + '</span>';
   }
 
@@ -93,7 +93,7 @@ function sentryCreateDsnBar(projects) {
     });
   var bar = $('<div class="dsn"></div>')
     .append(selectBox);
-  $('header div.container').prepend(bar);
+  $('.dsn-container').prepend(bar);
 
   projects.forEach(function(proj) {
     selectBox.append($('<option></option>')
