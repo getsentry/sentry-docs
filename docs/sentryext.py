@@ -10,6 +10,10 @@ def html_page_context(app, pagename, templatename, context, doctree):
     rendered_toc = get_rendered_toctree(app.builder, pagename)
     context['full_toc'] = rendered_toc
 
+    def render_sitemap():
+        return get_rendered_toctree(app.builder, 'index', collapse=False)
+    context['render_sitemap'] = render_sitemap
+
 
 def get_rendered_toctree(builder, docname, prune=False, collapse=True):
     fulltoc = build_full_toctree(builder, docname, prune=prune,
