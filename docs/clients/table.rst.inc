@@ -1,29 +1,29 @@
-.. class:: platformlink
+.. class:: platformlink row
 
 *   .. class:: platformlink-python
 
-    :doc:`/clients/python/index` — including Django, Flask etc.
+    :doc:`/clients/python/index` Including Django, Flask, and others.
 
 *   .. class:: platformlink-js
 
-    :doc:`/clients/javascript/index` — including Node, Browser environments etc.
+    :doc:`/clients/javascript/index` Including Node, Browser environments etc.
 
 *   .. class:: platformlink-php
 
-    :doc:`/clients/php/index` — including PHP applications
+    :doc:`/clients/php/index` Including PHP apps.
 
 *   .. class:: platformlink-ruby
 
-    :doc:`/clients/ruby/index` — including Rails, Sinatra, Rack and other environments.
+    :doc:`/clients/ruby/index` Including Rails, Sinatra, Rack and others.
 
 *   .. class:: platformlink-objc
 
-    :doc:`/clients/objc/index` — for iOS and Mac.
+    :doc:`/clients/objc/index` For iOS and Mac.
 
 *   .. class:: platformlink-java
 
-    :doc:`/clients/java/index` — for Java and Android.
+    :doc:`/clients/java/index` For Java and Android.
 
 *   .. class:: platformlink-csharp
 
-    :doc:`/clients/csharp/index` — including Mono and .NET languages.
+    :doc:`/clients/csharp/index` Including Mono and .NET languages.
