@@ -124,7 +124,7 @@ function createDsnBar(projects) {
 
   return {
     selectBox: selectBox,
-    currentDsn: currentDsn,
+    currentDsn: currentDsn ? currentDsn : projects[0].dsn,
     onDsnSelect: function(callback) {
       onDsnChangeFunc = callback;
     }
