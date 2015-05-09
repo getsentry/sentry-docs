@@ -105,7 +105,8 @@ function createDsnBar(projects) {
     .append(selectBox);
   $('.dsn-container').append(bar);
 
-  var dsnId = parseInt(document.cookie.match(/dsnid=(\d+)/)[1]);
+  var m = document.cookie.match(/dsnid=(\d+)/);
+  var dsnId = m ? parseInt(m[1]) : null;
   var currentDsn = null;
 
   projects.forEach(function(proj) {
