@@ -84,25 +84,46 @@ function processCodeBlocks(initialDsn) {
   }
 }
 
+function rememberLastDsn(dsns, currentDsn) {
+  dsns.forEach(function(dsn) {
+    if (dsn.dsn === currentDsn) {
+      document.cookie = 'dsnid=' + dsn.id;
+    }
+  })
+}
+
 function createDsnBar(projects) {
   var onDsnChangeFunc = function() {};
 
   var selectBox = $('<select class="dsn-select"></select>')
     .on('change', function() {
+      rememberLastDsn(projects, this.value);
+      currentDsn = this.value;
       onDsnChangeFunc(this.value);
     });
   var bar = $('<div class="dsn"></div>')
     .append(selectBox);
   $('.dsn-container').append(bar);
 
+  var dsnId = parseInt(document.cookie.match(/dsnid=(\d+)/)[1]);
+  var currentDsn = null;
+
   projects.forEach(function(proj) {
     selectBox.append($('<option></option>')
       .attr('value', proj.dsn)
       .text(proj.name));
+    if (proj.id === dsnId) {
+      currentDsn = proj.dsn;
+    }
   });
+
+  if (currentDsn) {
+    selectBox.val(currentDsn);
+  }
 
   return {
     selectBox: selectBox,
+    currentDsn: currentDsn,
     onDsnSelect: function(callback) {
       onDsnChangeFunc = callback;
     }
@@ -111,28 +132,45 @@ function createDsnBar(projects) {
 
 
 $(function() {
+  var API = 'https://www.getsentry.com/docs/api';
+
   var dummyDsn = {
     dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
     name: 'Example DSN'
   };
-  var lastBox = createDsnBar([dummyDsn]).selectBox;
 
   function initInterface(projects) {
     var dsnSelectBar = createDsnBar(projects);
-    lastBox.remove();
-    lastBox = dsnSelectBar.selectBox;
-    dsnSelectBar.onDsnSelect(processCodeBlocks(projects[0].dsn));
+    dsnSelectBar.onDsnSelect(processCodeBlocks(dsnSelectBar.currentDsn));
+
     $('body').on('dblclick', 'span.dsn', function(evt) {
       evt.preventDefault();
       var rng = document.createRange();
       rng.selectNode(this);
       window.getSelection().addRange(rng);
     });
+    $('.dsn-container').fadeIn();
   }
 
   $.ajax({
     type: 'GET',
-    url: 'https://www.getsentry.com/docs/api/dsns/',
+    url: API + '/header/',
+    crossDomain: true,
+    xhrFields: {
+      withCredentials: true
+    },
+    success: function(resp) {
+      $('header ul.user-nav')[0].outerHTML = resp;
+      $('header div.container').fadeIn();
+    },
+    error: function() {
+      $('header div.container').fadeIn();
+    }
+  });
+
+  $.ajax({
+    type: 'GET',
+    url: API + '/dsns/',
     crossDomain: true,
     xhrFields: {
       withCredentials: true
@@ -140,6 +178,7 @@ $(function() {
     success: function(resp) {
       var projects = resp.dsns.map(function(item) {
         return {
+          id: item.id,
           dsn: 'https://' + item.public_key + ':' + item.secret_key +
             '@app.getsentry.com/' + item.project_id,
           name: item.organization_name + '/' + item.project_name +
