@@ -11,7 +11,7 @@ def html_page_context(app, pagename, templatename, context, doctree):
     context['full_toc'] = rendered_toc
 
     def render_sitemap():
-        return get_rendered_toctree(app.builder, 'index', collapse=False)
+        return get_rendered_toctree(app.builder, 'sitemap', collapse=False)
     context['render_sitemap'] = render_sitemap
 
 
