@@ -7,7 +7,8 @@ module.exports = {
     'styles': './less/main.less',
     'vendor': [
       'jquery',
-      'bootstrap'
+      'bootstrap',
+      'selectize'
     ]
   },
   output: {
@@ -46,7 +47,7 @@ module.exports = {
     new webpack.optimize.DedupePlugin(),
     new webpack.ProvidePlugin({
       $: 'jquery',
-      jQuery: 'jquery',
+      jQuery: 'jquery'
     }),
     new ExtractTextPlugin('sentry.css', {
       allChunks: true
