@@ -194,6 +194,6 @@ $(function() {
       initInterface([dummyDsn]);
     }
   });
-});
 
-// $('.dsn-select').selectize();
+  $('select').selectize();
+});
