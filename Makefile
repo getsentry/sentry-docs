@@ -1,3 +1,6 @@
+requirements:
+	@pip install awscli sphinx
+
 build: design/node_modules
 	@cd design; ./node_modules/.bin/webpack
 	@touch docs/index.rst
@@ -7,10 +10,12 @@ clean:
 	@cd docs; make clean
 
 sync:
-	@s3cmd sync --delete-removed docs/_build/dirhtml/ s3://getsentry-docs/
+	@aws s3 sync --delete docs/_build/dirhtml/ s3://getsentry-docs/
 
 watch: design/node_modules
 	@cd design; ./node_modules/.bin/webpack --watch
 
 design/node_modules:
 	@cd design; npm install .
+
+release: requirements build sync
