@@ -40,3 +40,5 @@ update-submodules:
 	@echo ""
 
 release: requirements build sync
+
+.PHONY: build requirements clean sync watch update-submodules

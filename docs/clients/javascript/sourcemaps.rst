@@ -60,12 +60,12 @@ Validating a Source Map
 A third party tool is available to validate your source map:
 http://sourcemap-validator.herokuapp.com/
 
-Source Map Fetching
--------------------
-
 .. sentry:edition:: cloud
+
+    Source Map Fetching
+    -------------------
 
     Source maps are dynamically fetched "in reverse".  If you are using
     Sentry Cloud then you might want to restrict the access to those
     sourcemaps by IP address.  For the IP ranges used by Sentry Cloud and
-    how to whitelist access please refer to :doc:`../../cloud/ip-ranges`.
+    how to whitelist access please refer to :doc:`../../ip-ranges`.

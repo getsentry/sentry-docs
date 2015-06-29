@@ -19,7 +19,7 @@ Pick a Sentry Edition
 
 Sentry comes in different variations tailored towards customer's
 individual requirements.  All editions are based on our :doc:`Sentry Open
-Source Project <community/index>`.
+Source Server <server/index>`.
 
 *   **Sentry Cloud** (*getsentry.com*)
 
@@ -51,8 +51,6 @@ Source Project <community/index>`.
     The Sentry Community Edition is a distribution of the Sentry Open Source
     Project supported by the community.  You can download the community
     edition on `our github page <https://github.com/getsentry/sentry>`_.
-
-    Documentation is available here: :doc:`community/index`.
 
 
 .. _pick-a-client-integration:

@@ -1,13 +1,38 @@
-Sentry Documentation
-====================
+.. sentry:edition:: cloud
 
-Welcome to the documentation of Sentry — the modern error logging and
-aggregation platform.  This documentation covers the use of Sentry (The
-Sentry Server) as well as all officially supported client integrations
-(The Raven Clients).  To keep things easy we cover all different editions
-of the sentry server here.
+    Sentry Cloud Documentation
+    ==========================
 
-If you are completely new to Sentry give the :doc:`quickstart` a read.
+    Welcome to the documentation of the cloud hosted version of Sentry —
+    the modern error logging and aggregation platform.  This documentation
+    covers everything from getting started to how to integrate it with
+    your runtime environment.
+
+    If you are completely new to Sentry give the :doc:`quickstart` a read.
+
+.. sentry:edition:: enterprise
+
+    Sentry Enterprise Documentation
+    ===============================
+
+    Welcome to the documentation of the Enterprise Edition of Sentry — the
+    modern error logging and aggregation platform.  This documentation
+    covers the use of Sentry (The Sentry Server) as well as all officially
+    supported client integrations (The Raven Clients).  To keep things
+    easy we cover all different editions of the sentry server here.
+
+    *The documentation of the Enterprise Edition of Sentry is work in
+    progress.*
+
+.. sentry:edition:: community
+
+    Sentry Community Edition Documentation
+    ======================================
+
+    Welcome to the documentation of Sentry — the modern error logging and
+    aggregation platform.  This documentation covers the use of Sentry
+    (The Sentry Server) as well as all officially supported client
+    integrations (The Raven Clients).
 
 Client Documentation
 --------------------
@@ -40,6 +65,39 @@ use the UI and how to configure the clients.
    using/index
    events/index
 
+.. sentry:edition:: cloud
+
+    Sentry Cloud Specifics
+    ----------------------
+
+    The cloud deployment of sentry (getsentry.com) has some specifics that
+    are good to know.
+
+    .. toctree::
+       :maxdepth: 2
+
+       ip-ranges
+
+.. sentry:edition:: enterprise
+
+    Sentry Enterprise
+    -----------------
+
+    .. toctree::
+       :maxdepth: 2
+
+       server/index
+
+.. sentry:edition:: community
+
+    Sentry Community Edition
+    ------------------------
+
+    .. toctree::
+       :maxdepth: 2
+
+       server/index
+
 Development Documentation
 -------------------------
 
@@ -56,23 +114,3 @@ general guidelines.
 
    clientdev/index
    api/index
-
-.. sentry:edition:: cloud
-
-    Sentry Cloud
-    ------------
-
-    .. toctree::
-       :maxdepth: 2
-
-       cloud/index
-
-.. sentry:edition:: community
-
-    Sentry Community Edition
-    ------------------------
-
-    .. toctree::
-       :maxdepth: 2
-
-       community/index
