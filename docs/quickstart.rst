@@ -3,25 +3,26 @@ Getting Started
 
 Sentry is designed to be very simple to get off the ground, yet powerful
 to grow into.  If you have never used Sentry before, this tutorial will
-help you chose an edition of sentry and guides you through the most
-important steps.
+help you getting started.
 
 Getting started with Sentry is a three step process:
 
-1.  :ref:`pick-a-sentry-edition`
-2.  :ref:`pick-a-client-integration`
-3.  :ref:`configure-the-dsn`
+.. sentry:edition:: cloud
 
-.. _pick-a-sentry-edition:
+    1.  `Sign up for an account <https://www.getsentry.com/signup/>`_
+    2.  :ref:`pick-a-client-integration`
+    3.  :ref:`configure-the-dsn`
 
-Pick a Sentry Edition
----------------------
+.. sentry:edition:: community, enterprise
 
-Sentry comes in different variations tailored towards customer's
-individual requirements.  All editions are based on our :doc:`Sentry Open
-Source Server <server/index>`.
+    1.  :ref:`install-the-server`
+    2.  :ref:`pick-a-client-integration`
+    3.  :ref:`configure-the-dsn`
 
-*   **Sentry Cloud** (*getsentry.com*)
+.. sentry:edition:: cloud
+
+    About Sentry Cloud
+    ------------------
 
     If you are new to Sentry and you have not used it before, you can get
     started started by signing up for a `free trial account
@@ -35,22 +36,44 @@ Source Server <server/index>`.
     with it right away without having to spend time with installation or
     maintenance.
 
-*   **Sentry Enterprise Edition**
+.. sentry:edition:: enterprise
 
-    For enterprise customers we also provide Sentry Enterprise Edition.  It
-    includes all the functionality of Sentry Cloud but runs on your own
-    network on your own hardware and can be integrated with the rest of your
-    infrastructure.  Sentry Enterprise Edition is a bespoke product that comes
-    with a support contract.
+    Sentry Enterprise
+    -----------------
 
-    If you are interested in the enterprise edition, `you can learn more about
-    out enterprise offering <https://www.getsentry.com/enterprise/>`_.
+    For enterprise customers we also provide Sentry Enterprise Edition.
+    It includes all the functionality of Sentry Cloud but runs on your own
+    network on your own hardware and can be integrated with the rest of
+    your infrastructure.  Sentry Enterprise Edition is a bespoke product
+    that comes with a support contract.
 
-*   **Sentry Community Edition**
+    If you are interested in the enterprise edition, `you can learn more
+    about out enterprise offering
+    <https://www.getsentry.com/enterprise/>`_.
+
+.. sentry:edition:: community
+
+    Sentry Community Edition
+    ------------------------
 
     The Sentry Community Edition is a distribution of the Sentry Open Source
     Project supported by the community.  You can download the community
     edition on `our github page <https://github.com/getsentry/sentry>`_.
+
+.. sentry:edition:: community, enterprise
+
+    .. _install-the-server:
+
+    Installing The Server
+    ---------------------
+
+    All editions of Sentry are based on the same :doc:`Open Source Server
+    </server/index>`.  For a detailed introduction about the installation
+    process see :doc:`/server/installation`.
+
+    Generally to run the Sentry Server you need a UNIX based operating
+    system, Python 2.7, PostgreSQL and redis as well as an HTTP server of
+    your choice.
 
 
 .. _pick-a-client-integration:
@@ -75,7 +98,6 @@ The most popular clients are:
 
 For exact configuration for the clients consult the corresponding
 documentation.  For all clients however, the basics are the same.
-
 
 .. _configure-the-dsn:
 

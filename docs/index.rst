@@ -83,6 +83,11 @@ use the UI and how to configure the clients.
     Sentry Enterprise
     -----------------
 
+    This part of the documentation covers all parts of the Sentry
+    Enterprise edition and how to run them.  As the Enterprise Edition is
+    based on the Open Source server some parts of this documentation
+    overlap with the Community Edition.
+
     .. toctree::
        :maxdepth: 2
 
@@ -92,6 +97,9 @@ use the UI and how to configure the clients.
 
     Sentry Community Edition
     ------------------------
+
+    This part of the documentation covers all parts of the Sentry Open
+    Source project and how to run it.
 
     .. toctree::
        :maxdepth: 2
