@@ -65,7 +65,7 @@ Source Map Fetching
 
 .. sentry:edition:: cloud
 
-Source maps are dynamically fetched "in reverse".  If you are using Sentry
-Cloud then you might want to restrict the access to those sourcemaps by IP
-address.  For the IP ranges used by Sentry Cloud and how to whitelist
-access please refer to :doc:`../../cloud/ip-ranges`.
+    Source maps are dynamically fetched "in reverse".  If you are using
+    Sentry Cloud then you might want to restrict the access to those
+    sourcemaps by IP address.  For the IP ranges used by Sentry Cloud and
+    how to whitelist access please refer to :doc:`../../cloud/ip-ranges`.

@@ -23,18 +23,18 @@ The general rules for access are as follows:
 Scoping is based on the selection of teams (team-level scoping) or if the
 membership is selected to apply across all teams (org-level scoping).
 
-Billing and Quotas
-------------------
-
 .. sentry:edition:: cloud
 
-Billing is managed at the Organization level.  An Organization's quota is
-spread across all projects within it.
+    Billing and Quotas
+    ------------------
 
-This generally makes sense in the context of a personal vs a business
-account.  You could be using a smaller plan on your personal account, and
-your company account could be on a much larger plan, as well as charging a
-different credit card.
+    Billing is managed at the Organization level.  An Organization's quota
+    is spread across all projects within it.
+
+    This generally makes sense in the context of a personal vs a business
+    account.  You could be using a smaller plan on your personal account,
+    and your company account could be on a much larger plan, as well as
+    charging a different credit card.
 
 Stats
 -----

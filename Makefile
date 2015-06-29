@@ -4,18 +4,25 @@ requirements: update-submodules
 	@echo ""
 
 build: design/node_modules
-	@echo "--> Building docs"
+	@echo "--> Prepairing theme"
 	@cd design; ./node_modules/.bin/webpack
-	@touch docs/index.rst
-	@cd docs; make dirhtml html
+	@echo '--> Cloud Docs'
+	@SENTRY_DOC_VARIANT=cloud sphinx-build -v -a -b sentryhtml -d build/doctrees -T docs build/html/cloud
+	@SENTRY_DOC_VARIANT=cloud sphinx-build -v -a -b sentrydirhtml -d build/doctrees -T docs build/dirhtml/cloud
+	@echo '--> Enterprise Docs'
+	@SENTRY_DOC_VARIANT=enterprise sphinx-build -v -a -b sentryhtml -d build/doctrees -T docs build/html/enterprise
+	@SENTRY_DOC_VARIANT=enterprise sphinx-build -v -a -b sentrydirhtml -d build/doctrees -T docs build/dirhtml/enterprise
+	@echo '--> Community Docs'
+	@SENTRY_DOC_VARIANT=community sphinx-build -v -a -b sentryhtml -d build/doctrees -T docs build/html/community
+	@SENTRY_DOC_VARIANT=community sphinx-build -v -a -b sentrydirhtml -d build/doctrees -T docs build/dirhtml/community
 	@echo ""
 
 clean:
-	@cd docs; make clean
+	@rm -rf build
 
 sync:
 	@echo "--> Syncing with S3"
-	@aws s3 sync --delete docs/_build/dirhtml/ s3://getsentry-docs/
+	@aws s3 sync --delete docs/build/dirhtml/ s3://getsentry-docs/
 	@echo ""
 
 watch: design/node_modules

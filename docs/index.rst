@@ -57,14 +57,22 @@ general guidelines.
    clientdev/index
    api/index
 
-Edition Specifics
------------------
+.. sentry:edition:: cloud
 
-Depending on the edition of Sentry you are using there will be some
-differences.  All the relevant information is available here for you:
+    Sentry Cloud
+    ------------
 
-.. toctree::
-   :maxdepth: 1
+    .. toctree::
+       :maxdepth: 2
 
-   cloud/index
-   community/index
+       cloud/index
+
+.. sentry:edition:: community
+
+    Sentry Community Edition
+    ------------------------
+
+    .. toctree::
+       :maxdepth: 2
+
+       community/index
