@@ -25,7 +25,7 @@ def make_link_builder(app, base_page):
                 uri = (posixpath.dirname(uri or '.') or '.').rstrip('/') + \
                     '/../' + edition + '/index.html'
             else:
-                uri = uri.rstrip('/') + '/../' + edition + '/index.html'
+                uri = uri.rstrip('/') + '/../' + edition + '/'
         return uri
     return link_builder
 

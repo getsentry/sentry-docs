@@ -1,7 +1,7 @@
 .. sentry:edition:: cloud
 
-    Sentry Cloud Documentation
-    ==========================
+    Sentry Cloud
+    ============
 
     Welcome to the documentation of the cloud hosted version of Sentry —
     the modern error logging and aggregation platform.  This documentation
@@ -12,8 +12,8 @@
 
 .. sentry:edition:: enterprise
 
-    Sentry Enterprise Documentation
-    ===============================
+    Sentry Enterprise
+    =================
 
     Welcome to the documentation of the Enterprise Edition of Sentry — the
     modern error logging and aggregation platform.  This documentation
@@ -26,8 +26,8 @@
 
 .. sentry:edition:: community
 
-    Sentry Community Edition Documentation
-    ======================================
+    Sentry Community Edition
+    ========================
 
     Welcome to the documentation of Sentry — the modern error logging and
     aggregation platform.  This documentation covers the use of Sentry
