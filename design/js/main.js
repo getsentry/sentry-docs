@@ -144,14 +144,17 @@ $(function() {
   function initInterface(projects) {
     var dsnSelectBar = createDsnBar(projects);
     dsnSelectBar.onDsnSelect(processCodeBlocks(dsnSelectBar.currentDsn));
-
     $('body').on('dblclick', 'span.dsn', function(evt) {
       evt.preventDefault();
       var rng = document.createRange();
       rng.selectNode(this);
       window.getSelection().addRange(rng);
     });
-    $('.dsn-container').fadeIn();
+
+    if (projects.length > 1 &&
+        DOCUMENTATION_OPTIONS.sentry_doc_variant == 'cloud') {
+      $('.dsn-container').fadeIn();
+    }
   }
 
   $.ajax({
