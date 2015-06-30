@@ -13,7 +13,13 @@ use the UI and how to configure the clients.
    projects
    sampling
    ssl
-   sso
+
+.. sentry:edition:: hosted
+
+   .. toctree::
+      :maxdepth: 1
+
+      sso
 
 .. sentry:edition:: hosted
 

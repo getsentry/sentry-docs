@@ -13,7 +13,9 @@ account before they are able to continue using Sentry. Because of that we
 recommend coordinating with your team during off-peak hours. That said,
 it's super quick to link accounts, so we don't consider it a true hurdle.
 
-.. note:: SSO is not available on certain grandfathered plans.
+.. sentry:edition:: hosted
+
+    .. note:: SSO is not available on certain grandfathered plans.
 
 Getting Started
 ---------------
