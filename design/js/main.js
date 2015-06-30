@@ -152,7 +152,7 @@ $(function() {
     });
 
     if (projects.length > 1 &&
-        DOCUMENTATION_OPTIONS.sentry_doc_variant == 'hosted') {
+        DOCUMENTATION_OPTIONS.SENTRY_DOC_VARIANT == 'hosted') {
       $('.dsn-container').fadeIn();
     }
   }
