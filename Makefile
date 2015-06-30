@@ -1,3 +1,7 @@
+SPHINX_BUILD=sphinx-build -v -a -d build/doctrees -T
+SPHINX_HTML_BUILD=$(SPHINX_BUILD) -b sentryhtml
+SPHINX_DIRHTML_BUILD=$(SPHINX_BUILD) -b sentrydirhtml
+
 requirements: update-submodules
 	@echo "--> Installing base requirements"
 	@pip install awscli sphinx
@@ -7,18 +11,20 @@ build: design/node_modules
 	@echo "--> Prepairing theme"
 	@cd design; ./node_modules/.bin/webpack
 	@echo '--> Cloud Docs'
-	@SENTRY_DOC_VARIANT=cloud sphinx-build -v -a -b sentryhtml -d build/doctrees -T docs build/html/cloud
-	@SENTRY_DOC_VARIANT=cloud sphinx-build -v -a -b sentrydirhtml -d build/doctrees -T docs build/dirhtml/cloud
+	@SENTRY_DOC_VARIANT=cloud $(SPHINX_HTML_BUILD) docs build/html/cloud
+	@SENTRY_DOC_VARIANT=cloud $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/cloud
 	@echo '--> Enterprise Docs'
-	@SENTRY_DOC_VARIANT=enterprise sphinx-build -v -a -b sentryhtml -d build/doctrees -T docs build/html/enterprise
-	@SENTRY_DOC_VARIANT=enterprise sphinx-build -v -a -b sentrydirhtml -d build/doctrees -T docs build/dirhtml/enterprise
+	@SENTRY_DOC_VARIANT=enterprise $(SPHINX_HTML_BUILD) docs build/html/enterprise
+	@SENTRY_DOC_VARIANT=enterprise $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/enterprise
 	@echo '--> Community Docs'
-	@SENTRY_DOC_VARIANT=community sphinx-build -v -a -b sentryhtml -d build/doctrees -T docs build/html/community
-	@SENTRY_DOC_VARIANT=community sphinx-build -v -a -b sentrydirhtml -d build/doctrees -T docs build/dirhtml/community
+	@SENTRY_DOC_VARIANT=community $(SPHINX_HTML_BUILD) docs build/html/community
+	@SENTRY_DOC_VARIANT=community $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/community
 	@echo ""
 
 clean:
-	@rm -rf build
+	@echo "--> Cleaning build"
+	@rm -vrf build
+	@echo ""
 
 sync:
 	@echo "--> Syncing with S3"
@@ -26,9 +32,10 @@ sync:
 	@echo ""
 
 watch: design/node_modules
+	@echo "--> Watching webpack"
 	@cd design; ./node_modules/.bin/webpack --watch
 
-design/node_modules:
+design/node_modules: design/webpack.config.js design/package.json
 	@echo "--> Installing frontend requirements"
 	@cd design; npm install .
 	@echo ""
