@@ -77,6 +77,7 @@ use the UI and how to configure the clients.
        :maxdepth: 2
 
        ip-ranges
+       status-page
 
 .. sentry:edition:: enterprise
 
