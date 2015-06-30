@@ -17,9 +17,10 @@
 
     Welcome to the documentation of the Enterprise Edition of Sentry — the
     modern error logging and aggregation platform.  This documentation
-    covers the use of Sentry (The Sentry Server) as well as all officially
-    supported client integrations (The Raven Clients).  To keep things
-    easy we cover all different editions of the sentry server here.
+    covers the use of Sentry (The Sentry Open Source Server) as well as
+    all officially supported client integrations (The Raven Clients).  To
+    keep things easy we cover all different editions of the sentry server
+    here.
 
     *The documentation of the Enterprise Edition of Sentry is work in
     progress.*
@@ -31,8 +32,8 @@
 
     Welcome to the documentation of Sentry — the modern error logging and
     aggregation platform.  This documentation covers the use of Sentry
-    (The Sentry Server) as well as all officially supported client
-    integrations (The Raven Clients).
+    (The Sentry Open Source Server) as well as all officially supported
+    client integrations (The Raven Clients).
 
 Client Documentation
 --------------------
@@ -106,6 +107,8 @@ use the UI and how to configure the clients.
        :maxdepth: 2
 
        server/index
+       license
+       project-resources
 
 Development Documentation
 -------------------------
