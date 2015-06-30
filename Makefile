@@ -28,7 +28,7 @@ clean:
 
 sync:
 	@echo "--> Syncing with S3"
-	@aws s3 sync --delete docs/build/dirhtml/ s3://getsentry-docs/
+	@aws s3 sync --delete build/dirhtml/ s3://getsentry-docs/
 	@echo ""
 
 watch: design/node_modules
