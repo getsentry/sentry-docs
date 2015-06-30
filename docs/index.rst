@@ -1,7 +1,7 @@
-.. sentry:edition:: cloud
+.. sentry:edition:: hosted
 
-    Sentry Cloud
-    ============
+    Sentry Documentation
+    ====================
 
     Welcome to the documentation of the cloud hosted version of Sentry —
     the modern error logging and aggregation platform.  This documentation
@@ -65,13 +65,13 @@ use the UI and how to configure the clients.
    using/index
    events/index
 
-.. sentry:edition:: cloud
+.. sentry:edition:: hosted
 
-    Sentry Cloud Specifics
-    ----------------------
+    Hosted Sentry Specifics
+    -----------------------
 
-    The cloud deployment of sentry (getsentry.com) has some specifics that
-    are good to know.
+    The cloud hosted version of Sentry (getsentry.com) has some specifics
+    that are good to know.
 
     .. toctree::
        :maxdepth: 2

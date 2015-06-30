@@ -60,7 +60,7 @@ Validating a Source Map
 A third party tool is available to validate your source map:
 http://sourcemap-validator.herokuapp.com/
 
-.. sentry:edition:: cloud
+.. sentry:edition:: hosted
 
     Source Map Fetching
     -------------------

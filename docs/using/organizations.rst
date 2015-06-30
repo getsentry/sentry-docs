@@ -23,7 +23,7 @@ The general rules for access are as follows:
 Scoping is based on the selection of teams (team-level scoping) or if the
 membership is selected to apply across all teams (org-level scoping).
 
-.. sentry:edition:: cloud
+.. sentry:edition:: hosted
 
     Billing and Quotas
     ------------------

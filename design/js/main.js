@@ -152,7 +152,7 @@ $(function() {
     });
 
     if (projects.length > 1 &&
-        DOCUMENTATION_OPTIONS.sentry_doc_variant == 'cloud') {
+        DOCUMENTATION_OPTIONS.sentry_doc_variant == 'hosted') {
       $('.dsn-container').fadeIn();
     }
   }

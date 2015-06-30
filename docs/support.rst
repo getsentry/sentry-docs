@@ -1,9 +1,10 @@
 Support
 =======
 
-We provide support for the Cloud and Enterprise Edition.
+.. sentry:edition:: hosted, enterprise
 
-.. sentry:edition:: cloud, enterprise
+    As a paying customer of Hosted Sentry or Sentry Enterpise you have
+    access to various forms of support.
 
     General Support
     ---------------
@@ -15,10 +16,10 @@ We provide support for the Cloud and Enterprise Edition.
     Outside of email, there's a few areas where you can get support pretty
     easily (and generally more quickly):
 
-.. sentry:edition:: cloud, enterprise, community
-
     Community Support
     -----------------
+
+.. sentry:edition:: hosted, enterprise, community
 
     The community support is where you can go to get questions answered with
     either the sentry community edition or some community maintained projects.

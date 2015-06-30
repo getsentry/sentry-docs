@@ -6,9 +6,9 @@ slightly different depending on the version of Sentry you are using.  For
 the most part we are trying to make the handling of SSL as transparent as
 possible, but this cannot be guaranteed in all cases.
 
-.. sentry:edition:: cloud
+.. sentry:edition:: hosted
 
-    Getsentry Certificates
+    GetSentry Certificates
     ----------------------
 
     Due to the complexities of root CAs and distributions, you may find

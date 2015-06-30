@@ -7,7 +7,7 @@ help you getting started.
 
 Getting started with Sentry is a three step process:
 
-.. sentry:edition:: cloud
+.. sentry:edition:: hosted
 
     1.  `Sign up for an account <https://www.getsentry.com/signup/>`_
     2.  :ref:`pick-a-client-integration`
@@ -19,10 +19,10 @@ Getting started with Sentry is a three step process:
     2.  :ref:`pick-a-client-integration`
     3.  :ref:`configure-the-dsn`
 
-.. sentry:edition:: cloud
+.. sentry:edition:: hosted
 
-    About Sentry Cloud
-    ------------------
+    About Hosted Sentry
+    -------------------
 
     If you are new to Sentry and you have not used it before, you can get
     started started by signing up for a `free trial account

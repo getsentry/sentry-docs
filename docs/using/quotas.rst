@@ -1,8 +1,6 @@
 Quotas
 ======
 
-.. sentry:edition:: cloud
-
 Sentry quota's are mostly soft limits, with a few exceptions:
 
 *   Notifications may not be sent once you've exceeded your daily quota.

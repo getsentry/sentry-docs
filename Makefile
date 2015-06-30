@@ -11,8 +11,8 @@ build: design/node_modules
 	@echo "--> Prepairing theme"
 	@cd design; ./node_modules/.bin/webpack
 	@echo '--> Cloud Docs'
-	@SENTRY_DOC_VARIANT=cloud $(SPHINX_HTML_BUILD) docs build/html/cloud
-	@SENTRY_DOC_VARIANT=cloud $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/cloud
+	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) docs build/html/hosted
+	@SENTRY_DOC_VARIANT=hosted $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/hosted
 	@echo '--> Enterprise Docs'
 	@SENTRY_DOC_VARIANT=enterprise $(SPHINX_HTML_BUILD) docs build/html/enterprise
 	@SENTRY_DOC_VARIANT=enterprise $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/enterprise

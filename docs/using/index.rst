@@ -11,7 +11,13 @@ use the UI and how to configure the clients.
    organizations
    teams
    projects
-   quotas
    sampling
    ssl
    sso
+
+.. sentry:edition:: hosted
+
+   .. toctree::
+      :maxdepth: 1
+
+      quotas
