@@ -10,15 +10,12 @@ requirements: update-submodules
 build: design/node_modules
 	@echo "--> Prepairing theme"
 	@cd design; ./node_modules/.bin/webpack
-	@echo '--> Cloud Docs'
+	@echo '--> Hosted Docs'
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) docs build/html/hosted
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/hosted
-	@echo '--> Enterprise Docs'
-	@SENTRY_DOC_VARIANT=enterprise $(SPHINX_HTML_BUILD) docs build/html/enterprise
-	@SENTRY_DOC_VARIANT=enterprise $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/enterprise
-	@echo '--> Community Docs'
-	@SENTRY_DOC_VARIANT=community $(SPHINX_HTML_BUILD) docs build/html/community
-	@SENTRY_DOC_VARIANT=community $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/community
+	@echo '--> On-Premise Docs'
+	@SENTRY_DOC_VARIANT=onpremise $(SPHINX_HTML_BUILD) docs build/html/on-premise
+	@SENTRY_DOC_VARIANT=onpremise $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/on-premise
 	@echo ""
 
 clean:

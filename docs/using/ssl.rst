@@ -45,7 +45,7 @@ possible, but this cannot be guaranteed in all cases.
             -alias getsentry -keystore $JAVA_HOME/jre/lib/security/cacerts
 
 
-.. sentry:edition:: enterprise, community
+.. sentry:edition:: onpremise
 
     Custom Certificates
     -------------------

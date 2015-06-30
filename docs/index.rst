@@ -10,30 +10,17 @@
 
     If you are completely new to Sentry give the :doc:`quickstart` a read.
 
-.. sentry:edition:: enterprise
+.. sentry:edition:: onpremise
 
-    Sentry Enterprise
+    Sentry On-Premise
     =================
 
-    Welcome to the documentation of the Enterprise Edition of Sentry — the
+    Welcome to the documentation of the On-Premise Edition of Sentry — the
     modern error logging and aggregation platform.  This documentation
     covers the use of Sentry (The Sentry Open Source Server) as well as
     all officially supported client integrations (The Raven Clients).  To
     keep things easy we cover all different editions of the sentry server
     here.
-
-    *The documentation of the Enterprise Edition of Sentry is work in
-    progress.*
-
-.. sentry:edition:: community
-
-    Sentry Community Edition
-    ========================
-
-    Welcome to the documentation of Sentry — the modern error logging and
-    aggregation platform.  This documentation covers the use of Sentry
-    (The Sentry Open Source Server) as well as all officially supported
-    client integrations (The Raven Clients).
 
 Client Documentation
 --------------------
@@ -80,28 +67,13 @@ use the UI and how to configure the clients.
        ip-ranges
        status-page
 
-.. sentry:edition:: enterprise
+.. sentry:edition:: onpremise
 
-    Sentry Enterprise
+    Sentry On-Premise
     -----------------
 
     This part of the documentation covers all parts of the Sentry
-    Enterprise edition and how to run them.  As the Enterprise Edition is
-    based on the Open Source server some parts of this documentation
-    overlap with the Community Edition.
-
-    .. toctree::
-       :maxdepth: 2
-
-       server/index
-
-.. sentry:edition:: community
-
-    Sentry Community Edition
-    ------------------------
-
-    This part of the documentation covers all parts of the Sentry Open
-    Source project and how to run it.
+    On-Premise and how to run them.
 
     .. toctree::
        :maxdepth: 2

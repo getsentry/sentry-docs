@@ -13,7 +13,7 @@ Getting started with Sentry is a three step process:
     2.  :ref:`pick-a-client-integration`
     3.  :ref:`configure-the-dsn`
 
-.. sentry:edition:: community, enterprise
+.. sentry:edition:: onpremise
 
     1.  :ref:`install-the-server`
     2.  :ref:`pick-a-client-integration`
@@ -36,31 +36,21 @@ Getting started with Sentry is a three step process:
     with it right away without having to spend time with installation or
     maintenance.
 
-.. sentry:edition:: enterprise
+.. sentry:edition:: onpremise
 
-    Sentry Enterprise
+    Sentry On-Premise
     -----------------
 
-    For enterprise customers we also provide Sentry Enterprise Edition.
-    It includes all the functionality of Sentry Cloud but runs on your own
-    network on your own hardware and can be integrated with the rest of
-    your infrastructure.  Sentry Enterprise Edition is a bespoke product
-    that comes with a support contract.
+    Sentry On-Premise is a distribution of the Sentry Open Source
+    Project supported by the community.  It can be installed on-premise
+    and integrate into the rest of your infrastructure behind your
+    firewall.  As an enterprise customer you are additionally entitled to
+    a bespoke support contract.  You can download the community edition on
+    `our github page <https://github.com/getsentry/sentry>`_.
 
     If you are interested in the enterprise edition, `you can learn more
     about out enterprise offering
     <https://www.getsentry.com/enterprise/>`_.
-
-.. sentry:edition:: community
-
-    Sentry Community Edition
-    ------------------------
-
-    The Sentry Community Edition is a distribution of the Sentry Open Source
-    Project supported by the community.  You can download the community
-    edition on `our github page <https://github.com/getsentry/sentry>`_.
-
-.. sentry:edition:: community, enterprise
 
     .. _install-the-server:
 
