@@ -280,7 +280,7 @@ class SentryStandaloneHTMLBuilder(SphinxBuilderMixin, StandaloneHTMLBuilder):
     name = 'sentryhtml'
 
 
-class SentryDirectoryHTMLBuilder(DirectoryHTMLBuilder):
+class SentryDirectoryHTMLBuilder(SphinxBuilderMixin, DirectoryHTMLBuilder):
     name = 'sentrydirhtml'
 
 
