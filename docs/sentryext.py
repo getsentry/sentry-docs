@@ -220,34 +220,48 @@ class SphinxBuilderMixin(object):
     def __build_wizard_section(self, base_path, snippets):
         trees = {}
         rv = []
-        self.build_wizard_fragment = True
-        try:
-            for snippet in snippets:
-                snippet_path, section_name = snippet.split('#', 1)
-                docname = posixpath.join(base_path, snippet_path)
-                if docname in trees:
-                    doctree = trees.get(docname)
-                else:
-                    doctree = self.env.get_and_resolve_doctree(docname, self)
-                    trees[docname] = doctree
 
+        def _build_node(node):
+            original_header_level = self.docsettings.initial_header_level
+            self.docsettings.initial_header_level = 2
+            self.build_wizard_fragment = True
+            try:
+                sub_doc = document(self.docsettings,
+                                   doctree.reporter)
+                sub_doc += node
+                destination = StringOutput(encoding='utf-8')
+                self.current_docname = docname
+                self.docwriter.write(sub_doc, destination)
+                self.docwriter.assemble_parts()
+                rv.append(self.docwriter.parts['fragment'])
+            finally:
+                self.build_wizard_fragment = False
+                self.docsettings.initial_header_level = original_header_level
+
+        for snippet in snippets:
+            if '#' not in snippet:
+                snippet_path = snippet
+                section_name = None
+            else:
+                snippet_path, section_name = snippet.split('#', 1)
+            docname = posixpath.join(base_path, snippet_path)
+            if docname in trees:
+                doctree = trees.get(docname)
+            else:
+                doctree = self.env.get_and_resolve_doctree(docname, self)
+                trees[docname] = doctree
+
+            if section_name is None:
+                _build_node(next(iter(doctree.traverse(section))))
+            else:
                 for sect in doctree.traverse(section):
-                    if section_name not in sect['ids']:
-                        continue
-                    sub_doc = document(self.docsettings,
-                                       doctree.reporter)
-                    sub_doc += sect
-                    destination = StringOutput(encoding='utf-8')
-                    self.current_docname = docname
-                    self.docwriter.write(sub_doc, destination)
-                    self.docwriter.assemble_parts()
-                    rv.append(self.docwriter.parts['fragment'])
-        finally:
-            self.build_wizard_fragment = False
+                    if section_name in sect['ids']:
+                        _build_node(sect)
+
         return u'\n\n'.join(rv)
 
     def __write_wizard(self, data, base_path):
-        for uid, framework_data in data.get('frameworks', {}).iteritems():
+        for uid, framework_data in data.get('configurations', {}).iteritems():
             body = self.__build_wizard_section(base_path,
                                                framework_data['snippets'])
 
@@ -257,10 +271,15 @@ class SphinxBuilderMixin(object):
             except OSError:
                 pass
 
+            doc_link = framework_data.get('doc_link')
+            if doc_link is not None:
+                doc_link = urljoin(EXTERNAL_DOCS_URL,
+                                   posixpath.join(base_path, doc_link))
             with open(fn, 'w') as f:
                 json.dump({
                     'name': framework_data.get('name') or uid.title(),
-                    'doc_link': framework_data.get('doc_link'),
+                    'is_framework': framework_data.get('is_framework', False),
+                    'doc_link': doc_link,
                     'body': body
                 }, f)
                 f.write('\n')
