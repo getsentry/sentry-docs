@@ -1,6 +1,11 @@
 import re
+import os
 import posixpath
+import json
+from urlparse import urljoin
 from docutils import nodes
+from docutils.io import StringOutput
+from docutils.nodes import document, section
 
 from sphinx import addnodes
 from sphinx.domains import Domain
@@ -10,6 +15,9 @@ from sphinx.builders.html import StandaloneHTMLBuilder, DirectoryHTMLBuilder
 
 _edition_re = re.compile(r'^(\s*)..\s+sentry:edition::\s*(.*?)$')
 _docedition_re = re.compile(r'^..\s+sentry:docedition::\s*(.*?)$')
+
+
+EXTERNAL_DOCS_URL = 'https://docs.getsentry.com/hosted/'
 
 
 def make_link_builder(app, base_page):
@@ -175,12 +183,93 @@ def is_referenced(docname, references):
 
 
 class SphinxBuilderMixin(object):
+    build_wizard_fragment = False
+
+    def get_target_uri(self, *args, **kwargs):
+        rv = super(SphinxBuilderMixin, self).get_target_uri(*args, **kwargs)
+        if self.build_wizard_fragment:
+            rv = urljoin(EXTERNAL_DOCS_URL, rv)
+        return rv
+
+    def get_relative_uri(self, from_, to, typ=None):
+        if self.build_wizard_fragment:
+            return self.get_target_uri(to, typ)
+        return super(SphinxBuilderMixin, self).get_relative_uri(
+            from_, to, typ)
 
     def write_doc(self, docname, doctree):
         if is_referenced(docname, self.app.env.sentry_referenced_docs):
             return super(SphinxBuilderMixin, self).write_doc(docname, doctree)
         else:
             print 'skipping because unreferenced'
+
+    def __iter_wizard_files(self):
+        for dirpath, dirnames, filenames in os.walk(self.srcdir):
+            dirnames[:] = [x for x in dirnames if x[:1] not in '_.']
+            for filename in filenames:
+                if filename == 'wizards.json':
+                    full_path = os.path.join(self.srcdir, dirpath)
+                    base_path = full_path[len(self.srcdir):].strip('/\\') \
+                        .replace(os.path.sep, '/')
+                    yield os.path.join(full_path, filename), base_path
+
+    def __build_wizard_section(self, base_path, snippets):
+        trees = {}
+        rv = []
+        self.build_wizard_fragment = True
+        try:
+            for snippet in snippets:
+                snippet_path, section_name = snippet.split('#', 1)
+                docname = posixpath.join(base_path, snippet_path)
+                if docname in trees:
+                    doctree = trees.get(docname)
+                else:
+                    doctree = self.env.get_and_resolve_doctree(docname, self)
+                    trees[docname] = doctree
+
+                for sect in doctree.traverse(section):
+                    if section_name not in sect['ids']:
+                        continue
+                    sub_doc = document(self.docsettings,
+                                       doctree.reporter)
+                    sub_doc += sect
+                    destination = StringOutput(encoding='utf-8')
+                    self.current_docname = docname
+                    self.docwriter.write(sub_doc, destination)
+                    self.docwriter.assemble_parts()
+                    rv.append(self.docwriter.parts['fragment'])
+        finally:
+            self.build_wizard_fragment = False
+        return u'\n\n'.join(rv)
+
+    def __write_wizard(self, data, base_path):
+        for uid, framework_data in data.get('frameworks', {}).iteritems():
+            body = self.__build_wizard_section(base_path,
+                                               framework_data['snippets'])
+
+            fn = os.path.join(self.outdir, '_wizards', '%s.json' % uid)
+            try:
+                os.makedirs(os.path.dirname(fn))
+            except OSError:
+                pass
+
+            with open(fn, 'w') as f:
+                json.dump({
+                    'name': framework_data.get('name') or uid.title(),
+                    'doc_link': framework_data.get('doc_link'),
+                    'body': body
+                }, f)
+                f.write('\n')
+
+    def __write_wizards(self):
+        for filename, base_path in self.__iter_wizard_files():
+            with open(filename) as f:
+                data = json.load(f)
+                self.__write_wizard(data, base_path)
+
+    def finish(self):
+        super(SphinxBuilderMixin, self).finish()
+        self.__write_wizards()
 
 
 class SentryStandaloneHTMLBuilder(SphinxBuilderMixin, StandaloneHTMLBuilder):
