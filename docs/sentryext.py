@@ -185,6 +185,10 @@ def is_referenced(docname, references):
 class SphinxBuilderMixin(object):
     build_wizard_fragment = False
 
+    @property
+    def add_permalinks(self):
+        return not self.build_wizard_fragment
+
     def get_target_uri(self, *args, **kwargs):
         rv = super(SphinxBuilderMixin, self).get_target_uri(*args, **kwargs)
         if self.build_wizard_fragment:
