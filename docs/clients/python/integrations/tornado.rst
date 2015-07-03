@@ -1,7 +1,7 @@
 Tornado
 =======
 
-Tornado is an asycn web framework for Python.
+Tornado is an async web framework for Python.
 
 Setup
 -----
