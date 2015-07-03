@@ -288,6 +288,7 @@ class SphinxBuilderMixin(object):
                     'name': framework_data.get('name') or uid.title(),
                     'is_framework': framework_data.get('is_framework', False),
                     'doc_link': doc_link,
+                    'client_lib': framework_data.get('client_lib'),
                     'body': body
                 }, f)
                 f.write('\n')
