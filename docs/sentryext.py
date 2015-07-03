@@ -223,8 +223,15 @@ class SphinxBuilderMixin(object):
 
         def _build_node(node):
             original_header_level = self.docsettings.initial_header_level
+            # bump initial header level to two
             self.docsettings.initial_header_level = 2
+            # indicate that we're building for the wizard fragements.
+            # This changes url generation and more.
             self.build_wizard_fragment = True
+            # Embed pygments colors as inline styles
+            original_args = self.highlighter.formatter_args
+            self.highlighter.formatter_args = original_args.copy()
+            self.highlighter.formatter_args['noclasses'] = True
             try:
                 sub_doc = document(self.docsettings,
                                    doctree.reporter)
@@ -236,6 +243,7 @@ class SphinxBuilderMixin(object):
                 rv.append(self.docwriter.parts['fragment'])
             finally:
                 self.build_wizard_fragment = False
+                self.highlighter.formatter_args = original_args
                 self.docsettings.initial_header_level = original_header_level
 
         for snippet in snippets:
