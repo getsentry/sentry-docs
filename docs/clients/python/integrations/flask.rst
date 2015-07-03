@@ -23,6 +23,9 @@ The first thing you'll need to do is to initialize Raven under your application:
 If you don't specify the ``dsn`` value, we will attempt to read it from
 your environment under the ``SENTRY_DSN`` key.
 
+Extended Setup
+--------------
+
 You can optionally configure logging too::
 
     import logging
@@ -47,7 +50,6 @@ You can pass parameters in the ``init_app`` hook::
         sentry.init_app(app, dsn='http://public_key:secret_key@example.com/1',
                         logging=True, level=logging.ERROR)
         return app
-
 
 Settings
 --------
