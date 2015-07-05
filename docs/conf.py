@@ -20,6 +20,7 @@ import os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../theme/sentry'))
+sys.path.insert(0, os.path.abspath('../doc-support'))
 
 # Sentry specific variables
 sentry_doc_variant = os.environ['SENTRY_DOC_VARIANT']
@@ -35,7 +36,6 @@ sentry_doc_variant = os.environ['SENTRY_DOC_VARIANT']
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
-    'sentryext',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -292,8 +292,10 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-primary_domain = 'std'
-
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+# Import the sentry extension and activate it
+import sentryext
+sentryext.activate()
