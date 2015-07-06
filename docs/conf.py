@@ -20,7 +20,11 @@ import os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../theme/sentry'))
-sys.path.insert(0, os.path.abspath('../doc-support'))
+
+if os.environ.get('SENTRY_DOCS_DEV') == '1':
+    sys.path.insert(0, os.path.abspath('../../sentry-doc-support'))
+else:
+    sys.path.insert(0, os.path.abspath('../doc-support'))
 
 # Sentry specific variables
 sentry_doc_variant = os.environ['SENTRY_DOC_VARIANT']
