@@ -26,9 +26,6 @@ if os.environ.get('SENTRY_DOCS_DEV') == '1':
 else:
     sys.path.insert(0, os.path.abspath('../doc-support'))
 
-# Sentry specific variables
-sentry_doc_variant = os.environ['SENTRY_DOC_VARIANT']
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
