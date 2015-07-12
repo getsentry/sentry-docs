@@ -12,7 +12,7 @@ module.exports = {
     ]
   },
   output: {
-    path: __dirname + "/../theme/sentry/static",
+    path: __dirname + "/../build/theme/sentry/static",
     //publicPath: "/static/",
     filename: '[name].js'
   },

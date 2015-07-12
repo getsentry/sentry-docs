@@ -9,6 +9,9 @@ requirements: update-submodules
 
 build: design/node_modules
 	@echo "--> Prepairing theme"
+	@mkdir -p build/theme/sentry
+	@cp -R design/theme-support/* build/theme/sentry
+	@cp -R design/templates/* build/theme/sentry
 	@cd design; ./node_modules/.bin/webpack
 	@echo '--> Hosted Docs'
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) docs build/html/hosted

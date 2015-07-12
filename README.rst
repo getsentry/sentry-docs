@@ -18,13 +18,9 @@ The structure of this repository is broken into a few separate parts:
   the individual split docs.  The ``docs/clients`` folder contains a bunch of
   symlinks that point to the appropriate place within the client doc
   folder for instance.
-* ``design/``: this folder contains the JavaScript and CSS files as well
-  as some webpack related stuff for the final design of the documentation.
-  At present the templates however are split into a separate folder called
-  ``theme``.
-* ``theme/``: this folder contains a Sphinx theme that works together with
-  the CSS files in ``design``.  The build step merges them together as
-  needed.
+* ``design/``: this folder contains the JavaScript, CSS files and
+  templates as well as some webpack related stuff for the final design of
+  the documentation.
 * ``doc-support``: this submodule references the sentry-doc-support
   repository which contains support for building federated docs.  See
   below for more information.

@@ -19,7 +19,7 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('../theme/sentry'))
+sys.path.insert(0, os.path.abspath('../build/theme/sentry'))
 
 if os.environ.get('SENTRY_DOCS_DEV') == '1':
     sys.path.insert(0, os.path.abspath('../../sentry-doc-support'))
@@ -124,7 +124,7 @@ html_theme = 'sentry'
 #html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ['../theme']
+html_theme_path = ['../build/theme']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
