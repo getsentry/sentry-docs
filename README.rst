@@ -75,3 +75,17 @@ directive comes in useful:
     This only shows up in the on-premise version of the documentation.
 
 Multiple variants can be defined with a comma.
+
+Doc Sync Hook
+-------------
+
+This repository has a helpful bot that listens to a webhook that can be
+used to update the cross references on commits automatically.  The hook is
+available at ``https://sentry-doc-hook.herokuapp.com/``.  It can be
+registered on any github repository that is referenced as a submodule
+here.  By default it only tracks the master branch and changes below
+``/docs``.
+
+To override the branch you can pass ``?branches=`` as parameter which is a
+comma separated list of branches.  To override the tracked paths provide
+``?prefixes=`` which is a comma seperated list of path prefixes.
