@@ -42,8 +42,7 @@ design/node_modules: design/webpack.config.js design/package.json
 
 update-submodules:
 	@echo "--> Updating git submodules"
-	git submodule init
-	git submodule update
+	git submodule update --init
 	@echo ""
 
 release: requirements build sync
