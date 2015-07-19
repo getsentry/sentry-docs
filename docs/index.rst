@@ -10,7 +10,7 @@
 
     If you are completely new to Sentry give the :doc:`quickstart` a read.
 
-.. sentry:edition:: onpremise
+.. sentry:edition:: on-premise
 
     Sentry On-Premise
     =================
@@ -67,7 +67,7 @@ use the UI and how to configure the clients.
        ip-ranges
        status-page
 
-.. sentry:edition:: onpremise
+.. sentry:edition:: on-premise
 
     Sentry On-Premise
     -----------------

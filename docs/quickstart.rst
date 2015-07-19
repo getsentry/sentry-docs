@@ -13,7 +13,7 @@ Getting started with Sentry is a three step process:
     2.  :ref:`pick-a-client-integration`
     3.  :ref:`configure-the-dsn`
 
-.. sentry:edition:: onpremise
+.. sentry:edition:: on-premise
 
     1.  :ref:`install-the-server`
     2.  :ref:`pick-a-client-integration`
@@ -36,7 +36,7 @@ Getting started with Sentry is a three step process:
     with it right away without having to spend time with installation or
     maintenance.
 
-.. sentry:edition:: onpremise
+.. sentry:edition:: on-premise
 
     Sentry On-Premise
     -----------------
