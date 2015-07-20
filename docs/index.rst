@@ -44,41 +44,34 @@ No matter which edition of Sentry you are using, the basics or reporting
 and using are exactly the same.  This gives you an introduction to how to
 use the UI and how to configure the clients.
 
-.. toctree::
-   :maxdepth: 2
-   :titlesonly:
-
-   quickstart
-   using/index
-   support
-
 .. sentry:edition:: hosted
 
-    Hosted Sentry Specifics
-    -----------------------
+  .. toctree::
+     :maxdepth: 2
+     :titlesonly:
 
-    The cloud hosted version of Sentry (getsentry.com) has some specifics
-    that are good to know.
-
-    .. toctree::
-       :maxdepth: 2
-
-       ip-ranges
+     quickstart
+     membership
+     rollups
+     tagging
+     quotas
+     ssl
+     support
 
 .. sentry:edition:: on-premise
 
-    Sentry On-Premise
-    -----------------
+  .. toctree::
+     :maxdepth: 2
+     :titlesonly:
 
-    This part of the documentation covers all parts of the Sentry
-    On-Premise and how to run them.
-
-    .. toctree::
-       :maxdepth: 2
-
-       server/index
-       license
-       project-resources
+     quickstart
+     membership
+     rollups
+     tagging
+     server/index
+     license
+     project-resources
+     support
 
 Development Documentation
 -------------------------

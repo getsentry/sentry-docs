@@ -1,13 +1,18 @@
-Event Grouping
-==============
+Rollups and Sampling
+====================
 
-An important part of Sentry is how it groups messages together.  This
-turns out to be a pretty complex issue and it can be confusing for users
-about why some information might not be grouped correctly.
+An important part of Sentry is how it aggregates similar events together
+and creates rollups.  This turns out to be a pretty complex issue and
+it can be confusing for users about why some information might not be
+grouped correctly.
 
-This document describes the current grouping behavior that the Sentry
-server applies to events and how it can be overridden in very special
-cases.
+There are two core pieces to understand:
+
+- The structured data of an event dictates how a rollup is created. This
+  varies depending on the data available as well as the language.
+
+- Individual events are sampled and thus some raw events may not be
+  available once the system has finished processing them.
 
 Grouping Priorities
 -------------------
@@ -97,3 +102,19 @@ automatically.
 To implement custom grouping a ``checksum`` attribute can be sent with the
 events.  If supplied it needs to be a 32 character value (for instance a
 hexadecimal MD5 hash) and will be the exclusive identifier for grouping.
+
+Sampling
+--------
+
+Due to the large amount of data Sentry collects, it becomes impractical to
+store all data about every event. Instead, Sentry stores a single entity
+for every unique event (a group or rollup as we call it), and will then only store
+a subset of the repeat events. We attempt to do this in an intelligent
+manner so that it becomes almost invisible to you.
+
+For example, when a new event comes in, it creates an aggregate. Several
+of the following events will also create individual entries under that
+aggregate. Once it we see a certain threshold reached of the same event,
+we stop storing every entry, and instead store one in N events, as well as
+one event every N seconds. Additionally, we will always store the first
+event on a status change (e.g. you resolve an event and it happens again).
