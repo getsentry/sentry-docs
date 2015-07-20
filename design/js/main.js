@@ -194,16 +194,7 @@ $(function() {
       withCredentials: true
     },
     success: function(resp) {
-      var projects = resp.dsns.map(function(item) {
-        return {
-          id: item.id,
-          dsn: 'https://' + item.public_key + ':' + item.secret_key +
-            '@app.getsentry.com/' + item.project_id,
-          teamName: item.team_name,
-          orgName: item.org_name,
-          name: item.project_name
-        };
-      });
+      var projects = resp.dsns;
       projects.unshift(dummyDsn);
       initInterface(projects);
     },
