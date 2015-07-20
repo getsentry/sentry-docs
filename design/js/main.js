@@ -109,22 +109,22 @@ function createDsnBar(projects) {
   var dsnId = m ? parseInt(m[1]) : null;
   var currentDsn = null;
 
-  var projectsByOrg = {};
+  var projectsByGroup = {};
   projects.forEach(function(proj) {
-    if (typeof projectsByOrg[proj.orgName] === "undefined") {
-      projectsByOrg[proj.orgName] = [];
+    if (typeof projectsByGroup[proj.orgName] === "undefined") {
+      projectsByGroup[proj.orgName] = [];
     }
-    projectsByOrg[proj.orgName].push(proj);
+    projectsByGroup[proj.orgName].push(proj);
   });
 
-  for (var org in projectsByOrg) {
+  for (var group in projectsByGroup) {
     var optgroup = $('<optgroup></optgroup>')
-      .attr('label', org);
+      .attr('label', group);
 
-    projectsByOrg[org].forEach(function(proj) {
+    projectsByGroup[group].forEach(function(proj) {
       optgroup.append($('<option></option>')
         .attr('value', proj.dsn)
-        .text(proj.teamName + ' / ' + proj.name));
+        .text(proj.name));
       if (proj.id === dsnId) {
         currentDsn = proj.dsn;
       }
@@ -151,7 +151,8 @@ $(function() {
 
   var dummyDsn = {
     dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
-    name: 'Example DSN'
+    name: 'Example DSN',
+    group: 'Example'
   };
 
   function initInterface(projects) {
@@ -194,7 +195,13 @@ $(function() {
       withCredentials: true
     },
     success: function(resp) {
-      var projects = resp.dsns;
+      var projects = resp.dsns.map(function(proj) {
+        return {
+          dsn: proj.dsn,
+          name: proj.teamName + ' / ' + proj.projectName,
+          group: proj.organizationName
+        };
+      });
       projects.unshift(dummyDsn);
       initInterface(projects);
     },
