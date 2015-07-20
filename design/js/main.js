@@ -111,10 +111,10 @@ function createDsnBar(projects) {
 
   var projectsByGroup = {};
   projects.forEach(function(proj) {
-    if (typeof projectsByGroup[proj.orgName] === "undefined") {
-      projectsByGroup[proj.orgName] = [];
+    if (typeof projectsByGroup[proj.group] === "undefined") {
+      projectsByGroup[proj.group] = [];
     }
-    projectsByGroup[proj.orgName].push(proj);
+    projectsByGroup[proj.group].push(proj);
   });
 
   for (var group in projectsByGroup) {
