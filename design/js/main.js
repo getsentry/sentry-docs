@@ -14,7 +14,7 @@ function parseDsn(dsn) {
     // XXX: support path here
     project: parseInt(urlPieces[0].substring(1), 10) || 1,
     query: urlPieces[1] || ''
-  }
+  };
 }
 
 function dsnToHtml(parsedDsn, pub) {
@@ -81,7 +81,7 @@ function processCodeBlocks(initialDsn) {
     blocks.forEach(function(setter) {
       setter(dsn);
     });
-  }
+  };
 }
 
 function rememberLastDsn(dsns, currentDsn) {
@@ -89,7 +89,7 @@ function rememberLastDsn(dsns, currentDsn) {
     if (dsn.dsn === currentDsn) {
       document.cookie = 'dsnid=' + dsn.id;
     }
-  })
+  });
 }
 
 function createDsnBar(projects) {
