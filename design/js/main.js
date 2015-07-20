@@ -198,8 +198,8 @@ $(function() {
       var projects = resp.dsns.map(function(proj) {
         return {
           dsn: proj.dsn,
-          name: proj.teamName + ' / ' + proj.name,
-          group: proj.orgName
+          name: proj.teamName + ' / ' + proj.projectName,
+          group: proj.organizationName
         };
       });
       projects.unshift(dummyDsn);
