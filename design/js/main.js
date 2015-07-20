@@ -124,7 +124,7 @@ function createDsnBar(projects) {
     projectsByGroup[group].forEach(function(proj) {
       optgroup.append($('<option></option>')
         .attr('value', proj.dsn)
-        .text(proj.name);
+        .text(proj.name));
       if (proj.id === dsnId) {
         currentDsn = proj.dsn;
       }
