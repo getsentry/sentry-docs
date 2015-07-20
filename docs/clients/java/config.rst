@@ -19,7 +19,7 @@ done by using a DSN of this form::
 
     http://<public>:<private>@sentryserver/<project>
 
-This is unavailable for Sentry Cloud which requires HTTPS.
+This is unavailable for Hosted Sentry which requires HTTPS.
 
 HTTPS
 `````

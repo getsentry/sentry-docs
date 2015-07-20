@@ -26,9 +26,9 @@ Getting started with Sentry is a three step process:
 
     If you are new to Sentry and you have not used it before, you can get
     started started by signing up for a `free trial account
-    of Sentry Cloud <https://www.getsentry.com/signup/>`_ on getsentry.com.
+    of Hosted Sentry <https://www.getsentry.com/signup/>`_ on getsentry.com.
 
-    Sentry Cloud is the most popular edition of Sentry which is used by hobby
+    Hosted Sentry is the most popular edition of Sentry which is used by hobby
     developers and large corporations alike.  It is hosted on our
     dedicated cloud infrastructure and automatically scales with your
     requirements and gives you access to your event data from anywhere in
@@ -107,8 +107,8 @@ The DSN can be found in Sentry by navigation to Account -> Projects ->
 
     '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
 
-If you use the Sentry Cloud Edition and you are signed into your account,
-the documentation will refer to your actual DSNs and you can select the
+If you use the Hosted Sentry and you are signed into your account, the
+documentation will refer to your actual DSNs and you can select the
 correct one, on the top right of this page for adjusting the examples for
 easy copy pasting::
 
@@ -137,6 +137,6 @@ For example for the Python client it works roughly like this::
     from raven import Client
     client = Client('___DSN___')
 
-Note: If you're using Heroku, and you've added Sentry Cloud via the
+Note: If you're using Heroku, and you've added Hosted Sentry via the
 standard addon hooks, most clients will automatically pick up the
 ``SENTRY_DSN`` environment variable that we've already configured for you.

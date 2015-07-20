@@ -1,7 +1,7 @@
 IP Ranges
 =========
 
-In some circumstances the Sentry Cloud infrastructure might send HTTP
+In some circumstances the Hosted Sentry infrastructure might send HTTP
 requests your way.  At present this is exclusively used for
 :doc:`JavaScript Source Maps <../../clients/javascript/sourcemaps>`.
 

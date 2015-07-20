@@ -37,7 +37,7 @@ need to setup a fairly complex cluster of machines, and utilize all of
 Sentry's advanced configuration options.  This means you'll need Postgres,
 Riak, Redis, Memcached, and RabbitMQ.  It's very rare you'd need this
 complex of a cluster, and the primary usecase for this is for the
-Sentry Cloud Edition on `getsentry.com <https://getsentry.com/>`_.
+Hosted Sentry on `getsentry.com <https://getsentry.com/>`_.
 
 For more typical, but still fairly high throughput setups, you can run off
 of a single machine as long as it has reasonable IO (ideally SSDs), and a
