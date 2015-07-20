@@ -26,7 +26,7 @@ Integrations
 ------------
 
 To report to Sentry you need a client integration.  The :doc:`Official
-Integrations <clients/index>` are called “raven clients”.  Clients exist
+Integrations <clients/index>` are called "raven" (:ref:`what is Raven? <history-naming>`).  Clients exist
 for all popular programming languages and platforms.
 
 .. include:: clients/table.rst.inc
@@ -55,6 +55,7 @@ use the UI and how to configure the clients.
      tagging
      membership
      quotas
+     sso
      ssl
      support
 
@@ -68,6 +69,7 @@ use the UI and how to configure the clients.
      membership
      rollups
      tagging
+     sso
      server/index
      license
      project-resources
@@ -89,3 +91,11 @@ general guidelines.
 
    clientdev/index
    api/index
+
+Misc
+----
+
+.. toctree::
+    :maxdepth: 1
+
+    history
