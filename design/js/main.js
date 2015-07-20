@@ -111,10 +111,10 @@ function createDsnBar(projects) {
 
   var projectsByOrg = {};
   projects.forEach(function(proj) {
-    if (typeof projectsByOrg[proj.org_name] === "undefined") {
-      projectsByOrg[proj.org_name] = [];
+    if (typeof projectsByOrg[proj.orgName] === "undefined") {
+      projectsByOrg[proj.orgName] = [];
     }
-    projectsByOrg[proj.org_name].push(proj);
+    projectsByOrg[proj.orgName].push(proj);
   });
 
   for (var org in projectsByOrg) {
@@ -124,7 +124,7 @@ function createDsnBar(projects) {
     projectsByOrg[org].forEach(function(proj) {
       optgroup.append($('<option></option>')
         .attr('value', proj.dsn)
-        .text(proj.team_name + ' / ' + proj.name));
+        .text(proj.teamName + ' / ' + proj.name));
       if (proj.id === dsnId) {
         currentDsn = proj.dsn;
       }
@@ -199,6 +199,8 @@ $(function() {
           id: item.id,
           dsn: 'https://' + item.public_key + ':' + item.secret_key +
             '@app.getsentry.com/' + item.project_id,
+          teamName: item.team_name,
+          orgName: item.org_name,
           name: item.project_name
         };
       });
