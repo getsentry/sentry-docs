@@ -199,8 +199,7 @@ $(function() {
           id: item.id,
           dsn: 'https://' + item.public_key + ':' + item.secret_key +
             '@app.getsentry.com/' + item.project_id,
-          name: item.organization_name + '/' + item.project_name +
-            (item.is_user_key ? ' (User Key)' : '')
+          name: item.project_name
         };
       });
       projects.unshift(dummyDsn);
