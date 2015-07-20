@@ -109,14 +109,28 @@ function createDsnBar(projects) {
   var dsnId = m ? parseInt(m[1]) : null;
   var currentDsn = null;
 
+  var projectsByOrg = {};
   projects.forEach(function(proj) {
-    selectBox.append($('<option></option>')
-      .attr('value', proj.dsn)
-      .text(proj.name));
-    if (proj.id === dsnId) {
-      currentDsn = proj.dsn;
+    if (typeof projectsByOrg[proj.org_name] === "undefined") {
+      projectsByOrg[proj.org_name] = [];
     }
+    projectsByOrg[proj.org_name].push(proj);
   });
+
+  for (var org in projectsByOrg) {
+    var optgroup = $('<optgroup></optgroup>')
+      .attr('label', org);
+
+    projectsByTeam[team].forEach(function(proj) {
+      optgroup.append($('<option></option>')
+        .attr('value', proj.dsn)
+        .text(proj.team_name + ' / ' + proj.name));
+      if (proj.id === dsnId) {
+        currentDsn = proj.dsn;
+      }
+    });
+    selectBox.append(optgroup);
+  }
 
   if (currentDsn) {
     selectBox.val(currentDsn);
