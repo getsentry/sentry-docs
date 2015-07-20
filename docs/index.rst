@@ -51,9 +51,9 @@ use the UI and how to configure the clients.
      :titlesonly:
 
      quickstart
-     membership
      rollups
      tagging
+     membership
      quotas
      ssl
      support

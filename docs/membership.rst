@@ -8,9 +8,14 @@ Roles
 
 The general rules for access roles are as follows:
 
-* Owner: Can perform severe/catastrophic operations (such as deleting the organization)
-* Admin: Can manage settings as well as create projects (or teams, if they're scoped to the organization)
-* Member: Can generally only view events
+**Member:**
+  General read access (such as being able to view events). Gets ``*:read`` permission.
+
+**Owner:**
+  Can perform severe/catastrophic operations (such as deleting the organization). Gets ``*:write`` permission.
+
+**Admin:**
+  Can manage settings as well as create projects (or teams, if they're scoped to the organization). Gets ``*:delete`` permission.
 
 The scoping of the membership dictates what kind of access the role is applied to.
 
