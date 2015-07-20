@@ -121,7 +121,7 @@ function createDsnBar(projects) {
     var optgroup = $('<optgroup></optgroup>')
       .attr('label', org);
 
-    projectsByTeam[team].forEach(function(proj) {
+    projectsByOrg[org].forEach(function(proj) {
       optgroup.append($('<option></option>')
         .attr('value', proj.dsn)
         .text(proj.team_name + ' / ' + proj.name));
