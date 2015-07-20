@@ -49,9 +49,8 @@ use the UI and how to configure the clients.
    :titlesonly:
 
    quickstart
-   support
    using/index
-   events/index
+   support
 
 .. sentry:edition:: hosted
 
@@ -65,7 +64,6 @@ use the UI and how to configure the clients.
        :maxdepth: 2
 
        ip-ranges
-       status-page
 
 .. sentry:edition:: on-premise
 

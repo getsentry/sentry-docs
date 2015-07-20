@@ -11,8 +11,11 @@ use the UI and how to configure the clients.
    organizations
    teams
    projects
+   grouping
    sampling
+   tagging
    ssl
+   ip-ranges
 
 .. sentry:edition:: hosted
 
