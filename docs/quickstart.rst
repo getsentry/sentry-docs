@@ -68,15 +68,16 @@ Getting started with Sentry is a three step process:
 
 .. _pick-a-client-integration:
 
-Pick A Client Integration
--------------------------
+Configure an Integration
+------------------------
 
 To report to Sentry you need a client library that supports your platform.
-These client libraries (called "raven" clients) are available for all
-major programming languages and environments.  In case your environment is
+These libraries (historically called "raven") are available for all
+major programming languages and environments and generally integrate
+directly with frameworks as well.  In case your environment is
 very specific, you can also directly report to the underlying REST API.
 
-The most popular clients are:
+The most popular integrations are:
 
 *   :doc:`raven-python <clients/python/index>` for Python
 *   :doc:`raven.js <clients/javascript/index>` for JavaScript
@@ -86,7 +87,7 @@ The most popular clients are:
 *   `raven-java <https://github.com/getsentry/raven-java>`_
 *   `raven-csharp <https://github.com/getsentry/raven-csharp>`_
 
-For exact configuration for the clients consult the corresponding
+For exact configuration for the integration consult the corresponding
 documentation.  For all clients however, the basics are the same.
 
 .. _configure-the-dsn:
