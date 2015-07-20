@@ -1,23 +1,6 @@
 Quotas
 ======
 
-Sentry quota's are mostly soft limits, with a few exceptions:
-
-*   Notifications may not be sent once you've exceeded your daily quota.
-*   The more you exceed your quota, the higher the sampling rate of
-    events. This can potentially mean a loss of data as we sample events
-    before they would go into Sentry.
-*   If you continue to exceed your quota, or you send enough information
-    that you may impact paying customers, we may disable your account.
-*   Burst quotas are strictly enforced, and messages will be dropped (for
-    the remainder of the minute) once you've exceeded your quota.
-*   Individual events that are extremely large may be dropped or truncated
-    to a more reasonable size.
-
-
-Burst Quotas and Throttling
----------------------------
-
 Sentry enforces quotas as a few levels, most importantly in short bursts.
 We throttle both at the firewall level and within the application.
 
