@@ -145,30 +145,6 @@ function createDsnBar(projects) {
   };
 }
 
-function initDynamicSidebar() {
-  return;
-  var tocParts = $('div.global-toc > ul');
-  var clientToc = null;
-
-  tocParts.each(function() {
-    var link = $('> li > a', this).attr('href');
-    if (link.match(/(^|\/)clients\//)) {
-      clientToc = $('> li', this);
-    }
-  });
-
-  var clients = $('<div class="client-toc"><h3>Clients</h3></div>')
-    .prependTo('div.sidebar');
-  clients.append($('<div class="toc global-toc"></div>')
-                 .append($('> ul', clientToc)));
-  clientToc.remove();
-}
-
-window.sentry = {
-  initDynamicSidebar: initDynamicSidebar
-};
-
-
 $(function() {
   //var API = 'http://www.dev.getsentry.net:8000/docs/api';
   var API = 'https://www.getsentry.com/docs/api';
