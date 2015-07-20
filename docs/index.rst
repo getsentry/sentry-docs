@@ -100,3 +100,4 @@ general guidelines.
     :hidden:
 
     history
+    ip-ranges
