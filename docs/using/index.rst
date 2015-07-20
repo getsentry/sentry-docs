@@ -8,10 +8,8 @@ use the UI and how to configure the clients.
 .. toctree::
    :maxdepth: 1
 
-   organizations
-   teams
-   projects
    grouping
+   membership
    sampling
    tagging
    ssl
