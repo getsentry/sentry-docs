@@ -1,5 +1,5 @@
-Client Libraries
-================
+Integrations
+============
 
 To submit events to sentry from your platform of choice, you can use the
 raven clients.  These libraries exist for a wide range of programming
