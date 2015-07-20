@@ -198,7 +198,7 @@ $(function() {
       var projects = resp.dsns.map(function(proj) {
         return {
           dsn: proj.dsn,
-          name: teamName + ' / ' + proj.name,
+          name: proj.teamName + ' / ' + proj.name,
           group: proj.orgName
         };
       });
