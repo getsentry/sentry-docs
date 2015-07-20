@@ -22,8 +22,8 @@
     keep things easy we cover all different editions of the sentry server
     here.
 
-Client Documentation
---------------------
+Integrations
+------------
 
 To report to Sentry you need a client integration.  The :doc:`Official
 Integrations <clients/index>` are called “raven clients”.  Clients exist
