@@ -92,10 +92,11 @@ general guidelines.
    clientdev/index
    api/index
 
-Misc
-----
+
+.. these are docs only referenced by the sidebar
 
 .. toctree::
     :maxdepth: 1
+    :hidden:
 
     history
