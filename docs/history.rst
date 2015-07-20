@@ -1,7 +1,7 @@
 History
 =======
 
-Sentry was born at `Disqus <http://disqus.com>`_ from an 2008 project called ``django-db-log``.
+Sentry was born in 2010 at `Disqus <http://disqus.com>`_ from an older project called ``django-db-log``.
 
 .. _history-naming:
 
