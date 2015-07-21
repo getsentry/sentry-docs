@@ -247,7 +247,7 @@ $(function() {
         } else {
           $sidebar.html(sidebar);
           $pageContent.hide().html(content);
-          processCodeBlocks(dsnSelectBar.currentDsn);
+          processCodeBlocks(dsnSelectBar.currentDsn)();
           $pageContent.fadeIn();
           $('.page a.internal').click(loadDynamically);
           $pageContent.find('select').selectize();
