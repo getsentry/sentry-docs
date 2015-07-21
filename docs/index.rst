@@ -92,6 +92,14 @@ general guidelines.
    clientdev/index
    api/index
 
+.. sentry:edition:: on-premise
+
+    .. toctree::
+       :maxdepth: 2
+       :titlesonly:
+
+       docdev
+
 
 .. these are docs only referenced by the sidebar
 
