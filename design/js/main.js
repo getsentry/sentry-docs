@@ -269,7 +269,7 @@ $(function() {
             $sidebar.html(sidebar);
             $pageContent.hide().html(content);
             tagDsnBlocks($pageContent);
-            dsnSelectBar.sync();
+            if (dsnSelectBar) dsnSelectBar.sync();
             $pageContent.fadeIn();
             $('.page a.internal').click(linkHandler);
             $pageContent.find('select').selectize();
