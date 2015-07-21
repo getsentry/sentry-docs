@@ -227,15 +227,14 @@ $(function() {
   };
 
   var loadDynamically = function(e) {
-    var $this = $(this);
-    var target = $this.attr('href');
-
-    e.preventDefault();
+    var target = this.pathname;
 
     $pageContent.html('<div class="loading"><div class="loading-indicator"></div></div>');
     $dsnContainer.hide();
 
-    $.ajax($this.attr('href'), {
+    e.preventDefault();
+
+    $.ajax(target, {
       success: function(html) {
         var body = getBody(html);
         var content = body.find('.page-content').children();
