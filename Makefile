@@ -12,7 +12,7 @@ build: design/node_modules
 	@mkdir -p build/theme/sentry
 	@cp -R design/theme-support/* build/theme/sentry
 	@cp -R design/templates/* build/theme/sentry
-	@cd design; ./node_modules/.bin/webpack
+	@cd design; ./node_modules/.bin/webpack -p
 	@echo '--> Hosted Docs'
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) docs build/html/hosted
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/hosted
