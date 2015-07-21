@@ -193,6 +193,8 @@ function renderDsnSelector(dsnContainer, projects) {
       DOCUMENTATION_OPTIONS.SENTRY_DOC_VARIANT == 'hosted') {
     $('.dsn-container').fadeIn();
   }
+
+  return dsnSelectBar;
 }
 
 $(function() {
@@ -207,6 +209,7 @@ $(function() {
 
   var projects = null;
   var user = null;
+  var dsnSelectBar = null;
 
   var $dsnContainer = $('.dsn-container');
   var $pageContent = $('.page-content');
@@ -214,7 +217,7 @@ $(function() {
 
   var initInterface = function() {
     // TODO(dcramer): dsn selector doesnt need re-rendered repeatedly
-    renderDsnSelector($dsnContainer, projects);
+    dsnSelectBar = renderDsnSelector($dsnContainer, projects);
     renderHeader(user);
   };
 
@@ -243,7 +246,9 @@ $(function() {
           window.location.href = target;
         } else {
           $sidebar.html(sidebar);
-          $pageContent.hide().html(content).fadeIn();
+          $pageContent.hide().html(content);
+          processCodeBlocks(dsnSelectBar.currentDsn);
+          $pageContent.fadeIn();
           $('.page a.internal').click(loadDynamically);
           $pageContent.find('select').selectize();
           $dsnContainer.show();
