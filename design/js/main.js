@@ -235,21 +235,26 @@ $(function() {
 
     $.ajax(target, {
       success: function(html) {
-        var body = getBody(html);
-        var content = body.find('.page-content').children();
-        var sidebar = body.find('.sidebar').children();
-        if (!content || !sidebar) {
+        try {
+          var body = getBody(html);
+          var content = body.find('.page-content').children();
+          var sidebar = body.find('.sidebar').children();
+          if (!content || !sidebar) {
+            window.location.href = target;
+          } else {
+            $sidebar.html(sidebar);
+            $pageContent.hide().html(content);
+            dsnSelectBar.sync();
+            $pageContent.fadeIn();
+            $('.page a.internal').click(loadDynamically);
+            $pageContent.find('select').selectize();
+            $dsnContainer.show();
+            document.title = getTitle(html);
+            window.history.pushState({}, window.title, target);
+          }
+        } catch (ex) {
+          window.error(ex);
           window.location.href = target;
-        } else {
-          $sidebar.html(sidebar);
-          $pageContent.hide().html(content);
-          dsnSelectBar.sync();
-          $pageContent.fadeIn();
-          $('.page a.internal').click(loadDynamically);
-          $pageContent.find('select').selectize();
-          $dsnContainer.show();
-          document.title = getTitle(html);
-          window.history.pushState({}, window.title, target);
         }
       },
       error: function() {
