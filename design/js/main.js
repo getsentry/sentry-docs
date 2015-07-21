@@ -230,4 +230,42 @@ $(function() {
   });
 
   $('select').selectize();
+
+  var getBody = function(html) {
+    return $('<div' +  html.match(/<body([^>]*>[\S\s]*)<\/body>/)[1] + '</div>');
+  };
+
+  var getTitle = function(html) {
+    return html.match(/<title>([^<]+)<\/title>/)[1];
+  };
+
+  var loadDynamically = function(e) {
+    var $this = $(this);
+    var target = $this.attr('href');
+
+    e.preventDefault();
+
+    $('.document').html('<div class="loading"><div class="loading-indicator"></div></div>');
+    $.ajax($this.attr('href'), {
+      success: function(html) {
+        var body = getBody(html);
+        var content = body.find('.document').children();
+        var sidebar = body.find('.sidebar').children();
+        if (!content || !sidebar) {
+          window.location.href = target;
+        } else {
+          $('.sidebar').html(sidebar);
+          $('.document').hide().html(content).fadeIn();
+          $('.page a.internal').click(loadDynamically);
+          document.title = getTitle(html);
+          window.history.pushState({}, window.title, target);
+        }
+      },
+      error: function() {
+        window.location.href = target;
+      }
+    });
+  };
+
+  $('a.internal').click(loadDynamically);
 });
