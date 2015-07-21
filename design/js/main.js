@@ -178,11 +178,8 @@ function renderHeader(user) {
   $('#user_nav').html(userNav).fadeIn();
 }
 
-function renderDsnSelector(projects) {
-  var $selector = $('.dsn-container');
-  if (!$selector) return;
-
-  var dsnSelectBar = createDsnBar($selector, projects);
+function renderDsnSelector(dsnContainer, projects) {
+  var dsnSelectBar = createDsnBar(dsnContainer, projects);
 
   dsnSelectBar.onDsnSelect(processCodeBlocks(dsnSelectBar.currentDsn));
   $('body').on('dblclick', 'span.dsn', function(evt) {
@@ -192,7 +189,7 @@ function renderDsnSelector(projects) {
     window.getSelection().addRange(rng);
   });
 
-  if (projects.length > 1 &&
+  if (projects.length &&
       DOCUMENTATION_OPTIONS.SENTRY_DOC_VARIANT == 'hosted') {
     $('.dsn-container').fadeIn();
   }
@@ -211,15 +208,14 @@ $(function() {
   var projects = null;
   var user = null;
 
+  var $dsnContainer = $('.dsn-container');
+  var $pageContent = $('.page-content');
+  var $sidebar = $('.sidebar');
+
   var initInterface = function() {
     // TODO(dcramer): dsn selector doesnt need re-rendered repeatedly
-    renderDsnSelector(projects);
+    renderDsnSelector($dsnContainer, projects);
     renderHeader(user);
-  };
-
-  var onLoad = function() {
-      $('.page select').selectize();
-      renderDsnSelector(projects);
   };
 
   var getBody = function(html) {
@@ -236,21 +232,24 @@ $(function() {
 
     e.preventDefault();
 
-    $('.document').html('<div class="loading"><div class="loading-indicator"></div></div>');
+    $pageContent.html('<div class="loading"><div class="loading-indicator"></div></div>');
+    $dsnContainer.hide();
+
     $.ajax($this.attr('href'), {
       success: function(html) {
         var body = getBody(html);
-        var content = body.find('.document').children();
+        var content = body.find('.page-content').children();
         var sidebar = body.find('.sidebar').children();
         if (!content || !sidebar) {
           window.location.href = target;
         } else {
-          $('.sidebar').html(sidebar);
-          $('.document').hide().html(content).fadeIn();
+          $sidebar.html(sidebar);
+          $pageContent.hide().html(content).fadeIn();
           $('.page a.internal').click(loadDynamically);
+          $pageContent.find('select').selectize();
+          $dsnContainer.show();
           document.title = getTitle(html);
           window.history.pushState({}, window.title, target);
-          onLoad();
         }
       },
       error: function() {
@@ -260,7 +259,7 @@ $(function() {
   };
 
   $('a.internal').click(loadDynamically);
-  $('.page select').selectize();
+  $('.page-content select').selectize();
 
   $.ajax({
     type: 'GET',
