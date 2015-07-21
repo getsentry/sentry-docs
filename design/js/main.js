@@ -177,8 +177,8 @@ function renderHeader(user) {
 }
 
 $(function() {
-  var API = 'http://www.dev.getsentry.net:8000/docs/api';
-  //var API = 'https://www.getsentry.com/docs/api';
+  //var API = 'http://www.dev.getsentry.net:8000/docs/api';
+  var API = 'https://www.getsentry.com/docs/api';
 
   var dummyDsn = {
     dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
