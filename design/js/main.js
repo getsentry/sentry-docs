@@ -307,6 +307,7 @@ $(function() {
     success: function(resp) {
       projects = resp.projects.map(function(proj) {
         return {
+          id: proj.id,
           dsn: proj.dsn,
           name: proj.teamName + ' / ' + proj.projectName,
           group: proj.organizationName
