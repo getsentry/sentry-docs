@@ -191,7 +191,7 @@ function renderDsnSelector(dsnContainer, projects) {
 
   if (projects.length &&
       DOCUMENTATION_OPTIONS.SENTRY_DOC_VARIANT == 'hosted') {
-    $('.dsn-container').fadeIn();
+    dsnContainer.fadeIn();
   }
 
   return dsnSelectBar;
