@@ -38,38 +38,60 @@ function dsnToHtml(parsedDsn, pub) {
   '</span>';
 }
 
+function tagDsnBlocks(parent) {
+  parent.find('div.highlight pre,code').each(function() {
+    var contents = this.innerHTML.replace(/___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g, function(match) {
+      if (match === '___DSN___') {
+        return '<span class="rewrite-dsn" data-value="dsn">' + match + '</span>';
+      } else if (match === '___PUBLIC_DSN___') {
+        return '<span class="rewrite-dsn" data-value="dsn-public">' + match + '</span>';
+      } else if (match === '___PUBLIC_KEY___') {
+        return '<span class="rewrite-dsn" data-value="public-key">' + match + '</span>';
+      } else if (match === '___SECRET_KEY___') {
+        return '<span class="rewrite-dsn" data-value="secret-key">' + match + '</span>';
+      } else if (match === '___API_URL___') {
+        return '<span class="rewrite-dsn" data-value="api-url">' + match + '</span>';
+      } else if (match === '___PROJECT_ID___') {
+        return '<span class="rewrite-dsn" data-value="project-id">' + match + '</span>';
+      }
+    });
+    this.innerHTML = contents;
+  });
+}
+
 function updateDsnTemplates(dsn) {
   if (!dsn) return;
   var parsedDsn = parseDsn(dsn);
 
-  function setDsn(block) {
-    var originalContents = block.innerHTML;
-    var replaced = false;
-    var contents = originalContents.replace(/___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g, function(match) {
-      replaced = true;
-      if (match === '___DSN___') {
-        return dsnToHtml(parsedDsn);
-      } else if (match === '___PUBLIC_DSN___') {
-        return dsnToHtml(parsedDsn, true);
-      } else if (match === '___PUBLIC_KEY___') {
-        return escape(parsedDsn.publicKey);
-      } else if (match === '___SECRET_KEY___') {
-        return '<span class="dsn-secret-key">' + escape(parsedDsn.secretKey) + '</span>';
-      } else if (match === '___API_URL___') {
-        return escape(parsedDsn.scheme + parsedDsn.host);
-      } else if (match === '___PROJECT_ID___') {
-        return escape('' + parsedDsn.project);
-      }
-    });
-    if (!replaced) {
-      return false;
-    }
-    block.innerHTML = contents;
-    return true;
-  }
+  $('.rewrite-dsn').each(function(){
+    var $this = $(this);
+    var value = $this.data('value');
+    var newValue;
 
-  $('div.highlight pre,code').each(function() {
-    setDsn(this, dsn);
+    switch (value) {
+      case "dsn":
+        newValue = dsnToHtml(parsedDsn);
+        break;
+      case "dsn-public":
+        newValue = dsnToHtml(parsedDsn, true);
+        break;
+      case "public-key":
+        newValue = escape(parsedDsn.publicKey);
+        break;
+      case "secret-key":
+        newValue = '<span class="dsn-secret-key">' + escape(parsedDsn.secretKey) + '</span>';
+        break;
+      case "api-url":
+        newValue = escape(parsedDsn.scheme + parsedDsn.host);
+        break;
+      case "project-id":
+        newValue = escape('' + parsedDsn.project);
+        break;
+    }
+
+    if (newValue) {
+      $this.html(newValue);
+    }
   });
 }
 
@@ -84,6 +106,10 @@ function rememberLastDsn(dsns, currentDsn) {
 function createDsnBar(element, projects) {
   var onDsnChangeFunc = function(dsn) {};
 
+  var m = document.cookie.match(/dsnid=(\d+)/);
+  var dsnId = m ? parseInt(m[1]) : null;
+  var currentDsn = null;
+
   var selectBox = $('<select class="dsn-select"></select>')
     .on('change', function() {
       rememberLastDsn(projects, this.value);
@@ -93,10 +119,6 @@ function createDsnBar(element, projects) {
   var bar = $('<div class="dsn"></div>')
     .append(selectBox);
   $(element).append(bar);
-
-  var m = document.cookie.match(/dsnid=(\d+)/);
-  var dsnId = m ? parseInt(m[1]) : null;
-  var currentDsn = null;
 
   var projectsByGroup = {};
   projects.forEach(function(proj) {
@@ -212,7 +234,7 @@ $(function() {
   var $sidebar = $('.sidebar');
 
   var initInterface = function() {
-    // TODO(dcramer): dsn selector doesnt need re-rendered repeatedly
+    tagDsnBlocks($pageContent);
     dsnSelectBar = renderDsnSelector($dsnContainer, projects);
     renderHeader(user);
   };
@@ -244,6 +266,7 @@ $(function() {
           } else {
             $sidebar.html(sidebar);
             $pageContent.hide().html(content);
+            tagDsnBlocks($pageContent);
             dsnSelectBar.sync();
             $pageContent.fadeIn();
             $('.page a.internal').click(loadDynamically);
@@ -253,7 +276,7 @@ $(function() {
             window.history.pushState({}, window.title, target);
           }
         } catch (ex) {
-          window.error(ex);
+          console.error(ex);
           window.location.href = target;
         }
       },
