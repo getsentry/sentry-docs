@@ -1,5 +1,4 @@
 var $ = require("jquery");
-var Hashban = require("./hashban");
 
 function escape(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -231,13 +230,4 @@ $(function() {
   });
 
   $('select').selectize();
-
-  if (window.history && window.history.replaceState) {
-    console.log('Hijacking links via Hashban loader');
-    var hashban = Hashban({
-      contentWrapSelector: '.body'
-    });
-    hashban.hashban($('.internal'));
-    hashban.bind();
-  }
 });

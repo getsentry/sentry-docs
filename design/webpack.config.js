@@ -8,8 +8,7 @@ module.exports = {
     'vendor': [
       'jquery',
       'bootstrap',
-      'selectize',
-      './js/hashban.js'
+      'selectize'
     ]
   },
   output: {
