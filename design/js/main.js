@@ -247,13 +247,15 @@ $(function() {
     return html.match(/<title>([^<]+)<\/title>/)[1];
   };
 
-  var loadDynamically = function(e) {
+  var linkHandler = function(e) {
     var target = this.pathname;
+    loadDynamically(target, true);
+    e.preventDefault();
+  };
 
+  var loadDynamically = function(target, pushState) {
     $pageContent.html('<div class="loading"><div class="loading-indicator"></div></div>');
     $dsnContainer.hide();
-
-    e.preventDefault();
 
     $.ajax(target, {
       success: function(html) {
@@ -269,11 +271,13 @@ $(function() {
             tagDsnBlocks($pageContent);
             dsnSelectBar.sync();
             $pageContent.fadeIn();
-            $('.page a.internal').click(loadDynamically);
+            $('.page a.internal').click(linkHandler);
             $pageContent.find('select').selectize();
             $dsnContainer.show();
             document.title = getTitle(html);
-            window.history.pushState({}, window.title, target);
+            if (pushState) {
+              window.history.pushState({}, window.title, target);
+            }
           }
         } catch (ex) {
           console.error(ex);
@@ -286,7 +290,11 @@ $(function() {
     });
   };
 
-  $('a.internal').click(loadDynamically);
+  $(window).on('popstate', function(e){
+    loadDynamically(document.location.pathname);
+  });
+
+  $('a.internal').click(linkHandler);
   $('.page-content select').selectize();
 
   $.ajax({
