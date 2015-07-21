@@ -1,3 +1,6 @@
+var $ = require("jquery");
+var Hashban = require("./hashban");
+
 function escape(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -149,7 +152,7 @@ function renderHeader(user) {
   var userNav = $(
     '<ul class="user-nav">' +
       '<li class="hidden-xs"><a href="https://www.getsentry.com/pricing/" class="pricing-link">Pricing</a></li>' +
-      '<li class="active hidden-xs"><a href="/">Documentation</a></li>' +
+      '<li class="active hidden-xs"><a href="https://docs.getsentry.com">Documentation</a></li>' +
       '<li class="hidden-xs"><a href="http://blog.getsentry.com">Blog</a></li>' +
     '</ul>'
   );
@@ -228,4 +231,13 @@ $(function() {
   });
 
   $('select').selectize();
+
+  if (window.history && window.history.replaceState) {
+    console.log('Hijacking links via Hashban loader');
+    var hashban = Hashban({
+      contentWrapSelector: '.body'
+    });
+    hashban.hashban($('.internal'));
+    hashban.bind();
+  }
 });

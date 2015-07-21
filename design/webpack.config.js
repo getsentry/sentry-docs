@@ -8,7 +8,8 @@ module.exports = {
     'vendor': [
       'jquery',
       'bootstrap',
-      'selectize'
+      'selectize',
+      './js/hashban.js'
     ]
   },
   output: {
@@ -37,7 +38,7 @@ module.exports = {
         loader: ExtractTextPlugin.extract('style-loader', 'css-loader')
       },
       {
-        test: /\.(woff|eot|ttf|svg)(\?.*)?$/,
+        test: /\.(woff2|woff|eot|ttf|svg)(\?.*)?$/,
         loader: 'url?limit=5000'
       }
     ]
