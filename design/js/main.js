@@ -145,9 +145,40 @@ function createDsnBar(projects) {
   };
 }
 
+function renderHeader(user) {
+  var userNav = $(
+    '<ul class="user-nav">' +
+      '<li class="hidden-xs"><a href="https://www.getsentry.com/pricing/" class="pricing-link">Pricing</a></li>' +
+      '<li class="active hidden-xs"><a href="/">Documentation</a></li>' +
+      '<li class="hidden-xs"><a href="http://blog.getsentry.com">Blog</a></li>' +
+    '</ul>'
+  );
+  if (user.isAuthenticated) {
+    userNav.append($(
+      '<li class="dropdown">' +
+        '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' +
+          '<img src="' + user.avatarUrl + '" class="avatar"> <b class="caret"></b>' +
+        '</a>' +
+        '<ul class="dropdown-menu">' +
+          '<li><a href="https://app.getsentry.com">Dashboard</a>' +
+          '<li class="divider"></li>' +
+          '<li><a href="mailto:support@getsentry.com" class="support-link">Support</a></li>' +
+          '<li class="divider"></li>' +
+          '<li><a href="https://www.getsentry.com/logout/">Logout</a>' +
+        '</ul>' +
+      '</li>'
+    ));
+  } else {
+      userNav.append($('<li class="hidden-xs"><a href="https://app.getsentry.com/auth/login/">Sign in</a></li>'));
+      userNav.append($('<li class="divider hidden-xs"></li>'));
+      userNav.append($('<li><a class="cta" href="https://www.getsentry.com/signup/">Start for free</a></li>'));
+  }
+  $('#user_nav').html(userNav).fadeIn();
+}
+
 $(function() {
-  //var API = 'http://www.dev.getsentry.net:8000/docs/api';
-  var API = 'https://www.getsentry.com/docs/api';
+  var API = 'http://www.dev.getsentry.net:8000/docs/api';
+  //var API = 'https://www.getsentry.com/docs/api';
 
   var dummyDsn = {
     dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
@@ -155,7 +186,7 @@ $(function() {
     group: 'Example'
   };
 
-  function initInterface(projects) {
+  function initInterface(projects, user) {
     var dsnSelectBar = createDsnBar(projects);
     dsnSelectBar.onDsnSelect(processCodeBlocks(dsnSelectBar.currentDsn));
     $('body').on('dblclick', 'span.dsn', function(evt) {
@@ -169,33 +200,19 @@ $(function() {
         DOCUMENTATION_OPTIONS.SENTRY_DOC_VARIANT == 'hosted') {
       $('.dsn-container').fadeIn();
     }
+
+    renderHeader(user);
   }
 
   $.ajax({
     type: 'GET',
-    url: API + '/header/',
+    url: API + '/user/',
     crossDomain: true,
     xhrFields: {
       withCredentials: true
     },
     success: function(resp) {
-      $('header ul.user-nav')[0].outerHTML = resp;
-      $('header div.container').fadeIn();
-    },
-    error: function() {
-      $('header div.container').fadeIn();
-    }
-  });
-
-  $.ajax({
-    type: 'GET',
-    url: API + '/dsns/',
-    crossDomain: true,
-    xhrFields: {
-      withCredentials: true
-    },
-    success: function(resp) {
-      var projects = resp.dsns.map(function(proj) {
+      var projects = resp.projects.map(function(proj) {
         return {
           dsn: proj.dsn,
           name: proj.teamName + ' / ' + proj.projectName,
@@ -203,10 +220,10 @@ $(function() {
         };
       });
       projects.unshift(dummyDsn);
-      initInterface(projects);
+      initInterface(projects, resp.user);
     },
     error: function() {
-      initInterface([dummyDsn]);
+      initInterface([dummyDsn], {isAuthenticated: false});
     }
   });
 
