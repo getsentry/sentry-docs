@@ -94,7 +94,7 @@ function rememberLastDsn(dsns, currentDsn) {
   });
 }
 
-function createDsnBar(projects) {
+function createDsnBar(element, projects) {
   var onDsnChangeFunc = function() {};
 
   var selectBox = $('<select class="dsn-select"></select>')
@@ -105,7 +105,7 @@ function createDsnBar(projects) {
     });
   var bar = $('<div class="dsn"></div>')
     .append(selectBox);
-  $('.dsn-container').append(bar);
+  $(element).append(bar);
 
   var m = document.cookie.match(/dsnid=(\d+)/);
   var dsnId = m ? parseInt(m[1]) : null;
@@ -178,6 +178,26 @@ function renderHeader(user) {
   $('#user_nav').html(userNav).fadeIn();
 }
 
+function renderDsnSelector(projects) {
+  var $selector = $('.dsn-container');
+  if (!$selector) return;
+
+  var dsnSelectBar = createDsnBar($selector, projects);
+
+  dsnSelectBar.onDsnSelect(processCodeBlocks(dsnSelectBar.currentDsn));
+  $('body').on('dblclick', 'span.dsn', function(evt) {
+    evt.preventDefault();
+    var rng = document.createRange();
+    rng.selectNode(this);
+    window.getSelection().addRange(rng);
+  });
+
+  if (projects.length > 1 &&
+      DOCUMENTATION_OPTIONS.SENTRY_DOC_VARIANT == 'hosted') {
+    $('.dsn-container').fadeIn();
+  }
+}
+
 $(function() {
   //var API = 'http://www.dev.getsentry.net:8000/docs/api';
   var API = 'https://www.getsentry.com/docs/api';
@@ -188,48 +208,19 @@ $(function() {
     group: 'Example'
   };
 
-  function initInterface(projects, user) {
-    var dsnSelectBar = createDsnBar(projects);
-    dsnSelectBar.onDsnSelect(processCodeBlocks(dsnSelectBar.currentDsn));
-    $('body').on('dblclick', 'span.dsn', function(evt) {
-      evt.preventDefault();
-      var rng = document.createRange();
-      rng.selectNode(this);
-      window.getSelection().addRange(rng);
-    });
+  var projects = null;
+  var user = null;
 
-    if (projects.length > 1 &&
-        DOCUMENTATION_OPTIONS.SENTRY_DOC_VARIANT == 'hosted') {
-      $('.dsn-container').fadeIn();
-    }
-
+  var initInterface = function() {
+    // TODO(dcramer): dsn selector doesnt need re-rendered repeatedly
+    renderDsnSelector(projects);
     renderHeader(user);
-  }
+  };
 
-  $.ajax({
-    type: 'GET',
-    url: API + '/user/',
-    crossDomain: true,
-    xhrFields: {
-      withCredentials: true
-    },
-    success: function(resp) {
-      var projects = resp.projects.map(function(proj) {
-        return {
-          dsn: proj.dsn,
-          name: proj.teamName + ' / ' + proj.projectName,
-          group: proj.organizationName
-        };
-      });
-      projects.unshift(dummyDsn);
-      initInterface(projects, resp.user);
-    },
-    error: function() {
-      initInterface([dummyDsn], {isAuthenticated: false});
-    }
-  });
-
-  $('select').selectize();
+  var onLoad = function() {
+      $('.page select').selectize();
+      renderDsnSelector(projects);
+  };
 
   var getBody = function(html) {
     return $('<div' +  html.match(/<body([^>]*>[\S\s]*)<\/body>/)[1] + '</div>');
@@ -259,6 +250,7 @@ $(function() {
           $('.page a.internal').click(loadDynamically);
           document.title = getTitle(html);
           window.history.pushState({}, window.title, target);
+          onLoad();
         }
       },
       error: function() {
@@ -268,4 +260,32 @@ $(function() {
   };
 
   $('a.internal').click(loadDynamically);
+  $('.page select').selectize();
+
+  $.ajax({
+    type: 'GET',
+    url: API + '/user/',
+    crossDomain: true,
+    xhrFields: {
+      withCredentials: true
+    },
+    success: function(resp) {
+      projects = resp.projects.map(function(proj) {
+        return {
+          dsn: proj.dsn,
+          name: proj.teamName + ' / ' + proj.projectName,
+          group: proj.organizationName
+        };
+      });
+      projects.unshift(dummyDsn);
+      user = resp.user;
+      initInterface();
+    },
+    error: function() {
+      console.error('Failed to load user data from Sentry');
+      projects = [dummyDsn];
+      user = {isAuthenticated: false};
+      initInterface();
+    }
+  });
 });
