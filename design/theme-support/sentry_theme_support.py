@@ -30,7 +30,7 @@ class SentryStyle(Style):
         Error:                     "#a40000 border:#ef2929", # class: 'err'
         Other:                     black,                # class 'x'
 
-        Comment:                   "italic " + red,  # class: 'c'
+        Comment:                   "italic " + green,  # class: 'c'
         Comment.Preproc:           "noitalic",       # class: 'cp'
 
         Keyword:                   blue,   # class: 'k'
@@ -50,7 +50,7 @@ class SentryStyle(Style):
         # are not recognized as such later in the parsing, we choose them
         # to look the same as ordinary variables.
         Name:                      black,        # class: 'n'
-        Name.Attribute:            orange,        # class: 'na' - to be revised
+        Name.Attribute:            purple,        # class: 'na' - to be revised
         Name.Builtin:              blue,        # class: 'nb'
         Name.Builtin.Pseudo:       teal,        # class: 'bp'
         Name.Class:                black,        # class: 'nc' - to be revised
@@ -74,18 +74,18 @@ class SentryStyle(Style):
         Literal:                   black,        # class: 'l'
         Literal.Date:              black,        # class: 'ld'
 
-        String:                    green,        # class: 's'
-        String.Backtick:           green,        # class: 'sb'
-        String.Char:               green,        # class: 'sc'
+        String:                    red,        # class: 's'
+        String.Backtick:           red,        # class: 'sb'
+        String.Char:               red,        # class: 'sc'
         String.Doc:                "italic " + purple, # class: 'sd' - like a comment
-        String.Double:             green,        # class: 's2'
-        String.Escape:             green,        # class: 'se'
-        String.Heredoc:            green,        # class: 'sh'
-        String.Interpol:           green,        # class: 'si'
-        String.Other:              green,        # class: 'sx'
-        String.Regex:              green,        # class: 'sr'
-        String.Single:             green,        # class: 's1'
-        String.Symbol:             green,        # class: 'ss'
+        String.Double:             red,        # class: 's2'
+        String.Escape:             red,        # class: 'se'
+        String.Heredoc:            red,        # class: 'sh'
+        String.Interpol:           red,        # class: 'si'
+        String.Other:              red,        # class: 'sx'
+        String.Regex:              red,        # class: 'sr'
+        String.Single:             red,        # class: 's1'
+        String.Symbol:             red,        # class: 'ss'
 
         Generic:                   black,        # class: 'g'
         Generic.Deleted:           red,        # class: 'gd'
