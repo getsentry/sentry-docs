@@ -38,52 +38,39 @@ function dsnToHtml(parsedDsn, pub) {
   '</span>';
 }
 
-function processCodeBlocks(initialDsn) {
-  var blocks = [];
+function updateDsnTemplates(dsn) {
+  if (!dsn) return;
+  var parsedDsn = parseDsn(dsn);
 
-  function rewriteCodeBlock(block) {
+  function setDsn(block) {
     var originalContents = block.innerHTML;
-
-    function setDsn(dsn) {
-      var parsedDsn = parseDsn(dsn);
-      var replaced = false;
-      var contents = originalContents.replace(/___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g, function(match) {
-        replaced = true;
-        if (match === '___DSN___') {
-          return dsnToHtml(parsedDsn);
-        } else if (match === '___PUBLIC_DSN___') {
-          return dsnToHtml(parsedDsn, true);
-        } else if (match === '___PUBLIC_KEY___') {
-          return escape(parsedDsn.publicKey);
-        } else if (match === '___SECRET_KEY___') {
-          return '<span class="dsn-secret-key">' + escape(parsedDsn.secretKey) + '</span>';
-        } else if (match === '___API_URL___') {
-          return escape(parsedDsn.scheme + parsedDsn.host);
-        } else if (match === '___PROJECT_ID___') {
-          return escape('' + parsedDsn.project);
-        }
-      });
-      if (!replaced) {
-        return false;
+    var replaced = false;
+    var contents = originalContents.replace(/___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g, function(match) {
+      replaced = true;
+      if (match === '___DSN___') {
+        return dsnToHtml(parsedDsn);
+      } else if (match === '___PUBLIC_DSN___') {
+        return dsnToHtml(parsedDsn, true);
+      } else if (match === '___PUBLIC_KEY___') {
+        return escape(parsedDsn.publicKey);
+      } else if (match === '___SECRET_KEY___') {
+        return '<span class="dsn-secret-key">' + escape(parsedDsn.secretKey) + '</span>';
+      } else if (match === '___API_URL___') {
+        return escape(parsedDsn.scheme + parsedDsn.host);
+      } else if (match === '___PROJECT_ID___') {
+        return escape('' + parsedDsn.project);
       }
-      block.innerHTML = contents;
-      return true;
+    });
+    if (!replaced) {
+      return false;
     }
-
-    if (setDsn(initialDsn)) {
-      blocks.push(setDsn);
-    }
+    block.innerHTML = contents;
+    return true;
   }
 
   $('div.highlight pre,code').each(function() {
-    rewriteCodeBlock(this);
+    setDsn(this, dsn);
   });
-
-  return function(dsn) {
-    blocks.forEach(function(setter) {
-      setter(dsn);
-    });
-  };
 }
 
 function rememberLastDsn(dsns, currentDsn) {
@@ -95,7 +82,7 @@ function rememberLastDsn(dsns, currentDsn) {
 }
 
 function createDsnBar(element, projects) {
-  var onDsnChangeFunc = function() {};
+  var onDsnChangeFunc = function(dsn) {};
 
   var selectBox = $('<select class="dsn-select"></select>')
     .on('change', function() {
@@ -134,15 +121,22 @@ function createDsnBar(element, projects) {
     selectBox.append(optgroup);
   }
 
+  if (!currentDsn) {
+    currentDsn = projects[0].dsn;
+  }
+
   if (currentDsn) {
     selectBox.val(currentDsn);
   }
 
   return {
     selectBox: selectBox.selectize(),
-    currentDsn: currentDsn ? currentDsn : projects[0].dsn,
+    currentDsn: currentDsn,
     onDsnSelect: function(callback) {
       onDsnChangeFunc = callback;
+    },
+    sync: function() {
+      onDsnChangeFunc(currentDsn);
     }
   };
 }
@@ -181,7 +175,7 @@ function renderHeader(user) {
 function renderDsnSelector(dsnContainer, projects) {
   var dsnSelectBar = createDsnBar(dsnContainer, projects);
 
-  dsnSelectBar.onDsnSelect(processCodeBlocks(dsnSelectBar.currentDsn));
+  dsnSelectBar.onDsnSelect(updateDsnTemplates);
   $('body').on('dblclick', 'span.dsn', function(evt) {
     evt.preventDefault();
     var rng = document.createRange();
@@ -193,6 +187,8 @@ function renderDsnSelector(dsnContainer, projects) {
       DOCUMENTATION_OPTIONS.SENTRY_DOC_VARIANT == 'hosted') {
     dsnContainer.fadeIn();
   }
+
+  dsnSelectBar.sync();
 
   return dsnSelectBar;
 }
@@ -247,7 +243,7 @@ $(function() {
         } else {
           $sidebar.html(sidebar);
           $pageContent.hide().html(content);
-          processCodeBlocks(dsnSelectBar.currentDsn)();
+          dsnSelectBar.sync();
           $pageContent.fadeIn();
           $('.page a.internal').click(loadDynamically);
           $pageContent.find('select').selectize();
