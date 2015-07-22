@@ -3,8 +3,8 @@ Documentation Guide
 
 A part of every development project (especially Open Source projects) is
 documentation that explains how it works.  Sentry and Raven are not any
-different.  Because documentation is a bit part of what makes Sentry work
-we outlined some guidelines about how this documentation is structured and
+different.  Because documentation is a big part of what makes Sentry work
+we've outlined some guidelines about how this documentation is structured and
 how to extend it.
 
 Stylistic Choices
@@ -79,7 +79,7 @@ For headlines the following styles should be used:
 
     Third Level
     ```````````
-    
+
     Fourth Level
     ~~~~~~~~~~~~
 
