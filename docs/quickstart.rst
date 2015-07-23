@@ -72,10 +72,11 @@ Configure an Integration
 ------------------------
 
 To report to Sentry you need a client library that supports your platform.
-These libraries, generally known as "raven" (:ref:`what is Raven? <history-naming>`)
-are available for all major programming languages and environments and generally integrate
-directly with frameworks as well.  In case your environment is
-very specific, you can also directly report to the underlying REST API.
+These libraries, generally known as "raven" (:ref:`what is Raven?
+<history-naming>`) are available for all major programming languages and
+environments and generally integrate directly with frameworks as well.  In
+case your environment is very specific, you can also directly report to
+the underlying REST API.
 
 The most popular integrations are:
 
