@@ -83,9 +83,9 @@ The most popular integrations are:
 *   :doc:`raven.js <clients/javascript/index>` for JavaScript
 *   :doc:`raven-php <clients/php/index>` for PHP
 *   :doc:`raven-ruby <clients/ruby/index>` for all variations of Ruby
-*   `raven-objc <https://github.com/getsentry/raven-objc>`_
-*   `raven-java <https://github.com/getsentry/raven-java>`_
-*   `raven-csharp <https://github.com/getsentry/raven-csharp>`_
+*   :doc:`raven-objc <clients/objc/index>` for objective C
+*   :doc:`raven-java <clients/java/index>` for Java and JVM languages
+*   :doc:`raven-csharp <clients/csharp/index>` for C# and .NET languages
 
 For exact configuration for the integration consult the corresponding
 documentation.  For all clients however, the basics are the same.
