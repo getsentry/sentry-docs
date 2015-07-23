@@ -36,16 +36,16 @@ will return JSON as the response::
 Sentry makes an attempt to stick to appropriate methods, but we always
 prioritize usability over correctness.
 
-=========== =============================================================
+=========== ==============================================================
 Method      Description
-=========== =============================================================
+=========== ==============================================================
 ``DELETE``  Used for deleting resources.
 ``GET``     Used for retrieving resources.
 ``OPTIONS`` Describes the given endpoint.
 ``POST``    Used for creating resources.
 ``PUT``     Used for updating resources. Partial data is accepted where
             possible.
-=========== =============================================================
+=========== ==============================================================
 
 Parameters and Data
 -------------------
