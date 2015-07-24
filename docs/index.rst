@@ -72,7 +72,6 @@ use the UI and how to configure the clients.
      sso
      server/index
      license
-     project-resources
      support
 
 Development Documentation
@@ -92,6 +91,7 @@ general guidelines.
    clientdev/index
    api/index
    docdev
+   project-resources
 
 
 .. these are docs only referenced by the sidebar
