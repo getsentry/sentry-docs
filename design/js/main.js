@@ -256,6 +256,9 @@ $(function() {
   var loadDynamically = function(target, pushState) {
     $pageContent.html('<div class="loading"><div class="loading-indicator"></div></div>');
     $dsnContainer.hide();
+    if (pushState) {
+      window.scrollTo(0, 0);
+    }
 
     $.ajax(target, {
       success: function(html) {
