@@ -311,7 +311,9 @@ $(function() {
   // make all links external so that when we do our content switcheroo
   // they do not break.
   $('a').each(function() {
-    this.href = this.href;
+    if (this.getAttribute('href').substr(0, 1) !== '#') {
+      this.href = this.href;
+    }
   });
 
   $('a.internal').click(linkHandler);
