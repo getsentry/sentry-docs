@@ -349,27 +349,17 @@ for the lifecycle of a request, and the general interface is "bind some
 kind of context", and then at the end of a request lifecycle, clear any
 present context.
 
-This interface consists of `*_context` methods, as well as a "clear
-context" method. The following is an example API which is implemented in
-most clients::
+This interface consists of `*_context` methods, access to the `context`
+dictionary as well as a `clear` and `merge` context method.  Method
+methods exist usually depend on the client.  The following methods
+generally make sense:
 
-    # Bind sentry.interfaces.User
-    client.user_context({
-        'email': 'foo@example.com',
-    })
-
-    # Merge in additional tag context
-    client.tags_context({
-        'key': 'value',
-    })
-
-    # Merge in additional extra context
-    client.extra_context({
-        'key': 'value',
-    })
-
-    # Clear context
-    client.context.clear()
+*   ``client.user_context``
+*   ``client.tags_context``
+*   ``client.http_context``
+*   ``client.extra_context``
+*   ``client.context.merge``
+*   ``client.context.clear``
 
 For more information about this (specifically about how to deal with
 concurrency) please make sure to read :doc:`context`.

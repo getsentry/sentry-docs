@@ -65,3 +65,42 @@ framework integrations in the clients should do this whenever possible.
 For manual clearing ``client.context.clear()`` is the preferred method.
 If the context cannot be directly exposed, ``client.clearContext()`` or a
 method with a similar name should exist.
+
+Common Context Methods
+----------------------
+
+The following methods are recommended to exist:
+
+``client.user_context(data)``:
+
+    Updates the user context for future events.
+
+    Equivalent to this::
+
+        client.context.merge({'user': data})
+
+``client.http_context(data)``:
+    Updates the HTTP context for future events.
+
+    Equivalent to this::
+
+        client.context.merge({'request': data})
+
+``client.extra_context(data)``:
+    Update the extra context for future events.
+
+    Equivalent to this::
+
+        client.context.merge({'extra': data})
+
+``client.tags_context(data)``:
+    Update the tags context for future events.
+
+    Equivalent to this::
+
+        client.context.merge({'tags': data})
+
+For some clients it also makes sense to provide additional helpers to
+bind http context and similar things to common language patterns.  For
+instance if you expect a CGI/WSGI/Rack environment you could provide
+``client.cgi_context`` / ``client.wsgi_context`` methods.
