@@ -27,3 +27,7 @@
 *   .. class:: platformlink-csharp
 
     :doc:`/clients/csharp/index` Including Mono and .NET languages.
+
+*   .. class:: platformlink-go
+
+    :doc:`/clients/go/index` For Google's Go Language

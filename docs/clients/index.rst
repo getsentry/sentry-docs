@@ -16,5 +16,6 @@ licenses.
    objc/index
    java/index
    csharp/index
+   go/index
 
 .. include:: table.rst.inc

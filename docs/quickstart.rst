@@ -87,6 +87,7 @@ The most popular integrations are:
 *   :doc:`raven-objc <clients/objc/index>` for objective C
 *   :doc:`raven-java <clients/java/index>` for Java and JVM languages
 *   :doc:`raven-csharp <clients/csharp/index>` for C# and .NET languages
+*   :doc:`raven-go <clients/go/index>` for the Go programming language
 
 For exact configuration for the integration consult the corresponding
 documentation.  For all clients however, the basics are the same.
