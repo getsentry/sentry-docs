@@ -248,14 +248,19 @@ $(function() {
   };
 
   var linkHandler = function(e) {
-    if (e.getAttribute('href').substr(0, 1) !== '#') {
-      var target = this.pathname;
-      loadDynamically(target, true);
+    var here = window.location;
+    // if we navigate to the same host but a different path, we want to
+    // dynamically load.  otherwise do the browser default.
+    if (this.protocol === here.protocol &&
+        this.host === here.host &&
+        this.pathname !== here.pathname) {
+      loadDynamically(this.pathname, this.hash, true);
       e.preventDefault();
     }
   };
 
-  var loadDynamically = function(target, pushState) {
+  var loadDynamically = function(target, hash, pushState) {
+    hash = hash || null;
     $pageContent.html('<div class="loading"><div class="loading-indicator"></div></div>');
     $dsnContainer.hide();
     if (pushState) {
@@ -281,7 +286,11 @@ $(function() {
             $dsnContainer.show();
             document.title = getTitle(html);
             if (pushState) {
-              window.history.pushState({}, window.title, target);
+              if (hash) {
+                window.location = hash;
+              } else {
+                window.history.pushState({}, window.title, target);
+              }
             }
           }
         } catch (ex) {
