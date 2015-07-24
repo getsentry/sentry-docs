@@ -248,9 +248,11 @@ $(function() {
   };
 
   var linkHandler = function(e) {
-    var target = this.pathname;
-    loadDynamically(target, true);
-    e.preventDefault();
+    if (e.getAttribute('href').substr(0, 1) !== '#') {
+      var target = this.pathname;
+      loadDynamically(target, true);
+      e.preventDefault();
+    }
   };
 
   var loadDynamically = function(target, pushState) {
