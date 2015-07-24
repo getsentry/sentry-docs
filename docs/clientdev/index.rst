@@ -31,6 +31,7 @@ Additionally, the following features are highly encouraged:
 * Logging integration (to whatever standard solution is available)
 * Non-blocking event submission
 * Basic data sanitization (e.g. filtering out values that look like passwords)
+* Context data helpers
 
 Usage for End-users
 -------------------
@@ -44,7 +45,7 @@ look almost identical no matter the language:
 
 2. Capturing an event::
 
-      var resultId = myClient->captureException($myException);
+      var resultId = myClient.captureException(myException);
 
 3. Using the result of an event capture::
 
@@ -72,8 +73,8 @@ done with whatever standard logging module is available for your platform.
 Additionally, you should provide methods (depending on the platform) which
 allow for capturing of a basic message and an exception-type:
 
-* ``RavenClient::captureMessage(string $message)``
-* ``RavenClient::captureException(exception $exception)``
+* ``RavenClient.captureMessage(message)``
+* ``RavenClient.captureException(exception)``
 
 The above methods should also allow optional arguments (or a map of
 arguments). For example::
@@ -127,22 +128,11 @@ You should parse the following settings:
 If any of these values are not present, the client should notify the user
 immediately that they've misconfigured the client.
 
-The protocol value may also include a transport option. For example, in
-the Python client several transports are available on top of HTTP:
-
-* ``gevent+http``
-* ``threaded+http``
-* ``zmq+tcp``
-* ...
-
 Building the JSON Packet
 ------------------------
 
-The body of the post is a string representation of a JSON object. It is
-also preferably gzip encoded, which also means its expected to be
-base64-encoded.
-
-For example, with an included Exception event, a basic JSON body might
+The body of the post is a string representation of a JSON object.  For
+example, with an included Exception event, a basic JSON body might
 resemble the following:
 
 .. sourcecode:: json
@@ -218,8 +208,9 @@ body, which acts as an ownership identifier::
 A Working Example
 -----------------
 
-When all is said and done, you should be sending an HTTP POST request to a Sentry webserver, where
-the path is the BASE_URI/api/PROJECT_ID/store/. So given the following DSN::
+When all is said and done, you should be sending an HTTP POST request to a
+Sentry webserver, where the path is the
+``BASE_URI/api/PROJECT_ID/store/``. So given the following DSN::
 
     ___DSN___
 
@@ -246,6 +237,16 @@ The request body should then somewhat resemble the following:
         "module": "__builtins__"
       }]
     }
+
+Request Encoding
+----------------
+
+Clients are heavily encouraged to gzip or deflate encode the request body
+before sending it to the server to keep the data small.  The preferred
+method for this is to send an ``Content-Encoding: gzip`` header.
+Alternatively the server also accepts gzip compressed json in a base64
+wrapper which is detected regardless of the header.  This allows you to
+send compressed events in very restrictive environments.
 
 Reading the Response
 --------------------
@@ -278,11 +279,12 @@ For example, you might get something like this:
     Client request error: Missing client version identifier
 
 
-.. note:: The X-Sentry-Error header will always be present with the precise
-          error message and it is the preferred way to identify the root cause.
+.. note:: The X-Sentry-Error header will always be present with the
+   precise error message and it is the preferred way to identify the root
+   cause.
 
-          If it's not available, it's likely the request was not handled by the
-          API server, or a critical system failure has occurred.
+   If it's not available, it's likely the request was not handled by the
+   API server, or a critical system failure has occurred.
 
 Handling Failures
 -----------------
@@ -304,13 +306,8 @@ code for this is simple::
     def should_try(self):
         if self.status == self.ONLINE:
             return True
-
         interval = min(self.retry_number, 6) ** 2
-
-        if time.time() - self.last_check > interval:
-            return True
-
-        return False
+        return time.time() - self.last_check > interval
 
 Tags
 ----
@@ -344,16 +341,17 @@ The client should send the following upstream for ``tags``::
         ],
     }
 
+Contextual Data
+---------------
+
 You should also provide relevant contextual interfaces. These should last
 for the lifecycle of a request, and the general interface is "bind some
 kind of context", and then at the end of a request lifecycle, clear any
 present context.
 
-This interface consists of \*_context methods, as well as a "clear
+This interface consists of `*_context` methods, as well as a "clear
 context" method. The following is an example API which is implemented in
-most clients:
-
-::
+most clients::
 
     # Bind sentry.interfaces.User
     client.user_context({
@@ -373,13 +371,8 @@ most clients:
     # Clear context
     client.context.clear()
 
-Some additional examples of context helpers which might be relevant:
-
-- ``http_context(data)``: bind the HTTP interface with data.
-- ``wsgi_context(env)``: bind http_context based on a wsgi environment in
-  Python
-- ``rack_context(env)``: bind http_context based on a rack environment in
-  Ruby
+For more information about this (specifically about how to deal with
+concurrency) please make sure to read :doc:`context`.
 
 More Information
 ----------------
@@ -394,3 +387,4 @@ important part are the server supported :doc:`attributes` and
    attributes
    interfaces
    advanced
+   context
