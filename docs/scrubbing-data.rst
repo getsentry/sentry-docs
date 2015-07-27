@@ -1,4 +1,4 @@
-Scrubbing Data
+Sensitive Data
 ==============
 
 As with any third party service it's important to understand what data is being
