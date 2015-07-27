@@ -55,6 +55,7 @@ use the UI and how to configure the clients.
      tagging
      membership
      quotas
+     scrubbing-data
      sso
      ssl
      support
