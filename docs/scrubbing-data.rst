@@ -26,9 +26,11 @@ Sentry will scrub the following:
   - api_key
   - apikey
   - access_token
+- Any keys which match values that you've added to the list of additional fields
+  in your Project Settings.
 
-Additionally some clients will allow you to filter data ahead of time following
-similar patterns.
+Some clients will also allow you to filter data ahead of time following similar
+patterns.
 
 
 Removing Data
