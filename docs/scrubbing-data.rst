@@ -19,13 +19,13 @@ Sentry will scrub the following:
 - Values that look like they contain credit cards (using a basic regular
   expression)
 - Keys that contain any of the following values:
-  - password
-  - secret
-  - passwd
-  - authorization
-  - api_key
-  - apikey
-  - access_token
+  * password
+  * secret
+  * passwd
+  * authorization
+  * api_key
+  * apikey
+  * access_token
 - Any keys which match values that you've added to the list of additional fields
   in your Project Settings.
 
