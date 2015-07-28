@@ -337,7 +337,9 @@ $(function() {
           group: proj.organizationName
         };
       });
-      projects.unshift(dummyDsn);
+      if (projects.length === 0) {
+        projects.unshift(dummyDsn);
+      }
       user = resp.user;
       initInterface();
     },
