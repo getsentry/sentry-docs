@@ -254,6 +254,15 @@ $(function() {
     return here.protocol === there.protocol && here.host === there.host;
   };
 
+  // make all links external so that when we do our content switcheroo
+  // they do not break.
+  var rewriteLink = function() {
+    var url = this.getAttribute('href');
+    if (url && url.substr(0, 1) !== '#') {
+      this.href = this.href;
+    }
+  };
+
   var linkHandler = function(e) {
     var here = window.location;
 
@@ -294,6 +303,7 @@ $(function() {
             if (dsnSelectBar) dsnSelectBar.sync();
             $pageContent.fadeIn();
             $('.page a.internal').click(linkHandler);
+            $('a').each(rewriteLink);
             $pageContent.find('select').selectize();
             $dsnContainer.show();
             document.title = getTitle(html);
@@ -322,14 +332,7 @@ $(function() {
     }
   });
 
-  // make all links external so that when we do our content switcheroo
-  // they do not break.
-  $('a').each(function() {
-    var url = this.getAttribute('href');
-    if (url && url.substr(0, 1) !== '#') {
-      this.href = this.href;
-    }
-  });
+  $('a').each(rewriteLink);
 
   $('a.internal').click(linkHandler);
   $('.page-content select').selectize();
