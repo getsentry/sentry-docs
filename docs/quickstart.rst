@@ -116,18 +116,31 @@ easy copy pasting::
 
     '___DSN___'
 
-It is composed of six important pieces:
+.. sentry:edition:: hosted
 
-* The Protocol used. This can be one of the following: http or https.
+    It is composed of five important pieces:
 
-* The public and secret keys to authenticate the client.
+    * The protocol used. This should be ``https``.
 
-* The hostname of the Sentry server.
+    * The public and secret keys to authenticate the client.
 
-* An optional path if Sentry is not located at the webserver root. This is
-  specific to HTTP requests.
+    * The hostname of the Sentry server.
 
-* The project ID which the authenticated user is bound to.
+    * The project ID which the authenticated user is bound to.
+
+.. sentry:edition:: on-premise
+
+    It is composed of six important pieces:
+
+    * The Protocol used. This can be one of the following: http or https.
+
+    * The public and secret keys to authenticate the client.
+
+    * The hostname of the Sentry server.
+
+    * An optional path if Sentry is not located at the webserver root.
+
+    * The project ID which the authenticated user is bound to.
 
 You'll have a few options for plugging the DSN into the client, depending
 on what it supports. At the very least, most clients will allow you to set
