@@ -275,7 +275,7 @@ $(function() {
     if (this.pathname && this.pathname !== currentPathName) {
       loadDynamically(this.pathname, this.hash, true);
     } else {
-      window.location = '#' + this.hash;
+      window.location = this.hash;
     }
   };
 
@@ -307,7 +307,7 @@ $(function() {
             $dsnContainer.show();
             document.title = getTitle(html);
             if (hash) {
-              window.location = '#' + hash;
+              window.location = hash;
             } else if (pushState) {
               window.history.pushState({}, window.title, target);
             }
