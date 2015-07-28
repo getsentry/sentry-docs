@@ -107,14 +107,14 @@ To work around these the Sentry protocol supports a ``fingerprint`` attribute.
 In supported clients, this attribute can be passed with the event information,
 and should be an array of strings:
 
-.. code-style:: python
+.. code-style:: javascript
 
     Raven.captureException(ex, {fingerprint: ['my', 'custom', 'fingerprint']})
 
 Additionally if you simply wish to append information, thus making the grouping
 slightly less aggressive, you can do that as well:
 
-.. code-style:: python
+.. code-style:: javascript
 
     Raven.captureException(ex, {fingerprint: ['{{ default }}', 'other', 'data']})
 
