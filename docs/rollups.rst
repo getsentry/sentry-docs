@@ -92,16 +92,31 @@ Custom Grouping
 
 For some very advanced use cases clients can override the Sentry default
 grouping.  It's very important to understand that this grouping comes with
-certain disadvantages.  The biggest one is that you need to be very sure
-about your grouping as there is no way to fix up grouping afterwards.
+certain disadvantages.
 
-We have generally been facing out support for custom grouping but it will
-remain a feature for specific uses we cannot handle in Sentry
-automatically.
+Two common cases generally come up here:
 
-To implement custom grouping a ``checksum`` attribute can be sent with the
-events.  If supplied it needs to be a 32 character value (for instance a
-hexadecimal MD5 hash) and will be the exclusive identifier for grouping.
+- An RPC or external API service is queried, so the stacktrace is generally
+  the same (even if the outgoing request is very different)
+
+- A generic error, such as a database connection error, has many different
+  stacktraces and never groups together.
+
+To work around these the Sentry protocol supports a ``fingerprint`` attribute.
+
+In supported clients, this attribute can be passed with the event information,
+and should be an array of strings:
+
+.. code-style:: python
+
+    Raven.captureException(ex, {fingerprint: ['my', 'custom', 'fingerprint']})
+
+Additionally if you simply wish to append information, thus making the grouping
+slightly less aggressive, you can do that as well:
+
+.. code-style:: python
+
+    Raven.captureException(ex, {fingerprint: ['{{ default }}', 'other', 'data']})
 
 Sampling
 --------
