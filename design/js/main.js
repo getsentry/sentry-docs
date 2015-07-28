@@ -234,6 +234,8 @@ $(function() {
   var $pageContent = $('.page-content');
   var $sidebar = $('.sidebar');
 
+  var currentPathName = document.location.pathname;
+
   var initInterface = function() {
     tagDsnBlocks($pageContent);
     dsnSelectBar = renderDsnSelector($dsnContainer, projects);
@@ -248,20 +250,28 @@ $(function() {
     return html.match(/<title>([^<]+)<\/title>/)[1];
   };
 
+  var isSameDomain = function(here, there) {
+    return here.protocol === there.protocol && here.host === there.host;
+  };
+
   var linkHandler = function(e) {
     var here = window.location;
+
+    if (!isSameDomain(here, this)) return;
+
+    e.preventDefault();
+
     // if we navigate to the same host but a different path, we want to
     // dynamically load.  otherwise do the browser default.
-    if (this.protocol === here.protocol &&
-        this.host === here.host &&
-        this.pathname !== here.pathname) {
-      loadDynamically(this.pathname, this.hash, true);
-      e.preventDefault();
+    if (this.pathname !== currentPathName) {
+      loadDynamically(this.pathname, true);
+    } else {
+      window.location = '#' + this.hash;
     }
   };
 
-  var loadDynamically = function(target, hash, pushState) {
-    hash = hash || null;
+  var loadDynamically = function(target, pushState) {
+    console.log('Loading content for ' + target);
     $pageContent.html('<div class="loading"><div class="loading-indicator"></div></div>');
     $dsnContainer.hide();
     if (pushState) {
@@ -275,6 +285,7 @@ $(function() {
           var content = body.find('.page-content').children();
           var sidebar = body.find('.sidebar').children();
           if (!content || !sidebar) {
+            console.warn('Unable to find required child elements in dynamic loader');
             window.location.href = target;
           } else {
             $sidebar.html(sidebar);
@@ -287,11 +298,7 @@ $(function() {
             $dsnContainer.show();
             document.title = getTitle(html);
             if (pushState) {
-              if (hash) {
-                window.location = hash;
-              } else {
-                window.history.pushState({}, window.title, target);
-              }
+              window.history.pushState({}, window.title, target);
             }
           }
         } catch (ex) {
@@ -303,13 +310,15 @@ $(function() {
         window.location.href = target;
       }
     });
+
+    currentPathName = document.location.pathName;
   };
 
-  var currentPathName = document.location.pathname;
   $(window).on('popstate', function(e){
     if (currentPathName !== document.location.pathname) {
-      currentPathName = document.location.pathName;
       loadDynamically(currentPathName);
+    } else {
+      window.location = '#' + this.hash;
     }
   });
 
