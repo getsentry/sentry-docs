@@ -1,4 +1,5 @@
 var $ = require("jquery");
+var bootstrap = require("bootstrap")
 
 function escape(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -311,7 +312,8 @@ $(function() {
   // make all links external so that when we do our content switcheroo
   // they do not break.
   $('a').each(function() {
-    if (this.getAttribute('href').substr(0, 1) !== '#') {
+    var url = this.getAttribute('href');
+    if (url && url.substr(0, 1) !== '#') {
       this.href = this.href;
     }
   });
@@ -346,4 +348,6 @@ $(function() {
       initInterface();
     }
   });
+
+  $('[data-toggle="tooltip"]').tooltip();
 });
