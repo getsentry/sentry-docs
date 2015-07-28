@@ -303,7 +303,6 @@ $(function() {
             if (dsnSelectBar) dsnSelectBar.sync();
             $pageContent.fadeIn();
             $('.page a.internal').click(linkHandler);
-            $('a').each(rewriteLink);
             $pageContent.find('select').selectize();
             $dsnContainer.show();
             document.title = getTitle(html);
