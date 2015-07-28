@@ -1,4 +1,4 @@
-SPHINX_BUILD=SENTRY_FEDERATED_DOCS=1 sphinx-build -v -a -d build/doctrees -T
+SPHINX_BUILD=SENTRY_FEDERATED_DOCS=1 sphinx-build -v -a -d build/doctrees -T -j 16
 SPHINX_HTML_BUILD=$(SPHINX_BUILD) -b sentryhtml
 SPHINX_DIRHTML_BUILD=$(SPHINX_BUILD) -b sentrydirhtml
 
