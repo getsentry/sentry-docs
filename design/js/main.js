@@ -305,8 +305,12 @@ $(function() {
     });
   };
 
+  var currentPathName = document.location.pathname;
   $(window).on('popstate', function(e){
-    loadDynamically(document.location.pathname);
+    if (currentPathName !== document.location.pathname) {
+      currentPathName = document.location.pathName;
+      loadDynamically(currentPathName);
+    }
   });
 
   // make all links external so that when we do our content switcheroo
