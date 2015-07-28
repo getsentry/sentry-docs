@@ -179,7 +179,7 @@ body, which acts as an ownership identifier::
 
 .. describe:: sentry_version
 
-    The protocol version. This should be sent as the value '5'.
+    The protocol version. The current version of the protocol is '7'.
 
 .. describe:: sentry_client
 

@@ -185,26 +185,25 @@ highly encouraged:
           }
         }
 
-Custom Grouping
----------------
+.. describe:: fingerprint
 
-A feature that clients should not be using, but exists anyways for very
-specialized cases is the `checksum`.  If supplied then Sentry will not
-group by its own rules but purely by the supplied `checksum` value.
+    An array of strings used to dictate the deduplicating for this event.
 
-.. describe:: checksum
-
-    A hash value that is used as grouping identifier.  It should not be
-    supplied by clients unless they have a very specialized usecase where
-    they need to override the default grouping that sentry performs.
-
-    It's a 32 character checksum.  Typically it can be implemented as an
-    MD5 hash.
+    A value of ``{{ default }}`` will be replaced with the built-in behavior, thus
+    allowing you to extend it, or completely replace it.
 
     .. sourcecode:: json
 
         {
-          "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+          "fingerprint": ["myrpc", "POST", "/foo.bar"]
         }
+
+    .. sourcecode:: json
+
+        {
+          "fingerprint": ["{{ default }}", "http://example.com/my.url"]
+        }
+
+    .. versionadded:: Protocol version '7'
 
 For information about overriding grouping see :ref:`custom-grouping`.
