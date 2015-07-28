@@ -264,13 +264,13 @@ $(function() {
     // if we navigate to the same host but a different path, we want to
     // dynamically load.  otherwise do the browser default.
     if (this.pathname && this.pathname !== currentPathName) {
-      loadDynamically(this.pathname, true);
+      loadDynamically(this.pathname, this.hash, true);
     } else {
       window.location = '#' + this.hash;
     }
   };
 
-  var loadDynamically = function(target, pushState) {
+  var loadDynamically = function(target, hash, pushState) {
     console.log('Loading content for ' + target);
     $pageContent.html('<div class="loading"><div class="loading-indicator"></div></div>');
     $dsnContainer.hide();
@@ -297,7 +297,9 @@ $(function() {
             $pageContent.find('select').selectize();
             $dsnContainer.show();
             document.title = getTitle(html);
-            if (pushState) {
+            if (hash) {
+              window.location = '#' + hash;
+            } else if (pushState) {
               window.history.pushState({}, window.title, target);
             }
           }
@@ -317,8 +319,6 @@ $(function() {
   $(window).on('popstate', function(e){
     if (currentPathName !== document.location.pathname) {
       loadDynamically(currentPathName);
-    } else {
-      window.location = '#' + this.hash;
     }
   });
 
