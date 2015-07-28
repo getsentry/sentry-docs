@@ -327,7 +327,7 @@ $(function() {
 
   $(window).on('popstate', function(e){
     if (currentPathName !== document.location.pathname) {
-      loadDynamically(currentPathName);
+      loadDynamically(document.location.pathname);
     }
   });
 
