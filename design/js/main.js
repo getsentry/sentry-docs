@@ -263,7 +263,7 @@ $(function() {
 
     // if we navigate to the same host but a different path, we want to
     // dynamically load.  otherwise do the browser default.
-    if (this.pathname !== currentPathName) {
+    if (this.pathname && this.pathname !== currentPathName) {
       loadDynamically(this.pathname, true);
     } else {
       window.location = '#' + this.hash;
