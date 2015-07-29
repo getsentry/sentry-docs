@@ -306,7 +306,7 @@ $(function() {
             $pageContent.find('select').selectize();
             $dsnContainer.show();
             document.title = getTitle(html);
-            var fullTarget = target + (hash | '');
+            var fullTarget = target + (hash || '');
             window.history.pushState({}, window.title, fullTarget);
             if (hash) {
               window.scrollTo(0, $(hash)[0].offsetTop);
