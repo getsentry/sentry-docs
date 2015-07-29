@@ -305,7 +305,9 @@ $(function() {
             $('.page a.internal').click(linkHandler);
             $pageContent.find('select').selectize();
             $dsnContainer.show();
-            document.title = getTitle(html);
+            var $title = $("title");
+            $title.innerHTML = getTitle(html);
+            document.title = $title.innerText;
             var fullTarget = target + (hash || '');
             window.history.pushState({}, window.title, fullTarget);
             if (hash) {
