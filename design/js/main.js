@@ -306,10 +306,10 @@ $(function() {
             $pageContent.find('select').selectize();
             $dsnContainer.show();
             document.title = getTitle(html);
-            window.history.pushState({}, window.title, target);
+            var fullTarget = target + (hash | '');
+            window.history.pushState({}, window.title, fullTarget);
             if (hash) {
-              window.location.href = hash;
-              window.history.replaceState({}, window.title, target);
+              window.scrollTo(0, $(hash)[0].offsetTop);
             }
           }
         } catch (ex) {
