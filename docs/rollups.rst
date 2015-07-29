@@ -55,7 +55,7 @@ dealt with:
 
 *   minimized JavaScript sourcecode will destroy the grouping in really
     bad ways.  Because of this you should ensure Sentry can access your
-    :ref:`sourcemaps`.
+    :ref:`raven-js-sourcemaps`.
 *   if you modify your stacktrace by introducing a new level through the
     use of decorators, your stacktrace will change and so will the
     grouping.  For this matter many clients support hiding irrelevant

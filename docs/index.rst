@@ -26,8 +26,9 @@ Integrations
 ------------
 
 To report to Sentry you need a client integration.  The :doc:`Official
-Integrations <clients/index>` are called "raven" (:ref:`what is Raven? <history-naming>`).  Clients exist
-for all popular programming languages and platforms.
+Integrations <clients/index>` are called "raven" (:ref:`what is Raven?
+<history-naming>`).  Clients exist for all popular programming languages
+and platforms.
 
 .. include:: clients/table.rst.inc
 
@@ -37,59 +38,80 @@ for all popular programming languages and platforms.
 
    clients/index
 
-Using Sentry
-------------
+
+.. sentry:edition:: hosted
+
+    Hosted Sentry
+    -------------
+
+    This covers the basics for the cloud hosted version of Sentry.
+
+    .. toctree::
+       :maxdepth: 2
+       :titlesonly:
+
+       quickstart
+       quotas
+       rollups
+       ip-ranges
+       support
+
+.. sentry:edition:: on-premise
+
+   Sentry On-Premise
+   -----------------
+
+   This covers the basics for the on-premise hosted version of Sentry.
+
+   .. toctree::
+      :maxdepth: 2
+      :titlesonly:
+
+      quickstart
+      server/index
+      support
+
+Learning Sentry
+---------------
 
 No matter which edition of Sentry you are using, the basics or reporting
-and using are exactly the same.  This gives you an introduction to how to
-use the UI and how to configure the clients.
+and using are the same.
 
 .. sentry:edition:: hosted
 
   .. toctree::
-     :maxdepth: 2
+     :maxdepth: 1
      :titlesonly:
 
-     quickstart
-     rollups
      tagging
      membership
-     quotas
      notifications
      scrubbing-data
      sso
-     ssl
-     support
 
 .. sentry:edition:: on-premise
 
   .. toctree::
-     :maxdepth: 2
+     :maxdepth: 1
      :titlesonly:
 
-     quickstart
      membership
      rollups
      tagging
      notifications
      scrubbing-data
-     server/index
-     license
-     support
 
 Development Documentation
 -------------------------
 
-If you want to extend Sentry, write your own Raven client or understand
-the internals of the system, this is the documentation you need to
-reference.  It does not just cover event reporting but also management
-APIs.
-
-This covers the protocol, how clients are supposed to work and some
-general guidelines.
+At the heart of Sentry and the Raven Clients there stands an Open Source
+product.  If you want to extend Sentry, write your own Raven client or
+understand the internals of the system, we have an extensive development
+documentation that can help you out with all those parts.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :titlesonly:
 
    clientdev/index
    api/index
@@ -97,10 +119,13 @@ general guidelines.
    project-resources
 
 
-.. these are docs only referenced by the sidebar
+.. these are the files we reference from here.  The will show up in the
+   sidebar and the final product.
 
 .. toctree::
-    :maxdepth: 1
-    :hidden:
+   :maxdepth: 2
+   :hidden:
 
-    history
+   ssl
+   history
+   license
