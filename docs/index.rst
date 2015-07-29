@@ -73,7 +73,6 @@ use the UI and how to configure the clients.
      tagging
      notifications
      scrubbing-data
-     sso
      server/index
      license
      support

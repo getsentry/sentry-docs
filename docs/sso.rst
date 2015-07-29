@@ -47,3 +47,21 @@ linked accounts and will disable them within any reasonable sign that the
 account's access may have been revoked. Generally this will be transparent
 to you, but if the provider is functioning in an unexpected way you may
 experience more frequent re-authorization requests.
+
+Providers
+---------
+
+Google Business App
+~~~~~~~~~~~~~~~~~~~
+
+Enabling the Google integration will ask you to authenticate against a Google
+Apps account. Once done, membership will be restricted to only members of the
+given Apps domain (i.e. ``getsentry.com``).
+
+GitHub Organizations
+~~~~~~~~~~~~~~~~~~~~
+
+The GitHub integration will authenticate against all organizations, and once
+complete prompt you for the organization which you wish to restrict access by.
+
+Currently GitHub Enterprise is not supported.
