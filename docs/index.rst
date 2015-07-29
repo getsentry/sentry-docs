@@ -1,7 +1,7 @@
 .. sentry:edition:: hosted
 
-    Sentry Documentation
-    ====================
+    Hosted Sentry Documentation
+    ===========================
 
     Welcome to the documentation of the cloud hosted version of Sentry —
     the modern error logging and aggregation platform.  This documentation
@@ -10,8 +10,8 @@
 
 .. sentry:edition:: on-premise
 
-    Sentry On-Premise
-    =================
+    Sentry On-Premise Documentation
+    ===============================
 
     Welcome to the documentation of the On-Premise Edition of Sentry — the
     modern error logging and aggregation platform.  This documentation
