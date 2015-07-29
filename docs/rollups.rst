@@ -91,8 +91,7 @@ Custom Grouping
 ---------------
 
 For some very advanced use cases clients can override the Sentry default
-grouping.  It's very important to understand that this grouping comes with
-certain disadvantages.
+grouping.
 
 Two common cases generally come up here:
 
