@@ -1,6 +1,8 @@
 IP Ranges
 =========
 
+.. _ip-ranges:
+
 In some circumstances the Hosted Sentry infrastructure might send HTTP
 requests your way.  At present this is exclusively used for
 :doc:`JavaScript Source Maps <../../clients/javascript/sourcemaps>`.
