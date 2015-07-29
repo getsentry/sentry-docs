@@ -55,6 +55,7 @@ use the UI and how to configure the clients.
      tagging
      membership
      quotas
+     notifications
      scrubbing-data
      sso
      ssl
@@ -70,6 +71,8 @@ use the UI and how to configure the clients.
      membership
      rollups
      tagging
+     notifications
+     scrubbing-data
      sso
      server/index
      license
