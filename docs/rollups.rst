@@ -1,5 +1,5 @@
-Rollups and Sampling
-====================
+Rollups & Sampling
+==================
 
 An important part of Sentry is how it aggregates similar events together
 and creates rollups.  This turns out to be a pretty complex issue and

@@ -1,5 +1,5 @@
-Quotas
-======
+Subscriptions & Quotas
+======================
 
 Sentry enforces quotas as a few levels, most importantly in short bursts.
 We throttle both at the firewall level and within the application.
