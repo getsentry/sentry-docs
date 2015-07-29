@@ -26,7 +26,7 @@ Integrations
 ------------
 
 To report to Sentry you need a client integration.  The :doc:`Official
-Integrations <clients/index>` are called "raven" (:ref:`what is Raven?
+Integrations <clients/index>` are called "raven" (:ref:`What is Raven?
 <history-naming>`).  Clients exist for all popular programming languages
 and platforms.
 
