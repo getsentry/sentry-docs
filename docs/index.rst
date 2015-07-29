@@ -23,21 +23,21 @@
 Getting Started
 ---------------
 
-If you are completely new to Sentry give the :doc:`quickstart` a read
-which guides you through how to get started with reporting events to
-Sentry.
+There is a lot in those docs.  To get you started, you might find some of
+these links relevant:
 
 .. sentry:edition:: hosted
 
-    If you don't have a Sentry account yet, you can sign up for one at
-    `getsentry.com <https://www.getsentry.com/signup/>`_.
+   * New to Sentry? Have a look at the :doc:`quickstart`.
+   * No account yet?  You can sign up for one at
+     `getsentry.com <https://www.getsentry.com/signup/>`_.
+   * Stuck? Feel free to contact :doc:`support`.
 
 .. sentry:edition:: on-premise
 
-    If you do not have Sentry installed you, you might want to read the
-    :doc:`server/installation` documentation.
-
-If at any point you are stuck, feel free to contact :doc:`support`.
+   * New to Sentry? Have a look at the :doc:`quickstart`.
+   * Need help installing Sentry? See :doc:server/installation`
+   * Stuck? Feel free to contact :doc:`support`.
 
 Integrations
 ------------
