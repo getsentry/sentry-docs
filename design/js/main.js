@@ -306,10 +306,10 @@ $(function() {
             $pageContent.find('select').selectize();
             $dsnContainer.show();
             document.title = getTitle(html);
+            window.history.pushState({}, window.title, target);
             if (hash) {
-              window.location = hash;
-            } else if (pushState) {
-              window.history.pushState({}, window.title, target);
+              window.location.href = hash;
+              window.history.replaceState({}, window.title, target);
             }
           }
         } catch (ex) {
