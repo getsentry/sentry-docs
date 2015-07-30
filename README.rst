@@ -40,6 +40,11 @@ To clean the build use this::
 
     make clean
 
+At this point you'll need a real webserver to serve the docs otherwise
+various browser security controls will block some of our JavaScript::
+
+    bin/web
+
 How the Docs Build
 ------------------
 
