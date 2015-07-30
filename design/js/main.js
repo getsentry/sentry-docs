@@ -247,7 +247,7 @@ $(function() {
   };
 
   var getTitle = function(html) {
-    return html.match(/<title>([^<]+)<\/title>/)[1];
+    return $('<div>' + html.match(/<title>([^<]+)<\/title>/)[1] + '</div>').text();
   };
 
   var isSameDomain = function(here, there) {
@@ -263,6 +263,24 @@ $(function() {
     }
   };
 
+  var loadContent = function(html) {
+    var body = getBody(html);
+    var content = body.find('.page-content').children();
+    var sidebar = body.find('.sidebar').children();
+    if (!content || !sidebar) {
+      throw new Error('Could not find required child elements in html');
+    }
+    $sidebar.html(sidebar);
+    $pageContent.hide().html(content);
+    tagDsnBlocks($pageContent);
+    if (dsnSelectBar) dsnSelectBar.sync();
+    $pageContent.fadeIn();
+    $('.page a.internal').click(linkHandler);
+    $pageContent.find('select').selectize();
+    $dsnContainer.show();
+    document.title = getTitle(html);
+  };
+
   var linkHandler = function(e) {
     var here = window.location;
 
@@ -270,67 +288,53 @@ $(function() {
 
     e.preventDefault();
 
-    // if we navigate to the same host but a different path, we want to
-    // dynamically load.  otherwise do the browser default.
-    if (this.pathname && this.pathname !== currentPathName) {
-      loadDynamically(this.pathname, this.hash, true);
-    } else {
-      window.location = this.hash;
-    }
+    loadDynamically(this.pathname, this.hash, true);
   };
 
   var loadDynamically = function(target, hash, pushState) {
-    console.log('Loading content for ' + target);
-    $pageContent.html('<div class="loading"><div class="loading-indicator"></div></div>');
-    $dsnContainer.hide();
-    if (pushState) {
-      window.scrollTo(0, 0);
-    }
+    var fullTarget = (target || currentPathName) + (hash || '');
 
-    $.ajax(target, {
-      success: function(html) {
-        try {
-          var body = getBody(html);
-          var content = body.find('.page-content').children();
-          var sidebar = body.find('.sidebar').children();
-          if (!content || !sidebar) {
-            console.warn('Unable to find required child elements in dynamic loader');
+    window.scrollTo(0, 0);
+
+    var done = function() {
+      if (pushState) {
+        window.history.pushState(null, document.title, fullTarget);
+      }
+      if (hash) {
+        $(document.body).scrollTop($(hash).offset().top);
+      }
+      currentPathName = target;
+    };
+
+    if (target !== currentPathName) {
+      console.log('Fetching content for ' + fullTarget);
+
+      $pageContent.html('<div class="loading"><div class="loading-indicator"></div></div>');
+
+      $dsnContainer.hide();
+
+      $.ajax(target, {
+        success: function(html) {
+          try {
+            loadContent(html);
+            done();
+          } catch (ex) {
+            console.error(ex);
             window.location.href = target;
-          } else {
-            $sidebar.html(sidebar);
-            $pageContent.hide().html(content);
-            tagDsnBlocks($pageContent);
-            if (dsnSelectBar) dsnSelectBar.sync();
-            $pageContent.fadeIn();
-            $('.page a.internal').click(linkHandler);
-            $pageContent.find('select').selectize();
-            $dsnContainer.show();
-            var $title = $("title");
-            $title.innerHTML = getTitle(html);
-            document.title = $title.innerText;
-            var fullTarget = target + (hash || '');
-            window.history.pushState({}, window.title, fullTarget);
-            if (hash) {
-              window.scrollTo(0, $(hash)[0].offsetTop);
-            }
           }
-        } catch (ex) {
-          console.error(ex);
+        },
+        error: function() {
           window.location.href = target;
         }
-      },
-      error: function() {
-        window.location.href = target;
-      }
-    });
-
-    currentPathName = document.location.pathName;
+      });
+    } else {
+      console.log('Jumping to ' + fullTarget);
+      done();
+    }
   };
 
   $(window).on('popstate', function(e){
-    if (currentPathName !== document.location.pathname) {
-      loadDynamically(document.location.pathname);
-    }
+    loadDynamically(document.location.pathname, document.location.hash, false);
   });
 
   $('a').each(rewriteLink);
