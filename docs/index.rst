@@ -36,7 +36,7 @@ these links relevant:
 .. sentry:edition:: on-premise
 
    * New to Sentry? Have a look at the :doc:`quickstart`.
-   * Need help installing Sentry? See :doc:server/installation`
+   * Need help installing Sentry? See :doc:`server/installation`
    * Stuck? Feel free to contact :doc:`support`.
 
 Integrations
