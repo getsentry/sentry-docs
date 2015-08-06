@@ -40,8 +40,6 @@ either the sentry community edition or some community maintained projects.
 
 IRC
     `irc.freenode.net #sentry <irc://irc.freenode.net/sentry>`_
-Twitter
-    `@getsentry <https://twitter.com/getsentry>`_
 Google Groups
     `Google Groups <https://groups.google.com/forum/?fromgroups#!forum/getsentry>`_
 
