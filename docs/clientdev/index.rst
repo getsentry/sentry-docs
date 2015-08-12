@@ -128,6 +128,10 @@ You should parse the following settings:
 If any of these values are not present, the client should notify the user
 immediately that they've misconfigured the client.
 
+Finally, the actual endpoint you'd POST data to would be:
+
+  '___API_URL___/api/___PROJECT_ID___/store/'
+
 Building the JSON Packet
 ------------------------
 
