@@ -28,7 +28,7 @@ function dsnToHtml(parsedDsn, pub) {
     auth = escape(parsedDsn.publicKey);
   } else {
     auth =
-      '<span class="dsn-auth" title="Copy paste includes key and secret.">' +
+      '<span class="dsn-auth" title="Copy paste includes key and secret." data-toggle="tooltip">' +
       escape(parsedDsn.publicKey) + ':' +
       escape(parsedDsn.secretKey) + '</span>';
   }
@@ -105,6 +105,7 @@ function selectProject(project) {
 
     if (newValue) {
       $this.html(newValue);
+      $this.find('[data-toggle="tooltip"]').tooltip();
     }
   });
 
