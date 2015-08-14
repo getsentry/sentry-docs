@@ -149,7 +149,7 @@ function renderProjectSelector(element) {
   }
   var $dropdown = $('<div class="dropdown">' +
     '<a class="dropdown-toggle" data-toggle="dropdown">' +
-      '<span class="dropdown-label">' + currentProject.name + '</span>' +
+      '<span class="dropdown-label">' + escape(currentProject.name) + '</span>' +
       '<span class="caret"></span>' +
     '</a>' +
     '<ul class="dropdown-menu">' +
