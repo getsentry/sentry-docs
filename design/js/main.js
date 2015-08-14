@@ -346,12 +346,17 @@ $(function() {
       withCredentials: true
     },
     success: function(resp) {
-      projectList = resp.projects.map(function(proj) {
+      projectList = resp.projects.map(function(project) {
+        var projectLabel = project.projectName;
+        if (project.projectName.indexOf(project.teamName) === -1) {
+          projectLabel = project.teamName + ' / ' + projectLabel;
+        }
+
         return {
-          id: proj.id,
-          dsn: proj.dsn,
-          name: proj.teamName + ' / ' + proj.projectName,
-          group: proj.organizationName
+          id: project.id,
+          dsn: project.dsn,
+          name: projectLabel,
+          group: project.organizationName
         };
       });
       if (projectList.length === 0) {
