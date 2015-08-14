@@ -104,7 +104,7 @@ function selectProject(project) {
     }
 
     if (newValue) {
-      $this.html(newValue);
+      $this.html(newValue).hide().fadeIn();
       $this.find('[data-toggle="tooltip"]').tooltip();
     }
   });
