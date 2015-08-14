@@ -112,7 +112,7 @@ allow the first argument as a DSN string. This string contains the following bit
 The final endpoint you'll be sending requests to is constructed per the
 following::
 
-    '{URI}api/{PROJECT ID}/store/'
+    '{URI}/api/{PROJECT ID}/store/'
 
 For example, given the following constructor::
 
@@ -125,8 +125,12 @@ You should parse the following settings:
 * Secret Key = ``secret``
 * Project ID = ``1``
 
-If any of these values are not present, the client should notify the user
-immediately that they've misconfigured the client.
+The resulting POST request would then transmit to::
+
+  'https://sentry.example.com/api/1/store/'
+
+.. note:: If any of configuration values are not present, the client should notify the user
+          immediately that they've misconfigured the client.
 
 Building the JSON Packet
 ------------------------
