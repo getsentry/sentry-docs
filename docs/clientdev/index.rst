@@ -41,7 +41,7 @@ look almost identical no matter the language:
 
 1. Creation of the client (sometimes this is hidden to the user)::
 
-      var myClient = new RavenClient('___DSN___');
+      var myClient = new RavenClient('{DSN}');
 
 2. Capturing an event::
 
@@ -55,7 +55,7 @@ The constructor ideally allows several configuration methods. The first
 argument should always be the DSN value (if possible), followed by an
 optional secondary argument which is a map of options::
 
-    client = new RavenClient('___DSN___', {
+    client = new RavenClient('{DSN}', {
         'tags': {'foo': 'bar'}
     })
 
@@ -95,11 +95,11 @@ something like the following::
 
 Finally, provide a CLI to test your client's configuration. Python example::
 
-    raven test ___DSN___
+    raven test {DSN}
 
 Ruby example::
 
-    rake raven:test ___DSN___
+    rake raven:test {DSN}
 
 Parsing the DSN
 ---------------
@@ -116,14 +116,14 @@ following::
 
 For example, given the following constructor::
 
-    new RavenClient('___DSN___')
+    new RavenClient('https://public:secret@sentry.example.com/1')
 
 You should parse the following settings:
 
-* URI = ``___API_URL___``
-* Public Key = ``___PUBLIC_KEY___``
-* Secret Key = ``___SECRET_KEY___``
-* Project ID = ``___PROJECT_ID___``
+* URI = ``https://sentry.example.com``
+* Public Key = ``public``
+* Secret Key = ``secret``
+* Project ID = ``1``
 
 If any of these values are not present, the client should notify the user
 immediately that they've misconfigured the client.
@@ -212,16 +212,17 @@ When all is said and done, you should be sending an HTTP POST request to a
 Sentry webserver, where the path is the
 ``BASE_URI/api/PROJECT_ID/store/``. So given the following DSN::
 
-    ___DSN___
+    https://b70a31b3510c4cf793964a185cfe1fd0:b7d80b520139450f903720eb7991bf3d@sentry.example.com/1
 
 The request body should then somewhat resemble the following:
 
 .. sourcecode:: http
 
-    POST /api/project-id/store/ HTTP/1.1
+    POST /api/1/store/ HTTP/1.1
     User-Agent: raven-python/1.0
     Content-Type: application/json
-    X-Sentry-Auth: Sentry sentry_version=5, sentry_timestamp=1329096377,
+    X-Sentry-Auth: Sentry sentry_version=7,
+      sentry_timestamp=1329096377,
       sentry_key=b70a31b3510c4cf793964a185cfe1fd0,
       sentry_secret=b7d80b520139450f903720eb7991bf3d,
       sentry_client=raven-python/1.0

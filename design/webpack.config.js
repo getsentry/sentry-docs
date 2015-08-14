@@ -7,8 +7,7 @@ module.exports = {
     'styles': './less/main.less',
     'vendor': [
       'jquery',
-      'bootstrap',
-      'selectize'
+      'bootstrap'
     ]
   },
   output: {

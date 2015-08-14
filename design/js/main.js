@@ -1,5 +1,7 @@
 var $ = require("jquery");
-var bootstrap = require("bootstrap")
+var bootstrap = require("bootstrap");
+
+var projectList = [];
 
 function escape(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -40,7 +42,11 @@ function dsnToHtml(parsedDsn, pub) {
 }
 
 function tagDsnBlocks(parent) {
-  parent.find('div.highlight pre,code').each(function() {
+  parent.find('div.highlight pre').each(function() {
+    var hasVariables = /___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g.test(this.innerHTML);
+    if (!hasVariables) {
+      return;
+    }
     var contents = this.innerHTML.replace(/___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g, function(match) {
       if (match === '___DSN___') {
         return '<span class="rewrite-dsn" data-value="dsn">' + match + '</span>';
@@ -56,13 +62,20 @@ function tagDsnBlocks(parent) {
         return '<span class="rewrite-dsn" data-value="project-id">' + match + '</span>';
       }
     });
-    this.innerHTML = contents;
+    var wrapper = $('<div class="project-selector-wrapper"></div>');
+    var header = $('<div class="project-selector-header">' +
+      '<div class="project-label">Showing configuration for:</div>' +
+      '<div class="project-selector"></div>' +
+    '</div>');
+    $(this).html(contents).wrap(wrapper);
+    $(this).parent().prepend(header);
+    renderProjectSelector(header.find('.project-selector'));
   });
 }
 
-function updateDsnTemplates(dsn) {
-  if (!dsn) return;
-  var parsedDsn = parseDsn(dsn);
+function selectProject(project) {
+  if (!project) return;
+  var parsedDsn = parseDsn(project.dsn);
 
   $('.rewrite-dsn').each(function(){
     var $this = $(this);
@@ -94,74 +107,72 @@ function updateDsnTemplates(dsn) {
       $this.html(newValue);
     }
   });
-}
 
-function rememberLastDsn(dsns, currentDsn) {
-  dsns.forEach(function(dsn) {
-    if (dsn.dsn === currentDsn) {
-      document.cookie = 'dsnid=' + dsn.id;
+  rememberLastProject(project);
+
+  $('.project-selector .dropdown-label').text(project.name);
+  $('.project-selector li').each(function(){
+    var $this = $(this);
+    var thisProject = $this.data('project');
+    if (!thisProject) return;
+    if (thisProject.id === project.id) {
+      $this.addClass('active');
+    } else {
+      $this.removeClass('active');
     }
   });
 }
 
-function createDsnBar(element, projects) {
-  var onDsnChangeFunc = function(dsn) {};
+function rememberLastProject(project) {
+  document.cookie = 'dsnid=' + project.id;
+}
 
+function renderProjectSelector(element) {
   var m = document.cookie.match(/dsnid=(\d+)/);
   var dsnId = m ? parseInt(m[1]) : null;
-  var currentDsn = null;
-
-  var selectBox = $('<select class="dsn-select"></select>')
-    .on('change', function() {
-      rememberLastDsn(projects, this.value);
-      currentDsn = this.value;
-      onDsnChangeFunc(this.value);
-    });
-  var bar = $('<div class="dsn"></div>')
-    .append(selectBox);
-  $(element).append(bar);
+  var currentProject = null;
 
   var projectsByGroup = {};
-  projects.forEach(function(proj) {
-    if (typeof projectsByGroup[proj.group] === "undefined") {
-      projectsByGroup[proj.group] = [];
+  projectList.forEach(function(project) {
+    if (typeof projectsByGroup[project.group] === "undefined") {
+      projectsByGroup[project.group] = [];
     }
-    projectsByGroup[proj.group].push(proj);
+    projectsByGroup[project.group].push(project);
+    if (project.id === dsnId) {
+      currentProject = project;
+    }
   });
 
+  if (!currentProject) {
+    currentProject = projectList[0];
+  }
+  var $dropdown = $('<div class="dropdown">' +
+    '<a class="dropdown-toggle" data-toggle="dropdown">' +
+      '<span class="dropdown-label">' + currentProject.name + '</span>' +
+      '<span class="caret"></span>' +
+    '</a>' +
+    '<ul class="dropdown-menu">' +
+    '</ul>' +
+  '</div>');
+  $(element).append($dropdown);
+
+  var $menu = $dropdown.find('.dropdown-menu');
   for (var group in projectsByGroup) {
-    var optgroup = $('<optgroup></optgroup>')
-      .attr('label', group);
+    $menu.append($('<li class="nav-header"></li>').append($('<h6></h6>').text(group)));
 
-    projectsByGroup[group].forEach(function(proj) {
-      optgroup.append($('<option></option>')
-        .attr('value', proj.dsn)
-        .text(proj.name));
-      if (proj.id === dsnId) {
-        currentDsn = proj.dsn;
-      }
+    projectsByGroup[group].forEach(function(project) {
+      var className = (currentProject.id === project.id ? 'active': '');
+      var $link = $('<a></a>').text(project.name);
+      $link.on('click', function(){
+        selectProject(project);
+      });
+      $menu.append($('<li class="' + className + '"></li>').data('project', project).append($link));
     });
-    selectBox.append(optgroup);
   }
 
-  if (!currentDsn) {
-    currentDsn = projects[0].dsn;
-  }
+  $dropdown.find('.dropdown-toggle').dropdown();
 
-  if (currentDsn) {
-    selectBox.val(currentDsn);
-  }
-
-  return {
-    selectBox: selectBox.selectize(),
-    currentDsn: currentDsn,
-    onDsnSelect: function(callback) {
-      onDsnChangeFunc = callback;
-    },
-    sync: function() {
-      onDsnChangeFunc(currentDsn);
-    }
-  };
+  selectProject(currentProject);
 }
 
 function renderHeader(user) {
@@ -195,38 +206,20 @@ function renderHeader(user) {
   $('#user_nav').html(userNav).fadeIn();
 }
 
-function renderDsnSelector(dsnContainer, projects) {
-  var dsnSelectBar = createDsnBar(dsnContainer, projects);
-
-  dsnSelectBar.onDsnSelect(updateDsnTemplates);
-  $('body').on('dblclick', 'span.dsn', function(evt) {
-    evt.preventDefault();
-    var rng = document.createRange();
-    rng.selectNode(this);
-    window.getSelection().addRange(rng);
-  });
-
-  if (projects.length &&
-      DOCUMENTATION_OPTIONS.SENTRY_DOC_VARIANT == 'hosted') {
-    dsnContainer.fadeIn();
+$(function() {
+  if (document.location.host === "localhost:9000") {
+    var API = 'http://www.dev.getsentry.net:8000/docs/api';
+  } else {
+    var API = 'https://www.getsentry.com/docs/api';
   }
 
-  dsnSelectBar.sync();
-
-  return dsnSelectBar;
-}
-
-$(function() {
-  //var API = 'http://www.dev.getsentry.net:8000/docs/api';
-  var API = 'https://www.getsentry.com/docs/api';
-
   var dummyDsn = {
+    id: '-1',
     dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
     name: 'Example DSN',
     group: 'Example'
   };
 
-  var projects = null;
   var user = null;
   var dsnSelectBar = null;
 
@@ -238,7 +231,6 @@ $(function() {
 
   var initInterface = function() {
     tagDsnBlocks($pageContent);
-    dsnSelectBar = renderDsnSelector($dsnContainer, projects);
     renderHeader(user);
   };
 
@@ -273,10 +265,14 @@ $(function() {
     $sidebar.html(sidebar);
     $pageContent.hide().html(content);
     tagDsnBlocks($pageContent);
-    if (dsnSelectBar) dsnSelectBar.sync();
+    $('body').on('dblclick', 'span.dsn', function(evt) {
+      evt.preventDefault();
+      var rng = document.createRange();
+      rng.selectNode(this);
+      window.getSelection().addRange(rng);
+    });
     $pageContent.fadeIn();
     $('.page a.internal').click(linkHandler);
-    $pageContent.find('select').selectize();
     $dsnContainer.show();
     document.title = getTitle(html);
   };
@@ -340,7 +336,6 @@ $(function() {
   $('a').each(rewriteLink);
 
   $('a.internal').click(linkHandler);
-  $('.page-content select').selectize();
 
   $.ajax({
     type: 'GET',
@@ -350,7 +345,7 @@ $(function() {
       withCredentials: true
     },
     success: function(resp) {
-      projects = resp.projects.map(function(proj) {
+      projectList = resp.projects.map(function(proj) {
         return {
           id: proj.id,
           dsn: proj.dsn,
@@ -358,15 +353,15 @@ $(function() {
           group: proj.organizationName
         };
       });
-      if (projects.length === 0) {
-        projects.unshift(dummyDsn);
+      if (projectList.length === 0) {
+        projectList.unshift(dummyDsn);
       }
       user = resp.user;
       initInterface();
     },
     error: function() {
       console.error('Failed to load user data from Sentry');
-      projects = [dummyDsn];
+      projectList = [dummyDsn];
       user = {isAuthenticated: false};
       initInterface();
     }
