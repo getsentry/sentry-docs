@@ -41,7 +41,7 @@ function dsnToHtml(parsedDsn, pub) {
   '</span>';
 }
 
-function tagDsnBlocks(parent) {
+function tagInteractiveBlocks(parent) {
   parent.find('div.highlight pre').each(function() {
     var hasVariables = /___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g.test(this.innerHTML);
     if (!hasVariables) {
@@ -70,6 +70,16 @@ function tagDsnBlocks(parent) {
     $(this).html(contents).wrap(wrapper);
     $(this).parent().prepend(header);
     renderProjectSelector(header.find('.project-selector'));
+  });
+
+  parent.find('div.api-response div.highlight').each(function() {
+    var response = $(this).hide();
+    $('<div class="api-response-header"></div>')
+      .append($('<a href="#">Toggle Response</a>')
+        .on('click', function() {
+          response.slideToggle();
+          return false;
+        })).insertBefore(this);
   });
 }
 
@@ -231,7 +241,7 @@ $(function() {
   var currentPathName = document.location.pathname;
 
   var initInterface = function() {
-    tagDsnBlocks($pageContent);
+    tagInteractiveBlocks($pageContent);
     renderHeader(user);
   };
 
@@ -265,7 +275,7 @@ $(function() {
     }
     $sidebar.html(sidebar);
     $pageContent.hide().html(content);
-    tagDsnBlocks($pageContent);
+    tagInteractiveBlocks($pageContent);
     $('body').on('dblclick', 'span.dsn', function(evt) {
       evt.preventDefault();
       var rng = document.createRange();

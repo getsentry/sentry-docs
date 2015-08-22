@@ -10,3 +10,5 @@ APIs.
    :maxdepth: 1
 
    overview
+
+   events
