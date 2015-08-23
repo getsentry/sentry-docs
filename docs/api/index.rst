@@ -11,7 +11,6 @@ APIs.
 
    overview
 
-   accounts
    events
    organizations
    projects
