@@ -4,7 +4,7 @@ SPHINX_DIRHTML_BUILD=$(SPHINX_BUILD) -b sentrydirhtml
 
 requirements: update-submodules
 	@echo "--> Installing base requirements"
-	@pip install awscli sphinx
+	@pip install awscli sphinx click
 	@echo ""
 
 build: design/node_modules
@@ -44,6 +44,10 @@ update-submodules:
 	@echo "--> Updating git submodules"
 	git submodule update --init
 	@echo ""
+
+generate-api-docs:
+	@echo "--> Generate API documentation"
+	@python bin/generate-api-docs.py
 
 release: requirements build sync
 
