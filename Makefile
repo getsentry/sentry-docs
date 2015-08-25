@@ -7,7 +7,7 @@ requirements: update-submodules
 	@pip install awscli sphinx click
 	@echo ""
 
-build: design/node_modules
+build: design/node_modules generate-api-docs
 	@echo "--> Prepairing theme"
 	@mkdir -p build/theme/sentry
 	@cp -R design/theme-support/* build/theme/sentry
