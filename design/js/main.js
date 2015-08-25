@@ -71,16 +71,6 @@ function tagInteractiveBlocks(parent) {
     $(this).parent().prepend(header);
     renderProjectSelector(header.find('.project-selector'));
   });
-
-  parent.find('div.api-response div.highlight').each(function() {
-    var response = $(this).hide();
-    $('<div class="api-response-header"></div>')
-      .append($('<a href="#">Toggle Response</a>')
-        .on('click', function() {
-          response.slideToggle();
-          return false;
-        })).insertBefore(this);
-  });
 }
 
 function selectProject(project) {
