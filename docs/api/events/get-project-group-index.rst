@@ -25,6 +25,7 @@ List a Project's Aggregates
                                       groups belong to.
     :pparam string project_slug: the slug of the project the groups
                                  belong to.
+    :auth: required
 
     :http-method: GET
     :http-path: /api/0/projects/{organization_slug}/{project_slug}/groups/

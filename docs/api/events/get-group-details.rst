@@ -11,6 +11,7 @@ Retrieve an Aggregate
     user reports) as well as the summarized event data.
     
     :pparam int group_id: the ID of the group to retrieve.
+    :auth: required
 
     :http-method: GET
     :http-path: /api/0/groups/{group_id}/
