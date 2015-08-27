@@ -281,6 +281,10 @@ $(function() {
   var linkHandler = function(e) {
     var here = window.location;
 
+    if (e.ctrlKey || e.metaKey) {
+      return;
+    }
+
     if (!isSameDomain(here, this)) return;
 
     e.preventDefault();
