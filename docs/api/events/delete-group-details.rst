@@ -1,14 +1,19 @@
 .. this file is auto generated. do not edit
 
-Delete an Aggregate
+Remove an Aggregate
 ===================
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: delete-group-details
 
-Path:
- ``/api/0/groups/{group_id}/``
-Method:
- ``DELETE``
+    Removes an individual aggregate.
+    
+    :pparam int group_id: the ID of the group to delete.
 
-Deletes an individual aggregate.
+    :http-method: DELETE
+    :http-path: /api/0/groups/{group_id}/
+
+Example
+-------
+
+
+.. sentry:api-scenario:: DeleteAggregate

@@ -3,12 +3,17 @@
 Latest Sample
 =============
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: get-group-events-latest
 
-Path:
- ``/api/0/groups/{group_id}/events/latest/``
-Method:
- ``GET``
+    Retrieves the details of the latest sample for an aggregate.
+    
+    :pparam int group_id: the ID of the group to get the latest sample of.
 
-Retrieves the details of the latest sample for an aggregate.
+    :http-method: GET
+    :http-path: /api/0/groups/{group_id}/events/latest/
+
+Example
+-------
+
+
+.. sentry:api-scenario:: GetLatestGroupSample

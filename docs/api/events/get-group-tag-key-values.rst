@@ -3,12 +3,12 @@
 List a Tag's Values
 ===================
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: get-group-tag-key-values
 
-Path:
- ``/api/0/groups/{group_id}/tags/{key}/values/``
-Method:
- ``GET``
+    Return a list of values associated with this key.
+    
+    :pparam int group_id: the ID of the group to retrieve.
+    :pparam string key: the tag key to look the values up for.
 
-Return a list of values associated with this key.
+    :http-method: GET
+    :http-path: /api/0/groups/{group_id}/tags/{key}/values/

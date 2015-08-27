@@ -12,15 +12,6 @@ API_DOCS = os.path.join(DOC_BASE, 'api')
 API_CACHE = os.path.join(DOC_BASE, '_apicache')
 
 
-WARNING = [
-    '.. note::',
-    '  This new API documentation is currently work in progress. '
-    'Consider using `the old documentation '
-    '<https://beta.getsentry.com/api/>`__ for the time being.',
-    ''
-]
-
-
 def color_for_string(s):
     colors = ('red', 'green', 'yellow', 'blue', 'cyan', 'magenta')
     return colors[zlib.crc32(s) % len(colors)]
@@ -67,16 +58,25 @@ def write_api_endpoint(endpoint):
         endpoint['title'],
         '=' * len(endpoint['title']),
         '',
-    ] + WARNING + [
-        'Path:',
-        ' ``%s``' % endpoint['path'],
-        'Method:',
-        ' ``%s``' % endpoint['method'],
+        '.. sentry:api-endpoint:: %s' % endpoint['endpoint_name'],
         '',
     ]
 
     for line in endpoint['text']:
-        lines.append(line)
+        lines.append('    ' + line)
+
+    lines.append('')
+    lines.append('    :http-method: %s' % endpoint['method'])
+    lines.append('    :http-path: %s' % endpoint['path'])
+
+    if endpoint['scenarios']:
+        lines.append('')
+        lines.append('Example')
+        lines.append('-------')
+        lines.append('')
+        for scenario in endpoint['scenarios']:
+            lines.append('')
+            lines.append('.. sentry:api-scenario:: %s' % scenario)
 
     with open(fn, 'w') as f:
         for line in lines:
@@ -92,8 +92,8 @@ def write_section_index(section):
         section['title'],
         '=' * len(section['title']),
         '',
-    ] + WARNING + [
         '.. toctree::',
+        '   :maxdepth: 1',
         '',
     ]
     for entry in section['entries']:

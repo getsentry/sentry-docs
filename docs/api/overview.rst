@@ -76,6 +76,10 @@ bound to, you might make a request like so::
 
     $ curl -u API_KEY: https://app.getsentry.com/api/0/projects/1/
 
+You might notice that some API calls refer to user based authentication.
+This is somethign that is currently only available for internal calls to
+the API with a user cookie.
+
 Pagination
 ----------
 

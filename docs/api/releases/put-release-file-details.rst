@@ -3,12 +3,9 @@
 Update a File
 =============
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: put-release-file-details
 
-Path:
- ``/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/files/{file_id}/``
-Method:
- ``PUT``
+    Update metadata about an existing file.
 
-Update metadata about an existing file.
+    :http-method: PUT
+    :http-path: /api/0/projects/{organization_slug}/{project_slug}/releases/{version}/files/{file_id}/

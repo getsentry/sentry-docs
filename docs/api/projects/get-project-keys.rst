@@ -3,12 +3,9 @@
 List a Project's Client Keys
 ============================
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: get-project-keys
 
-Path:
- ``/api/0/projects/{organization_slug}/{project_slug}/keys/``
-Method:
- ``GET``
+    Return a list of client keys bound to a project.
 
-Return a list of client keys bound to a project.
+    :http-method: GET
+    :http-path: /api/0/projects/{organization_slug}/{project_slug}/keys/

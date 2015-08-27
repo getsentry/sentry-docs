@@ -3,10 +3,8 @@
 Organizations
 =============
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
-
 .. toctree::
+   :maxdepth: 1
 
    post-organization-index
    post-organization-teams

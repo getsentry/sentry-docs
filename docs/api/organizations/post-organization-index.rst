@@ -3,12 +3,9 @@
 Create a New Organization
 =========================
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: post-organization-index
 
-Path:
- ``/api/0/organizations/``
-Method:
- ``POST``
+    Create a new organization.
 
-Create a new organization.
+    :http-method: POST
+    :http-path: /api/0/organizations/

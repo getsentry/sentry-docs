@@ -3,12 +3,9 @@
 Delete a Release
 ================
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: delete-release-details
 
-Path:
- ``/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/``
-Method:
- ``DELETE``
+    Permanently remove a release and all of its files.
 
-Permanently remove a release and all of its files.
+    :http-method: DELETE
+    :http-path: /api/0/projects/{organization_slug}/{project_slug}/releases/{version}/

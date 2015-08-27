@@ -3,12 +3,9 @@
 Create a New Project
 ====================
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: post-team-project-index
 
-Path:
- ``/api/0/teams/{organization_slug}/{team_slug}/projects/``
-Method:
- ``POST``
+    Create a new project bound to a team.
 
-Create a new project bound to a team.
+    :http-method: POST
+    :http-path: /api/0/teams/{organization_slug}/{team_slug}/projects/

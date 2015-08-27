@@ -3,12 +3,9 @@
 Update a Release
 ================
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: put-release-details
 
-Path:
- ``/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/``
-Method:
- ``PUT``
+    Update a release.
 
-Update a release.
+    :http-method: PUT
+    :http-path: /api/0/projects/{organization_slug}/{project_slug}/releases/{version}/

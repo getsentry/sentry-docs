@@ -3,12 +3,9 @@
 List your Organizations
 =======================
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: get-organization-index
 
-Path:
- ``/api/0/organizations/``
-Method:
- ``GET``
+    Return a list of organizations available to the authenticated session.
 
-Return a list of organizations available to the authenticated session.
+    :http-method: GET
+    :http-path: /api/0/organizations/

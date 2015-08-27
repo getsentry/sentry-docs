@@ -3,13 +3,10 @@
 Update a Project
 ================
 
-.. note::
-  This new API documentation is currently work in progress. Consider using `the old documentation <https://beta.getsentry.com/api/>`__ for the time being.
+.. sentry:api-endpoint:: put-project-details
 
-Path:
- ``/api/0/projects/{organization_slug}/{project_slug}/``
-Method:
- ``PUT``
+    Update various attributes and configurable settings for the given
+    project.
 
-Update various attributes and configurable settings for the given
-project.
+    :http-method: PUT
+    :http-path: /api/0/projects/{organization_slug}/{project_slug}/
