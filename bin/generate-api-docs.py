@@ -63,7 +63,7 @@ def write_api_endpoint(endpoint):
     ]
 
     for line in endpoint['text']:
-        lines.append('    ' + line)
+        lines.append(('    ' + line).rstrip())
 
     lines.append('')
     lines.append('    :http-method: %s' % endpoint['method'])
