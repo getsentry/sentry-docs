@@ -6,7 +6,7 @@ List a Team's Projects
 .. sentry:api-endpoint:: get-team-project-index
 
     Return a list of projects bound to a team.
-    
+
         {method} {path}
 
     :http-method: GET

@@ -9,7 +9,7 @@ Retrieve an Aggregate
     sometimes referred to as groups.  This returns the basic stats for
     the group (the bar graph), some overall numbers (number of comments,
     user reports) as well as the summarized event data.
-    
+
     :pparam int group_id: the ID of the group to retrieve.
     :auth: required
 

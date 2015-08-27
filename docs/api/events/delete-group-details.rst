@@ -6,7 +6,7 @@ Remove an Aggregate
 .. sentry:api-endpoint:: delete-group-details
 
     Removes an individual aggregate.
-    
+
     :pparam int group_id: the ID of the group to delete.
     :auth: required
 

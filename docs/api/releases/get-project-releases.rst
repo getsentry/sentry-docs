@@ -6,7 +6,7 @@ List a Project's Releases
 .. sentry:api-endpoint:: get-project-releases
 
     Retrieve a list of releases for a given project.
-    
+
     To find releases for a given version the 'query' parameter may be to
     create a "version STARTS WITH" filter.
 

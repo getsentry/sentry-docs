@@ -6,7 +6,7 @@ Delete a File
 .. sentry:api-endpoint:: delete-release-file-details
 
     Permanently remove a file from a release.
-    
+
     This will also remove the physical file from storage.
 
     :http-method: DELETE

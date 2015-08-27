@@ -8,19 +8,19 @@ Bulk Mutate a List of Aggregates
     Bulk mutate various attributes on aggregates.  The list of groups
     to modify is given through the `id` query parameter.  It is repeated
     for each group that should be modified.
-    
+
     - For non-status updates, the `id` query parameter is required.
     - For status updates, the `id` query parameter may be omitted
       for a batch "update all" query.
     - An optional `status` query parameter may be used to restrict
       mutations to only events with the given status.
-    
+
     The following attributes can be modified and are supplied as
     JSON object in the body:
-    
+
     If any ids are out of scope this operation will succeed without
     any data mutation.
-    
+
     :qparam int id: a list of IDs of the groups to be mutated.  This
                     parameter shall be repeated for each group.  It
                     is optional only if a status is mutated in which

@@ -6,7 +6,7 @@ Retrieve a Team
 .. sentry:api-endpoint:: get-team-details
 
     Return details on an individual team.
-    
+
         {method} {path}
 
     :http-method: GET

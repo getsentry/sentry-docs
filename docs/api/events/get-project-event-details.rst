@@ -6,7 +6,7 @@ Retrieve an Event for a Project
 .. sentry:api-endpoint:: get-project-event-details
 
     Return details on an individual event.
-    
+
     :pparam string organization_slug: the slug of the organization the
                                       event belongs to.
     :pparam string project_slug: the slug of the project the event

@@ -6,7 +6,7 @@ Latest Sample
 .. sentry:api-endpoint:: get-group-events-latest
 
     Retrieves the details of the latest sample for an aggregate.
-    
+
     :pparam int group_id: the ID of the group to get the latest sample of.
 
     :http-method: GET
