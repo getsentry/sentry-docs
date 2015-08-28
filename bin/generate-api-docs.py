@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import re
 import os
 import zlib
 import json
@@ -10,6 +11,8 @@ BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
 DOC_BASE = os.path.join(BASE, 'docs')
 API_DOCS = os.path.join(DOC_BASE, 'api')
 API_CACHE = os.path.join(DOC_BASE, '_apicache')
+
+_auth_re = re.compile(r'^\s*:auth:\s+(.*?)$')
 
 
 def color_for_string(s):
@@ -62,12 +65,28 @@ def write_api_endpoint(endpoint):
         '',
     ]
 
+    user_context_needed = False
     for line in endpoint['text']:
         lines.append(('    ' + line).rstrip())
+
+        auth = _auth_re.search(line)
+        if auth is not None:
+            for item in auth.group(1).split(','):
+                if item.lower().strip() == 'user-context-needed':
+                    user_context_needed = True
+                    break
 
     lines.append('')
     lines.append('    :http-method: %s' % endpoint['method'])
     lines.append('    :http-path: %s' % endpoint['path'])
+
+    if user_context_needed:
+        lines.append('')
+        lines.append('    .. note::')
+        lines.append('       This endpoint needs a user context which is '
+                     'currently not possible through API keys. This '
+                     'endpoint is presently only useful for Sentry '
+                     'itself.')
 
     if endpoint['scenarios']:
         lines.append('')
