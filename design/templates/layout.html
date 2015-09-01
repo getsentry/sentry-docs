@@ -89,22 +89,32 @@
   <div class="body">
     <div class="container page">
       <div class="sidebar col-md-3 col-sm-4">
+        <h3>{{ {
+          'hosted': 'Hosted Sentry',
+          'on-premise': 'Sentry On-Premise',
+        }[sentry_doc_variant] }}</h3>
         {% set toc_parts = build_toc(
             split_toc={
             'learn': ['server', 'rollups', 'tagging', 'scrubbing-data', 'notifications', 'membership', 'sso'],
             'misc': ['history', 'ssl'],
             'clients': ['clients/index'],
-            'dev': ['clientdev/index', 'api/index', 'license',
-                    'docdev', 'project-resources'],
+            'api': ['api/index'],
+            'dev': ['clientdev/index', 'license', 'docdev', 'project-resources'],
             }
         ) %}
-        <h3>{{ {
-          'hosted': 'Hosted Sentry',
-          'on-premise': 'Sentry On-Premise',
-        }[sentry_doc_variant] }}</h3>
+        {% if pagename.startswith('api/') %}
+        <div class="back-to-docs toc">
+          <ul>
+            <li><a href="{{ pathto(master_doc) }}">Back to Docs</a></li>
+          </ul>
+        </div>
+        <div class="toc api-toc">
+          {{ toc_parts.api }}
+        </div>
+        {% else %}
         <div class="toc global-toc">
           <ul>
-            <li class="toctree-l1"><a href="{{ pathto(master_doc) }}" class="reference internal{%
+            <li><a href="{{ pathto(master_doc) }}" class="reference internal{%
               if pagename == master_doc %} current{% endif %}">Overview</a></li>
           </ul>
           {{ toc_parts.main }}
@@ -120,16 +130,20 @@
         <div class="toc dev-toc">
           {{ toc_parts.dev }}
         </div>
+        {% endif %}
+
         <h3>Meta</h3>
         <div class="toc discover-toc">
           <ul>
-            <li class="toctree-l1"><a href="{{ pathto('ssl') }}" class="reference internal{%
+            <li><a href="{{ pathto('api/index') }}" class="reference internal{%
+              if pagename == 'api/index' %} current{% endif %}">API</a></li>
+            <li><a href="{{ pathto('ssl') }}" class="reference internal{%
               if pagename == 'ssl' %} current{% endif %}">SSL</a></li>
-            <li class="toctree-l1"><a href="{{ pathto('history') }}" class="reference internal{%
+            <li><a href="{{ pathto('history') }}" class="reference internal{%
               if pagename == 'history' %} current{% endif %}">History</a></li>
-            <li class="toctree-l1"><a href="{{ pathto('search') }}" class="reference internal{%
+            <li><a href="{{ pathto('search') }}" class="reference internal{%
               if pagename == 'search' %} current{% endif %}">Search</a></li>
-            <li class="toctree-l1"><a href="{{ pathto('sitemap') }}" class="reference internal{%
+            <li><a href="{{ pathto('sitemap') }}" class="reference internal{%
               if pagename == 'sitemap' %} current{% endif %}">Sitemap</a></li>
           </ul>
         </div>
