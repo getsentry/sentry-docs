@@ -2,11 +2,11 @@
 
 *   .. class:: platformlink-python
 
-    :doc:`/clients/python/index` Including Django, Flask, and others.
+    :doc:`/clients/python/index` Including Django, Flask, and Pyramid.
 
 *   .. class:: platformlink-js
 
-    :doc:`/clients/javascript/index` Including jQuery, Angular.js, Ember, and others.
+    :doc:`/clients/javascript/index` Including jQuery, Angular.js, and Ember.
 
 *   .. class:: platformlink-php
 
