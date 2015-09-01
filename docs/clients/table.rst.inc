@@ -6,7 +6,7 @@
 
 *   .. class:: platformlink-js
 
-    :doc:`/clients/javascript/index` Including Node, Browser environments etc.
+    :doc:`/clients/javascript/index` Including jQuery, Angular.js, Ember, and others.
 
 *   .. class:: platformlink-php
 
