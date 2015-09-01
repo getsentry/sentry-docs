@@ -8,9 +8,13 @@
 
     :doc:`/clients/javascript/index` Including jQuery, Angular.js, and Ember.
 
+*   .. class:: platformlink-node
+
+    :doc:`/clients/node/index` Including Express and Connect.
+
 *   .. class:: platformlink-php
 
-    :doc:`/clients/php/index` Including PHP apps.
+    :doc:`/clients/php/index` For PHP apps.
 
 *   .. class:: platformlink-ruby
 
