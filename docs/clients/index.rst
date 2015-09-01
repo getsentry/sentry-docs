@@ -11,6 +11,7 @@ licenses.
 
    python/index
    javascript/index
+   node/index
    php/index
    ruby/index
    objc/index
