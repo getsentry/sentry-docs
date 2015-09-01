@@ -295,7 +295,9 @@ $(function() {
   var loadDynamically = function(target, hash, pushState) {
     var fullTarget = (target || currentPathName) + (hash || '');
 
-    window.scrollTo(0, 0);
+    if (pushState) {
+      window.scrollTo(0, 0);
+    }
 
     var done = function() {
       if (pushState) {
