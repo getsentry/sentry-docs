@@ -7,5 +7,15 @@ List an Organization's Projects
 
     Return a list of projects bound to a organization.
 
+    :pparam string organization_slug: the slug of the organization for
+                                      which the projects should be listed.
+    :auth: required
+
     :http-method: GET
     :http-path: /api/0/organizations/{organization_slug}/projects/
+
+Example
+-------
+
+
+.. sentry:api-scenario:: ListOrganizationProjects

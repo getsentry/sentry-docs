@@ -7,7 +7,7 @@ Remove an Aggregate
 
     Removes an individual aggregate.
 
-    :pparam int group_id: the ID of the group to delete.
+    :pparam string group_id: the ID of the group to delete.
     :auth: required
 
     :http-method: DELETE
