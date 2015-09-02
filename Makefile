@@ -4,10 +4,10 @@ SPHINX_DIRHTML_BUILD=$(SPHINX_BUILD) -b sentrydirhtml
 
 requirements: update-submodules
 	@echo "--> Installing base requirements"
-	@pip install awscli sphinx
+	@pip install awscli sphinx click
 	@echo ""
 
-build: design/node_modules
+build-only: design/node_modules
 	@echo "--> Prepairing theme"
 	@mkdir -p build/theme/sentry
 	@cp -R design/theme-support/* build/theme/sentry
@@ -20,6 +20,8 @@ build: design/node_modules
 	@SENTRY_DOC_VARIANT=on-premise $(SPHINX_HTML_BUILD) docs build/html/on-premise
 	@SENTRY_DOC_VARIANT=on-premise $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/on-premise
 	@echo ""
+
+build: update-api-docs build-only
 
 clean:
 	@echo "--> Cleaning build"
@@ -45,6 +47,23 @@ update-submodules:
 	git submodule update --init
 	@echo ""
 
+extract-api-docs:
+	@echo "--> Update api-docs venv"
+	mkdir -p docs/_apicache
+	virtualenv .api-docs-venv
+	. .api-docs-venv/bin/activate; cd doc-modules/sentry; make develop-only
+	@echo "--> Extracing API documentation"
+	. .api-docs-venv/bin/activate; python doc-modules/sentry/api-docs/generator.py --output-path=docs/_apicache
+
+generate-api-docs:
+	@echo "--> Generate API documentation"
+	@python bin/generate-api-docs.py
+
+update-api-docs: extract-api-docs generate-api-docs
+
 release: requirements build sync
+
+serve:
+	@./bin/web
 
 .PHONY: build requirements clean sync watch update-submodules

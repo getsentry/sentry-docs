@@ -100,6 +100,7 @@ and platforms.
    :hidden:
 
    clientdev/index
+   api/index
    docdev
    project-resources
 
