@@ -224,7 +224,6 @@ $(function() {
   var user = null;
   var dsnSelectBar = null;
 
-  var $dsnContainer = $('.dsn-container');
   var $pageContent = $('.page-content');
   var $sidebar = $('.sidebar');
 
@@ -274,7 +273,6 @@ $(function() {
     });
     $pageContent.fadeIn();
     $('.page a.internal').click(linkHandler);
-    $dsnContainer.show();
     document.title = getTitle(html);
   };
 
@@ -307,8 +305,6 @@ $(function() {
       console.log('Fetching content for ' + fullTarget);
 
       $pageContent.html('<div class="loading"><div class="loading-indicator"></div></div>');
-
-      $dsnContainer.hide();
 
       $.ajax(target, {
         success: function(html) {
