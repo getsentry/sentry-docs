@@ -1,7 +1,8 @@
 var $ = require("jquery");
 var bootstrap = require("bootstrap");
 
-var projectList = [];
+var dsnList = [];
+var apiKeyList = [];
 
 function escape(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -43,11 +44,12 @@ function dsnToHtml(parsedDsn, pub) {
 
 function tagInteractiveBlocks(parent) {
   parent.find('div.highlight pre').each(function() {
-    var hasVariables = /___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g.test(this.innerHTML);
+    var hasVariables = /___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|ENCODED_API_KEY|PROJECT_ID)___/g.test(this.innerHTML);
     if (!hasVariables) {
       return;
     }
-    var contents = this.innerHTML.replace(/___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|PROJECT_ID)___/g, function(match) {
+    var isApiKeySection = false;
+    var contents = this.innerHTML.replace(/___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|ENCODED_API_KEY|PROJECT_ID)___/g, function(match) {
       if (match === '___DSN___') {
         return '<span class="rewrite-dsn" data-value="dsn">' + match + '</span>';
       } else if (match === '___PUBLIC_DSN___') {
@@ -58,24 +60,35 @@ function tagInteractiveBlocks(parent) {
         return '<span class="rewrite-dsn" data-value="secret-key">' + match + '</span>';
       } else if (match === '___API_URL___') {
         return '<span class="rewrite-dsn" data-value="api-url">' + match + '</span>';
+      } else if (match === '___ENCODED_API_KEY___') {
+        isApiKeySection = true;
+        return '<span class="rewrite-dsn" data-value="encoded-api-key">' + match + '</span>';
       } else if (match === '___PROJECT_ID___') {
         return '<span class="rewrite-dsn" data-value="project-id">' + match + '</span>';
       }
     });
+    var title = isApiKeySection ? 'API Key for Request' : 'Showing configuration for';
     var wrapper = $('<div class="project-selector-wrapper"></div>');
     var header = $('<div class="project-selector-header">' +
-      '<div class="project-label">Showing configuration for:</div>' +
+      '<div class="project-label">' + title + ':</div>' + 
       '<div class="project-selector"></div>' +
     '</div>');
     $(this).html(contents).wrap(wrapper);
     $(this).parent().prepend(header);
-    renderProjectSelector(header.find('.project-selector'));
+
+    renderProjectSelector(header.find('.project-selector'),
+                          isApiKeySection ? 'apikey' : 'dsn');
   });
 }
 
-function selectProject(project) {
-  if (!project) return;
-  var parsedDsn = parseDsn(project.dsn);
+function selectItem(item, section) {
+  if (!item) return;
+
+  var parsedDsn;
+
+  if (section == 'dsn') {
+    parsedDsn = parseDsn(item.dsn);
+  }
 
   $('.rewrite-dsn').each(function(){
     var $this = $(this);
@@ -96,10 +109,18 @@ function selectProject(project) {
         newValue = '<span class="dsn-secret-key">' + escape(parsedDsn.secretKey) + '</span>';
         break;
       case "api-url":
-        newValue = escape(parsedDsn.scheme + parsedDsn.host);
+        if (section == 'apikey') {
+          // XXX: configurable
+          newValue = 'https://app.getsentry.com/api/';
+        } else {
+          newValue = escape(parsedDsn.scheme + parsedDsn.host);
+        }
         break;
-      case "project-id":
-        newValue = escape('' + parsedDsn.project);
+      case "encoded-api-key":
+        newValue = item.encodedKey;
+        break;
+      case "item-id":
+        newValue = escape('' + parsedDsn.item);
         break;
     }
 
@@ -109,14 +130,14 @@ function selectProject(project) {
     }
   });
 
-  rememberLastProject(project);
+  document.cookie = section + 'id=' + item.id;
 
-  $('.project-selector .dropdown-label').text(project.name);
-  $('.project-selector li').each(function(){
+  $('.item-selector .dropdown-label').text(item.name);
+  $('.item-selector li').each(function(){
     var $this = $(this);
-    var thisProject = $this.data('project');
-    if (!thisProject) return;
-    if (thisProject.id === project.id) {
+    var thisItem = $this.data('item');
+    if (!thisItem) return;
+    if (thisItem.id === item.id) {
       $this.addClass('active');
     } else {
       $this.removeClass('active');
@@ -124,32 +145,37 @@ function selectProject(project) {
   });
 }
 
-function rememberLastProject(project) {
-  document.cookie = 'dsnid=' + project.id;
-}
+function renderProjectSelector(element, section) {
+  var source, selectionId;
+  var m = document.cookie.match(section + 'id=(\\d+)');
+  var selectionId = m ? parseInt(m[1]) : null;
 
-function renderProjectSelector(element) {
-  var m = document.cookie.match(/dsnid=(\d+)/);
-  var dsnId = m ? parseInt(m[1]) : null;
-  var currentProject = null;
+  if (section == 'dsn') {
+    source = dsnList;
+  } else if (section == 'apikey') {
+    source = apiKeyList;
+  }
 
-  var projectsByGroup = {};
-  projectList.forEach(function(project) {
-    if (typeof projectsByGroup[project.group] === "undefined") {
-      projectsByGroup[project.group] = [];
+  var currentSelection = null;
+
+  var selectionsByGroup = {};
+  source.forEach(function(item) {
+    if (selectionsByGroup[item.group] === undefined) {
+      selectionsByGroup[item.group] = [];
     }
-    projectsByGroup[project.group].push(project);
-    if (project.id === dsnId) {
-      currentProject = project;
+    selectionsByGroup[item.group].push(item);
+    if (item.id === selectionId) {
+      currentSelection = item;
     }
   });
 
-  if (!currentProject) {
-    currentProject = projectList[0];
+  if (!currentSelection) {
+    currentSelection = source[0];
   }
+
   var $dropdown = $('<div class="dropdown">' +
     '<a class="dropdown-toggle" data-toggle="dropdown">' +
-      '<span class="dropdown-label">' + escape(currentProject.name) + '</span>' +
+      '<span class="dropdown-label">' + escape(currentSelection.name) + '</span>' +
       '<span class="caret"></span>' +
     '</a>' +
     '<ul class="dropdown-menu">' +
@@ -158,22 +184,22 @@ function renderProjectSelector(element) {
   $(element).append($dropdown);
 
   var $menu = $dropdown.find('.dropdown-menu');
-  for (var group in projectsByGroup) {
+  for (var group in selectionsByGroup) {
     $menu.append($('<li class="nav-header"></li>').append($('<h6></h6>').text(group)));
 
-    projectsByGroup[group].forEach(function(project) {
-      var className = (currentProject.id === project.id ? 'active': '');
-      var $link = $('<a></a>').text(project.name);
+    selectionsByGroup[group].forEach(function(item) {
+      var className = (currentSelection.id === item.id ? 'active': '');
+      var $link = $('<a></a>').text(item.name);
       $link.on('click', function(){
-        selectProject(project);
+        selectItem(item);
       });
-      $menu.append($('<li class="' + className + '"></li>').data('project', project).append($link));
+      $menu.append($('<li class="' + className + '"></li>').data('item', item).append($link));
     });
   }
 
   $dropdown.find('.dropdown-toggle').dropdown();
 
-  selectProject(currentProject);
+  selectItem(currentSelection, section);
 }
 
 function renderHeader(user) {
@@ -218,6 +244,13 @@ $(function() {
     id: '-1',
     dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
     name: 'Example DSN',
+    group: 'Example'
+  };
+
+  var dummyApiKey = {
+    id: '-1',
+    encodedKey: '{base64-encoded-key-here}',
+    name: 'Example Key',
     group: 'Example'
   };
 
@@ -352,7 +385,7 @@ $(function() {
       withCredentials: true
     },
     success: function(resp) {
-      projectList = resp.projects.map(function(project) {
+      dsnList = resp.projects.map(function(project) {
         var projectLabel = project.projectName;
         if (project.projectName.indexOf(project.teamName) === -1) {
           projectLabel = project.teamName + ' / ' + projectLabel;
@@ -365,15 +398,29 @@ $(function() {
           group: project.organizationName
         };
       });
-      if (projectList.length === 0) {
-        projectList.unshift(dummyDsn);
+      if (dsnList.length === 0) {
+        dsnList.unshift(dummyDsn);
       }
+
+      apiKeyList = (resp.api_keys || []).map(function(apiKey) {
+        return {
+          id: apiKey.id,
+          encodedKey: apiKey.base64Key,
+          name: apiKey.label,
+          group: apiKey.organizationName
+        }
+      });
+      if (apiKeyList.length === 0) {
+        apiKeyList.unshift(dummyApiKey);
+      }
+
       user = resp.user;
       initInterface();
     },
     error: function() {
       console.error('Failed to load user data from Sentry');
-      projectList = [dummyDsn];
+      dsnList = [dummyDsn];
+      apiKeyList = [dummyApiKey];
       user = {isAuthenticated: false};
       initInterface();
     }
