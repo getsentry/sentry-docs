@@ -63,4 +63,7 @@ update-api-docs: extract-api-docs generate-api-docs
 
 release: requirements build sync
 
+serve:
+	@./bin/web
+
 .PHONY: build requirements clean sync watch update-submodules
