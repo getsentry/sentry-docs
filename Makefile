@@ -21,7 +21,7 @@ build-only: design/node_modules
 	@SENTRY_DOC_VARIANT=on-premise $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/on-premise
 	@echo ""
 
-build: update-api-docs
+build: update-api-docs build-only
 
 clean:
 	@echo "--> Cleaning build"
