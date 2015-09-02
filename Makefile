@@ -51,7 +51,8 @@ extract-api-docs:
 	@echo "--> Update api-docs venv"
 	mkdir -p docs/_apicache
 	virtualenv .api-docs-venv
-	. .api-docs-venv/bin/activate; cd doc-modules/sentry; make develop-only
+	# XXX: temporary hack for heroku
+	. .api-docs-venv/bin/activate; cd doc-modules/sentry; PKG_CONFIG_PATH="/app/.heroku/vendor/lib/pkgconfig:$$PKG_CONFIG_PATH" make develop-only
 	@echo "--> Extracing API documentation"
 	. .api-docs-venv/bin/activate; python doc-modules/sentry/api-docs/generator.py --output-path=docs/_apicache
 
