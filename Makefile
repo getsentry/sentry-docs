@@ -4,7 +4,7 @@ SPHINX_DIRHTML_BUILD=$(SPHINX_BUILD) -b sentrydirhtml
 
 requirements: update-submodules
 	@echo "--> Installing base requirements"
-	@pip install awscli sphinx click
+	@pip install awscli sphinx click virtualenv
 	@echo ""
 
 build-only: design/node_modules
