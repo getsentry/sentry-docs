@@ -1,5 +1,5 @@
-Management API Overview
-=======================
+Overview
+========
 
 The Sentry API is used for submitting events to the Sentry collector as
 well as performing management tasks.  The reporting and management APIs
@@ -30,7 +30,7 @@ will return JSON as the response::
     Content-Type: application/json
     Content-Language: en
     Allow: GET, HEAD, OPTIONS
-  
+
     {"version": "0"}
 
 Sentry makes an attempt to stick to appropriate methods, but we always
