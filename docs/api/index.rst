@@ -1,18 +1,24 @@
 Sentry API
 ==========
 
-If you want to extend Sentry, write your own Raven client or understand
-the internals of the system, this is the documentation you need to
-reference.  It does not just cover event reporting but also management
-APIs.
+The Sentry API is used for submitting events to the Sentry collector as
+well as exporting and managing data.  The reporting and web APIs are
+individually versioned.  This document refers to the web APIs only.
+For information about the reporting API see :doc:`../clientdev/index`.
 
-Some general information about using the API (authentication, how you can
-debug it etc.):
+API Versions
+------------
+
+The current version of the web API is known as **v0** and is considered
+to be in a draft phase. While we don't expect public endpoints to add
+change greatly, keep in mind that the API is still under development.
 
 .. toctree::
    :maxdepth: 1
 
-   overview
+   requests
+   auth
+   pagination
 
 A full list of the currently supported API endpoints:
 
