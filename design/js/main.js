@@ -191,7 +191,7 @@ function renderProjectSelector(element, section) {
       var className = (currentSelection.id === item.id ? 'active': '');
       var $link = $('<a></a>').text(item.name);
       $link.on('click', function(){
-        selectItem(item);
+        selectItem(item, section);
       });
       $menu.append($('<li class="' + className + '"></li>').data('item', item).append($link));
     });
