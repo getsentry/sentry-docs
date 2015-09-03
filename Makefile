@@ -51,7 +51,7 @@ extract-api-docs:
 	@echo "--> Update api-docs venv"
 	mkdir -p docs/_apicache
 	virtualenv .api-docs-venv
-	. .api-docs-venv/bin/activate; cd doc-modules/sentry; make develop-only
+	. .api-docs-venv/bin/activate; cd doc-modules/sentry; SENTRY_LIGHT_BUILD=1 make develop-only
 	@echo "--> Extracing API documentation"
 	. .api-docs-venv/bin/activate; python doc-modules/sentry/api-docs/generator.py --output-path=docs/_apicache
 
