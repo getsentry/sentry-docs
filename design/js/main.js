@@ -132,8 +132,8 @@ function selectItem(item, section) {
 
   document.cookie = section + 'id=' + item.id;
 
-  $('.item-selector .dropdown-label').text(item.name);
-  $('.item-selector li').each(function(){
+  $('.project-selector .dropdown-label').text(item.name);
+  $('.project-selector li').each(function(){
     var $this = $(this);
     var thisItem = $this.data('item');
     if (!thisItem) return;
