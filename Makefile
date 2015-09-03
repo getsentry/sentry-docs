@@ -49,15 +49,11 @@ update-submodules:
 
 extract-api-docs:
 	@echo "--> Update api-docs venv"
-	mkdir -p docs/_apicache
-	virtualenv .api-docs-venv
-	. .api-docs-venv/bin/activate; cd doc-modules/sentry; SENTRY_LIGHT_BUILD=1 make develop-only
-	@echo "--> Extracing API documentation"
-	. .api-docs-venv/bin/activate; python doc-modules/sentry/api-docs/generator.py --output-path=docs/_apicache
+	./bin/extract-api-docs
 
 generate-api-docs:
 	@echo "--> Generate API documentation"
-	@python bin/generate-api-docs.py
+	./bin/generate-api-docs
 
 update-api-docs: extract-api-docs generate-api-docs
 
