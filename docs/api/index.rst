@@ -6,12 +6,16 @@ well as exporting and managing data.  The reporting and web APIs are
 individually versioned.  This document refers to the web APIs only.
 For information about the reporting API see :doc:`../clientdev/index`.
 
-API Versions
-------------
+Versioning
+----------
 
 The current version of the web API is known as **v0** and is considered
 to be in a draft phase. While we don't expect public endpoints to add
 change greatly, keep in mind that the API is still under development.
+
+
+Reference
+---------
 
 .. toctree::
    :maxdepth: 1
@@ -19,6 +23,9 @@ change greatly, keep in mind that the API is still under development.
    requests
    auth
    pagination
+
+Endpoints
+---------
 
 A full list of the currently supported API endpoints:
 
