@@ -9,14 +9,14 @@ licenses.
 .. toctree::
    :hidden:
 
-   python/index
-   javascript/index
-   node/index
-   php/index
-   ruby/index
-   objc/index
-   java/index
    csharp/index
    go/index
+   java/index
+   javascript/index
+   node/index
+   objc/index
+   php/index
+   python/index
+   ruby/index
 
 .. include:: table.rst.inc
