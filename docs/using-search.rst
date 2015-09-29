@@ -6,11 +6,18 @@ basic CONTAINS matches on the title of an issue or exact matches on tags.
 
 Queries are constructed using a ``token:value`` pattern::
 
-    is:resolved user.email:foo@example.com example error
+    is:resolved user.username:"Jane Doe" server:web-8 example error
 
-If the value contains spaces, it must be enclosed within quotes::
+In the above there are four tokens:
 
-    user.username:"Jane Doe"
+* ``is:resolved``
+* ``user.username:Jane Doe``
+* ``server:web-8``
+* ``example error``
+
+The first two are standard search tokens, both using reserved keywords. The second
+is pointing to a custom tag sent by the client. The third is passed as part of the
+issue search query (which uses a CONTAINS match).
 
 The following tokens are reserved and known to Sentry:
 
