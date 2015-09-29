@@ -72,7 +72,7 @@ and platforms.
       support
 
       tagging
-      search
+      using-search
       membership
       notifications
       scrubbing-data
