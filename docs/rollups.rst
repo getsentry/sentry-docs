@@ -87,8 +87,8 @@ not available, it uses the message attribute.
 
 .. _custom-grouping:
 
-Custom Grouping
----------------
+Customize Grouping with Fingerprints
+------------------------------------
 
 For some very advanced use cases clients can override the Sentry default
 grouping.
