@@ -66,17 +66,17 @@ and platforms.
       :hidden:
 
       quickstart
-      quotas
-      rollups
+      learn/quotas
+      learn/rollups
       ip-ranges
       support
 
-      tagging
-      using-search
-      membership
-      notifications
-      scrubbing-data
-      sso
+      learn/context
+      learn/search
+      learn/membership
+      learn/notifications
+      learn/sensitive-data
+      learn/sso
 
 .. sentry:edition:: on-premise
 
@@ -89,11 +89,12 @@ and platforms.
       server/index
       support
 
-      membership
-      rollups
-      tagging
-      notifications
-      scrubbing-data
+      learn/context
+      learn/search
+      learn/membership
+      learn/notifications
+      learn/rollups
+      learn/sensitive-data
 
 .. toctree::
    :maxdepth: 1

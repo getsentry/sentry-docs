@@ -14,6 +14,7 @@ Events
    get-group-tag-key-values
    get-group-events
    get-group-tag-key-details
+   get-group-events-oldest
    delete-group-details
    get-group-details
    get-project-event-details
