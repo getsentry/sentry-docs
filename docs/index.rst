@@ -73,7 +73,6 @@ and platforms.
 
       learn/context
       learn/search
-      learn/membership
       learn/notifications
       learn/sensitive-data
       learn/sso
@@ -91,7 +90,6 @@ and platforms.
 
       learn/context
       learn/search
-      learn/membership
       learn/notifications
       learn/rollups
       learn/sensitive-data
