@@ -62,4 +62,8 @@ release: requirements build sync
 serve:
 	@./bin/web
 
+link-static:
+	cd build/html/hosted/ && rm -rf _static && ln -Ffshv ../../theme/sentry/static _static
+	cd build/html/on-premise/ && rm -rf _static && ln -Ffshv ../../theme/sentry/static _static
+
 .PHONY: build requirements clean sync watch update-submodules
