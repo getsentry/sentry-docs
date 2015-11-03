@@ -70,7 +70,7 @@ function tagInteractiveBlocks(parent) {
     var title = isApiKeySection ? 'API Key for Request' : 'Showing configuration for';
     var wrapper = $('<div class="project-selector-wrapper"></div>');
     var header = $('<div class="project-selector-header">' +
-      '<div class="project-label">' + title + ':</div>' + 
+      '<div class="project-label">' + title + ':</div>' +
       '<div class="project-selector"></div>' +
     '</div>');
     $(this).html(contents).wrap(wrapper);
@@ -255,7 +255,6 @@ $(function() {
   };
 
   var user = null;
-  var dsnSelectBar = null;
 
   var $pageContent = $('.page-content');
   var $sidebar = $('.sidebar');
