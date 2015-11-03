@@ -55,9 +55,6 @@ and platforms.
 
    clients/index
 
-
-
-
 .. sentry:edition:: hosted
 
    .. toctree::
@@ -70,6 +67,7 @@ and platforms.
       learn/rollups
       ip-ranges
       support
+      api/index
 
       learn/context
       learn/search
@@ -87,6 +85,7 @@ and platforms.
       quickstart
       server/index
       support
+      api/index
 
       learn/context
       learn/search
@@ -100,7 +99,6 @@ and platforms.
    :hidden:
 
    clientdev/index
-   api/index
    docdev
    project-resources
 
