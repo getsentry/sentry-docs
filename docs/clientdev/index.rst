@@ -1,5 +1,5 @@
-Client Development
-==================
+Client API
+==========
 
 This part of the documentation guides you towards implementing a new
 Client for Sentry.  It covers the protocol for event submission as well as

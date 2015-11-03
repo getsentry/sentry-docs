@@ -67,7 +67,6 @@ and platforms.
       learn/rollups
       ip-ranges
       support
-      api/index
 
       learn/context
       learn/search
@@ -85,7 +84,6 @@ and platforms.
       quickstart
       server/index
       support
-      api/index
 
       learn/context
       learn/search
@@ -98,6 +96,7 @@ and platforms.
    :titlesonly:
    :hidden:
 
+   api/index
    clientdev/index
    docdev
    project-resources
