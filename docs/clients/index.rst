@@ -1,10 +1,9 @@
-Integrations
-============
+SDKs
+====
 
-To submit events to sentry from your platform of choice, you can use the
-raven clients.  These libraries exist for a wide range of programming
-languages and runtime environments and are available under Open Source
-licenses.
+Sending data to Sentry involves utilizing onf our SDKs. These libraries
+exist for a wide range of programming languages and runtime environments
+and are available under Open Source licenses.
 
 .. toctree::
    :hidden:
