@@ -8,6 +8,7 @@ and are available under Open Source licenses.
 .. toctree::
    :hidden:
 
+   actionscript/index
    csharp/index
    go/index
    java/index
