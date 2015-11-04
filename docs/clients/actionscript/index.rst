@@ -20,6 +20,8 @@ Grab the source code from GitHub:
 
     git clone https://github.com/skitoo/raven-as3.git
 
+Now simply add it to your class path.
+
 
 Configuring the Client
 ----------------------
