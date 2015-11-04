@@ -27,7 +27,7 @@ Create a new instance of the client:
 
 .. code-block:: perl
 
-    my $sentry = Sentry::Raven->new( sentry_dsn => 'http://<publickey>:<secretkey>@app.getsentry.com/<projectid>' );
+    my $sentry = Sentry::Raven->new( sentry_dsn => '___DSN___' );
 
 
 Reporting Errors
