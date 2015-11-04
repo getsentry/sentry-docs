@@ -19,6 +19,7 @@ build-only: design/node_modules
 	@echo '--> On-Premise Docs'
 	@SENTRY_DOC_VARIANT=on-premise $(SPHINX_HTML_BUILD) docs build/html/on-premise
 	@SENTRY_DOC_VARIANT=on-premise $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/on-premise
+	@cp -R design/root-sitemap.xml build/html/sitemap.xml
 	@echo ""
 
 build: update-api-docs build-only
