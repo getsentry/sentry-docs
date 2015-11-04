@@ -71,23 +71,20 @@ Getting started with Sentry is a three step process:
 Configure an Integration
 ------------------------
 
-To report to Sentry you need a client library that supports your platform.
-These libraries, generally known as "raven" (:ref:`what is Raven?
-<history-naming>`) are available for all major programming languages and
-environments and generally integrate directly with frameworks as well.  In
-case your environment is very specific, you can also directly report to
-the underlying REST API.
+To report to Sentry you'll need to use an SDK (also referred to as a client)
+which supports your platform. In case your environment is very specific,
+you can simply use the JSON reporting API.
 
-The most popular integrations are:
+Popular integrations are:
 
-*   :doc:`raven-python <clients/python/index>` for Python
-*   :doc:`raven.js <clients/javascript/index>` for JavaScript
-*   :doc:`raven-php <clients/php/index>` for PHP
-*   :doc:`raven-ruby <clients/ruby/index>` for all variations of Ruby
-*   :doc:`raven-objc <clients/objc/index>` for objective C
-*   :doc:`raven-java <clients/java/index>` for Java and JVM languages
-*   :doc:`raven-csharp <clients/csharp/index>` for C# and .NET languages
-*   :doc:`raven-go <clients/go/index>` for the Go programming language
+*   :doc:`Python <clients/python/index>`
+*   :doc:`JavaScript <clients/javascript/index>`
+*   :doc:`PHP <clients/php/index>`
+*   :doc:`Ruby <clients/ruby/index>`
+*   :doc:`Objective-C <clients/objc/index>`
+*   :doc:`Java <clients/java/index>`
+*   :doc:`C# <clients/csharp/index>`
+*   :doc:`Go <clients/go/index>`
 
 For exact configuration for the integration consult the corresponding
 documentation.  For all clients however, the basics are the same.
