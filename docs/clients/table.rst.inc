@@ -35,3 +35,7 @@
 *   .. class:: platformlink-go
 
     :doc:`/clients/go/index` For Google's Go Language
+
+*   .. class:: platformlink-perl
+
+    :doc:`/clients/perl/index` For Perl apps.

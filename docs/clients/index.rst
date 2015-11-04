@@ -14,6 +14,7 @@ and are available under Open Source licenses.
    javascript/index
    node/index
    objc/index
+   perl/index
    php/index
    python/index
    ruby/index
