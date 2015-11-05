@@ -5,9 +5,11 @@
     Perl
     ====
 
-.. class:: sentry-support-block sentry-support-block-community
+.. sentry:support-warning::
 
-    The Perl SDK is maintained and supported by the Sentry community. Learn more about the project on `GitHub <https://github.com/rentrak/perl-raven>`_.
+    The Perl SDK is maintained and supported by the Sentry community.
+    Learn more about the project on `GitHub
+    <https://github.com/rentrak/perl-raven>`_.
 
 Installation
 ------------
