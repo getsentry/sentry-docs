@@ -5,7 +5,7 @@
     ActionScript
     ============
 
-.. class:: sentry-support-block sentry-support-block-community
+.. sentry:support-warning::
 
     The ActionScript SDK is maintained and supported by the Sentry community. Learn more about the project on `GitHub <https://github.com/skitoo/raven-as3>`_.
 
