@@ -65,7 +65,6 @@ and platforms.
       quickstart
       learn/quotas
       learn/rollups
-      ip-ranges
       support
 
       learn/context
@@ -73,6 +72,8 @@ and platforms.
       learn/notifications
       learn/sensitive-data
       learn/sso
+
+      ip-ranges
 
 .. sentry:edition:: on-premise
 
