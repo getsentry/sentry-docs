@@ -4,12 +4,13 @@ IP Ranges
 =========
 
 In some circumstances the Hosted Sentry infrastructure might send HTTP
-requests your way.  At present this is exclusively used for
-:doc:`JavaScript Source Maps <../../clients/javascript/sourcemaps>`.
+requests your way.  Primarily this is relevant to
+:doc:`JavaScript Source Maps <../../clients/javascript/sourcemaps>`, but
+also affects things like webhooks and other integrations.
 
-Currently any of the Sentry IP ranges can send sourcemap requests which
-makes the CIDR list quite long.  This is the complete list of all
-getsentry.com subnets::
+At this time Sentry does not provide an outbound proxy, so any of the public
+subnets used by our workers may make outbound requests. The follow is a list
+of the subnets usable by those machines::
 
     169.53.228.176/28
     173.193.138.208/28
