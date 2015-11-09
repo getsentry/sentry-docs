@@ -6,7 +6,7 @@ of events you can send within a window of time. These windows generally
 apply to a 60-second bucket, and your subsription will provide a rate limit
 which is the maximum number of events the server will accept during that
 period. When this threshold has been reached the server will respond with
-a 429 request.
+a 429 HTTP status code.
 
 Additionally some plans may also include a daily rate limit. For example, if
 you're on the Limited plan, you'll be restricted to a maximum of 250 events
