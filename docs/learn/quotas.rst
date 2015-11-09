@@ -1,20 +1,32 @@
 Subscriptions & Quotas
 ======================
 
-Sentry enforces quotas as a few levels, most importantly in short bursts.
-We throttle both at the firewall level and within the application.
+A subscription to Sentry primarily entails a resource quota on the amount
+of events you can send within a window of time. These windows generally
+apply to a 60-second bucket, and your subsription will provide a rate limit
+which is the maximum number of events the server will accept during that
+period. When this threshold has been reached the server will respond with
+a 429 request.
 
-Most of the time when you're throttled, Sentry will return a 429. This
-error code means you've hit the 60 second burst protection. In rare cases,
-the server might flat out reject your request (connection refused). Both
-cases the throttling happens only for a short period of time (less than a
-minute), and the service will operate as expected once its lifted.
+Additionally some plans may also include a daily rate limit. For example, if
+you're on the Limited plan, you'll be restricted to a maximum of 250 events
+per day.
 
+Increasing Quotas
+-----------------
 
-Message Truncation
-------------------
+Each tiered plan in Sentry has a predefined rate limit. Generally the more
+expensive the plan, the more data you're allowed to send. While the plans
+available will generally fit most individual and small business needs, there
+often arises a need for more. Fear not, Sentry is designed to handle large
+throughput, and if your team needs more we're happy to help. Reach out to
+your account manager, or send an email to support@getsentry.com to learn
+more about increasing capacity.
 
-Sentry imposes hard limits on various components within a message. While
+Attributes Limits
+-----------------
+
+Sentry imposes hard limits on various components within an event. While
 the limits may change over time, and vary between attributes most
 individual attributes are capped at 512 bytes. Additionally, certain
 attributes also limit the maximum number of items.
@@ -36,18 +48,3 @@ The following limitations will be automatically enforced:
     maximum size.
 *   Individually values exceeding the maximum length will be trimmed down
     to the maximum size.
-
-
-Optimizing What You Send
-------------------------
-
-Trying to keep within the bounds of your subscription? Try these useful
-tips for optimizing what you send to Sentry:
-
-*   Only send information that you will act on. Generally these are
-    errors, and sometimes warnings. You usually don't truly care about a
-    user hitting a 404, or an action happening (such as you would see in
-    ``DEBUG`` logging).
-*   Add some safety measures for system failures. If you frequently have
-    to worry about your cache server going down, make it a soft failure, or
-    make it only send to Sentry 10% of the time.
