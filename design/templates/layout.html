@@ -45,122 +45,81 @@
   {%- block extrahead %} {% endblock %}
 </head>
 <body>
-  <header>
-    <div class="container">
-      <div id="user_nav">
-        <ul class="user-nav">
-            <li class="hidden-xs"><a href="https://www.getsentry.com/pricing/" class="pricing-link">Pricing</a></li>
-            <li class="active hidden-xs"><a href="https://docs.getsentry.com">Documentation</a></li>
-            <li class="hidden-xs"><a href="http://blog.getsentry.com">Blog</a></li>
-            <li class="hidden-xs"><a href="https://getsentry.com/login">Sign in</a></li>
-            <li class="divider hidden-xs"></li>
-            <li><a class="cta" href="https://getsentry.com/login">Start for free</a></li>
-        </ul>
-      </div>
-
-      <script>
-      document.getElementById('user_nav').style.display = 'none';
-      </script>
-
-      <h1><a href="{{ pathto(master_doc) }}"><span class="icon-logo"></span></a><span class="text hidden-md hidden-sm">{{ {
-        'hosted': 'Documentation',
-        'on-premise': 'On-Premise Documentation'
-        }[sentry_doc_variant] }}</span></h1>
-    </div>
-  </header>
-  <div class="subheader">
-    <div class="container">
-      {# search removed for the moment
-      <div class="search">
-        <input type="text" placeholder="Search the docs...">
-        <span class="icon-search"></span>
-      </div>
-      #}
-      <ul class="edition-select list-unstyled clearfix">
-        <li{% if sentry_doc_variant == 'hosted' %} class="active"{% endif %}>
-          <a href="{{ link_to_edition('hosted') }}">Hosted Sentry</a>
-        </li>
-        <li{% if sentry_doc_variant == 'on-premise' %} class="active"{% endif %}>
-          <a href="{{ link_to_edition('on-premise') }}">Sentry On-Premise</a>
-        </li>
-      </ul>
-    </div>
-  </div>
   <div class="body">
     <div class="container page">
-      <div class="sidebar">
-        {% set toc_parts = build_toc(
-            split_toc={
-              'learn': ['learn/rollups', 'learn/context', 'learn/search', 'learn/sensitive-data', 'learn/notifications', 'learn/sso'],
-              'misc': ['history', 'ssl', 'ip-ranges'],
-              'clients': ['clients/index'],
-              'api': ['api/requests', 'api/auth', 'api/pagination'],
-              'api_endpoints': ['api/events/index', 'api/organizations/index', 'api/projects/index', 'api/releases/index', 'api/teams/index'],
-              'dev': ['api/index', 'clientdev/index', 'license', 'docdev', 'project-resources'],
-            }
-        ) %}
-        {% if pagename.startswith('api/') %}
-        <a href="{{ pathto(master_doc) }}" class="return-link">Return to Docs Overview</a>
-        <h3>Web API</h3>
-        <div class="toc global-toc">
-          <ul>
-            <li><a href="{{ pathto('api/index') }}" class="reference internal{%
-              if pagename == 'api/index' %} current{% endif %}">Overview</a></li>
-          </ul>
-          {{ toc_parts.api }}
-        </div>
-        <h3>Endpoints</h3>
-        <div class="toc">
-          {{ toc_parts.api_endpoints }}
-        </div>
-        {% else %}
-        <h3>{{ {
-          'hosted': 'Hosted Sentry',
-          'on-premise': 'Sentry On-Premise',
-        }[sentry_doc_variant] }}</h3>
-        <div class="toc global-toc">
-          <ul>
-            <li><a href="{{ pathto(master_doc) }}" class="reference internal{%
-              if pagename == master_doc %} current{% endif %}">Overview</a></li>
-          </ul>
-          {{ toc_parts.main }}
-        </div>
-        <h3>Learn</h3>
-        <div class="toc dev-toc">
-          {{ toc_parts.learn }}
-        </div>
-        <div class="toc client-toc">
-          {{ toc_parts.clients }}
-        </div>
-        <h3>Development</h3>
-        <div class="toc dev-toc">
-          {{ toc_parts.dev }}
+      <nav class="sidebar" id="nav" role="navigation">
+        <a href="#nav" title="Show navigation"><span class="icon-search"></span></a>
+        <a href="#" title="Hide navigation"><span class="icon-search"></span></a>
+
+        <div class="edition-select btn-group">
+          <a href="{{ link_to_edition('hosted') }}"
+             class="btn btn-default{% if sentry_doc_variant == 'hosted' %} active{% endif %}">Hosted Sentry</a>
+          <a href="{{ link_to_edition('on-premise') }}"
+             class="btn btn-default{% if sentry_doc_variant == 'on-premise' %} active{% endif %}">On-Premise</a>
         </div>
 
-        <h3>Meta</h3>
-        <div class="toc discover-toc">
-          <ul>
-            <li><a href="{{ pathto('ssl') }}" class="reference internal{%
-              if pagename == 'ssl' %} current{% endif %}">SSL</a></li>
-            <li><a href="{{ pathto('history') }}" class="reference internal{%
-              if pagename == 'history' %} current{% endif %}">History</a></li>
-            <li><a href="{{ pathto('search') }}" class="reference internal{%
-              if pagename == 'search' %} current{% endif %}">Search</a></li>
-            <li><a href="{{ pathto('sitemap') }}" class="reference internal{%
-              if pagename == 'sitemap' %} current{% endif %}">Sitemap</a></li>
-          </ul>
-        </div>
-        {% endif %}
+        <div class="sidebar-content">
+          <a href="{{ pathto(master_doc) }}" class="logo"><span class="icon-logo"></span></a>
+          {% set toc_parts = build_toc(
+              split_toc={
+                'learn': ['learn/rollups', 'learn/context', 'learn/search', 'learn/sensitive-data', 'learn/notifications', 'learn/sso'],
+                'misc': ['history', 'ssl', 'ip-ranges'],
+                'clients': ['clients/index'],
+                'api': ['api/requests', 'api/auth', 'api/pagination'],
+                'api_endpoints': ['api/events/index', 'api/organizations/index', 'api/projects/index', 'api/releases/index', 'api/teams/index'],
+                'dev': ['api/index', 'clientdev/index', 'license', 'docdev', 'project-resources'],
+              }
+          ) %}
+          {% if pagename.startswith('api/') %}
+          <a href="{{ pathto(master_doc) }}" class="return-link">Return to Docs Overview</a>
+          <h3>Web API</h3>
+          <div class="toc global-toc">
+            <ul>
+              <li><a href="{{ pathto('api/index') }}" class="reference internal{%
+                if pagename == 'api/index' %} current{% endif %}">Overview</a></li>
+            </ul>
+            {{ toc_parts.api }}
+          </div>
+          <h3>Endpoints</h3>
+          <div class="toc">
+            {{ toc_parts.api_endpoints }}
+          </div>
+          {% else %}
+          <div class="toc global-toc">
+            <ul>
+              <li><a href="{{ pathto(master_doc) }}" class="reference internal{%
+                if pagename == master_doc %} current{% endif %}">Overview</a></li>
+            </ul>
+            {{ toc_parts.main }}
+          </div>
+          <h3>Learn</h3>
+          <div class="toc dev-toc">
+            {{ toc_parts.learn }}
+          </div>
+          <div class="toc client-toc">
+            {{ toc_parts.clients }}
+          </div>
+          <h3>Development</h3>
+          <div class="toc dev-toc">
+            {{ toc_parts.dev }}
+          </div>
 
-        {#
-        {% if toc %}
-        <h3 class="hidden-sm hidden-xs">This Page</h3>
-        <div class="toc local-toc hidden-sm hidden-xs">
-          {{ toc }}
+          <h3>Meta</h3>
+          <div class="toc discover-toc">
+            <ul>
+              <li><a href="{{ pathto('ssl') }}" class="reference internal{%
+                if pagename == 'ssl' %} current{% endif %}">SSL</a></li>
+              <li><a href="https://getsentry.com/pricing/">Pricing</a></li>
+              <li><a href="http://blog.getsentry.com/">Blog</a></li>
+              <li><a href="{{ pathto('history') }}" class="reference internal{%
+                if pagename == 'history' %} current{% endif %}">History</a></li>
+              <li><a href="{{ pathto('sitemap') }}" class="reference internal{%
+                if pagename == 'sitemap' %} current{% endif %}">Sitemap</a></li>
+            </ul>
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
-        #}
-      </div>
+      </nav>
 
       <section class="document">
         <div class="page-content">
@@ -187,13 +146,5 @@
       </section>
     </div>
   </div>
-
-  <footer>
-    <div class="container">
-      <div class="pull-right">&copy; 2015 Sentry</div>
-      <div class="pull-left">Sentry Docs</div>
-      <a href="/" class="logo"><span class="icon-logo-mark"></span></a>
-    </div>
-  </footer>
 </body>
 </html>

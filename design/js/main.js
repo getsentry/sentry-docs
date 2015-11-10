@@ -320,6 +320,7 @@ $(function() {
     e.preventDefault();
 
     loadDynamically(this.pathname, this.hash, true);
+    $('.sidebar > a[href="#"]').click();
   };
 
   var loadDynamically = function(target, hash, pushState) {
