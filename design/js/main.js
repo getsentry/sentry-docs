@@ -306,17 +306,22 @@ $(function() {
     $pageContent.fadeIn();
     $('.page a.internal').click(linkHandler);
     document.title = getTitle(html);
+    hookNavigation();
   };
 
-  $('.toggle-navigation').click(function(e) {
-    var $this = $(this);
-    var $nav = $('#nav');
-    if ($nav.is('.active')) {
-      $nav.removeClass('active');
-    } else {
-      $nav.addClass('active');
-    }
-  });
+  var hookNavigation = function() {
+    $('.toggle-navigation').click(function(e) {
+      var $this = $(this);
+      var $nav = $('#nav');
+      if ($nav.is('.active')) {
+        $nav.removeClass('active');
+      } else {
+        $nav.addClass('active');
+      }
+    });
+  };
+
+  hookNavigation();
 
   var linkHandler = function(e) {
     var here = window.location;
