@@ -308,6 +308,16 @@ $(function() {
     document.title = getTitle(html);
   };
 
+  $('.toggle-navigation').click(function(e) {
+    var $this = $(this);
+    var $nav = $('#nav');
+    if ($nav.is('.active')) {
+      $nav.removeClass('active');
+    } else {
+      $nav.addClass('active');
+    }
+  });
+
   var linkHandler = function(e) {
     var here = window.location;
 
@@ -320,7 +330,8 @@ $(function() {
     e.preventDefault();
 
     loadDynamically(this.pathname, this.hash, true);
-    $('.sidebar > a[href="#"]').click();
+
+    $('#nav').removeClass('active');
   };
 
   var loadDynamically = function(target, hash, pushState) {
