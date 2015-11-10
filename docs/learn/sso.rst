@@ -64,4 +64,5 @@ GitHub Organizations
 The GitHub integration will authenticate against all organizations, and once
 complete prompt you for the organization which you wish to restrict access by.
 
-Currently GitHub Enterprise is not supported.
+Currently GitHub Enterprise is not supported. If your company needs support for
+GE, `let us know <mailto:support@getsentry.com>`_.
