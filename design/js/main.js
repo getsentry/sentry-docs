@@ -205,7 +205,7 @@ function renderProjectSelector(element, section) {
 function renderHeader(user) {
   var userNav = $(
     '<ul class="user-nav">' +
-      '<li class="hidden-xs"><a href="https://www.getsentry.com/pricing/" class="pricing-link">Pricing</a></li>' +
+      '<li class="hidden-xs"><a href="https://getsentry.com/pricing/" class="pricing-link">Pricing</a></li>' +
       '<li class="active hidden-xs"><a href="https://docs.getsentry.com">Documentation</a></li>' +
       '<li class="hidden-xs"><a href="http://blog.getsentry.com">Blog</a></li>' +
     '</ul>'
@@ -221,23 +221,23 @@ function renderHeader(user) {
           '<li class="divider"></li>' +
           '<li><a href="mailto:support@getsentry.com" class="support-link">Support</a></li>' +
           '<li class="divider"></li>' +
-          '<li><a href="https://www.getsentry.com/logout/">Logout</a>' +
+          '<li><a href="https://getsentry.com/logout/">Logout</a>' +
         '</ul>' +
       '</li>'
     ));
   } else {
       userNav.append($('<li class="hidden-xs"><a href="https://app.getsentry.com/auth/login/">Sign in</a></li>'));
       userNav.append($('<li class="divider hidden-xs"></li>'));
-      userNav.append($('<li><a class="cta" href="https://www.getsentry.com/signup/">Start for free</a></li>'));
+      userNav.append($('<li><a class="cta" href="https://getsentry.com/signup/">Start for free</a></li>'));
   }
   $('#user_nav').html(userNav).fadeIn();
 }
 
 $(function() {
   if (document.location.host === "localhost:9000") {
-    var API = 'http://www.dev.getsentry.net:8000/docs/api';
+    var API = 'http://dev.getsentry.net:8000/docs/api';
   } else {
-    var API = 'https://www.getsentry.com/docs/api';
+    var API = 'https://getsentry.com/docs/api';
   }
 
   var dummyDsn = {
