@@ -83,11 +83,6 @@ The following attributes are required for all events:
           "logger": "my.logger.name"
         }
 
-Optional Attributes
--------------------
-
-Additionally, there are several optional values which Sentry recognizes and are
-highly encouraged:
 
 .. describe:: platform
 
@@ -101,6 +96,29 @@ highly encouraged:
           "platform": "python"
         }
 
+    Acceptable values are:
+
+    * ``as3``
+    * ``c``
+    * ``cfml``
+    * ``csharp``
+    * ``go``
+    * ``java``
+    * ``javascript``
+    * ``node``
+    * ``objc``
+    * ``other``
+    * ``perl``
+    * ``php``
+    * ``python``
+    * ``ruby``
+
+
+Optional Attributes
+-------------------
+
+Additionally, there are several optional values which Sentry recognizes and are
+highly encouraged:
 
 .. describe:: culprit
 
