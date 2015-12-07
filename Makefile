@@ -48,15 +48,15 @@ update-submodules:
 	git submodule update --init
 	@echo ""
 
-extract-api-docs:
+extract-docs:
 	@echo "--> Update api-docs venv"
-	./bin/extract-api-docs
+	./bin/extract-docs
 
 generate-api-docs:
 	@echo "--> Generate API documentation"
 	./bin/generate-api-docs
 
-update-api-docs: extract-api-docs generate-api-docs
+update-api-docs: extract-docs generate-api-docs
 
 release: requirements build sync
 
