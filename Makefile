@@ -8,7 +8,7 @@ requirements: update-submodules
 	@echo ""
 
 build-only: design/node_modules
-	@echo "--> Prepairing theme"
+	@echo "--> Preparing theme"
 	@mkdir -p build/theme/sentry
 	@cp -R design/theme-support/* build/theme/sentry
 	@cp -R design/templates/* build/theme/sentry
