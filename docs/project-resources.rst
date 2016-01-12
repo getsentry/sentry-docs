@@ -9,11 +9,11 @@ used services:
   translating Sentry into different languages.
 * `Travis-CI <https://travis-ci.org/getsentry/sentry>`_ for continuous
   integration of Sentry.
-* `Bug Tracker <http://github.com/getsentry/sentry/issues>`_ on GitHub
+* `Bug Tracker <https://github.com/getsentry/sentry/issues>`_ on GitHub
   for bug reports, feature requests and project planning.
-* `Code <http://github.com/getsentry/sentry>`_ on GitHub for the Open
+* `Code <https://github.com/getsentry/sentry>`_ on GitHub for the Open
   Source project.
-* `The GitHub Organization <http://github.com/getsentry>`_ for the entire
+* `The GitHub Organization <https://github.com/getsentry>`_ for the entire
   list of Open Source projects which also includes many of the Raven
   clients.
 * `Mailing List <https://groups.google.com/group/getsentry>`_ on Google
