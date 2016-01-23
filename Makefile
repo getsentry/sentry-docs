@@ -1,10 +1,15 @@
-SPHINX_BUILD=SENTRY_FEDERATED_DOCS=1 sphinx-build -v -a -d build/doctrees -T -j 1 -W
+SPHINX_BUILD=SENTRY_FEDERATED_DOCS=1 venv/bin/sphinx-build -v -a -d build/doctrees -T -j 1 -W
 SPHINX_HTML_BUILD=$(SPHINX_BUILD) -b sentryhtml
 SPHINX_DIRHTML_BUILD=$(SPHINX_BUILD) -b sentrydirhtml
 
-requirements: update-submodules
+venv/bin/python:
+	@echo "--> Creating Virtualenv"
+	@virtualenv venv
+
+requirements: update-submodules venv/bin/python
 	@echo "--> Installing base requirements"
-	@pip install awscli sphinx click virtualenv
+	@venv/bin/pip install --upgrade pip
+	@venv/bin/pip install awscli sphinx click virtualenv
 	@echo ""
 
 build-only: design/node_modules
@@ -31,7 +36,7 @@ clean:
 
 sync:
 	@echo "--> Syncing with S3"
-	@aws s3 sync --delete build/dirhtml/ s3://getsentry-docs/
+	@venv/bin/aws s3 sync --delete build/dirhtml/ s3://getsentry-docs/
 	@echo ""
 
 watch: design/node_modules
@@ -54,7 +59,7 @@ extract-docs:
 
 generate-api-docs:
 	@echo "--> Generate API documentation"
-	./bin/generate-api-docs
+	./venv/bin/python ./bin/generate-api-docs
 
 update-api-docs: extract-docs generate-api-docs
 
