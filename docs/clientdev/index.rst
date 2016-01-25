@@ -274,9 +274,7 @@ you want to ensure that the message was delivered, as a small level of
 validation happens immediately that may result in a different response
 code (and message).
 
-For example, you might get something like this:
-
-.. sourcecode:: http
+For example, you might get something like this::
 
     HTTP/1.1 400 Bad Request
     X-Sentry-Error: Client request error: Missing client version identifier
