@@ -25,11 +25,17 @@ The following tokens are reserved and known to Sentry:
 
     Filter on the status of an issue.
 
-    Values are ``resolved``, ``unresolved``, and ``muted``
+    Values are ``resolved``, ``unresolved``, ``muted``, ``assigned``, and ``unassigned``.
 
 .. describe:: assigned
 
     Filter on the user which the issue is assigned to.
+
+    Values can be your user ID (your email address) or ``me`` for yourself.
+
+.. describe:: bookmarks
+
+    Filter on the user which the issue is bookmarked by.
 
     Values can be your user ID (your email address) or ``me`` for yourself.
 
@@ -45,5 +51,18 @@ The following tokens are reserved and known to Sentry:
 .. describe:: user.ip
 
     Restrict results to issues affecting the given user.
+
+.. describe:: age
+
+    Restrict results to issues created since ``age``. The syntax is similar to the unix ``find`` command:
+
+    # issues new in the last 24 hours
+    age:-24h
+
+    # issues older than 12 hours
+    age:+12h
+
+    # issues created between 12 and 24 hours ago
+    age:+12h age:-24h
 
 Additionally you can use any tag you've specified as a token.
