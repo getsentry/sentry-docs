@@ -9,7 +9,7 @@ venv/bin/python:
 requirements: update-submodules venv/bin/python
 	@echo "--> Installing base requirements"
 	@venv/bin/pip install --upgrade pip
-	@venv/bin/pip install awscli sphinx==1.3.4 click virtualenv
+	@venv/bin/pip install --upgrade awscli sphinx==1.3.4 click virtualenv
 	@echo ""
 
 build-only: design/node_modules
