@@ -1,4 +1,4 @@
-SPHINX_BUILD=SENTRY_FEDERATED_DOCS=1 venv/bin/sphinx-build -v -a -d build/doctrees -T -j 1 -W
+SPHINX_BUILD=PYTHONIOENCODING=utf-8 SENTRY_FEDERATED_DOCS=1 venv/bin/sphinx-build -v -a -d build/doctrees -T -j 1 -W
 SPHINX_HTML_BUILD=$(SPHINX_BUILD) -b sentryhtml
 SPHINX_DIRHTML_BUILD=$(SPHINX_BUILD) -b sentrydirhtml
 
