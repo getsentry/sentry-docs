@@ -37,6 +37,7 @@ clean:
 sync:
 	@echo "--> Syncing with S3"
 	@venv/bin/aws s3 sync --delete build/dirhtml/ s3://getsentry-docs/
+	@./bin/upload-search-index
 	@echo ""
 
 watch: design/node_modules
