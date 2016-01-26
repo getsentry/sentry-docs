@@ -250,6 +250,47 @@ function initRigidSearch() {
     return urlBase + '/' + path + '/';
   }
 
+  function getSearchUrl(newParams) {
+    newParams = newParams || {};
+    var currentParams = {
+      q: params.q,
+      page: params.page,
+    };
+    Object.keys(newParams).forEach(function(key) {
+      currentParams[key] = newParams[key];
+    });
+    return document.location.pathname + '?' + qs.stringify(currentParams);
+  }
+
+  function renderPath(path) {
+    var el = $('<span class="path"></span>');
+    path.split(/\//g).forEach(function (item) {
+      el.append($('<span class="seg"></span>').text(item));
+    });
+    return el;
+  }
+
+  function renderPagination(results) {
+    var el = $('<div class="pagination"></div>');
+
+    function addButton(delta, text) {
+      var otherPage = results.page + delta;
+      if (otherPage >= 1 && otherPage < results.pages) {
+        el.append($('<a></a>')
+          .attr('href', getSearchUrl({page: otherPage}))
+          .text(text));
+      } else {
+        el.append($('<span class="disabled"></span>')
+          .text(text));
+      }
+    }
+
+    addButton(-1, '« Previous');
+    el.append($('<em></em>').text(results.page));
+    addButton(+1, 'Next »');
+    return el;
+  }
+
   if (params.q) {
     $('input[name="q"]').val(params.q);
     $.ajax({
@@ -257,6 +298,7 @@ function initRigidSearch() {
       url: 'https://rigidsearch.getsentry.net/api/search',
       data: {
         q: params.q,
+        page: params.page || 1,
         section: form.data('section')
       },
       crossDomain: true,
@@ -267,11 +309,13 @@ function initRigidSearch() {
             .append($('<h3></h3>')
               .append($('<a class="link"></a>')
                 .attr('href', makeUrl(item.path))
-                .text(item.title)))
+                .text(item.title))
+              .append(renderPath(item.path)))
             .append($('<p class="excerpt"></p>')
               .html(item.excerpt))
             .appendTo(results);
         });
+        results.append(renderPagination(resp));
       },
       error: function() {
         console.error('Failed to search :(');
