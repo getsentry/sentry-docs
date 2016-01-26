@@ -1,5 +1,6 @@
 var $ = require("jquery");
 var bootstrap = require("bootstrap");
+var qs = require("query-string");
 
 var dsnList = [];
 var apiKeyList = [];
@@ -233,6 +234,52 @@ function renderHeader(user) {
   $('#user_nav').html(userNav).fadeIn();
 }
 
+function initRigidSearch() {
+  var form = $('form.rigidsearch-form');
+  if (form.length === 0) {
+    return;
+  }
+
+  var params = qs.parse(location.search);
+  var urlBase = document.location.pathname.match(/^(.*)\/search(\.html|\/?)$/)[1];
+
+  function makeUrl(path) {
+    if (path === 'index') {
+      return urlBase;
+    }
+    return urlBase + '/' + path + '/';
+  }
+
+  if (params.q) {
+    $('input[name="q"]').val(params.q);
+    $.ajax({
+      type: 'GET',
+      url: 'https://rigidsearch.getsentry.net/api/search',
+      data: {
+        q: params.q,
+        section: form.data('section')
+      },
+      crossDomain: true,
+      success: function(resp) {
+        var results = $('div.results', form).html('');
+        resp.items.forEach(function(item) {
+          $('<div class="result"></div>')
+            .append($('<h3></h3>')
+              .append($('<a class="link"></a>')
+                .attr('href', makeUrl(item.path))
+                .text(item.title)))
+            .append($('<p class="excerpt"></p>')
+              .html(item.excerpt))
+            .appendTo(results);
+        });
+      },
+      error: function() {
+        console.error('Failed to search :(');
+      }
+    });
+  }
+}
+
 $(function() {
   if (document.location.host === "localhost:9000") {
     var API = 'http://dev.getsentry.net:8000/docs/api';
@@ -439,4 +486,6 @@ $(function() {
   });
 
   $('[data-toggle="tooltip"]').tooltip();
+
+  initRigidSearch();
 });
