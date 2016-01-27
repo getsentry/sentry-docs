@@ -1,6 +1,6 @@
-var $ = require('jquery');
-var bootstrap = require('bootstrap');
-var qs = require('query-string');
+var $ = require("jquery");
+var bootstrap = require("bootstrap");
+var qs = require("query-string");
 
 var dsnList = [];
 var apiKeyList = [];
