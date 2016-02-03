@@ -39,6 +39,12 @@ The following tokens are reserved and known to Sentry:
 
     Values can be your user ID (your email address) or ``me`` for yourself.
 
+.. describe:: has
+
+    Restrict results to issues which have *any* value for a tag.
+
+    ``has:user``
+
 .. describe:: release
 
     Restrict results to issues seen within the given release.
