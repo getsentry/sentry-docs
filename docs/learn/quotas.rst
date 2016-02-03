@@ -23,6 +23,13 @@ throughput, and if your team needs more we're happy to help. Reach out to
 your account manager, or send an email to support@getsentry.com to learn
 more about increasing capacity.
 
+Rate Limiting Projects
+----------------------
+
+You can set an organization-wide per-project rate limit via the "Rate Limits"
+link on your dashboard. For example, you might want to set this to "90%", which
+means no individual project can send more than 90% of your organization's quota.
+
 Attributes Limits
 -----------------
 
