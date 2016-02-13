@@ -181,6 +181,11 @@ body, which acts as an ownership identifier::
    portion of the header, and it will be used if sentry_client is not sent
    in the auth header.
 
+In situations where it's not possible to send the custom ``X-Sentry-Auth``
+header, it's possible to send these values via the querystring::
+
+    ?sentry_version=5&sentry_key=<public api key>&sentry_secret=<secret api key>...
+
 .. describe:: sentry_version
 
     The protocol version. The current version of the protocol is '7'.
