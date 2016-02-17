@@ -27,8 +27,8 @@ quick access to finding related events.
 Several common uses for tags include:
 
 *   The hostname of the server
-*   The version of your application (e.g. your git sha)
 *   The version of your platform (e.g. iOS 5.0)
+*   The user's language
 
 Once you've starting sending tagged data, you'll see it show up in a few places:
 
@@ -49,7 +49,7 @@ For example, in the JavaScript client:
 .. code-block:: javascript
 
     Raven.captureMessage('hello world!', {tags: {
-        version: 'my application version'
+        locale: 'en-us'
     }});
 
 Or to bind tags to the request context:
