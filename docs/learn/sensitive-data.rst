@@ -9,10 +9,10 @@ Sentry and you either want to remove it, or you want to ensure it doesnt get
 stored.
 
 
-Built-in Protection
--------------------
+Server-Side Filtering
+---------------------
 
-Within your project settings you'll find a "Data scrubber" option. By default
+Within your project settings you'll find a **Data Scrubber** option. By default
 this is enabled, and we highly recommend you keep it that way. With it enabled
 Sentry will scrub the following:
 
@@ -38,8 +38,12 @@ Sentry will scrub the following:
 - Any keys which match values that you've added to the list of additional fields
   in your Project Settings.
 
-Some SDKs will also allow you to filter data ahead of time following similar
-patterns.
+You can choose to expand the keys which are scrubbed by the server, as well as
+prevent IP addresses from being stored. The latter is particularly important if
+you're concerned about PII and using our Browser JavaScript SDK.
+
+Additionally some SDKs will also allow you to filter data ahead of time following
+similar patterns.
 
 
 Restricting Emails
