@@ -23,7 +23,6 @@ The following items are expected of production-ready clients:
 Feature based support is required for the following:
 
 * If cookie data is available, it's not sent by default
-* If POST data is available, it's not sent by default
 
 Additionally, the following features are highly encouraged:
 
