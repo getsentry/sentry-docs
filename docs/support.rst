@@ -45,5 +45,5 @@ Google Groups
 
 If you're looking for support on a specific client, check the
 documentation specific to that client. Several clients are maintained by
-the Sentry team, whereas others are not. Nearly every client also has it's
+the Sentry team, whereas others are not. Nearly every client also has its
 own bug tracker, which is generally where the code lives (i.e. on GitHub).
