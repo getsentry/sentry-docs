@@ -1,7 +1,7 @@
 Support
 =======
 
-As a paying customer of Hosted Sentry or Sentry Enterprise you have access
+As a paying customer of Hosted Sentry or Sentry On-Premise you have access
 to various forms of support; and if you are using the Open Source version
 you can get in contact with the Sentry community for questions.
 
