@@ -9,6 +9,7 @@ and are available under Open Source licenses.
    :hidden:
 
    actionscript/index
+   cocoa/index
    csharp/index
    go/index
    java/index
