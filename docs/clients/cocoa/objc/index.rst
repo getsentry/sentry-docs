@@ -24,15 +24,15 @@ Usage is pretty straightforward:
     }
 
     - (void)sendLogEventsToSentry {
+        // The last 10 of these will be sent along with the next crash report.
+
         [Sentry logDebug:@"Send a debug log event to Sentry!"];
         [Sentry logInfo:@"Send an info log event to Sentry!"];
         [Sentry logWarning:@"Send a warning log event to Sentry!"];
         [Sentry logError:@"Send an error log event to Sentry!"];
         [Sentry logFatal:@"Send a fatal log event to Sentry!"];
-    }
 
-    - (void)sendQueuedEvents {
-        // You must periodically call this to send queued events.
-        // It will be called automatically on app startup only.
-        [Sentry sendQueuedEvents];
+        [Sentry logNavigationFrom:@"main" to:@"settings"];
+
+        [Sentry logUIEventOfType:@"touch" withTarget:@"start button"];
     }
