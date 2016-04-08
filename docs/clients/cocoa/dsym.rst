@@ -28,7 +28,7 @@ processing on iTunesConnect so this should be run in its own lane.
 
     lane :upload_symbols do
       download_dsyms
-      upload_sybols_to_sentry(
+      upload_symbols_to_sentry(
         api_key: '...',
         org_slug: '...',
         project_slug: '...',
@@ -62,7 +62,7 @@ Use Fastlane
 
     lane :build do
       gym
-      upload_sybols_to_sentry(
+      upload_symbols_to_sentry(
         api_key: '...',
         org_slug: '...',
         project_slug: '...',
