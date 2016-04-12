@@ -113,6 +113,21 @@ The following attributes are required for all events:
     * ``python``
     * ``ruby``
 
+.. describe:: sdk
+
+    Information about the SDK sending the event.
+
+    .. sourcecode:: json
+
+        {
+          "sdk": {
+            "name": "sentry-unity",
+            "version": "1.0.0"
+          }
+        }
+
+    .. versionadded:: Sentry 8.4
+
 
 Optional Attributes
 -------------------
@@ -178,6 +193,18 @@ highly encouraged:
           ]
         }
 
+.. describe:: environment
+
+    The environment name, such as 'production' or 'staging'.
+
+    .. sourcecode:: json
+
+        {
+          "environment": "production"
+        }
+
+    .. versionadded:: Sentry 8.0
+
 .. describe:: modules
 
     A list of relevant modules and their versions.
@@ -223,5 +250,6 @@ highly encouraged:
         }
 
     .. versionadded:: Protocol version '7'
+
 
 For information about overriding grouping see :ref:`custom-grouping`.
