@@ -128,6 +128,22 @@ The following attributes are required for all events:
 
     .. versionadded:: Sentry 8.4
 
+.. describe:: device
+
+    Information about the Device.
+
+    .. sourcecode:: json
+
+        {
+          "device": {
+            "name": "Windows",
+            "version": "95",
+            "build": "95.0.134.1651"
+          }
+        }
+
+    .. versionadded:: Sentry 8.4
+
 
 Optional Attributes
 -------------------
