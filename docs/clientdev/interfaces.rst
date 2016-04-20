@@ -377,9 +377,12 @@ that occurred before the main event.
           }
         }]
 
+Breadcrumb Types
+~~~~~~~~~~~~~~~~
+
 Below are descriptions of individual breadcrumb types, and what their ``data`` properties look like.
 
-.. describe:: "message" breadcrumb
+.. describe:: "message"
 
     Describes a log message breadcrumb. This is typically a generic log message.
 
@@ -402,7 +405,7 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
           }
         }
 
-.. describe:: "navigation" breadcrumb
+.. describe:: "navigation"
 
     Describes a navigation breadcrumb. A navigation event can be a URL change in a web application, or
     a UI transition in a mobile or desktop application, etc.
@@ -425,7 +428,7 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
           }
         }
 
-.. describe:: "ui_event" breadcrumb
+.. describe:: "ui_event"
 
     Describes a UI event breadcrumb.
 
@@ -449,7 +452,7 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
           }
         }
 
-.. describe:: "error" breadcrumb
+.. describe:: "error"
 
     Describes an error breadcrumb. This represents a previous error event that was sent to Sentry
     from your client.
@@ -475,7 +478,7 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
           }
         }
 
-.. describe:: "http_request" breadcrumb
+.. describe:: "http_request"
 
     Describes an HTTP request breadcrumb. This represents an HTTP request transmitted from your
     application. This could be an AJAX request from a web application, or a server-to-server HTTP
