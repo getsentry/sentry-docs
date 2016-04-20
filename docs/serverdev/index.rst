@@ -1,26 +1,24 @@
 Contributing to Sentry
 ======================
-
-This part of the documentation guides you towards contributing to `Sentry <https://www.github.com/getsentry/sentry>`_.
-It covers the installation and configuration of required dependencies, as well as
-standard procedures of contribution.
+This part of the documentation guides you towards contributing to our core repository,
+`sentry <https://www.github.com/getsentry/sentry>`_. It covers the installation and
+configuration of required dependencies, as well as standard procedures of contribution.
 
 Setting up Your Development Environment
 ---------------------------------------
 
-Macintosh OSX
-'''''''''''''
+Macintosh OS X
+''''''''''''''
 
 Third Party Services
 ~~~~~~~~~~~~~~~~~~~~
-To run the basic development server, you need to install both Redis and Postgresql.
-Below are basic commands to install them on OSX. By now, you hopefully have Homebrew installed.
-If you don't run::
-
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+To run the basic development server, you need to install both Redis and PostgreSQL.
+If you haven't already installed `Mac Homebrew <http://brew.sh>`_, follow the directions
+they provide on their homepage. It is an insanely useful package manager for OS X and we
+will be using it in this guide.
 
 .. note:: If you would like to have the following services run when you start your machine,
-  follow the instructions that Homeberw provides at the end of running ``install``.
+  follow the instructions that Homebrew provides at the end of running ``install``.
 
 Redis
 *****
@@ -30,10 +28,10 @@ Run the following to install, configure, and execute Redis as a daemonized serve
     brew install redis
     redis-server --save --daemonize yes
 
-Postgresql
+PostgreSQL
 **********
-Postgresql is the primary database that Sentry uses for all persistent storage.
-Run the following to install, configure, and execute Postgresql as a daemonized server::
+PostgreSQL is the primary database that Sentry uses for all persistent storage.
+Run the following to install, configure, and execute PostgreSQL as a daemonized server::
 
     brew install postgresql
     pg_ctl -D /usr/local/var/postgres start
@@ -42,21 +40,17 @@ Third Party Libraries
 ~~~~~~~~~~~~~~~~~~~~~
 Sentry depends on a combination of both Python and JavaScript packages that need to be installed
 in order for the server to function properly. Below are basic commands to install the languages
-and their libraries on OSX.
+and their libraries on OS X.
 
 Python
 ******
-While OSX ships with an acceptable version of Python, installing the latest binaries from HomeBrew
+While OS X ships with an acceptable version of Python, installing the latest binaries from Homebrew
 is recommended. In addition, it is highly recommended to separate your libraries per-environment
 with the use of virtual environments. One of the easiest ways to curate your virtual environments is
-with `virtualenvwrapper <https://virtualenvwrapper.readthedocs.org/>`_. Run the following to install
-and configure brewed Python and virtualenvwrapper::
+with `virtualenv-burrito`virtualenv-burrito <https://github.com/brainsik/virtualenv-burrito#install>`_.
+Run the following to install and configure brewed Python::
 
     brew install python
-    pip install virtualenvwrapper
-    touch ~/.bashrc >> source /usr/local/bin/virtualenvwrapper.sh
-    source ~/.bashrc
-    mkvirtualenv sentry
 
 JavaScript
 **********
@@ -82,15 +76,22 @@ data::
     createdb -E utf-8 sentry
     sentry init
     sentry upgrade
-    ./bin/load-mocks
 
 .. note:: You will be prompted to create a user during ``sentry upgrade``. It is recommended
-  to supply the prompts with a proper email address and password. It is also recommended to
-  designate said user as a superuser.
+  to supply the prompts with a proper email address and password. It is also required to
+  designate said user as a superuser because said user is responsible for the initial
+  configurations.
 
-Once you've successfully stood up your dataset, you can now run the development server::
+.. note:: If you would like to import an example dataset, running ``./bin/load-mocks`` will
+  add a few example projects and teams to the main organization.
 
-    sentry devserver
+
+Once you've successfully stood up your datastore, you can now run the development server::
+
+    sentry devserver --workers
+
+.. note:: If you are developing for aesthetics only and do not rely on the async workers,
+  you can omit the ``--workers`` flag in order to use less system resources.
 
 .. note:: If you would like to be able to run ``devserver`` outside of your root checkout,
   you can install ``webpack`` globally with ``npm install -g webpack``.
@@ -105,10 +106,6 @@ You've made your changes to the codebase, now it's time to present them to the S
 It is recommended to first run the test suite locally in order to find any linting, syntax, or
 integration before you post a Pull Request.
 
-Code Coverage
-'''''''''''''
-#TODO Should this even be here?#
-
 Running the Test Suite Locally
 ''''''''''''''''''''''''''''''
 There are no additional services required for running the Sentry test suite. To install dependent
@@ -116,8 +113,10 @@ libraries, lint all source code, and run both the Python and JavaScript test sui
 
     make test
 
-.. note:: If you find yourself constantly running ``make test`` and wishing it was faster, check
-  out other entry points for testing in the ``Makefile``.
+.. note:: If you find yourself constantly running ``make test`` and wishing it was faster, running
+  either ``make test-js`` or ``make test-python`` will only run the test suite with the
+  corresponding language, skipping over linting and dependency checks. If you would like to see
+  even more options, check out other entry points in the ``Makefile``.
 
 Posting a Pull Request
 ''''''''''''''''''''''
@@ -126,5 +125,5 @@ weed out any inconsistency problems, now is the right time to post a Pull Reques
 In your PR, please provide a quick description as to what it is fixing or providing.
 If your PR is related to a topic that a certain team should be aware of, please tag said team at
 the bottom of the description. A list of teams can be found `here <https://github.com/orgs/getsentry/teams>`_.
-If you are not part of the Sentry organization, please #TODO what should we have here?#.
-
+If you are not part of the Sentry organization, please either tag the team member you were
+corresponding with prior to posting your PR, or just wait for a team member to tag it.
