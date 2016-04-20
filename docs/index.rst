@@ -73,6 +73,7 @@ and platforms.
       learn/quotas
       learn/sensitive-data
       learn/sso
+      learn/user-feedback
 
       ip-ranges
 
@@ -94,6 +95,7 @@ and platforms.
       learn/rollups
       learn/sensitive-data
       learn/sso
+      learn/user-feedback
 
 .. toctree::
    :maxdepth: 1
