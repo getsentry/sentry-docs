@@ -329,3 +329,175 @@ data related to the current user, the current HTTP request.
           "query": "SELECT 1",
           "engine": "psycopg2"
         }
+
+
+Breadcrumbs Interface
+---------------------
+
+**NOTE:** *Breadcrumbs are an experimental Sentry feature and may not yet be available.*
+
+The breadcrumbs interface specifies a series of application events, or "breadcrumbs",
+that occurred before the main event.
+
+.. describe:: sentry.interfaces.Breadcrumbs
+
+    Alias: ``breadcrumbs``
+
+    An array of breadcrumbs. Breadcrumb entries are ordered from oldest to newest. The last breadcrumb
+    in the array should be the last entry before the main event fired.
+
+    Each breadcrumb has two required properties: ``timestamp``, and ``type``. A
+    third property, ``data``, is optional and its contents depend on the breadcrumb ``type``.
+
+    ``timestamp``
+      A timestamp representing when the breadcrumb occurred. This can be either an ISO datetime string,
+      or a Unix timestamp.
+    ``type``
+      The type of breadcrumb. Can be one of ``message``, ``http_request``, ``ui_event``, ``error``,
+      or ``navigation``.
+    ``data``
+      Data associated with this breadcrumb. Contains a sub-object whose contents depend on the breadcrumb
+      ``type``. See descriptions of breadcrumb types below.
+
+    .. sourcecode:: json
+
+        [{
+          "timestamp": 1461185753845,
+          "type": "message",
+          "data": {
+            "message": "Something happened",
+            "level": "debug"
+          }
+        }, {
+          "timestamp": 1461185753847,
+          "type": "navigation",
+          "data": {
+            "from": "/login",
+            "to": "/dashboard"
+          }
+        }]
+
+Below are descriptions of individual breadcrumb types, and what their ``data`` properties look like.
+
+.. describe:: "message" breadcrumb
+
+    Describes a log message breadcrumb. This is typically a generic log message.
+
+    Its ``data`` property has the following sub-properties:
+
+    ``message``
+      The log message string.
+    ``level``
+      The log level (optional). This can be any string, but Sentry will recognize standard debug levels
+      like ``debug``, ``info``, ``warning``, and ``error``.
+
+    .. sourcecode:: json
+
+        {
+          "timestamp": 1461185753845,
+          "type": "message",
+          "data": {
+            "message": "Something happened",
+            "level": "debug"
+          }
+        }
+
+.. describe:: "navigation" breadcrumb
+
+    Describes a navigation breadcrumb. A navigation event can be a URL change in a web application, or
+    a UI transition in a mobile or desktop application, etc.
+
+    Its ``data`` property has the following sub-properties:
+
+    ``from``
+      A string representing the original application state / location.
+    ``to``
+      A string representing the new application state / location.
+
+    .. sourcecode:: json
+
+        {
+          "timestamp": 1461185753845,
+          "type": "navigation",
+          "data": {
+            "from": "/login",
+            "to": "/dashboard"
+          }
+        }
+
+.. describe:: "ui_event" breadcrumb
+
+    Describes a UI event breadcrumb.
+
+    Its ``data`` property has the following sub-properties:
+
+    ``type``
+      A string representing the "type" of UI event. This can be any descriptive string representing the
+      UI event, like "click" or "keypress".
+    ``target``
+      A string representing the UI event target, if there is one. This can be any descriptive string
+      representing the UI target, like HTML describing a DOM element target.
+
+    .. sourcecode:: json
+
+        {
+          "timestamp": 1461185753845,
+          "type": "ui_event",
+          "data": {
+            "type": "click",
+            "target": "<input type=\"password\" name=\"password\" />"
+          }
+        }
+
+.. describe:: "error" breadcrumb
+
+    Describes an error breadcrumb. This represents a previous error event that was sent to Sentry
+    from your client.
+
+    Its ``data`` property has the following sub-properties:
+
+    ``type``
+      The type of error, e.g. "ReferenceError" or "TypeError".
+    ``message``
+      The full error message, e.g. "foo is not defined".
+    ``event_id``
+      The ID of the event sent to Sentry.
+
+    .. sourcecode:: json
+
+        {
+          "timestamp": 1461185753845,
+          "type": "error",
+          "data": {
+            "type": "ReferenceError",
+            "message": "foo is not defined",
+            "event_id": "765b3d6acabc4de788e0156f79b9e658"
+          }
+        }
+
+.. describe:: "http_request" breadcrumb
+
+    Describes an HTTP request breadcrumb. This represents an HTTP request transmitted from your
+    application. This could be an AJAX request from a web application, or a server-to-server HTTP
+    request to an API service provider, etc.
+
+    Its ``data`` property has the following sub-properties:
+
+    ``url``
+      The request URL.
+    ``method``
+      The HTTP request method.
+    ``status_code``
+      The HTTP status code of the response.
+
+    .. sourcecode:: json
+
+        {
+          "timestamp": 1461185753845,
+          "type": "error",
+          "data": {
+            "url": "http://example.com/api/1.0/users",
+            "method": "GET",
+            "status_code": 200
+          }
+        }
