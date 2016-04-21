@@ -2,6 +2,8 @@ SPHINX_BUILD=PYTHONIOENCODING=utf-8 SENTRY_FEDERATED_DOCS=1 venv/bin/sphinx-buil
 SPHINX_HTML_BUILD=$(SPHINX_BUILD) -b sentryhtml
 SPHINX_DIRHTML_BUILD=$(SPHINX_BUILD) -b sentrydirhtml
 
+setup: venv/bin/python requirements
+
 venv/bin/python:
 	@echo "--> Creating Virtualenv"
 	@virtualenv venv
