@@ -70,7 +70,7 @@ it into the widget:
 
 Some integrations and frameworks will make this even easier:
 
-- :doc:`Django <../clients/python/integrations/django#user-feedback>`
-- :doc:`JavaScript <../clients/javascript/usage#user-feedback>`
+- :ref:`Django <python-django-user-feedback>`
+- :ref:`JavaScript <javascript-user-feedback>`
 
 Take a look at your SDK's documentation for more information.
