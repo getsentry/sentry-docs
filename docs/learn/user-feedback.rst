@@ -39,4 +39,38 @@ For example, in Django this looks like the following:
       </script>
     {% endif %}
 
-Take a look at your SDK's documentation for more details on integrating User Feedback.
+Often this will vary depending on how you handle errors -- specifically routing and rendering
+errors. If you've got a more custom setup, you'll simply need to pull out the event ID and pass
+it into the widget:
+
+.. sourcecode:: python
+
+  class IndexController(Controller):
+      def get(self, request):
+          try:
+              1 / 0
+          except Exception:
+              event_id = Raven.captureException()
+              return render('500.html', {'sentry_event_id': event_id})
+
+.. sourcecode:: html+django
+
+    <script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
+
+    {% if sentry_event_id %}
+      <script>
+      Raven.showReportDialog({
+        eventId: '{{ sentry_event_id }}',
+
+        // use the public DSN (dont include your secret!)
+        dsn: '___PUBLIC_DSN___'
+      });
+      </script>
+    {% endif %}
+
+Some integrations and frameworks will make this even easier:
+
+- :doc:`Django <../client/python/integrations/django#user-feedback>`
+- :doc:`JavaScript <../client/javascript/usage#user-feedback>`
+
+Take a look at your SDK's documentation for more information.
