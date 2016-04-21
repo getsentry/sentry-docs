@@ -53,6 +53,8 @@ it into the widget:
               event_id = Raven.captureException()
               return render('500.html', {'sentry_event_id': event_id})
 
+Then simply check for the ID in the template, and open the feedback dialog:
+
 .. sourcecode:: html+django
 
     <script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
