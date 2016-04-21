@@ -104,6 +104,7 @@ and platforms.
 
    api/index
    clientdev/index
+   serverdev/index
    docdev
    project-resources
 
