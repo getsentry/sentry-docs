@@ -72,7 +72,8 @@ Then simply check for the ID in the template, and open the feedback dialog:
 
 Some integrations and frameworks will make this even easier:
 
+- :ref:`Browser JavaScript <javascript-user-feedback>`
 - :ref:`Django <python-django-user-feedback>`
-- :ref:`JavaScript <javascript-user-feedback>`
+- :ref:`Flask <python-django-user-feedback>`
 
 Take a look at your SDK's documentation for more information.
