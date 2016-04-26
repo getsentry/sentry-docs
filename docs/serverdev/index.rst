@@ -127,3 +127,11 @@ If your PR is related to a topic that a certain team should be aware of, please 
 the bottom of the description. A list of teams can be found `here <https://github.com/orgs/getsentry/teams>`_.
 If you are not part of the Sentry organization, please either tag the team member you were
 corresponding with prior to posting your PR, or just wait for a team member to tag it.
+
+More Information
+================
+
+.. toctree::
+   :maxdepth: 0
+
+   code
