@@ -129,7 +129,7 @@ If you are not part of the Sentry organization, please either tag the team membe
 corresponding with prior to posting your PR, or just wait for a team member to tag it.
 
 More Information
-================
+----------------
 
 .. toctree::
    :maxdepth: 0
