@@ -74,7 +74,7 @@ for it to use. Running the following will create the proper database and fill it
 data::
 
     createdb -E utf-8 sentry
-    sentry init
+    sentry init --dev
     sentry upgrade
 
 .. note:: You will be prompted to create a user during ``sentry upgrade``. It is recommended
