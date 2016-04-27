@@ -517,6 +517,8 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
     ``params``
       Query parameters.  This can be a list of values for the query.  Each
       item is inserted into the query whenever a ``%s`` is encountered.
+      The parameters should be already formatted into strings althrough
+      `None` is a valid value for `NULL`.
     ``duration``
       Duration of the query in seconds.
 
@@ -527,7 +529,7 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
           "type": "query",
           "data": {
             "query": "SELECT * FROM users WHERE id = %s",
-            "params": [42],
+            "params": ['42'],
             "duration": 0.0001,
           }
         }
