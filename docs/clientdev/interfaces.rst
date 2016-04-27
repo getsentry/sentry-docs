@@ -504,3 +504,30 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
             "status_code": 200
           }
         }
+
+.. describe:: query
+
+    Describes a database query breadcrumb. This represents a query to a database
+    from the application. Typically this is SQL.
+
+    Its ``data`` property has the following sub-properties:
+
+    ``query``
+      The query. Typically a string but can also be a JSON object.
+    ``params``
+      Query parameters.  This can be a list of values for the query.  Each
+      item is inserted into the query whenever a ``%s`` is encountered.
+    ``duration``
+      Duration of the query in seconds.
+
+    .. sourcecode:: json
+
+        {
+          "timestamp": 1461185753845,
+          "type": "query",
+          "data": {
+            "query": "SELECT * FROM users WHERE id = %s",
+            "params": [42],
+            "duration": 0.0001,
+          }
+        }
