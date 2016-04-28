@@ -15,8 +15,8 @@ In the above there are four tokens:
 * ``server:web-8``
 * ``example error``
 
-The first two are standard search tokens, both using reserved keywords. The second
-is pointing to a custom tag sent by the client. The third is passed as part of the
+The first two are standard search tokens, both using reserved keywords. The third
+is pointing to a custom tag sent by the client. The fourth is passed as part of the
 issue search query (which uses a CONTAINS match).
 
 The following tokens are reserved and known to Sentry:
