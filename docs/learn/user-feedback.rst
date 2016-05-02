@@ -75,5 +75,6 @@ Some integrations and frameworks will make this even easier:
 - :ref:`Browser JavaScript <javascript-user-feedback>`
 - :ref:`Django <python-django-user-feedback>`
 - :ref:`Flask <python-flask-user-feedback>`
+- :ref:`PHP <php-user-feedback>`
 
 Take a look at your SDK's documentation for more information.
