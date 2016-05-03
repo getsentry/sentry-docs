@@ -32,6 +32,10 @@ The point of the federated documentation system is that a whole cohesive
 documentation can be built however the individual documentation for the
 components can remain in the individual repositories.
 
+For building the required environment, you can use this command::
+
+    make requirements
+
 For building the complete docs, you can use this command::
 
     make build
