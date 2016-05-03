@@ -346,27 +346,48 @@ that occurred before the main event.
     An array of breadcrumbs. Breadcrumb entries are ordered from oldest to newest. The last breadcrumb
     in the array should be the last entry before the main event fired.
 
-    Each breadcrumb has two required properties: ``timestamp``, and ``type``. A
-    third property, ``data``, is optional and its contents depend on the breadcrumb ``type``.
+    Each breadcrumb has a few properties of which at least ``timestamp``
+    and ``category`` must be provided.  The rest is optional and depending on what
+    is provided the rendering might be different.
 
     ``timestamp``
       A timestamp representing when the breadcrumb occurred. This can be either an ISO datetime string,
       or a Unix timestamp.
     ``type``
-      The type of breadcrumb. Can be one of ``message``, ``http_request``, ``ui_event``, ``error``,
-      or ``navigation``.
+      The type of breadcrumb. The default type is ``default`` which indicates
+      no specific handling.  Other types are currently ``http`` for HTTP
+      requests and ``navigation`` for navigation events.  More about types
+      later.
+    ``message``
+      If a message is provided it's rendered as text where whitespace is
+      preserved.  Very long text might be abbreviated in the UI.
     ``data``
-      Data associated with this breadcrumb. Contains a sub-object whose contents depend on the breadcrumb
-      ``type``. See descriptions of breadcrumb types below.
+      Data associated with this breadcrumb. Contains a sub-object whose
+      contents depend on the breadcrumb ``type``. See descriptions of
+      breadcrumb types below.  Additional parameters that are unsupported
+      by the type are rendered as a key/value table.
+    ``category``
+      Categories are dotted strings that indicate what the crumb is or
+      where it comes from.  Typically it's a module name or a descriptive
+      string.  For instance `ui.click` could be used to indicate that a
+      click happend in the UI or `flask` could be used to indicate that
+      the event originated in the Flask framework.
+    ``level``
+      This defines the level of the event.  If not provided it defaults to
+      ``info`` which is the middle level.  In the order of priority from
+      highest to lowest the levels are ``critical``, ``error``,
+      ``warning``, ``info`` and ``debug``.  Levels are used in the UI to
+      emphasize and deemphasize the crumb.
 
     .. sourcecode:: json
 
         [{
           "timestamp": 1461185753845,
-          "type": "message",
+          "message": "Something happened",
+          "category": "log",
           "data": {
-            "message": "Something happened",
-            "level": "debug"
+            "foo": "bar",
+            "blub": "blah"
           }
         }, {
           "timestamp": 1461185753847,
@@ -382,33 +403,28 @@ Breadcrumb Types
 
 Below are descriptions of individual breadcrumb types, and what their ``data`` properties look like.
 
-.. describe:: message
+.. describe:: default
 
-    Describes a log message breadcrumb. This is typically a generic log message.
-
-    Its ``data`` property has the following sub-properties:
-
-    ``message``
-      The log message string.
-    ``level``
-      The log level (optional). This can be any string, but Sentry will recognize standard debug levels
-      like ``debug``, ``info``, ``warning``, and ``error``.
+    Describes an unspecified breadcrumb. This is typically a generic log message
+    or something similar.  The ``data`` part is entirely undefined and as
+    such completely rendered as a key/value table.
 
     .. sourcecode:: json
 
         {
           "timestamp": 1461185753845,
-          "type": "message",
+          "message": "Something happened",
+          "category": "log",
           "data": {
-            "message": "Something happened",
-            "level": "debug"
+            "key": "value"
           }
         }
 
 .. describe:: navigation
 
-    Describes a navigation breadcrumb. A navigation event can be a URL change in a web application, or
-    a UI transition in a mobile or desktop application, etc.
+    Describes a navigation breadcrumb. A navigation event can be a URL
+    change in a web application, or a UI transition in a mobile or desktop
+    application, etc.
 
     Its ``data`` property has the following sub-properties:
 
@@ -428,61 +444,12 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
           }
         }
 
-.. describe:: ui_event
+.. describe:: http
 
-    Describes a UI event breadcrumb.
-
-    Its ``data`` property has the following sub-properties:
-
-    ``type``
-      A string representing the "type" of UI event. This can be any descriptive string representing the
-      UI event, like "click" or "keypress".
-    ``target``
-      A string representing the UI event target, if there is one. This can be any descriptive string
-      representing the UI target, like HTML describing a DOM element target.
-
-    .. sourcecode:: json
-
-        {
-          "timestamp": 1461185753845,
-          "type": "ui_event",
-          "data": {
-            "type": "click",
-            "target": "<input type=\"password\" name=\"password\" />"
-          }
-        }
-
-.. describe:: error
-
-    Describes an error breadcrumb. This represents a previous error event that was sent to Sentry
-    from your client.
-
-    Its ``data`` property has the following sub-properties:
-
-    ``type``
-      The type of error, e.g. "ReferenceError" or "TypeError".
-    ``message``
-      The full error message, e.g. "foo is not defined".
-    ``event_id``
-      The ID of the event sent to Sentry.
-
-    .. sourcecode:: json
-
-        {
-          "timestamp": 1461185753845,
-          "type": "error",
-          "data": {
-            "type": "ReferenceError",
-            "message": "foo is not defined",
-            "event_id": "765b3d6acabc4de788e0156f79b9e658"
-          }
-        }
-
-.. describe:: http_request
-
-    Describes an HTTP request breadcrumb. This represents an HTTP request transmitted from your
-    application. This could be an AJAX request from a web application, or a server-to-server HTTP
-    request to an API service provider, etc.
+    Describes an HTTP request breadcrumb. This represents an HTTP request
+    transmitted from your application. This could be an AJAX request from
+    a web application, or a server-to-server HTTP request to an API
+    service provider, etc.
 
     Its ``data`` property has the following sub-properties:
 
@@ -492,6 +459,8 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
       The HTTP request method.
     ``status_code``
       The HTTP status code of the response.
+    ``reason``
+      A text that describes the status code.
 
     .. sourcecode:: json
 
@@ -501,35 +470,7 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
           "data": {
             "url": "http://example.com/api/1.0/users",
             "method": "GET",
-            "status_code": 200
-          }
-        }
-
-.. describe:: query
-
-    Describes a database query breadcrumb. This represents a query to a database
-    from the application. Typically this is SQL.
-
-    Its ``data`` property has the following sub-properties:
-
-    ``query``
-      The query. Typically a string but can also be a JSON object.
-    ``params``
-      Query parameters.  This can be a list of values for the query.  Each
-      item is inserted into the query whenever a ``%s`` is encountered.
-      The parameters should be already formatted into strings althrough
-      `None` is a valid value for `NULL`.
-    ``duration``
-      Duration of the query in seconds.
-
-    .. sourcecode:: json
-
-        {
-          "timestamp": 1461185753845,
-          "type": "query",
-          "data": {
-            "query": "SELECT * FROM users WHERE id = %s",
-            "params": ['42'],
-            "duration": 0.0001,
+            "status_code": 200,
+            "reason": "OK"
           }
         }
