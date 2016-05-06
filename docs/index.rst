@@ -65,6 +65,7 @@ and platforms.
       quickstart
       support
 
+      learn/breadcrumbs
       learn/context
       learn/search
       learn/membership
@@ -88,6 +89,7 @@ and platforms.
       server/index
       support
 
+      learn/breadcrumbs
       learn/context
       learn/search
       learn/membership
