@@ -466,7 +466,7 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
 
         {
           "timestamp": 1461185753845,
-          "type": "error",
+          "type": "http",
           "data": {
             "url": "http://example.com/api/1.0/users",
             "method": "GET",
