@@ -11,6 +11,8 @@ authenticate as a user account with the API.
 
     $ curl -H 'Authentication: Bearer {TOKEN}' https://app.getsentry.com/api/0/projects/1/
 
+You can `find or create authentication tokens within Sentry <https://app.getsentry.com/api/>`_.
+
 
 API Keys
 --------
