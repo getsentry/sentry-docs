@@ -1,15 +1,16 @@
-Adding Context
-==============
+Context
+=======
 
-Context can be added into events in a few various ways:
+Sentry supports additional context with events. Often this context is shared
+amongs any issue captured in its lifecycle, and includes the following components:
 
-Tags
-    Key/value pairs which generate breakdowns and search filters
+**Tags**
+    Key/value pairs which generate breakdowns charts and search filters
 
-User
+**User**
     Information about the current actor
 
-Extra
+**Extra**
     Arbitrary unstructured data which is stored with an event sample
 
 Context is considered to be request state, and thus should be cleared
