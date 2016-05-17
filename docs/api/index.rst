@@ -10,7 +10,7 @@ Versioning
 ----------
 
 The current version of the web API is known as **v0** and is considered
-to be in a draft phase. While we don't expect public endpoints to add
+to be in a draft phase. While we don't expect public endpoints to
 change greatly, keep in mind that the API is still under development.
 
 
