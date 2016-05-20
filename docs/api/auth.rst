@@ -9,7 +9,7 @@ authenticate as a user account with the API.
 
 .. sourcecode:: bash
 
-    $ curl -H 'Authentication: Bearer {TOKEN}' https://app.getsentry.com/api/0/projects/1/
+    $ curl -H 'Authorization: Bearer {TOKEN}' https://app.getsentry.com/api/0/projects/1/
 
 You can `find or create authentication tokens within Sentry <https://app.getsentry.com/api/>`_.
 
