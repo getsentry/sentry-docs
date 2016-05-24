@@ -51,6 +51,12 @@ The following tokens are reserved and known to Sentry:
 
     Exact match on the version of a release.
 
+.. describe:: first-release
+
+    Restrict results to issues first seen within the given release.
+
+    Exact match on the version of a release.
+
 .. describe:: user.id
 .. describe:: user.email
 .. describe:: user.username
@@ -73,5 +79,26 @@ The following tokens are reserved and known to Sentry:
     Issues created between 12 and 24 hours ago:
 
     ``age:+12h age:-24h``
+
+.. describe:: event.timestamp
+
+    Restrict results to issues in which an event occurred at the given timestamp. This filter can
+    be passed twice to provide a range.
+
+    Events occurred on January 2nd 2016:
+
+    ``event.timestamp:2016-01-02``
+
+    Events between 01:00 and 02:00 (UTC):
+
+    ``event.timestamp:>=2016-01-02T01:00:00 event.timestamp:<2016-01-02T02:00:00``
+
+    The following comparative operators are available:
+
+    - greater than (``>``)
+    - greater than or equal (``>=``)
+    - less than (``<``)
+    - less than or equal (``<=``)
+
 
 Additionally you can use any tag you've specified as a token.
