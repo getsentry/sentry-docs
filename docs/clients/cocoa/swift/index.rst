@@ -26,9 +26,12 @@ it in your `Cartfile`:
 Run `carthage update` to build the framework and drag the built
 `SentrySwift.framework` and `KSCrash.framework` into your Xcode project.
 
-Client usage:
+To use the client change your AppDelegate's application method to
+instanciate the Sentry client:
 
 .. sourcecode:: swift
+
+    import SentrySwift;
 
     func application(application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
