@@ -12,7 +12,9 @@ To integrate SentrySwift into your Xcode project using CocoaPods, specify it in 
     platform :ios, '8.0'
     use_frameworks!
 
-    pod 'SentrySwift', :git => 'git@github.com:getsentry/sentry-swift.git', :branch => 'master'
+    target 'YourApp' do
+        pod 'SentrySwift', :git => 'git@github.com:getsentry/sentry-swift.git', :branch => 'master'
+    end
 
 To integrate SentrySwift into your Xcode project using Carthage, specify
 it in your `Cartfile`:
