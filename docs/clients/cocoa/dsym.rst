@@ -48,7 +48,7 @@ one of the two following ways, you can upload the dSYM using
 
 ::
 
-    sentry-cli --api-key YOUR_API_KEY upload-dsym --org YOUR_ORG_SLUG --project YOUR_PROJECT_SLUG PATH_TO_DSYM"
+    sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dsym --org YOUR_ORG_SLUG --project YOUR_PROJECT_SLUG PATH_TO_DSYM"
 
 Without Bitcode
 ```````````````
@@ -86,12 +86,12 @@ Shell: `/usr/bin/ruby`
 
 .. sourcecode:: ruby
 
-    API_KEY = "your-api-key"
+    AUTH_TOKEN = "your-auth-token"
     ORG_SLUG = "your-org-slug"
     PROJECT_SLUG = "your-project-slug"
 
     Dir["#{ENV["DWARF_DSYM_FOLDER_PATH"]}/*.dSYM"].each do |dsym|
-        cmd = "sentry-cli --api-key #{API_KEY} upload-dsym --org #{ORG_SLUG} --project #{PROJECT_SLUG} #{dsym}"
+        cmd = "sentry-cli --auth-token #{AUTH_TOKEN} upload-dsym --org #{ORG_SLUG} --project #{PROJECT_SLUG} #{dsym}"
         Process.detach(fork {system cmd })
     end
 
@@ -113,4 +113,4 @@ place to put this is in the `/usr/local/bin/` directory.
 
 Then run this::
 
-    sentry-cli --api-key YOUR_API_KEY upload-dsym --org YOUR_ORG_SLUG --project YOUR_PROJECT_SLUG PATH_TO_DSYM"
+    sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dsym --org YOUR_ORG_SLUG --project YOUR_PROJECT_SLUG PATH_TO_DSYM"
