@@ -4,7 +4,8 @@ Swift
 The client can be installed using `CocoaPods <http://cocoapods.org>`__ or
 `Carthage <https://github.com/Carthage/Carthage>`__.
 
-To integrate SentrySwift into your Xcode project using CocoaPods, specify it in your `Podfile`:
+To integrate SentrySwift into your Xcode project using CocoaPods, specify
+it in your `Podfile`:
 
 .. sourcecode:: ruby
 
@@ -16,6 +17,8 @@ To integrate SentrySwift into your Xcode project using CocoaPods, specify it in 
         pod 'SentrySwift', :git => 'git@github.com:getsentry/sentry-swift.git', :branch => 'master'
     end
 
+Afterwards run ``pod install``.
+
 To integrate SentrySwift into your Xcode project using Carthage, specify
 it in your `Cartfile`:
 
@@ -23,7 +26,7 @@ it in your `Cartfile`:
 
     github "getsentry/sentry-swift" "master"
 
-Run `carthage update` to build the framework and drag the built
+Run ``carthage update`` to build the framework and drag the built
 `SentrySwift.framework` and `KSCrash.framework` into your Xcode project.
 
 To use the client change your AppDelegate's application method to
@@ -56,7 +59,9 @@ If you do not want to send events in a debug build, you can wrap the above code 
 Client Information
 ``````````````````
 
-A user, tags, and extra information can be stored on a `SentryClient`. This information will get sent with every message/exception in which that `SentryClient` sends up the Sentry. They can be used like...
+A user, tags, and extra information can be stored on a `SentryClient`.
+This information will get sent with every message/exception in which that
+`SentryClient` sends up the Sentry. They can be used like...
 
 .. sourcecode:: swift
 
@@ -75,7 +80,8 @@ A user, tags, and extra information can be stored on a `SentryClient`. This info
         "some_other_value": "foo bar"
     ]
 
-All of the above (`user`, `tags`, and `extra`) can all be set at anytime and can also be set to nil to clear.
+All of the above (`user`, `tags`, and `extra`) can all be set at anytime
+and can also be set to nil to clear.
 
 Sending Messages
 ````````````````
@@ -86,7 +92,9 @@ Sending a basic message (no stacktrace) can be done with `captureMessage`.
 
     SentryClient.shared?.captureMessage("TEST 1 2 3", level: .Debug)
 
-If more detailed information is required, `Event` has a large constructor that allows for passing in of all the information or a `build` function can be called to build the `Event` object like below.
+If more detailed information is required, `Event` has a large constructor
+that allows for passing in of all the information or a `build` function
+can be called to build the `Event` object like below.
 
 .. sourcecode:: swift
 
