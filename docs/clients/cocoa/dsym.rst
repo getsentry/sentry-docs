@@ -127,6 +127,10 @@ Shell: `/bin/bash`
     export SENTRY_AUTH_TOKEN=your-auth-token
     sentry-cli upload-dsym
 
+The ``upload-dsym`` command automatically picks up the
+``DWARF_DSYM_FOLDER_PATH`` environment variable that xcode exports and
+look for dsym files there.
+
 .. sentry:edition:: on-premise
 
     By default sentry-cli will connect to app.getsentry.com.  For
