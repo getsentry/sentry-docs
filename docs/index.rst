@@ -75,6 +75,7 @@ and platforms.
       learn/sensitive-data
       learn/sso
       learn/user-feedback
+      learn/cli
 
       ip-ranges
 
