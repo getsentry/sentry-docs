@@ -1,63 +1,36 @@
-Swift
-=====
+Advanced Usage
+==============
 
-The client can be installed using `CocoaPods <http://cocoapods.org>`__ or
-`Carthage <https://github.com/Carthage/Carthage>`__.
+Here are some advanced topics:
 
-To integrate SentrySwift into your Xcode project using CocoaPods, specify
-it in your `Podfile`:
 
-.. sourcecode:: ruby
+Sending Messages
+----------------
 
-    source 'https://github.com/CocoaPods/Specs.git'
-    platform :ios, '8.0'
-    use_frameworks!
-
-    target 'YourApp' do
-        pod 'SentrySwift', :git => 'git@github.com:getsentry/sentry-swift.git', :branch => 'master'
-    end
-
-Afterwards run ``pod install``.
-
-To integrate SentrySwift into your Xcode project using Carthage, specify
-it in your `Cartfile`:
-
-.. sourcecode:: ruby
-
-    github "getsentry/sentry-swift" "master"
-
-Run ``carthage update`` to build the framework and drag the built
-`SentrySwift.framework` and `KSCrash.framework` into your Xcode project.
-
-To use the client change your AppDelegate's application method to
-instanciate the Sentry client:
+Sending a basic message (no stacktrace) can be done with `captureMessage`.
 
 .. sourcecode:: swift
 
-    import SentrySwift;
+    SentryClient.shared?.captureMessage("TEST 1 2 3", level: .Debug)
 
-    func application(application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-
-        // Create a Sentry client and start crash handler
-        SentryClient.shared = SentryClient(dsnString: "___DSN___")	
-        SentryClient.shared?.startCrashHandler()
-        
-        return true
-    }
-
-If you do not want to send events in a debug build, you can wrap the above code in something like...
+If more detailed information is required, `Event` has a large constructor
+that allows for passing in of all the information or a `build` function
+can be called to build the `Event` object like below.
 
 .. sourcecode:: swift
 
-    // Create a Sentry client and start crash handler when not in debug
-    if !DEBUG {
-        SentryClient.shared = SentryClient(dsnString: "___DSN___")
-        SentryClient.shared?.startCrashHandler()
+    let event = Event.build("TEST 1 2 3") {
+        $0.level = .Debug
+        $0.tags = ["context": "production"]
+        $0.extra = [
+            "my_key": 1,
+            "some_other_value": "foo bar"
+        ]
     }
+    SentryClient.shared?.captureEvent(event)
 
 Client Information
-``````````````````
+------------------
 
 A user, tags, and extra information can be stored on a `SentryClient`.
 This information will get sent with every message/exception in which that
@@ -84,7 +57,7 @@ All of the above (`user`, `tags`, and `extra`) can all be set at anytime
 and can also be set to nil to clear.
 
 Sending Messages
-````````````````
+----------------
 
 Sending a basic message (no stacktrace) can be done with `captureMessage`.
 

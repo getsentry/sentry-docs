@@ -8,6 +8,8 @@ The dSYM file can be uploaded through the
 `sentry-cli <https://github.com/getsentry/sentry-cli>`__ tool or through a
 `Fastlane <https://fastlane.tools/>`__ action.
 
+.. _dsym-with-bitcode:
+
 With Bitcode
 ````````````
 
@@ -53,7 +55,7 @@ There are two ways to download the dSYM from iTunesConnect. After you do
 one of the two following ways, you can upload the dSYM using
 `sentry-cli <https://github.com/getsentry/sentry-cli/releases>`__.
 
-1. Open Xcode Oraganizer, go to your app, and click "Download dSYMs..."
+1. Open Xcode Organizer, go to your app, and click "Download dSYMs..."
 2. Login to iTunes Connect, go to your app, go to "Activity, click the
    build number to go into the detail page, and click "Download dSYM"
 
@@ -68,6 +70,8 @@ Afterwards manually upload the symbols with `sentry-cli`::
     to instruct the tool to connect to your server::
 
         export SENTRY_URL=https://mysentry.invalid/
+
+.. _dsym-without-bitcode:
 
 Without Bitcode
 ```````````````
@@ -128,8 +132,8 @@ Shell: `/bin/bash`
     sentry-cli upload-dsym
 
 The ``upload-dsym`` command automatically picks up the
-``DWARF_DSYM_FOLDER_PATH`` environment variable that xcode exports and
-look for dsym files there.
+``DWARF_DSYM_FOLDER_PATH`` environment variable that Xcode exports and
+look for dSYM files there.
 
 .. sentry:edition:: on-premise
 
