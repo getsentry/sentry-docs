@@ -6,17 +6,18 @@ Command Line Interface
 For certain actions you can use the ``sentry-cli`` command line
 executable.  It can connect to the Sentry API and manage some data for
 your projects.  Currently the tool is still very barebones and is
-primarily used for managing debug symbols for the iOS integration.
+primarily used for managing debug symbols for the iOS integration as well
+as basic release management.
 
 Installation
 ------------
 
-At present `sentry-cli` is only supported on OS X.  It can be installed
-from a terminal with the following command::
+At present `sentry-cli` is only supported on OS X and Linux.  It can be
+installed from a terminal with the following command::
 
     curl https://www.getsentry.com/get-cli | bash
 
-It will automatically download the correct version of ``sentry-cli`` for
+This will automatically download the correct version of ``sentry-cli`` for
 your operating system and install it.  If necessarily it will prompt for
 your admin password for ``sudo``.
 
@@ -24,17 +25,46 @@ To verify it's installed correctly you can bring up the help::
 
     $ sentry-cli --help
 
+Configuration
+-------------
+
+The `sentry-cli` tool can be configured with a config file named
+:file:`.sentryclirc` as well as environment variables.  The config file is
+looked for upwards from the current path and defaults from
+`~/.sentryclirc` are always loaded.  You can also override these settings
+from command line parameters.
+
+The config file uses standard INI syntax.
+
 .. sentry:edition:: on-premise
 
-    Connecting To Your Installation
-    -------------------------------
-
     By default ``sentry-cli`` will connect to app.getsentry.com.  For
-    on-prem you need to either provide the ``--url`` parameter or you can
-    export the ``SENTRY_URL`` parameter and point it to your
-    installation::
+    on-prem you can export the ``SENTRY_URL`` environment variable and
+    point it to your installation::
 
         export SENTRY_URL=https://mysentry.invalid/
+
+    Alternatively you can add it to your ``~/.sentryclirc`` config:
+
+    .. sourcecode:: ini
+
+        [defaults]
+        url = https://mysentry.invalid/
+
+The following settings are available (first is envvar, second is the
+config key in the config file):
+
+``SENTRY_AUTH_TOKEN`` (`auth.token`):
+    the authentication token to use for all communication with Sentry.
+``SENTRY_API_KEY`` (`auth.api_key`):
+    the legacy API key for authentication if you have one.
+``SENTRY_URL`` (`defaults.url`):
+    The URL to use to connect to sentry.  This defaults to
+    ``https://app.getsentry.com/``.
+``SENTRY_ORG`` (`defaults.org`):
+    the slug of the organization to use for a command.
+``SENTRY_PROJECT`` (`defaults.project`):
+    the slug of the project to use for a command.
 
 Authentication
 --------------
@@ -46,24 +76,15 @@ Afterwards you can export the ``SENTRY_AUTH_TOKEN`` environment variable::
     export SENTRY_AUTH_TOKEN=your-auth-token
 
 Alternatively you can provide the ``--auth-token`` command line parameter
-whenever you invoke ``sentry-cli``.
+whenever you invoke `sentry-cli` or add it to your `.sentryclirc` config
+file.
 
-Environment Variables
+Validating The Config
 ---------------------
 
-Most parameters that can be supplied on the command line to the tool
-itself or some of the commands within it, can also be supplied as
-environment variables.  The following variables are known:
-
-``SENTRY_ORG``:
-    the slug of the organization to use for a command.
-``SENTRY_PROJECT``:
-    the slug of the project to use for a command.
-``SENTRY_AUTH_TOKEN``:
-    the authentication token to use for all communication with Sentry.
-``SENTRY_URL``:
-    The URL to use to connect to sentry.  This defaults to
-    ``https://app.getsentry.com/``.
+To make sure everything works you can run ``sentrycli info`` and it should
+print out some basic information about the Sentry installation you connect
+to as well as some authentication information.
 
 Updating and Uninstalling
 -------------------------
