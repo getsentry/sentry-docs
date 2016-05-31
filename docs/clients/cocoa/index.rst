@@ -4,8 +4,10 @@ Cocoa
 =====
 
 This is the documentation for our official clients for Cocoa (Objective-C
-and Swift).  This feature is currently under development and requires
-being enrolled as early adopter on our hosted solution.
+and Swift).
+
+*This feature is currently under development on our hosted solution ([app.getsentry.com](https://app.getsentry.com)) and requires
+checking the "early adopter" option in your organization settings.*
 
 Installation
 ------------
