@@ -87,7 +87,7 @@ If you prefer to use Objective-C you can do so like this:
 Debug Symbols
 -------------
 
-Before you can start crashing you need to tell Sentry about the debug
+Before you can start capturing crashes you will need to tell Sentry about the debug
 information by uploading dSYM files.  Depending on your setup this can be
 done in different ways:
 
