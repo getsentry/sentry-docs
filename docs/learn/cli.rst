@@ -82,7 +82,7 @@ file.
 Validating The Config
 ---------------------
 
-To make sure everything works you can run ``sentrycli info`` and it should
+To make sure everything works you can run ``sentry-cli info`` and it should
 print out some basic information about the Sentry installation you connect
 to as well as some authentication information.
 
