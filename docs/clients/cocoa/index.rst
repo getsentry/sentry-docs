@@ -75,7 +75,7 @@ code in something like this:
         SentryClient.shared?.startCrashHandler()
     }
 
-If you prefer to use Objective-C it's not much harder:
+If you prefer to use Objective-C you can do so like this:
 
 .. sourcecode:: objc
 
