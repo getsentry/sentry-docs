@@ -76,8 +76,7 @@ Afterwards manually upload the symbols with `sentry-cli`::
 Without Bitcode
 ```````````````
 
-Things are a bit easier if you do not use bitcode.  In that case you can
-directly upload the symbols to Sentry as part of a build.
+When not using bitcode you can directly upload the symbols to Sentry as part of a build.
 
 Use Fastlane
 ~~~~~~~~~~~~

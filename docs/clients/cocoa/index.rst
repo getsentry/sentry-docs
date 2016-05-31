@@ -4,8 +4,10 @@ Cocoa
 =====
 
 This is the documentation for our official clients for Cocoa (Objective-C
-and Swift).  This feature is currently under development and requires
-being enrolled as early adopter on our hosted solution.
+and Swift).
+
+*This feature is currently under development on our hosted solution ([app.getsentry.com](https://app.getsentry.com)) and requires
+checking the "early adopter" option in your organization settings.*
 
 Installation
 ------------
@@ -45,8 +47,8 @@ Run ``carthage update`` to build the framework and drag the built
 Configuration
 -------------
 
-To use the client change your AppDelegate's application method to
-instanciate the Sentry client:
+To use the client, change your AppDelegate's `application` method to
+instantiate the Sentry client:
 
 .. sourcecode:: swift
 
@@ -73,7 +75,7 @@ code in something like this:
         SentryClient.shared?.startCrashHandler()
     }
 
-If you prefer to use Objective-C it's not much harder:
+If you prefer to use Objective-C you can do so like this:
 
 .. sourcecode:: objc
 
@@ -85,7 +87,7 @@ If you prefer to use Objective-C it's not much harder:
 Debug Symbols
 -------------
 
-Before you can start crashing you need to tell Sentry about the debug
+Before you can start capturing crashes you will need to tell Sentry about the debug
 information by uploading dSYM files.  Depending on your setup this can be
 done in different ways:
 
@@ -95,11 +97,10 @@ done in different ways:
 Testing a Crash
 ---------------
 
-If you want to test the crash reporting you need to cause a crash.  It
-would appear obvious to try to make it crash on launch but this is not a
-good idea because it will not give the Sentry client a chance to actually
-submit the crash report.  We recommend to trigger a crash from a button
-tap.
+If you would like to test the crash reporting you will need to cause a crash. While, the seemingly obvious method
+would be make it crash on launch, this will not give the Sentry client a chance
+to actually submit the crash report. Instead, we recommend triggering a crash
+from a button tap.
 
 You can use the following methods to cause a crash:
 
@@ -115,10 +116,11 @@ You can use the following methods to cause a crash:
 
         int *x = 0; *x = 42;
 
-*Note that if you crash with a debugger attached nothing will happen.*  To
-test the crashing just close the app and launch it again from the
-springboard.  Additionally crashes are only submitted on re-launching the
-application to make sure you do that.
+*Note that if you crash with a debugger attached nothing will happen.*
+
+Crashes are only submitted upon re-launching the
+application. To test the crashing, close the app and launch it again from the
+springboard.
 
 Deep Dive
 ---------
