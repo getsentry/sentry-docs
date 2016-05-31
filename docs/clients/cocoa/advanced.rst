@@ -13,7 +13,7 @@ Sending a basic message (no stacktrace) can be done with `captureMessage`.
 
     SentryClient.shared?.captureMessage("TEST 1 2 3", level: .Debug)
 
-If more detailed information is required, `Event` has a constructor
+If more detailed information is required, `Event` has a large constructor
 that allows for passing in of all the information or a `build` function
 can be called to build the `Event` object like below.
 
