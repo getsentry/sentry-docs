@@ -47,7 +47,7 @@ Run ``carthage update`` to build the framework and drag the built
 Configuration
 -------------
 
-To use the client change your AppDelegate's application method to
+To use the client change your AppDelegate's `application` method to
 instanciate the Sentry client:
 
 .. sourcecode:: swift

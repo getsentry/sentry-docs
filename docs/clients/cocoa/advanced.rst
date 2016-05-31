@@ -54,7 +54,7 @@ This information will get sent with every message/exception in which that
     ]
 
 All of the above (`user`, `tags`, and `extra`) can all be set at anytime
-and can also be set to nil to clear.
+and can also be set to `nil` to clear.
 
 Sending Messages
 ----------------
