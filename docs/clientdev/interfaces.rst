@@ -309,27 +309,6 @@ data related to the current user, the current HTTP request.
           "subscription": "basic"
         }
 
-.. describe:: sentry.interfaces.query.Query
-
-    Alias: ``query``
-
-    A SQL query with an optional string describing the SQL driver,
-    ``engine``.
-
-    ``query``
-        The SQL query.  Not always can this be entirely provided with
-        parameters, so it's perfectly okay to submit a partial query here.
-    ``engine``
-        Some description of what engine was used (driver name) to help
-        make sense of the query as a human reader.
-
-    .. sourcecode:: json
-
-        {
-          "query": "SELECT 1",
-          "engine": "psycopg2"
-        }
-
 
 Breadcrumbs Interface
 ---------------------
