@@ -25,6 +25,18 @@ To verify it's installed correctly you can bring up the help::
 
     $ sentry-cli --help
 
+To sign the cli tool in you can use the `login` command which will guide you
+through it::
+
+    $ sentry-cli login
+
+.. sentry:edition:: on-premise
+
+    By default ``sentry-cli`` will connect to app.getsentry.com but for
+    on-premise you can also sign in elsewhere::
+
+        $ sentry-cli --url https://myserver.invalid/ login
+
 Configuration
 -------------
 
@@ -44,7 +56,8 @@ The config file uses standard INI syntax.
 
         export SENTRY_URL=https://mysentry.invalid/
 
-    Alternatively you can add it to your ``~/.sentryclirc`` config:
+    Alternatively you can add it to your ``~/.sentryclirc`` config.  This
+    is also what the `login` command does:
 
     .. sourcecode:: ini
 
@@ -69,8 +82,8 @@ config key in the config file):
 Authentication
 --------------
 
-To authenticate ``sentry-cli`` you can to your to your API keys settings
-in your user account (User Icon -> API) and generate a new key.
+To authenticate ``sentry-cli`` you can to your to your auth token settings
+in your user account (User Icon -> API) and generate a new token.
 Afterwards you can export the ``SENTRY_AUTH_TOKEN`` environment variable::
 
     export SENTRY_AUTH_TOKEN=your-auth-token
