@@ -15,7 +15,7 @@ Installation
 At present `sentry-cli` is only supported on OS X and Linux.  It can be
 installed from a terminal with the following command::
 
-    curl -s https://www.getsentry.com/get-cli | bash
+    curl -sL https://getsentry.com/get-cli/ | bash
 
 This will automatically download the correct version of ``sentry-cli`` for
 your operating system and install it.  If necessarily it will prompt for
