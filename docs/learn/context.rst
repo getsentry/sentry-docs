@@ -2,7 +2,7 @@ Context
 =======
 
 Sentry supports additional context with events. Often this context is shared
-amongs any issue captured in its lifecycle, and includes the following components:
+amongst any issue captured in its lifecycle, and includes the following components:
 
 **Tags**
     Key/value pairs which generate breakdowns charts and search filters
