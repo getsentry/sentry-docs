@@ -59,7 +59,7 @@ Getting started with Sentry is a three step process:
 
     All editions of Sentry are based on the same :doc:`Open Source Server
     </server/index>`.  For a detailed introduction about the installation
-    process see :doc:`/server/installation`.
+    process see :doc:`/server/installation/index`.
 
     Generally to run the Sentry Server you need a UNIX based operating
     system, Python 2.7, PostgreSQL and redis as well as an HTTP server of
