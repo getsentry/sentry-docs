@@ -47,7 +47,7 @@ Python
 While OS X ships with an acceptable version of Python, installing the latest binaries from Homebrew
 is recommended. In addition, it is highly recommended to separate your libraries per-environment
 with the use of virtual environments. One of the easiest ways to curate your virtual environments is
-with `virtualenv-burrito`virtualenv-burrito <https://github.com/brainsik/virtualenv-burrito#install>`_.
+with `virtualenv-burrito <https://github.com/brainsik/virtualenv-burrito#install>`_.
 Run the following to install and configure brewed Python::
 
     brew install python
