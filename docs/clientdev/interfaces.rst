@@ -355,7 +355,7 @@ The following types are known:
     used multiple times if multiple runtimes are involved (for instance if
     you have a JavaScript application running on top of JVM)
 
-    Attributes::
+    Attributes:
 
     ``name``:
         The name of the runtime.
