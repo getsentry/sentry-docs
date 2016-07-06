@@ -68,6 +68,9 @@ in an application.
     ``type`` and ``module`` arguments describing the exception class type
     and module namespace.
 
+    Optionally a ``thread_id`` attribute can refer to a thread from the
+    `threads` interface.
+
     You can also optionally bind a stacktrace interface to an exception.
     The spec is identical to ``sentry.interfaces.Stacktrace``.
 
@@ -110,10 +113,8 @@ in an application.
 
     ``filename``
         The relative filepath to the call
-
     ``function``
         The name of the function being called
-
     ``module``
         Platform-specific module path (e.g. sentry.interfaces.Stacktrace)
 
@@ -133,6 +134,28 @@ in an application.
     ``post_context``
         A list of source code lines after context_line (in order) –
         usually ``[lineno + 1:lineno + 5]``
+    ``package``
+        The "package" the frame was contained in.  Depending on the
+        platform this can be different things.  For C# it can be the name
+        of the assembly, for native code it can be the path of the dynamic
+        library etc.
+    ``platform``
+        This can override the platform for a single frame.  Otherwise the
+        platform of the event is assumed.
+    ``image_addr``
+        Optionally an address of the debug image to reference.  If this is
+        set and a known image is defined by ``debug_meta`` then
+        symbolication can take place.
+    ``instruction_addr``
+        An optional instruction address for symbolication.  This should be
+        a string as hexadecimal number with a ``0x`` prefix.
+    ``symbol_addr``
+        An optional address that points to a symbol.  We actually use the
+        instruction address for symbolication but this can be used to
+        calculate an instruction offset automatically.
+    ``instruction_offset``
+        The difference between instruction address and symbol address in
+        bytes.
     ``in_app``
         Signifies whether this frame is related to the execution of the
         relevant code in this stacktrace. For example, the frames that
@@ -167,6 +190,35 @@ in an application.
           }],
           "frames_omitted": [13, 56]
         }
+
+.. describe:: sentry.interfaces.Threads
+
+    Alias: ``threads``
+
+    The threads interface allows you to specify the threads there were
+    running at the time an event happened.  These threads can also contain
+    stacktraces.  As per policy the thread that actually crashed with an
+    exception should not have a stacktrace but instead the ``thread_id``
+    attribute should be set on the exception and Sentry will connect the
+    two.
+
+    This interface supports multiple thread values in the ``values`` key.
+    The following attributes are known for each value:
+
+    ``stacktrace``:
+        You can also optionally bind a stacktrace interface to the
+        thread.  The spec is identical to ``sentry.interfaces.Stacktrace``.
+    ``id``:
+        The ID of the thread.  Typically an integer or short string.
+        Needs to be unique among the threads.  An exception can set the
+        ``thread_id`` attribute to cross reference this thread.
+    ``crashed``:
+        An optional bool to indicate that the thread crashed.
+    ``current``:
+        An optional bool to indicate that the thread was in the
+        foreground.
+    ``name``:
+        an optional thread name.
 
 Template Interface
 ------------------
@@ -224,6 +276,99 @@ Context Interfaces
 
 The context interfaces provide additional context data.  Typically this is
 data related to the current user, the current HTTP request.
+
+.. describe:: contexts
+
+    The ``contexts`` type can be used to defined almost arbitrary
+    contextual data on the event.  It accepts an object of key, value
+    pairs.  The key is the "alias" of the context and can be freely
+    chosen.  However as per policy it should match the type of the context
+    unless there are two values for a type.
+
+    Example::
+
+        {
+            "os": {
+                "type": "os",
+                "name": "Windows"
+            }
+        }
+
+    If the type is omitted it uses the alias as type.
+
+    Unknown data for the contexts is rendered as a key/value list.
+
+Context Types
+~~~~~~~~~~~~~
+
+The following types are known:
+
+.. describe:: device
+
+    This describes the device that caused the event.  This is most
+    appropriate for mobile applications.
+
+    Attributes:
+
+    ``name``:
+        the name of the device.  This is typically a hostname.
+    ``family``:
+        the family of the device.  This is normally the common part of
+        model names across generations.  For instance ``iPhone`` would be
+        a reasonable family, so would be ``Samsung Galaxy``.
+    ``model``:
+        The model name.  This for instance can be ``Samsung Galaxy S3``.
+    ``model_id``:
+        An internal hardware revision to identify the device exactly.
+    ``architecture``:
+        The CPU architecture.
+    ``battery_level``:
+        If the device has a battery this can be an integer defining the
+        battery level (in the range 0-100).
+    ``orientation``:
+        This can be a string ``portrait`` or ``landscape`` to define the
+        orientation of a device.
+
+.. describe:: os
+
+    Defines the operating system that created the event.
+
+    Attributes:
+
+    ``name``:
+        The name of the operating system
+    ``version``:
+        The version of the operating system
+    ``build``:
+        The internal build revision of the operating system
+    ``kernel_version``:
+        If known this can be an independent kernel version string.
+        Typically this is something like the entire output of the uname
+        tool.
+    ``rooted``:
+        An optional bool that defines if the OS has been jailbroken or
+        rooted.
+
+.. describe:: runtime
+
+    This describes a runtime in more detail.  Typically this context is
+    used multiple times if multiple runtimes are involved (for instance if
+    you have a JavaScript application running on top of JVM)
+
+    Attributes::
+
+    ``name``:
+        The name of the runtime.
+    ``version``:
+        The version identifier of the runtime.
+
+
+Special Interfaces
+~~~~~~~~~~~~~~~~~~
+
+These interfaces are not contained below ``contexts`` but stored toplevel
+as normal interface which highlights their special nature.  In particular
+only one http request and one user can be set.
 
 .. describe:: sentry.interfaces.http.Http
 
@@ -453,3 +598,36 @@ Below are descriptions of individual breadcrumb types, and what their ``data`` p
             "reason": "OK"
           }
         }
+
+Debug Support
+-------------
+
+The debug support interface is only available during processing and is not
+stored afterwards.
+
+.. describe:: debug_meta
+
+    This interface can provide temporary debug information that Sentry can
+    use to improve reporting.  Currently it is used for symbolication
+    only.
+
+    Supported properties:
+
+    ``sdk_info``:
+        An object with the following attributes: ``dsym_type``,
+        ``sdk_name``, ``version_major``, ``version_minor`` and
+        ``version_patchlevel``.  If this object is provided then resolving
+        system symbols is activated.  The values provided need to match
+        uploaded system symbols to Sentry.
+    ``images``:
+        A list of debug images.  The ``type`` of the image must be
+        provided and the other keys depend on the image type.
+
+    Supported image types:
+
+    ``apple``:
+        The format otherwise matches the apple crash reports.  The
+        following keys are supported: ``cpu_type``, ``cpu_subtype``,
+        ``image_addr``, ``image_size``, ``image_vmaddr``, ``name`` and
+        ``uuid``.  Note that it's recommended to use hexadecimal addresses
+        (``"0x1234"``) instead of integers.
