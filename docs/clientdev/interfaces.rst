@@ -71,6 +71,13 @@ in an application.
     Optionally a ``thread_id`` attribute can refer to a thread from the
     `threads` interface.
 
+    Additionally an optional ``mechanism`` key can be sent with
+    information about how the exception was delivered from a low level
+    point of view.  Currently it supports the following nested sub
+    attributes (the dot signifies a key in a sub object):
+    ``mach_exception.exception_name``, ``mach_exception.code_name``,
+    ``posix_signal.name`` and ``posix_signal.signal``.
+
     You can also optionally bind a stacktrace interface to an exception.
     The spec is identical to ``sentry.interfaces.Stacktrace``.
 
