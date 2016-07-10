@@ -78,11 +78,20 @@ config key in the config file):
     the slug of the organization to use for a command.
 ``SENTRY_PROJECT`` (`defaults.project`):
     the slug of the project to use for a command.
-
 (`http.keepalive`):
     This ini only setting is used to control the behavior of the client
     with regards to HTTP keepalives.  The default is `true` but it can
     be set to `false` to disable keepalive support.
+``http_proxy`` (`http.proxy_url`):
+    The URL that should be used for the HTTP proxy.  The standard
+    ``http_proxy`` environment variable is also honored.  Note that it
+    is lowercase.
+(`http.proxy_username`):
+    This ini only setting sets the proxy username in case proxy
+    authentication is required.
+(`http.proxy_password`):
+    This ini only setting sets the proxy password in case proxy
+    authentication is required.
 
 Authentication
 --------------
