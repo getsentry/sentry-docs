@@ -79,6 +79,11 @@ config key in the config file):
 ``SENTRY_PROJECT`` (`defaults.project`):
     the slug of the project to use for a command.
 
+(`http.keepalive`):
+    This ini only setting is used to control the behavior of the client
+    with regards to HTTP keepalives.  The default is `true` but it can
+    be set to `false` to disable keepalive support.
+
 Authentication
 --------------
 
