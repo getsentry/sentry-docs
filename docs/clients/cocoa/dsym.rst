@@ -128,9 +128,9 @@ Shell: `/bin/bash`
 
 .. sourcecode:: bash
 
-    export SENTRY_ORG=your-org
-    export SENTRY_PROJECT=your-project
-    export SENTRY_AUTH_TOKEN=your-auth-token
+    export SENTRY_ORG=___ORG_NAME___
+    export SENTRY_PROJECT=___PROJECT_NAME___
+    export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
     sentry-cli upload-dsym
 
 The ``upload-dsym`` command automatically picks up the

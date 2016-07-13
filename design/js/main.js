@@ -45,12 +45,12 @@ function dsnToHtml(parsedDsn, pub) {
 
 function tagInteractiveBlocks(parent) {
   parent.find('div.highlight pre').each(function() {
-    var hasVariables = /___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|ENCODED_API_KEY|PROJECT_ID)___/g.test(this.innerHTML);
+    var hasVariables = /___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|ENCODED_API_KEY|PROJECT_ID|ORG_NAME|PROJECT_NAME)___/g.test(this.innerHTML);
     if (!hasVariables) {
       return;
     }
     var isApiKeySection = false;
-    var contents = this.innerHTML.replace(/___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|ENCODED_API_KEY|PROJECT_ID)___/g, function(match) {
+    var contents = this.innerHTML.replace(/___(DSN|PUBLIC_DSN|PUBLIC_KEY|SECRET_KEY|API_URL|ENCODED_API_KEY|PROJECT_ID|ORG_NAME|PROJECT_NAME)___/g, function(match) {
       if (match === '___DSN___') {
         return '<span class="rewrite-dsn" data-value="dsn">' + match + '</span>';
       } else if (match === '___PUBLIC_DSN___') {
@@ -66,6 +66,10 @@ function tagInteractiveBlocks(parent) {
         return '<span class="rewrite-dsn" data-value="encoded-api-key">' + match + '</span>';
       } else if (match === '___PROJECT_ID___') {
         return '<span class="rewrite-dsn" data-value="project-id">' + match + '</span>';
+      } else if (match === '___PROJECT_NAME___') {
+        return '<span class="rewrite-dsn" data-value="project-slug">' + match + '</span>';
+      } else if (match === '___ORG_NAME___') {
+        return '<span class="rewrite-dsn" data-value="org-slug">' + match + '</span>';
       }
     });
     var title = isApiKeySection ? 'API Key for Request' : 'Showing configuration for';
@@ -116,6 +120,12 @@ function selectItem(item, section) {
         } else {
           newValue = escape(parsedDsn.scheme + parsedDsn.host);
         }
+        break;
+      case "project-slug":
+        newValue = escape(item.projectSlug);
+        break;
+      case "org-slug":
+        newValue = escape(item.organizationSlug);
         break;
       case "encoded-api-key":
         newValue = item.encodedKey;
@@ -335,7 +345,9 @@ $(function() {
     id: '-1',
     dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
     name: 'Example DSN',
-    group: 'Example'
+    group: 'Example',
+    projectSlug: 'your-project',
+    organizationSlug: 'your-org'
   };
 
   var dummyApiKey = {
@@ -498,7 +510,9 @@ $(function() {
           id: project.id,
           dsn: project.dsn,
           name: projectLabel,
-          group: project.organizationName
+          group: project.organizationName,
+          projectSlug: project.projectSlug,
+          organizationSlug: project.organizationSlug
         };
       });
       if (dsnList.length === 0) {
