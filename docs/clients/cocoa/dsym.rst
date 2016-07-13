@@ -107,14 +107,17 @@ instead of `auth_token`.
 
         api_host: 'https://mysentry.invalid/'
 
-Run Script with `sentry-cli`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Upload Symbols with `sentry-cli`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Your project's dSYM can be upload during the build phase as a "Run
 Script".  For this you need to st the `DEBUG_INFORMATION_FORMAT` to be
 `DWARF with dSYM File`. By default, an Xcode project will only have
 `DEBUG_INFORMATION_FORMAT` set to `DWARF with dSYM File` in `Release` so
 make sure everything is set in your build settings properly.
+
+You need to have an Auth Token for this to work.  You can `create an
+Auth Token here <https://app.getsentry.com/api/>`_.
 
 1. You will need to copy the below into a new `Run Script` and set your
    `AUTH_TOKEN`, `ORG_SLUG`, and `PROJECT_SLUG`
