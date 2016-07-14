@@ -92,6 +92,11 @@ config key in the config file):
 (`http.proxy_password`):
     This ini only setting sets the proxy password in case proxy
     authentication is required.
+``SENTRY_LOG_LEVEL`` (`log.level`):
+    Configures the log level for the client.  The default is ``warning``.
+    If you want to see what the library is doing you can set it to
+    ``info`` which will spit out more information which might help to
+    debug some issues with permissions.
 
 Authentication
 --------------
