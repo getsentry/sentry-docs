@@ -22,7 +22,7 @@
 
 *   .. class:: platformlink-objc
 
-    :doc:`/clients/objc/index` For iOS and Mac.
+    :doc:`/clients/cocoa/index` For iOS, macOS and tvOS.
 
 *   .. class:: platformlink-java
 
