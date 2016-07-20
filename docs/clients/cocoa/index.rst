@@ -3,11 +3,13 @@
 Cocoa
 =====
 
+.. sentry:support-warning::
+
+    The new Cocoa SDK is a preview release.  Please give feedback if you
+    encounter issues with it.
+
 This is the documentation for our official clients for Cocoa (Objective-C
 and Swift).
-
-*This feature is currently under development on our hosted solution ([app.getsentry.com](https://app.getsentry.com)) and requires
-checking the "early adopter" option in your organization settings.*
 
 Installation
 ------------
