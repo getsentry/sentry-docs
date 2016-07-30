@@ -327,7 +327,7 @@ The following types are known:
         The model name.  This for instance can be ``Samsung Galaxy S3``.
     ``model_id``:
         An internal hardware revision to identify the device exactly.
-    ``architecture``:
+    ``arch``:
         The CPU architecture.
     ``battery_level``:
         If the device has a battery this can be an integer defining the
