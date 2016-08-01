@@ -20,12 +20,10 @@ build-only: design/node_modules
 	@cp -R design/theme-support/* build/theme/sentry
 	@cp -R design/templates/* build/theme/sentry
 	@cd design && ./node_modules/.bin/webpack -p
-	@echo '--> Hosted Docs'
+	@echo '--> Building'
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) docs build/html/hosted
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/hosted
-	@echo '--> On-Premise Docs'
-	@SENTRY_DOC_VARIANT=on-premise $(SPHINX_HTML_BUILD) docs build/html/on-premise
-	@SENTRY_DOC_VARIANT=on-premise $(SPHINX_DIRHTML_BUILD) docs build/dirhtml/on-premise
+
 	@cp -R design/root-sitemap.xml build/html/sitemap.xml
 	@echo ""
 
@@ -73,6 +71,5 @@ serve:
 
 link-static:
 	cd build/html/hosted/ && rm -rf _static && ln -Ffshv ../../theme/sentry/static _static
-	cd build/html/on-premise/ && rm -rf _static && ln -Ffshv ../../theme/sentry/static _static
 
 .PHONY: build requirements clean sync watch update-submodules

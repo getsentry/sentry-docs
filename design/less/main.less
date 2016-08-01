@@ -3,6 +3,9 @@
 @import url(../node_modules/bootstrap/less/bootstrap.less);
 @import url(../node_modules/bootstrap/less/theme.less);
 
+@width: 1150px;
+@sidebarWidth: 226px;
+
 // Colors
 
 @trim: #d0d8de;
@@ -14,8 +17,6 @@
 @gray-light: #B5B9BD;
 @navbarInverseLinkBackgroundActive: #333;
 @orange: #F78300;
-@black: #111;
-@white: #fff;
 @sentry-orange: #fb4226;
 @blue: #2eb0f7;
 @green: #34c08b;
@@ -25,7 +26,13 @@
 @purple: #6C5FC7;
 @teal: #45c2c9;
 
-@linkColor: @blue;
+// New colors
+@black: #342c3e;
+@white: #fff;
+@purpleLight: #b9b2d0;
+@purpleDark: #6c5fc7;
+
+@linkColor: @purpleDark;
 
 ::selection {
     background: #1791F8;
@@ -37,8 +44,12 @@
     color: #eaf3fa;
 }
 
-html, body {
+body {
     height: 100%;
+    min-height: 100%;
+    display: flex;
+    font-family: 'Avenir Next', 'Avenir', 'Source Sans Pro', sans-serif;
+    font-size: 17px;
 }
 
 a {
@@ -49,7 +60,7 @@ a {
 }
 
 a:hover {
-    color: darken(@blue, 15);
+    color: darken(@linkColor, 15);
 }
 
 h1, h2, h3, h4, h5 {
@@ -74,81 +85,85 @@ section.document li {
     line-height: 1.6;
 }
 
-.container {
-    width: 100%;
+.body {
+    overflow-x: auto;
+    overflow-y: hidden;
+    color: @black;
+    background: #fff;
 }
 
-#nav .toggle-navigation {
-    .btn;
-    .btn-default;
-    padding-bottom: 0;
+.document, .sidebar, .sidebar-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 
+.document, .body {
     position: absolute;
-    top: 15px;
-    right: 15px;
-    z-index: 2000;
-    display: none;
-
-    .icon-menu {
-      font-size: 20px;
-    }
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    min-width: @width + 84;
+    transform: translateZ(0);
+    outline: none;
 }
-#nav.active .toggle-navigation {
-    background-color: #e0e0e0;
-    background-image: none;
-    border-color: #dbdbdb;
-    .box-shadow(inset 0 3px 5px rgba(0, 0, 0, 0.125));
+
+.sidebar {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    top: 0;
+    bottom: 0;
+    // padding: 20px 20px 15px;
+    z-index: 1000;
+    border-right: 1px solid lighten(@trim, 7);
+    width: calc(~"(100% - " @width ~") / 2 + " @sidebarWidth);
+    min-width: 252px;
+    padding-left: ~"calc((100% - 994px) / 2)";
 }
 
 .sidebar-content {
-    position: fixed;
-    left: 0;
-    bottom: 0;
+    position: absolute;
     top: 0;
-    padding: 20px 20px 15px;
-    width: 230px;
-    overflow: auto;
-    background: #f7f8f9;
-    z-index: 1000;
-    border-right: 1px solid lighten(@trim, 7);
+    bottom: 0;
+    right: 0;
+    left: ~"calc(100% - 452px)";
+    z-index: 1;
+    padding-left: 226px;
+    padding-top: 20px;
+    padding-right: 10px;
 
     .logo {
         display: block;
         font-size: 24px;
-        color: @gray-dark;
+        color: inherit;
         padding: 0 20px 13px;
         margin: 0 -20px 15px;
+        text-decoration: none;
 
-        &:hover, &:active {
+        &:hover, &:active, &:visited {
             text-decoration: none;
         }
     }
-}
 
-.edition-select {
-    .clearfix;
-    .btn-group;
-
-    position: absolute;
-    right: 30px;
-    top: 15px;
-
-    li {
-        a {
-            .btn;
-            .btn-default;
-        }
-
-        &.active a {
-            .btn;
+    form input[type="text"] {
+        border-radius: 0;
+        &:focus {
+            border-color: inherit;
         }
     }
 }
 
-.document {
+.page-content {
+    position: relative;
+    margin-left: calc(~"(100% - " @width ~") / 2 + " @sidebarWidth);
+    width: @width - @sidebarWidth;
     padding: 5px 30px 0;
-    margin-left: 230px;
+    overflow-x: hidden
+}
 
+.document {
     .section {
       margin-top: 30px;
       padding-top: 10px;
@@ -175,6 +190,28 @@ section.document li {
     }
 }
 
+#nav .toggle-navigation {
+    .btn;
+    .btn-default;
+    padding-bottom: 0;
+
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 2000;
+    display: none;
+
+    .icon-menu {
+      font-size: 20px;
+    }
+}
+
+#nav.active .toggle-navigation {
+    background-color: #e0e0e0;
+    background-image: none;
+    border-color: #dbdbdb;
+    .box-shadow(inset 0 3px 5px rgba(0, 0, 0, 0.125));
+}
 
 p, ul, ol {
     margin: 20px 0;
@@ -230,12 +267,6 @@ p, ul, ol {
 	content: "\e901";
 }
 
-
-body {
-    font-family: 'Avenir Next', 'Avenir', 'Source Sans Pro', sans-serif;
-    font-size: 17px;
-    color: @grayDark;
-}
 
 .breadcrumb {
     background: none;
@@ -324,14 +355,17 @@ a.return-link {
         }
 
         a.current {
-            color: @grayDark;
-            font-weight: 600;
+            border-bottom: 3px solid @purpleDark;
+            color: @purpleDark;
             text-decoration: none;
         }
     }
 
     a {
-        color: @gray;
+        color: #999;
+        &:hover {
+            text-decoration: none;
+        }
     }
 }
 
@@ -341,8 +375,8 @@ a.return-link {
     .api-toc > ul > li > a {
         display: block;
         margin: 20px 0;
-        color: black;
-        font-weight: 500;
+        color: @gray;
+        font-weight: 600;
         padding: 0;
         font-size: 14px;
         text-transform: uppercase;
@@ -436,14 +470,6 @@ div.local-toc ul li {
     }
 }
 
-div.page {
-    padding: 0 0 40px;
-}
-
-div.body {
-    background: white;
-}
-
 a.headerlink {
     opacity: 0;
     -webkit-transition: opacity .1s linear;
@@ -454,7 +480,7 @@ a.headerlink {
     vertical-align: super;
 
     &:hover {
-        color: @blue;
+        color: @linkColor;
         text-decoration: none;
     }
 }
@@ -619,7 +645,7 @@ dl.api-endpoint {
             > li.active > a {
                 background: inherit;
                 color: inherit;
-                border-left: 3px solid @blue;
+                border-left: 3px solid @linkColor;
                 padding-left: 4px;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -942,126 +968,6 @@ p.qa + blockquote {
   }
 }
 
-// Responsive
-
-@media (max-width: 767px) {
-    h1 {
-        font-size: 28px;
-        margin-top: -20px !important;
-    }
-    h2 {
-        font-size: 24px;
-    }
-    h3 {
-        font-size: 20px;
-    }
-
-    .breadcrumb {
-        display: none;
-    }
-
-    .sentry-support-level {
-        display: none;
-    }
-
-    [class^="platform-"] h1:before {
-      display: none !important;
-    }
-
-    .document {
-        margin-left: 0;
-        padding: 5px 15px 0;
-    }
-
-    .edition-select {
-        display: none;
-        position: absolute;
-        top: 15px;
-        right: 65px;
-        z-index: 2000;
-    }
-
-    ul.platformlink > li {
-      width: 50%;
-    }
-
-    #nav .toggle-navigation {
-        display: block;
-    }
-
-    #nav.active .toggle-navigation {
-        position: fixed;
-    }
-
-    #nav > .sidebar-content {
-        height: auto;
-        display: none;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 0;
-        background: inherit;
-    }
-    #nav.active > .edition-select {
-        display: inline-block;
-    }
-    #nav.active > .sidebar,
-    #nav.active > .sidebar-content {
-        position: fixed;
-        display: block;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        top: 0;
-        width: 100%;
-    }
-    #nav.active > .sidebar-content {
-        background: #fff;
-        overflow: auto;
-
-        .btn {
-            font-size: 13px;
-        }
-
-        .logo {
-            font-size: 28px;
-            line-height: 28px;
-            padding: 15px;
-            margin-top: 3px;
-            margin-left: 0;
-            margin-right: 0;
-
-            .icon-logo:before {
-                content: "\e601";
-            }
-        }
-
-        ul {
-            margin: 0;
-        }
-        li > a,
-        h3 {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            display: block;
-            margin: 0;
-        }
-    }
-
-    .page {
-        zoom: .90;
-        font-size: 14px;
-    }
-}
-
-/* Smartphones (portrait and landscape) ----------- */
-@media (max-width : 480px) {
-  ul.platformlink > li {
-    width: 100%;
-  }
-}
 
 /* Search stuff */
 .rigidsearch-form div.results {

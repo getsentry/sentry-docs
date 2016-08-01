@@ -1,5 +1,5 @@
-Sentry API
-==========
+API Reference
+=============
 
 The Sentry API is used for submitting events to the Sentry collector as
 well as exporting and managing data.  The reporting and web APIs are

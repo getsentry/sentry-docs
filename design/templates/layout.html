@@ -11,7 +11,6 @@
     {% if pagename != 'index' %}
       <title>{{ title|striptags|e }} &ndash; {{ {
         'hosted': 'Sentry Documentation',
-        'on-premise': 'Sentry On-Premise Documentation'
       }[sentry_doc_variant] }}</title>
     {% else %}
       <title>{{ title|striptags|e }}</title>
@@ -30,34 +29,27 @@
 </head>
 <body>
   <div class="body">
-    <div class="container page">
-      <nav class="sidebar" id="nav" role="navigation">
-        <a class="toggle-navigation"><span class="icon-menu"></span></a>
+    <nav class="sidebar" id="nav" role="navigation">
+      <a class="toggle-navigation"><span class="icon-menu"></span></a>
 
-        <div class="edition-select btn-group">
-          <a href="{{ link_to_edition('hosted') }}"
-             class="btn btn-default{% if sentry_doc_variant == 'hosted' %} active{% endif %}">Hosted Sentry</a>
-          <a href="{{ link_to_edition('on-premise') }}"
-             class="btn btn-default{% if sentry_doc_variant == 'on-premise' %} active{% endif %}">On-Premise</a>
-        </div>
-
-        <div class="sidebar-content">
-          <a href="{{ pathto(master_doc) }}" class="logo"><span class="icon-logo"></span></a>
-          <form method="GET" action="/{{ sentry_doc_variant }}/search/">
-            <div class="form-group">
-              <input name="q" type="text" class="form-control" placeholder="Search {{ sentry_doc_variant }} docs" />
-            </div>
-          </form>
-          {% set toc_parts = build_toc(
-              split_toc={
-                'learn': ['learn/quotas', 'learn/rollups', 'learn/breadcrumbs', 'learn/context', 'learn/membership', 'learn/search', 'learn/sensitive-data', 'learn/notifications', 'learn/sso', 'learn/user-feedback', 'learn/cli', 'integrations/index'],
-                'misc': ['history', 'ssl', 'ip-ranges'],
-                'clients': ['clients/index'],
-                'api': ['api/requests', 'api/auth', 'api/pagination'],
-                'api_endpoints': ['api/events/index', 'api/organizations/index', 'api/projects/index', 'api/releases/index', 'api/teams/index'],
-                'dev': ['api/index', 'clientdev/index', 'serverdev/index', 'license', 'docdev', 'project-resources'],
-              }
-          ) %}
+      <div class="sidebar-content">
+        <a href="{{ pathto(master_doc) }}" class="logo"><span class="icon-logo"></span></a>
+        <form method="GET" action="/{{ sentry_doc_variant }}/search/">
+          <div class="form-group">
+            <input name="q" type="text" class="form-control" placeholder="Search {{ sentry_doc_variant }} docs" />
+          </div>
+        </form>
+        {% set toc_parts = build_toc(
+            split_toc={
+              'learn': ['learn/sensitive-data', 'learn/notifications', 'learn/sso', 'learn/user-feedback', 'learn/cli'],
+              'misc': ['history', 'ssl', 'ip-ranges'],
+              'clients': ['clients/index'],
+              'api': ['api/requests', 'api/auth', 'api/pagination'],
+              'api_endpoints': ['api/events/index', 'api/organizations/index', 'api/projects/index', 'api/releases/index', 'api/teams/index'],
+              'dev': ['api/index', 'clientdev/index', 'serverdev/index', 'license', 'docdev', 'project-resources'],
+            }
+        ) %}
+        <nav>
           {% if pagename.startswith('api/') %}
           <a href="{{ pathto(master_doc) }}" class="return-link">Return to Docs Overview</a>
           <h3>Web API</h3>
@@ -75,20 +67,47 @@
           {% else %}
           <div class="toc global-toc">
             <ul>
-              <li><a href="{{ pathto(master_doc) }}" class="reference internal{%
-                if pagename == master_doc %} current{% endif %}">Overview</a></li>
+              <li>{{ page_link(master_doc, 'Overview') }}</li>
+              <li>{{ page_link('quickstart', 'Getting Started') }}</li>
+              <li>{{ page_link('support', 'Support') }}</li>
             </ul>
-            {{ toc_parts.main }}
           </div>
           <h3>Learn</h3>
           <div class="toc dev-toc">
-            {{ toc_parts.learn }}
+            <ul>
+              <li>{{ page_link('learn/breadcrumbs', 'Breadcrumbs') }}</li>
+              <li>{{ page_link('learn/context', 'Context') }}</li>
+              <li>{{ page_link('learn/membership', 'Membership') }}</li>
+              <li>{{ page_link('learn/notifications', 'Notifications') }}</li>
+              <li>{{ page_link('learn/rollups', 'Rollups & Sampling') }}</li>
+              <li>{{ page_link('learn/search', 'Search') }}</li>
+              <li>{{ page_link('learn/quotas', 'Quotas') }}</li>
+              <li>{{ page_link('learn/sensitive-data', 'Sensitive Data') }}</li>
+              <li>{{ page_link('learn/sso', 'Single Sign-On') }}</li>
+              <li>{{ page_link('learn/user-feedback', 'User Feedback') }}</li>
+            </ul>
           </div>
-          <div class="toc client-toc">
-            {{ toc_parts.clients }}
+          <h3>Platforms</h3>
+          <div class="toc">
+            <ul>
+              <li>{{ page_link('clients/actionscript/index', 'ActionScript') }}</li>
+              <li>{{ page_link('clients/cocoa/index', 'Cocoa') }}</li>
+              <li>{{ page_link('clients/csharp/index', 'C#') }}</li>
+              <li>{{ page_link('clients/elixir/index', 'Elixir') }}</li>
+              <li>{{ page_link('clients/go/index', 'Go') }}</li>
+              <li>{{ page_link('clients/java/index', 'Java') }}</li>
+              <li>{{ page_link('clients/javascript/index', 'JavaScript') }}</li>
+              <li>{{ page_link('clients/node/index', 'Node.js') }}</li>
+              <li>{{ page_link('clients/perl/index', 'Perl') }}</li>
+              <li>{{ page_link('clients/python/index', 'Python') }}</li>
+              <li>{{ page_link('clients/ruby/index', 'Ruby') }}</li>
+            </ul>
           </div>
           <h3>Development</h3>
           <div class="toc dev-toc">
+            <ul>
+              {{ page_link('learn/cli', 'Command Line Interface') }}
+            </ul>
             {{ toc_parts.dev }}
           </div>
 
@@ -106,27 +125,24 @@
             </ul>
           </div>
           {% endif %}
-        </div>
-      </nav>
+        </nav>
+      </div>
+    </nav>
 
-      <section class="document">
-        <div class="page-content">
-          <ul class="breadcrumb">
-            <li><a href="{{ pathto(master_doc) }}">{{ {
-              'hosted': 'Hosted Sentry',
-              'on-premise': 'Sentry On-Premise'
-            }[sentry_doc_variant] }}</a></li>
-            {%- for parent in parents %}
-            <li><a href="{{ parent.link|e }}" class="internal">{{ parent.title }}</a></li>
-            {%- endfor %}
-            {% if master_doc != pagename %}
-            <li><a href="{{ pathto(pagename) }}" class="internal">{{ title|striptags|e }}</a></li>
-            {% endif %}
-          </ul>
-          {% block body %} {% endblock %}
-        </div>
-      </section>
-    </div>
+    <section class="document">
+      <div class="page-content">
+        <ul class="breadcrumb">
+          <li><a href="{{ pathto(master_doc) }}">Documentation</a></li>
+          {%- for parent in parents %}
+          <li><a href="{{ parent.link|e }}" class="internal">{{ parent.title }}</a></li>
+          {%- endfor %}
+          {% if master_doc != pagename %}
+          <li><a href="{{ pathto(pagename) }}" class="internal">{{ title|striptags|e }}</a></li>
+          {% endif %}
+        </ul>
+        {% block body %} {% endblock %}
+      </div>
+    </section>
   </div>
   <script type="text/javascript">
     var DOCUMENTATION_OPTIONS = {

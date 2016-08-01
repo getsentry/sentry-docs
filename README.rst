@@ -62,7 +62,7 @@ environment variables:
     to change behavior.
 
 ``SENTRY_DOC_VARIANT``:
-    This is set to either ``hosted`` or ``on-premise`` to indicate which
+    This is set to either ``hosted`` or ``self`` to indicate which
     flavor of sentry docs to build.  Within the docs the
     ``sentry:edition`` directive can be used to filter the docs.
 
@@ -79,9 +79,6 @@ directive comes in useful:
 ``.. sentry:edition:: hosted``:
     Only included if the docs are build for the hosted (getsentry.com)
     docs
-
-``.. sentry:edition:: on-premise``:
-    This only shows up in the on-premise version of the documentation.
 
 Multiple variants can be defined with a comma.
 

@@ -7,73 +7,28 @@ help you getting started.
 
 Getting started with Sentry is a three step process:
 
-.. sentry:edition:: hosted
+1.  `Sign up for an account <https://sentry.io/signup/>`_
+2.  :ref:`pick-a-client-integration`
+3.  :ref:`configure-the-dsn`
 
-    1.  `Sign up for an account <https://sentry.io/signup/>`_
-    2.  :ref:`pick-a-client-integration`
-    3.  :ref:`configure-the-dsn`
 
-.. sentry:edition:: on-premise
+About Hosted Sentry
+-------------------
 
-    1.  :ref:`install-the-server`
-    2.  :ref:`pick-a-client-integration`
-    3.  :ref:`configure-the-dsn`
+If you are new to Sentry and you have not used it before, you can get
+started for free `on our hosted service at sentry.io <https://sentry.io/signup/>`_.
 
-.. sentry:edition:: hosted
-
-    About Hosted Sentry
-    -------------------
-
-    If you are new to Sentry and you have not used it before, you can get
-    started started by signing up for a `free trial account
-    of Hosted Sentry <https://sentry.io/signup/>`_ on sentry.io.
-
-    Hosted Sentry is the most popular edition of Sentry which is used by hobby
-    developers and large corporations alike.  It is hosted on our
-    dedicated cloud infrastructure and automatically scales with your
-    requirements and gives you access to your event data from anywhere in
-    the world.  We keep it running for you and you can get started working
-    with it right away without having to spend time with installation or
-    maintenance.
-
-.. sentry:edition:: on-premise
-
-    Sentry On-Premise
-    -----------------
-
-    Sentry On-Premise is a distribution of the Sentry Open Source
-    Project supported by the community.  It can be installed on-premise
-    and integrate into the rest of your infrastructure behind your
-    firewall.  As an enterprise customer you are additionally entitled to
-    a bespoke support contract.  You can download the community edition on
-    `our github page <https://github.com/getsentry/sentry>`_.
-
-    If you are interested in the enterprise edition, `you can learn more
-    about out enterprise offering
-    <https://sentry.io/enterprise/>`_.
-
-    .. _install-the-server:
-
-    Installing The Server
-    ---------------------
-
-    All editions of Sentry are based on the same :doc:`Open Source Server
-    </server/index>`.  For a detailed introduction about the installation
-    process see :doc:`/server/installation/index`.
-
-    Generally to run the Sentry Server you need a UNIX based operating
-    system, Python 2.7, PostgreSQL and redis as well as an HTTP server of
-    your choice.
-
+Note: If you're running Sentry behind your firewall, you can skip this step.
 
 .. _pick-a-client-integration:
 
-Configure an Integration
-------------------------
+Configure an SDK
+----------------
 
-To report to Sentry you'll need to use an SDK (also referred to as a client)
-which supports your platform. In case your environment is very specific,
-you can simply use the JSON reporting API.
+Sentry captures data by using an SDK within your application's runtime. These
+are platform specific, and allow Sentry to have a deep understanding of both
+how your application works. In case your environment is very specific, you can
+also roll your own SDK using our document :doc:`Client API <clientdev/index>`.
 
 Popular integrations are:
 
@@ -83,8 +38,10 @@ Popular integrations are:
 *   :doc:`Ruby <clients/ruby/index>`
 *   :doc:`Objective-C <clients/objc/index>`
 *   :doc:`Java <clients/java/index>`
+*   :doc:`Cocoa <clients/cocoa/index>`
 *   :doc:`C# <clients/csharp/index>`
 *   :doc:`Go <clients/go/index>`
+*   :doc:`Elixir <clients/elixir/index>`
 
 For exact configuration for the integration consult the corresponding
 documentation.  For all clients however, the basics are the same.
@@ -113,41 +70,25 @@ easy copy pasting::
 
     '___DSN___'
 
-.. sentry:edition:: hosted
+It is composed of five important pieces:
 
-    It is composed of five important pieces:
+* The Protocol used. This can be one of the following: http or https.
 
-    * The protocol used. This should be ``https``.
+* The public and secret keys to authenticate the client.
 
-    * The public and secret keys to authenticate the client.
+* The destination Sentry server.
 
-    * The hostname of the Sentry server.
-
-    * The project ID which the authenticated user is bound to.
-
-.. sentry:edition:: on-premise
-
-    It is composed of six important pieces:
-
-    * The Protocol used. This can be one of the following: http or https.
-
-    * The public and secret keys to authenticate the client.
-
-    * The hostname of the Sentry server.
-
-    * An optional path if Sentry is not located at the webserver root.
-
-    * The project ID which the authenticated user is bound to.
+* The project ID which the authenticated user is bound to.
 
 You'll have a few options for plugging the DSN into the client, depending
-on what it supports. At the very least, most clients will allow you to set
+on what it supports. At the very least, most SDKs will allow you to set
 it up as the ``SENTRY_DSN`` environment variable or by passing it into the
 client constructor.
 
-For example for the Python client it works roughly like this::
+For example for the JavaScript client it works roughly like this::
 
-    from raven import Client
-    client = Client('___DSN___')
+    import raven
+    raven.Client('___DSN___')
 
 Note: If you're using Heroku, and you've added Hosted Sentry via the
 standard addon hooks, most clients will automatically pick up the

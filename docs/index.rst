@@ -1,24 +1,10 @@
-.. sentry:edition:: hosted
+Sentry Documentation
+====================
 
-    Hosted Sentry Documentation
-    ===========================
-
-    Welcome to the documentation of the cloud hosted version of Sentry —
-    the modern error logging and aggregation platform.  This documentation
-    covers everything from getting started to how to integrate it with
-    your runtime environment.
-
-.. sentry:edition:: on-premise
-
-    Sentry On-Premise Documentation
-    ===============================
-
-    Welcome to the documentation of the On-Premise Edition of Sentry — the
-    modern error logging and aggregation platform.  This documentation
-    covers the use of Sentry (The Sentry Open Source Server) as well as
-    all officially supported client integrations (The Raven Clients).  To
-    keep things easy we cover all different editions of the sentry server
-    here.
+Welcome to the documentation of the cloud hosted version of Sentry —
+the modern error logging and aggregation platform.  This documentation
+covers everything from getting started to how to integrate it with
+your runtime environment.
 
 Getting Started
 ---------------
@@ -26,18 +12,10 @@ Getting Started
 There is a lot in those docs.  To get you started, you might find some of
 these links relevant:
 
-.. sentry:edition:: hosted
-
-   * New to Sentry? Have a look at the :doc:`quickstart`.
-   * No account yet?  You can sign up for one at
-     `sentry.io <https://sentry.io/signup/>`_.
-   * Stuck? Feel free to contact :doc:`support`.
-
-.. sentry:edition:: on-premise
-
-   * New to Sentry? Have a look at the :doc:`quickstart`.
-   * Need help installing Sentry? See :doc:`server/installation/index`
-   * Stuck? Feel free to contact :doc:`support`.
+* New to Sentry? Have a look at the :doc:`quickstart`.
+* No account yet?  You can sign up for one at `sentry.io <https://sentry.io/signup/>`_.
+* Stuck? Feel free to contact :doc:`support`.
+* Installing the Sentry server yourself? See :doc:`server/installation/index`
 
 Platforms
 ---------
@@ -50,69 +28,47 @@ discussion about supporting it on our `community forum <https://forum.sentry.io>
 .. include:: clients/table.rst.inc
 
 .. toctree::
-   :hidden:
-   :includehidden:
+    :hidden:
+    :includehidden:
 
-   clients/index
-
-.. sentry:edition:: hosted
-
-   .. toctree::
-      :maxdepth: 2
-      :titlesonly:
-      :hidden:
-
-      quickstart
-      support
-
-      learn/breadcrumbs
-      learn/context
-      learn/search
-      learn/membership
-      learn/notifications
-      learn/rollups
-      learn/quotas
-      learn/sensitive-data
-      learn/sso
-      learn/user-feedback
-      learn/cli
-      integrations/index
-
-      ip-ranges
-
-.. sentry:edition:: on-premise
-
-   .. toctree::
-      :maxdepth: 2
-      :titlesonly:
-      :hidden:
-
-      quickstart
-      server/index
-      support
-
-      learn/breadcrumbs
-      learn/context
-      learn/search
-      learn/membership
-      learn/notifications
-      learn/rollups
-      learn/sensitive-data
-      learn/sso
-      learn/user-feedback
-      integrations/index
+    clients/index
 
 .. toctree::
-   :maxdepth: 1
-   :titlesonly:
-   :hidden:
+    :maxdepth: 2
+    :titlesonly:
+    :hidden:
 
-   api/index
-   clientdev/index
-   serverdev/index
-   docdev
-   project-resources
+    quickstart
+    server/index
+    support
 
-   ssl
-   history
-   license
+    learn/breadcrumbs
+    learn/context
+    learn/search
+    learn/membership
+    learn/notifications
+    learn/rollups
+    learn/quotas
+    learn/sensitive-data
+    learn/sso
+    learn/user-feedback
+    learn/cli
+
+    integrations/index
+
+    ip-ranges
+
+.. toctree::
+    :maxdepth: 1
+    :titlesonly:
+    :hidden:
+
+    api/index
+    clientdev/index
+    serverdev/index
+    docdev
+    project-resources
+
+    ssl
+    history
+    license
