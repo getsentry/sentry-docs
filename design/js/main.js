@@ -533,6 +533,11 @@ $(function() {
 
       user = resp.user;
       initInterface();
+
+      analytics.identify(user.id);
+      orgIdList = resp.projects.map(function(project) { return project.organizationId });
+      analytics.group(orgIdList.filter(function(value, index, self) {return self.indexOf(value) === index}));
+      analytics.page();
     },
     error: function() {
       console.error('Failed to load user data from Sentry');
