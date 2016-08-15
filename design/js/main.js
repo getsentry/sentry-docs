@@ -535,7 +535,7 @@ $(function() {
       initInterface();
 
       analytics.identify(user.id);
-      orgIdList = resp.projects.map(function(project) { return project.organizationId });
+      var orgIdList = resp.projects.map(function(project) { return project.organizationId });
       analytics.group(orgIdList.filter(function(value, index, self) {return self.indexOf(value) === index}));
       analytics.page();
     },
@@ -545,6 +545,7 @@ $(function() {
       apiKeyList = [dummyApiKey];
       user = {isAuthenticated: false};
       initInterface();
+      analytics.page()
     }
   });
 
