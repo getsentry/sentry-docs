@@ -13,7 +13,7 @@ you can get in contact with the Sentry community for questions.
 
     The availability of the Sentry cloud hosted installation is independently
     monitored from outside the infrastructure.  To monitor the availability,
-    get notifications and read status updates about outdates you can visit the
+    get notifications and read status updates about outages you can visit the
     status page at `status.getsentry.com <http://status.getsentry.com/>`_.
     There you can also subscribe to email and SMS notifications.
 
