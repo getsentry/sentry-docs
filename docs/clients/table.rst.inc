@@ -2,27 +2,27 @@
 
 *   .. class:: platformlink-python
 
-    :doc:`/clients/python/index` Including Django, Flask, and Pyramid.
+    :doc:`/clients/python/index` Including Django, Flask, Pyramid, and others.
 
 *   .. class:: platformlink-js
 
-    :doc:`/clients/javascript/index` Including jQuery, Angular.js, and Ember.
+    :doc:`/clients/javascript/index` Including React, Angular, Ember, Vue, and Backbone.
 
 *   .. class:: platformlink-node
 
-    :doc:`/clients/node/index` Including Express and Connect.
+    :doc:`/clients/node/index` Including Express, Koa, and Connect.
 
 *   .. class:: platformlink-php
 
-    :doc:`/clients/php/index` For PHP apps.
+    :doc:`/clients/php/index` Including Laravel, Symfony, and Monolog.
 
 *   .. class:: platformlink-ruby
 
-    :doc:`/clients/ruby/index` Including Rails, Sinatra, Rack and others.
+    :doc:`/clients/ruby/index` Including Rails, Sinatra, Rack, and others.
 
 *   .. class:: platformlink-objc
 
-    :doc:`/clients/cocoa/index` For iOS, macOS and tvOS.
+    :doc:`/clients/cocoa/index` For iOS, macOS, and tvOS.
 
 *   .. class:: platformlink-java
 
