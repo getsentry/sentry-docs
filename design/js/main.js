@@ -217,7 +217,7 @@ function renderHeader(user) {
   var userNav = $(
     '<ul class="user-nav">' +
       '<li class="hidden-xs"><a href="https://getsentry.com/pricing/" class="pricing-link">Pricing</a></li>' +
-      '<li class="active hidden-xs"><a href="https://docs.getsentry.com">Documentation</a></li>' +
+      '<li class="active hidden-xs"><a href="https://docs.sentry.io">Documentation</a></li>' +
       '<li class="hidden-xs"><a href="http://blog.getsentry.com">Blog</a></li>' +
     '</ul>'
   );

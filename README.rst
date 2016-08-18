@@ -1,7 +1,7 @@
 Federated Sentry Documentation
 ==============================
 
-This repository contains the documentation for docs.getsentry.com and some
+This repository contains the documentation for docs.sentry.io and some
 support to build the entire documentation which in parts is made from
 content of other repositories.
 

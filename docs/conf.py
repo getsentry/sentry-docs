@@ -122,7 +122,7 @@ html_theme = 'sentry'
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-  'base_url': 'https://docs.getsentry.com',
+  'base_url': 'https://docs.sentry.io',
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
