@@ -35,13 +35,9 @@ you can get in contact with the Sentry community for questions.
 Community Support
 -----------------
 
-The community support is where you can go to get questions answered with
-either the sentry community edition or some community maintained projects.
-
-IRC
-    `irc.freenode.net #sentry <irc://irc.freenode.net/sentry>`_
-Google Groups
-    `Google Groups <https://groups.google.com/forum/?fromgroups#!forum/getsentry>`_
+We offer community support through at `forum.sentry.io <https://forum.sentry.io/>`_. This
+is a great place to provide product feedback, get help and advice with various issues,
+as well as to take part in the larger Sentry community.
 
 If you're looking for support on a specific client, check the
 documentation specific to that client. Several clients are maintained by
