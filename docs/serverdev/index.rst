@@ -121,7 +121,7 @@ libraries, lint all source code, and run both the Python and JavaScript test sui
 Posting a Pull Request
 ''''''''''''''''''''''
 If your test suite run has completed successfully or you wish to run it in Travis CI in order to
-weed out any inconsistency problems, now is the right time to post a Pull Request(abbreviated as PR).
+weed out any inconsistency problems, now is the right time to post a Pull Request (abbreviated as PR).
 In your PR, please provide a quick description as to what it is fixing or providing.
 If your PR is related to a topic that a certain team should be aware of, please tag said team at
 the bottom of the description. A list of teams can be found `here <https://github.com/orgs/getsentry/teams>`_.
