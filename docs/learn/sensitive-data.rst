@@ -66,8 +66,8 @@ description.
 Removing Data
 -------------
 
-If you've accidental sent sensitive data to the server it's likely you're not
-going to want to leave it there. There's a few things to note in removal:
+If you've accidentally sent sensitive data to the server it's likely you're not
+going to want to leave it there. There are a few things to note in removal:
 
 - If you've sent it as a tagged value, removing the event is not enough. You
   can visit Project Settings and under Tags you'll find a way to permanently
