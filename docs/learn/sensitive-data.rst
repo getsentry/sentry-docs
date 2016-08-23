@@ -75,7 +75,7 @@ going to want to leave it there. There are a few things to note in removal:
 
 - If you need to wipe just a single event, you'll find the ability to bulk
   delete all sampled events under a rollup by visiting the rollup details page
-  and selecting "Remove Event Data".
+  and selecting "Delete".
 
 - If you've set of sparse events to a project (potentially all of them), your
   only option is to remove the project and re-create it. Keep in mind this will
