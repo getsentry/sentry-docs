@@ -7,6 +7,10 @@ configuration of required dependencies, as well as standard procedures of contri
 Setting up Your Development Environment
 ---------------------------------------
 
+Linux
+''''''''''''''
+Just follow the :doc:`official installation from source instructions <../server/installation/python/index>`.
+
 Macintosh OS X
 ''''''''''''''
 
