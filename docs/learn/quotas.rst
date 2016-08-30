@@ -20,7 +20,7 @@ expensive the plan, the more data you're allowed to send. While the plans
 available will generally fit most individual and small business needs, there
 often arises a need for more. Fear not, Sentry is designed to handle large
 throughput, and if your team needs more we're happy to help. Reach out to
-your account manager, or send an email to support@getsentry.com to learn
+your account manager, or send an email to support@sentry.io to learn
 more about increasing capacity.
 
 Rate Limiting Projects

@@ -13,7 +13,7 @@ possible, but this cannot be guaranteed in all cases.
 
     Due to the complexities of root CAs and distributions, you may find
     that your client does not contain the root certificate authority used
-    by getsentry.com.  While we bundle this in official raven clients,
+    by sentry.io.  While we bundle this in official raven clients,
     that's not true for everything.
 
     Our CA is DigiCert, a widely trusted name. Below you'll find our
@@ -21,14 +21,14 @@ possible, but this cannot be guaranteed in all cases.
 
     Certificates:
 
-    -   `getsentry.crt <https://getsentry.com/_static/getsentry/ssl/getsentry.crt>`_
-    -   `DigiCertCA.crt <https://getsentry.com/_static/getsentry/ssl/DigiCertCA.crt>`_
-    -   `TrustedRoot.crt <https://getsentry.com/_static/getsentry/ssl/TrustedRoot.crt>`_
+    -   `getsentry.crt <https://sentry.io/_static/getsentry/ssl/getsentry.crt>`_
+    -   `DigiCertCA.crt <https://sentry.io/_static/getsentry/ssl/DigiCertCA.crt>`_
+    -   `TrustedRoot.crt <https://sentry.io/_static/getsentry/ssl/TrustedRoot.crt>`_
 
     Bundles:
 
-    -   `getsentry.pem <https://getsentry.com/_static/getsentry/ssl/getsentry.pem>`_
-    -   `getsentry.p7b <https://getsentry.com/_static/getsentry/ssl/getsentry.p7b>`_
+    -   `getsentry.pem <https://sentry.io/_static/getsentry/ssl/getsentry.pem>`_
+    -   `getsentry.p7b <https://sentry.io/_static/getsentry/ssl/getsentry.p7b>`_
 
     Using this varies from case to case. Many clients you will have to
     explicit specify the path to the certificate bundle.  Covering this is

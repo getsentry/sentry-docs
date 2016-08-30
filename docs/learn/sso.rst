@@ -56,7 +56,7 @@ Google Business App
 
 Enabling the Google integration will ask you to authenticate against a Google
 Apps account. Once done, membership will be restricted to only members of the
-given Apps domain (i.e. ``getsentry.com``).
+given Apps domain (i.e. ``sentry.io``).
 
 GitHub Organizations
 ~~~~~~~~~~~~~~~~~~~~
@@ -65,4 +65,4 @@ The GitHub integration will authenticate against all organizations, and once
 complete prompt you for the organization which you wish to restrict access by.
 
 Currently GitHub Enterprise is not supported. If your company needs support for
-GE, `let us know <mailto:support@getsentry.com>`_.
+GE, `let us know <mailto:support@sentry.io>`_.

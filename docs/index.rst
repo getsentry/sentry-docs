@@ -30,7 +30,7 @@ these links relevant:
 
    * New to Sentry? Have a look at the :doc:`quickstart`.
    * No account yet?  You can sign up for one at
-     `getsentry.com <https://getsentry.com/signup/>`_.
+     `sentry.io <https://sentry.io/signup/>`_.
    * Stuck? Feel free to contact :doc:`support`.
 
 .. sentry:edition:: on-premise

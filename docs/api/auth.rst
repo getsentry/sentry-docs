@@ -9,9 +9,9 @@ authenticate as a user account with the API.
 
 .. sourcecode:: bash
 
-    $ curl -H 'Authorization: Bearer {TOKEN}' https://app.getsentry.com/api/0/projects/1/
+    $ curl -H 'Authorization: Bearer {TOKEN}' https://sentry.io/api/0/projects/1/
 
-You can `find or create authentication tokens within Sentry <https://app.getsentry.com/api/>`_.
+You can `find or create authentication tokens within Sentry <https://sentry.io/api/>`_.
 
 
 API Keys
@@ -29,7 +29,7 @@ bound to, you might make a request like so:
 
 .. sourcecode:: bash
 
-    $ curl -u {API_KEY}: https://app.getsentry.com/api/0/projects/1/
+    $ curl -u {API_KEY}: https://sentry.io/api/0/projects/1/
 
 .. note:: You **must** pass a value for the password, which is the reason the ``:``
           is present in our example.

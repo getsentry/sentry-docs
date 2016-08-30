@@ -15,7 +15,7 @@ Installation
 At present `sentry-cli` is only supported on OS X and Linux.  It can be
 installed from a terminal with the following command::
 
-    curl -sL https://getsentry.com/get-cli/ | bash
+    curl -sL https://sentry.io/get-cli/ | bash
 
 This will automatically download the correct version of ``sentry-cli`` for
 your operating system and install it.  If necessarily it will prompt for
@@ -32,7 +32,7 @@ through it::
 
 .. sentry:edition:: on-premise
 
-    By default ``sentry-cli`` will connect to app.getsentry.com but for
+    By default ``sentry-cli`` will connect to sentry.io but for
     on-premise you can also sign in elsewhere::
 
         $ sentry-cli --url https://myserver.invalid/ login
@@ -50,7 +50,7 @@ The config file uses standard INI syntax.
 
 .. sentry:edition:: on-premise
 
-    By default ``sentry-cli`` will connect to app.getsentry.com.  For
+    By default ``sentry-cli`` will connect to sentry.io.  For
     on-prem you can export the ``SENTRY_URL`` environment variable and
     point it to your installation::
 
@@ -73,7 +73,7 @@ config key in the config file):
     the legacy API key for authentication if you have one.
 ``SENTRY_URL`` (`defaults.url`):
     The URL to use to connect to sentry.  This defaults to
-    ``https://app.getsentry.com/``.
+    ``https://sentry.io/``.
 ``SENTRY_ORG`` (`defaults.org`):
     the slug of the organization to use for a command.
 ``SENTRY_PROJECT`` (`defaults.project`):

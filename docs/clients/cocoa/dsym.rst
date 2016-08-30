@@ -42,7 +42,7 @@ instead of `auth_token`.
 
 .. sentry:edition:: on-premise
 
-    By default fastlane will connect to app.getsentry.com.  For
+    By default fastlane will connect to sentry.io.  For
     on-prem you need to provide the `api_host` parameter
     to instruct the tool to connect to your server::
 
@@ -65,7 +65,7 @@ Afterwards manually upload the symbols with `sentry-cli`::
 
 .. sentry:edition:: on-premise
 
-    By default sentry-cli will connect to app.getsentry.com.  For
+    By default sentry-cli will connect to sentry.io.  For
     on-prem you need to export the `SENTRY_URL` environment variable
     to instruct the tool to connect to your server::
 
@@ -101,7 +101,7 @@ instead of `auth_token`.
 
 .. sentry:edition:: on-premise
 
-    By default fastlane will connect to app.getsentry.com.  For
+    By default fastlane will connect to sentry.io.  For
     on-prem you need to provide the `api_host` parameter
     to instruct the tool to connect to your server::
 
@@ -117,7 +117,7 @@ Script".  For this you need to st the `DEBUG_INFORMATION_FORMAT` to be
 make sure everything is set in your build settings properly.
 
 You need to have an Auth Token for this to work.  You can `create an
-Auth Token here <https://app.getsentry.com/api/>`_.
+Auth Token here <https://sentry.io/api/>`_.
 
 1. You will need to copy the below into a new `Run Script` and set your
    `AUTH_TOKEN`, `ORG_SLUG`, and `PROJECT_SLUG`
@@ -139,7 +139,7 @@ look for dSYM files there.
 
 .. sentry:edition:: on-premise
 
-    By default sentry-cli will connect to app.getsentry.com.  For
+    By default sentry-cli will connect to sentry.io.  For
     on-prem you need to export the `SENTRY_URL` environment variable
     to instruct the tool to connect to your server::
 
@@ -167,7 +167,7 @@ Then run this::
 
 .. sentry:edition:: on-premise
 
-    By default sentry-cli will connect to app.getsentry.com.  For
+    By default sentry-cli will connect to sentry.io.  For
     on-prem you need to export the `SENTRY_URL` environment variable
     to instruct the tool to connect to your server::
 

@@ -39,13 +39,13 @@ self explanatory and range from simple state changes (such as the defaults) to
 more complex filters on attributes.
 
 For example, at Sentry we send a notification every single time an error happens
-and the affected user's email address ends with ``@getsentry.com``. To do this
+and the affected user's email address ends with ``@sentry.io``. To do this
 we create a new rule, and we add condition:
 
 ``An events {attribute} value {match} {value}``
 
 We then enter the attribute ``user.email``, select ``ends with``, and we enter
-``@getsentry.com`` for the value.
+``@sentry.io`` for the value.
 
 Additional conditions exist for things like rate limits and other event
 attributes.

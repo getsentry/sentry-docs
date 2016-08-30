@@ -9,7 +9,7 @@ Getting started with Sentry is a three step process:
 
 .. sentry:edition:: hosted
 
-    1.  `Sign up for an account <https://getsentry.com/signup/>`_
+    1.  `Sign up for an account <https://sentry.io/signup/>`_
     2.  :ref:`pick-a-client-integration`
     3.  :ref:`configure-the-dsn`
 
@@ -26,7 +26,7 @@ Getting started with Sentry is a three step process:
 
     If you are new to Sentry and you have not used it before, you can get
     started started by signing up for a `free trial account
-    of Hosted Sentry <https://getsentry.com/signup/>`_ on getsentry.com.
+    of Hosted Sentry <https://sentry.io/signup/>`_ on sentry.io.
 
     Hosted Sentry is the most popular edition of Sentry which is used by hobby
     developers and large corporations alike.  It is hosted on our
@@ -50,7 +50,7 @@ Getting started with Sentry is a three step process:
 
     If you are interested in the enterprise edition, `you can learn more
     about out enterprise offering
-    <https://getsentry.com/enterprise/>`_.
+    <https://sentry.io/enterprise/>`_.
 
     .. _install-the-server:
 

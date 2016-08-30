@@ -14,7 +14,7 @@ you can get in contact with the Sentry community for questions.
     The availability of the Sentry cloud hosted installation is independently
     monitored from outside the infrastructure.  To monitor the availability,
     get notifications and read status updates about outdates you can visit the
-    status page at `status.getsentry.com <http://status.getsentry.com/>`_.
+    status page at `status.sentry.io <http://status.sentry.io/>`_.
     There you can also subscribe to email and SMS notifications.
 
     We also update the twitter feed `@getsentry
@@ -26,7 +26,7 @@ you can get in contact with the Sentry community for questions.
     ---------------
 
     There are a few avenues for getting support. You can always email us via
-    support@getsentry.com, but we suggest reserving that for actual problems
+    support@sentry.io, but we suggest reserving that for actual problems
     with the service.
 
     Outside of email, there's a few areas where you can get support pretty

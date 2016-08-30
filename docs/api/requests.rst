@@ -6,7 +6,7 @@ will return JSON as the response:
 
 .. sourcecode:: bash
 
-    $ curl -i https://app.getsentry.com/api/0/
+    $ curl -i https://sentry.io/api/0/
 
 .. sourcecode:: http
 
@@ -43,7 +43,7 @@ Content-Type of ``'application/json'``:
 
 .. sourcecode:: bash
 
-    $ curl -i https://app.getsentry.com/api/0/projects/1/groups/ \
+    $ curl -i https://sentry.io/api/0/projects/1/groups/ \
         -d '{"status": "resolved"}' \
         -H 'Content-Type: application/json'
 
@@ -52,7 +52,7 @@ for ``POST``, ``PUT``, and ``DELETE`` requests:
 
 .. sourcecode:: bash
 
-    $ curl -i https://app.getsentry.com/api/0/projects/1/groups/?status=unresolved \
+    $ curl -i https://sentry.io/api/0/projects/1/groups/?status=unresolved \
         -d '{"status": "resolved"}' \
         -H 'Content-Type: application/json'
 

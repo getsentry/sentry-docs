@@ -3,7 +3,7 @@ Pagination
 
 Pagination in the API is handled via the Link header standard::
 
-    $ curl -i https://app.getsentry.com/api/0/projects/1/groups/
+    $ curl -i https://sentry.io/api/0/projects/1/groups/
 
 .. sourcecode:: http
 
@@ -12,9 +12,9 @@ Pagination in the API is handled via the Link header standard::
     Content-Type: application/json
     Content-Language: en
     Allow: GET, HEAD, OPTIONS
-    Link: <https://app.getsentry.com/api/0/projects/1/groups/?&cursor=1420837590:0:1>;
+    Link: <https://sentry.io/api/0/projects/1/groups/?&cursor=1420837590:0:1>;
       rel="previous"; results="false",
-      <https://app.getsentry.com/api/0/projects/1/groups/?&cursor=1420837533:0:0>;
+      <https://sentry.io/api/0/projects/1/groups/?&cursor=1420837533:0:0>;
       rel="next"; results="true"
 
 In this example we have both a 'previous' link and a 'next' link. The
