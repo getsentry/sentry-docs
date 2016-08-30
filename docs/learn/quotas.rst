@@ -1,5 +1,5 @@
-Subscriptions & Quotas
-======================
+Quotas & Filtering
+==================
 
 A subscription to Sentry primarily entails a resource quota on the amount
 of events you can send within a window of time. These windows generally
@@ -29,6 +29,28 @@ Rate Limiting Projects
 You can set an organization-wide per-project rate limit via the "Rate Limits"
 link on your dashboard. For example, you might want to set this to "90%", which
 means no individual project can send more than 90% of your organization's quota.
+
+Inbound Data Filters
+--------------------
+
+In some cases the data you're receiving in Sentry is hard to filter, or you simply
+don't have the ability to update the client's application to apply the filters. Due
+to this Sentry provides several ways to filter data server-side, which will also
+apply before any rate limits are checked.
+
+Built-in Filters
+~~~~~~~~~~~~~~~~
+
+Various built-in filters are available within Sentry. You can find these by going to
+**[Project] » Inbound Data Filters**. Each filter caters to specific situations, such
+as web crawlers or old browsers, and can be enabled as needed by the specific application.
+
+IP Blocklist
+~~~~~~~~~~~~
+
+If you have a rogue client you may find yourself simple wanting to block that IP from
+sending data. Sentry supports this by going to **[Project] » General** and adding the
+IP addresses (or subnets) under the **Client Security** section.
 
 Attributes Limits
 -----------------
