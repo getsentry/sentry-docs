@@ -116,7 +116,7 @@ function selectItem(item, section) {
       case "api-url":
         if (section == 'apikey') {
           // XXX: configurable
-          newValue = 'https://app.getsentry.com/api/';
+          newValue = 'https://sentry.io/api/';
         } else {
           newValue = escape(parsedDsn.scheme + parsedDsn.host);
         }
@@ -216,9 +216,9 @@ function renderProjectSelector(element, section) {
 function renderHeader(user) {
   var userNav = $(
     '<ul class="user-nav">' +
-      '<li class="hidden-xs"><a href="https://getsentry.com/pricing/" class="pricing-link">Pricing</a></li>' +
+      '<li class="hidden-xs"><a href="https://sentry.io/pricing/" class="pricing-link">Pricing</a></li>' +
       '<li class="active hidden-xs"><a href="https://docs.sentry.io">Documentation</a></li>' +
-      '<li class="hidden-xs"><a href="http://blog.getsentry.com">Blog</a></li>' +
+      '<li class="hidden-xs"><a href="http://blog.sentry.io">Blog</a></li>' +
     '</ul>'
   );
   if (user.isAuthenticated) {
@@ -228,18 +228,18 @@ function renderHeader(user) {
           '<img src="' + user.avatarUrl + '" class="avatar"> <b class="caret"></b>' +
         '</a>' +
         '<ul class="dropdown-menu">' +
-          '<li><a href="https://app.getsentry.com">Dashboard</a>' +
+          '<li><a href="https://sentry.io">Dashboard</a>' +
           '<li class="divider"></li>' +
-          '<li><a href="mailto:support@getsentry.com" class="support-link">Support</a></li>' +
+          '<li><a href="mailto:support@sentry.io" class="support-link">Support</a></li>' +
           '<li class="divider"></li>' +
-          '<li><a href="https://getsentry.com/logout/">Logout</a>' +
+          '<li><a href="https://sentry.io/logout/">Logout</a>' +
         '</ul>' +
       '</li>'
     ));
   } else {
-      userNav.append($('<li class="hidden-xs"><a href="https://app.getsentry.com/auth/login/">Sign in</a></li>'));
+      userNav.append($('<li class="hidden-xs"><a href="https://sentry.io/auth/login/">Sign in</a></li>'));
       userNav.append($('<li class="divider hidden-xs"></li>'));
-      userNav.append($('<li><a class="cta" href="https://getsentry.com/signup/">Start for free</a></li>'));
+      userNav.append($('<li><a class="cta" href="https://sentry.io/signup/">Start for free</a></li>'));
   }
   $('#user_nav').html(userNav).fadeIn();
 }
@@ -338,12 +338,12 @@ $(function() {
   if (document.location.host === "localhost:9000") {
     var API = 'http://dev.getsentry.net:8000/docs/api';
   } else {
-    var API = 'https://getsentry.com/docs/api';
+    var API = 'https://sentry.io/docs/api';
   }
 
   var dummyDsn = {
     id: '-1',
-    dsn: 'https://<key>:<secret>@app.getsentry.com/<project>',
+    dsn: 'https://<key>:<secret>@sentry.io/<project>',
     name: 'Example DSN',
     group: 'Example',
     projectSlug: 'your-project',
