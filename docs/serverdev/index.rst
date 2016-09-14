@@ -36,6 +36,9 @@ Run the following to install, configure, and execute PostgreSQL as a daemonized 
     brew install postgresql
     pg_ctl -D /usr/local/var/postgres start
 
+.. note:: Sometimes OS X does not like to uphold standards, and does not create the ``postgres``
+          role. If you are finding this problem, follow `this StackOverflow answer <http://stackoverflow.com/a/15309551>`_.
+
 Third Party Libraries
 ~~~~~~~~~~~~~~~~~~~~~
 Sentry depends on a combination of both Python and JavaScript packages that need to be installed
