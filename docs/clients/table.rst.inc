@@ -36,6 +36,10 @@
 
     :doc:`/clients/go/index` For Google's Go Language
 
+*   .. class:: platformlink-elixir
+
+    :doc:`/clients/elixir/index` For Elixir.
+
 *   .. class:: platformlink-perl
 
     :doc:`/clients/perl/index` For Perl apps.
