@@ -11,6 +11,7 @@ and are available under Open Source licenses.
    actionscript/index
    cocoa/index
    csharp/index
+   elixir/index
    go/index
    java/index
    javascript/index
