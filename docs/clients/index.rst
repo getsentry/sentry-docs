@@ -1,9 +1,10 @@
 SDKs
 ====
 
-Sending data to Sentry involves utilizing one of our SDKs. These libraries
-exist for a wide range of programming languages and runtime environments
-and are available under Open Source licenses.
+To report to Sentry you'll need to use a language-specific SDK. The Sentry team builds and
+maintains these for most popular languages, but there's also a large ecosystem supported
+by the community. If your favorite language isn't listed below, we encourage you to start a
+discussion about supporting it on our `community forum <https://forum.sentry.io>`.
 
 .. toctree::
    :hidden:
