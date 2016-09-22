@@ -39,8 +39,8 @@ these links relevant:
    * Need help installing Sentry? See :doc:`server/installation/index`
    * Stuck? Feel free to contact :doc:`support`.
 
-Integrations
-------------
+Platforms
+---------
 
 To report to Sentry you'll need to use a language-specific SDK. The Sentry team builds and
 maintains these for most popular languages, but there's also a large ecosystem supported
@@ -76,6 +76,7 @@ discussion about supporting it on our `community forum <https://forum.sentry.io>
       learn/sso
       learn/user-feedback
       learn/cli
+      integrations/index
 
       ip-ranges
 
@@ -99,6 +100,7 @@ discussion about supporting it on our `community forum <https://forum.sentry.io>
       learn/sensitive-data
       learn/sso
       learn/user-feedback
+      integrations/index
 
 .. toctree::
    :maxdepth: 1
