@@ -42,10 +42,10 @@ these links relevant:
 Integrations
 ------------
 
-To report to Sentry you need a client integration.  The :doc:`Official
-Integrations <clients/index>` are called "raven" (:ref:`What is Raven?
-<history-naming>`).  Clients exist for all popular programming languages
-and platforms.
+To report to Sentry you'll need to use a language-specific SDK. The Sentry team builds and
+maintains these for most popular languages, but there's also a large ecosystem supported
+by the community. If your favorite language isn't listed below, we encourage you to start a
+discussion about supporting it on our `community forum <https://forum.sentry.io>`.
 
 .. include:: clients/table.rst.inc
 
