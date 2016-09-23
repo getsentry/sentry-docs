@@ -94,4 +94,4 @@ additional context to your data.
 
 * :doc:`identifying users via context <learn/context>`
 * :doc:`tracing issues with breadcrumbs <learn/breadcrumbs>`
-* :doc:`capturing user feedback on crashes <learn/feedback>`
+* :doc:`capturing user feedback on crashes <learn/user-feedback>`
