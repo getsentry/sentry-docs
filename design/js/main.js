@@ -360,7 +360,7 @@ $(function() {
   var user = null;
 
   var $pageContent = $('.page-content');
-  var $sidebar = $('.sidebar');
+  var $sidebar = $('.sidebar-content');
 
   var currentPathName = document.location.pathname;
 
@@ -393,7 +393,7 @@ $(function() {
   var loadContent = function(html) {
     var body = getBody(html);
     var content = body.find('.page-content').children();
-    var sidebar = body.find('.sidebar').children();
+    var sidebar = body.find('.sidebar-content').children();
     if (!content || !sidebar) {
       throw new Error('Could not find required child elements in html');
     }
