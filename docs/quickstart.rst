@@ -11,15 +11,6 @@ Getting started with Sentry is a three step process:
 2.  :ref:`pick-a-client-integration`
 3.  :ref:`configure-the-dsn`
 
-
-About Hosted Sentry
--------------------
-
-If you are new to Sentry and you have not used it before, you can get
-started for free `on our hosted service at sentry.io <https://sentry.io/signup/>`_.
-
-Note: If you're running Sentry behind your firewall, you can skip this step.
-
 .. _pick-a-client-integration:
 
 Configure an SDK
@@ -48,8 +39,8 @@ documentation.  For all clients however, the basics are the same.
 
 .. _configure-the-dsn:
 
-Configure The DSN
------------------
+About the DSN
+-------------
 
 After you complete setting up a project in Sentry, you'll be given a value
 which we call a *DSN*, or *Data Source Name*.  It looks a lot like a
@@ -93,3 +84,14 @@ For example for the JavaScript client it works roughly like this::
 Note: If you're using Heroku, and you've added Hosted Sentry via the
 standard addon hooks, most clients will automatically pick up the
 ``SENTRY_DSN`` environment variable that we've already configured for you.
+
+
+Next Steps
+----------
+
+Now that you've got basic reporting setup, you'll want to explore adding
+additional context to your data.
+
+* :doc:`identifying users via context <learn/context>`
+* :doc:`tracing issues with breadcrumbs <learn/breadcrumbs>`
+* :doc:`capturing user feedback on crashes <learn/feedback>`
