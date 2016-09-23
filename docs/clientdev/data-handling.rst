@@ -1,10 +1,7 @@
-Advanced Topics
-===============
+Data Handling
+=============
 
-This covers some not as common grounds that are however still important to
-know.
-
-Scrubbing Data
+Sensitive Data
 --------------
 
 Clients should provide some mechanism for scrubbing data. Ideally through
@@ -64,10 +61,3 @@ as things like extra data, or tags.
 - Http data (the body) is limited to 2048 characters.
 - Stacktraces are limited to 50 frames. If more are sent, data will be
   removed from the middle of the stack.
-
-crossdomain.xml
----------------
-
-Cross domain requests from flash are supported within the API by
-specifying sub-policy, which is located at `/api/<project
-id>/crossdomain.xml`.
