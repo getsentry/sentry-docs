@@ -10,7 +10,7 @@ Sentry integrates seamlessly with your favorite apps and services.
 - GitHub
 - GitLab
 - Heroku
-- HipChat
+- :doc:`hipchat`
 - Lighthouse
 - :doc:`jira`
 - OpsGenie
@@ -30,3 +30,4 @@ Sentry integrates seamlessly with your favorite apps and services.
    :hidden:
 
    jira
+   hipchat
