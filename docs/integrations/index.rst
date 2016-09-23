@@ -25,3 +25,8 @@ Sentry integrates seamlessly with your favorite apps and services.
 - Teamwork
 - Trello
 - Twilio
+
+.. toctree::
+   :hidden:
+
+   jira
