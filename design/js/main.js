@@ -488,9 +488,9 @@ $(function() {
     loadDynamically(document.location.pathname, document.location.hash, false);
   });
 
-  $('a').each(rewriteLink);
+  // $('a').each(rewriteLink);
 
-  $('a.internal').click(linkHandler);
+  // $('a.internal').click(linkHandler);
 
   $.ajax({
     type: 'GET',
