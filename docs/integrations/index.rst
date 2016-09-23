@@ -4,7 +4,7 @@ Integrations
 
 Sentry integrates seamlessly with your favorite apps and services.
 
-- Bitbucket
+- :doc:`bitbucket`
 - Campfire
 - Flowdock
 - GitHub
