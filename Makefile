@@ -10,7 +10,7 @@ venv/bin/python:
 
 requirements: update-submodules venv/bin/python
 	@echo "--> Installing base requirements"
-	@venv/bin/pip install --upgrade pip
+	@venv/bin/pip install "pip>=8.1.1"
 	@venv/bin/pip install --upgrade awscli sphinx==1.3.4 click virtualenv
 	@echo ""
 
