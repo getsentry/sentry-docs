@@ -51,9 +51,6 @@ design/node_modules: design/webpack.config.js design/package.json
 
 update-submodules:
 	@echo "--> Updating git submodules"
-	@if [ -d doc-modules/sentry ]; then \
-		cd doc-modules/sentry && git reset HEAD --hard && git clean -fdx; \
-	fi
 	git submodule update --init
 	@echo ""
 
