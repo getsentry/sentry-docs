@@ -34,7 +34,9 @@ it in your `Podfile`:
         pod 'SentrySwift', :git => 'git@github.com:getsentry/sentry-swift.git', :branch => 'master'
     end
 
-Afterwards run ``pod install``.
+Afterwards run ``pod install``.  In case you encounter problems with
+dependencies and you are on a newer CocoaPods you might have to run
+``pod repo update`` first.
 
 To integrate SentrySwift into your Xcode project using Carthage, specify
 it in your `Cartfile`:
