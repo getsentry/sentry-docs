@@ -269,3 +269,13 @@ highly encouraged:
 
 
 For information about overriding grouping see :ref:`custom-grouping`.
+
+.. describe:: time_spent
+
+    A float representing the time, in seconds, the client took to capture this event.
+
+    .. sourcecode:: json
+
+        {
+          "time_spent": 0.385
+        }
