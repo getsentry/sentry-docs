@@ -40,7 +40,7 @@ processing on iTunesConnect so this should be run in its own lane.
 If you have a legacy API key instead you can supply it with `api_key`
 instead of `auth_token`.
 
-.. sentry:edition:: on-premise
+.. admonition:: On Prem
 
     By default fastlane will connect to sentry.io.  For
     on-prem you need to provide the `api_host` parameter
@@ -63,7 +63,7 @@ Afterwards manually upload the symbols with `sentry-cli`::
 
     sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dsym --org YOUR_ORG_SLUG --project YOUR_PROJECT_SLUG PATH_TO_DSYMS
 
-.. sentry:edition:: on-premise
+.. admonition:: On Prem
 
     By default sentry-cli will connect to sentry.io.  For
     on-prem you need to export the `SENTRY_URL` environment variable
@@ -99,7 +99,7 @@ X-Code.
 If you have a legacy API key instead you can supply it with `api_key`
 instead of `auth_token`.
 
-.. sentry:edition:: on-premise
+.. admonition:: On Prem
 
     By default fastlane will connect to sentry.io.  For
     on-prem you need to provide the `api_host` parameter
@@ -137,7 +137,7 @@ The ``upload-dsym`` command automatically picks up the
 ``DWARF_DSYM_FOLDER_PATH`` environment variable that Xcode exports and
 look for dSYM files there.
 
-.. sentry:edition:: on-premise
+.. admonition:: On Prem
 
     By default sentry-cli will connect to sentry.io.  For
     on-prem you need to export the `SENTRY_URL` environment variable
@@ -165,7 +165,7 @@ Then run this::
 
     sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dsym --org YOUR_ORG_SLUG --project YOUR_PROJECT_SLUG PATH_TO_DSYMS
 
-.. sentry:edition:: on-premise
+.. admonition:: On Prem
 
     By default sentry-cli will connect to sentry.io.  For
     on-prem you need to export the `SENTRY_URL` environment variable
