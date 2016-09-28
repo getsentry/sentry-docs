@@ -7,7 +7,7 @@ Sentry integrates seamlessly with your favorite apps and services.
 - :doc:`bitbucket`
 - Campfire
 - Flowdock
-- GitHub
+- :doc:`github`
 - GitLab
 - Heroku
 - :doc:`hipchat`
@@ -30,5 +30,6 @@ Sentry integrates seamlessly with your favorite apps and services.
    :hidden:
 
    jira
+   github
    hipchat
    bitbucket
