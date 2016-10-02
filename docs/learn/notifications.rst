@@ -74,7 +74,7 @@ The following third-party notifications are available via Sentry extensions:
 - `Grove.io <https://github.com/mattrobenolt/sentry-groveio>`_
 - `Hipchat <https://github.com/linovia/sentry-hipchat>`_
 - `IRC <https://github.com/gisce/sentry-irc>`_
-- `Pushover <https://github.com/dz0ny/sentry-pushover>`_
+- `Pushover <https://github.com/getsentry/sentry-plugins>`_
 - `Whatsapp <https://github.com/ecarreras/sentry-whatsapp>`_
 - `XMPP <https://github.com/chroto/sentry-xmpp>`_
 - `Slack <https://github.com/getsentry/sentry-slack>`_
