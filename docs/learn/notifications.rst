@@ -26,7 +26,6 @@ Muted
     An event will not send alerts. Additionally the default filter
     only shows unresolved events, so muted events would be hidden.
 
-
 Alerts
 ------
 
@@ -63,6 +62,20 @@ Currently only a couple of actions exist in Sentry:
 
 An example use-case might be that you want a specific kind of error to send via
 Slack, but you want everything to send via Mail.
+
+Workflow
+--------
+
+Most activity within Sentry will generate a workflow notification. These notifications
+are sent to anyone participating in a conversation. By default this is all members of a
+project, but each member may choose their participation state, as well as opt-in or opt-out
+of specific issues.
+
+Core workflow notifications include:
+
+- Assignment
+- Comments
+- Regressions -- when Sentry changes state of an issue from **resolved** to **unresolved**
 
 Integrations
 ------------
