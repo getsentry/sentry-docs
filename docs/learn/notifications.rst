@@ -1,18 +1,21 @@
 Notifications
 =============
 
-Notifications in Sentry come in many flavors, but by default are aimed at Email.
+Notifications in Sentry come in many flavors, but by default are aimed at Email. Additionally
+notifications are categorized into two categories:
 
-By default, Sentry will setup two rules for a project which all configured
-integrations will get notified. These rules will notify you when:
+Alerts
+    Generated based upon a project's rules. By default this is only when a new issue is seen.
+Workflow
+    All activity related to user actions, such as resolution, comments, and automatic regressions.
 
-- An event is first seen (the first event in a rollup)
-- An event changes state from *resolved* to *unresolved*
+Each category has its own set of configuration and subscription options. By default you'll be subscribed
+to everything, but this can be changed via your account settings.
 
-Understanding States
---------------------
+Issue States
+------------
 
-Sentry provides a few states for each event:
+Sentry provides a few states for each event, which greatly impact how notifications work:
 
 Unresolved
     The default state when an event is added to the system.
@@ -20,15 +23,15 @@ Resolved
     An event is mark as resolved when an individual resolves it or when the
     project's *auto resolve* feature is configured.
 Muted
-    An event will not send notifications. Additionally the default filter
+    An event will not send alerts. Additionally the default filter
     only shows unresolved events, so muted events would be hidden.
 
-Configuration via Rules
------------------------
 
-As mentioned, two rules exist by default for sending notifications. Within
-Sentry however, you're freely able to customize, remove, and add other rules.
-To do so visit your **Project Settings** and then click the **Rules** link. On
+Alerts
+------
+
+Alerts are configured per-project and are based on the rules defined for that project. To modify
+the rules visit your **Project Settings**, click **Alerts**, then click the **Rules** tab. On
 this page you'll see a list of all active rules.
 
 Conditions
@@ -53,7 +56,7 @@ attributes.
 Actions
 ~~~~~~~
 
-Currently only a couple actions exist in Sentry:
+Currently only a couple of actions exist in Sentry:
 
 - Send a notification via all configured integrations
 - Send a notification to only a specific integration
