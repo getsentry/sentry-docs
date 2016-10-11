@@ -62,6 +62,7 @@ Looking to get started contributing to Sentry? Our :doc:`internal documentation 
     api/index
     clientdev/index
     project-resources
+    internal/index
 
     ssl
     history
