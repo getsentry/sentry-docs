@@ -27,11 +27,10 @@ discussion about supporting it on our `community forum <https://forum.sentry.io>
 
 .. include:: clients/table.rst.inc
 
-.. toctree::
-    :hidden:
-    :includehidden:
+Contributing
+------------
 
-    clients/index
+Looking to get started contributing to Sentry? Our :doc:`internal documentation <internal/index>` has you covered.
 
 .. toctree::
     :maxdepth: 2
@@ -54,21 +53,17 @@ discussion about supporting it on our `community forum <https://forum.sentry.io>
     learn/user-feedback
     learn/cli
 
+    clients/index
+
     integrations/index
 
     ip-ranges
 
-.. toctree::
-    :maxdepth: 1
-    :titlesonly:
-    :hidden:
-
     api/index
     clientdev/index
-    serverdev/index
-    docdev
     project-resources
 
     ssl
     history
     license
+
