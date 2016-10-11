@@ -1,8 +1,5 @@
-Contributing to Sentry
-======================
-This part of the documentation guides you towards contributing to our core repository,
-`sentry <https://www.github.com/getsentry/sentry>`_. It covers the installation and
-configuration of required dependencies, as well as standard procedures of contribution.
+Development Environment
+=======================
 
 Setting up Your Development Environment
 ---------------------------------------
@@ -16,6 +13,7 @@ Macintosh OS X
 
 Third Party Services
 ~~~~~~~~~~~~~~~~~~~~
+
 To run the basic development server, you need to install both Redis and PostgreSQL.
 If you haven't already installed `Mac Homebrew <http://brew.sh>`_, follow the directions
 they provide on their homepage. It is an insanely useful package manager for OS X and we
@@ -26,6 +24,7 @@ will be using it in this guide.
 
 Redis
 *****
+
 Redis is a popular in-memory datastore that Sentry uses for queuing and caching mechanisms.
 Run the following to install, configure, and execute Redis as a daemonized server::
 
@@ -34,6 +33,7 @@ Run the following to install, configure, and execute Redis as a daemonized serve
 
 PostgreSQL
 **********
+
 PostgreSQL is the primary database that Sentry uses for all persistent storage.
 Run the following to install, configure, and execute PostgreSQL as a daemonized server::
 
@@ -45,12 +45,14 @@ Run the following to install, configure, and execute PostgreSQL as a daemonized 
 
 Third Party Libraries
 ~~~~~~~~~~~~~~~~~~~~~
+
 Sentry depends on a combination of both Python and JavaScript packages that need to be installed
 in order for the server to function properly. Below are basic commands to install the languages
 and their libraries on OS X.
 
 Python
 ******
+
 While OS X ships with an acceptable version of Python, installing the latest binaries from Homebrew
 is recommended. In addition, it is highly recommended to separate your libraries per-environment
 with the use of virtual environments. One of the easiest ways to curate your virtual environments is
@@ -61,6 +63,7 @@ Run the following to install and configure brewed Python::
 
 JavaScript
 **********
+
 JavaScript is a tad easier because it separates environments already. To install node.js and
 the Node Package Manager(npm) run::
 
@@ -68,6 +71,7 @@ the Node Package Manager(npm) run::
 
 Installing Libraries
 ********************
+
 Once all of your dependencies are installed, head over to the root of ``getsentry/sentry``.
 Run the following to install both the Python and JavaScript libraries that Sentry depends on
 and some extra pieces that hold the development environment together::
@@ -76,6 +80,7 @@ and some extra pieces that hold the development environment together::
 
 Running the Development Server
 ------------------------------
+
 Before you are able to run the development server, you first must create a proper database
 for it to use. Running the following will create the proper database and fill it with example
 data::
@@ -109,6 +114,7 @@ administrator.
 
 Staging Your Changes
 --------------------
+
 You've made your changes to the codebase, now it's time to present them to the Sentry developers.
 It is recommended to first run the test suite locally in order to find any linting, syntax, or
 integration before you post a Pull Request.
@@ -124,21 +130,3 @@ libraries, lint all source code, and run both the Python and JavaScript test sui
   either ``make test-js`` or ``make test-python`` will only run the test suite with the
   corresponding language, skipping over linting and dependency checks. If you would like to see
   even more options, check out other entry points in the ``Makefile``.
-
-Posting a Pull Request
-''''''''''''''''''''''
-If your test suite run has completed successfully or you wish to run it in Travis CI in order to
-weed out any inconsistency problems, now is the right time to post a Pull Request(abbreviated as PR).
-In your PR, please provide a quick description as to what it is fixing or providing.
-If your PR is related to a topic that a certain team should be aware of, please tag said team at
-the bottom of the description. A list of teams can be found `here <https://github.com/orgs/getsentry/teams>`_.
-If you are not part of the Sentry organization, please either tag the team member you were
-corresponding with prior to posting your PR, or just wait for a team member to tag it.
-
-More Information
-----------------
-
-.. toctree::
-   :maxdepth: 0
-
-   code

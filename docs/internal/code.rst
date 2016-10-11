@@ -1,5 +1,6 @@
 Code Review
 ===========
+
 Code review is mandatory at Sentry. This adds overhead to each change, but ensures
 that simple, often overlooked problems are more easily avoided.
 
@@ -11,7 +12,8 @@ When creating a pull request, reference any tickets or Sentry issues which are
 being addressed. Additionally **@mention** an appropriate team (or teams) for review.
 
 GitHub Teams
-============
+------------
+
 The following teams are defined in GitHub and should be used when creating Pull Requests:
 
 - `@getsentry/api <https://github.com/orgs/getsentry/teams/api>`_
@@ -29,7 +31,8 @@ Additionally, language specific teams exist, primarily for SDKs:
 - `@getsentry/python <https://github.com/orgs/getsentry/teams/python>`_
 
 Why Pull Requests
-=================
+-----------------
+
 Because Sentry is an open source project maintained via GitHub we want to ensure that
 the barrier to entry for external contributions is minimal. By using GitHub features
 when possible, we make it easy for developers familiar with other projects on GitHub.
