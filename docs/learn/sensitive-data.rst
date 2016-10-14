@@ -4,8 +4,8 @@ Sensitive Data
 As with any third party service it's important to understand what data is being
 sent to Sentry, and where relevant ensure sensitive data either never reaches
 the Sentry servers, or at the very least it doesn't get stored. Our primary
-approach to this problem is a pessimitic view: you accidentaly sent data to
-Sentry and you either want to remove it, or you want to ensure it doesnt get
+approach to this problem is a pessimitic view: you accidentally sent data to
+Sentry and you either want to remove it, or you want to ensure it doesn't get
 stored.
 
 
