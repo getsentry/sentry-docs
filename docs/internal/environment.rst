@@ -29,7 +29,7 @@ Redis is a popular in-memory datastore that Sentry uses for queuing and caching 
 Run the following to install, configure, and execute Redis as a daemonized server::
 
     brew install redis
-    redis-server --save --daemonize yes
+    brew services start redis
 
 PostgreSQL
 **********
@@ -38,7 +38,7 @@ PostgreSQL is the primary database that Sentry uses for all persistent storage.
 Run the following to install, configure, and execute PostgreSQL as a daemonized server::
 
     brew install postgresql
-    pg_ctl -D /usr/local/var/postgres start
+    brew services start postgresql
 
 .. note:: Sometimes OS X does not like to uphold standards, and does not create the ``postgres``
           role. If you are finding this problem, follow `this StackOverflow answer <http://stackoverflow.com/a/15309551>`_.
