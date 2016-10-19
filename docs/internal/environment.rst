@@ -78,6 +78,10 @@ and some extra pieces that hold the development environment together::
 
     make develop
 
+.. note:: Some libraries depend on OpenSSL. Install via ``brew install openssl``, and make
+  sure to ``export LDFLAGS=-L/usr/local/opt/openssl/lib`` while building, so that the
+  ``openssl`` libraries can be found by the build process.
+
 Running the Development Server
 ------------------------------
 
