@@ -19,9 +19,6 @@ If you haven't already installed `Mac Homebrew <http://brew.sh>`_, follow the di
 they provide on their homepage. It is an insanely useful package manager for OS X and we
 will be using it in this guide.
 
-.. note:: If you would like to have the following services run when you start your machine,
-  follow the instructions that Homebrew provides at the end of running ``install``.
-
 Redis
 *****
 
