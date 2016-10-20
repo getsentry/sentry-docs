@@ -14,16 +14,6 @@ the future.  More than that however, for on-premise installations of
 Sentry the interfaces can be customized so client libraries should ideally
 be written in a way that custom interfaces can be emitted.
 
-Interfaces are typically identified by their full canonical path as it
-exists in Sentry.  For built-in interfaces we also provide aliases which
-should be used instead.  For instance the full canonical path for the
-stacktrace interface is ``sentry.interfaces.Stacktrace`` which is also
-available under the alias ``stacktrace``.
-
-For custom interfaces in on-premise installations aliases are typically
-not configured.  All interfaces on this page here are built into Sentry
-and available on all installation.
-
 Message Interface
 -----------------
 
@@ -31,9 +21,7 @@ The message interface is a slightly improved version of the ``message``
 attribute and can be used to split the log message from the log message
 parameters:
 
-.. describe:: sentry.interfaces.message.Message
-
-    Alias: ``logentry``
+.. describe:: logentry
 
     A standard message consisting of a ``message`` argugment, and an
     optional list of ``params`` for formatting.  The regular Python
@@ -57,9 +45,7 @@ Failure Interfaces
 These interfaces are related to reporting of failures (errors, exceptions)
 in an application.
 
-.. describe:: sentry.interfaces.exception.Exception
-
-    Alias: ``exception``
+.. describe:: exception
 
     An exception consists of a list of values. In most cases, this list
     contains a single exception, with an optional stacktrace interface.
@@ -79,7 +65,7 @@ in an application.
     ``posix_signal.name`` and ``posix_signal.signal``.
 
     You can also optionally bind a stacktrace interface to an exception.
-    The spec is identical to ``sentry.interfaces.Stacktrace``.
+    The spec is identical to ``stacktrace``.
 
     .. sourcecode:: json
 
@@ -89,14 +75,12 @@ in an application.
             "value": "My exception value",
             "module": "__builtins__"
             "stacktrace": {
-              "see": "sentry.interfaces.Stacktrace"
+              "see": "stacktrace"
             }
           }]
         }
 
-.. describe:: sentry.interfaces.stacktrace.Stacktrace
-
-    Alias: ``stacktrace``
+.. describe:: stacktrace
 
     A stacktrace contains a list of frames, each with various bits (most
     optional) describing the context of that frame. Frames should be
@@ -123,7 +107,7 @@ in an application.
     ``function``
         The name of the function being called
     ``module``
-        Platform-specific module path (e.g. sentry.interfaces.Stacktrace)
+        Platform-specific module path (e.g. sentry.models.User)
 
     The following additional attributes are supported:
 
@@ -198,9 +182,7 @@ in an application.
           "frames_omitted": [13, 56]
         }
 
-.. describe:: sentry.interfaces.Threads
-
-    Alias: ``threads``
+.. describe:: threads
 
     The threads interface allows you to specify the threads there were
     running at the time an event happened.  These threads can also contain
@@ -214,7 +196,7 @@ in an application.
 
     ``stacktrace``:
         You can also optionally bind a stacktrace interface to the
-        thread.  The spec is identical to ``sentry.interfaces.Stacktrace``.
+        thread.  The spec is identical to ``stacktrace``.
     ``id``:
         The ID of the thread.  Typically an integer or short string.
         Needs to be unique among the threads.  An exception can set the
@@ -235,9 +217,7 @@ regular stacktraces do not contain template data.  This for instance is
 required in the Django framework where the templates do not integrate into
 the Python stacktrace.
 
-.. describe:: sentry.interfaces.template.Template
-
-    Alias: ``template``
+.. describe:: template
 
     A rendered template.  This is generally used like a single frame in a
     stacktrace and should only be used if the template system does not
@@ -377,9 +357,7 @@ These interfaces are not contained below ``contexts`` but stored toplevel
 as normal interface which highlights their special nature.  In particular
 only one http request and one user can be set.
 
-.. describe:: sentry.interfaces.http.Http
-
-    Alias: ``request``
+.. describe:: request
 
     The Request information is stored in the Http interface. Two arguments
     are required: url and ``method``.
@@ -430,9 +408,7 @@ only one http request and one user can be set.
           }
         }
 
-.. describe:: sentry.interfaces.user.User
-
-    Alias: ``user``
+.. describe:: user
 
     An interface which describes the authenticated User for a request.
 
@@ -470,9 +446,7 @@ Breadcrumbs Interface
 The breadcrumbs interface specifies a series of application events, or "breadcrumbs",
 that occurred before the main event.
 
-.. describe:: sentry.interfaces.Breadcrumbs
-
-    Alias: ``breadcrumbs``
+.. describe:: breadcrumbs
 
     An array of breadcrumbs. Breadcrumb entries are ordered from oldest to newest. The last breadcrumb
     in the array should be the last entry before the main event fired.
