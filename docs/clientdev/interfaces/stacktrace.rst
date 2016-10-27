@@ -84,7 +84,7 @@ Stacktrace Interface
 
         {
           "frames": [{
-            "abs_path": "/real/file/name.py"
+            "abs_path": "/real/file/name.py",
             "filename": "file/name.py",
             "function": "myfunction",
             "vars": {
