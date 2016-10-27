@@ -9,7 +9,7 @@ JIRA Service Desk Add-on
 
 See the specific errors affecting your users from within the Service Desk UI.
 
-- Install the Sentry for JIRA add-on from the Atlassian Marketplace
+- `Install the Sentry for JIRA add-on <https://marketplace.atlassian.com/plugins/sentry.io.jira_ac/cloud/overview>`_ from the Atlassian Marketplace
 - Click configure to select a Sentry organization to connect to your JIRA account
 - Sentry issues experienced by your users will be displayed in JIRA
 
