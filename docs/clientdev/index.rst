@@ -9,6 +9,6 @@ are unable to use one of our official SDKs, you've come to the right place.
 
    overview
    attributes
-   interfaces
+   interfaces/index
    data-handling
    context

@@ -163,7 +163,7 @@ As an example for attributes there is the ``event_id``, the ``tags`` etc.
 whereas the exception is an interface.
 
 For a list of all supported attributes see :doc:`attributes`.  For a list
-of built-in interfaces see :doc:`interfaces`.
+of built-in interfaces see :doc:`interfaces/index`.
 
 Authentication
 --------------

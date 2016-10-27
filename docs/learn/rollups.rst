@@ -18,7 +18,7 @@ Grouping Priorities
 -------------------
 
 The grouping switches behavior based on the interfaces
-(:doc:`../clientdev/interfaces`) that are available within an event.
+(:doc:`../clientdev/interfaces/index`) that are available within an event.
 
 *   if the interfaces used in an event differ, then there is no chance for
     those events to be grouped together.
