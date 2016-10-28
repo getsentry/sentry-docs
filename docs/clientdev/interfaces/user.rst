@@ -24,7 +24,7 @@ User Interface
 
     .. sourcecode:: json
 
-        {
+        "user": {
           "id": "unique_id",
           "username": "my_user",
           "email": "foo@example.com",

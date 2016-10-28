@@ -29,3 +29,13 @@ Threads Interface
         foreground.
     ``name``:
         an optional thread name.
+
+    .. sourcecode:: json
+
+        "threads": {
+          "values": [{
+            "id": "0",
+            "name": "main",
+            "crashed": true,
+            "stacktrace": {...}
+        }

@@ -9,18 +9,22 @@ parameters:
 
     Alias: ``logentry``
 
-    A standard message consisting of a ``message`` argugment, and an
-    optional list of ``params`` for formatting.  The regular Python
-    format string is supported (``%s``, ``%d`` etc.).
+    A standard message, generally associated with parameterized logging.
 
-    If your message cannot be parameterized, then the message interface
-    will serve no benefit.
+    Attributes:
+
+    ``message``:
+        the raw message string (uninterpolated)
+    ``params``:
+        an optional list of formatting parameters
+    ``formatted``:
+        the formatted message
 
     ``message`` must be no more than 1000 characters in length.
 
     .. sourcecode:: json
 
-        {
+        "sentry.interfaces.Message": {
           "message": "My raw message with interpreted strings like %s",
           "params": ["this"]
         }

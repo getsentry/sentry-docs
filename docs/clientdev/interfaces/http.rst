@@ -38,7 +38,7 @@ HTTP Interface
 
     .. sourcecode:: json
 
-        {
+        "request": {
           "url": "http://absolute.uri/foo",
           "method": "POST",
           "data": {

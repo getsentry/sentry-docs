@@ -27,7 +27,7 @@ Exception Interface
 
     .. sourcecode:: json
 
-        {
+        "exception": {
           "values": [{
             "type": "ValueError",
             "value": "My exception value",

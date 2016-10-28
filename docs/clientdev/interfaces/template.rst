@@ -34,7 +34,7 @@ the Python stacktrace.
 
     .. sourcecode:: json
 
-        {
+        "template": {
           "abs_path": "/real/file/name.html"
           "filename": "file/name.html",
           "pre_context": [

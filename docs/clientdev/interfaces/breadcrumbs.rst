@@ -46,22 +46,24 @@ that occurred before the main event.
 
     .. sourcecode:: json
 
-        [{
-          "timestamp": 1461185753845,
-          "message": "Something happened",
-          "category": "log",
-          "data": {
-            "foo": "bar",
-            "blub": "blah"
+        "breadcrumbs": [
+          {
+            "timestamp": 1461185753845,
+            "message": "Something happened",
+            "category": "log",
+            "data": {
+              "foo": "bar",
+              "blub": "blah"
+            }
+          }, {
+            "timestamp": 1461185753847,
+            "type": "navigation",
+            "data": {
+              "from": "/login",
+              "to": "/dashboard"
+            }
           }
-        }, {
-          "timestamp": 1461185753847,
-          "type": "navigation",
-          "data": {
-            "from": "/login",
-            "to": "/dashboard"
-          }
-        }]
+        ]
 
 Breadcrumb Types
 ~~~~~~~~~~~~~~~~

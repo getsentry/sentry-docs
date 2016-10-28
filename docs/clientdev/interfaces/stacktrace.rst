@@ -32,7 +32,7 @@ Stacktrace Interface
     ``module``
         Platform-specific module path (e.g. sentry.interfaces.Stacktrace)
 
-    The following additional attributes are supported:
+    Optional core attributes:
 
     ``lineno``
         The line number of the call
@@ -48,6 +48,18 @@ Stacktrace Interface
     ``post_context``
         A list of source code lines after context_line (in order) –
         usually ``[lineno + 1:lineno + 5]``
+    ``in_app``
+        Signifies whether this frame is related to the execution of the
+        relevant code in this stacktrace. For example, the frames that
+        might power the framework’s webserver of your app are probably not
+        relevant, however calls to the framework’s library once you start
+        handling code likely are.
+    ``vars``
+        A mapping of variables which were available within this frame
+        (usually context-locals).
+
+    The following attributes are primarily used for C-based languages:
+
     ``package``
         The "package" the frame was contained in.  Depending on the
         platform this can be different things.  For C# it can be the name
@@ -70,19 +82,10 @@ Stacktrace Interface
     ``instruction_offset``
         The difference between instruction address and symbol address in
         bytes.
-    ``in_app``
-        Signifies whether this frame is related to the execution of the
-        relevant code in this stacktrace. For example, the frames that
-        might power the framework’s webserver of your app are probably not
-        relevant, however calls to the framework’s library once you start
-        handling code likely are.
-    ``vars``
-        A mapping of variables which were available within this frame
-        (usually context-locals).
 
     .. sourcecode:: json
 
-        {
+        "stacktrace": {
           "frames": [{
             "abs_path": "/real/file/name.py",
             "filename": "file/name.py",

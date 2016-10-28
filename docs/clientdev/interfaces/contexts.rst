@@ -14,7 +14,7 @@ data related to the current user, the current HTTP request.
 
     Example::
 
-        {
+        "contexts": {
             "os": {
                 "type": "os",
                 "name": "Windows"
