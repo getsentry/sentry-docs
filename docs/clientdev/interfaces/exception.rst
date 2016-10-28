@@ -7,13 +7,29 @@ Exception Interface
 
     An exception consists of a list of values. In most cases, this list
     contains a single exception, with an optional stacktrace interface.
+    Multiple values represent a chained exception, and should be sent
+    oldest to newest. That is, if you're code does this:
 
-    Each exception has a mandatory ``value`` argument and optional
-    ``type`` and ``module`` arguments describing the exception class type
-    and module namespace.
+    .. sourcecode:: python
 
-    Optionally a ``thread_id`` attribute can refer to a thread from the
-    `threads` interface.
+        try:
+            raise Exception
+        except Exception as e:
+            raise ValueError() from e
+
+    The order of exceptions would be ``Exception`` and then ``ValueError``.
+
+    Attributes:
+
+    ``type``:
+        the type of exception, e.g. ``ValueError``
+    ``value``:
+        the value of the exception (a string)
+    ``module``:
+        the optional module, or package which the exception type lives in
+    ``thread_id``:
+        an optional value which refers to a thread in the :doc:`threads <threads>`
+        interface.
 
     Additionally an optional ``mechanism`` key can be sent with
     information about how the exception was delivered from a low level
