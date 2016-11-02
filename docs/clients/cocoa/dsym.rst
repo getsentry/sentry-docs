@@ -128,10 +128,14 @@ Shell: `/bin/bash`
 
 .. sourcecode:: bash
 
+    if which sentry-cli >/dev/null; then
     export SENTRY_ORG=___ORG_NAME___
     export SENTRY_PROJECT=___PROJECT_NAME___
     export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
     sentry-cli upload-dsym
+    else
+    echo "warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
+    fi
 
 The ``upload-dsym`` command automatically picks up the
 ``DWARF_DSYM_FOLDER_PATH`` environment variable that Xcode exports and
