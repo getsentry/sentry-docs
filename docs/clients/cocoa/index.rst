@@ -31,7 +31,7 @@ it in your `Podfile`:
     use_frameworks!
 
     target 'YourApp' do
-        pod 'SentrySwift', :git => 'git@github.com:getsentry/sentry-swift.git', :branch => 'master'
+        pod 'SentrySwift', :git => 'git@github.com:getsentry/sentry-swift.git', :tag => '0.5.0'
     end
 
 Afterwards run ``pod install``.  In case you encounter problems with
@@ -43,7 +43,7 @@ it in your `Cartfile`:
 
 .. sourcecode:: ruby
 
-    github "getsentry/sentry-swift" "master"
+    github "getsentry/sentry-swift" "0.5.0"
 
 Run ``carthage update`` to build the framework and drag the built
 `SentrySwift.framework` and `KSCrash.framework` into your Xcode project.
