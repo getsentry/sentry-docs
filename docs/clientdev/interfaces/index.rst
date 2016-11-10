@@ -53,4 +53,5 @@ Misc
     :titlesonly:
 
     debug
+    repos
     sdk
