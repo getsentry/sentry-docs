@@ -1,33 +1,29 @@
 User Interface
 ==============
 
-.. describe:: sentry.interfaces.user.User
+An interface which describes the authenticated User for a request.
 
-    Alias: ``user``
+You should provide at least either an ``id`` (a unique identifier for
+an authenticated user) or ``ip_address`` (their IP address).
 
-    An interface which describes the authenticated User for a request.
+``id``
+    The unique ID of the user.
+``email``
+    The email address of the user.
+``ip_address``
+    The IP of the user.
+``username``
+    The username of the user
 
-    You should provide at least either an ``id`` (a unique identifier for
-    an authenticated user) or ``ip_address`` (their IP address).
+All other keys are stored as extra information but not specifically
+processed by sentry.
 
-    ``id``
-        The unique ID of the user.
-    ``email``
-        The email address of the user.
-    ``ip_address``
-        The IP of the user.
-    ``username``
-        The username of the user
+.. sourcecode:: json
 
-    All other keys are stored as extra information but not specifically
-    processed by sentry.
-
-    .. sourcecode:: json
-
-        "user": {
-          "id": "unique_id",
-          "username": "my_user",
-          "email": "foo@example.com",
-          "ip_address": "127.0.0.1",
-          "subscription": "basic"
-        }
+    "user": {
+      "id": "unique_id",
+      "username": "my_user",
+      "email": "foo@example.com",
+      "ip_address": "127.0.0.1",
+      "subscription": "basic"
+    }

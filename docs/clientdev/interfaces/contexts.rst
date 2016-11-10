@@ -4,26 +4,24 @@ Contexts Interface
 The context interfaces provide additional context data.  Typically this is
 data related to the current user, the current HTTP request.
 
-.. describe:: contexts
+The ``contexts`` type can be used to defined almost arbitrary
+contextual data on the event.  It accepts an object of key, value
+pairs.  The key is the "alias" of the context and can be freely
+chosen.  However as per policy it should match the type of the context
+unless there are two values for a type.
 
-    The ``contexts`` type can be used to defined almost arbitrary
-    contextual data on the event.  It accepts an object of key, value
-    pairs.  The key is the "alias" of the context and can be freely
-    chosen.  However as per policy it should match the type of the context
-    unless there are two values for a type.
+Example::
 
-    Example::
-
-        "contexts": {
-            "os": {
-                "type": "os",
-                "name": "Windows"
-            }
+    "contexts": {
+        "os": {
+            "type": "os",
+            "name": "Windows"
         }
+    }
 
-    If the type is omitted it uses the alias as type.
+If ``type`` is omitted it uses the alias as type.
 
-    Unknown data for the contexts is rendered as a key/value list.
+Unknown data for the contexts is rendered as a key/value list.
 
 Context Types
 -------------

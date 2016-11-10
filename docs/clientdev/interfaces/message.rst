@@ -5,26 +5,22 @@ The message interface is a slightly improved version of the ``message``
 attribute and can be used to split the log message from the log message
 parameters:
 
-.. describe:: sentry.interfaces.message.Message
+A standard message, generally associated with parameterized logging.
 
-    Alias: ``logentry``
+Attributes:
 
-    A standard message, generally associated with parameterized logging.
+``message``:
+    the raw message string (uninterpolated)
+``params``:
+    an optional list of formatting parameters
+``formatted``:
+    the formatted message
 
-    Attributes:
+``message`` must be no more than 1000 characters in length.
 
-    ``message``:
-        the raw message string (uninterpolated)
-    ``params``:
-        an optional list of formatting parameters
-    ``formatted``:
-        the formatted message
+.. sourcecode:: json
 
-    ``message`` must be no more than 1000 characters in length.
-
-    .. sourcecode:: json
-
-        "sentry.interfaces.Message": {
-          "message": "My raw message with interpreted strings like %s",
-          "params": ["this"]
-        }
+    "sentry.interfaces.Message": {
+      "message": "My raw message with interpreted strings like %s",
+      "params": ["this"]
+    }

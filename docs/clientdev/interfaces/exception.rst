@@ -1,54 +1,50 @@
 Exception Interface
 ===================
 
-.. describe:: sentry.interfaces.exception.Exception
+An exception consists of a list of values. In most cases, this list
+contains a single exception, with an optional stacktrace interface.
+Multiple values represent a chained exception, and should be sent
+oldest to newest. That is, if you're code does this:
 
-    Alias: ``exception``
+.. sourcecode:: python
 
-    An exception consists of a list of values. In most cases, this list
-    contains a single exception, with an optional stacktrace interface.
-    Multiple values represent a chained exception, and should be sent
-    oldest to newest. That is, if you're code does this:
+    try:
+        raise Exception
+    except Exception as e:
+        raise ValueError() from e
 
-    .. sourcecode:: python
+The order of exceptions would be ``Exception`` and then ``ValueError``.
 
-        try:
-            raise Exception
-        except Exception as e:
-            raise ValueError() from e
+Attributes:
 
-    The order of exceptions would be ``Exception`` and then ``ValueError``.
+``type``:
+    the type of exception, e.g. ``ValueError``
+``value``:
+    the value of the exception (a string)
+``module``:
+    the optional module, or package which the exception type lives in
+``thread_id``:
+    an optional value which refers to a thread in the :doc:`threads <threads>`
+    interface.
 
-    Attributes:
+Additionally an optional ``mechanism`` key can be sent with
+information about how the exception was delivered from a low level
+point of view.  Currently it supports the following nested sub
+attributes (the dot signifies a key in a sub object):
+``mach_exception.exception_name``, ``mach_exception.code_name``,
+``posix_signal.name`` and ``posix_signal.signal``.
 
-    ``type``:
-        the type of exception, e.g. ``ValueError``
-    ``value``:
-        the value of the exception (a string)
-    ``module``:
-        the optional module, or package which the exception type lives in
-    ``thread_id``:
-        an optional value which refers to a thread in the :doc:`threads <threads>`
-        interface.
+You can also optionally bind a :doc:`stacktrace interface <stacktrace>`
+to an exception.
 
-    Additionally an optional ``mechanism`` key can be sent with
-    information about how the exception was delivered from a low level
-    point of view.  Currently it supports the following nested sub
-    attributes (the dot signifies a key in a sub object):
-    ``mach_exception.exception_name``, ``mach_exception.code_name``,
-    ``posix_signal.name`` and ``posix_signal.signal``.
+.. sourcecode:: json
 
-    You can also optionally bind a :doc:`stacktrace interface <stacktrace>`
-    to an exception.
-
-    .. sourcecode:: json
-
-        "exception": {
-          "values": [{
-            "type": "ValueError",
-            "value": "My exception value",
-            "module": "__builtins__"
-            "stacktrace": {sentry.interfaces.Stacktrace}
-            }
-          }]
+    "exception": {
+      "values": [{
+        "type": "ValueError",
+        "value": "My exception value",
+        "module": "__builtins__"
+        "stacktrace": {sentry.interfaces.Stacktrace}
         }
+      }]
+    }
