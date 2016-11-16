@@ -56,7 +56,7 @@ The following types are known:
 
 .. describe:: os
 
-    Defines the operating system that created the event.
+    Defines the operating system that caused the event. In web contexts, this is the operating system of the browser (normally pulled from the User-Agent string).
 
     Attributes:
 
