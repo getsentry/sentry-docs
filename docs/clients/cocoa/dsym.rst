@@ -132,7 +132,10 @@ Shell: `/bin/bash`
     export SENTRY_ORG=___ORG_NAME___
     export SENTRY_PROJECT=___PROJECT_NAME___
     export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
-    sentry-cli upload-dsym
+    ERROR=$(sentry-cli upload-dsym 2>&1 >/dev/null)
+    if [ ! -z "$ERROR" ]; then
+    echo "warning: sentry-cli - $ERROR"
+    fi
     else
     echo "warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
     fi
