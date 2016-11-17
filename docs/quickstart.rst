@@ -27,7 +27,6 @@ Popular integrations are:
 *   :doc:`JavaScript <clients/javascript/index>`
 *   :doc:`PHP <clients/php/index>`
 *   :doc:`Ruby <clients/ruby/index>`
-*   :doc:`Objective-C <clients/objc/index>`
 *   :doc:`Java <clients/java/index>`
 *   :doc:`Cocoa <clients/cocoa/index>`
 *   :doc:`C# <clients/csharp/index>`
