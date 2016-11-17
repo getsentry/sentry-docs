@@ -4,6 +4,7 @@ Integrations
 
 Sentry integrates seamlessly with your favorite apps and services.
 
+- :doc:`asana`
 - :doc:`bitbucket`
 - Campfire
 - Flowdock
@@ -29,7 +30,8 @@ Sentry integrates seamlessly with your favorite apps and services.
 .. toctree::
    :hidden:
 
-   jira
+   asana
+   bitbucket
    github
    hipchat
-   bitbucket
+   jira
