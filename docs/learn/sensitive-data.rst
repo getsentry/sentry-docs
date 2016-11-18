@@ -69,7 +69,7 @@ Removing Data
 If you've accidentally sent sensitive data to the server it's likely you're not
 going to want to leave it there. There are a few things to note in removal:
 
-- If you've sent it as a tagged value, removing the event is not enough. You
+- If you send it as a tagged value, removing the event is not enough. You
   can visit Project Settings and under Tags you'll find a way to permanently
   remove any related data for a given tag.
 
@@ -77,6 +77,6 @@ going to want to leave it there. There are a few things to note in removal:
   delete all sampled events under a rollup by visiting the rollup details page
   and selecting "Delete".
 
-- If you've set of sparse events to a project (potentially all of them), your
+- If you send sparse events to a project (potentially all of them), your
   only option is to remove the project and re-create it. Keep in mind this will
   revoke API credentials, so you likely want to do this in the reverse order.
