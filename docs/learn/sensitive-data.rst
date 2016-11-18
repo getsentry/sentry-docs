@@ -67,7 +67,7 @@ Removing Data
 -------------
 
 
-accidentally sent sensitive data to the server it's likely you're not
+If you've accidentally sent sensitive data to the server it's likely you're not
 going to want to leave it there. There are a few things to note in removal:
 
 - If you send it as a tagged value, removing the event is not enough. You
