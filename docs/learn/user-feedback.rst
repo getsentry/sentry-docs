@@ -76,5 +76,6 @@ Some integrations and frameworks will make this even easier:
 - :ref:`Django <python-django-user-feedback>`
 - :ref:`Flask <python-flask-user-feedback>`
 - :ref:`PHP <php-user-feedback>`
+- :ref:`Cocoa <cocoa-user-feedback>`
 
 Take a look at your SDK's documentation for more information.

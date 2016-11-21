@@ -3,13 +3,7 @@
 Cocoa
 =====
 
-.. sentry:support-warning::
-
-    The new Cocoa SDK is a preview release.  Please give feedback if you
-    encounter issues with it.
-
-This is the documentation for our official clients for Cocoa (Objective-C
-and Swift).
+This is the documentation for our official clients for Cocoa (Swift and Objective-C).
 
 Installation
 ------------
@@ -31,19 +25,30 @@ it in your `Podfile`:
     use_frameworks!
 
     target 'YourApp' do
-        pod 'SentrySwift', :git => 'git@github.com:getsentry/sentry-swift.git', :tag => '0.5.0'
+        pod 'SentrySwift', :git => 'git@github.com:getsentry/sentry-swift.git', :tag => '1.0.0'
     end
 
 Afterwards run ``pod install``.  In case you encounter problems with
 dependencies and you are on a newer CocoaPods you might have to run
 ``pod repo update`` first.
 
+In case your project still uses Swift 2.3 you can add these lines at the end of your Podfile which tells your Pods to use Swift 2.3.
+
+.. sourcecode:: ruby
+
+    post_install do |installer|
+      installer.pods_project.build_configurations.each do |config|
+        config.build_settings['SWIFT_VERSION'] = '2.3'
+        config.build_settings['ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES'] = 'NO'
+      end
+    end
+
 To integrate SentrySwift into your Xcode project using Carthage, specify
 it in your `Cartfile`:
 
 .. sourcecode:: ruby
 
-    github "getsentry/sentry-swift" "0.5.0"
+    github "getsentry/sentry-swift" "1.0.0"
 
 Run ``carthage update`` to build the framework and drag the built
 `SentrySwift.framework` and `KSCrash.framework` into your Xcode project.
@@ -112,13 +117,13 @@ You can use the following methods to cause a crash:
 
     .. sourcecode:: swift
 
-        [][0];
+        SentryClient.shared?.crash()
 
 *   Objective-C:
 
     .. sourcecode:: objc
 
-        int *x = 0; *x = 42;
+        [[SentryClient shared] crash];
 
 *Note that if you crash with a debugger attached nothing will happen.*
 

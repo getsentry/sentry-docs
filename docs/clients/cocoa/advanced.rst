@@ -81,6 +81,38 @@ can be called to build the `Event` object like below.
     }
     SentryClient.shared?.captureEvent(event)
 
+.. _cocoa-user-feedback:
+
+User Feedback (iOS only feature)
+--------------------------------
+
+You can activate the User Feedback feature by simply calling `enableUserFeedbackAfterFatalEvent`, which will then in case of an `Fatal` event call a delegate method where you can present the provided User Feedback viewcontroller.
+
+.. sourcecode:: swift
+    
+    SentryClient.shared?.enableUserFeedbackAfterFatalEvent()
+    SentryClient.shared?.delegate = self
+
+Additionally you have to set the `delegate` and implement the `SentryClientUserFeedbackDelegate` protocol. It is your responsability to present the UserFeedback viewcontroller according to your needs, below you'll find the code to present the viewcontroller modally.
+
+.. sourcecode:: swift
+
+    // MARK: SentryClientUserFeedbackDelegate
+
+    func userFeedbackReady() {
+        if let viewControllers = SentryClient.shared?.userFeedbackControllers() {
+            presentViewController(viewControllers.navigationController, animated: true, completion: nil)
+        }
+    }
+    
+    func userFeedbackSent() {
+        // Will be called after userFeedback has been sent
+    }
+
+You can pass a `UserFeedbackViewModel` to the `enableUserFeedbackAfterFatalEvent` to customize the labels of the controller. Alternatively you'll get the complete viewcontrollers with this function `SentryClient.shared?.userFeedbackControllers()`.
+
+Please take a look at our example projects if you need more details on how to integrate it.
+
 ..
   Breadcrumbs
   ```````````
