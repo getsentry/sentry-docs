@@ -133,7 +133,7 @@ Shell: `/bin/bash`
     export SENTRY_PROJECT=___PROJECT_NAME___
     export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
     ERROR=$(sentry-cli upload-dsym 2>&1 >/dev/null)
-    if [ ! -z "$ERROR" ]; then
+    if [ ! $? -eq 0 ]; then
     echo "warning: sentry-cli - $ERROR"
     fi
     else

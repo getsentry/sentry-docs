@@ -111,6 +111,7 @@ Additionally you have to set the `delegate` and implement the `SentryClientUserF
 
 You can pass a `UserFeedbackViewModel` to the `enableUserFeedbackAfterFatalEvent` to customize the labels of the controller. Alternatively you'll get the complete viewcontrollers with this function `SentryClient.shared?.userFeedbackControllers()`.
 
+Please take a look at our example projects if you need more details on how to integrate it.
 
 ..
   Breadcrumbs
