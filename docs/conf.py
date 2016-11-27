@@ -36,7 +36,7 @@ else:
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.intersphinx',
+    # 'sphinx.ext.intersphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -297,7 +297,7 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+# intersphinx_mapping = {'https://docs.python.org/': None}
 
 # Import the sentry extension and activate it
 import sentryext
