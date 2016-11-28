@@ -23,8 +23,6 @@ build-only: design/node_modules
 	@echo '--> Building'
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) docs build/html
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_DIRHTML_BUILD) docs build/dirhtml
-
-	@cp -R design/root-sitemap.xml build/html/sitemap.xml
 	@echo ""
 
 build: update-api-docs build-only
