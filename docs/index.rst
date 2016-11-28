@@ -1,16 +1,21 @@
 Sentry Documentation
 ====================
 
-Welcome to the documentation of the cloud hosted version of Sentry —
-the modern error logging and aggregation platform.  This documentation
-covers everything from getting started to how to integrate it with
-your runtime environment.
+.. raw:: html
+
+    <form method="get" action="search/" class="rigidsearch-form" data-section="hosted">
+      <div class="input-group">
+        <input type="text" class="form-control" name="q" size="40" autofocus="" placeholder="what are you looking for?">
+        <span class="input-group-btn">
+          <input type="submit" class="btn btn-default" value="Search">
+        </span>
+      </div>
+    </form>
 
 Getting Started
 ---------------
 
-There is a lot in those docs.  To get you started, you might find some of
-these links relevant:
+To get you started, you might find some of these links relevant:
 
 * New to Sentry? Have a look at the :doc:`quickstart`.
 * No account yet?  You can sign up for one at `sentry.io <https://sentry.io/signup/>`_.
