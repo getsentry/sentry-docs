@@ -43,7 +43,3 @@
 *   .. class:: platformlink-perl
 
     :doc:`/clients/perl/index` For Perl apps.
-
-*   .. class:: platformlink-actionscript
-
-    :doc:`/clients/actionscript/index` For ActionScript 3.

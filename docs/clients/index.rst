@@ -9,7 +9,6 @@ discussion about supporting it on our `community forum <https://forum.sentry.io>
 .. toctree::
    :hidden:
 
-   actionscript/index
    cocoa/index
    csharp/index
    elixir/index
