@@ -113,42 +113,22 @@ You can pass a `UserFeedbackViewModel` to the `enableUserFeedbackAfterFatalEvent
 
 Please take a look at our example projects if you need more details on how to integrate it.
 
-..
-  Breadcrumbs
-  ```````````
-  Breadcrumbs are used as a way to trace how an error occured. They will queue up on a `SentryClient` based on `type` and will be sent up on the next `error` or `fatal` message.
-  
-  .. sourcecode:: swift
-  
-      @IBAction func onClickBreak(sender: AnyObject) {
-          let breadcrumb = Breadcrumb(uiEventType: "button", target: "onClickBreak")
-          SentryClient.shared?.breadcrumbs.add(breadcrumb)
-      }
-  
-  The client will queue up a maximum of 20 breadcrumbs for each type by default but this can be changed by setting `maxCrumbsForType`.
-  
-  .. sourcecode:: swift
-  
-      SentryClient.shared?.breadcrumbs.maxCrumbsForType = 10
-  
-  All of the different breadcrumb types below can be created...
-  
-  .. sourcecode:: swift
-  
-      // Type: message
-      Breadcrumb(message: "", logger: "", level: .Info, classifier: "")
-      
-      // Type: rpc
-      Breadcrumb(endpoint: "", params: [:], classifier: "")
-      
-      // Type: http_request
-      Breadcrumb(url: "", method: "", headers: [:], statusCode: 404, response: "", reason: "", classifier: "")
-      
-      // Type: query
-      Breadcrumb(query: "", params: "", classifier: "")
-      
-      // Type: ui_event
-      Breadcrumb(uiEventType: "", target: "", classifier: "")
-      
-      // Type: navigation
-      Breadcrumb(to: "", from: "")
+
+Breadcrumbs
+```````````
+Breadcrumbs are used as a way to trace how an error occured. They will queue up on a `SentryClient` and will be sent up with the next event.
+
+.. sourcecode:: swift
+
+    SentryClient.shared?.breadcrumbs.add(Breadcrumb(category: "navigation", to: "point b", from: "point a"))
+
+The client will queue up a maximum of 20 breadcrumbs by default.
+
+With version `1.1.0` we added another iOS only feature which tracks breadcrumbs automatically by calling:
+
+.. sourcecode:: swift
+    
+    SentryClient.shared?.enableAutomaticBreadcrumbTracking()
+
+If called this will track every action sent from a Storyboard and every `viewDidAppear` from an `UIViewController`.
+We use method swizzling for this feature, so in case your app also overwrites one of these methods be sure to checkout our implementation in our repo.
