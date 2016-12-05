@@ -15,7 +15,7 @@ With Bitcode
 
 If `Bitcode <https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/AppThinning/AppThinning.html#//apple_ref/doc/uid/TP40012582-CH35-SW2>`__
 **is enabled** in your project, you will have to upload the dSYM to Sentry
-**after** it has finished processing in the iTunesConnect. The dSYM can be
+**after** it has finished processing in the iTunesConnect. We also recommend using the latest Xcode 8.1 version for submitting your build. The dSYM can be
 downloaded in three ways.
 
 Use Fastlane
