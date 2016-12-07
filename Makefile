@@ -24,6 +24,8 @@ build-only: design/node_modules
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) docs build/html
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_DIRHTML_BUILD) docs build/dirhtml
 	@echo ""
+	@echo '--> Injecting latest Github Tag for Sentry Swift'
+	@./bin/extract-latest-github-tag 'https://api.github.com/repos/getsentry/sentry-swift/releases/latest' './build/html/clients/cocoa/index.html'
 
 build: update-api-docs build-only
 
