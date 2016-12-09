@@ -25,6 +25,10 @@ build-only: design/node_modules
 	@SENTRY_DOC_VARIANT=hosted $(SPHINX_DIRHTML_BUILD) docs build/dirhtml
 	@echo ""
 
+fast-build:
+	@echo '--> Building (fast)'
+	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) docs build/html
+
 build: update-api-docs build-only
 
 clean:
