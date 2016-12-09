@@ -1,4 +1,4 @@
-SPHINX_BUILD=PYTHONIOENCODING=utf-8 SENTRY_FEDERATED_DOCS=1 venv/bin/sphinx-build -v -a -d build/doctrees -T -j 1 -W
+SPHINX_BUILD=PYTHONIOENCODING=utf-8 SENTRY_FEDERATED_DOCS=1 venv/bin/sphinx-build -v -d build/doctrees -T -W
 SPHINX_HTML_BUILD=$(SPHINX_BUILD) -b sentryhtml
 SPHINX_DIRHTML_BUILD=$(SPHINX_BUILD) -b sentrydirhtml
 
@@ -21,13 +21,13 @@ build-only: design/node_modules
 	@cp -R design/templates/* build/theme/sentry
 	@cd design && ./node_modules/.bin/webpack -p
 	@echo '--> Building'
-	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) docs build/html
-	@SENTRY_DOC_VARIANT=hosted $(SPHINX_DIRHTML_BUILD) docs build/dirhtml
+	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) -a docs build/html
+	@SENTRY_DOC_VARIANT=hosted $(SPHINX_DIRHTML_BUILD) -a docs build/dirhtml
 	@echo ""
 
 fast-build:
 	@echo '--> Building (fast)'
-	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) docs build/html
+	@SENTRY_DOC_VARIANT=hosted $(SPHINX_HTML_BUILD) -j 8 docs build/html
 
 build: update-api-docs build-only
 
