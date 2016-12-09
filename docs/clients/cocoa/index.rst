@@ -25,7 +25,7 @@ it in your `Podfile`:
     use_frameworks!
 
     target 'YourApp' do
-        pod 'SentrySwift', :git => 'git@github.com:getsentry/sentry-swift.git', :tag => '#LATEST_GITHUB_TAG#'
+        pod 'SentrySwift', :git => 'https://github.com/getsentry/sentry-swift.git', :tag => '#LATEST_GITHUB_TAG#'
     end
 
 Afterwards run ``pod install``.  In case you encounter problems with
