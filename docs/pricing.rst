@@ -56,7 +56,7 @@ Plans
 Paid
 ~~~~
 
-Every paid plan includes 50,000 of reserved event capacity per month. Additional capacity can be purchased as on-demand or reserved. Reserved capacity can be upgrade mid-month and consumed capacity will be recalculated based on the new reserved capacity level.
+Every paid plan includes 50,000 reserved events per month. Additional capacity can be purchased as on-demand or reserved. Reserved capacity can be upgrade mid-month and consumed capacity will be recalculated based on the new reserved capacity level.
 
 Trial
 `````
