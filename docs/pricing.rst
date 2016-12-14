@@ -66,7 +66,7 @@ The paid plan comes with a 14-day trial of Sentry with unlimited events and team
 Free
 ~~~~
 
-Sentry’s free tier provides Sentry’s core functionality for hobbyist pursuing side projects. It includes 10,000 events per month, 1 team member, and community support.
+Sentry’s free tier is for hobbyists pursuing side projects. It includes all of Sentry's product features, unlimited projects, 10,000 events per month, 1 team member, and community support. Email support is not included.
 
 FAQ
 ---
