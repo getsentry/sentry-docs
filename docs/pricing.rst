@@ -61,12 +61,12 @@ Every paid plan includes 50,000 reserved events per month. Additional capacity c
 Trial
 `````
 
-The paid plan comes with a 14-day trial of Sentry with unlimited events and team members. Trials will have access to all features and email support. Trials have a default rate limit of 500 events/minute. If you need more or an unlimited rate limit during trial, please contact us sales@sentry.io.
+The paid plan comes with a 14-day trial of Sentry with unlimited events and team members. Trials have access to all features and email support. Trials have a default rate limit of 500 events/minute. If you need more or an unlimited rate limit during trial, please contact us sales@sentry.io.
 
 Free
 ~~~~
 
-Sentry’s free tier provides the core of Sentry’s functionality for hobbyist pursuing side projects. It includes 10,000 events per month, 1 team member, and community support.
+Sentry’s free tier provides Sentry’s core functionality for hobbyist pursuing side projects. It includes 10,000 events per month, 1 team member, and community support.
 
 FAQ
 ---
@@ -77,7 +77,7 @@ You are downgraded to the free plan, which has limited members and events.
 
 .. describe:: Who sees my events?
 
-You control who can see events. We allow you to add your team members, as well as share events with anonymous users should you wish.
+You control who can see events. We allow you to add your team members, as well as share events with anonymous users should you wish to do so.
 
 .. describe:: How are reserved capacity discounts applied as my capacity increases?
 
