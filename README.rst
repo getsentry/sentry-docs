@@ -49,6 +49,10 @@ various browser security controls will block some of our JavaScript::
 
     bin/web
 
+If you only need to rebuild pages in the sentry-docs repo (and not the client repo docs), you can use this command::
+
+    make fast-build
+
 How the Docs Build
 ------------------
 
