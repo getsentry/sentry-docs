@@ -1,8 +1,22 @@
 FAQ
 ===
 
-**Q**: Why am I still receiving notification and alert emails?
---------------------------------------------------------------
+**Q**: :ref:`faq-1`
+
+**Q**: :ref:`faq-2`
+
+**Q**: :ref:`faq-3`
+
+**Q**: :ref:`faq-4`
+
+**Q**: :ref:`faq-5`
+
+
+
+.. _faq-1:
+
+Why am I still receiving notification and alert emails?
+-------------------------------------------------------
 
 **A**: In the body of each email you will see the specific reason you are receiving that email.
 
@@ -26,17 +40,19 @@ clicking the **Unsubscribe** button.
 
 .. image:: /../design/images/faq1-1.jpg
 
+.. _faq-2:
 
-**Q**: I accidentally merged issues together, can I unmerge?
-------------------------------------------------------------
+I accidentally merged issues together, can I unmerge?
+-----------------------------------------------------
 
 **A**: No. Merging is a permanent action. However, you can delete the merged
 issue and the future events will be grouped together how they originally would
 be.
 
+.. _faq-3:
 
-**Q**: I want to search all events with a certain tag. How come when I select an issue, the event shows a different value for that tag?
----------------------------------------------------------------------------------------------------------------------------------------
+I want to search all events with a certain tag. How come when I select an issue, the event shows a different value for that tag?
+--------------------------------------------------------------------------------------------------------------------------------
 
 **A**: If you are searching by tag within a certain project, you will get issues that contain at least one event with that given tag.
 If you select a particular issue, you can search after selecting the "Related Events" tab to find the exact events with the tag you are
@@ -59,17 +75,18 @@ Example:
 
 .. image:: /../design/images/faq3-4.png
 
-**Q**: Why am I still receiving emails?
----------------------------------------
+.. _faq-4:
+
+I’m seeing [Filtered] data, what is causing that?
+-------------------------------------------------
 
 **A**: Because answer
 
-**Q**: Why am I still receiving emails?
----------------------------------------
+.. _faq-5:
 
-**A**: Because answer
+What qualifies as a 'Field Name' for Sensitive Data?
+----------------------------------------------------
 
-**Q**: Why am I still receiving emails?
----------------------------------------
+**A**:
 
-**A**: Because answer
+.. image:: /../design/images/faq5.png
