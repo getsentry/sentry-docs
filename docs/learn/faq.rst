@@ -58,29 +58,40 @@ I want to search all events with a certain tag. How come when I select an issue,
 If you select a particular issue, you can search after selecting the "Related Events" tab to find the exact events with the tag you are
 searching for.
 
-Example:
-- Desired tag "release:97eaa54"
+**Example:**
 
-.. image:: /../design/images/faq3-1.jpg
+Desired tag: release:97eaa54
 
-- Selecting the first issue shows you the most recent event.
+.. image:: /../design/images/faq3-1.png
 
-.. image:: /../design/images/faq3-2.jpg
 
-- You can also see in the side bar the breakdown of tags over the events
+Selecting an issue [the first one for example] shows you the most recent event for that issue. Selecting "Related Events" will give you all the events for that particular issue
 
-.. image:: /../design/images/faq3-3.jpg
+.. image:: /../design/images/faq3-2.png
 
-- Searching under "Related Events"
 
-.. image:: /../design/images/faq3-4.png
+Searching under "Related Events" gives you specific events with the desired tag
+
+.. image:: /../design/images/faq3-3.png
+
+
 
 .. _faq-4:
 
 I’m seeing [Filtered] data, what is causing that?
 -------------------------------------------------
 
-**A**: Because answer
+**A**: This is because you have Data Scrubbers enabled.
+
+.. image:: /../design/images/faq4.png
+
+Data Scrubbers can operate at both an **organization** level and a **project** level.
+This is option can be found at ``https://sentry.io/organizations/{organization}/settings/`` and
+at ``https://sentry.io/organizations/{organization_slug}/{project_slug}/settings/``.
+
+If you have Data Scrubbers enabled on the organization level, they are applied to *every* project.
+
+See `Sensitive Data <https://docs.sentry.io/learn/sensitive-data>`__ for more detailed information
 
 .. _faq-5:
 
