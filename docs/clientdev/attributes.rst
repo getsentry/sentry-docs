@@ -25,18 +25,6 @@ The following attributes are required for all events:
           "event_id": "fc6d8c0c43fc4630ad850ee518f1b9d0"
         }
 
-.. describe:: message
-
-    User-readable representation of this event
-
-    Maximum length is 1000 characters.
-
-    .. sourcecode:: json
-
-        {
-          "message": "SyntaxError: Wattttt!"
-        }
-
 .. describe:: timestamp
 
     Indicates when the logging record was created (in the Sentry client).

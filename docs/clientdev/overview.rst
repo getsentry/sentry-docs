@@ -145,7 +145,6 @@ resemble the following:
       "event_id": "fc6d8c0c43fc4630ad850ee518f1b9d0",
       "culprit": "my.module.function_name",
       "timestamp": "2011-05-02T17:41:36",
-      "message": "SyntaxError: Wattttt!",
       "tags": {
         "ios_version": "4.0"
       },
