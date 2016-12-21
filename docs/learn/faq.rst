@@ -20,7 +20,7 @@ Why am I still receiving notification and alert emails?
 
 **A**: In the body of each email you will see the specific reason you are receiving that email.
 
-.. image:: /../design/images/faq1.jpg
+.. image:: /../design/images/faq1-1.png
 
 Select **Unsubscribe** to stop receiving emails for this issue.
 
@@ -38,7 +38,7 @@ You can find which issues you are assigned to by searching ``subscribed:me``.
 Then you can unsubscribe from a particular issue by selecting that issue and
 clicking the **Unsubscribe** button.
 
-.. image:: /../design/images/faq1-1.jpg
+.. image:: /../design/images/faq1-2.png
 
 .. _faq-2:
 
@@ -62,17 +62,17 @@ searching for.
 
 Desired tag: release:97eaa54
 
-.. image:: /../design/images/faq3-1.png
+  .. image:: /../design/images/faq3-1.png
 
 
 Selecting an issue [the first one for example] shows you the most recent event for that issue. Selecting "Related Events" will give you all the events for that particular issue
 
-.. image:: /../design/images/faq3-2.png
+  .. image:: /../design/images/faq3-2.png
 
 
 Searching under "Related Events" gives you specific events with the desired tag
 
-.. image:: /../design/images/faq3-3.png
+  .. image:: /../design/images/faq3-3.png
 
 
 
@@ -95,9 +95,19 @@ See `Sensitive Data <https://docs.sentry.io/learn/sensitive-data>`__ for more de
 
 .. _faq-5:
 
-What qualifies as a 'Field Name' for Sensitive Data?
-----------------------------------------------------
+How come when I search for additional data information, I don't see any results?
+--------------------------------------------------------------------------------
 
-**A**:
+**A**: Additional data such as User Context or Extra Context is not indexed. This information
+must be included as a Tag.
 
-.. image:: /../design/images/faq5.png
+However, for User Context, Sentry provides four field names that are already indexed, and therefore
+searchable if the information is provided:
+
+  .. describe:: id
+  .. describe:: username
+  .. describe:: email
+  .. describe:: ip
+
+
+See `Context <https://docs.sentry.io/learn/context/#context>`__ for more detailed information
