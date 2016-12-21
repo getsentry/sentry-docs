@@ -39,28 +39,6 @@ The following attributes are required for all events:
           "timestamp": "2011-05-02T17:41:36"
         }
 
-.. describe:: level
-
-    The record severity.
-
-    Defaults to ``error``.
-
-    The value needs to be one on the supported level string values.
-
-    .. sourcecode:: json
-
-        {
-          "level": "warning"
-        }
-
-    Acceptable values are:
-
-    * ``fatal``
-    * ``error``
-    * ``warning``
-    * ``info``
-    * ``debug``
-
 .. describe:: logger
 
     The name of the logger which created the record.
@@ -89,6 +67,7 @@ The following attributes are required for all events:
     * ``as3``
     * ``c``
     * ``cfml``
+    * ``cocoa``
     * ``csharp``
     * ``go``
     * ``java``
@@ -116,21 +95,6 @@ The following attributes are required for all events:
 
     .. versionadded:: Sentry 8.4
 
-.. describe:: device
-
-    Information about the Device.
-
-    .. sourcecode:: json
-
-        {
-          "device": {
-            "name": "Windows",
-            "version": "95",
-            "build": "95.0.134.1651"
-          }
-        }
-
-    .. versionadded:: Sentry 8.4
 
 
 Optional Attributes
@@ -139,9 +103,33 @@ Optional Attributes
 Additionally, there are several optional values which Sentry recognizes and are
 highly encouraged:
 
+.. describe:: level
+
+    The record severity.
+
+    Defaults to ``error``.
+
+    The value needs to be one on the supported level string values.
+
+    .. sourcecode:: json
+
+        {
+          "level": "warning"
+        }
+
+    Acceptable values are:
+
+    * ``fatal``
+    * ``error``
+    * ``warning``
+    * ``info``
+    * ``debug``
+
 .. describe:: culprit
 
-    Function call which was the primary perpetrator of this event.
+    The name of the transaction (or culprit) which caused this exception.
+
+    For example, in in a web app, this might be the route name: ``/welcome/``
 
     .. sourcecode:: json
 
@@ -254,6 +242,5 @@ highly encouraged:
         }
 
     .. versionadded:: Protocol version '7'
-
 
 For information about overriding grouping see :ref:`custom-grouping`.
