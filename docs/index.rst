@@ -57,6 +57,7 @@ Looking to get started contributing to Sentry? Our :doc:`internal documentation 
     learn/sso
     learn/user-feedback
     learn/cli
+    learn/faq
 
     clients/index
 
@@ -72,4 +73,3 @@ Looking to get started contributing to Sentry? Our :doc:`internal documentation 
     ssl
     history
     license
-
