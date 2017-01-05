@@ -43,6 +43,7 @@ Looking to get started contributing to Sentry? Our :doc:`internal documentation 
     :hidden:
 
     quickstart
+    pricing
     server/index
     support
 
