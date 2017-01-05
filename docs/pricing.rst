@@ -117,11 +117,11 @@ Reserved capacity discounts are cumulative and graduated. For example, the prici
 | 100,001–150,000   | $0.00020        | $11.50 |
 +-------------------+-----------------+--------+
 
-Total price: $10 (base plan) + $11.50 + $10 = $31.50
+Total price: $12 (base plan) + $11.50 + $10 = $33.50
 
 .. describe:: How am I billed if I expand my reserved capacity mid-annual billing cycle?
 
-When expanding reserved capacity mid-billing year, you are billed the pro-rated amount based on months left in the current billing year, including the current billing month. The current billing month’s accepted events will applied to the new reserved capacity first, before being applied to on-demand.
+When expanding reserved capacity mid-billing year, you are billed the prorated amount based on months left in the current billing year, including the current billing month. The current billing month’s accepted events will applied to the new reserved capacity first, before being applied to on-demand.
 
 Your annual billing period remains the same and is not extended beyond the original period to provide our customers maximum flexibility.
 
