@@ -1,7 +1,7 @@
 Pricing
 =======
 
-All paying customers receive unlimited members and projects, email support, and access to all of Sentry’s product features. Pricing is based on your data volume and has two options. You may either pay for what you use without long term commitments or prepay for significant discounts (up to 75%).
+All paying customers receive unlimited members and projects, email support, and access to all of Sentry’s product features. Pricing is based on your data volume and has two options. You may either pay for what you use without long term commitments or prepay for significant discounts (up to 70%).
 
 Concepts
 --------
@@ -25,7 +25,7 @@ On-demand capacity is billed at the end of each billing cycle. You are charged p
 Reserved Capacity
 `````````````````
 
-Reserved capacity allows you to prepay annually for significant discounts (up to 75%). Your reserved capacity is always applied before on-demand capacity. Unused reserved capacity expires at the end of each billing month.
+Reserved capacity allows you to prepay annually for significant discounts (up to 70%). Your prepaid, reserved capacity is always applied before on-demand capacity. Unused reserved capacity expires at the end of each billing month.
 
 **Reserved Capacity Price Schedule**
 
@@ -59,7 +59,7 @@ All Sentry organizations receive 10,000 events per month of free capacity. You r
 Billing Cycle
 ~~~~~~~~~~~~~
 
-By default, your account will be billed monthly, starting on the date you switch to a paid account. If you purchase reserve capacity, which requires annual billing, the annual billing cycle start date will match the current monthly billing start date. Any unused capacity will be discarded at the end of each monthly billing cycle. The minimum charge for any billing month is $1.
+By default, your account will be billed monthly, starting on the date you switch to a paid plan. If you purchase reserve capacity, which requires annual billing, the annual billing cycle start date will match the current monthly billing start date. Any unused capacity will be discarded at the end of each monthly billing cycle. The minimum charge for any billing month is $1.
 
 Billing Controls
 ~~~~~~~~~~~~~~~~
@@ -77,15 +77,15 @@ You can set the maximum number of events per minute that Sentry will accept. Thi
 Plans
 -----
 
-Paid
+Pro
 ~~~~
 
-Every paid plan includes 50,000 reserved events per month. Additional capacity can be purchased as on-demand or reserved. Reserved capacity can be upgrade mid-month and consumed capacity will be recalculated based on the new reserved capacity level.
+The Pro plan includes 50,000 events per month. Additional capacity can be purchased as pay-per-event, on-demand capacity or prepaid, reserved capacity. Reserved capacity can be upgrade mid-month and any capacity used thus far this month will be recalculated based on the new reserved capacity level.
 
 Trial
 `````
 
-The paid plan comes with a 14-day trial of Sentry with unlimited events and team members. Trials have access to all features and email support. Trials have a default rate limit of 500 events/minute. If you need more or an unlimited rate limit during trial, please contact us sales@sentry.io.
+The Pro plan comes with a 14-day trial of Sentry with unlimited events and team members. Trials have access to all features and email support. Trials have a default rate limit of 500 events/minute. If you need more or an unlimited rate limit during trial, please contact us sales@sentry.io.
 
 Free
 ~~~~
