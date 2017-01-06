@@ -1,7 +1,7 @@
 Pricing
 =======
 
-All paying customers receive unlimited members and projects, email support, and access to every Sentry product features for a base price of $15 monthly (or $144 annually). Pricing is based on your event data volume and has two options. You may either pay for what you use with monthly on-demand capacity or prepay for significant discounts (up to 70%) with reserved capacity.
+All paying customers receive unlimited members and projects, email support, and access to every Sentry product feature for a base price of $15 monthly (or $144 annually). Pricing is based on your event data volume and has two options. You may either pay for what you use with monthly on-demand capacity or prepay for significant discounts (up to 70%) with reserved capacity.
 
 Concepts
 --------
@@ -9,12 +9,12 @@ Concepts
 Events
 ~~~~~~
 
-An event is a crash report (also known as exception or error) that is sent to Sentry’s server for processing. Additional metadata around an event (breadcrumbs, user context, environment, etc) do not count as separate events.
+An event is a crash report (also known as an exception or error) that's sent to Sentry’s server for processing. Additional metadata around an event (breadcrumbs, user context, environment, etc) do not count as separate events.
 
 Capacity
 ~~~~~~~~
 
-Capacity is the total number of events sent by and billed to your organization. Capacity comes in two types: on-demand and reserved.
+Capacity is the total number of events sent by and billed to your organization. You can purchase capacity in two ways: on-demand and reserved.
 
 On-demand Capacity
 ``````````````````
