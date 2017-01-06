@@ -1,7 +1,7 @@
 Pricing
 =======
 
-All paying customers receive unlimited members and projects, email support, and access to all of Sentry’s product features for a base price of $15 monthly ($144 annually). Pricing is based on your data volume and has two options. You may either pay for what you use without long term commitments or prepay for significant discounts (up to 70%).
+All paying customers receive unlimited members and projects, email support, and access to all of Sentry’s product features for a base price of $15 monthly (or $144 annually). Pricing is based on your event data volume and has two options. You may either pay for what you use with monthly on-demand capacity or prepay for significant discounts (up to 70%) with reserved capacity.
 
 Concepts
 --------
@@ -9,7 +9,7 @@ Concepts
 Events
 ~~~~~~
 
-An event is a crash report (also known as exception or error) that is sent to Sentry’s server to be processes. Additional metadata around an event (breadcrumbs, user context, environment, etc) do not count as separate events.
+An event is a crash report (also known as exception or error) that is sent to Sentry’s server for processing. Additional metadata around an event (breadcrumbs, user context, environment, etc) do not count as separate events.
 
 Capacity
 ~~~~~~~~
@@ -120,7 +120,7 @@ Reserved capacity discounts are cumulative and graduated. For example, the prici
 | 100,001–150,000   | $0.00020        | $11.50 |
 +-------------------+-----------------+--------+
 
-Total price: $12 (reserved base plan) + $11.50 + $10 = $33.50 monthly and $402.00 annually.
+Total price: $12 (reserved capacity base plan) + $10 + $11.50 = $33.50 monthly and is billed annually for $402.00.
 
 .. describe:: How am I billed if I expand my reserved capacity mid-annual billing cycle?
 
