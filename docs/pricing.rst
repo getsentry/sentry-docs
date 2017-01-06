@@ -19,7 +19,7 @@ Capacity is the total number of events sent by and billed to your organization. 
 On-demand Capacity
 ``````````````````
 
-On-demand capacity is billed at the end of each billing cycle. You are charged per processed event, rounded up to the nearest cent. You have the ability to set on-demand caps so you can stay on budget. See _`Billing Controls <https://docs.sentry.io/pricing/#billing-controls>`_ for more information. 
+On-demand capacity is billed at the end of each billing cycle. You are charged per processed event, rounded up to the nearest cent. You have the ability to set on-demand caps so you can stay on budget. See :ref:`on-demand-cap` for more information. 
 
 
 Reserved Capacity
@@ -64,6 +64,8 @@ By default, your account will be billed monthly, starting on the date you switch
 
 Billing Controls
 ~~~~~~~~~~~~~~~~
+
+.. _on-demand-cap:
 
 On-demand spending cap
 ``````````````````````
