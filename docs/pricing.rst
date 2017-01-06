@@ -1,7 +1,7 @@
 Pricing
 =======
 
-All paying customers receive unlimited members and projects, email support, and access to every Sentry’s product features for a base price of $15 monthly (or $144 annually). Pricing is based on your event data volume and has two options. You may either pay for what you use with monthly on-demand capacity or prepay for significant discounts (up to 70%) with reserved capacity.
+All paying customers receive unlimited members and projects, email support, and access to every Sentry product features for a base price of $15 monthly (or $144 annually). Pricing is based on your event data volume and has two options. You may either pay for what you use with monthly on-demand capacity or prepay for significant discounts (up to 70%) with reserved capacity.
 
 Concepts
 --------
