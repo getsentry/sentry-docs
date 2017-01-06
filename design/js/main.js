@@ -4,7 +4,6 @@ var qs = require("query-string");
 
 var dsnList = [];
 var apiKeyList = [];
-
 function escape(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -534,6 +533,9 @@ $(function() {
       user = resp.user;
       initInterface();
 
+      ra.identify(user.id);
+      ra.page();
+
       analytics.identify(user.id);
       var orgIdList = resp.projects.map(function(project) { return project.organizationId });
       analytics.group(orgIdList.filter(function(value, index, self) {return self.indexOf(value) === index}));
@@ -545,6 +547,7 @@ $(function() {
       apiKeyList = [dummyApiKey];
       user = {isAuthenticated: false};
       initInterface();
+      ra.page();
       analytics.page()
     }
   });
