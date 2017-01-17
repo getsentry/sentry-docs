@@ -129,7 +129,7 @@ highly encouraged:
 
     The name of the transaction (or culprit) which caused this exception.
 
-    For example, in in a web app, this might be the route name: ``/welcome/``
+    For example, in a web app, this might be the route name: ``/welcome/``
 
     .. sourcecode:: json
 
