@@ -23,10 +23,10 @@ Grab the source code from GitHub:
 Now simply add it to your class path.
 
 
-Configuring the Client
-----------------------
+Configuring the SDK
+-------------------
 
-Create a new instance of the client:
+Create a new instance of the SDK:
 
 .. code-block:: actionscript
 

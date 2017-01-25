@@ -27,7 +27,7 @@ The following attributes are required for all events:
 
 .. describe:: timestamp
 
-    Indicates when the logging record was created (in the Sentry client).
+    Indicates when the logging record was created (in the Sentry SDK).
 
     The Sentry server assumes the time is in UTC.
 
@@ -52,7 +52,7 @@ The following attributes are required for all events:
 
 .. describe:: platform
 
-    A string representing the platform the client is submitting from. This will
+    A string representing the platform the SDK is submitting from. This will
     be used by the Sentry interface to customize various components in the
     interface.
 
@@ -140,7 +140,7 @@ highly encouraged:
 
 .. describe:: server_name
 
-    Identifies the host client from which the event was recorded.
+    Identifies the host SDK from which the event was recorded.
 
     .. sourcecode:: json
 

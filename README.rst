@@ -16,7 +16,7 @@ The structure of this repository is broken into a few separate parts:
   more information have a look into the `Makefile`.
 * ``doc-modules/``: this folder contains references to the submodules for
   the individual split docs.  The ``docs/clients`` folder contains a bunch of
-  symlinks that point to the appropriate place within the client doc
+  symlinks that point to the appropriate place within the SDK doc
   folder for instance.
 * ``design/``: this folder contains the JavaScript, CSS files and
   templates as well as some webpack related stuff for the final design of
@@ -49,7 +49,7 @@ various browser security controls will block some of our JavaScript::
 
     bin/web
 
-If you only need to rebuild pages in the sentry-docs repo (and not the client repo docs), you can use this command::
+If you only need to rebuild pages in the sentry-docs repo (and not the SDK repo docs), you can use this command::
 
     make fast-build
 

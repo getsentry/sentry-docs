@@ -2,18 +2,18 @@ Overview
 ========
 
 This part of the documentation guides you towards implementing a new
-Client for Sentry.  It covers the protocol for event submission as well as
+SDK for Sentry.  It covers the protocol for event submission as well as
 guidelines for how clients should look and behave.
 
-Writing a Client
-----------------
+Writing an SDK
+--------------
 
-A client at its core is simply a set of utilities for capturing various
+An SDK at its core is simply a set of utilities for capturing various
 logging parameters. Given these parameters, it then builds a JSON payload
 which it will send to a Sentry server using some sort of authentication
 method.
 
-The following items are expected of production-ready clients:
+The following items are expected of production-ready SDKs:
 
 * DSN configuration
 * Graceful failures (e.g. Sentry server unreachable)
@@ -36,10 +36,10 @@ Additionally, the following features are highly encouraged:
 Usage for End-users
 -------------------
 
-Generally, a client consists of three steps to the end user, which should
+Generally, an SDK consists of three steps to the end user, which should
 look almost identical no matter the language:
 
-1. Creation of the client (sometimes this is hidden to the user)::
+1. Creation of the SDK (sometimes this is hidden to the user)::
 
       var myClient = new SentryClient('{DSN}');
 
@@ -60,13 +60,13 @@ optional secondary argument which is a map of options::
     })
 
 .. note:: If an empty DSN is passed, you should treat it as valid option
-   which signifies disabling the client.
+   which signifies disabling the SDK.
 
 Which options you support is up to you, but ideally you would provide
 defaults for generic values that can be passed to the capture methods.
 
 Once you accept the options, you should output a logging message
-describing whether the client has been configured actively (as in, it will
+describing whether the SDK has been configured actively (as in, it will
 send to the remote server), or if it has been disabled. This should be
 done with whatever standard logging module is available for your platform.
 
@@ -93,7 +93,7 @@ something like the following::
 .. note:: In the above example, we're passing any options that would
    normally be passed to the capture methods along with the block wrapper.
 
-Finally, provide a CLI to test your client's configuration. Python example::
+Finally, provide a CLI to test your SDK's configuration. Python example::
 
     raven test {DSN}
 
@@ -104,7 +104,7 @@ Ruby example::
 Parsing the DSN
 ---------------
 
-Clients are encouraged to allow arbitrary options via the constructor, but must
+SDKs are encouraged to allow arbitrary options via the constructor, but must
 allow the first argument as a DSN string. This string contains the following bits::
 
     '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
@@ -129,8 +129,8 @@ The resulting POST request would then transmit to::
 
   'https://sentry.example.com/api/1/store/'
 
-.. note:: If any of configuration values are not present, the client should notify the user
-          immediately that they've misconfigured the client.
+.. note:: If any of configuration values are not present, the SDK should notify the user
+          immediately that they've misconfigured the SDK.
 
 Building the JSON Packet
 ------------------------
@@ -176,7 +176,7 @@ body, which acts as an ownership identifier::
       sentry_key=<public api key>,
       sentry_secret=<secret api key>
 
-.. note:: You should include the client version string in the User-Agent
+.. note:: You should include the SDK version string in the User-Agent
    portion of the header, and it will be used if sentry_client is not sent
    in the auth header.
 
@@ -191,11 +191,11 @@ header, it's possible to send these values via the querystring::
 
 .. describe:: sentry_client
 
-    An arbitrary string which identifies your client, including its version.
+    An arbitrary string which identifies your SDK, including its version.
 
     The typical pattern for this is '**client_name**/**client_version**'.
 
-    For example, the Python client might send this as 'raven-python/1.0'.
+    For example, the Python SDK might send this as 'raven-python/1.0'.
 
 .. describe:: sentry_timestamp
 
@@ -203,11 +203,11 @@ header, it's possible to send these values via the querystring::
 
 .. describe:: sentry_key
 
-    The public key which should be provided as part of the client configuration.
+    The public key which should be provided as part of the SDK configuration.
 
 .. describe:: sentry_secret
 
-    The secret key which should be provided as part of the client configuration.
+    The secret key which should be provided as part of the SDK configuration.
 
     .. note:: You should only pass the secret key if you're communicating via
               secure communication to the server. Client-side behavior (such
@@ -250,7 +250,7 @@ The request body should then somewhat resemble the following:
 Request Encoding
 ----------------
 
-Clients are heavily encouraged to gzip or deflate encode the request body
+SDKs are heavily encouraged to gzip or deflate encode the request body
 before sending it to the server to keep the data small.  The preferred
 method for this is to send an ``Content-Encoding: gzip`` header.
 Alternatively the server also accepts gzip compressed json in a base64
@@ -296,7 +296,7 @@ For example, you might get something like this::
 Handling Failures
 -----------------
 
-It is **highly encouraged** that your client handles failures from the
+It is **highly encouraged** that your SDK handles failures from the
 Sentry server gracefully. This means taking care of several key things:
 
 * Soft failures when the Sentry server fails to respond in a reasonable
@@ -305,7 +305,7 @@ Sentry server gracefully. This means taking care of several key things:
   server is offline)
 * Failover to a standard logging module on errors.
 
-For example, the Python client will log any failed requests to the Sentry
+For example, the Python SDK will log any failed requests to the Sentry
 server to a named logger, ``sentry.errors``.  It will also only retry
 every few seconds, based on how many consecutive failures its seen. The
 code for this is simple::
@@ -322,12 +322,12 @@ Tags
 Tags are key/value pairs that describe an event. They should be
 configurable in the following contexts:
 
-* Environment (client-level)
+* Environment (SDK-level)
 * Thread (block-level)
 * Event (as part of capture)
 
 Each of these should inherit its parent. So for example, if you configure
-your client as so::
+your SDK as so::
 
     client = Client(..., {
         'tags': {'foo': 'bar'},
@@ -339,7 +339,7 @@ And then you capture an event::
         'tags': {'foo': 'baz'},
     })
 
-The client should send the following upstream for ``tags``::
+The SDK should send the following upstream for ``tags``::
 
     {
         "tags": [
@@ -358,7 +358,7 @@ present context.
 
 This interface consists of `*_context` methods, access to the `context`
 dictionary as well as a `clear` and `merge` context method.  Method
-methods exist usually depend on the client.  The following methods
+methods exist usually depend on the SDK.  The following methods
 generally make sense:
 
 *   ``client.user_context``

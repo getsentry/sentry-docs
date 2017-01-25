@@ -21,10 +21,10 @@ Installation
     cpanm Sentry::Raven
 
 
-Configuring the Client
-----------------------
+Configuring the SDK
+-------------------
 
-Create a new instance of the client:
+Create a new instance of the SDK:
 
 
 .. code-block:: perl

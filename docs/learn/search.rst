@@ -16,7 +16,7 @@ In the above there are four tokens:
 * ``example error``
 
 The first two are standard search tokens, both using reserved keywords. The third
-is pointing to a custom tag sent by the client. The fourth is passed as part of the
+is pointing to a custom tag sent by the SDK. The fourth is passed as part of the
 issue search query (which uses a CONTAINS match).
 
 The following tokens are reserved and known to Sentry:

@@ -14,8 +14,8 @@ amongst any issue captured in its lifecycle, and includes the following componen
     Arbitrary unstructured data which is stored with an event sample
 
 Context is considered to be request state, and thus should be cleared
-out at the beginning (or end) of each operation. Clients like the JavaScript
-client usually won't need to worry about this as they are generally are not
+out at the beginning (or end) of each operation. SDKs like the JavaScript
+SDK usually won't need to worry about this as they are generally are not
 long lived.
 
 Tagging Events
@@ -42,10 +42,10 @@ and the last time a value has been seen. Even more so, we keep track of
 the number of distinct tags, and can assist in you determining hotspots
 for various issues.
 
-Most clients generally support configuring tags at the global client level
+Most SDKs generally support configuring tags at the global SDK level
 configuration, as well as on a per event basis.
 
-For example, in the JavaScript client:
+For example, in the JavaScript SDK:
 
 .. code-block:: javascript
 
@@ -94,7 +94,7 @@ the user to be captured:
 Additionally you can provide arbitrary key/value pairs beyond the reserved names and those
 will be stored with the user.
 
-Capturing the user is fairly straight forward. For example, in the JavaScript client:
+Capturing the user is fairly straight forward. For example, in the JavaScript SDK:
 
 .. code-block:: javascript
 
@@ -113,7 +113,7 @@ and are simply used to add additional information about what might be happening.
 Extra context can generally be passed in both the event constructor, as well as the
 global context state:
 
-For example, in the JavaScript client:
+For example, in the JavaScript SDK:
 
 .. code-block:: javascript
 

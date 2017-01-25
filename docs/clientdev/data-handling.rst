@@ -4,10 +4,10 @@ Data Handling
 Sensitive Data
 --------------
 
-Clients should provide some mechanism for scrubbing data. Ideally through
+SDKs should provide some mechanism for scrubbing data. Ideally through
 an extensible interface that the user can customize the behavior of.
 
-This is generally done as part of the client configuration::
+This is generally done as part of the SDK configuration::
 
     client = Client(..., {
         'processors': ['processor.className'],
@@ -37,7 +37,7 @@ We recommend scrubbing the following values:
 * Session cookies.
 * The Authentication header (HTTP).
 
-Keep in mind, that if your client is passing extra interface data (e.g.
+Keep in mind, that if your SDK is passing extra interface data (e.g.
 HTTP POST variables) you will also want to scrub those interfaces. Given
 that, it is a good idea to simply recursively scrub most variables other
 than predefined things (like HTTP headers).

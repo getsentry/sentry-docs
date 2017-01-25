@@ -34,7 +34,7 @@ Inbound Data Filters
 --------------------
 
 In some cases the data you're receiving in Sentry is hard to filter, or you simply
-don't have the ability to update the client's application to apply the filters. Due
+don't have the ability to update the SDK's configuration to apply the filters. Due
 to this Sentry provides several ways to filter data server-side, which will also
 apply before any rate limits are checked.
 

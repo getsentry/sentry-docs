@@ -19,7 +19,7 @@ Configure an SDK
 Sentry captures data by using an SDK within your application's runtime. These
 are platform specific, and allow Sentry to have a deep understanding of both
 how your application works. In case your environment is very specific, you can
-also roll your own SDK using our document :doc:`Client API <clientdev/index>`.
+also roll your own SDK using our document :doc:`SDK API <clientdev/index>`.
 
 Popular integrations are:
 
@@ -34,7 +34,7 @@ Popular integrations are:
 *   :doc:`Elixir <clients/elixir/index>`
 
 For exact configuration for the integration consult the corresponding
-documentation.  For all clients however, the basics are the same.
+documentation.  For all SDKs however, the basics are the same.
 
 .. _configure-the-dsn:
 
@@ -44,7 +44,7 @@ About the DSN
 After you complete setting up a project in Sentry, you'll be given a value
 which we call a *DSN*, or *Data Source Name*.  It looks a lot like a
 standard URL, but it's actually just a representation of the configuration
-required by the Raven clients.  It consists of a few pieces, including the
+required by the Sentry SDKs.  It consists of a few pieces, including the
 protocol, public and secret keys, the server address, and the project
 identifier.
 
@@ -64,24 +64,24 @@ It is composed of five important pieces:
 
 * The Protocol used. This can be one of the following: http or https.
 
-* The public and secret keys to authenticate the client.
+* The public and secret keys to authenticate the SDK.
 
 * The destination Sentry server.
 
 * The project ID which the authenticated user is bound to.
 
-You'll have a few options for plugging the DSN into the client, depending
+You'll have a few options for plugging the DSN into the SDK, depending
 on what it supports. At the very least, most SDKs will allow you to set
 it up as the ``SENTRY_DSN`` environment variable or by passing it into the
-client constructor.
+SDK's constructor.
 
-For example for the JavaScript client it works roughly like this::
+For example for the JavaScript SDK it works roughly like this::
 
     import raven
     raven.Client('___DSN___')
 
 Note: If you're using Heroku, and you've added Hosted Sentry via the
-standard addon hooks, most clients will automatically pick up the
+standard addon hooks, most SDKs will automatically pick up the
 ``SENTRY_DSN`` environment variable that we've already configured for you.
 
 
