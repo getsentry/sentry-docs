@@ -4,7 +4,7 @@ Context Management
 All SDKs should have the concept of a concurrency safe context storage.
 What this means heavily depends on the language.  The basic idea is that a
 user of the Raven library can call a method to provide additional context
-information from whererever the user has access to the SDK object in a
+information from whererever the user has access to the client object in a
 safe way.
 
 In general this is implemented as a thread local in most languages, but in

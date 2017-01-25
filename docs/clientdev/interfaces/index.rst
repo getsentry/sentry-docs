@@ -9,7 +9,7 @@ including storing stacktraces, HTTP request information, and other
 metadata.
 
 For the most part interfaces are an evolving part of Sentry.  Like with
-attributes, SDK are expected to assume more can appear at any point in
+attributes, SDKs are expected to assume more can appear at any point in
 the future.  More than that however, for on-premise installations of
 Sentry the interfaces can be customized so SDK libraries should ideally
 be written in a way that custom interfaces can be emitted.
