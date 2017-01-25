@@ -8,7 +8,7 @@ guidelines for how clients should look and behave.
 Writing an SDK
 --------------
 
-A SDK at its core is simply a set of utilities for capturing various
+An SDK at its core is simply a set of utilities for capturing various
 logging parameters. Given these parameters, it then builds a JSON payload
 which it will send to a Sentry server using some sort of authentication
 method.
@@ -210,7 +210,7 @@ header, it's possible to send these values via the querystring::
     The secret key which should be provided as part of the SDK configuration.
 
     .. note:: You should only pass the secret key if you're communicating via
-              secure communication to the server. SDK-side behavior (such
+              secure communication to the server. Client-side behavior (such
               as JavaScript) should use CORS, and only pass the public key.
 
 A Working Example

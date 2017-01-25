@@ -11,7 +11,7 @@ Certificates
 
 Due to the complexities of root CAs and distributions, you may find
 that your SDK does not contain the root certificate authority used
-by sentry.io.  While we bundle this in official raven SDK,
+by sentry.io.  While we bundle this in official Sentry SDKs,
 that's not true for everything.
 
 Our CA is DigiCert, a widely trusted name. Below you'll find our

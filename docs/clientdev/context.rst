@@ -14,11 +14,11 @@ something that makes sense in the environment.
 User's Perspective
 ------------------
 
-From the user's perspective of the raven SDK there should be two types
+From the user's perspective of the Sentry SDK there should be two types
 of APIs:
 
 ``RavenClient.context``:
-    Given a raven SDK object it should be possible to get a reference
+    Given a Sentry SDK object it should be possible to get a reference
     to the underlying context object for manual updating.  This might not
     always be something that makes sense in the context of the language,
     so it's possible to hide this.
@@ -56,11 +56,11 @@ things like ``http_context`` automatically.
 Context Clearing
 ----------------
 
-For most SDK there should be a method to clear the context.  This is
+For most SDKs there should be a method to clear the context.  This is
 especially imporant in multithreaded environments where threads might be
 re-used.  The preferred method to clear the context would be automatically
 if that is something the SDK can provide.  As mentioned earlier the
-framework integrations in the SDK should do this whenever possible.
+framework integrations in the SDKs should do this whenever possible.
 
 For manual clearing ``client.context.clear()`` is the preferred method.
 If the context cannot be directly exposed, ``client.clearContext()`` or a

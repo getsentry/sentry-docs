@@ -34,7 +34,7 @@ Popular integrations are:
 *   :doc:`Elixir <clients/elixir/index>`
 
 For exact configuration for the integration consult the corresponding
-documentation.  For all SDK however, the basics are the same.
+documentation.  For all SDKs however, the basics are the same.
 
 .. _configure-the-dsn:
 
@@ -44,7 +44,7 @@ About the DSN
 After you complete setting up a project in Sentry, you'll be given a value
 which we call a *DSN*, or *Data Source Name*.  It looks a lot like a
 standard URL, but it's actually just a representation of the configuration
-required by the Raven SDKs.  It consists of a few pieces, including the
+required by the Sentry SDKs.  It consists of a few pieces, including the
 protocol, public and secret keys, the server address, and the project
 identifier.
 
@@ -73,7 +73,7 @@ It is composed of five important pieces:
 You'll have a few options for plugging the DSN into the SDK, depending
 on what it supports. At the very least, most SDKs will allow you to set
 it up as the ``SENTRY_DSN`` environment variable or by passing it into the
-SDK constructor.
+SDK's constructor.
 
 For example for the JavaScript SDK it works roughly like this::
 

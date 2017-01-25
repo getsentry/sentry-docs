@@ -14,7 +14,7 @@ around many of the open source repos (and some of the Sentry dependencies)
 you'll see a common thread: StarCraft 2. Originally we started with the
 name Sentry representing a Protoss unit that had a shield, which was
 fairly fitting as Sentry helps shield you from problems, but doesn't
-prevent them, just like the unit. When we named the SDK we went with
+prevent them, just like the unit. When we named the first SDK we went with
 Raven, which represents a Terran air unit that also happens to place
 Sentry turrets.
 
