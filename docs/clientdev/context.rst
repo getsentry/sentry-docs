@@ -1,10 +1,10 @@
 Context Management
 ==================
 
-All clients should have the concept of a concurrency safe context storage.
+All SDKs should have the concept of a concurrency safe context storage.
 What this means heavily depends on the language.  The basic idea is that a
 user of the Raven library can call a method to provide additional context
-information from whererever the user has access to the client object in a
+information from whererever the user has access to the SDK object in a
 safe way.
 
 In general this is implemented as a thread local in most languages, but in
@@ -14,18 +14,18 @@ something that makes sense in the environment.
 User's Perspective
 ------------------
 
-From the user's perspective of the raven client there should be two types
+From the user's perspective of the raven SDK there should be two types
 of APIs:
 
 ``RavenClient.context``:
-    Given a raven client object it should be possible to get a reference
+    Given a raven SDK object it should be possible to get a reference
     to the underlying context object for manual updating.  This might not
     always be something that makes sense in the context of the language,
     so it's possible to hide this.
 
     If it is possible in the language, then it's encouraged that this is a
     thread local accessor to not break concurrent environments.  For
-    instance the Python client has a different context for each thread to
+    instance the Python SDK has a different context for each thread to
     support concurrent web frameworks and multithreaded environments.
 
     If the context is exposed it needs to provide two methods:
@@ -38,7 +38,7 @@ of APIs:
 
 ``RavenClient.*_context``:
     These are methods that update the context according to the name of the
-    method.  Which of those methods exist is up to the client developer,
+    method.  Which of those methods exist is up to the SDK developer,
     however as a general rule those should exist:
 
     *   ``user_context``
@@ -48,7 +48,7 @@ of APIs:
 
 Ideally a user never needs to be concerned with clearing the context.
 Framework integrations should do this automatically as far as possible.
-For instance if a client integration is configured for a web framework
+For instance if a SDK integration is configured for a web framework
 it should automatically hook the framework in a way where it will clear
 the context at the end of every request and ideally also already invoke
 things like ``http_context`` automatically.
@@ -56,11 +56,11 @@ things like ``http_context`` automatically.
 Context Clearing
 ----------------
 
-For most clients there should be a method to clear the context.  This is
+For most SDK there should be a method to clear the context.  This is
 especially imporant in multithreaded environments where threads might be
 re-used.  The preferred method to clear the context would be automatically
-if that is something the client can provide.  As mentioned earlier the
-framework integrations in the clients should do this whenever possible.
+if that is something the SDK can provide.  As mentioned earlier the
+framework integrations in the SDK should do this whenever possible.
 
 For manual clearing ``client.context.clear()`` is the preferred method.
 If the context cannot be directly exposed, ``client.clearContext()`` or a
@@ -100,7 +100,7 @@ The following methods are recommended to exist:
 
         client.context.merge({'tags': data})
 
-For some clients it also makes sense to provide additional helpers to
+For some SDKs it also makes sense to provide additional helpers to
 bind http context and similar things to common language patterns.  For
 instance if you expect a CGI/WSGI/Rack environment you could provide
 ``client.cgi_context`` / ``client.wsgi_context`` methods.

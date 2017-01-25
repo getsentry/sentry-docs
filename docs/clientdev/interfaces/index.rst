@@ -9,9 +9,9 @@ including storing stacktraces, HTTP request information, and other
 metadata.
 
 For the most part interfaces are an evolving part of Sentry.  Like with
-attributes, clients are expected to assume more can appear at any point in
+attributes, SDK are expected to assume more can appear at any point in
 the future.  More than that however, for on-premise installations of
-Sentry the interfaces can be customized so client libraries should ideally
+Sentry the interfaces can be customized so SDK libraries should ideally
 be written in a way that custom interfaces can be emitted.
 
 Interfaces are typically identified by their full canonical path as it

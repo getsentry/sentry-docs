@@ -34,7 +34,7 @@ Inbound Data Filters
 --------------------
 
 In some cases the data you're receiving in Sentry is hard to filter, or you simply
-don't have the ability to update the client's application to apply the filters. Due
+don't have the ability to update the SDK's application to apply the filters. Due
 to this Sentry provides several ways to filter data server-side, which will also
 apply before any rate limits are checked.
 
@@ -48,9 +48,9 @@ as web crawlers or old browsers, and can be enabled as needed by the specific ap
 IP Blocklist
 ~~~~~~~~~~~~
 
-If you have a rogue client you may find yourself simple wanting to block that IP from
+If you have a rogue SDK you may find yourself simple wanting to block that IP from
 sending data. Sentry supports this by going to **[Project] » General** and adding the
-IP addresses (or subnets) under the **Client Security** section.
+IP addresses (or subnets) under the **SDK Security** section.
 
 Attributes Limits
 -----------------

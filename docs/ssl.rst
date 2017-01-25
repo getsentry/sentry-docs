@@ -10,8 +10,8 @@ Certificates
 ------------
 
 Due to the complexities of root CAs and distributions, you may find
-that your client does not contain the root certificate authority used
-by sentry.io.  While we bundle this in official raven clients,
+that your SDK does not contain the root certificate authority used
+by sentry.io.  While we bundle this in official raven SDK,
 that's not true for everything.
 
 Our CA is DigiCert, a widely trusted name. Below you'll find our
@@ -28,10 +28,10 @@ Bundles:
 -   `getsentry.pem <https://sentry.io/_static/getsentry/ssl/getsentry.pem>`_
 -   `getsentry.p7b <https://sentry.io/_static/getsentry/ssl/getsentry.p7b>`_
 
-Using this varies from case to case. Many clients you will have to
+Using this varies from case to case. Many SDKs you will have to
 explicit specify the path to the certificate bundle.  Covering this is
 outside of the scope of these docs, so we suggest referring to your
-specific client's documentation.
+specific SDK's documentation.
 
 Note on Java:
 

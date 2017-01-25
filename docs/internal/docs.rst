@@ -92,7 +92,7 @@ The repository for the documentation can be found on our github home:
 `getsentry/sentry-docs <https://github.com/getsentry/sentry-docs>`_.
 
 Some documentation sources are not contained within that repository but
-referenced through submodules from the raven clients or the sentry server.
+referenced through submodules from the raven SDKs or the sentry server.
 You can easily find those repositories from the github repository as they
 are cross linked.
 

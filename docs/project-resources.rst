@@ -15,7 +15,7 @@ used services:
   Source project.
 * `The GitHub Organization <https://github.com/getsentry>`_ for the entire
   list of Open Source projects which also includes many of the Raven
-  clients.
+  SDKs.
 * `Mailing List <https://groups.google.com/group/getsentry>`_ on Google
   Groups.
 * `#sentry IRC Channel <irc://irc.freenode.net/sentry>`_ on

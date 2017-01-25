@@ -25,9 +25,9 @@ We offer community support through at `forum.sentry.io <https://forum.sentry.io/
 is a great place to provide product feedback, get help and advice with various issues,
 as well as to take part in the larger Sentry community.
 
-If you're looking for support on a specific client, check the
-documentation specific to that client. Several clients are maintained by
-the Sentry team, whereas others are not. Nearly every client also has its
+If you're looking for support on a specific SDK, check the
+documentation specific to that SDK. Several SDKs are maintained by
+the Sentry team, whereas others are not. Nearly every SDK also has its
 own bug tracker, which is generally where the code lives (i.e. on GitHub).
 
 Paid Support

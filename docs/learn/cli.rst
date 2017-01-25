@@ -79,7 +79,7 @@ config key in the config file):
 ``SENTRY_PROJECT`` (`defaults.project`):
     the slug of the project to use for a command.
 (`http.keepalive`):
-    This ini only setting is used to control the behavior of the client
+    This ini only setting is used to control the behavior of the SDK
     with regards to HTTP keepalives.  The default is `true` but it can
     be set to `false` to disable keepalive support.
 ``http_proxy`` (`http.proxy_url`):
@@ -93,7 +93,7 @@ config key in the config file):
     This ini only setting sets the proxy password in case proxy
     authentication is required.
 ``SENTRY_LOG_LEVEL`` (`log.level`):
-    Configures the log level for the client.  The default is ``warning``.
+    Configures the log level for the SDK.  The default is ``warning``.
     If you want to see what the library is doing you can set it to
     ``info`` which will spit out more information which might help to
     debug some issues with permissions.

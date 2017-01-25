@@ -36,7 +36,7 @@ stacktrace.  This grouping is fairly involved but easy enough to
 understand.
 
 The first and most important part is that Sentry only groups by stack
-trace frames reported in the application.  Not all clients might report
+trace frames reported in the application.  Not all SDKs might report
 this, but if that information is provided, it's used for grouping.  This
 means that if the stacktrace is modified from one event to another
 exclusively in parts of the stack that is not related to the application,
@@ -58,8 +58,8 @@ dealt with:
     :ref:`raven-js-sourcemaps`.
 *   if you modify your stacktrace by introducing a new level through the
     use of decorators, your stacktrace will change and so will the
-    grouping.  For this matter many clients support hiding irrelevant
-    stack trace frames.  For instance the Python client will skip all
+    grouping.  For this matter many SDKs support hiding irrelevant
+    stack trace frames.  For instance the Python SDK will skip all
     stack frames with a local variable called ``__traceback_hide__`` set
     to `True`).
 
@@ -90,7 +90,7 @@ not available, it uses the message attribute.
 Customize Grouping with Fingerprints
 ------------------------------------
 
-For some very advanced use cases clients can override the Sentry default
+For some very advanced use cases SDKs can override the Sentry default
 grouping.
 
 Two common cases generally come up here:
@@ -103,7 +103,7 @@ Two common cases generally come up here:
 
 To work around these the Sentry protocol supports a ``fingerprint`` attribute.
 
-In supported clients, this attribute can be passed with the event information,
+In supported SDKs, this attribute can be passed with the event information,
 and should be an array of strings:
 
 .. code-block:: javascript
