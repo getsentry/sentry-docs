@@ -257,7 +257,13 @@ function initRigidSearch() {
     if (path === 'index') {
       return urlBase;
     }
-    return urlBase + '/' + path + '/';
+    // Handle a url fragment from search result
+    var bits = path.split('#');
+    var url = urlBase + '/' + bits[0] + '/';
+    if (bits.length === 2) {
+        url += '#' + bits[1];
+    }
+    return url;
   }
 
   function getSearchUrl(newParams) {
