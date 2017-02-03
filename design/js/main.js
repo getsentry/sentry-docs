@@ -279,7 +279,7 @@ function initRigidSearch() {
 
   function renderPath(path) {
     var el = $('<span class="path"></span>');
-    path.split(/\//g).forEach(function (item) {
+    path.split(/[#\/]/g).forEach(function (item) {
       el.append($('<span class="seg"></span>').text(item));
     });
     return el;
