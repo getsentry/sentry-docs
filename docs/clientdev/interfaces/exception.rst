@@ -43,8 +43,7 @@ to an exception.
       "values": [{
         "type": "ValueError",
         "value": "My exception value",
-        "module": "__builtins__"
+        "module": "__builtins__",
         "stacktrace": {sentry.interfaces.Stacktrace}
-        }
       }]
     }
