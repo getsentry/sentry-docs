@@ -4,8 +4,9 @@ Breadcrumbs Interface
 The breadcrumbs interface specifies a series of application events, or "breadcrumbs",
 that occurred before the main event.
 
-An array of breadcrumbs. Breadcrumb entries are ordered from oldest to newest. The last breadcrumb
-in the array should be the last entry before the main event fired.
+The value of the interface is an array of breadcrumb objects. Breadcrumb entries are
+ordered from oldest to newest. The last breadcrumb in the array should be the last
+entry before the main event fired.
 
 Each breadcrumb has a few properties of which at least ``timestamp``
 and ``category`` must be provided.  The rest is optional and depending on what
@@ -20,7 +21,7 @@ is provided the rendering might be different.
   requests and ``navigation`` for navigation events.  More about types
   later.
 ``message``
-  If a message is provided it's rendered as text where whitespace is
+  If a message is provided it's rendered as text and the whitespace is
   preserved.  Very long text might be abbreviated in the UI.
 ``data``
   Data associated with this breadcrumb. Contains a sub-object whose

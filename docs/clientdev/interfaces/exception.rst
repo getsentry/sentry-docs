@@ -4,7 +4,7 @@ Exception Interface
 An exception consists of a list of values. In most cases, this list
 contains a single exception, with an optional stacktrace interface.
 Multiple values represent a chained exception, and should be sent
-oldest to newest. That is, if you're code does this:
+oldest to newest. That is, if your code does this:
 
 .. sourcecode:: python
 

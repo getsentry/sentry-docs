@@ -37,7 +37,7 @@ We recommend scrubbing the following values:
 * Session cookies.
 * The Authentication header (HTTP).
 
-Keep in mind, that if your SDK is passing extra interface data (e.g.
+Keep in mind that if your SDK is passing extra interface data (e.g.
 HTTP POST variables) you will also want to scrub those interfaces. Given
 that, it is a good idea to simply recursively scrub most variables other
 than predefined things (like HTTP headers).
@@ -58,6 +58,6 @@ as things like extra data, or tags.
 - Most contextual variables are limited to 512 characters.
 - Extra contextual data is limited to 4096 characters.
 - Messages are limited to ~10kb.
-- Http data (the body) is limited to 2048 characters.
+- HTTP data (the body) is limited to 2048 characters.
 - Stacktraces are limited to 50 frames. If more are sent, data will be
   removed from the middle of the stack.
