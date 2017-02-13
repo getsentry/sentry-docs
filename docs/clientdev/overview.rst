@@ -36,10 +36,10 @@ Additionally, the following features are highly encouraged:
 Usage for End-users
 -------------------
 
-Generally, an SDK consists of three steps to the end user, which should
+Generally, using an SDK consists of three steps for the end user, which should
 look almost identical no matter the language:
 
-1. Creation of the SDK (sometimes this is hidden to the user)::
+1. Creation of the SDK (sometimes this is hidden from the user)::
 
       var myClient = new SentryClient('{DSN}');
 
@@ -83,7 +83,7 @@ arguments). For example::
         'tags': {'foo': 'bar'},
     })
 
-If your platform supports block statements, it is recommend you provide
+If your platform supports block statements, it is recommended that you provide
 something like the following::
 
     with client.captureExceptions(tags={'foo': 'bar'}):
@@ -156,10 +156,10 @@ resemble the following:
     }
 
 The body of the event can carry attributes or interface values.  The
-difference between is that attributes are very barebones key/value pairs
+difference between them is that attributes are very barebones key/value pairs
 (for the most part) and interfaces are rich styled interface elements.
-As an example for attributes there is the ``event_id``, the ``tags`` etc.
-whereas the exception is an interface.
+Examples of attribute are ``event_id`` or ``tags`` whereas the ``exception``
+key is an interface.
 
 For a list of all supported attributes see :doc:`attributes`.  For a list
 of built-in interfaces see :doc:`interfaces/index`.
@@ -177,7 +177,7 @@ body, which acts as an ownership identifier::
       sentry_secret=<secret api key>
 
 .. note:: You should include the SDK version string in the User-Agent
-   portion of the header, and it will be used if sentry_client is not sent
+   portion of the header, and it will be used if ``sentry_client`` is not sent
    in the auth header.
 
 In situations where it's not possible to send the custom ``X-Sentry-Auth``

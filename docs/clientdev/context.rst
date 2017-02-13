@@ -1,14 +1,13 @@
 Context Management
 ==================
 
-All SDKs should have the concept of a concurrency safe context storage.
-What this means heavily depends on the language.  The basic idea is that a
-user of the Raven library can call a method to provide additional context
-information from whererever the user has access to the client object in a
-safe way.
+All SDKs should have the concept of concurrency safe context storage.
+What this means depends on the language.  The basic idea is that a
+user of the Raven library can call a method to safely provide additional
+context information from whererever the user has access to the client object.
 
-In general this is implemented as a thread local in most languages, but in
-some (like JavaScript) it can be global under the assumption that this is
+This is implemented as a thread local in most languages, but in some
+(such as JavaScript) it might be global under the assumption that this is
 something that makes sense in the environment.
 
 User's Perspective
@@ -21,10 +20,10 @@ of APIs:
     Given a Sentry SDK object it should be possible to get a reference
     to the underlying context object for manual updating.  This might not
     always be something that makes sense in the context of the language,
-    so it's possible to hide this.
+    so it's sometimes reasonable to hide this.
 
-    If it is possible in the language, then it's encouraged that this is a
-    thread local accessor to not break concurrent environments.  For
+    If it is possible in the language, then it's encouraged that this be a
+    thread local accessor so as not to break concurrent environments.  For
     instance the Python SDK has a different context for each thread to
     support concurrent web frameworks and multithreaded environments.
 
@@ -39,7 +38,7 @@ of APIs:
 ``RavenClient.*_context``:
     These are methods that update the context according to the name of the
     method.  Which of those methods exist is up to the SDK developer,
-    however as a general rule those should exist:
+    however as a general rule these should exist:
 
     *   ``user_context``
     *   ``tags_context``
@@ -58,7 +57,7 @@ Context Clearing
 
 For most SDKs there should be a method to clear the context.  This is
 especially imporant in multithreaded environments where threads might be
-re-used.  The preferred method to clear the context would be automatically
+re-used.  It is preferred that the context be cleared automatically
 if that is something the SDK can provide.  As mentioned earlier the
 framework integrations in the SDKs should do this whenever possible.
 
@@ -69,10 +68,9 @@ method with a similar name should exist.
 Common Context Methods
 ----------------------
 
-The following methods are recommended to exist:
+It is recommended that the following methods exist:
 
 ``client.user_context(data)``:
-
     Updates the user context for future events.
 
     Equivalent to this::
@@ -101,6 +99,6 @@ The following methods are recommended to exist:
         client.context.merge({'tags': data})
 
 For some SDKs it also makes sense to provide additional helpers to
-bind http context and similar things to common language patterns.  For
+bind the HTTP context and similar things to common language patterns. For
 instance if you expect a CGI/WSGI/Rack environment you could provide
 ``client.cgi_context`` / ``client.wsgi_context`` methods.

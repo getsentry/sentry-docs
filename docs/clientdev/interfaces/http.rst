@@ -1,7 +1,7 @@
 HTTP Interface
 ==============
 
-The Request information is stored in the Http interface. Two arguments
+The Request information is stored in the HTTP interface. Two arguments
 are required: url and ``method``.
 
 The ``env`` variable is a compounded dictionary of HTTP headers as

@@ -6,7 +6,7 @@ basic information about events.  These are things like the unique ID of an
 event, the human readable message etc.
 
 Attributes are separate from :doc:`interfaces/index` which provide very specific
-and tailored data such as exception data, stacktraces etc.
+and tailored data such as exception data, stacktraces, etc.
 
 Required Attributes
 -------------------
@@ -224,7 +224,7 @@ highly encouraged:
 
 .. describe:: fingerprint
 
-    An array of strings used to dictate the deduplicating for this event.
+    An array of strings used to dictate the deduplication of this event.
 
     A value of ``{{ default }}`` will be replaced with the built-in behavior, thus
     allowing you to extend it, or completely replace it.
