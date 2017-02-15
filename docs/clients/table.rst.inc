@@ -26,7 +26,7 @@
 
 *   .. class:: platformlink-java
 
-    :doc:`/clients/java/index` For Java and Android.
+    :doc:`/clients/java/index` For Java, Android, Scala, Clojure, Kotlin and others.
 
 *   .. class:: platformlink-csharp
 
