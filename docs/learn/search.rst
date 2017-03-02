@@ -100,5 +100,20 @@ The following tokens are reserved and known to Sentry:
     - less than (``<``)
     - less than or equal (``<=``)
 
+.. describe:: timesSeen
+
+    Restrict results to issues that have been seen exactly, at least, or at
+    most some number of times.
+
+    Exact match:
+
+    ``timesSeen:10``
+
+    Upper or lower bounds:
+
+    * ``timesSeen:>10``
+    * ``timesSeen:>=10``
+    * ``timesSeen:<10``
+    * ``timesSeen:<=10``
 
 Additionally you can use any tag you've specified as a token.
