@@ -19,7 +19,7 @@ Capacity is the total number of events sent by and billed to your organization. 
 On-demand Capacity
 ``````````````````
 
-On-demand capacity is billed at the end of each billing cycle. You are charged per processed event, rounded up to the nearest cent. You have the ability to set on-demand caps so you can stay on budget. See :ref:`on-demand-cap` for more information. 
+On-demand capacity is billed at the end of each billing cycle. You are charged per processed event, rounded up to the nearest cent. You have the ability to set on-demand caps so you can stay on budget. See :ref:`on-demand-cap` for more information.
 
 
 Reserved Capacity
@@ -96,12 +96,12 @@ Free
 Sentry’s free tier is for hobbyists pursuing side projects. It includes all of Sentry's product features, unlimited projects, 10,000 events per month, 1 team member, and community support. Email support is not included.
 
 Managing your event volume
------
+--------------------------
 If your projects have a high volume of events, you can control how many errors Sentry receives in a few ways:
 
 - Within the SDK you can reduce the data volume you’re sending by sampling.
 - Turn on :doc:`inbound data filters`<learn/quotas/inbound-data-filters> for legacy browsers, browser extensions, localhost, and web crawlers. Any filtered events will not count towards your quota.
-- For JavaScript projects, use `whitelistUrls` and `ignoreErrors` 
+- For JavaScript projects, use `whitelistUrls` and `ignoreErrors`
 - Set a per-project rate limit to specify the maximum percentage of your account quota an individual project can consume at **[Organization] » Settings » Rate Limit**.
 - When you migrate to the new plan you’ll also be able to set an organization-wide hourly rate limit to prevent massive spikes from consuming your quota at **[Organization] » Settings » Rate Limit**.
 
