@@ -83,7 +83,7 @@ Plans
 Pro
 ~~~~
 
-The Pro plan includes 50,000 events per month for $15 billed monthly or $144 billed annually. Additional capacity can be purchased as pay-per-event with on-demand capacity or prepaid annually with reserved capacity. Reserved capacity can be upgraded mid-month and any capacity already used in the current billing cycle will be recalculated based on the new reserved capacity level. 
+The Pro plan includes 50,000 events per month for $15 billed monthly or $144 billed annually. Additional capacity can be purchased as pay-per-event with on-demand capacity or prepaid annually with reserved capacity. Reserved capacity can be upgraded mid-month and any capacity already used in the current billing cycle will be recalculated based on the new reserved capacity level.
 
 Trial
 `````
@@ -100,7 +100,7 @@ Managing your event volume
 If your projects have a high volume of events, you can control how many errors Sentry receives in a few ways:
 
 - Within the SDK you can reduce the data volume you’re sending by sampling.
-- Turn on :doc:`inbound data filters`<learn/quotas/inbound-data-filters> for legacy browsers, browser extensions, localhost, and web crawlers. Any filtered events will not count towards your quota.
+- Turn on :ref:`inbound-data-filters` for legacy browsers, browser extensions, localhost, and web crawlers. Any filtered events will not count towards your quota.
 - For JavaScript projects, use `whitelistUrls` and `ignoreErrors`
 - Set a per-project rate limit to specify the maximum percentage of your account quota an individual project can consume at **[Organization] » Settings » Rate Limit**.
 - When you migrate to the new plan you’ll also be able to set an organization-wide hourly rate limit to prevent massive spikes from consuming your quota at **[Organization] » Settings » Rate Limit**.
