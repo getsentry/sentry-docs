@@ -30,6 +30,8 @@ You can set an organization-wide per-project rate limit via the "Rate Limits"
 link on your dashboard. For example, you might want to set this to "90%", which
 means no individual project can send more than 90% of your organization's quota.
 
+.. _inbound-data-filters:
+
 Inbound Data Filters
 --------------------
 
