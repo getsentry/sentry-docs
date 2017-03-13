@@ -12,7 +12,7 @@
 
     :doc:`/clients/node/index` Including Express, Koa, and Connect.
 
-*   .. class:: platformlink-react
+*   .. class:: platformlink-react-native
 
     :doc:`/clients/react-native/index` For iOS.
 
