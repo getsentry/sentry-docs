@@ -12,6 +12,10 @@
 
     :doc:`/clients/node/index` Including Express, Koa, and Connect.
 
+*   .. class:: platformlink-react
+
+    :doc:`/clients/react-native/index` For iOS.
+
 *   .. class:: platformlink-php
 
     :doc:`/clients/php/index` Including Laravel, Symfony, and Monolog.
