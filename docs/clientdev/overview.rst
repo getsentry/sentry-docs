@@ -133,7 +133,7 @@ The resulting POST request would then transmit to::
 .. note:: If any of configuration values are not present, the SDK should notify the user
           immediately that they've misconfigured the SDK.
 
-Event sampling
+Event Sampling
 --------------
 
 SDKs should allow the user to configure what percentage of events are actually
@@ -141,9 +141,9 @@ sent to the server (the rest should be silently ignored). For example:
 
 .. sourcecode:: python
 
-    sample_rate = options.get('sample_rate') or 1.0
+    sample_rate = options.get('sample_rate', 1.0)
 
-    # assuming random() returns a value between 0.0 and 1.0
+    # assuming random() returns a value between 0.0 (inclusive) and 1.0 (exclusive)
     if random() < sample_rate:
         raven.send(data)
 
