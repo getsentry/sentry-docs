@@ -14,7 +14,7 @@
 
 *   .. class:: platformlink-react-native
 
-    :doc:`/clients/react-native/index` For iOS.
+    :doc:`/clients/react-native/index` For iOS and Android.
 
 *   .. class:: platformlink-php
 
