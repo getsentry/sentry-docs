@@ -541,11 +541,6 @@ $(function() {
 
       ra.identify(user.id);
       ra.page();
-
-      analytics.identify(user.id);
-      var orgIdList = resp.projects.map(function(project) { return project.organizationId });
-      analytics.group(orgIdList.filter(function(value, index, self) {return self.indexOf(value) === index}));
-      analytics.page();
     },
     error: function() {
       console.error('Failed to load user data from Sentry');
@@ -554,7 +549,6 @@ $(function() {
       user = {isAuthenticated: false};
       initInterface();
       ra.page();
-      analytics.page()
     }
   });
 
