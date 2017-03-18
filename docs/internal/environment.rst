@@ -51,12 +51,17 @@ Python
 ******
 
 While OS X ships with an acceptable version of Python, installing the latest binaries from Homebrew
-is recommended. In addition, it is highly recommended to separate your libraries per-environment
-with the use of virtual environments. One of the easiest ways to curate your virtual environments is
-with `virtualenv-burrito <https://github.com/brainsik/virtualenv-burrito#install>`_.
-Run the following to install and configure brewed Python::
+is recommended. Run the following to install and configure brewed Python::
 
     brew install python
+
+Python Virtual Environment
+**************************
+
+It is necessary for some functionality in the development environment to be running inside a Python
+virtual environment. One of the easiest ways to curate your virtual environments is
+with `virtualenv-burrito <https://github.com/brainsik/virtualenv-burrito#install>`_.
+
 
 JavaScript
 **********
@@ -74,7 +79,9 @@ and clone down a local version::
 
     git clone https://github.com/<your github username>/sentry.git
 
-cd into the project root and run the following to install both the Python and JavaScript
+Setup and activate a Python 2.7 virtual environment in the project root.
+
+Run the following to install both the Python and JavaScript
 libraries that Sentry depends on and some extra pieces that hold the development environment
 together::
 
