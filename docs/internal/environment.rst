@@ -69,9 +69,14 @@ the Node Package Manager(npm) run::
 Installing Libraries
 ********************
 
-Once all of your dependencies are installed, head over to the root of ``getsentry/sentry``.
-Run the following to install both the Python and JavaScript libraries that Sentry depends on
-and some extra pieces that hold the development environment together::
+Once all of your dependencies are installed, fork the repo at https://github.com/getsentry/sentry
+and clone down a local version::
+
+    git clone https://github.com/<your github username>/sentry.git
+
+cd into the project root and run the following to install both the Python and JavaScript
+libraries that Sentry depends on and some extra pieces that hold the development environment
+together::
 
     make develop
 
