@@ -85,6 +85,9 @@ Run the following to install both the Python and JavaScript
 libraries that Sentry depends on and some extra pieces that hold the development environment
 together::
 
+.. note:: It is important to be running inside a virtual environment before running the
+  following command.  If you have not set this up, do so now.  
+
     make develop
 
 .. note:: Some libraries depend on OpenSSL. Install via ``brew install openssl``, and make

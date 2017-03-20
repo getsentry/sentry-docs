@@ -80,6 +80,13 @@ The following tokens are reserved and known to Sentry:
 
     ``age:+12h age:-24h``
 
+    Supported suffixes:
+
+    ``m -> minutes``
+    ``h -> hours``
+    ``d -> days``
+    ``w -> weeks``
+
 .. describe:: event.timestamp
 
     Restrict results to issues in which an event occurred at the given timestamp. This filter can
