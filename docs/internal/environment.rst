@@ -87,6 +87,10 @@ together::
 
     make develop
 
+.. note:: It is important to be running inside a virtual environment before running the
+   following command.  If you have not set this up, do so now.
+
+
 .. note:: Some libraries depend on OpenSSL. Install via ``brew install openssl``, and make
   sure to ``export LDFLAGS=-L/usr/local/opt/openssl/lib`` while building, so that the
   ``openssl`` libraries can be found by the build process.
