@@ -92,6 +92,15 @@ config key in the config file):
 (`http.proxy_password`):
     This ini only setting sets the proxy password in case proxy
     authentication is required.
+(`http.verify_ssl`):
+    This can be used to disable SSL verification when set to false.  You
+    should never do that unless you are working with a known self signed
+    server locally.
+(`http.check_ssl_revoke`):
+    If this is set to false then SSL revocation checks are disabled on
+    Windows.  This can be useful when working with a corporate SSL MITM
+    proxy that does not properly implement revocation checks.  Do not use
+    this unless absolutely necessary.
 ``SENTRY_LOG_LEVEL`` (`log.level`):
     Configures the log level for the SDK.  The default is ``warning``.
     If you want to see what the library is doing you can set it to
