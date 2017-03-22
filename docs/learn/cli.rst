@@ -12,8 +12,23 @@ as basic release management.
 Installation
 ------------
 
-At present `sentry-cli` is only supported on OS X and Linux.  It can be
-installed from a terminal with the following command::
+Depending on your platform there are different methods available to
+install `sentry-cli`.
+
+Manual Download
+```````````````
+
+You can find the list of releases on `the github release page
+<https://github.com/getsentry/sentry-cli/releases/>`__.  We provide
+executables for Linux, OS X and Windows.  It's a single file download and
+upon receiving the file you can rename it to just ``sentry-cli`` or
+``sentry-cli.exe`` to use it.
+
+Automatic Installation
+``````````````````````
+
+If you are on OS X or Linux you can use the automated downloader which
+will fetch the latest release version for you and install it::
 
     curl -sL https://sentry.io/get-cli/ | bash
 
@@ -25,10 +40,45 @@ To verify it's installed correctly you can bring up the help::
 
     $ sentry-cli --help
 
+Installation via NPM
+````````````````````
+
+There is also the option to install `sentry-cli` via npm for specialized
+use cases.  This for instance is useful for build servers.  The package is
+called ``sentry-cli-binary`` and in the post installation it will download
+the appropriate release binary::
+
+    $ npm install sentry-cli-binary
+
+You can then find it in the `.bin` folder::
+
+    $ ./node_modules/.bin/sentry-cli --help
+
+Installation via Homebrew
+`````````````````````````
+
+If you are on OS X you can install `sentry-cli` via homebrew::
+
+    $ brew install getsentry/tools/sentry-cli
+
+Authentication
+--------------
+
 To sign the cli tool in you can use the `login` command which will guide you
 through it::
 
     $ sentry-cli login
+
+If you want to manually authenticate ``sentry-cli`` you can to your to
+your auth token settings in your user account (User Icon -> API) and
+generate a new token.  Afterwards you can export the ``SENTRY_AUTH_TOKEN``
+environment variable::
+
+    export SENTRY_AUTH_TOKEN=your-auth-token
+
+Alternatively you can provide the ``--auth-token`` command line parameter
+whenever you invoke `sentry-cli` or add it to your `.sentryclirc` config
+file.
 
 .. sentry:edition:: on-premise
 
@@ -107,19 +157,6 @@ config key in the config file):
     ``info`` which will spit out more information which might help to
     debug some issues with permissions.
 
-Authentication
---------------
-
-To authenticate ``sentry-cli`` you can to your to your auth token settings
-in your user account (User Icon -> API) and generate a new token.
-Afterwards you can export the ``SENTRY_AUTH_TOKEN`` environment variable::
-
-    export SENTRY_AUTH_TOKEN=your-auth-token
-
-Alternatively you can provide the ``--auth-token`` command line parameter
-whenever you invoke `sentry-cli` or add it to your `.sentryclirc` config
-file.
-
 Validating The Config
 ---------------------
 
@@ -131,4 +168,6 @@ Updating and Uninstalling
 -------------------------
 
 You can use ``sentry-cli update`` and ``sentry-cli uninstall`` to update
-or uninstall the sentry command line interface.
+or uninstall the sentry command line interface.  These commands might be
+unavailable in certain situations (for instance if you install `sentry-cli`
+with homebrew).
