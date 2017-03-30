@@ -57,7 +57,7 @@ Looking to get started contributing to Sentry? Our :doc:`internal documentation 
     learn/sensitive-data
     learn/sso
     learn/user-feedback
-    learn/cli
+    learn/cli/index
 
     clients/index
 
