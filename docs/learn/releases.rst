@@ -33,6 +33,49 @@ and the previous release's HEAD sha. For more information, you can check
 out our `API <https://docs.sentry.io/api/releases/post-organization-releases/>`_ or
 `CLI <https://docs.sentry.io/learn/cli/releases/#commit-integration>`_ docs.
 
+An example of what this might look like is:
+
+.. code-block:: python
+
+    import subprocess
+    import requests
+
+    SENTRY_API_TOKEN = <my_api_token>
+    sha_of_previous_release = <previous_sha>
+
+    log = subprocess.Popen([
+        'git',
+        '--no-pager',
+        'log',
+        '--no-merges',
+        '--no-color',
+        '--pretty=%H',
+        '%s..HEAD' % (sha_of_previous_release,),
+    ], stdout=subprocess.PIPE)
+
+    # you can choose to send all commits or just
+    # the beginning and end commits
+    commits = log.stdout.read().strip().split('\n')
+    head_commits = [{
+        'repository': 'my-repo-name',
+        'previousId': sha_of_previous_release,
+        'currentId': commits[0],
+    }]
+
+    data = {
+        'commits': [{'id': c, 'repository': 'my-repo-name'} for c in commits],
+        'headCommits': head_commits,
+        'version': commits[0],
+        'projects': ['my-project', 'my-other-project'],
+    }
+
+    res = requests.post(
+        'https://sentry.io/api/0/organizations/my-org/releases/',
+        json=data,
+        headers={'Authorization': 'Bearer {}'.format(SENTRY_API_TOKEN)},
+    )
+
+
 
 Tell Sentry About Deploys
 -------------------------
