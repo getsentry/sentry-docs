@@ -34,7 +34,25 @@ and the previous release's HEAD sha. For more information, you can check
 out our :doc:`API <../api/releases/post-organization-releases/>` or
 :ref:`CLI <sentry-cli-commit-integration>` docs.
 
-An example of what this might look like is:
+The easiest way to get started with this would be something like:
+
+.. code-block:: bash
+
+    # Create a new release
+    $ curl https://sentry.io/api/0/organizations/:organization_slug/releases/ \
+      -X POST \
+      -H 'Authorization: Bearer {TOKEN}' \
+      -H 'Content-Type: application/json'
+      -d '{"version":"2da95dfb052f477380608d59d32b4ab9","refs":[{"repository":"my-repo","commit":"2da95dfb052f477380608d59d32b4ab9","previousCommit":"1e6223108647a7bfc040ef0ca5c92f68ff0dd993"}],"projects":["my-project","my-other-project"]}' \
+
+    {
+      "dateCreated": "2015-03-06T04:51:32.723Z",
+      "version": "2da95dfb052f477380608d59d32b4ab9"
+    }
+
+Alternately, if you'd like to have more control over what order the
+commits appear in, you can send us a list of commits. That might look
+something like this:
 
 .. code-block:: python
 
