@@ -16,11 +16,11 @@ release version.
 Setting up releases in Sentry is helpful as it will give you access
 to the following features:
 
-# Marking issues as resolved in the next release
-# Learn which release an issue was first introduced or last seen in
-# Resolving issues via commit messages (requires setting up commits, see below)
-# Suggested owners on issues (requires setting up commits, see below)
-# Detailed deploy emails to inform Sentry users of when their code is going out (requires setting up commits and deploys, see below)
+- Marking issues as resolved in the next release
+- Learn which release an issue was first introduced or last seen in
+- Resolving issues via commit messages (requires setting up commits, see below)
+- Suggested owners on issues (requires setting up commits, see below)
+- Detailed deploy emails to inform Sentry users of when their code is going out (requires setting up commits and deploys, see below)
 
 Releases are better with commits
 --------------------------------
