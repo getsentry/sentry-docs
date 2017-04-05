@@ -42,7 +42,7 @@ The easiest way to get started with this would be something like:
     curl https://sentry.io/api/0/organizations/:organization_slug/releases/ \
       -X POST \
       -H 'Authorization: Bearer {TOKEN}' \
-      -H 'Content-Type: application/json'\
+      -H 'Content-Type: application/json' \
       -d '
       {
         "version": "2da95dfb052f477380608d59d32b4ab9",
@@ -57,7 +57,7 @@ The easiest way to get started with this would be something like:
 
 Alternately, if you'd like to have more control over what order the
 commits appear in, you can send us a list of commits. That might look
-something like this:
+like this:
 
 .. code-block:: python
 
@@ -77,18 +77,10 @@ something like this:
         '%s..HEAD' % (sha_of_previous_release,),
     ], stdout=subprocess.PIPE)
 
-    # you can choose to send all commits or just
-    # the beginning and end commits
     commits = log.stdout.read().strip().split('\n')
-    head_commits = [{
-        'repository': 'my-repo-name',
-        'previousId': sha_of_previous_release,
-        'currentId': commits[0],
-    }]
 
     data = {
         'commits': [{'id': c, 'repository': 'my-repo-name'} for c in commits],
-        'headCommits': head_commits,
         'version': commits[0],
         'projects': ['my-project', 'my-other-project'],
     }
