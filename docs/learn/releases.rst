@@ -16,12 +16,11 @@ release version.
 Setting up releases in Sentry is helpful as it will give you access
 to the following features:
 
-#. Marking issues as resolved in the next release
-#. Learn in which release an issue was first introduced / last seen
-#. Resolving issues via commit messages (requires setting up commits, see below)
-#. Suggested assignees (requires setting up commits, see below)
-#. Detailed deploy emails to inform Sentry users of when their code is going out (requires setting up commits and deploys, see below)
-
+# Marking issues as resolved in the next release
+# Learn which release an issue was first introduced or last seen in
+# Resolving issues via commit messages (requires setting up commits, see below)
+# Suggested owners on issues (requires setting up commits, see below)
+# Detailed deploy emails to inform Sentry users of when their code is going out (requires setting up commits and deploys, see below)
 
 Releases are better with commits
 --------------------------------
@@ -32,7 +31,13 @@ associate commits with a release either by sending us a list of commit
 ids (shas) with their repos or just by including the current HEAD sha
 and, optionally, the previous release's HEAD sha.
 
-The easiest way to get started with this would be something like:
+To get started, you'll need to first add the repository. To do this, go to
+your organization's dashboard, click "Repositories", and click
+"Add Repository".
+
+Once added, Sentry will automatically collect commits for the repository,
+and you can begin referencing it in releases. To do so, you'l; you'll need
+to send ``refs`` along when you create a release:
 
 .. code-block:: bash
 
@@ -53,10 +58,14 @@ The easiest way to get started with this would be something like:
     }
     '
 
-In the above example, ``previousCommit`` is optional. If you don't
-specify a ``previousCommit``, we'll look at the previous release's
-``commit``. If it's your first time specifying `refs` with a release,
-we'll start fetching commits in your next release.
+In the above example, we're telling Sentry that this release contains
+the ``my-repo`` repository, in which the current version (HEAD) is
+``2da95dfb052f477380608d59d32b4ab9``. We're also giving it the previous
+version (``previousCommit``), which is optional, but will help Sentry
+be more accurate with building the commit list. If it's your first time
+specifying `refs` with a release and you dont send along ``previousCommit``
+we won't have a commit log, but we'll start fetching commits in your next
+release.
 
 Alternately, if you'd like to have more control over what order the
 commits appear in, you can send us a list of all commits. That might
@@ -94,21 +103,55 @@ look like this:
         headers={'Authorization': 'Bearer {}'.format(SENTRY_API_TOKEN)},
     )
 
+For more information, you can check out our
+:doc:`API <../api/releases/post-organization-releases/>`
+or :ref:`CLI <sentry-cli-commit-integration>` docs.
+
+
+Resolving issues via commits
+----------------------------
+
 Once you are sending commits (either as ``commits`` or ``refs``), you
 can start including ``fixes <SHORT-ID>`` in your commit messages. Then,
 once we identify a commit as being included in a release, we'll
 automatically resolve that issue. You can find the short issue id at
 the top of the issue details page, next to the assignee dropdown.
 
-We'll also start suggesting assignees for issues based on changes
-to files in an issue's stack trace once we have commit data.
+For example, a commit message might look like this:
 
-For more information, you can check out our
-:doc:`API <../api/releases/post-organization-releases/>`
-or :ref:`CLI <sentry-cli-commit-integration>` docs.
+.. code-block::
+
+    Prevent empty queries on users
+
+    Fixes SENTRY-317
 
 
-Tell Sentry About Deploys
+When Sentry sees this commit, we'll automatically annotate the matching
+issue with a reference to the commit, and upon deploy, we'll mark the issue
+as resolved.
+
+Suggested owners
+----------------
+
+Once we have commit data associated with releases, we'll be able to start
+suggesting owners for issues. To do this, we look at the commit author's email
+address and automatically pair it up with any primary or secondary member
+addresses in the system.
+
+Once we've identified the authors, we'll compare the stacktrace of the issue
+to the files changed within a given release. If we find any potential owners,
+we'll suggest them on the issues details page.
+
+A note on Github
+~~~~~~~~~~~~~~~~
+
+If you're using GitHub, you may have a privacy setting enabled which prevents
+Sentry from identifying the user's real email address. If you wish to use the
+suggested owners feature, you'll need to ensure "Keep my email address private"
+is unchecked in `GitHub's account settings <https://github.com/settings/emails>`_.
+
+
+Tell Sentry about deploys
 -------------------------
 
 Letting Sentry know when you've deployed a given release to an environment
