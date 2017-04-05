@@ -97,8 +97,30 @@ Tell Sentry About Deploys
 -------------------------
 
 Letting Sentry know when you've deployed a given release to an environment
-unlocks another feature: Deploy emails. Deploy emails are automatically
-sent to users who have committed to a release that is being deployed.
+unlocks another feature: Deploy emails.
+
+To let Sentry know you've deployed, you'd just send an additional request
+after creating a release via our API:
+
+.. code-block:: bash
+
+    # Create a new deploy
+    curl https://sentry.io/api/0/organizations/:organization_slug/releases/:release_version/deploys/ \
+      -X POST \
+      -H 'Authorization: Bearer {TOKEN}' \
+      -H 'Content-Type: application/json' \
+      -d '
+      {
+        "environment": "production",
+        "name": "my-deploy"
+    }
+    '
+
+If you've already configured a repo with Sentry, when you create a deploy,
+we'll automatically send an email to Sentry users who have committed to
+the release that is being deployed.
+
+For more details, check out our :doc:`API <../api/releases/post-release-deploys/>` docs.
 
 
 Release Artifacts
