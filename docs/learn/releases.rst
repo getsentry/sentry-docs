@@ -119,7 +119,7 @@ the top of the issue details page, next to the assignee dropdown.
 
 For example, a commit message might look like this:
 
-.. code-block::
+.. code-block:: bash
 
     Prevent empty queries on users
 
