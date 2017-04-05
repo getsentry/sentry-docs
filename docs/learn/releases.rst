@@ -30,9 +30,7 @@ If you connect a repository in Sentry, we'll create a webhook to start
 collecting commit data. Once you're ready to create a release, you can
 associate commits with a release either by sending us a list of commit
 ids (shas) with their repos or just by including the current HEAD sha
-and the previous release's HEAD sha. For more information, you can check
-out our :doc:`API <../api/releases/post-organization-releases/>` or
-:ref:`CLI <sentry-cli-commit-integration>` docs.
+and, optionally, the previous release's HEAD sha.
 
 The easiest way to get started with this would be something like:
 
@@ -55,9 +53,14 @@ The easiest way to get started with this would be something like:
     }
     '
 
+In the above example, ``previousCommit`` is optional. If you don't
+specify a ``previousCommit``, we'll look at the previous release's
+``commit``. If it's your first time specifying `refs` with a release,
+we'll start fetching commits in your next release.
+
 Alternately, if you'd like to have more control over what order the
-commits appear in, you can send us a list of commits. That might look
-like this:
+commits appear in, you can send us a list of all commits. That might
+look like this:
 
 .. code-block:: python
 
@@ -91,6 +94,18 @@ like this:
         headers={'Authorization': 'Bearer {}'.format(SENTRY_API_TOKEN)},
     )
 
+Once you are sending commits (either as ``commits`` or ``refs``), you
+can start including ``fixes <SHORT-ID>`` in your commit messages. Then,
+once we identify a commit as being included in a release, we'll
+automatically resolve that issue. You can find the short issue id at
+the top of the issue details page, next to the assignee dropdown.
+
+We'll also start suggesting assignees for issues based on changes
+to files in an issue's stack trace once we have commit data.
+
+For more information, you can check out our
+:doc:`API <../api/releases/post-organization-releases/>`
+or :ref:`CLI <sentry-cli-commit-integration>` docs.
 
 
 Tell Sentry About Deploys
