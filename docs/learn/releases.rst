@@ -36,8 +36,10 @@ your organization's dashboard, click "Repositories", and click
 "Add Repository".
 
 Once added, Sentry will automatically collect commits for the repository,
-and you can begin referencing it in releases. To do so, you'l; you'll need
-to send ``refs`` along when you create a release:
+and you can begin referencing it in releases. To do so, you'll need
+to send ``refs`` along when you create a release. **Note:** You need to
+make sure you're using :ref:`Auth Tokens <auth-tokens>` **not**
+:ref:`API Keys <api-keys>`, which are deprecated.
 
 .. code-block:: bash
 
