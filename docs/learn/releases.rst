@@ -11,7 +11,9 @@ Releases are used by Sentry to provide you with additional context
 when determining the cause of an issue. You set a release context in
 your SDK, and can either create a release via our API or allow Sentry
 to create one automatically when we receive an event with a new
-release version.
+release version. Once a release is created, we'll provide an overview in the UI:
+
+.. image:: img/releases-overview.png
 
 Setting up releases in Sentry is helpful as it will give you access
 to the following features:
