@@ -1,8 +1,10 @@
 Releases
 ========
 
-.. note:: Some features of releases are still in beta. If you'd like to check them out, consider joining our early adopter program.
+.. container:: admonition
 
+    **Note:** Some features of releases are still in beta. If you'd like to
+    check them out, consider joining our early adopter program.
 
 What is a Release?
 ------------------
