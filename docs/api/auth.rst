@@ -1,6 +1,8 @@
 Authentication
 ==============
 
+.. _auth-tokens:
+
 Auth Tokens
 -----------
 
@@ -13,6 +15,8 @@ authenticate as a user account with the API.
 
 You can `find or create authentication tokens within Sentry <https://sentry.io/api/>`_.
 
+
+.. _api-keys:
 
 API Keys
 --------
