@@ -48,8 +48,7 @@ required by the Sentry SDKs.  It consists of a few pieces, including the
 protocol, public and secret keys, the server address, and the project
 identifier.
 
-The DSN can be found in Sentry by navigation to Account -> Projects ->
-[Project Name] -> [Member Name]. Its template resembles the following::
+The DSN can be found in Sentry by navigating to [Project Name] -> Project Settings -> Client Keys (DSN). Its template resembles the following::
 
     '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
 
