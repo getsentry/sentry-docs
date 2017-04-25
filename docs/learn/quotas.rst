@@ -3,7 +3,7 @@ Quotas & Filtering
 
 A subscription to Sentry primarily entails a resource quota on the amount
 of events you can send within a window of time. These windows generally
-apply to a 60-second bucket, and your subsription will provide a rate limit
+apply to a 60-second bucket, and your subscription will provide a rate limit
 which is the maximum number of events the server will accept during that
 period. When this threshold has been reached the server will respond with
 a 429 HTTP status code.
