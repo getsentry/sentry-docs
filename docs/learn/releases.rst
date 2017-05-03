@@ -37,7 +37,8 @@ and, optionally, the previous release's HEAD sha.
 
 To get started, you'll need to first add the repository. To do this, go to
 your organization's dashboard, click "Repositories", and click
-"Add Repository".
+"Add Repository". You'll need to be an Owner or Manager of your Sentry
+organization to do this.
 
 Once added, Sentry will automatically collect commits for the repository,
 and you can begin referencing it in releases. To do so, you'll need
