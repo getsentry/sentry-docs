@@ -70,9 +70,10 @@ the ``my-repo`` repository, in which the current version (HEAD) is
 ``2da95dfb052f477380608d59d32b4ab9``. We're also giving it the previous
 version (``previousCommit``), which is optional, but will help Sentry
 be more accurate with building the commit list. If it's your first time
-specifying `refs` with a release and you dont send along ``previousCommit``
-we won't have a commit log, but we'll start fetching commits in your next
-release.
+specifying `refs` with a release and you don't send along ``previousCommit``
+we'll fetch the 10 most recent commits for that repository.
+For subsequent releases, we'll be able to determine the commits
+involved based on the previous release.
 
 Alternately, if you'd like to have more control over what order the
 commits appear in, you can send us a list of all commits. That might
