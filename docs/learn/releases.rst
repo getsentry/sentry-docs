@@ -75,6 +75,15 @@ we'll fetch the 10 most recent commits for that repository.
 For subsequent releases, we'll be able to determine the commits
 involved based on the previous release.
 
+For a more convenient method you can use the :ref:`sentry-cli` tool which
+can automatically push releases and commits up for you::
+
+    export SENTRY_AUTH_TOKEN=...
+    export SENTRY_ORG=organization-slug
+    VERSION=$(sentry-cli releases propose-version)
+    sentry-cli releases new -p my-project -p my-other-project $VERSION
+    sentry-cli releases set-commits --auto $VERSION
+
 Alternately, if you'd like to have more control over what order the
 commits appear in, you can send us a list of all commits. That might
 look like this:
@@ -114,7 +123,6 @@ look like this:
 For more information, you can check out our
 :doc:`API <../api/releases/post-organization-releases/>`
 or :ref:`CLI <sentry-cli-commit-integration>` docs.
-
 
 Resolving issues via commits
 ----------------------------
