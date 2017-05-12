@@ -57,7 +57,7 @@ make sure you're using :ref:`Auth Tokens <auth-tokens>` **not**
       {
         "version": "2da95dfb052f477380608d59d32b4ab9",
         "refs": [{
-            "repository":"my-repo",
+            "repository":"owner-name/repo-name",
             "commit":"2da95dfb052f477380608d59d32b4ab9",
             "previousCommit":"1e6223108647a7bfc040ef0ca5c92f68ff0dd993"
         }],
@@ -66,7 +66,8 @@ make sure you're using :ref:`Auth Tokens <auth-tokens>` **not**
     '
 
 In the above example, we're telling Sentry that this release contains
-the ``my-repo`` repository, in which the current version (HEAD) is
+the ``owner-name/repo-name`` repository (this name should match the name
+you entered when setting up the repo), in which the current version (HEAD) is
 ``2da95dfb052f477380608d59d32b4ab9``. We're also giving it the previous
 version (``previousCommit``), which is optional, but will help Sentry
 be more accurate with building the commit list. If it's your first time
