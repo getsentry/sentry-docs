@@ -26,9 +26,16 @@ more about increasing capacity.
 Rate Limiting Projects
 ----------------------
 
-You can set an organization-wide per-project rate limit via the "Rate Limits"
-link on your dashboard. For example, you might want to set this to "90%", which
-means no individual project can send more than 90% of your organization's quota.
+If you're on our Large or Enterprise plan we support per-key rate limits. These allow
+you to set the maximum volume of events a key will accept during a period of time.
+
+For example, you may have a project in production that generates a lot of noise. With
+a rate limit you could set the maximum amount of data to "500 events per minute".
+Additionally you could create a second key for the same project for your staging
+environment which is unlimited, ensuring your QA process is still untouched.
+
+To setup rate limits, simply navigate to the Project you wish to limit, go to Project Settings,
+Client Keys, and then select the key you wish to enable them on.
 
 .. _inbound-data-filters:
 
