@@ -35,7 +35,7 @@ Additionally you could create a second key for the same project for your staging
 environment which is unlimited, ensuring your QA process is still untouched.
 
 To setup rate limits, simply navigate to the Project you wish to limit, go to
-**[Project] » CLient Keys**. Select on an individual key or create a new one, and you'll
+**[Project] » Client Keys**. Select on an individual key or create a new one, and you'll
 be able to define a rate limit as well as see a breakdown of events received by that key.
 
 .. _inbound-data-filters:
