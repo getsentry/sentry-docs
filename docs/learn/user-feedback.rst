@@ -26,7 +26,7 @@ For example, in Django this looks like the following:
 .. sourcecode:: html+django
 
     <!-- Sentry JS SDK 2.1.+ required -->
-    <script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
+    <script src="https://cdn.ravenjs.com/3.15.0/raven.min.js"></script>
 
     {% if request.sentry.id %}
       <script>
@@ -57,7 +57,7 @@ Then simply check for the ID in the template, and open the feedback dialog:
 
 .. sourcecode:: html+django
 
-    <script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
+    <script src="https://cdn.ravenjs.com/3.15.0/raven.min.js"></script>
 
     {% if sentry_event_id %}
       <script>
