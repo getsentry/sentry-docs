@@ -203,4 +203,4 @@ Release Artifacts
 
 Javascript and iOS projects can utilize release artifacts to unminify or
 symbolicate error stack traces. To learn more, please check out our
-:ref:`iOS <sentry-swift-debug-symbols>` and :ref:`JavaScript <raven-js-sourcemaps>` docs.
+:ref:`iOS <sentry-cocoa-debug-symbols>` and :ref:`JavaScript <raven-js-sourcemaps>` docs.
