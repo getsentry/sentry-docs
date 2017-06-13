@@ -20,6 +20,7 @@ Sentry integrates seamlessly with your favorite apps and services.
 - Pivotal Tracker
 - Pushover
 - Redmine
+- :doc:`sessionstack`
 - Slack
 - Sprint.ly
 - Taiga
