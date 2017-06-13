@@ -22,7 +22,7 @@ Category
     area an event took place, such as ``auth``.
 
 Level
-    The level may be any of ``error``, ``warn``, ``info``, or ``debug``.
+    The level may be any of ``error``, ``warning``, ``info``, or ``debug``.
 
 
 Recording Crumbs
