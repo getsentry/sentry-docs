@@ -36,3 +36,4 @@ Sentry integrates seamlessly with your favorite apps and services.
    github
    hipchat
    jira
+   sessionstack
