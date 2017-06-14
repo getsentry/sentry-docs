@@ -19,6 +19,7 @@ The following items are expected of production-ready SDKs:
 * Graceful failures (e.g. Sentry server unreachable)
 * Scrubbing with processors
 * Tag support
+* Support for Linux, Windows and OS X (where applicable)
 
 Feature based support is required for the following:
 
@@ -31,8 +32,11 @@ Additionally, the following features are highly encouraged:
 * Logging integration (to whatever standard solution is available)
 * Non-blocking event submission
 * Basic data sanitization (e.g. filtering out values that look like passwords)
-* Context data helpers
+* Context data helpers (e.g. setting the current user, recording breadcrumbs)
 * Event sampling
+* Honor Sentry's HTTP 429 Retry-After header
+* Pre and Post event send hooks
+* Local variable values in stacktrace (on platforms where this is possible)
 
 Usage for End-users
 -------------------
@@ -145,7 +149,7 @@ sent to the server (the rest should be silently ignored). For example:
 
     # assuming random() returns a value between 0.0 (inclusive) and 1.0 (exclusive)
     if random() < sample_rate:
-        raven.send(data)
+        client.send(data)
 
 Building the JSON Packet
 ------------------------
