@@ -1,24 +1,23 @@
 Overview
 ========
 
-This part of the documentation guides you towards implementing a new
-SDK for Sentry.  It covers the protocol for event submission as well as
-guidelines for how clients should look and behave.
+The following is a guide for implementing a new Sentry SDK.  It covers
+the protocol for event submission as well as guidelines for how clients
+should typically look and behave.
 
 Writing an SDK
 --------------
 
-An SDK at its core is simply a set of utilities for capturing various
-logging parameters. Given these parameters, it then builds a JSON payload
-which it will send to a Sentry server using some sort of authentication
-method.
+At its core an SDK is a set of utilities for capturing data about an
+exceptional state in an application. Given this data, it then builds and
+sends a JSON payload to the Sentry server.
 
 The following items are expected of production-ready SDKs:
 
 * DSN configuration
-* Graceful failures (e.g. Sentry server unreachable)
-* Scrubbing with processors
-* Tag support
+* Graceful failures (e.g. Sentry server is unreachable)
+* Setting attributes (e.g. tags and extra data)
+* Support for Linux, Windows and OS X (where applicable)
 
 Feature based support is required for the following:
 
@@ -27,12 +26,18 @@ Feature based support is required for the following:
 
 Additionally, the following features are highly encouraged:
 
-* Automated error handling (e.g. default error handlers)
-* Logging integration (to whatever standard solution is available)
+* Automated error capturing (e.g. uncaught exception handlers)
+* Logging framework integration
 * Non-blocking event submission
 * Basic data sanitization (e.g. filtering out values that look like passwords)
-* Context data helpers
+* Context data helpers (e.g. setting the current user, recording breadcrumbs)
 * Event sampling
+* Honor Sentry's HTTP 429 Retry-After header
+* Pre and Post event send hooks
+* Local variable values in stacktrace (on platforms where this is possible)
+
+:ref:`Please see the features page <features>` for descriptions of commonly expected
+Sentry SDK features.
 
 Usage for End-users
 -------------------
@@ -132,20 +137,6 @@ The resulting POST request would then transmit to::
 
 .. note:: If any of configuration values are not present, the SDK should notify the user
           immediately that they've misconfigured the SDK.
-
-Event Sampling
---------------
-
-SDKs should allow the user to configure what percentage of events are actually
-sent to the server (the rest should be silently ignored). For example:
-
-.. sourcecode:: python
-
-    sample_rate = options.get('sample_rate', 1.0)
-
-    # assuming random() returns a value between 0.0 (inclusive) and 1.0 (exclusive)
-    if random() < sample_rate:
-        raven.send(data)
 
 Building the JSON Packet
 ------------------------

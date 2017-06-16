@@ -1,9 +1,11 @@
+.. _context:
+
 Context Management
 ==================
 
 All SDKs should have the concept of concurrency safe context storage.
 What this means depends on the language.  The basic idea is that a
-user of the Raven library can call a method to safely provide additional
+user of the SDK can call a method to safely provide additional
 context information from whererever the user has access to the client object.
 
 This is implemented as a thread local in most languages, but in some
@@ -16,7 +18,7 @@ User's Perspective
 From the user's perspective of the Sentry SDK there should be two types
 of APIs:
 
-``RavenClient.context``:
+``SentryClient.context``:
     Given a Sentry SDK object it should be possible to get a reference
     to the underlying context object for manual updating.  This might not
     always be something that makes sense in the context of the language,
@@ -35,7 +37,7 @@ of APIs:
         that reuse of threads is safe and old data does not leak into the
         reused context.
 
-``RavenClient.*_context``:
+``SentryClient.*_context``:
     These are methods that update the context according to the name of the
     method.  Which of those methods exist is up to the SDK developer,
     however as a general rule these should exist:

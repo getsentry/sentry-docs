@@ -1,13 +1,15 @@
 SDK Reference
 =============
 
-If you're interested in writing an SDK for your favorite language, or simply
-are unable to use one of our official SDKs, you've come to the right place.
+The following is a guide for implementing a new Sentry SDK.  It covers
+the protocol for event submission as well as guidelines for how clients
+should typically look and behave.
 
 .. toctree::
    :maxdepth: 1
 
    overview
+   features
    attributes
    interfaces/index
    data-handling

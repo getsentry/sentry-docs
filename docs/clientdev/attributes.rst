@@ -1,3 +1,5 @@
+.. _attributes:
+
 Attributes
 ==========
 
@@ -82,14 +84,17 @@ The following attributes are required for all events:
 
 .. describe:: sdk
 
-    Information about the SDK sending the event.
+    Information about the SDK sending the event. Note that the ``integrations`` key
+    is optional and used to list any of the SDK and language specific integrations
+    that the user is actively using.
 
     .. sourcecode:: json
 
         {
           "sdk": {
-            "name": "sentry-unity",
-            "version": "1.0.0"
+            "name": "sentry-java",
+            "version": "1.0.0",
+            "integrations": ["logback", "spring"] // Optional
           }
         }
 
