@@ -89,11 +89,12 @@ Surrounding source in stacktrace
 Lines of source code to provide context in stacktraces. This is easier in interpreted languages,
 may be hard or impossible in compiled ones.
 
-Stack variable values
----------------------
+Variable values
+---------------
 
-Local variable names and values for each stack frame, where possible. This may be very easy in
-some languages, but is hard or impossible in most.
+Local variable names and values for each stack frame, where possible. Restrictions apply on some
+platforms, for example it's may only be possible to collect the values of parameters passed into
+each function, or it may be completely impossible to collect this information at all.
 
 Desymbolication
 ---------------
