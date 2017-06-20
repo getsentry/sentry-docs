@@ -19,4 +19,4 @@ Create issues in GitHub based on Sentry events.
 - Click All Integrations, find the GitHub integration in the list, and click configure
 - Click Enable Plugin
 - Fill in the required information and save
-- The option to create and link GitHUb issues will be displayed from your Sentry issue pages
+- The option to create and link GitHub issues will be displayed from your Sentry issue pages
