@@ -30,6 +30,10 @@ Roles include:
 +---------------------------------+-----------+------------------+
 | Can change Project Settings     | Admin, Manager, Owner        |
 +---------------------------------+-----------+------------------+
+| Can add/remove projects         | Admin, Manager, Owner        |
++---------------------------------+------------------------------+
+| Can add/remove teams            | Manager, Owner               |
++---------------------------------+------------------------------+
 | Can add Repositories            | Manager, Owner               |
 +---------------------------------+-----------+------------------+
 | Can change Organization Settings| Manager, Owner               |
