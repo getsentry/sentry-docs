@@ -6,23 +6,33 @@ Membership in Sentry is handled at the organizational level. The system is desig
 Roles
 -----
 
-Access to organizations is dictated by roles. Your role is scoped to an entire organization. Roles include:
+Access to organizations is dictated by roles. Your role is scoped to an entire organization.
 
-.. describe:: owner
+Roles include:
+   * Owner
+   * Manager
+   * Admin
+   * Member
+   * Billing
 
-    The owner has full access to all controls within an organization.
-
-.. describe:: manager
-
-    The manager is similar to the owner, except that they cannot remove the organization.
-
-.. describe:: admin
-
-    An admin has full access to all projects they're a member of, but will not be able to add or change members in the organization.
-
-.. describe:: member
-
-    A member can only view and act on issues, such as assigning and resolving.
-
-
-
++------------+--------------------+------------------------------+
+|     Action                      |  Allowed Roles               |
++=================================+==============================+
+| Can see/edit billing information| Billing, Manager, Owner      |
+| and subscription details        |                              |
++---------------------------------+-----------+------------------+
+| Can view and act on issues, such| Admin, Member, Manager, Owner|
+| as assigning/resolving/etc.     |                              |
++---------------------------------+-----------+------------------+
+| Can join and leave teams.       | Admin, Member, Manager, Owner|
++---------------------------------+-----------+------------------+
+| Can add/remove/change members   | Manager, Owner               |
++---------------------------------+-----------+------------------+
+| Can change Project Settings     | Admin, Manager, Owner        |
++---------------------------------+-----------+------------------+
+| Can add Repositories            | Manager, Owner               |
++---------------------------------+-----------+------------------+
+| Can change Organization Settings| Manager, Owner               |
++---------------------------------+-----------+------------------+
+| Can remove an Organization      | Owner                        |
++---------------------------------+-----------+------------------+
