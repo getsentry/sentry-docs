@@ -6,23 +6,37 @@ Membership in Sentry is handled at the organizational level. The system is desig
 Roles
 -----
 
-Access to organizations is dictated by roles. Your role is scoped to an entire organization. Roles include:
+Access to organizations is dictated by roles. Your role is scoped to an entire organization.
 
-.. describe:: owner
+Roles include:
+   * Owner
+   * Manager
+   * Admin
+   * Member
+   * Billing
 
-    The owner has full access to all controls within an organization.
-
-.. describe:: manager
-
-    The manager is similar to the owner, except that they cannot remove the organization.
-
-.. describe:: admin
-
-    An admin has full access to all projects they're a member of, but will not be able to add or change members in the organization.
-
-.. describe:: member
-
-    A member can only view and act on issues, such as assigning and resolving.
-
-
-
++------------+--------------------+---------+--------+--------+---------+---------+
+|     Action                      | Billing | Member | Admin  | Manager |  Owner  |
++=================================+=========+========+========+=========+=========+
+| Can see/edit billing information|    X    |        |        |    X    |    X    |
+| and subscription details        |         |        |        |         |         |
++---------------------------------+---------+--------+--------+---------+---------+
+| Can view and act on issues, such|         |   X    |   X    |    X    |    X    |
+| as assigning/resolving/etc.     |         |        |        |         |         |
++---------------------------------+---------+--------+--------+---------+---------+
+| Can join and leave teams.       |         |   X    |   X    |    X    |    X    |
++---------------------------------+---------+--------+--------+---------+---------+
+| Can add/remove/change members   |         |        |        |    X    |    X    |
++---------------------------------+---------+--------+--------+---------+---------+
+| Can change Project Settings     |         |        |   X    |    X    |    X    |
++---------------------------------+---------+--------+--------+---------+---------+
+| Can add/remove projects         |         |        |   X    |    X    |    X    |
++---------------------------------+---------+--------+--------+---------+---------+
+| Can add/remove teams            |         |        |        |    X    |    X    |
++---------------------------------+---------+--------+--------+---------+---------+
+| Can add Repositories            |         |        |        |    X    |    X    |
++---------------------------------+---------+--------+--------+---------+---------+
+| Can change Organization Settings|         |        |        |    X    |    X    |
++---------------------------------+---------+--------+--------+---------+---------+
+| Can remove an Organization      |         |        |        |         |    X    |
++---------------------------------+---------+--------+--------+---------+---------+
