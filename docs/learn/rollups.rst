@@ -20,12 +20,12 @@ Grouping Priorities
 The grouping switches behavior based on the interfaces
 (:doc:`../clientdev/interfaces/index`) that are available within an event.
 
-*   if the interfaces used in an event differ, then there is no chance for
+*   If the interfaces used in an event differ, then there is no chance for
     those events to be grouped together.
 *   If a stacktrace or exception is involved in a report then grouping
     will only consider this information.
 *   If a template is involved, then grouping will consider the template.
-*   as a fallback it will use the message of the event for grouping.
+*   As a fallback it will use the message of the event for grouping.
 
 Grouping by Stacktrace
 ``````````````````````
@@ -45,18 +45,18 @@ it still groups the same.
 Depending on the information the following data can be used for each stack
 trace frame:
 
-*   module name
-*   normalized filename (removed from revision hashes etc.)
-*   normalized context line (essentially a cleaned up version of the
+*   Module name
+*   Normalized filename (removed from revision hashes etc.)
+*   Normalized context line (essentially a cleaned up version of the
     sourcecode of the affected line if provided)
 
 This grouping usually works well, but causes two annoying artifacts if not
 dealt with:
 
-*   minimized JavaScript sourcecode will destroy the grouping in really
+*   Minimized JavaScript sourcecode will destroy the grouping in really
     bad ways.  Because of this you should ensure Sentry can access your
     :ref:`raven-js-sourcemaps`.
-*   if you modify your stacktrace by introducing a new level through the
+*   If you modify your stacktrace by introducing a new level through the
     use of decorators, your stacktrace will change and so will the
     grouping.  For this matter many SDKs support hiding irrelevant
     stack trace frames.  For instance the Python SDK will skip all
