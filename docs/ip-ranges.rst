@@ -3,6 +3,11 @@
 IP Ranges
 =========
 
+Sentry is served from a single IP address for all web traffic and all
+event accepting. The IP address is::
+
+    35.188.42.15/32
+
 In some circumstances the Hosted Sentry infrastructure might send HTTP
 requests your way.  Primarily this is relevant to
 :doc:`JavaScript Source Maps <../../clients/javascript/sourcemaps>`, but
