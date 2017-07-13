@@ -52,10 +52,9 @@ The DSN can be found in Sentry by navigating to [Project Name] -> Project Settin
 
     '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
 
-If you use the Hosted Sentry and you are signed into your account, the
-documentation will refer to your actual DSNs and you can select the
-correct one, on the top right of this page for adjusting the examples for
-easy copy pasting::
+If you are using the Hosted Sentry and signed into your account, the
+documentation will refer to your actual DSNs. You can select the 
+correct one which will adjust the examples for easy copy pasting::
 
     '___DSN___'
 
