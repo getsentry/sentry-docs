@@ -68,6 +68,7 @@ If your projects have a high volume of events, you can control how many errors S
 - For JavaScript projects, use `whitelistUrls` and `ignoreErrors`
 - Set a per-project rate limit to specify the maximum percentage of your account quota an individual project can consume at **[Organization] » Settings » Rate Limit**.
 - When you migrate to the new plan you’ll also be able to set an organization-wide hourly rate limit to prevent massive spikes from consuming your quota at **[Organization] » Settings » Rate Limit**.
+- With the new Large and Enterprise plans, you'll be able to set a per-key rate limit for each DSN key in a project to prevent exhaustion of per-project rate limit at **[Organization] » [Project] » Project Settings » Client Keys (DSN) » Details**.
 
 FAQ
 ---
