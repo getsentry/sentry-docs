@@ -18,7 +18,7 @@ Roles include:
 +------------+--------------------+---------+--------+--------+---------+---------+
 |     Action                      | Billing | Member | Admin  | Manager |  Owner  |
 +=================================+=========+========+========+=========+=========+
-| Can see/edit billing information|    X    |        |        |    X    |    X    |
+| Can see/edit billing information|    X    |        |        |         |    X    |
 | and subscription details        |         |        |        |         |         |
 +---------------------------------+---------+--------+--------+---------+---------+
 | Can view and act on issues, such|         |   X    |   X    |    X    |    X    |
