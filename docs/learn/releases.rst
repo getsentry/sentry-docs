@@ -10,8 +10,10 @@ What is a Release?
 ------------------
 
 Releases are used by Sentry to provide you with additional context
-when determining the cause of an issue. You set a release context in
-your SDK, and can either create a release via our API or allow Sentry
+when determining the cause of an issue. 
+
+To use the feature, you must set a release context in your SDK.
+Then, you can either create a release via our API or allow Sentry
 to create one automatically when we receive an event with a new
 release version. Once a release is created, we'll provide an overview in the UI:
 
@@ -173,6 +175,8 @@ Tell Sentry about deploys
 
 Letting Sentry know when you've deployed a given release to an environment
 unlocks another feature: Deploy emails.
+
+You must have environment context set in your SDK in order to use this feature.
 
 To let Sentry know you've deployed, you'd just send an additional request
 after creating a release via our API:
