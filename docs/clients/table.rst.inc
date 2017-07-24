@@ -10,7 +10,7 @@
 
 *   .. class:: platformlink-node
 
-    :doc:`/clients/node/index` Including Express, Koa, and Connect.
+    :doc:`/clients/node/index` Including Express, Koa, Connect, and Winston.
 
 *   .. class:: platformlink-react-native
 
