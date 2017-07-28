@@ -144,8 +144,8 @@ For example, a commit message might look like this:
 
 
 When Sentry sees this commit, we'll automatically annotate the matching
-issue with a reference to the commit, and upon deploy, we'll mark the issue
-as resolved.
+issue with a reference to the commit, and upon release creation, we'll mark the issue
+as resolved in that release. **Note:** You must either specify ``commits`` or ``refs`` when creating the release.
 
 Suggested owners
 ----------------
