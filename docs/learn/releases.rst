@@ -48,6 +48,12 @@ to send ``refs`` along when you create a release. **Note:** You need to
 make sure you're using :ref:`Auth Tokens <auth-tokens>` **not**
 :ref:`API Keys <api-keys>`, which are deprecated.
 
+.. container:: admonition
+
+    **Note:** This is a different endpoint than the project releases endpoint, so if
+    you are attempting to add commits to your existing releases configuration, you will
+    need to change the url.
+
 .. code-block:: bash
 
     # Create a new release
