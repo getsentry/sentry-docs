@@ -66,10 +66,10 @@ with `virtualenv-burrito <https://github.com/brainsik/virtualenv-burrito#install
 JavaScript
 **********
 
-JavaScript is a tad easier because it separates environments already. To install node.js and
-the Node Package Manager(npm) run::
+JavaScript is a tad easier because it separates environments already. To install node.js, the
+Node Package Manager(npm), and the Yarn Package Manager run::
 
-    brew install nodejs
+    brew install nodejs yarn
 
 Installing Libraries
 ********************
