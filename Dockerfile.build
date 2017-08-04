@@ -1,7 +1,8 @@
 FROM python:2.7
 
 RUN set -x \
-    && export NODE_VERSION=4.7.0 \
+    && export NODE_VERSION=4.7.2 \
+    && export YARN_VERSION=0.24.5 \
     && export GNUPGHOME="$(mktemp -d)" \
     # gpg keys listed at https://github.com/nodejs/node
     && for key in \
@@ -23,7 +24,9 @@ RUN set -x \
     && grep " node-v$NODE_VERSION-linux-x64.tar.gz\$" SHASUMS256.txt.asc | sha256sum -c - \
     && tar -xzf "node-v$NODE_VERSION-linux-x64.tar.gz" -C /usr/local --strip-components=1 \
     && rm -r "$GNUPGHOME" "node-v$NODE_VERSION-linux-x64.tar.gz" SHASUMS256.txt.asc \
-    && apt-get purge -y --auto-remove wget
+    && apt-get purge -y --auto-remove wget \
+    && npm install -g yarn@$YARN_VERSION \
+    && npm cache clear
 
 RUN mkdir -p /usr/src/docs
 WORKDIR /usr/src/docs
