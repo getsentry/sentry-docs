@@ -37,8 +37,9 @@ Run the following to install, configure, and execute PostgreSQL as a daemonized 
     brew install postgresql
     brew services start postgresql
 
-.. note:: Sometimes OS X does not like to uphold standards, and does not create the ``postgres``
-          role. If you are finding this problem, follow `this StackOverflow answer <http://stackoverflow.com/a/15309551>`_.
+When installing postgresql using brew you'll have to also create the ``postgres`` role::
+
+    psql template1 $(whoami) -c 'CREATE USER postgres SUPERUSER;'
 
 Third Party Libraries
 ~~~~~~~~~~~~~~~~~~~~~
@@ -102,7 +103,7 @@ Before you are able to run the development server, you first must create a prope
 for it to use. Running the following will create the proper database and fill it with example
 data::
 
-    createdb -E utf-8 sentry
+    createdb -U postgres -E utf-8 sentry
     sentry init --dev
     sentry upgrade
 
