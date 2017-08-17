@@ -20,12 +20,12 @@ Grouping Priorities
 The grouping switches behavior based on the interfaces
 (:doc:`../clientdev/interfaces/index`) that are available within an event.
 
-*   If the interfaces used in an event differ, then there is no chance for
-    those events to be grouped together.
-*   If a stacktrace or exception is involved in a report then grouping
+*   If the interfaces used in an event differ, then those events will not
+    be grouped together.
+*   If a stacktrace or exception is involved in a report, then grouping
     will only consider this information.
 *   If a template is involved, then grouping will consider the template.
-*   As a fallback it will use the message of the event for grouping.
+*   As a fallback, the message of the event will be used for grouping.
 
 Grouping by Stacktrace
 ``````````````````````
