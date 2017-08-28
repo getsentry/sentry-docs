@@ -79,18 +79,17 @@ Once all of your dependencies are installed, fork the repo at https://github.com
 and clone down a local version::
 
     git clone https://github.com/<your github username>/sentry.git
+    cd sentry
 
-Setup and activate a Python 2.7 virtual environment in the project root.
+Setup and activate a Python 2.7 virtual environment in the project root::
+
+    mkvirtualenv .
 
 Run the following to install both the Python and JavaScript
 libraries that Sentry depends on and some extra pieces that hold the development environment
 together::
 
     make develop
-
-.. note:: It is important to be running inside a virtual environment before running the
-   following command.  If you have not set this up, do so now.
-
 
 .. note:: Some libraries depend on OpenSSL. Install via ``brew install openssl``, and make
   sure to ``export LDFLAGS=-L/usr/local/opt/openssl/lib`` while building, so that the
