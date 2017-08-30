@@ -7,6 +7,6 @@ This documentation serves as reference points for developing against Sentry.
    :maxdepth: 1
 
    environment
-   code
+   contributing
    docs
    api
