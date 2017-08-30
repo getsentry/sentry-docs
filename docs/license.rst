@@ -19,7 +19,7 @@ A lit of additional contributors can be seen on `GitHub
 Sentry License
 --------------
 
-Copyright (c) 2015 Functional Software, Inc and individual contributors.
+Copyright (c) 2017 Functional Software, Inc and individual contributors.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
