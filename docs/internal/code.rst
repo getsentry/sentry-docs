@@ -36,5 +36,5 @@ Why Pull Requests
 Because Sentry is an open source project maintained via GitHub we want to ensure that
 the barrier to entry for external contributions is minimal. By using GitHub features
 when possible, we make it easy for developers familiar with other projects on GitHub.
-While GitHub's tools `aren't always the best <http://cramer.io/2014/05/03/on-pull-requests>`_,
+While GitHub's tools `aren't always the best <http://cra.mr/2014/05/03/on-pull-requests>`_,
 they're usable enough that we'll make do.
