@@ -55,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Sentry'
-copyright = u'2015, Sentry Team'
+copyright = u'2017, Sentry Team'
 author = u'Sentry Team'
 
 # The version info for the project you're documenting, acts as replacement for
