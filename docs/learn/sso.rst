@@ -66,3 +66,19 @@ complete prompt you for the organization which you wish to restrict access by.
 
 Currently GitHub Enterprise is not supported. If your company needs support for
 GE, `let us know <mailto:support@sentry.io>`_.
+
+OneLogin
+~~~~~~~~
+
+The OneLogin integration supports SAML federated login for your organization.
+
+In your OneLogin dashboard locate the Sentry app in the app catalog and add it
+to your organization.
+
+As part of OneLogin SSO provisioning, you need to provide the OneLogin identity
+provider metadata to Sentry. This metadata is specific to your OneLogin
+account. To retrieve the identity provider metadata from OneLogin you can
+provide the ID of the app, or provide the URL of the metadata.
+
+The **SAML Metadata** can be found under the **More Actions** drop down in the
+OneLogin Sentry app configuration dashboard.
