@@ -67,18 +67,42 @@ complete prompt you for the organization which you wish to restrict access by.
 Currently GitHub Enterprise is not supported. If your company needs support for
 GE, `let us know <mailto:support@sentry.io>`_.
 
-OneLogin
-~~~~~~~~
+SAML2 Identity Provider
+~~~~~~~~~~~~~~~~~~~~~~~
 
-The OneLogin integration supports SAML federated login for your organization.
+Sentry provides `SAML2 based authentication
+<https://en.wikipedia.org/wiki/SAML_2.0>`_ which may be configured manually
+using the generic SAML2 provider, or a specific provider which provides
+defaults specific to that identity provider.
+
+OneLogin
+''''''''
 
 In your OneLogin dashboard locate the Sentry app in the app catalog and add it
 to your organization.
 
-As part of OneLogin SSO provisioning, you need to provide the OneLogin identity
-provider metadata to Sentry. This metadata is specific to your OneLogin
-account. To retrieve the identity provider metadata from OneLogin you can
-provide the ID of the app, or provide the URL of the metadata.
+As part of OneLogin SSO configuration, you must to provide the OneLogin
+identity provider issuer URL to Sentry. This URL is specific to your OneLogin
+account and can be found under the 'SSO' tab on the Sentry OneLogin application
+configuration page.
 
-The **SAML Metadata** can be found under the **More Actions** drop down in the
-OneLogin Sentry app configuration dashboard.
+Okta
+''''
+
+In your Okta admin dashboard locate the Sentry app in the Okta Application
+Network and add it to your organization.
+
+As part of the Okta SSO configuration, you must provide the Okta Identity
+Provider metadata to Sentry. This URL can be located under the Sign-On Methods
+SAML2 settings panel, look for the 'Identity Provider metadata' link which can
+may right click and copy link address.
+
+Auth0
+'''''
+
+In your Auth0 dashboard locate the Sentry app under the SSO Integrations page
+and add it to your organization.
+
+As part of the Auth0 SSO configuration, you must provide the Auth0 Identity
+Provider metadata to Sentry. This URL is available under the Tutorial tab of
+the Sentry SSO integration.
