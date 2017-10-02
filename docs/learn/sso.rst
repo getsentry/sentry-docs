@@ -94,7 +94,7 @@ Network and add it to your organization.
 
 As part of the Okta SSO configuration, you must provide the Okta Identity
 Provider metadata to Sentry. This URL can be located under the Sign-On Methods
-SAML2 settings panel, look for the 'Identity Provider metadat' link which can
+SAML2 settings panel, look for the 'Identity Provider metadata' link which can
 may right click and copy link address.
 
 Auth0
