@@ -250,7 +250,11 @@ function initRigidSearch() {
   }
 
   var params = qs.parse(location.search);
-  var urlBase = document.location.pathname.match(/^(.*)\/search(\.html|\/?)$/)[1];
+  var match = document.location.pathname.match(/^(.*)\/search(\.html|\/?)$/);
+  if (!match) {
+    return;
+  }
+  var urlBase = match[1];
 
   function makeUrl(path) {
     if (path === 'index') {
