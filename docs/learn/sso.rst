@@ -110,3 +110,13 @@ and add it to your organization.
 As part of the Auth0 SSO configuration, you must provide the Auth0 Identity
 Provider metadata to Sentry. This URL is available under the Tutorial tab of
 the Sentry SSO integration.
+
+Rippling
+''''''''
+
+In your Rippling admin dashboard locate the Sentry app in the list of suggested
+apps and select it.
+
+When prompted with the Rippling Metadata URL, copy this into the Sentry
+Rippling provider configuration. You will have to complete the Rippling
+application configuration before completing the sentry provider configuration.
