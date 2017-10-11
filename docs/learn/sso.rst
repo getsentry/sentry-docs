@@ -75,6 +75,15 @@ Sentry provides `SAML2 based authentication
 using the generic SAML2 provider, or a specific provider which provides
 defaults specific to that identity provider.
 
+Sentry's SAML endpints are as follows, where the ``{organization_slug}`` is
+substituted for your organization slug:
+
+:ACS: ``https://sentry.io/saml/acs/{organization_slug}/``
+:SLS: ``https://sentry.io/saml/SLS/{organization_slug}/``
+:Metadata: ``https://sentry.io/saml/metadata/{organization_slug}/``
+
+.. note:: SAML2 SSO requires an Enterprise Plan.
+
 OneLogin
 ''''''''
 
