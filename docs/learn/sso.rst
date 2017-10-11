@@ -82,7 +82,7 @@ substituted for your organization slug:
 :SLS: ``https://sentry.io/saml/SLS/{organization_slug}/``
 :Metadata: ``https://sentry.io/saml/metadata/{organization_slug}/``
 
-.. note:: SAML2 SSO requires an Enterprise Plan
+.. note:: SAML2 SSO requires an Enterprise Plan.
 
 OneLogin
 ''''''''
