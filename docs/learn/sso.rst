@@ -97,6 +97,10 @@ Provider metadata to Sentry. This URL can be located under the Sign-On Methods
 SAML2 settings panel, look for the 'Identity Provider metadata' link which can
 may right click and copy link address.
 
+You may refer to the `Okta documentation
+<http://saml-doc.okta.com/SAML_Docs/How-to-Configure-SAML-2.0-for-Sentry.html>`_
+for more detailed setup instructions.
+
 Auth0
 '''''
 
