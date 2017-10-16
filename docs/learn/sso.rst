@@ -95,6 +95,10 @@ identity provider issuer URL to Sentry. This URL is specific to your OneLogin
 account and can be found under the 'SSO' tab on the Sentry OneLogin application
 configuration page.
 
+You may refer to the `OneLogin documentation
+<https://support.onelogin.com/hc/en-us/articles/115005181586-Configuring-SAML-for-Sentry>`_
+for more detailed setup instructions.
+
 Okta
 ''''
 
