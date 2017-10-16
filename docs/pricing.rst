@@ -53,11 +53,6 @@ On-demand spending cap
 
 You can set a maximum monthly on-demand bill amount by setting an on-demand spending cap. Once you reach the spending cap, you will still be able to access Sentry and prior event data. However, any additional events you send will be rejected.
 
-Per-minute rate limits
-``````````````````````
-
-You can set the maximum number of events per minute that Sentry will accept. This allows you to protect yourself from consuming all of your month’s capacity in the event of sudden spikes.
-
 
 Managing your event volume
 --------------------------
