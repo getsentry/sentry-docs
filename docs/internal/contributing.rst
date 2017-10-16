@@ -182,7 +182,7 @@ Subject
 The subject contains a succinct description of the change:
 
 - Use the imperative, present tense: "change" not "changed" nor "changes"
-- Don't capitalize the first letter
+- Capitalize the first letter
 - No dot (.) at the end
 
 Body
