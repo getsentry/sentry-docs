@@ -75,8 +75,8 @@ SDK's constructor.
 
 For example for the JavaScript SDK it works roughly like this::
 
-    import raven
-    raven.Client('___DSN___')
+    import Raven from 'raven-js'
+    Raven.config('___DSN___')
 
 Note: If you're using Heroku, and you've added Hosted Sentry via the
 standard addon hooks, most SDKs will automatically pick up the
