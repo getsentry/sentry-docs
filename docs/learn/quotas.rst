@@ -52,29 +52,36 @@ Built-in Filters
 ~~~~~~~~~~~~~~~~
 
 Various built-in filters are available within Sentry. You can find these by going to
-**[Project] » Project Settings » Inbound Filters**. Each filter caters to specific situations, such
-as web crawlers or old browsers, and can be enabled as needed by the specific application.
+**[Project] » Project Settings » Inbound Filters**. Each filter caters to specific 
+situations, such as web crawlers or old browsers, and can be enabled as needed by the
+specific application.
 
 IP Blocklist
 ~~~~~~~~~~~~
 
 If you have a rogue client, you may find yourself simploy wanting to block that IP from
-sending data. Sentry supports this by going to **[Project] » Project Settings » Inbound Filters** and adding the
+sending data. Sentry supports this by going to
+**[Project] » Project Settings » Inbound Filters** and adding the
 IP addresses (or subnets) under the **Filter errors from these IP addresses** section.
 
 Filter by releases
 ~~~~~~~~~~~~~~~~~~
 
-In the case you have a problemeatic release that is causing an excessive amounts of noise, you can ignore all events from that release.
-Sentry supports this by going to **[Project] » Project Settings » Inbound Filters** and adding the
-releases under the **Filter errors from these releases** section.
+In the case you have a problemeatic release that is causing an excessive amount of noise,
+you can ignore all events from that release. Sentry supports this by going to 
+**[Project] » Project Settings » Inbound Filters** and adding the releases under the
+**Filter errors from these releases** section.
+
+.. note:: Filter by releases is avaliable only on Large and Enterprise Plans
 
 Filter by error message
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-You can ignore a specific or certain kind of error by 
-going to **[Project] » Project Settings » Inbound Filters** and adding the
+You can ignore a specific or certain kind of error by going to
+**[Project] » Project Settings » Inbound Filters** and adding the
 error message under the **Filter errors by error message** section.
+
+.. note:: Filter by error message is avaliable only on Large and Enterprise Plans
 
 Attributes Limits
 -----------------
