@@ -63,14 +63,14 @@ sending data. Sentry supports this by going to **[Project] » Project Settings �
 IP addresses (or subnets) under the **Filter errors from these IP addresses** section.
 
 Filter by releases
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 In the case you have a problemeatic release that is causing an excessive amounts of noise, you can ignore all events from that release.
 Sentry supports this by going to **[Project] » Project Settings » Inbound Filters** and adding the
 releases under the **Filter errors from these releases** section.
 
 Filter by error message
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 You can ignore a specific or certain kind of error by 
 going to **[Project] » Project Settings » Inbound Filters** and adding the
