@@ -83,7 +83,7 @@ and clone down a local version::
 
 Setup and activate a Python 2.7 virtual environment in the project root::
 
-    mkvirtualenv .
+    mkvirtualenv sentry
 
 Run the following to install both the Python and JavaScript
 libraries that Sentry depends on and some extra pieces that hold the development environment
