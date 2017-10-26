@@ -34,7 +34,9 @@ PostgreSQL
 PostgreSQL is the primary database that Sentry uses for all persistent storage.
 Run the following to install, configure, and execute PostgreSQL as a daemonized server::
 
+    brew tap petere/postgresql
     brew install postgresql@9.4
+    brew link -f postgresql@9.4
     brew services start postgresql@9.4
 
 When installing postgresql using brew you'll have to also create the ``postgres`` role::
