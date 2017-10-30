@@ -123,4 +123,17 @@ The following tokens are reserved and known to Sentry:
     * ``timesSeen:<10``
     * ``timesSeen:<=10``
 
+.. describe:: lastSeen
+
+   Restrict results that were last seen since or until a given point in time.
+   Usage is similar to the ``age`` token (see above).
+
+   Issues last seen 30 days ago or more:
+
+   ``lastSeen:+30d``
+
+   Issues last seen within the last two days:
+
+   ``lastSeen:-2d``
+
 Additionally you can use any tag you've specified as a token.
