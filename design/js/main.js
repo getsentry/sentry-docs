@@ -585,26 +585,113 @@ $(function() {
 
   initRigidSearch();
 
-  var cookiesYes = function() {
+  // Twitter
+  loadIfTrackersOk.push(function() {
+    const img1 = document.createElement('img');
+    img1.src =
+      'https://analytics.twitter.com/i/adsct?txn_id=nydby&p_id=Twitter&tw_sale_amount=0&tw_order_quantity=0';
+    img1.setAttribute('height', '1');
+    img1.setAttribute('width', '1');
+    img1.setAttribute('style', 'display:none;');
+    img1.setAttribute('alt', '');
+    img1.setAttribute('aria-hidden', 'true');
+
+    const img2 = document.createElement('img');
+    img2.src =
+      '//t.co/i/adsct?txn_id=nydby&p_id=Twitter&tw_sale_amount=0&tw_order_quantity=0';
+    img2.setAttribute('height', '1');
+    img2.setAttribute('width', '1');
+    img2.setAttribute('style', 'display:none;');
+    img2.setAttribute('alt', '');
+    img2.setAttribute('aria-hidden', 'true');
+
+    document.body.appendChild(img1);
+    document.body.appendChild(img2);
+  });
+
+  // Facebook
+  loadIfTrackersOk.push(function() {
+    const img = document.createElement('img');
+    img.src =
+      'https://www.facebook.com/tr?id=280953929088736&ev=PageView&noscript=1';
+    img.setAttribute('height', '1');
+    img.setAttribute('width', '1');
+    img.setAttribute('style', 'display:none;');
+    img.setAttribute('alt', '');
+    img.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(img);
+  });
+
+  // LinkedIn
+  loadIfTrackersOk.push(function() {
+    window._linkedin_data_partner_id = '107517';
+    (function() {
+      var s = document.getElementsByTagName('script')[0];
+      var b = document.createElement('script');
+      b.type = 'text/javascript';
+      b.async = true;
+      b.src = 'https://snap.licdn.com/li.lms-analytics/insight.min.js';
+      s.parentNode.insertBefore(b, s);
+    })();
+  });
+
+  // Bing
+  loadIfTrackersOk.push(function() {
+    (function(w, d, t, r, u) {
+      var f, n, i;
+      (w[u] = w[u] || []),
+        (f = function() {
+          var o = { ti: '5751143' };
+          (o.q = w[u]), (w[u] = new UET(o)), w[u].push('pageLoad');
+        }),
+        (n = d.createElement(t)),
+        (n.src = r),
+        (n.async = 1),
+        (n.onload = n.onreadystatechange = function() {
+          var s = this.readyState;
+          (s && s !== 'loaded' && s !== 'complete') ||
+            (f(), (n.onload = n.onreadystatechange = null));
+        }),
+        (i = d.getElementsByTagName(t)[0]),
+        i.parentNode.insertBefore(n, i);
+    })(window, document, 'script', '//bat.bing.com/bat.js', 'uetq');
+  });
+
+  // Hubspot
+  loadIfTrackersOk.push(function() {
+    const script = document.createElement('script');
+    script.setAttribute('src', '//js.hs-scripts.com/3344477.js');
+    script.setAttribute('type', 'text/javascript');
+    script.setAttribute('id', 'hs-script-loader');
+    script.setAttribute('async', true);
+    script.setAttribute('defer', true);
+    document.body.appendChild(script);
+  });
+
+  // If we've been given permission to track, set a cookie that we can check
+  // later to hide the banner, then load all of the trackers we have deferred.
+  //
+  // Returns nothing
+  var trackersYes = function() {
     // Only set the cookie if it hasn't been set yet
-    if (!Cookies.get('allow_cookies')) {
-      Cookies.set('allow_cookies', true, 365);
-      $('.privacy-shield-banner').addClass('hidden');
+    if (!Cookies.get('allow_trackers')) {
+      Cookies.set('allow_trackers', true, 365);
+      $('.tracking-banner').addClass('hidden');
     }
 
-    // Enable our trackers
-    $('.js-privacy-shield-deferred').each(function(i, el) {
-      var $el = $(el);
-      $el.attr('src', $el.data('src'));
-    });
+    while (loadIfTrackersOk.length > 0) {
+      loadIfTrackersOk.shift()();
+    }
   };
 
-  var cookiesNo = function() {
-    $('.privacy-shield-banner').removeClass('hidden');
+  // If we have not been given permission to track yet, show the banner.
+  //
+  // Returns nothing
+  var trackersNo = function() {
+    $('.tracking-banner').removeClass('hidden');
   };
 
-  Cookies.get('allow_cookies') ? cookiesYes() : cookiesNo();
+  Cookies.get('allow_trackers') ? trackersYes() : trackersNo();
 
-  $('.privacy-shield-banner').on('click', 'button', cookiesYes);
-
+  $('.tracking-banner').on('click', 'button', trackersYes);
 });
