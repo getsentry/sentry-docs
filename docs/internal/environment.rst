@@ -36,6 +36,7 @@ Run the following to install, configure, and execute PostgreSQL as a daemonized 
 
     brew install postgresql@9.4
     brew services start postgresql@9.4
+    brew link postgresql@9.4
 
 When installing postgresql using brew you'll have to also create the ``postgres`` role::
 
@@ -63,8 +64,14 @@ Python Virtual Environment
 **************************
 
 It is necessary for some functionality in the development environment to be running inside a Python
-virtual environment. One of the easiest ways to curate your virtual environments is
-with `virtualenv-burrito <https://github.com/brainsik/virtualenv-burrito#install>`_.
+virtual environment. Run the following to install ``virtualenv`` and ``virtualenvwrapper``::
+
+    pip install virtualenv
+    pip install virtualenvwrapper
+
+Then, add the following line to your bash profile::
+
+    source /usr/local/bin/virtualenvwrapper.sh
 
 
 JavaScript
