@@ -64,7 +64,14 @@ Python Virtual Environment
 **************************
 
 It is necessary for some functionality in the development environment to be running inside a Python
-virtual environment. Run the following to install virtualenv
+virtual environment. Run the following to install virtualenv and virtualenvwrapper::
+
+    pip install virtualenv
+    pip install virtualenvwrapper
+
+Then, add the following line to your bash profile::
+
+    source /usr/local/bin/virtualenvwrapper.sh
 
 
 JavaScript
