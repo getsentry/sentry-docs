@@ -64,7 +64,7 @@ Python Virtual Environment
 **************************
 
 It is necessary for some functionality in the development environment to be running inside a Python
-virtual environment. Run the following to install virtualenv and virtualenvwrapper::
+virtual environment. Run the following to install ``virtualenv`` and ``virtualenvwrapper``::
 
     pip install virtualenv
     pip install virtualenvwrapper
