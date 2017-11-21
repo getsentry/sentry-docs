@@ -36,7 +36,7 @@ Run the following to install, configure, and execute PostgreSQL as a daemonized 
 
     brew install postgresql@9.4
     brew services start postgresql@9.4
-    brew link postgresql@9.4
+    brew link --force postgresql@9.4
 
 When installing postgresql using brew you'll have to also create the ``postgres`` role::
 
