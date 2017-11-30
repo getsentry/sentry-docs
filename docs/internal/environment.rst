@@ -139,6 +139,8 @@ When webpack finishes processing, you can find a login prompt for the user accou
 created at `<http://localhost:8000>`_. From there, you are free to browse the website as an
 administrator.
 
+.. note:: When asked for the root address of the server, make sure that you use ``http://localhost:8000``, as both, protocol *and* port are required in order for DNS and some pages urls to be displayed correctly.
+
 Staging Your Changes
 --------------------
 
