@@ -86,10 +86,10 @@ error message under the **Filter errors by error message** section.
 Filter by issue
 ~~~~~~~~~~~~~~~
 
-If there is an issue that you unable to take action on but that continues to occur, you
-can delete and discard it. This will delete most data associated with an issue and
-filter out matching events before they ever reach your stream. Matching events will
-not count towards your quota.
+If there is an issue that you are unable to take action on but that continues to occur, you
+can delete and discard it from the issue details page by clicking "delete and discard future events."
+This will delete most data associated with an issue and filter out matching events before
+they ever reach your stream. Matching events will not count towards your quota.
 
 .. note:: Discarding issues is avaliable only on Medium, Large and Enterprise Plans
 
