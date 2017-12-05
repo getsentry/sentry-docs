@@ -2,7 +2,7 @@ Quotas & Filtering
 ==================
 
 A subscription to Sentry primarily entails a resource quota on the amount
-of events you can send within a window of time. These windows apply to a 
+of events you can send within a window of time. These windows apply to a
 60-second bucket for old plans and a one month bucket for new plans.
 Your subscription will provide a rate limit which is the maximum number of
 events the server will accept during that period on old plans,
@@ -52,7 +52,7 @@ Built-in Filters
 ~~~~~~~~~~~~~~~~
 
 Various built-in filters are available within Sentry. You can find these by going to
-**[Project] » Project Settings » Inbound Filters**. Each filter caters to specific 
+**[Project] » Project Settings » Inbound Filters**. Each filter caters to specific
 situations, such as web crawlers or old browsers, and can be enabled as needed by the
 specific application.
 
@@ -68,7 +68,7 @@ Filter by releases
 ~~~~~~~~~~~~~~~~~~
 
 In the case you have a problemeatic release that is causing an excessive amount of noise,
-you can ignore all events from that release. Sentry supports this by going to 
+you can ignore all events from that release. Sentry supports this by going to
 **[Project] » Project Settings » Inbound Filters** and adding the releases under the
 **Filter errors from these releases** section.
 
@@ -82,6 +82,16 @@ You can ignore a specific or certain kind of error by going to
 error message under the **Filter errors by error message** section.
 
 .. note:: Filter by error message is avaliable only on Large and Enterprise Plans
+
+Filter by issue
+~~~~~~~~~~~~~~~
+
+If there is an issue that you are unable to take action on but that continues to occur, you
+can delete and discard it from the issue details page by clicking "delete and discard future events."
+This will delete most data associated with an issue and filter out matching events before
+they ever reach your stream. Matching events will not count towards your quota.
+
+.. note:: Discarding issues is avaliable only on Medium, Large and Enterprise Plans
 
 Attributes Limits
 -----------------
