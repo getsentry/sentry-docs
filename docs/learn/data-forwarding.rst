@@ -49,3 +49,8 @@ look roughly similar to:
     },
     "timestamp": "2017-05-20T15:29:06Z"
   }
+
+Splunk
+------
+
+For details on the Splunk integration, visit the dedicated :doc:`Splunk integration documentation <../integrations/splunk>`.
