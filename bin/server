@@ -1,0 +1,20 @@
+#!/bin/bash
+# usage: bin/server
+#
+# Run the jekyll server
+
+green="\033[0;32m"
+reset="\033[0;m"
+
+echo -e "${green}Would you like to run the Sentry Docs in incremental build mode? [Y/n]${reset}"
+read -t 7
+REPLY=${REPLY:-y}
+
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  echo "Ok, running in incremental build mode"
+  incremental="--incremental "
+else
+  echo "Ok, running in normal build mode"
+fi
+
+(bundle check || bundle install) && bundle exec jekyll serve --config _config.yml,_config.dev.yml --watch --host 0.0.0.0 $incremental$@
