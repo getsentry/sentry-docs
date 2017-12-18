@@ -7,11 +7,11 @@ group :jekyll_plugins do
   gem "sprockets", "~> 4.0.beta", {
     require: false
   }
-
   gem 'jekyll-assets'
   gem 'jekyll-livereload'
   gem 'terminal-notifier'
   gem 'uglifier'
+  gem 'autoprefixer-rails'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
