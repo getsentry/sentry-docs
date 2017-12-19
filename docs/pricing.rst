@@ -1,9 +1,8 @@
 Pricing
 =======
 
-.. note:: This document reflects the latest version of Sentry's pricing model, although we
-          try to re-use the same general terms throughout our product.
-
+.. note:: This document aims to clarify concepts and frequently asked questions around pricing.
+          For the breakdown of plans and prices, go to our `pricing page <https://sentry.io/pricing>`_.
 
 Concepts
 --------
