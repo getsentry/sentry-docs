@@ -12,6 +12,7 @@ group :jekyll_plugins do
   gem 'terminal-notifier'
   gem 'uglifier'
   gem 'autoprefixer-rails'
+  gem 'jekyll-extlinks'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
