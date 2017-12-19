@@ -566,6 +566,9 @@ $(function() {
       }
 
       user = resp.user;
+      if (user.isAuthenticated) {
+        $('#signup-btn').attr('style', 'display:none;');
+      }
       initInterface();
 
       ra.identify(user.id);
