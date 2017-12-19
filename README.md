@@ -28,30 +28,30 @@ It is possible to define platform-specific examples of content using `_includes/
 
 ```
 # Define our individual examples
-
 {% capture javascript_example %}
   {%- highlight javascript -%}
   console.log("Hello world")
   {%- endhighlight -%}
 {% endcapture %}
-
 {% capture python_example %}
   {%- highlight python -%}
   print("Hello world")
   {%- endhighlight -%}
 {% endcapture %}
-
 {% capture ruby_example %}
   {%- highlight ruby -%}
   puts "Hello world"
   {%- endhighlight -%}
 {% endcapture %}
 
+# Give ourselves a quick reference to the platforms object
+{% assign platforms = site.data.platforms }
+
 # Define an Array of languages to display
 {% assign labels = site.Array
-  | push: 'JavaScript'
-  | push: 'Python'
-  | push: 'Ruby'
+  | push: platforms.javascript.name
+  | push: platforms.python.name
+  | push: platforms.ruby.name
 %}
 
 # Define an Array of examples
