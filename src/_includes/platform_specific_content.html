@@ -1,4 +1,8 @@
-{%- if include.key and include.platforms and include.contents -%}
+{%- assign has_errors = false -%}
+{%- unless include.key and include.platforms and include.contents -%}
+{%- assign has_errors = true -%}
+{%- endunless -%}
+{%- if has_errors != true -%}
 <ul class="nav nav-pills" id="pills-tab" role="tablist">
   {% for platform in include.platforms %}
   <li class="nav-item">
@@ -30,11 +34,14 @@
 {%- elsif jekyll.environment == 'development' -%}
 <div class="alert alert-danger">
   <h4 class="alert-heading">Language switcher error</h4>
-  <p>The following values are missing</p>
-  <ul>
-    {% unless include.key %}<li><code>key</code> String: (must be unique)</li>{% endunless %}
-    {% unless include.platforms %}<li><code>platforms</code> Array</li>{% endunless %}
-    {% unless include.contents %}<li><code>contents</code> Array</li>{% endunless %}
-  </ul>
+  <hr>
+  {%- unless include.key and include.platforms and include.contents -%}
+  {% unless include.key %}<p>Missing value: <code>key</code> String: (must be unique)</p>{% endunless %}
+  {% unless include.platforms %}<p>Missing value: <code>platforms</code> Array</p>{% endunless %}
+  {% unless include.contents %}<p>Missing value: <code>contents</code> Array</p>{% endunless %}
+  {%- endunless -%}
+  {%- unless include.platforms.size == include.contents.size -%}
+  <p>The values of <code>platforms</code> and <code>contents</code> must contain the same number of items</p>
+  {%- endunless -%}
 </div>
 {%- endif -%}
