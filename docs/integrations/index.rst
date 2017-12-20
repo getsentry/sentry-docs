@@ -10,7 +10,7 @@ Sentry integrates seamlessly with your favorite apps and services.
 - Flowdock
 - :doc:`github`
 - GitLab
-- Heroku
+- :doc:`heroku`
 - :doc:`hipchat`
 - Lighthouse
 - :doc:`jira`
@@ -35,6 +35,7 @@ Sentry integrates seamlessly with your favorite apps and services.
    asana
    bitbucket
    github
+   heroku
    hipchat
    jira
    sessionstack
