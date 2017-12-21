@@ -47,3 +47,7 @@
 *   .. class:: platformlink-perl
 
     :doc:`/clients/perl/index` For Perl apps.
+
+*   .. class:: platformlink-cordova
+
+    :doc:`/clients/cordova/index` Including Ionic.
