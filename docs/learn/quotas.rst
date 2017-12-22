@@ -101,8 +101,8 @@ the limits may change over time and vary between attributes most
 individual attributes are capped at 512 bytes. Additionally, certain
 attributes also limit the maximum number of items.
 
-For example, ``extra`` data is limited to 100 items, and each item is
-capped at 512 bytes. Similar restrictions apply to context locals (within
+For example, ``extra`` data is limited to 50 items, and each item is
+capped at 16 KB. Similar restrictions apply to context locals (within
 a stacktrace's frame), as well as any similar attributes.
 
 Generic attributes like the event's label also have limits but are more
