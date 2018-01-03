@@ -21,5 +21,6 @@ discussion about supporting it on our `community forum <https://forum.sentry.io>
    php/index
    python/index
    ruby/index
+   cordova/index
 
 .. include:: table.rst.inc
