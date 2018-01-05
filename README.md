@@ -28,7 +28,7 @@ It is possible to define platform-specific examples of content using `_includes/
 
 ```
 # Define the content for each platform
-re javascript_content %}
+{% capture javascript_content %}
   {%- highlight javascript -%}
   console.log("Hello world")
   {%- endhighlight -%}
