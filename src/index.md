@@ -28,7 +28,7 @@ description: |
 </div>
 
 <div class="alert alert-warning" role="alert">
-  <h5 class="alert-heading">Note</h5>
+  <h5 class="alert-heading text-uppercase">Note</h5>
   <p>Aww yeah, you successfully read this important alert message. This example text is going to run a bit longer so that you can see how spacing within an alert works with this kind of content.</p>
 </div>
 
