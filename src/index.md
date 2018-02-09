@@ -7,17 +7,23 @@ description: |
 <h5 class="text-center mb-3">Getting started with Sentry is a three step process:</h5>
 
 <div class="row bg-light process mb-4">
-  <div class="col py-2 text-center">
-    <svg src="img/svg/configure-sdk.svg" alt="..." class="icon mx-auto d-block" height="48" width="48"/>
-    <small><b>Sign Up</b></small>
+  <div class="col pt-3 pb-2 text-center">
+    <div class="icon mx-auto d-block mb-1">
+      {% include /svg/sign-up.svg %}
+    </div>
+    <small class="text-uppercase"><b>Sign Up</b></small>
   </div>
-  <div class="col py-2 text-center">
-    <svg src="../img/svg/sidebar/configure-sdk.svg" alt="..." class="mx-auto d-block" height="48" width="48"/>
-    <small><b>Configure SDK</b></small>
+  <div class="col pt-3 pb-2 text-center">
+    <div class="icon mx-auto d-block mb-1">
+      {% include /svg/configure-sdk.svg %}
+    </div>
+    <small class="text-uppercase"><b>Configure SDK</b></small>
   </div>
-  <div class="col py-2 text-center">
-    <svg src="../img/svg/sidebar/configure-sdk.svg" alt="..." class="mx-auto d-block" height="48" width="48"/>
-    <small><b>Learn About The DSN</b></small>
+  <div class="col pt-3 pb-2 text-center">
+    <div class="icon mx-auto d-block mb-1">
+      {% include /svg/about-the-dsn.svg %}
+    </div>
+    <small class="text-uppercase"><b>Learn About The DSN</b></small>
   </div>
 </div>
 
@@ -36,33 +42,45 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 &lt;p&gt;And another line of sample text here...&lt;/p&gt;
 </code></pre>
 
-**Popular integrations are:**
+##### Popular integrations are:
 <div class="integrations mb-2">
   <div class="row">
     <div class="col-sm">
-      <img src="..." alt="..." class="img-thumbnail rounded mx-auto d-block" height="48" width="48"/>
+      <div class="icon mx-auto d-block">
+        {% include /svg/about-the-dsn.svg %}
+      </div>
       <small><b>One of six columns</b></small>
     </div>
     <div class="col-sm">
-      <img src="..." alt="..." class="img-thumbnail rounded mx-auto d-block" height="48" width="48"/>
+      <div class="icon mx-auto d-block">
+        {% include /svg/about-the-dsn.svg %}
+      </div>
       <small><b>Two of six columns</b></small>
     </div>
     <div class="col-sm">
-      <img src="..." alt="..." class="img-thumbnail rounded mx-auto d-block" height="48" width="48"/>
+      <div class="icon mx-auto d-block">
+        {% include /svg/about-the-dsn.svg %}
+      </div>
       <small><b>Three of six columns</b></small>
     </div>
   </div>
   <div class="row">
     <div class="col-sm">
-      <img src="..." alt="..." class="img-thumbnail rounded mx-auto d-block" height="48" width="48"/>
+      <div class="icon mx-auto d-block">
+        {% include /svg/about-the-dsn.svg %}
+      </div>
       <small><b>Four of six columns</b></small>
     </div>
     <div class="col-sm">
-      <img src="..." alt="..." class="img-thumbnail rounded mx-auto d-block" height="48" width="48"/>
+      <div class="icon mx-auto d-block">
+        {% include /svg/about-the-dsn.svg %}
+      </div>
       <small><b>Five of six columns</b></small>
     </div>
     <div class="col-sm">
-      <img src="..." alt="..." class="img-thumbnail rounded mx-auto d-block" height="48" width="48"/>
+      <div class="icon mx-auto d-block">
+        {% include /svg/about-the-dsn.svg %}
+      </div>
       <small><b>Six of six columns</b></small>
     </div>
   </div>
@@ -78,18 +96,30 @@ After you complete setting up a project in Sentry, you’ll be given a value whi
 
 The DSN can be found in Sentry by navigating here:
 
-<div class="row bg-light process mb-4">
-  <div class="col py-2">
-    <img src="..." class="icon icon-1 rounded align-self-start mr-2" height="24" width="24"/>
-    <small><b>One of six columns</b></small>
+<div class="bg-light process mb-4">
+  <div class="d-flex align-items-center p-2">
+    <span class="badge badge-secondary mr-2">
+      1
+    </span>
+    <span class="">
+      <b>One of six columns</b>
+    </span>
   </div>
-  <div class="col py-2">
-    <img src="..." class="icon icon-1 rounded align-self-start mr-2" height="24" width="24"/>
-    <small><b>Two of six columns</b></small>
+  <div class="d-flex flex-row align-items-center p-2">
+    <span class="badge badge-secondary mr-2">
+      2
+    </span>
+    <span class="">
+      <b>One of six columns</b>
+    </span>
   </div>
-  <div class="col py-2">
-    <img src="..." class="icon icon-1 rounded align-self-start mr-2" height="24" width="24"/>
-    <small><b>Three of six columns</b></small>
+  <div class="d-flex flex-row align-items-center p-2">
+    <span class="badge badge-secondary mr-2">
+      3
+    </span>
+    <span class="">
+      <b>One of six columns</b>
+    </span>
   </div>
 </div>
 
