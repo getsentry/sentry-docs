@@ -72,6 +72,7 @@ virtual environment. Run the following to install ``virtualenv`` and ``virtualen
 Then, add the following line to your bash profile::
 
     source /usr/local/bin/virtualenvwrapper.sh
+    export PYTHONDONTWRITEBYTECODE=1 # recommended, but not required
 
 
 JavaScript
