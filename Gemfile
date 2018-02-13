@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "jekyll", "~> 3.6.2"
+gem "jekyll", "3.7.2"
 
 # If you have any plugins, put them here!
 group :jekyll_plugins do
@@ -8,7 +8,6 @@ group :jekyll_plugins do
     require: false
   }
   gem 'jekyll-assets'
-  gem 'jekyll-livereload'
   gem 'terminal-notifier'
   gem 'uglifier'
   gem 'autoprefixer-rails'
