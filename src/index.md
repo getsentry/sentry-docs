@@ -4,6 +4,7 @@ title: Getting Started
 description: |
   Sentry is designed to be very simple to get off the ground, yet powerful to grow into. If you have never used Sentry before, this tutorial will help you with getting started.
 ---
+
 <h5 class="text-center mb-3">Getting started with Sentry is a three step process:</h5>
 
 <div class="row bg-light process mb-4">
@@ -27,10 +28,7 @@ description: |
   </div>
 </div>
 
-<div class="alert alert-warning" role="alert">
-  <h5 class="alert-heading text-uppercase">Note</h5>
-  <p>Aww yeah, you successfully read this important alert message. This example text is going to run a bit longer so that you can see how spacing within an alert works with this kind of content.</p>
-</div>
+{% include components/alert.html content="Aww yeah, you successfully read this important alert message. This example text is going to run a bit longer so that you can see how spacing within an alert works with this kind of content." %}
 
 ---
 
