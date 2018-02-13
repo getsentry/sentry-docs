@@ -41,45 +41,45 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 </code></pre>
 
 ##### Popular integrations are:
-<div class="integrations mb-2">
+<div class="mb-2">
   <div class="row">
     <div class="col-sm">
-      <div class="icon mb-1 mx-auto d-block">
-        {% include /svg/about-the-dsn.svg %}
-      </div>
-      <small><b>One of six columns</b></small>
+    {%- include components/tile.html
+      label="One of six columns"
+      icon="about-the-dsn"
+    -%}
     </div>
     <div class="col-sm">
-      <div class="icon mb-1 mx-auto d-block">
-        {% include /svg/about-the-dsn.svg %}
-      </div>
-      <small><b>Two of six columns</b></small>
+    {%- include components/tile.html
+      label="Two of six columns"
+      icon="about-the-dsn"
+    -%}
     </div>
     <div class="col-sm">
-      <div class="icon mb-1 mx-auto d-block">
-        {% include /svg/about-the-dsn.svg %}
-      </div>
-      <small><b>Three of six columns</b></small>
+    {%- include components/tile.html
+      label="Three of six columns"
+      icon="about-the-dsn"
+    -%}
     </div>
   </div>
   <div class="row">
     <div class="col-sm">
-      <div class="icon mb-1 mx-auto d-block">
-        {% include /svg/about-the-dsn.svg %}
-      </div>
-      <small><b>Four of six columns</b></small>
+    {%- include components/tile.html
+      label="Four of six columns"
+      icon="about-the-dsn"
+    -%}
     </div>
     <div class="col-sm">
-      <div class="icon mb-1 mx-auto d-block">
-        {% include /svg/about-the-dsn.svg %}
-      </div>
-      <small><b>Five of six columns</b></small>
+    {%- include components/tile.html
+      label="Five of six columns"
+      icon="about-the-dsn"
+    -%}
     </div>
     <div class="col-sm">
-      <div class="icon mb-1 mx-auto d-block">
-        {% include /svg/about-the-dsn.svg %}
-      </div>
-      <small><b>Six of six columns</b></small>
+    {%- include components/tile.html
+      label="Six of six columns"
+      icon="about-the-dsn"
+    -%}
     </div>
   </div>
 </div>
