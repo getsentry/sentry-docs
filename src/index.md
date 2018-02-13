@@ -46,19 +46,19 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 <div class="integrations mb-2">
   <div class="row">
     <div class="col-sm">
-      <div class="icon mx-auto d-block">
+      <div class="icon mb-1 mx-auto d-block">
         {% include /svg/about-the-dsn.svg %}
       </div>
       <small><b>One of six columns</b></small>
     </div>
     <div class="col-sm">
-      <div class="icon mx-auto d-block">
+      <div class="icon mb-1 mx-auto d-block">
         {% include /svg/about-the-dsn.svg %}
       </div>
       <small><b>Two of six columns</b></small>
     </div>
     <div class="col-sm">
-      <div class="icon mx-auto d-block">
+      <div class="icon mb-1 mx-auto d-block">
         {% include /svg/about-the-dsn.svg %}
       </div>
       <small><b>Three of six columns</b></small>
@@ -66,19 +66,19 @@ Sentry captures data by using an SDK within your application’s runtime. These 
   </div>
   <div class="row">
     <div class="col-sm">
-      <div class="icon mx-auto d-block">
+      <div class="icon mb-1 mx-auto d-block">
         {% include /svg/about-the-dsn.svg %}
       </div>
       <small><b>Four of six columns</b></small>
     </div>
     <div class="col-sm">
-      <div class="icon mx-auto d-block">
+      <div class="icon mb-1 mx-auto d-block">
         {% include /svg/about-the-dsn.svg %}
       </div>
       <small><b>Five of six columns</b></small>
     </div>
     <div class="col-sm">
-      <div class="icon mx-auto d-block">
+      <div class="icon mb-1 mx-auto d-block">
         {% include /svg/about-the-dsn.svg %}
       </div>
       <small><b>Six of six columns</b></small>
