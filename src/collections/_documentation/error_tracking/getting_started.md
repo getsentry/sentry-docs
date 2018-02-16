@@ -1,4 +1,4 @@
 ---
 title: Getting Started
-order: 0
+sidebar_order: 0
 ---

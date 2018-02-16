@@ -1,6 +1,6 @@
 ---
 title: Error Alerts
-order: 0
+sidebar_order: 0
 ---
 
 Hello world
