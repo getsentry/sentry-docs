@@ -36,6 +36,26 @@ description: |
 
 Sentry captures data by using an SDK within your application’s runtime. These are platform specific, and allow Sentry to have a deep understanding of both how your application works. In case your environment is very specific, you can also roll your own SDK using our document SDK API.
 
+<div class="dropdown mb-2">
+  <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Integrations
+  </button>
+  <div class="dropdown-menu px-2" aria-labelledby="dropdownMenuButton">
+    <div class="row no-gutters">
+      <div class="col-6 d-flex flex-column">
+        <a class="dropdown-item" href="#">Action</a>
+        <a class="dropdown-item" href="#">Another action</a>
+        <a class="dropdown-item" href="#">Something else here</a>
+      </div>
+      <div class="col-6 d-flex flex-column">
+        <a class="dropdown-item" href="#">Action</a>
+        <a class="dropdown-item" href="#">Another action</a>
+        <a class="dropdown-item" href="#">Something else here</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <pre class="pre p-2 mb-5"><code>&lt;p&gt;Sample text here...&lt;/p&gt;
 &lt;p&gt;And another line of sample text here...&lt;/p&gt;
 </code></pre>
