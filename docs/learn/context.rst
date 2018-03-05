@@ -15,8 +15,7 @@ amongst any issue captured in its lifecycle, and includes the following componen
 
 Context is considered to be request state, and thus should be cleared
 out at the beginning (or end) of each operation. SDKs like the JavaScript
-SDK usually won't need to worry about this as they are generally are not
-long lived.
+SDK usually won't need to worry about this as they generally are not long lived.
 
 Tagging Events
 --------------
