@@ -27,13 +27,21 @@ Sentry will scrub the following:
 
   - passwd
 
-  - authorization
-
   - api_key
 
   - apikey
 
   - access_token
+  
+  - auth_token
+  
+  - credentials
+  
+  - mysql_pwd
+  
+  - stripetoken
+  
+  - card[number]
 
 - Any keys which match values that you've added to the list of additional fields
   in your Project Settings.
