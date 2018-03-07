@@ -41,7 +41,21 @@ Sentry captures data by using an SDK within your application’s runtime. These 
     Integrations
   </button>
   <div class="dropdown-menu px-2" aria-labelledby="dropdownMenuButton">
+    <div class="row no-gutters pb-2">
+      <h5 class="col-12 pl-1 pt-1">Title</h5>
+      <div class="col-6 d-flex flex-column">
+        <a class="dropdown-item" href="#">Action</a>
+        <a class="dropdown-item" href="#">Another action</a>
+        <a class="dropdown-item" href="#">Something else here</a>
+      </div>
+      <div class="col-6 d-flex flex-column">
+        <a class="dropdown-item" href="#">Action</a>
+        <a class="dropdown-item" href="#">Another action</a>
+        <a class="dropdown-item" href="#">Something else here</a>
+      </div>
+    </div>
     <div class="row no-gutters">
+      <h5 class="col-12 pl-1 pt-1">Title</h5>
       <div class="col-6 d-flex flex-column">
         <a class="dropdown-item" href="#">Action</a>
         <a class="dropdown-item" href="#">Another action</a>
