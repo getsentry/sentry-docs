@@ -16,6 +16,7 @@ discussion about supporting it on our `community forum <https://forum.sentry.io>
    java/index
    javascript/index
    node/index
+   electron/index
    react-native/index
    perl/index
    php/index

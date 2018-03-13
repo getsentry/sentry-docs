@@ -6,11 +6,15 @@
 
 *   .. class:: platformlink-js
 
-    :doc:`/clients/javascript/index` Including React, Angular, Electron, Ember, Vue, and Backbone.
+    :doc:`/clients/javascript/index` Including React, Angular, Ember, Vue, and Backbone.
 
 *   .. class:: platformlink-node
 
     :doc:`/clients/node/index` Including Express, Koa, Loopback, Sails and Connect.
+
+*   .. class:: platformlink-electron
+
+    :doc:`/clients/electron/index` For Electron apps.
 
 *   .. class:: platformlink-react-native
 
