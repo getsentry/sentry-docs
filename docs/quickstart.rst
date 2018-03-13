@@ -1,6 +1,9 @@
 Getting Started
 ===============
 
+For an overview of what Sentry does, take a look at the Sentry
+`workflow <https://blog.sentry.io/2018/03/06/the-sentry-workflow>`_.
+
 Sentry is designed to be very simple to get off the ground, yet powerful
 to grow into.  If you have never used Sentry before, this tutorial will
 help you getting started.
