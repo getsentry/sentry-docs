@@ -10,7 +10,7 @@ This is the documentation for the Electron SDK.
 setup. Under the hood we use `raven-node <https://github.com/getsentry/raven-node>`_
 and `raven-js <https://github.com/getsentry/raven-js>`_.
 
-We also do support native crashes via Minidumps.
+We also support native crashes via Minidumps.
 
 Installation
 ------------
