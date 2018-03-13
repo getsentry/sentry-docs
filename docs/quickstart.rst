@@ -5,6 +5,9 @@ Sentry is designed to be very simple to get off the ground, yet powerful
 to grow into.  If you have never used Sentry before, this tutorial will
 help you getting started.
 
+For an overview of what Sentry does, take a look at the Sentry
+`workflow <https://blog.sentry.io/2018/03/06/the-sentry-workflow>`_.
+
 Getting started with Sentry is a three step process:
 
 1.  `Sign up for an account <https://sentry.io/signup/>`_
