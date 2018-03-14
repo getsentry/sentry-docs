@@ -58,7 +58,9 @@ Python
 While OS X ships with an acceptable version of Python, installing the latest binaries from Homebrew
 is recommended. Run the following to install and configure brewed Python::
 
-    brew install python
+    brew install python@2
+
+.. note:: Python 2.7 is required.
 
 Python Virtual Environment
 **************************
