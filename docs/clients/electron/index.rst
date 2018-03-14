@@ -20,8 +20,9 @@ All packages are available via npm.
 .. code-block:: sh
 
     $ npm install @sentry/electron --save
+    $ npm install @sentry/wizard --save-dev
 
-This will also install `@sentry/wizard`. Run the wizard the help you finish your setup:
+Run the wizard to help you finish your setup:
 With ``yarn`` you can just call:
 
 .. code-block:: sh
@@ -36,8 +37,8 @@ If you only have ``npm`` call:
 
 ``sentry-wizard`` will display recommended packages like `electron-download` which we need
 to symbolicate native crashes.
-The wizard will also create a file called ``sentry.properties`` (which does contain
-you account information) and ``sentry-symbols.js`` which helps you with the symbols
+The wizard will also create a file called ``sentry.properties`` (which contains
+your account information) and ``sentry-symbols.js`` which helps you with the symbol
 upload.
 
 
@@ -49,7 +50,7 @@ The following code should reside in the ``main process`` and all ``renderer proc
 .. code-block:: javascript
 
     const { SentryClient } = require('@sentry/electron');
-    
+
     SentryClient.create({
       dsn: '___PRIVATE_DSN___',
       // ...
