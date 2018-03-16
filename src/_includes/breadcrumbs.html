@@ -1,10 +1,34 @@
-{%- assign path = page.path | split: '/' -%}
+{%- assign __path = page.url
+  | replace: "collections/_documentation/", ""
+  | split: '/'
+-%}
 <div class="breadcrumb bg-light title border-bottom d-flex align-items-center">
   <div class="container">
     <ol class="breadcrumb-list d-flex">
-      <li class="breadcrumb-item"><a href="#">Home</a></li>
-      <li class="breadcrumb-item"><a href="#">Library</a></li>
-      <li class="breadcrumb-item active" aria-current="page"><span>Data</span></li>
+      {%- assign __slugs = site.Array -%}
+      {%- for __segment in __path -%}
+        {%- assign __slugs = __slugs | push: __segment -%}
+        {%- assign __url = __slugs | join: '/' | append: '/' -%}
+        {%- assign __page = site.pages | concat: site.documentation
+          | where: "url", __url
+          | first
+        -%}
+        {%- if __page -%}
+          {%- if forloop.last -%}
+            <li class="breadcrumb-item active" aria-current="page"><span>{{ __page.title }}</span></li>
+          {%- else condition -%}
+            <li class="breadcrumb-item"><a href="{{ __page.url }}">{{ __page.title }}</a></li>
+          {%- endif -%}
+        {%- else -%}
+          {%- assign __cateogry = site.documentation_categories
+            | where: 'slug', __segment
+            | first
+          -%}
+          {%- if __cateogry -%}
+            <li class="breadcrumb-item"><span>{{ __cateogry.title }}</span></li>
+          {%- endif -%}
+        {%- endif -%}
+      {%- endfor -%}
     </ol>
   </div>
 </div>
