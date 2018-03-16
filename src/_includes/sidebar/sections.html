@@ -1,0 +1,38 @@
+<div class="list-item mb-5 text-white">
+  {%- if include.category -%}
+  <div class="sidebar-title d-flex align-items-center mb-2">
+    {% include /svg/{{ include.category.icon }}.svg %}
+    <h6 class="ml-2">{{ include.category.title }}</h6>
+  </div>
+  {%- endif -%}
+  {%- assign __docs_paths = include.documents | map: 'path' -%}
+  {%- assign __cat_prefix = __docs_paths | lcp -%}
+  {%- assign __section_grouped_paths = __docs_paths
+    | join: ';'
+    | replace: __cat_prefix
+    | split: ';'
+    | group_by_exp: 'item', 'item | split: "/" | first'
+  -%}
+  <ul class="sidebar-list category-highlight">
+    {%- for __document in include.documents -%}
+      {%- assign __segments = __document.path
+        | replace: __cat_prefix, ''
+        | split: '/'
+      -%}
+      {%- comment -%}
+      If the size is 1, this is a top level section
+      {%- endcomment -%}
+      {%- if __segments.size == 1 -%}
+        {%- assign __section = __section_grouped_paths
+          | where: 'name', __document.slug
+          | first
+        -%}
+        {%- include sidebar/section.html
+          section=__section
+          document=__document
+          documents=include.documents
+        -%}
+      {%- endif -%}
+    {%- endfor -%}
+  </ul>
+</div>

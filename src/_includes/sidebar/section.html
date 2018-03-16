@@ -1,0 +1,20 @@
+<li class="sidebar-list-item">
+  <a href="{{ include.document.url }}" class="d-block sidebar-link{% if page.path == include.document.path %} active{% endif %}">{{ include.document.title }}</a>
+  {%- capture __section_prefix -%}{{ __cat_prefix }}{{ include.document.slug }}{% endcapture%}
+  {%- capture __where_exp -%}
+    item.path contains '{{ __section_prefix }}/'
+  {%- endcapture -%}
+  {%- assign __section_documents = include.documents
+    | where_exp: 'item', __where_exp
+  -%}
+  {%- assign primary_document = __section_documents | first -%}
+  {% if page.path contains __section_prefix and include.section.items.size > 0 %}
+    <ul class="pl-2 sidebar-list">
+      {% for __section_document in __section_documents %}
+      <li class="sidebar-list-item">
+        <a href="{{ __section_document.url }}" class="d-block sidebar-link{% if page.path == __section_document.path %} active{% endif %}">{{ __section_document.title }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  {%- endif -%}
+</li>

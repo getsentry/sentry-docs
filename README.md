@@ -20,3 +20,19 @@ This will run Bundler to install all the necessary dependencies and then run a w
 ## Layout components
 
 While in dev mode, visit [localhost:4000/dev/components/](http://localhost:4000/dev/components/) to see the components available.
+
+## Adding content
+
+The Sentry documentation contains three levels of navigation hierarchy: Category, Section, and Document.
+
+### Add a category
+
+Add a new file to _src/collections/_documentation_categories_.
+
+### Add a section
+
+Add a new file to _src/collections/_documentation_.
+
+### Add a document
+
+Add the file to a folder within _src/collections/_documentation_. If creating a new section, you must also create a new section file mentioned above.
