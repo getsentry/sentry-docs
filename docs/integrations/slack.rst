@@ -73,6 +73,14 @@ When you click **Edit Rule**, under **Take these actions** you can specify your 
 After selecting **Send a notification to the {workspace} Slack workspace to {channel} and include tags {tags}**, you can specify the workspace, channel(s), and tags you'd like to include with your Alert Rule.
 
   .. image:: img/slack-alert-rule-for-one-workspace.png
+     :width: 70%
+
+You can add Alert Rules routing to as many Slack channels as you'd like!
+
+From the Slack notification, you can use the Resolve, Ignore, or Assign buttons to update the Issue in Sentry.
+
+.. image:: img/slack-alert-message.png
+   :width: 70%
 
 Deleting the legacy Slack integration
 -------------------------------------
