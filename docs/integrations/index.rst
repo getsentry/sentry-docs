@@ -21,7 +21,7 @@ Sentry integrates seamlessly with your favorite apps and services.
 - Pushover
 - Redmine
 - :doc:`sessionstack`
-- Slack
+- :doc:`slack`
 - :doc:`splunk`
 - Sprint.ly
 - Taiga
@@ -39,4 +39,5 @@ Sentry integrates seamlessly with your favorite apps and services.
    hipchat
    jira
    sessionstack
+   slack
    splunk
