@@ -1,6 +1,8 @@
 Slack
 ======
 
+.. note:: The new Slack integration is only available for Sentry's early adopters -- you can enable early adopters in your **Organization Settings** under **General**.
+
 Sentry's new Slack integration creates workflows for your team, instead of a notification stream. Now you can triage, resolve, and ignore issues directly from Slack.
 
 Configure Slack
@@ -8,19 +10,22 @@ Configure Slack
 
 You can authorize the Slack integration globally by clicking on **All Integrations** under your **Project settings**.
 
-At the top of the page, you'll see the available Global Integrations which includes Slack. Click on **Slack** to integrate your Slack workspace(s) with your project.
-    .. image:: img/slack-global-integration-project-settings-add-workspace.jpg
+At the top of the page, you'll see the available Global Integrations list, which includes Slack. Click on **Slack** to integrate your Slack workspace(s) with your project.
+
+    .. image:: img/slack-all-integrations-page.png
        :width: 70%
 
-Click **Add workspace**
+Click **Add workspace**:
 
-    .. image:: img/slack-global-integration-project-settings-add-workspace.jpg
-       :width: 70%
+.. image:: img/slack-global-integration-project-settings-add-workspace.png
+   :width: 70%
 
 A new window will open to connect your Slack workspace with Sentry:
 
     .. image:: img/slack-auth-choose-workspace.png
        :width: 70%
+
+*You must be your Slack workspace Owner to authorize Sentry.*
 
 .. note:: You can toggle the Slack workspace you want to connect in the dropdown menu in the upper right corner of the authentication window. To set up multiple workspaces, go through this process for each separate workspace.
 
@@ -28,14 +33,14 @@ After you ensure you're connecting the correct workspace, click **Continue**.
 
 On the next page, you can choose the scope of channels you'd like Sentry to access. You can specify all public channels or choose specific channels.
 
-    .. image:: img/slack-auth-channel-pref.png
+  .. image:: img/slack-auth-channel-pref.png
        :width: 60%
 
 Click **Authorize**.
 
 Your Project Integrations page will refresh and show the Slack workspace you just added.
 
-    .. image:: img/slack-add-workspace-success.png
+  .. image:: img/slack-add-workspace-success.png
        :width: 70%
 
 You'll also see the Sentry app join the Slack channels you specified right away:
