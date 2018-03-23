@@ -58,16 +58,23 @@ Configure Alert Rules for specific Slack channels
 
 Confirm your Slack workspace is configured globally for your Sentry organization by clicking on **All Integrations** from your **Project Settings**
 
-    .. image:: img/slack-global-integration-project-settings.png
+    .. image:: img/slack-all-integrations-page.png
        :width: 70%
 
-In your **Project Settings** under **Alerts** you can configure when notifications are sent to your Slack workspace(s). You can route notifications in a few ways:
+Click **Configure** and you'll see the available Slack workspaces for your project. From this page, you can click on **Add an Alert Rule for this project** to go directly to your Alert Rule settings.
+
+    .. image:: img/slack-global-integration-project-settings-add-workspace.png
+       :width: 70%
+
+You can also access **Alerts** from your **Project Settings**. There, you can configure when notifications are sent to your Slack workspace(s). You can route notifications in a few ways:
 
 1. To a specific channel in your Slack workspace
 2. To multiple channels in your Slack workspace
 3. To multiple Slack workspaces
 
-For any existing Alert Rules you configured, you can edit the rule to update the Slack channel routing:
+Click **New Alert Rule** to configure a new Alert.
+
+For any existing Alert Rules you previously configured, you can edit the rule to update the Slack channel routing:
 
     .. image:: img/slack-alert-rules.png
        :width: 70%
