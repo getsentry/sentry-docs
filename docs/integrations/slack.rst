@@ -27,7 +27,7 @@ A new window will open to connect your Slack workspace with Sentry:
     .. image:: img/slack-auth-choose-workspace.png
        :width: 70%
 
-*You must be your Slack workspace Owner to authorize Sentry.*
+*Slack defaults to let any member of your workspace authorize apps, but you may have to request access, see this `Slack help article <https://get.slack.help/hc/en-us/articles/202035138-Add-an-app-to-your-workspace> for more details`.*
 
 .. note:: You can toggle the Slack workspace you want to connect in the dropdown menu in the upper right corner of the authentication window. To set up multiple workspaces, go through this process for each separate workspace.
 
