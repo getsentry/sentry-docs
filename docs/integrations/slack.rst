@@ -63,7 +63,7 @@ Confirm your Slack workspace is configured globally for your Sentry organization
 
 Click **Configure** and you'll see the available Slack workspaces for your project. From this page, you can click on **Add an Alert Rule for this project** to go directly to your Alert Rule settings.
 
-    .. image:: img/slack-global-integration-project-settings-add-workspace.png
+    .. image:: img/slack-global-integration-project-settings-add-alert.png
        :width: 70%
 
 You can also access **Alerts** from your **Project Settings**. There, you can configure when notifications are sent to your Slack workspace(s). You can route notifications in a few ways:
