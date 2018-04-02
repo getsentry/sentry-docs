@@ -1,8 +1,6 @@
 Slack
 ======
 
-.. note:: The new Slack integration is only available for Sentry's early adopters -- you can enable early adopters in your **Organization Settings** under **General**.
-
 Sentry's new Slack integration creates workflows for your team, instead of a notification stream. Now you can triage, resolve, and ignore issues directly from Slack.
 
 Configure Slack
@@ -27,7 +25,7 @@ A new window will open to connect your Slack workspace with Sentry:
     .. image:: img/slack-auth-choose-workspace.png
        :width: 70%
 
-*You must be your Slack workspace Owner to authorize Sentry.*
+*Slack defaults to let any member of your workspace authorize apps, but you may have to request access, see this `Slack help article <https://get.slack.help/hc/en-us/articles/202035138-Add-an-app-to-your-workspace> for more details`.*
 
 .. note:: You can toggle the Slack workspace you want to connect in the dropdown menu in the upper right corner of the authentication window. To set up multiple workspaces, go through this process for each separate workspace.
 
@@ -63,7 +61,7 @@ Confirm your Slack workspace is configured globally for your Sentry organization
 
 Click **Configure** and you'll see the available Slack workspaces for your project. From this page, you can click on **Add an Alert Rule for this project** to go directly to your Alert Rule settings.
 
-    .. image:: img/slack-global-integration-project-settings-add-workspace.png
+    .. image:: img/slack-global-integration-project-settings-add-alert.png
        :width: 70%
 
 You can also access **Alerts** from your **Project Settings**. There, you can configure when notifications are sent to your Slack workspace(s). You can route notifications in a few ways:
