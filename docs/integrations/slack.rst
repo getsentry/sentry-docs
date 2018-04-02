@@ -1,8 +1,6 @@
 Slack
 ======
 
-.. note:: The new Slack integration is only available for Sentry's early adopters -- you can enable early adopters in your **Organization Settings** under **General**.
-
 Sentry's new Slack integration creates workflows for your team, instead of a notification stream. Now you can triage, resolve, and ignore issues directly from Slack.
 
 Configure Slack
