@@ -25,7 +25,7 @@ The following tokens are reserved and known to Sentry:
 
     Filter on the status of an issue.
 
-    Values are ``resolved``, ``unresolved``, ``muted``, ``assigned``, and ``unassigned``.
+    Values are ``resolved``, ``unresolved``, ``ignored``, ``assigned``, and ``unassigned``.
 
 .. describe:: assigned
 
