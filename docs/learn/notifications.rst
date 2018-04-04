@@ -90,5 +90,5 @@ The following third-party notifications are available via Sentry extensions:
 - `Pushover <https://github.com/getsentry/sentry-plugins>`_
 - `Whatsapp <https://github.com/ecarreras/sentry-whatsapp>`_
 - `XMPP <https://github.com/chroto/sentry-xmpp>`_
-- `Slack <https://github.com/getsentry/sentry-slack>`_
+- `slack <https://docs.sentry.io/integrations/slack/>`_
 - `Zabbix <https://github.com/m0n5t3r/sentry-zabbix>`_
