@@ -1,4 +1,6 @@
 ---
+title: Alert
+source: components/alert.html
 ---
 
 - `title="note"` _(optional)_ Title for the alert
@@ -7,7 +9,9 @@
 
 <hr>
 
-#### Basic use
+### Basic use
+
+#### Source
 
 ```liquid
 {% raw %}{% include components/alert.html
@@ -15,13 +19,17 @@
 %}{% endraw %}
 ```
 
-<div class="mb-3 mb-md-5">
+#### Output
+
+<div class="p-3 mb-3 mb-md-5 border rounded content-flush-bottom">
   {% include components/alert.html
     content="This is the body of the alert"
   %}
 </div>
 
-#### Full markdown content
+### Full markdown content
+
+#### Source
 
 ```liquid
 {% raw %}{% capture markdown_content %}
@@ -35,7 +43,10 @@ This paragraph explains that it will be followed by a list.
   content=markdown_content
 %}{% endraw %}
 ```
-<div class="mb-3 mb-md-5">
+
+#### Output
+
+<div class="p-3 mb-3 mb-md-5 border rounded content-flush-bottom">
   {% capture markdown_content %}
   This paragraph explains that it will be followed by a list.
 
@@ -52,6 +63,8 @@ This paragraph explains that it will be followed by a list.
 
 #### Kitchen sink
 
+#### Source
+
 ```liquid
 {% raw %}{% include components/alert.html
   title="Pay attention"
@@ -60,7 +73,9 @@ This paragraph explains that it will be followed by a list.
 %}{% endraw %}
 ```
 
-<div class="mb-3 mb-md-5">
+#### Output
+
+<div class="p-3 mb-3 mb-md-5 border rounded content-flush-bottom">
   {% include components/alert.html
     title="Pay attention"
     content="This is the body of the alert"

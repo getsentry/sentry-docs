@@ -1,4 +1,6 @@
 ---
+title: Tiles
+source: components/tile.html
 ---
 
 - `label="This is a tile"` _(required)_ Title for the tile
@@ -6,7 +8,9 @@
 
 <hr>
 
-#### Basic use
+### Basic use
+
+#### Source
 
 ```liquid
 {% raw %}{% include components/tile.html
@@ -16,7 +20,9 @@
 {% endraw %}
 ```
 
-<div class="mb-3 mb-md-5">
+#### Output
+
+<div class="p-3 mb-3 mb-md-5 border rounded content-flush-bottom">
 {%- include components/tile.html
   label="This is a tile"
   icon="api"

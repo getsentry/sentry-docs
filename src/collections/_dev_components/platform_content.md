@@ -1,6 +1,6 @@
 ---
 title: Platform Content
-source: _includes/platform_content.html
+source: components/platform_content.html
 example_string: Hello world
 example_1:
   JavaScript: |
@@ -29,7 +29,7 @@ You can customize content by platform. The switcher will globally remember the p
 
 <hr>
 
-### Basic example
+### Basic use
 
 #### Source
 
@@ -63,6 +63,6 @@ example_content:
 
 #### Output
 
-<div class="p-3 mb-3 mb-md-5 border rounded">
-{% include platform_content.html content=page.example_1 %}
+<div class="p-3 mb-3 mb-md-5 border rounded content-flush-bottom">
+{% include components/platform_content.html content=page.example_1 %}
 </div>
