@@ -12,6 +12,7 @@ group :jekyll_plugins do
   gem 'uglifier'
   gem 'autoprefixer-rails'
   gem 'jekyll-extlinks'
+  gem 'liquid-md5'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

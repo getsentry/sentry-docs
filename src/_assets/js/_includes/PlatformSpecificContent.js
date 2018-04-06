@@ -1,22 +1,20 @@
-$(function(){
-  var KEY = 'preferredPlatform'
-  var showPreferredPlatform = function(){
-    var preferredPlatform = localStorage.getItem(KEY)
-    if(!preferredPlatform) return
-    
-    var $tabs = $('.js-platform-specific-content .nav-link')
-    $tabs.removeClass('active')
-    $tabs.filter('[data-slug=' + preferredPlatform + ']').addClass('active')
+$(function() {
+  var KEY = 'preferredPlatform';
+  var showPreferredPlatform = function() {
+    var preferredPlatform = localStorage.getItem(KEY);
+    if (preferredPlatform) {
+      $('[data-platform="' + preferredPlatform + '"]').click();
+    }
+  };
 
-    var $tabPanes = $('.js-platform-specific-content .tab-pane')
-    $tabPanes.removeClass('show active')
-    $tabPanes.filter('[data-slug=' + preferredPlatform + ']').addClass('show active')
-  }
+  var $dropdownItems = $('.js-platform-specific-content .dropdown-item');
+  $dropdownItems.on('click', function(event) {
+    var $target = $(event.target);
+    var $parent = $target.closest('.js-platform-specific-content');
+    var platform = $target.data('platform');
+    localStorage.setItem(KEY, platform);
+    $parent.find('.dropdown-toggle').text(platform);
+  });
 
-  $('.js-platform-specific-content').on('shown.bs.tab', function(event){
-    localStorage.setItem(KEY, $(event.target).data('slug'))
-    showPreferredPlatform()
-  })
-
-  showPreferredPlatform()
-})
+  showPreferredPlatform();
+});
