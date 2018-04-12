@@ -133,3 +133,16 @@ The following types are known:
         Human readable application version, as it appears on the platform.
     ``app_build``:
         Internal build identifier, as it appears on the platform.
+
+.. describe:: browser
+
+    Carries information about the browser or user agent for web-related errors.
+    This can either be the browser this event ocurred in, or the user agent of a
+    web request that triggered the event.
+
+    Attributes:
+
+    ``name``:
+        Display name of the browser application.
+    ``version``:
+        Version string of the browser.
