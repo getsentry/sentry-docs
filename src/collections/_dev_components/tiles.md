@@ -16,8 +16,7 @@ source: components/tile.html
 {% raw %}{% include components/tile.html
   label="This is a tile"
   icon="api"
-%}
-{% endraw %}
+%}{% endraw %}
 ```
 
 #### Output

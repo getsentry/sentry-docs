@@ -57,8 +57,7 @@ example_content:
     {%- endhighlight -%}
 ---
 
-{% include platform_content.html content=page.example_content %}
-{% endraw %}
+{% include platform_content.html content=page.example_content %}{% endraw %}
 ```
 
 #### Output
