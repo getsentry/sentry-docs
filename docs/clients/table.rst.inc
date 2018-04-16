@@ -40,6 +40,10 @@
 
     :doc:`/clients/csharp/index` Including Mono and .NET languages.
 
+*   .. class:: platformlink-rust
+
+    :doc:`/clients/rust/index` For Rust apps.
+
 *   .. class:: platformlink-go
 
     :doc:`/clients/go/index` For Google's Go Language
