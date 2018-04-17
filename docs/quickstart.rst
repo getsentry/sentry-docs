@@ -51,21 +51,22 @@ required by the Sentry SDKs.  It consists of a few pieces, including the
 protocol, public and secret keys, the server address, and the project
 identifier.
 
-The DSN can be found in Sentry by navigating to [Project Name] -> Project Settings -> Client Keys (DSN). Its template resembles the following::
+The DSN can be found in Sentry by navigating to [Project Name] -> Project
+Settings -> Client Keys (DSN). Its template resembles the following::
 
-    '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+    '{PROTOCOL}://{PUBLIC_KEY}@{HOST}/{PATH}{PROJECT_ID}'
 
 If you are using the Hosted Sentry and signed into your account, the
-documentation will refer to your actual DSNs. You can select the 
+documentation will refer to your actual DSNs. You can select the
 correct one which will adjust the examples for easy copy pasting::
 
-    '___DSN___'
+    '___PUBLIC_DSN___'
 
 It is composed of five important pieces:
 
 * The Protocol used. This can be one of the following: http or https.
 
-* The public and secret keys to authenticate the SDK.
+* The public key to authenticate the SDK.
 
 * The destination Sentry server.
 
@@ -79,7 +80,7 @@ SDK's constructor.
 For example for the JavaScript SDK it works roughly like this::
 
     import Raven from 'raven-js'
-    Raven.config('___DSN___')
+    Raven.config('___PUBLIC_DSN___')
 
 Note: If you're using Heroku, and you've added Hosted Sentry via the
 standard addon hooks, most SDKs will automatically pick up the
