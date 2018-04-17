@@ -50,11 +50,11 @@ and can later be uploaded to Sentry. A minidump typically includes:
 .. admonition:: A Word on Data Privacy
 
     Minidumps are memory dumps of the process at the moment it crashes. As such,
-    they might contain sensible information on the target system, such as
+    they might contain sensitive information on the target system, such as
     environment variables, local path names or maybe even in-memory
     representations of input fields including passwords. **Sentry does not store
     these memory dumps**. Once processed, they are removed immediately and all
-    sensible information is stripped from the resulting issues.
+    sensitive information is stripped from the resulting issues.
 
 In addition to this information, you can add further meta data specific to
 Sentry, which can help in organizing and analyzing issues. For more information,
