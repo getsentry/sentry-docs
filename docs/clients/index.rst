@@ -24,5 +24,6 @@ discussion about supporting it on our `community forum <https://forum.sentry.io>
    ruby/index
    rust/index
    cordova/index
+   minidump/index
 
 .. include:: table.rst.inc

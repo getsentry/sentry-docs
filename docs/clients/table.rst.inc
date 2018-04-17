@@ -59,3 +59,7 @@
 *   .. class:: platformlink-cordova
 
     :doc:`/clients/cordova/index` Including Ionic.
+
+*   .. class:: platformlink-minidump
+
+    :doc:`/clients/minidump/index` For Breakpad, Crashpad and Windows crashes.
