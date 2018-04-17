@@ -5,7 +5,7 @@ Minidump
 
 Sentry can process Minidump crash reports, a memory dump used on Windows and by
 open-source libraries like :doc:`Breakpad <breakpad>` or :doc:`Crashpad
-<crashpad>`. You can either choose to generate and upload minidumps yourself, or
+<crashpad>`. You can either choose to generate and upload minidumps yourself or
 use a higher-level SDK for platforms with built-in support for native crashes:
 
 * :doc:`/clients/cocoa/index`
