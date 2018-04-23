@@ -54,3 +54,14 @@ assumes your sourcemaps live in ``/static/dist``:
         Allow from 104.155.149.19/32
         Allow from 130.211.230.102/32
     </FilesMatch>
+
+
+Email Delivery
+--------------
+
+All email is delivered from `SendGrid <https://sendgrid.com/>`_ from the
+following static IP addresses::
+
+    167.89.86.73
+    167.89.84.75
+    167.89.84.14
