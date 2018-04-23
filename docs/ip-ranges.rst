@@ -59,7 +59,7 @@ assumes your sourcemaps live in ``/static/dist``:
 Email Delivery
 --------------
 
-All email is delivered from `SendGrid <https://sendgrid.com/>` from the
+All email is delivered from `SendGrid <https://sendgrid.com/>`_ from the
 following static IP addresses::
 
     167.89.86.73
