@@ -1,18 +1,13 @@
-Rollups & Sampling
+Rollups & Grouping
 ==================
 
 An important part of Sentry is how it aggregates similar events together
 and creates rollups.  This turns out to be a pretty complex issue and
 it can be confusing for users about why some information might not be
-grouped correctly.
+grouped correctly. 
 
-There are two core pieces to understand:
-
-- The structured data of an event dictates how a rollup is created. This
-  varies depending on the data available as well as the language.
-
-- Individual events are sampled and thus some raw events may not be
-  available once the system has finished processing them.
+The structured data of an event dictates how a rollup is created. This
+varies depending on the data available as well as the language.
 
 Grouping Priorities
 -------------------
@@ -116,19 +111,3 @@ slightly less aggressive, you can do that as well:
 .. code-block:: javascript
 
     Raven.captureException(ex, {fingerprint: ['{{ default }}', 'other', 'data']})
-
-Sampling
---------
-
-Due to the large amount of data Sentry collects, it becomes impractical to
-store all data about every event. Instead, Sentry stores a single entity
-for every unique event (a group or rollup as we call it), and will then only store
-a subset of the repeat events. We attempt to do this in an intelligent
-manner so that it becomes almost invisible to you.
-
-For example, when a new event comes in, it creates an aggregate. Several
-of the following events will also create individual entries under that
-aggregate. Once it we see a certain threshold reached of the same event,
-we stop storing every entry, and instead store one in N events, as well as
-one event every N seconds. Additionally, we will always store the first
-event on a status change (e.g. you resolve an event and it happens again).
