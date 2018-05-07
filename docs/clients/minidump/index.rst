@@ -124,7 +124,7 @@ and add a tag, send:
     $ curl -X POST \
       '___MINIDUMP_URL___' \
       -F upload_file_minidump=@mini.dmp \
-      -F 'sentry=1.0.0' \
+      -F 'sentry[release]=1.0.0' \
       -F 'sentry[tags][mytag]=value'
 
 For the full list of supported attributes, see :ref:`attributes` and linked
