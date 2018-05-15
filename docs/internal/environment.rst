@@ -11,102 +11,35 @@ Just follow the :doc:`official installation from source instructions <../server/
 Macintosh OS X
 ''''''''''''''
 
-Third Party Services
-~~~~~~~~~~~~~~~~~~~~
-
-To run the basic development server, you need to install both Redis and PostgreSQL.
-If you haven't already installed `Mac Homebrew <http://brew.sh>`_, follow the directions
-they provide on their homepage. It is an insanely useful package manager for OS X and we
-will be using it in this guide.
-
-Redis
-*****
-
-Redis is a popular in-memory datastore that Sentry uses for queuing and caching mechanisms.
-Run the following to install, configure, and execute Redis as a daemonized server::
-
-    brew install redis
-    brew services start redis
-
-PostgreSQL
-**********
-
-PostgreSQL is the primary database that Sentry uses for all persistent storage.
-Run the following to install, configure, and execute PostgreSQL as a daemonized server::
-
-    brew install postgresql@9.4
-    brew services start postgresql@9.4
-    brew link --force postgresql@9.4
-
-When installing postgresql using brew you'll have to also create the ``postgres`` role::
-
-    psql template1 $(whoami) -c 'CREATE USER postgres SUPERUSER;'
-
-.. note:: Homebrew by default will want to install version 10.x, which is strongly incompatible with Sentry.
-
-
-Third Party Libraries
-~~~~~~~~~~~~~~~~~~~~~
-
-Sentry depends on a combination of both Python and JavaScript packages that need to be installed
-in order for the server to function properly. Below are basic commands to install the languages
-and their libraries on OS X.
-
-Python
-******
-
-While OS X ships with an acceptable version of Python, installing the latest binaries from Homebrew
-is recommended. Run the following to install and configure brewed Python::
-
-    brew install python@2
-
-.. note:: Python 2.7 is required.
-
-Python Virtual Environment
-**************************
-
-It is necessary for some functionality in the development environment to be running inside a Python
-virtual environment. Run the following to install ``virtualenv`` and ``virtualenvwrapper``::
-
-    pip install virtualenv
-    pip install virtualenvwrapper
-
-Then, add the following line to your bash profile::
-
-    source /usr/local/bin/virtualenvwrapper.sh
-    export PYTHONDONTWRITEBYTECODE=1 # recommended, but not required
-
-
-JavaScript
-**********
-
-JavaScript is a tad easier because it separates environments already. To install node.js, the
-Node Package Manager(npm), and the Yarn Package Manager run::
-
-    brew install nodejs yarn
-
-Installing Libraries
-********************
-
-Once all of your dependencies are installed, fork the repo at https://github.com/getsentry/sentry
-and clone down a local version::
+To get started, fork the repo at https://github.com/getsentry/sentry and clone it::
 
     git clone https://github.com/<your github username>/sentry.git
     cd sentry
+
+Install `Homebrew <http://brew.sh>`_, if you haven't already, then run ``brew install python@2``.
+
+It is highly recommended to develop inside a Python virtual environment, so install ``virtualenv``
+and ``virtualenvwrapper``::
+
+    pip install virtualenv virtualenvwrapper
+
+Then run the following, and also add it to your shell profile (e.g. ``~/.bashrc``)::
+
+    source /usr/local/bin/virtualenvwrapper.sh
 
 Setup and activate a Python 2.7 virtual environment in the project root::
 
     mkvirtualenv sentry
 
-Run the following to install both the Python and JavaScript
-libraries that Sentry depends on and some extra pieces that hold the development environment
-together::
+Run the following to install the Python and JavaScript libraries and database services that Sentry
+depends on and some extra pieces that hold the development environment together::
 
     make develop
 
-.. note:: Some libraries depend on OpenSSL. Install via ``brew install openssl``, and make
-  sure to ``export LDFLAGS=-L/usr/local/opt/openssl/lib`` while building, so that the
-  ``openssl`` libraries can be found by the build process.
+Finally, you'll have to also create the ``postgres`` role::
+
+    psql template1 $(whoami) -c 'CREATE USER postgres SUPERUSER;'
+
 
 Running the Development Server
 ------------------------------
