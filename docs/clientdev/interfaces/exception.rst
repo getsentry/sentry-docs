@@ -26,13 +26,9 @@ Attributes:
 ``thread_id``:
     an optional value which refers to a thread in the :doc:`threads <threads>`
     interface.
-
-Additionally an optional ``mechanism`` key can be sent with
-information about how the exception was delivered from a low level
-point of view.  Currently it supports the following nested sub
-attributes (the dot signifies a key in a sub object):
-``mach_exception.exception_name``, ``mach_exception.code_name``,
-``posix_signal.name`` and ``posix_signal.signal``.
+``mechanism``:
+    an optional object describing the :doc:`mechanism <mechanism>` that created
+    this exception.
 
 You can also optionally bind a :doc:`stacktrace interface <stacktrace>`
 to an exception.

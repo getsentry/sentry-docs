@@ -53,5 +53,6 @@ Misc
     :titlesonly:
 
     debug
+    mechanism
     repos
     sdk
