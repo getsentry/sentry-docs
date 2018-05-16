@@ -75,6 +75,13 @@ Sentry provides `SAML2 based authentication
 using the generic SAML2 provider, or a specific provider which provides
 defaults specific to that identity provider.
 
+Sentry supports the following SAML services:
+
+* Identity and Service Provider initiated SSO
+* Identity Provider initiated SLO (Single Logout)
+
+Sentry's Assertion Consumer Service uses the HTTP-POST bindings.
+
 Sentry's SAML endpints are as follows, where the ``{organization_slug}`` is
 substituted for your organization slug:
 
