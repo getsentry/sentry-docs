@@ -6,11 +6,12 @@ It carries additional information about the way the exception was created on the
 target system. This includes general exception values obtained from operating
 system or runtime APIs, as well as mechanism-specific values.
 
-Attributes:
+Attributes
+----------
 
 ``type``:
-    a unique identifier of this mechanism determining rendering and processing
-    of the mechanism data
+    required unique identifier of this mechanism determining rendering and
+    processing of the mechanism data
 ``description``:
     optional human readable description of the error mechanism and a possible
     hint on how to solve this error
@@ -27,6 +28,12 @@ Attributes:
     arbitrary extra data that might help the user understand the error thrown by
     this mechanism
 
+.. note::
+
+    The ``type`` attribute is required to send any exception mechanism
+    attribute, even if the SDK cannot determine the specific mechanism. In this
+    case, set the ``type`` to ``"generic"``. See below for an example.
+
 The ``meta`` key may contain one or more of the following attributes:
 
 ``signal``:
@@ -40,7 +47,14 @@ The ``meta`` key may contain one or more of the following attributes:
 ``seh_code``:
     the SEH (structured error handling) Win32 / NTSTATUS error code
 
-Example for an iOS native mach exceptions:
+Examples
+--------
+
+The following examples illustrate payloads that may be sent by SDKs in various
+circumstances.
+
+iOS native mach exception
+`````````````````````````
 
 .. code:: json
 
@@ -62,7 +76,8 @@ Example for an iOS native mach exceptions:
       }
     }
 
-Example for an unhandled promise rejection in JavaScript:
+JavaScript unhandled promise rejection
+``````````````````````````````````````
 
 .. code:: json
 
@@ -73,4 +88,14 @@ Example for an unhandled promise rejection in JavaScript:
       "data": {
         "polyfill": "bluebird"
       }
+    }
+
+Generic unhandled crash
+```````````````````````
+
+.. code:: json
+
+    {
+      "type": "generic",
+      "handled": false,
     }
