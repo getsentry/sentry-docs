@@ -37,7 +37,8 @@ Attributes
 The ``meta`` key may contain one or more of the following attributes:
 
 ``signal``:
-    the POSIX signal number
+    an object containing a POSIX signal ``number`` and an optional ``code`` on
+    apple systems
 ``errno``:
     the ISO C standard error code
 ``mach_exception``:
@@ -60,7 +61,7 @@ iOS native mach exception
 
     {
       "type": "mach",
-      "description": "EXC_BAD_ACCESS",
+      "description": "EXC_BAD_ACCESS / SIGBUS (BUS_NOOP)",
       "data": {
         "relevant_address": "0x1"
       },
@@ -72,7 +73,10 @@ iOS native mach exception
             "subcode": 8,
             "code": 1
         },
-        "signal": 11
+        "signal": {
+            "number": 11,
+            "code": 0
+        }
       }
     }
 
