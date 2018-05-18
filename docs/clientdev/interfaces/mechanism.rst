@@ -23,7 +23,7 @@ Attributes
     (e.g. via ``try..catch``)
 ``meta``:
     optional information from the operating system or runtime on the exception
-    mechanism
+    mechanism (see below)
 ``data``:
     arbitrary extra data that might help the user understand the error thrown by
     this mechanism
@@ -34,19 +34,59 @@ Attributes
     attribute, even if the SDK cannot determine the specific mechanism. In this
     case, set the ``type`` to ``"generic"``. See below for an example.
 
+Meta information
+----------------
+
+The mechanism meta data usually carries error codes reported by the runtime or
+operating system, along with a platform dependent interpretation of these codes.
+SDKs can safely omit code names and descriptions for well known error codes, as
+it will be filled out by Sentry. For proprietary or vendor-specific error codes,
+adding these values will give additional information to the user.
+
 The ``meta`` key may contain one or more of the following attributes:
 
-``signal``:
-    an object containing a POSIX signal ``number`` and an optional ``code`` on
-    apple systems
-``errno``:
-    the ISO C standard error code
-``mach_exception``:
-    an object containing the mach ``exception``, ``code`` and ``subcode`` numbers
-``hresult``:
-    the Windows COM error code
-``seh_code``:
-    the SEH (structured error handling) Win32 / NTSTATUS error code
+``signal``
+``````````
+
+Information on the POSIX signal. On Apple systems, signals also carry a code in
+addition to the signal number describing the signal in more detail. On Linux,
+this code does not exist.
+
+``number``:
+    the POSIX signal number
+``code``:
+    optional Apple signal code
+``name``:
+    optional name of the signal based on the signal number
+``code_name``:
+    optional name of the signal code
+
+``mach_exception``
+``````````````````
+
+A Mach Exception on Apple systems comprising a code triple and optional
+descriptions.
+
+``exception``:
+    required numeric exception number
+``code``:
+    required numeric exception code
+``subcode``:
+    required numeric exception subcode
+``name``:
+    optional name of the exception constant in iOS / macOS
+
+``errno``
+`````````
+
+Error codes set by linux system calls and some library functions as specified in
+ISO C99, POSIX.1-2001 and POSIX.1-2008. See `errno(3) <errno>`_ for more
+information.
+
+``number``:
+    the error number
+``name``:
+    optional name of the error
 
 Examples
 --------
@@ -60,24 +100,25 @@ iOS native mach exception
 .. code:: json
 
     {
-      "type": "mach",
-      "description": "EXC_BAD_ACCESS / SIGBUS (BUS_NOOP)",
-      "data": {
-        "relevant_address": "0x1"
-      },
-      "handled": false,
-      "help_link": "https://developer.apple.com/library/content/qa/qa1367/_index.html",
-      "meta": {
-        "mach_exception": {
-            "exception": 1,
-            "subcode": 8,
-            "code": 1
+        "type": "mach",
+        "handled": false,
+        "data": {
+            "relevant_address": "0x1"
         },
-        "signal": {
-            "number": 11,
-            "code": 0
+        "meta": {
+            "signal": {
+                "number": 10,
+                "code": 0,
+                "name": "SIGBUS"
+                "code_name": "BUS_NOOP",
+            },
+            "mach_exception": {
+                "code": 0,
+                "subcode": 8,
+                "exception": 1,
+                "name": "EXC_BAD_ACCESS"
+            }
         }
-      }
     }
 
 JavaScript unhandled promise rejection
@@ -86,12 +127,12 @@ JavaScript unhandled promise rejection
 .. code:: json
 
     {
-      "type": "promise",
-      "description": "This error originated either by throwing inside of an ...",
-      "handled": false,
-      "data": {
-        "polyfill": "bluebird"
-      }
+        "type": "promise",
+        "description": "This error originated either by throwing inside of an ...",
+        "handled": false,
+        "data": {
+            "polyfill": "bluebird"
+        }
     }
 
 Generic unhandled crash
@@ -100,6 +141,9 @@ Generic unhandled crash
 .. code:: json
 
     {
-      "type": "generic",
-      "handled": false,
+        "type": "generic",
+        "handled": false,
     }
+
+
+_errno: http://man7.org/linux/man-pages/man3/errno.3.html
