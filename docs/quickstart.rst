@@ -48,8 +48,14 @@ After you complete setting up a project in Sentry, you'll be given a value
 which we call a *DSN*, or *Data Source Name*.  It looks a lot like a
 standard URL, but it's actually just a representation of the configuration
 required by the Sentry SDKs.  It consists of a few pieces, including the
-protocol, public and secret keys, the server address, and the project
+protocol, public key, the server address, and the project
 identifier.
+
+.. note:: As of Sentry 9, we removed the need to provide the secret key.
+          Older versions of SDKs may still require you to provide the DSN including
+          the secret which is now called DSN (Legacy).
+          Please check the corresponding docs of the SDK you are using if you still need
+          to provide the secret.
 
 The DSN can be found in Sentry by navigating to [Project Name] -> Project
 Settings -> Client Keys (DSN). Its template resembles the following::
