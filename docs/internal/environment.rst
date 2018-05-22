@@ -23,20 +23,31 @@ and ``virtualenvwrapper``::
 
     pip install virtualenv virtualenvwrapper
 
-Then run the following, and also add it to your shell profile (e.g. ``~/.bashrc``)::
+Then append the following to your shell profile (e.g. ``~/.bashrc``) and reload it::
 
-    source /usr/local/bin/virtualenvwrapper.sh
+    echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
+    exec bash
 
 Setup and activate a Python 2.7 virtual environment in the project root::
 
     mkvirtualenv sentry
+
+Install ``nvm`` and use it to install the node version specified in the ``.nvmrc`` file::
+
+    brew install nvm
+    echo "source /usr/local/opt/nvm/nvm.sh" >> ~/.bashrc
+    exec bash
+    nvm install
 
 Run the following to install the Python and JavaScript libraries and database services that Sentry
 depends on and some extra pieces that hold the development environment together::
 
     make develop
 
-Finally, you'll have to also create the ``postgres`` role::
+.. note:: The ``Brewfile`` will install and link a pinned ``postgresql@9.6``, so if you were running
+  any older versions, you will need to migrate your old database over to 9.6.
+
+Finally, you'll need to create the ``postgres`` role::
 
     psql template1 $(whoami) -c 'CREATE USER postgres SUPERUSER;'
 
@@ -76,6 +87,7 @@ created at `<http://localhost:8000>`_. From there, you are free to browse the we
 administrator.
 
 .. note:: When asked for the root address of the server, make sure that you use ``http://localhost:8000``, as both, protocol *and* port are required in order for DNS and some pages urls to be displayed correctly.
+
 
 Staging Your Changes
 --------------------
