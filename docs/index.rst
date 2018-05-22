@@ -50,6 +50,7 @@ Looking to get started contributing to Sentry? Our :doc:`internal documentation 
     learn/breadcrumbs
     learn/releases
     learn/context
+    learn/environments
     learn/data-forwarding
     learn/search
     learn/membership
