@@ -23,9 +23,10 @@ and ``virtualenvwrapper``::
 
     pip install virtualenv virtualenvwrapper
 
-Then run the following, and also append the line to your shell profile (e.g. ``~/.bashrc``)::
+Then append the following to your shell profile (e.g. ``~/.bashrc``) and reload it::
 
-    source /usr/local/bin/virtualenvwrapper.sh
+    echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
+    exec bash
 
 Setup and activate a Python 2.7 virtual environment in the project root::
 
@@ -34,7 +35,8 @@ Setup and activate a Python 2.7 virtual environment in the project root::
 Install ``nvm`` and use it to install the node version specified in the ``.nvmrc`` file::
 
     brew install nvm
-    . "/usr/local/opt/nvm/nvm.sh"
+    echo "source /usr/local/opt/nvm/nvm.sh" >> ~/.bashrc
+    exec bash
     nvm install
 
 Run the following to install the Python and JavaScript libraries and database services that Sentry
