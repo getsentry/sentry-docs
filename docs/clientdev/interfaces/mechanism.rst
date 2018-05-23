@@ -109,8 +109,8 @@ iOS native mach exception
             "signal": {
                 "number": 10,
                 "code": 0,
-                "name": "SIGBUS"
-                "code_name": "BUS_NOOP",
+                "name": "SIGBUS",
+                "code_name": "BUS_NOOP"
             },
             "mach_exception": {
                 "code": 0,
@@ -142,7 +142,7 @@ Generic unhandled crash
 
     {
         "type": "generic",
-        "handled": false,
+        "handled": false
     }
 
 
