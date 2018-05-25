@@ -27,7 +27,7 @@ To configure Issue Owners, navigate to your project settings > Issue Owners.
 
 To add a new rule, you can use the dropdown to specify whether you’re using a path or URL. Then add the path or URL, and specify which users or teams own that path. You can add multiple users or teams to one path.
 
-You can also use the text editor below to dropdown to manually add rules.
+You can also use the text editor below to manually add rules.
 
 .. image:: img/owners_panel.png
   :width: 70%
