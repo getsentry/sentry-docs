@@ -51,6 +51,7 @@ Looking to get started contributing to Sentry? Our :doc:`internal documentation 
     learn/releases
     learn/context
     learn/environments
+    learn/issue-owners
     learn/data-forwarding
     learn/search
     learn/membership
