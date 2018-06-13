@@ -27,7 +27,7 @@ The Sentry documentation contains three levels of navigation hierarchy: Category
 
 ### Add a category
 
-Add a new file to _src/collections/_documentation_categories_.
+Add a new entry to _src/data/categories.yml_.
 
 ### Add a section
 
