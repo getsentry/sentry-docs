@@ -1,9 +1,72 @@
-{%- assign docs_by_cats = site.documentation
-  | group_by: 'category'
+{%- assign __documents_by_category = site.documentation
+  | group_by_exp: "item", 'item.path | replace: "collections/_documentation/" | split: "/" | first'
 -%}
+
 {%- for __category in site.data.categories -%}
-{%- assign __documents = site.documentation
-  | where: 'category', __category.slug
+{%- assign __documents =  __documents_by_category
+  | where: 'name', __category.slug
+  | first
 -%}
-{%- include sidebar/sections.html category=__category documents=__documents -%}
+{%- assign __documents = __documents.items -%}
+
+<div class="list-item mb-5 text-white">
+
+  <div class="sidebar-title d-flex align-items-center mb-2">
+    {% include /svg/{{ __category.icon }}.svg %}
+    <h6 class="ml-2">{{ __category.title }}</h6>
+  </div>
+
+
+  {%- if __documents.size > 0 -%}
+    <ul>
+      {%- for __document in __documents -%}
+      <li>{{ __document.path | inspect }}</li>
+      {%- endfor -%}
+    </ul>
+  {%- endif -%}
+
+
+  {% comment %}
+
+  <div class="sidebar-title d-flex align-items-center mb-2">
+    {% include /svg/{{ include.category.icon }}.svg %}
+    <h6 class="ml-2">{{ include.category.title }}</h6>
+  </div>
+
+  {%- if include.category -%}
+  <div class="sidebar-title d-flex align-items-center mb-2">
+    {% include /svg/{{ include.category.icon }}.svg %}
+    <h6 class="ml-2">{{ include.category.title }}</h6>
+  </div>
+  {%- endif -%}
+  {%- assign __docs_paths = include.documents | map: 'path' -%}
+  {%- assign __cat_prefix = __docs_paths | lcp -%}
+  {%- assign __section_grouped_paths = __docs_paths
+    | join: ';'
+    | replace: __cat_prefix
+    | split: ';'
+    | group_by_exp: 'item', 'item | split: "/" | first'
+  -%}
+  <ul class="sidebar-list category-highlight">
+    {%- for __document in include.documents -%}
+      {%- assign __segments = __document.path
+        | replace: __cat_prefix, ''
+        | split: '/'
+      -%}
+
+      {%- if __segments.size == 1 -%}
+        {%- assign __section = __section_grouped_paths
+          | where: 'name', __document.slug
+          | first
+        -%}
+        {%- include sidebar/section.html
+          section=__section
+          document=__document
+          documents=include.documents
+        -%}
+      {%- endif -%}
+    {%- endfor -%}
+  </ul>
+  {%- endcomment -%}
+</div>
 {%- endfor -%}
