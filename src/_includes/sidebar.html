@@ -1,21 +1,51 @@
+{%- assign __root = "collections/_documentation/" -%}
+
+{% comment %}
+Categories are represented by top level folders. Group together all documents by
+their folder and include any top level documents that match folder names which
+may be used for shallow category documents.
+{% endcomment %}
 {%- assign __documents_by_category = site.documentation
-  | group_by_exp: "item", 'item.path | replace: "collections/_documentation/" | split: "/" | first'
+  | group_by_exp: "item", 'item.path | replace: __root | split: "." | first | split: "/" | first'
 -%}
 
 {%- for __category in site.data.categories -%}
+
 {%- assign __documents =  __documents_by_category
   | where: 'name', __category.slug
   | first
 -%}
 {%- assign __documents = __documents.items -%}
 
+{% comment %}
+Determine if a document exists at the top level with a slug matching the category.
+{% endcomment %}
+{%- assign __category_document_path = __root
+  | append: __category.slug
+  | append: '.md'
+-%}
+{%- assign __category_document = __documents
+  | where: 'path', __category_document_path
+  | first
+-%}
+
 <div class="list-item mb-5 text-white">
 
+  {%- if __category_document -%}
+  <a href="{{ __category_document.url }}" class="sidebar-title d-flex align-items-center mb-2">
+    {% include /svg/{{ __category.icon }}.svg %}
+    <h6 class="ml-2">
+      {{- __category.title -}}
+    </h6>
+  </a>
+  {%- else -%}
   <div class="sidebar-title d-flex align-items-center mb-2">
     {% include /svg/{{ __category.icon }}.svg %}
-    <h6 class="ml-2">{{ __category.title }}</h6>
+    <h6 class="ml-2">
+      {{- __category.title -}}
+    </h6>
   </div>
-
+  {%- endif -%}
 
   {%- if __documents.size > 0 -%}
     <ul>
