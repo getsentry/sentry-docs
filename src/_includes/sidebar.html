@@ -6,7 +6,7 @@ their folder and include any top level documents that match folder names which
 may be used for shallow category documents.
 {% endcomment %}
 {%- assign __documents_by_category = site.documentation
-  | group_by_exp: "item", 'item.path | replace: __root | split: "." | first | split: "/" | first'
+  | group_by_exp: "item", 'item.path | remove: __root | split: "." | first | split: "/" | first'
 -%}
 
 {%- for __category in site.data.categories -%}
@@ -47,14 +47,10 @@ Determine if a document exists at the top level with a slug matching the categor
   </div>
   {%- endif -%}
 
-  {%- if __documents.size > 0 -%}
-    <ul>
-      {%- for __document in __documents -%}
-      <li>{{ __document.path | inspect }}</li>
-      {%- endfor -%}
-    </ul>
-  {%- endif -%}
-
+  {%- include sidebar/tree.html
+    documents=__documents
+    relative_to=__root
+  -%}
 
   {% comment %}
 

@@ -1,4 +1,4 @@
 ---
 title: Workflow Alerts
-sidebar_order: 1
+sidebar_order: 0
 ---
