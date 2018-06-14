@@ -23,16 +23,27 @@ While in dev mode, visit [localhost:4000/dev/components/](http://localhost:4000/
 
 ## Adding content
 
-The Sentry documentation contains three levels of navigation hierarchy: Category, Section, and Document.
+The Sentry documentation contains two document types: categories and documents. Documents may have child documents.
 
 ### Add a category
 
-Add a new entry to _src/data/categories.yml_.
+Categories are manually defined.
 
-### Add a section
+1. Add a new entry to _src/data/categories.yml_. Order is defined by the order in this document.
 
-Add a new file to _src/collections/_documentation_.
+  ```
+    # Display name for the category
+  - title: Category Name
+
+    # slug matching a filename in _includes/svg/
+    icon: category-icon
+
+    # A slug for the category. Must match a file or folder in collections/_documentation/
+    slug: category-slug
+  ```
+
+1. Create a markdown file or a folder of markdown files in collections/_documentation/
 
 ### Add a document
 
-Add the file to a folder within _src/collections/_documentation_. If creating a new section, you must also create a new section file mentioned above.
+Category hierarchy is automatically defined by folder structure. Add a markdown file to a folder within _src/collections/_documentation_. Order is alphabetical by default, or you may force sorting order by adding an  `sidebar_order` integer value in the frontmatter of the document.
