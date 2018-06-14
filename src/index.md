@@ -6,6 +6,7 @@ description: |
   Sentry is designed to be very simple to get off the ground, yet powerful to grow into. If you have never used Sentry before, this tutorial will help you with getting started.
 ---
 
+
 <h5 class="text-center mb-3">Getting started with Sentry is a three step process:</h5>
 
 <div class="row bg-light process mb-4">
