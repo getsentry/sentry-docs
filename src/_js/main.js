@@ -8,5 +8,5 @@ $(function() {
   InteractiveContent.init();
   window.User = new User();
   window.User.init();
-  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
 });
