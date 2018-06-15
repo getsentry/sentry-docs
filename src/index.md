@@ -1,7 +1,7 @@
 ---
 layout: doc
-title: Documentation
-meta_title: Sentry Documentation
+title: Sentry Documentation
+breadcrumb: Documentation
 description: |
   Sentry is designed to be very simple to get off the ground, yet powerful to grow into. If you have never used Sentry before, this tutorial will help you with getting started.
 ---
