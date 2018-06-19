@@ -54,12 +54,17 @@ const renderPagination = function({ q, page, pages }) {
 const init = function() {
   const params = qs.parse(location.search);
 
+  const rigidsearchUrl = RIGIDSEARCH_SERVER;
+
   if (params.q) {
     $('input[name="q"]').val(params.q);
 
     $.ajax({
       type: 'GET',
-      url: 'https://rigidsearch.getsentry.net/api/search',
+      // TODO: Ensure production config points this to the right place
+      // Replaced by ProvidePlugin
+      url: rigidsearchUrl,
+      dataType: 'json',
       data: {
         q: params.q,
         page: params.page || 1,
