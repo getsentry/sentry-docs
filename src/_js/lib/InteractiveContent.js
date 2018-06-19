@@ -39,7 +39,7 @@ const wrapTokens = function($src) {
     }, {});
 
     return `
-      <span class="dropdown js-interactive-content-dropdown mb-1" data-toggle="tooltip" data-placement="left" title="Showing example configuration">
+      <span class="dropdown mb-1" data-toggle="tooltip" data-placement="left" title="Showing example configuration">
         ${renderDropdownTarget({ kind, slug, match })}
 
         <div class="dropdown-menu family-sans" aria-hidden="true">${Object.keys(
@@ -63,7 +63,7 @@ const renderDropdownTarget = function({ kind, slug, value }) {
 };
 
 const renderDropdownItem = function(item) {
-  return `<a href="#" class="dropdown-item js-interactive-content-item" data-id="${
+  return `<a href="#" class="dropdown-item" data-interactive-content-item data-id="${
     item.id
   }" data-kind="${item.kind}">${item['project-name']}</a>`;
 };
@@ -82,7 +82,7 @@ const renderDropdown = function(list) {
   }, {});
 
   return `
-    <div class="dropdown js-interactive-content-dropdown mb-1">
+    <div class="dropdown mb-1">
       <a class="btn btn-sm btn-secondary dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ${current.name}
       </a>
@@ -130,7 +130,7 @@ const init = function() {
       updateTokens();
     }
 
-    $(document).on('click', '.js-interactive-content-item', function(event) {
+    $(document).on('click', '[data-interactive-content-item]', function(event) {
       const $el = $(event.target);
       setActiveId($el.data('kind'), $el.data('id'));
       updateTokens();

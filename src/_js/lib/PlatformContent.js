@@ -7,10 +7,10 @@ const init = function() {
     }
   };
 
-  const $dropdownItems = $('.js-platform-specific-content .dropdown-item');
+  const $dropdownItems = $('[data-platform-specific-content] .dropdown-item');
   $dropdownItems.on('click', function(event) {
     const $target = $(event.target);
-    const $parent = $target.closest('.js-platform-specific-content');
+    const $parent = $target.closest('[data-platform-specific-content]');
     const platform = $target.data('platform');
     localStorage.setItem(KEY, platform);
     $parent.find('.dropdown-toggle').text(platform);
