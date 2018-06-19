@@ -7,7 +7,7 @@ group :jekyll_plugins do
   gem "sprockets", "~> 4.0.beta", {
     require: false
   }
-  gem 'jekyll-assets'
+  gem 'jekyll-assets', '3.0.11'
   gem 'terminal-notifier'
   gem 'uglifier'
   gem 'autoprefixer-rails'
