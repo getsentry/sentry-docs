@@ -33,7 +33,7 @@ actually enforcing the policy::
     Content-Security-Policy-Report-Only: ...; report-uri https://sentry.io/api/<project>/security/?sentry_key=<key>
 
 For more information, see the article on
-`MDN <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy>`_.
+`MDN <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy>`__.
 
 Expect-CT
 ---------
@@ -47,7 +47,7 @@ from your server::
 
     Expect-CT: ..., report-uri="https://sentry.io/api/<project>/security/?sentry_key=<key>"
 
-For more information, see the article on `MDN <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT>`.
+For more information, see the article on `MDN <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT>`__.
 
 HTTP Public Key Pinning
 -----------------------
@@ -64,7 +64,7 @@ describing your policy, as well specifying the authenticated Sentry endpoint::
     Public-Key-Pins: ...; report-uri="https://sentry.io/api/<project>/security/?sentry_key=<key>"
 
 For more information, see the article on
-`MDN <https://developer.mozilla.org/en-US/docs/Web/HTTP/Public_Key_Pinning>`_.
+`MDN <https://developer.mozilla.org/en-US/docs/Web/HTTP/Public_Key_Pinning>`__.
 
 Additional Configuration
 ------------------------
