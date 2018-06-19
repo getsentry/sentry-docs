@@ -42,3 +42,13 @@ Roles include:
 +---------------------------------+---------+--------+--------+---------+---------+
 | Can remove an Organization      |         |        |        |         |    X    |
 +---------------------------------+---------+--------+--------+---------+---------+
+Restricting Access
+-----
+* Access to Organizations is dictated by Roles, which is scoped to an entire Organization. 
+* Access to a Project is limited to the Team that owns the project. However, any Member, Admin, Manager or Owner can join a Team.
+* If you want to further restrict access to a Project, you can control access to Teams by making them accessible only through invitation by a Member or Owner. 
+
+To restrict Team access, go to Organization Settings and flip the “Open Membership” toggle. 
+
+.. image:: img/membership%20toggle.png
+
