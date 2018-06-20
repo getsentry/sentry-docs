@@ -1,7 +1,7 @@
 Quotas & Filtering
 ==================
 
-A subscription to Sentry primarily entails a resource quota on the amount
+A subscription to Sentry primarily entails a resource quota on the number
 of events you can send within a window of time. These windows apply to a
 60-second bucket for old plans and a one month bucket for new plans.
 Your subscription will provide a rate limit which is the maximum number of
@@ -59,7 +59,7 @@ specific application.
 IP Blocklist
 ~~~~~~~~~~~~
 
-If you have a rogue client, you may find yourself simploy wanting to block that IP from
+If you have a rogue client, you may find yourself simply wanting to block that IP from
 sending data. Sentry supports this by going to
 **[Project] » Project Settings » Inbound Filters** and adding the
 IP addresses (or subnets) under the **Filter errors from these IP addresses** section.
@@ -67,12 +67,12 @@ IP addresses (or subnets) under the **Filter errors from these IP addresses** se
 Filter by releases
 ~~~~~~~~~~~~~~~~~~
 
-In the case you have a problemeatic release that is causing an excessive amount of noise,
+In the case you have a problematic release that is causing an excessive amount of noise,
 you can ignore all events from that release. Sentry supports this by going to
 **[Project] » Project Settings » Inbound Filters** and adding the releases under the
 **Filter errors from these releases** section.
 
-.. note:: Filter by releases is avaliable only on Large and Enterprise Plans
+.. note:: Filter by releases is available only on Large and Enterprise Plans
 
 Filter by error message
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,7 +81,7 @@ You can ignore a specific or certain kind of error by going to
 **[Project] » Project Settings » Inbound Filters** and adding the
 error message under the **Filter errors by error message** section.
 
-.. note:: Filter by error message is avaliable only on Large and Enterprise Plans
+.. note:: Filter by error message is available only on Large and Enterprise Plans
 
 Filter by issue
 ~~~~~~~~~~~~~~~
@@ -91,7 +91,7 @@ can delete and discard it from the issue details page by clicking "delete and di
 This will delete most data associated with an issue and filter out matching events before
 they ever reach your stream. Matching events will not count towards your quota.
 
-.. note:: Discarding issues is avaliable only on Medium, Large and Enterprise Plans
+.. note:: Discarding issues is available only on Medium, Large and Enterprise Plans
 
 Attributes Limits
 -----------------
