@@ -7,7 +7,7 @@ module.exports = {
   watch: true,
   mode: 'development',
   devtool: 'eval-source-map',
-  entry: './src/_js/main.js',
+  entry: ['./src/_js/main.js', './src/_js/dev.js'],
   output: {
     filename: 'bundle.js',
     path: path.resolve(process.cwd(), 'src/_assets/js/')
