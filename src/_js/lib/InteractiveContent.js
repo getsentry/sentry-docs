@@ -31,7 +31,7 @@ const wrapTokens = function($src) {
   const content = $src.html().replace(tokenRegex(), function(match) {
     const slug = slugify(match);
     const kind = slug === 'encoded-api-key' ? 'key' : 'dsn';
-    const list = User[`${kind}List`];
+    const list = User.userData[`${kind}List`];
     const grouped = list.reduce((obj, item) => {
       if (obj[item.group] === undefined) obj[item.group] = [];
       obj[item.group].push(item);
@@ -103,8 +103,8 @@ const setActiveId = function(kind, id) {
 };
 
 const getData = function(kind) {
-  const id = localStorage.getItem(`${kind}Preference`);
-  const list = User[`${kind}List`];
+  const id = localStorage.getItem(`${kind}Preference`) || -1;
+  const list = User.userData[`${kind}List`];
   const data = list.find(obj => parseInt(obj.id) === parseInt(id));
   return data;
 };

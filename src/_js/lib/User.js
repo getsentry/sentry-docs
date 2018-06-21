@@ -15,7 +15,6 @@ const dataFromDSN = function(dsn) {
     dsn: formatDsn(dsn, { public: false }),
     'public-dsn': formatDsn(dsn, { public: true }),
     'public-key': publicKey,
-    // TODO: test that this renders correctly
     'secret-key': secretKey,
     'api-url': `${scheme}${host}/api`,
     'minidump-url': `${scheme}${host}/api${pathSection}/minidump?sentry_key=${publicKey}`
@@ -24,15 +23,17 @@ const dataFromDSN = function(dsn) {
 
 export default class User {
   constructor() {
-    this.dsnList = [];
-    this.keyList = [];
-    this.user = null;
+    this.namespace = 'docsUserData';
+    this.userData = null;
 
     this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.init = this.init.bind(this);
+    this.loadCached = this.loadCached.bind(this);
   }
 
   init() {
+    this.loadCached();
+
     return $.ajax({
       type: 'GET',
       url: API + '/user/',
@@ -48,9 +49,49 @@ export default class User {
       });
   }
 
+  loadCached() {
+    const cached = localStorage.getItem(this.namespace);
+    if (cached) {
+      this.userData = JSON.parse(cached);
+    } else {
+      this.userData = {
+        dsnList: [
+          {
+            id: '-1',
+            kind: 'dsn',
+            group: 'Example Org',
+            'project-name': 'Example DSN',
+            'project-id': 'your-project',
+            'org-name': 'your-org',
+            dsn: '{dsn-here}',
+            'public-dsn': '{public-dsn-here}',
+            'public-key': '{public-key-here}',
+            'secret-key': '{secret-key-here}',
+            'api-url': '{api-url-here}',
+            'minidump-url': '{minidump-url-here}'
+          }
+        ],
+        keyList: [
+          {
+            id: '-1',
+            kind: 'key',
+            group: 'Example Org',
+            'project-name': 'Example Key',
+            'encoded-api-key': '{base64-encoded-key-here}'
+          }
+        ]
+      };
+
+      localStorage.setItem(this.namespace, JSON.stringify(this.userData));
+    }
+    $(document).trigger('user.ready', [this]);
+  }
+
   onFetchSuccess({ projects, api_keys, user }) {
+    const userData = { ...this.userData };
+
     // Transform the Project values into the forms we'll need
-    this.dsnList = projects.map(project => {
+    const dsnList = (projects || []).map(project => {
       let projectLabel = project.projectName;
       if (project.projectName.indexOf(project.teamName) === -1) {
         projectLabel = project.teamName + ' / ' + projectLabel;
@@ -83,49 +124,34 @@ export default class User {
         dataFromDSN(dsn)
       );
     });
-    if (this.dsnList.length === 0) {
-      this.dsnList = [
-        Object.assign(
-          {},
-          {
-            id: '-1',
-            kind: 'dsn',
-            group: 'Example Org',
-            'project-name': 'Example DSN',
-            'project-id': 'your-project',
-            'org-name': 'your-org'
-          },
-          dataFromDSN('https://<key>:<secret>@sentry.io/<project>')
-        )
-      ];
-    }
-    if (!localStorage.getItem(`dsnPreference`)) {
-      localStorage.setItem('dsnPreference', this.dsnList[0].id);
+
+    if (dsnList.length > 0) {
+      userData.dsnList = dsnList;
+
+      if (!localStorage.getItem(`dsnPreference`)) {
+        localStorage.setItem('dsnPreference', userData.dsnList[0].id);
+      }
     }
 
     // Transform the API key into the forms we'll need
-    this.keyList = (api_keys || []).map(apiKey => ({
+    const keyList = (api_keys || []).map(apiKey => ({
       id: apiKey.id,
       kind: 'key',
       group: apiKey.organizationName,
       'project-name': apiKey.label,
       'encoded-api-key': apiKey.base64Key
     }));
-    if (this.keyList.length === 0) {
-      this.keyList = [
-        {
-          id: '-1',
-          kind: 'key',
-          group: 'Example Org',
-          'project-name': 'Example Key',
-          'encoded-api-key': '{base64-encoded-key-here}'
-        }
-      ];
-    }
-    if (!localStorage.getItem(`keyPreference`)) {
-      localStorage.setItem('keyPreference', this.keyList[0].id);
+
+    if (keyList.length > 0) {
+      userData.keyList = keyList;
+
+      if (!localStorage.getItem(`keyPreference`)) {
+        localStorage.setItem('keyPreference', userData.keyList[0].id);
+      }
     }
 
-    this.user = user;
+    this.userData = userData;
+
+    localStorage.setItem(this.namespace, JSON.stringify(this.userData));
   }
 }
