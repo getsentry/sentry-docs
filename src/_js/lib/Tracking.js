@@ -1,14 +1,14 @@
+import { google, twitter, facebook, linkedin, bing, hubspot } from './Trackers';
+
 const init = function() {
   const namespace = 'trackersOk';
 
-  loadIfTrackersOk.push(function() {
-    window.dataLayer = window.dataLayer || [];
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-    gtag('js', new Date());
-    gtag('config', 'UA-47053361-1');
-  });
+  loadIfTrackersOk.push(google);
+  loadIfTrackersOk.push(twitter);
+  loadIfTrackersOk.push(facebook);
+  loadIfTrackersOk.push(linkedin);
+  loadIfTrackersOk.push(bing);
+  loadIfTrackersOk.push(hubspot);
 
   // If we've been given permission to track, set a cookie that we can check
   // later to hide the banner, then load all of the trackers we have deferred.
