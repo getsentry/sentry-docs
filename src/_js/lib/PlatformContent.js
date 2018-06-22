@@ -32,7 +32,8 @@ const updateUrlPlatform = function(url, slug) {
   return `${origin}?${qs.stringify(query)}`;
 };
 
-// Update UI state to show content for a given platform.
+// Update UI state to show content for a given platform. If the platform does
+// not exist,
 //
 //  slug - slug matching a platform in data/platforms.yml
 //
@@ -41,32 +42,34 @@ const showPlatform = function(slug) {
   const platform = getPlatformBySlug(slug);
   if (!platform) return;
 
-  const $contentBlocks = $('[data-platform-specific-content]');
-
-  // Update UI
-  $contentBlocks.each((i, el) => {
+  $('[data-platform-specific-content]').each((i, el) => {
     const $block = $(el);
-    // Update dropdown target title
-    $block.find('[data-toggle="dropdown"]').text(platform.name);
-
-    // Update active state of dropdown items
     const $dropdownItems = $block.find('[data-toggle="platform"]');
-    $dropdownItems.each((i, el) => {
-      const $el = $(el);
-      const isActive = $el.attr('data-platform') === platform.slug;
-      $el.toggleClass('active', isActive);
-      $el.attr('aria-selected', isActive);
-    });
+    const $requested = $dropdownItems.filter(`[data-platform="${slug}"]`);
+    const $preferred = $dropdownItems.filter(
+      `[data-platform="${localStorage.getItem(KEY)}"]`
+    );
+    let $active = $requested;
+    if (!$active.length) {
+      $active = $preferred.length ? $preferred : $dropdownItems.eq(0);
+    }
+
+    // Updat the active state of the dropdown items
+    $dropdownItems.removeClass('active');
+    $dropdownItems.attr('aria-selected', false);
+    $active.addClass('active');
+    $active.attr('aria-selected', true);
 
     // Update the active state of the tab panes
     const $activeItem = $dropdownItems.filter('.active');
-    const activeID = $activeItem.attr('href').replace('#', '');
+    const activeID = $active.attr('href').replace('#', '');
     const $tabPanes = $block.find('.tab-pane');
-    $tabPanes.each((i, el) => {
-      const $el = $(el);
-      const isActive = $el.attr('id') === activeID;
-      $el.toggleClass('show active', isActive);
-    });
+    const $activePane = $tabPanes.filter(`#${activeID}`);
+    $tabPanes.removeClass('show active');
+    $activePane.addClass('show active');
+
+    // Update dropdown target title
+    $block.find('[data-toggle="dropdown"]').text($active.text());
   });
 };
 
