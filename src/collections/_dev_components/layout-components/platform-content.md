@@ -6,21 +6,21 @@ example_1:
   JavaScript: |
     This is a JavaScript example.
 
-    {%- highlight javascript -%}
+    ``` javascript
     console.log("{{ page.example_string }}")
-    {%- endhighlight -%}
+    ```
   Python: |
     This is a Python example.
 
-    {%- highlight python -%}
+    ``` python
     print("{{ page.example_string }}")
-    {%- endhighlight -%}
+    ```
   Ruby: |
     This is a Ruby example.
 
-    {%- highlight ruby -%}
+    ``` ruby
     puts "{{ page.example_string }}"
-    {%- endhighlight -%}
+    ```
 ---
 
 You can customize content by platform. The switcher will globally remember the prefer language and load it by default until changed. Content is run through the Liquid compiler, then through the Markdown compiler, making it possible to create dynamic, rich styled content.
@@ -40,21 +40,21 @@ example_content:
   JavaScript: |
     This is a JavaScript example.
 
-    {%- highlight javascript -%}
+    ``` javascript
     console.log("{{ page.example_string }}")
-    {%- endhighlight -%}
+    ```
   Python: |
     This is a Python example.
 
-    {%- highlight python -%}
+    ``` python
     print("{{ page.example_string }}")
-    {%- endhighlight -%}
+    ```
   Ruby: |
     This is a Ruby example.
 
-    {%- highlight ruby -%}
+    ``` ruby
     puts "{{ page.example_string }}"
-    {%- endhighlight -%}
+    ```
 ---
 
 {% include platform_content.html content=page.example_content %}{% endraw %}

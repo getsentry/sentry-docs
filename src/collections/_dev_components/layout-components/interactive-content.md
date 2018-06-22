@@ -5,21 +5,21 @@ example_1:
   JavaScript: |
     This is a JavaScript example.
 
-    {%- highlight javascript -%}
+    ``` javascript
     console.log("Your DSN is ___PUBLIC_DSN___")
-    {%- endhighlight -%}
+    ```
   Python: |
     This is a Python example.
 
-    {%- highlight python -%}
+    ``` python
     print("Your DSN is ___PUBLIC_DSN___")
-    {%- endhighlight -%}
+    ```
   Ruby: |
     This is a Ruby example.
 
-    {%- highlight ruby -%}
+    ``` ruby
     puts "Your DSN is ___PUBLIC_DSN___"
-    {%- endhighlight -%}
+    ```
 ---
 
 When a user is logged in, content may be customized for them.
