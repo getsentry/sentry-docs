@@ -11,6 +11,27 @@ const getPlatformBySlug = function(slug) {
   return window.supportedPlatforms.find(p => p.slug === slug);
 };
 
+// Update the url of hte page to reflect a current slug
+//
+//  slug - slug matching a platform in data/platforms.yml
+//
+// Returns nothing.
+const updateLocationPlatform = function(slug) {
+  history.replaceState({}, '', updateUrlPlatform(location.href, slug));
+};
+
+// Add or update the platform slug of a url
+//
+//  url  - a url string
+//  slug - slug matching a platform in data/platforms.yml
+//
+// Returns a string
+const updateUrlPlatform = function(url, slug) {
+  const { url: origin, query } = qs.parseUrl(url);
+  query.platform = slug;
+  return `${origin}?${qs.stringify(query)}`;
+};
+
 // Update UI state to show content for a given platform.
 //
 //  slug - slug matching a platform in data/platforms.yml
@@ -62,11 +83,7 @@ const addPlatformToLinks = function(slug) {
     const $el = $(el);
     const href = $el.attr('href');
     const isDocLink = /(^\/|docs.sentry.io)/.test(href);
-    if (isDocLink) {
-      const { url, query } = qs.parseUrl(href);
-      query.platform = platform.slug;
-      $el.attr('href', `${url}?${qs.stringify(query)}`);
-    }
+    if (isDocLink) $el.attr('href', updateUrlPlatform(href, platform.slug));
   });
 };
 
@@ -82,6 +99,8 @@ const init = function() {
     const slug = $target.data('platform');
     localStorage.setItem(KEY, slug);
     showPlatform(slug);
+    addPlatformToLinks(slug);
+    updateLocationPlatform(slug);
   });
 
   const queryPlatform = qs.parse(location.search).platform;
