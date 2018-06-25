@@ -10,7 +10,9 @@ What is a Release?
 ------------------
 
 Releases are used by Sentry to provide you with additional context
-when determining the cause of an issue. 
+when determining the cause of an issue, as well as for applying
+`sourcemaps <https://docs.sentry.io/clients/javascript/sourcemaps/>`__
+to minified JavaScript to view original untransformed source code.
 
 To use the feature, you must set a release context in your SDK.
 Then, you can either create a release via our API or allow Sentry
@@ -25,7 +27,7 @@ to the following features:
 - Marking issues as resolved in the next release
 - Learn which release an issue was first introduced or last seen in
 - Resolving issues via commit messages (requires setting up commits, see below)
-- Suggested owners on issues (requires setting up commits, see below)
+- Suspect commits and suggested assignees on issues (requires setting up commits, see below)
 - Detailed deploy emails to inform Sentry users of when their code is going out (requires setting up commits and deploys, see below)
 
 Releases are better with commits
@@ -155,17 +157,21 @@ When Sentry sees this commit, we'll automatically annotate the matching
 issue with a reference to the commit, and upon release creation, we'll mark the issue
 as resolved in that release. **Note:** You must either specify ``commits`` or ``refs`` when creating the release.
 
-Suggested owners
-----------------
+Suspect commits and suggested assignees
+---------------------------------------
 
 Once we have commit data associated with releases, we'll be able to start
-suggesting owners for issues. To do this, we look at the commit author's email
+suggesting commits and owners that likely introduced the issue.
+
+To do this, we look at the commit author's email
 address and automatically pair it up with any primary or secondary member
 addresses in the system.
 
 Once we've identified the authors, we'll compare the stacktrace of the issue
-to the files changed within a given release. If we find any potential owners,
-we'll suggest them on the issues details page.
+to the files changed within a given release. If we find any potential commits,
+then we will suggest those commits and its owners on the issues details page.
+
+.. image:: img/releases-commits-issue.png
 
 A note on Github
 ~~~~~~~~~~~~~~~~
