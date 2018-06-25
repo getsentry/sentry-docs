@@ -1,6 +1,51 @@
 // TODO: point this at the production url
 const API = 'http://dev.getsentry.net:8000/docs/api';
 
+export default class User {
+  constructor() {
+    this.namespace = 'docsUserDataV1';
+    this.userData = {
+      projects: [constructDSNObject()],
+      projectPref: -1
+    };
+
+    this.onFetchSuccess = this.onFetchSuccess.bind(this);
+    this.init = this.init.bind(this);
+    this.update = this.update.bind(this);
+  }
+
+  update(newData = {}) {
+    this.userData = Object.assign({}, this.userData, newData);
+    localStorage.setItem(this.namespace, JSON.stringify(this.userData));
+    $(document).trigger('user.didUpdate', [this]);
+  }
+
+  init() {
+    const cached = JSON.parse(localStorage.getItem(this.namespace));
+    if (cached) this.update(cached);
+
+    return $.ajax({
+      type: 'GET',
+      url: API + '/user/',
+      crossDomain: true,
+      xhrFields: {
+        withCredentials: true
+      }
+    })
+      .done(this.onFetchSuccess)
+      .fail(function() {});
+  }
+
+  onFetchSuccess({ projects, api_keys, user }) {
+    const userData = { ...this.userData };
+    if (projects) {
+      userData.projects = projects.map(constructDSNObject);
+      if (userData.projectPref === -1) userData.projectPref = projects[0].id;
+    }
+    this.update(userData);
+  }
+}
+
 const formatDsn = function(
   { publicKey, secretKey, scheme, host, pathSection },
   opts = { public: false }
@@ -21,137 +66,60 @@ const dataFromDSN = function(dsn) {
   };
 };
 
-export default class User {
-  constructor() {
-    this.namespace = 'docsUserData';
-    this.userData = null;
+const formatMinidumpURL = function(dsn) {
+  const { scheme, host, pathSection, publicKey } = dsn;
+  return `${scheme}${host}/api${pathSection}/minidump?sentry_key=${publicKey}`;
+};
 
-    this.onFetchSuccess = this.onFetchSuccess.bind(this);
-    this.init = this.init.bind(this);
-    this.loadCached = this.loadCached.bind(this);
+const formatAPIURL = function(dsn) {
+  return `${dsn.scheme}${dsn.host}/api`;
+};
+
+const formatProjectLabel = function(project = {}) {
+  const { projectName, teamName } = project;
+  if (!projectName && !teamName) return null;
+
+  return projectName.indexOf(teamName) === -1
+    ? `${teamName} / ${projectName}`
+    : projectName;
+};
+
+const constructDSNObject = function(project = {}) {
+  let dsn;
+  if (project.dsn) {
+    // Transform the dsn into useful values
+    const match = project.dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
+    const urlPieces = match[5].split(/\?/, 2);
+    dsn = {
+      scheme: escape(match[1]),
+      publicKey: escape(match[2]),
+      secretKey: `<span className="dsn-secret-key">${escape(match[3])}</span>`,
+      host: escape(match[4]),
+      pathSection: escape(match[5]),
+      project: parseInt(urlPieces[0].substring(1), 10) || 1
+    };
+  } else {
+    dsn = {
+      scheme: 'https://',
+      publicKey: '<key>',
+      secretKey: '<secret>',
+      host: 'sentry.io',
+      pathSection: '/',
+      project: '<project>'
+    };
   }
 
-  init() {
-    this.loadCached();
-
-    return $.ajax({
-      type: 'GET',
-      url: API + '/user/',
-      crossDomain: true,
-      xhrFields: {
-        withCredentials: true
-      }
-    })
-      .done(this.onFetchSuccess)
-      .fail(function() {})
-      .always(res => {
-        $(document).trigger('user.ready', [this]);
-      });
-  }
-
-  loadCached() {
-    const cached = localStorage.getItem(this.namespace);
-    if (cached) {
-      this.userData = JSON.parse(cached);
-    } else {
-      this.userData = {
-        dsnList: [
-          {
-            id: '-1',
-            kind: 'dsn',
-            group: 'Example Org',
-            'project-name': 'Example DSN',
-            'project-id': 'your-project',
-            'org-name': 'your-org',
-            dsn: '{dsn-here}',
-            'public-dsn': '{public-dsn-here}',
-            'public-key': '{public-key-here}',
-            'secret-key': '{secret-key-here}',
-            'api-url': '{api-url-here}',
-            'minidump-url': '{minidump-url-here}'
-          }
-        ],
-        keyList: [
-          {
-            id: '-1',
-            kind: 'key',
-            group: 'Example Org',
-            'project-name': 'Example Key',
-            'encoded-api-key': '{base64-encoded-key-here}'
-          }
-        ]
-      };
-
-      localStorage.setItem(this.namespace, JSON.stringify(this.userData));
-    }
-    $(document).trigger('user.ready', [this]);
-  }
-
-  onFetchSuccess({ projects, api_keys, user }) {
-    const userData = { ...this.userData };
-
-    // Transform the Project values into the forms we'll need
-    const dsnList = (projects || []).map(project => {
-      let projectLabel = project.projectName;
-      if (project.projectName.indexOf(project.teamName) === -1) {
-        projectLabel = project.teamName + ' / ' + projectLabel;
-      }
-
-      // Transform the dsn into useful values
-      const match = project.dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
-      const urlPieces = match[5].split(/\?/, 2);
-      const dsn = {
-        scheme: escape(match[1]),
-        publicKey: escape(match[2]),
-        secretKey: `<span className="dsn-secret-key">${escape(
-          match[3]
-        )}</span>`,
-        host: escape(match[4]),
-        pathSection: escape(match[5]),
-        project: parseInt(urlPieces[0].substring(1), 10) || 1
-      };
-
-      return Object.assign(
-        {},
-        {
-          id: project.id,
-          kind: 'dsn',
-          group: project.organizationName,
-          'project-name': projectLabel,
-          'project-id': project.projectSlug,
-          'org-name': project.organizationSlug
-        },
-        dataFromDSN(dsn)
-      );
-    });
-
-    if (dsnList.length > 0) {
-      userData.dsnList = dsnList;
-
-      if (!localStorage.getItem(`dsnPreference`)) {
-        localStorage.setItem('dsnPreference', userData.dsnList[0].id);
-      }
-    }
-
-    // Transform the API key into the forms we'll need
-    const keyList = (api_keys || []).map(apiKey => ({
-      id: apiKey.id,
-      kind: 'key',
-      group: apiKey.organizationName,
-      'project-name': apiKey.label,
-      'encoded-api-key': apiKey.base64Key
-    }));
-
-    if (keyList.length > 0) {
-      userData.keyList = keyList;
-
-      if (!localStorage.getItem(`keyPreference`)) {
-        localStorage.setItem('keyPreference', userData.keyList[0].id);
-      }
-    }
-
-    this.userData = userData;
-
-    localStorage.setItem(this.namespace, JSON.stringify(this.userData));
-  }
-}
+  return {
+    id: project.id || '-1',
+    group: project.organizationName || 'Example',
+    PROJECT_NAME: formatProjectLabel(project) || 'Your Project',
+    PROJECT_ID: project.projectSlug || 'your-project',
+    ORG_NAME: project.organizationSlug || 'your-org',
+    DSN: formatDsn(dsn, { public: false }),
+    PUBLIC_DSN: formatDsn(dsn, { public: true }),
+    PUBLIC_KEY: dsn.publicKey,
+    SECRET_KEY: dsn.secretKey,
+    API_URL: formatAPIURL(dsn),
+    MINIDUMP_URL: formatMinidumpURL(dsn)
+  };
+};

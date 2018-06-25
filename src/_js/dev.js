@@ -1,4 +1,4 @@
-import { tokens as dynamicContentTokens } from './lib/InteractiveContent';
+import { tokens as userContentTokens } from './lib/UserContent';
 
 $(function() {
   const namespace = 'hidePeek';
@@ -21,10 +21,10 @@ $(function() {
   });
 
   // Load the list of dynamic tokens into the docs
-  $(document).on('dynamicContent.didLoad', function(event) {
-    $('[data-dynamic-token-list]').append(
+  $(document).on('userContent.didLoad', function(event) {
+    $('[data-user-token-list]').html(
       $('<ul></ul>').append(
-        $.map(dynamicContentTokens, function(token) {
+        $.map(userContentTokens, function(token) {
           return $(`<li><code>___${token}___</code></li>`);
         })
       )

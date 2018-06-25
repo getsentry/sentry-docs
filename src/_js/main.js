@@ -1,6 +1,6 @@
 import 'bootstrap';
 import PlatformContent from './lib/PlatformContent';
-import InteractiveContent from './lib/InteractiveContent';
+import InteractiveContent from './lib/UserContent';
 import Tracking from './lib/Tracking';
 import User from './lib/User';
 
