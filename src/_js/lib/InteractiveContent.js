@@ -1,5 +1,5 @@
 // These are the variables that can be replaced in the document
-const tokens = [
+export const tokens = [
   'DSN',
   'PUBLIC_DSN',
   'PUBLIC_KEY',
@@ -135,6 +135,8 @@ const init = function() {
       setActiveId($el.data('kind'), $el.data('id'));
       updateTokens();
     });
+
+    $(document).trigger('dynamicContent.didLoad');
   });
 };
 

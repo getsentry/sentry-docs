@@ -22,7 +22,11 @@ example_1:
     ```
 ---
 
-When a user is logged in, content may be customized for them.
+It is possible to display a user's actual configuration information within code samples. This is done using one of the following keys:
+
+<div data-dynamic-token-list></div>
+
+This feature only works within block level code examples, which are created using tripple tick <code>```</code> fenced code blocks in Markdown or using Jekyll's `highlight` tag.
 
 ### Basic use
 
@@ -33,14 +37,7 @@ When a user is logged in, content may be customized for them.
 ```liquid
 {% raw %}`⁣``javascript
 console.log("Your DSN is _⁣__DSN___")
-console.log("Your PUBLIC_DSN is _⁣__PUBLIC_DSN___")
-console.log("Your PUBLIC_KEY is _⁣__PUBLIC_KEY___")
-console.log("Your SECRET_KEY is _⁣__SECRET_KEY___")
-console.log("Your API_URL is _⁣__API_URL___")
 console.log("Your ENCODED_API_KEY is _⁣__ENCODED_API_KEY___")
-console.log("Your PROJECT_ID is _⁣__PROJECT_ID___")
-console.log("Your ORG_NAME is _⁣__ORG_NAME___")
-console.log("Your PROJECT_NAME is _⁣__PROJECT_NAME___")
 `⁣``{% endraw %}
 ```
 
@@ -49,14 +46,7 @@ console.log("Your PROJECT_NAME is _⁣__PROJECT_NAME___")
 <div class="p-3 mb-3 mb-md-5 border rounded content-flush-bottom">
 {% highlight javascript %}
 console.log("Your DSN is ___DSN___")
-console.log("Your PUBLIC_DSN is ___PUBLIC_DSN___")
-console.log("Your PUBLIC_KEY is ___PUBLIC_KEY___")
-console.log("Your SECRET_KEY is ___SECRET_KEY___")
-console.log("Your API_URL is ___API_URL___")
 console.log("Your ENCODED_API_KEY is ___ENCODED_API_KEY___")
-console.log("Your PROJECT_ID is ___PROJECT_ID___")
-console.log("Your ORG_NAME is ___ORG_NAME___")
-console.log("Your PROJECT_NAME is ___PROJECT_NAME___")
 {% endhighlight %}
 </div>
 
