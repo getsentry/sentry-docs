@@ -106,7 +106,7 @@ const init = function() {
     // Add a dropdown for switching the data.
     $el.before(`
       <div class="py-1 px-2 text-white" data-user-content-switcher>
-        <small>Showing configuration for</small>
+        <small>Showing<span class="d-none d-sm-inline"> configuration for</span></small>
         <div data-user-content-switcher-mount></div>
       </div>
     `);
