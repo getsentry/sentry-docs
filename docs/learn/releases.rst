@@ -10,8 +10,9 @@ What is a Release?
 ------------------
 
 Releases are used by Sentry to provide you with additional context
-when determining the cause of an issue, as well for
-`un-minification <https://docs.sentry.io/clients/javascript/sourcemaps/>`__.
+when determining the cause of an issue, as well as for applying
+`sourcemaps <https://docs.sentry.io/clients/javascript/sourcemaps/>`__
+to minified JavaScript to view original untransformed source code.
 
 To use the feature, you must set a release context in your SDK.
 Then, you can either create a release via our API or allow Sentry
