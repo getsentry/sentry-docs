@@ -22,19 +22,19 @@ Sentry captures data by using an SDK within your application\'s runtime.
 These are platform specific, and allow Sentry to have a deep
 understanding of both how your application works. In case your
 environment is very specific, you can also roll your own SDK using our
-document [SDK API](/clientdev/).
+document [SDK API](TODO /clientdev/).
 
 Popular integrations are:
 
-- [Python](/clients/python/)
-- [JavaScript](/clients/javascript/)
-- [PHP](/clients/php/)
-- [Ruby](/clients/ruby/)
-- [Java](/clients/java/)
-- [Cocoa](/clients/cocoa/)
-- [C\#](/clients/csharp/)
-- [Go](/clients/go/)
-- [Elixir](/clients/elixir/)
+- [Python](TODO /clients/python/)
+- [JavaScript](TODO /clients/javascript/)
+- [PHP](TODO /clients/php/)
+- [Ruby](TODO /clients/ruby/)
+- [Java](TODO /clients/java/)
+- [Cocoa](TODO /clients/cocoa/)
+- [C\#](TODO /clients/csharp/)
+- [Go](TODO /clients/go/)
+- [Elixir](TODO /clients/elixir/)
 
 For exact configuration for the integration consult the corresponding
 documentation. For all SDKs however, the basics are the same.
@@ -104,6 +104,6 @@ you.
 Now that you\'ve got basic reporting setup, you\'ll want to explore
 adding additional context to your data:
 
--   [identifying users via context](/error-tracking/context/)
--   [tracing issues with breadcrumbs](/error-tracking/breadcrumbs/)
--   [capturing user feedback on crashes](/error-tracking/user-feedback/)
+-   [identifying users via context](TODO /error-tracking/context/)
+-   [tracing issues with breadcrumbs](TODO /error-tracking/breadcrumbs/)
+-   [capturing user feedback on crashes](TODO /error-tracking/user-feedback/)
