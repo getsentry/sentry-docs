@@ -27,7 +27,7 @@ you can either create a release via our API or allow Sentry to create
 one automatically when we receive an event with a new release version.
 Once a release is created, we\'ll provide an overview in the UI:
 
-![image](img/releases-overview.png)
+![image](TODO img/releases-overview.png)
 
 Setting up releases in Sentry is helpful as it will give you access to
 the following features:
@@ -181,7 +181,7 @@ issue to the files changed within a given release. If we find any
 potential commits, then we will suggest those commits and its owners on
 the issues details page.
 
-![image](img/releases-commits-issue.png)
+![image](TODO img/releases-commits-issue.png)
 
 ### A note on Github
 
