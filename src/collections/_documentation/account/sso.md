@@ -18,10 +18,10 @@ a true hurdle.
 {% include components/alert.html
   content="SSO is not available on certain grandfathered plans."
 %}
+
 ---
 
 ## Getting Started
-
 
 With that out of the way, head on over to your organization home.
 You\'ll see an \"Auth\" link in the sidebar. Start by hitting that, and
@@ -35,16 +35,18 @@ click the link, the next time they try to hit any page within the
 organization we\'ll require them to link their account (with the same
 auth flow you just went through).
 
-## Default Membership
+---
 
+## Default Membership
 
 Every member who creates a new account via SSO will be given global
 organization access with a member role. This means that they can access
 events from any team, but they won\'t be able to create new projects or
 administer current ones.
 
-## Security
+---
 
+## Security
 
 Our SSO implementation prioritizes security. We aggressively monitor
 linked accounts and will disable them within any reasonable sign that
@@ -52,8 +54,9 @@ the account\'s access may have been revoked. Generally this will be
 transparent to you, but if the provider is functioning in an unexpected
 way you may experience more frequent re-authorization requests.
 
-## Providers
+---
 
+## Providers
 
 ### Google Business App
 
@@ -130,6 +133,8 @@ metadata\' link which can may right click and copy link address.
 You may refer to the [Okta
 documentation](http://saml-doc.okta.com/SAML_Docs/How-to-Configure-SAML-2.0-for-Sentry.html)
 for more detailed setup instructions.
+
+---
 
 #### Auth0
 
