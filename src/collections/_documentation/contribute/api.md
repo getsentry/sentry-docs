@@ -12,20 +12,20 @@ Error Responses
 Errors should have an `error` attribute at the top level, with the
 following children:
 
-##### code
+code
 
-A string representing the type of error.
+: A string representing the type of error.
 
-##### message
+message
 
-An optional human readable error message.
+: An optional human readable error message.
 
-##### params
+params
 
-A mapping containing additional error information specific to
+: A mapping containing additional error information specific to
 parameters.
 
-Each value should be a mapping with a code (required) and message
+: Each value should be a mapping with a code (required) and message
 (optional).
 
 An example general error:
