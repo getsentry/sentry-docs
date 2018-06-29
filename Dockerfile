@@ -53,6 +53,7 @@ RUN bundle install
 COPY . /usr/src/app
 
 RUN set -x \
+    && ./node_modules/.bin/webpack --config ./config/webpack.config.prod.js \
     && bundle exec jekyll build --verbose --trace \
     && find _site \
         -type f \
