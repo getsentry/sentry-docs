@@ -1,5 +1,5 @@
-// TODO: point this at the production url
-const API = 'http://dev.getsentry.net:8000/docs/api';
+// This is set in DefinePlugin
+const API = API_URL;
 
 export default class User {
   constructor() {
