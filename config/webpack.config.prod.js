@@ -10,6 +10,9 @@ module.exports = {
     path: path.resolve(process.cwd(), 'src/_assets/js/')
   },
   plugins: [
+    new webpack.DefinePlugin({
+      API_URL: "'https://sentry.io/docs/api'"
+    }),
     new webpack.ProvidePlugin({
       jQuery: 'jquery',
       $: 'jquery',
