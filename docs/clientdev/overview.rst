@@ -113,7 +113,7 @@ Parsing the DSN
 SDKs are encouraged to allow arbitrary options via the constructor, but must
 allow the first argument as a DSN string. This string contains the following bits::
 
-    '{PROTOCOL}://{SENTRY_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+    '{PROTOCOL}://{CLIENT_KEY}@{HOST}/{PATH}{PROJECT_ID}'
 
 The final endpoint you'll be sending requests to is constructed per the
 following::
@@ -127,7 +127,7 @@ For example, given the following constructor::
 You should parse the following settings:
 
 * URI = ``https://sentry.example.com``
-* Sentry Key = ``key``
+* Client Key = ``key``
 * Project ID = ``1``
 
 The resulting POST request would then transmit to::
@@ -178,7 +178,7 @@ body, which acts as an ownership identifier::
     X-Sentry-Auth: Sentry sentry_version=5,
       sentry_client=<client version, arbitrary>,
       sentry_timestamp=<current timestamp>,
-      sentry_key=<sentry api key>,
+      sentry_key=<client api key>,
 
 .. note:: You should include the SDK version string in the User-Agent
    portion of the header, and it will be used if ``sentry_client`` is not sent
@@ -187,7 +187,7 @@ body, which acts as an ownership identifier::
 In situations where it's not possible to send the custom ``X-Sentry-Auth``
 header, it's possible to send these values via the querystring::
 
-    ?sentry_version=5&sentry_key=<sentry api key>...
+    ?sentry_version=5&sentry_key=<client api key>...
 
 .. describe:: sentry_version
 
@@ -207,7 +207,7 @@ header, it's possible to send these values via the querystring::
 
 .. describe:: sentry_key
 
-    The sentry key which should be provided as part of the SDK configuration.
+    The client key which should be provided as part of the SDK configuration.
 
 A Working Example
 -----------------
@@ -216,7 +216,7 @@ When all is said and done, you should be sending an HTTP POST request to a
 Sentry webserver, where the path is the
 ``BASE_URI/api/PROJECT_ID/store/``. So given the following DSN::
 
-    https://b70a31b3510c4cf793964a185cfe1fd0:b7d80b520139450f903720eb7991bf3d@sentry.example.com/1
+    https://b70a31b3510c4cf793964a185cfe1fd0@sentry.example.com/1
 
 The request body should then somewhat resemble the following:
 
