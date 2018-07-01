@@ -113,7 +113,7 @@ Parsing the DSN
 SDKs are encouraged to allow arbitrary options via the constructor, but must
 allow the first argument as a DSN string. This string contains the following bits::
 
-    '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+    '{PROTOCOL}://{SENTRY_KEY}@{HOST}/{PATH}{PROJECT_ID}'
 
 The final endpoint you'll be sending requests to is constructed per the
 following::
@@ -122,13 +122,12 @@ following::
 
 For example, given the following constructor::
 
-    new SentryClient('https://public:secret@sentry.example.com/1')
+    new SentryClient('https://key@sentry.example.com/1')
 
 You should parse the following settings:
 
 * URI = ``https://sentry.example.com``
-* Public Key = ``public``
-* Secret Key = ``secret``
+* Sentry Key = ``key``
 * Project ID = ``1``
 
 The resulting POST request would then transmit to::
@@ -179,8 +178,7 @@ body, which acts as an ownership identifier::
     X-Sentry-Auth: Sentry sentry_version=5,
       sentry_client=<client version, arbitrary>,
       sentry_timestamp=<current timestamp>,
-      sentry_key=<public api key>,
-      sentry_secret=<secret api key>
+      sentry_key=<sentry api key>,
 
 .. note:: You should include the SDK version string in the User-Agent
    portion of the header, and it will be used if ``sentry_client`` is not sent
@@ -189,7 +187,7 @@ body, which acts as an ownership identifier::
 In situations where it's not possible to send the custom ``X-Sentry-Auth``
 header, it's possible to send these values via the querystring::
 
-    ?sentry_version=5&sentry_key=<public api key>&sentry_secret=<secret api key>...
+    ?sentry_version=5&sentry_key=<sentry api key>...
 
 .. describe:: sentry_version
 
@@ -209,15 +207,7 @@ header, it's possible to send these values via the querystring::
 
 .. describe:: sentry_key
 
-    The public key which should be provided as part of the SDK configuration.
-
-.. describe:: sentry_secret
-
-    The secret key which should be provided as part of the SDK configuration.
-
-    .. note:: You should only pass the secret key if you're communicating via
-              secure communication to the server. Client-side behavior (such
-              as JavaScript) should use CORS, and only pass the public key.
+    The sentry key which should be provided as part of the SDK configuration.
 
 A Working Example
 -----------------
@@ -238,7 +228,6 @@ The request body should then somewhat resemble the following:
     X-Sentry-Auth: Sentry sentry_version=7,
       sentry_timestamp=1329096377,
       sentry_key=b70a31b3510c4cf793964a185cfe1fd0,
-      sentry_secret=b7d80b520139450f903720eb7991bf3d,
       sentry_client=raven-python/1.0
 
     {
