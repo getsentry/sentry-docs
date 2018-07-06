@@ -33,7 +33,9 @@ export default class User {
       }
     })
       .done(this.onFetchSuccess)
-      .fail(function() {});
+      .fail(() => {
+        this.update();
+      });
   }
 
   onFetchSuccess({ projects, api_keys, user }) {
