@@ -110,7 +110,7 @@ const constructDSNObject = function(project = {}) {
   }
 
   return {
-    id: project.id || '-1',
+    id: project.id || -1,
     group: project.organizationName || 'Example',
     PROJECT_NAME: formatProjectLabel(project) || 'Your Project',
     PROJECT_ID: project.projectSlug || 'your-project',
