@@ -9,7 +9,6 @@ export default class User {
       projectPref: -1
     };
 
-    this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.init = this.init.bind(this);
     this.update = this.update.bind(this);
   }
@@ -32,19 +31,18 @@ export default class User {
         withCredentials: true
       }
     })
-      .done(this.onFetchSuccess)
+      .done(({ projects, api_keys, user }) => {
+        const userData = { ...this.userData };
+        if (projects) {
+          userData.projects = projects.map(constructDSNObject);
+          if (userData.projectPref === -1)
+            userData.projectPref = projects[0].id;
+        }
+        this.update(userData);
+      })
       .fail(() => {
         this.update();
       });
-  }
-
-  onFetchSuccess({ projects, api_keys, user }) {
-    const userData = { ...this.userData };
-    if (projects) {
-      userData.projects = projects.map(constructDSNObject);
-      if (userData.projectPref === -1) userData.projectPref = projects[0].id;
-    }
-    this.update(userData);
   }
 }
 
