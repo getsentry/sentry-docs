@@ -93,7 +93,7 @@ const constructDSNObject = function(project = {}) {
     dsn = {
       scheme: escape(match[1]),
       publicKey: escape(match[2]),
-      secretKey: `<span className="dsn-secret-key">${escape(match[3])}</span>`,
+      secretKey: `${escape(match[3])}`,
       host: escape(match[4]),
       pathSection: escape(match[5]),
       project: parseInt(urlPieces[0].substring(1), 10) || 1
