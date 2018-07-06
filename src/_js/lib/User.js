@@ -101,11 +101,11 @@ const constructDSNObject = function(project = {}) {
   } else {
     dsn = {
       scheme: 'https://',
-      publicKey: '<key>',
-      secretKey: '<secret>',
+      publicKey: '&lt;key&gt;',
+      secretKey: '&lt;secret&gt;',
       host: 'sentry.io',
       pathSection: '/',
-      project: '<project>'
+      project: '&lt;project&gt;'
     };
   }
 
