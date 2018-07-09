@@ -72,22 +72,11 @@ const updateTokens = function() {
     const $el = $(el);
     $el.html(renderDropdown(User.userData.projects, User.userData.projectPref));
   });
+
+  $(document).trigger('userContent.didLoad');
 };
 
-const init = function() {
-  // Update tokens whenever the User data updates
-  $(document).on('user.didUpdate', function(event) {
-    updateTokens();
-    $(document).trigger('userContent.didLoad');
-  });
-
-  const ucSelector = '[data-user-content-switcher] .dropdown-item';
-  $(document).on('click', ucSelector, function(event) {
-    event.preventDefault();
-    const id = $(event.target).data('id');
-    if (id) User.update({ projectPref: id });
-  });
-
+const wrapTokens = function() {
   // Update UI with our widgets
   $('main pre').each(function(i, el) {
     const $el = $(el);
@@ -110,6 +99,25 @@ const init = function() {
         <div data-user-content-switcher-mount></div>
       </div>
     `);
+  });
+};
+
+const init = function() {
+  // Update tokens whenever the User data updates
+  $(document).on('user.didUpdate', function(event) {
+    updateTokens();
+
+    $(document).on('page.didUpdate', function() {
+      wrapTokens();
+      updateTokens();
+    });
+  });
+
+  const ucSelector = '[data-user-content-switcher] .dropdown-item';
+  $(document).on('click', ucSelector, function(event) {
+    event.preventDefault();
+    const id = $(event.target).data('id');
+    if (id) User.update({ projectPref: id });
   });
 };
 
