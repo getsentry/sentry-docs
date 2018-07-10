@@ -79,3 +79,27 @@ Some integrations and frameworks will make this even easier:
 - :ref:`Cocoa <cocoa-user-feedback>`
 
 Take a look at your SDK's documentation for more information.
+
+Customizing the Widget
+----------------------
+
+Several parameters are available to customize the widget, specifically for localization. All options can be passed through the ``showReportDialog`` call.
+
+An override for Sentry's automatic language detection (e.g. ``lang=de``)
+
+==================  =======
+Param               Default
+==================  =======
+``lang``            *[automatic]* -- **override for Sentry's language code**
+``title``           It looks like we're having issues.
+``subtitle``        Our team has been notified.
+``subtitle2``       If you'd like to help, tell us what happened below. -- **not visible on small screen resolutions**
+``labelName``       Name
+``labelEmail``      Email
+``labelComments``   What happened?
+``labelClose``      Close
+``labelSubmit``     Submit
+``errorGeneric``    An unknown error occurred while submitting your report. Please try again.
+``errorFormEntry``  Some fields were invalid. Please correct the errors and try again.
+``successMessage``  Your feedback has been sent. Thank you!
+==================  =======
