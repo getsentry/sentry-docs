@@ -65,7 +65,11 @@ const isSameDomain = function(here, there) {
 };
 
 const init = function() {
-  $(document).on('click', '[data-dynamic-load] a', linkHandler);
+  $(document).on(
+    'click',
+    '[data-dynamic-load] a:not([data-not-dynamic])',
+    linkHandler
+  );
 
   $(window).on('popstate', function(event) {
     loadDynamically(document.location.pathname, document.location.hash, false);

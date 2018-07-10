@@ -39,7 +39,7 @@ const renderDropdown = function(list, selected) {
 
   return `
     <div class="dropdown">
-      <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-not-dynamic>
         ${current.PROJECT_NAME}
       </a>
 
