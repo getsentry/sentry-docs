@@ -28,7 +28,7 @@ This will run Bundler to install all the necessary dependencies and then run a w
 
 Documentation is written in Markdown, which is parsed by [kramdown](https://kramdown.gettalong.org/).
 
-[<kbd>Read the quick reference</kbd>](https://kramdown.gettalong.org/quickref.html).
+[<kbd>Read the quick reference</kbd>](https://kramdown.gettalong.org/quickref.html)
 
 ## Layout components
 
