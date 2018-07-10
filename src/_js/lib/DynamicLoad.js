@@ -40,6 +40,7 @@ const loadDynamically = function(target, hash, pushState) {
   };
 
   if (target !== currentPathName) {
+    $('body').addClass('loading');
     return $.ajax({
       type: 'GET',
       url: target
@@ -50,6 +51,9 @@ const loadDynamically = function(target, hash, pushState) {
       })
       .fail(function() {
         window.location.href = target;
+      })
+      .always(function() {
+        $('body').removeClass('loading');
       });
   } else {
     done();
