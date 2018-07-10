@@ -32,7 +32,7 @@ Documentation is written in Markdown, which is parsed by [kramdown](https://kram
 
 ## Layout components
 
-While in dev mode, visit [localhost:4000/dev/components/](http://localhost:4000/dev/components/) to see the components available.
+While in dev mode, the sidebar includes documentation for the special components available for formatting content.
 
 ## Adding content
 
