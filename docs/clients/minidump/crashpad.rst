@@ -58,6 +58,16 @@ platforms, child processes must also register by using `SetHandlerIPCPipe()`_.
 For more information on configuring the crashpad handler, see
 `crashpad_handler`_.
 
+.. admonition:: Known Issue
+
+    Sentry cannot handle gzip compressed minidump submissions and will respond
+    with a 400 error. To fix this, pass the ``--no-upload-gzip`` argument to the
+    handler:
+
+    .. code-block:: cpp
+
+        arguments.push_back("--no-upload-gzip");
+
 If you also want Crashpad to upload crashes to Sentry, additionally configure
 the Crashpad database for automatic uploads:
 
@@ -72,6 +82,13 @@ the Crashpad database for automatic uploads:
     if (db != nullptr && db->GetSettings() != nullptr) {
       db->GetSettings()->SetUploadsEnabled(true);
     }
+
+By default, the crashpad handler will limit uploads to one per hour. To disable
+this limitation, pass the ``--no-rate-limit`` argument to the handler:
+
+.. code-block:: cpp
+
+    arguments.push_back("--no-rate-limit");
 
 .. _Crashpad: https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md
 .. _Developing Crashpad: https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/doc/developing.md
