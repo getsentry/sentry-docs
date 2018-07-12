@@ -1,8 +1,6 @@
 const webpack = require('webpack');
 const path = require('path');
 
-console.log('RIGIDSEARCH_SERVER', process.env.RIGIDSEARCH_SERVER);
-
 module.exports = {
   watch: true,
   mode: 'development',
@@ -22,7 +20,8 @@ module.exports = {
       Popper: 'popper.js'
     }),
     new webpack.DefinePlugin({
-      RIGIDSEARCH_SERVER: `"${process.env.RIGIDSEARCH_SERVER}"`
+      RIGIDSEARCH_SERVER: `"${process.env.RIGIDSEARCH_SERVER ||
+        '/api/search.json'}"`
     })
   ]
 };

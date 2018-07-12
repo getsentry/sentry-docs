@@ -73,7 +73,6 @@ const init = function() {
       },
       crossDomain: true,
       success: function(res) {
-        console.log(res);
         const $results = $('[data-search-results]');
         $.each(res.items, function(i, data) {
           $results.append(renderResult(data));

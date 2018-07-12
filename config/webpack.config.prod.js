@@ -11,7 +11,8 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      API_URL: "'https://sentry.io/docs/api'"
+      API_URL: "'https://sentry.io/docs/api'",
+      RIGIDSEARCH_SERVER: "'https://rigidsearch.getsentry.net/api/search/'"
     }),
     new webpack.ProvidePlugin({
       jQuery: 'jquery',

@@ -20,7 +20,22 @@ else
   echo "👍  Ok, running in normal build mode"
 fi
 
-export RIGIDSEARCH_SERVER=${RIGIDSEARCH_SERVER:-"http://127.0.0.1:5001/"}
+if lsof -i :5001 > /dev/null 2>&1; then
+  echo -e "❓  ${green}Would you like to connect search to your local RigidSearch instance? [Y/n]${reset}"
+  read -t 7
+  REPLY=${REPLY:-y}
+
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    export RIGIDSEARCH_SERVER="http://127.0.0.1:5001/"
+    echo "👍  Ok, I’ll point search requests to $RIGIDSEARCH_SERVER"
+  else
+    echo "👍  Ok, I'll pretend I don’t know you’re running that server"
+  fi
+fi
+
+if [ -z ${RIGIDSEARCH_SERVER+x} ]; then
+  export JEKYLL_SEARCH_DISABLED=True
+fi
 
 rm -rf _site
 rm -rf .jekyll-cache
