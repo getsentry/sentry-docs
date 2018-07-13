@@ -1,11 +1,6 @@
-let currentPathName = document.location.pathname;
+import { fullPath } from './Helpers';
 
-const linkHandler = function(event) {
-  if (event.ctrlKey || event.metaKey) return;
-  if (!isSameDomain(window.location, this)) return;
-  event.preventDefault();
-  loadDynamically(this.pathname, this.hash, true);
-};
+let currentPathName = document.location.pathname;
 
 const replaceContent = function(html) {
   const $page = $(html.replace('<!DOCTYPE html>', ''));
@@ -21,59 +16,83 @@ const replaceContent = function(html) {
   });
 };
 
-const loadDynamically = function(target, hash, pushState) {
-  const fullTarget = (target || currentPathName) + (hash || '');
-
-  window.scrollTo(0, 0);
-
-  const done = function() {
-    if (pushState) {
-      window.history.pushState(null, document.title, fullTarget);
-    }
-    if (hash) {
-      $(hash)
-        .get(0)
-        .scrollIntoView();
-    }
-    currentPathName = target;
-    $(document).trigger('page.didUpdate');
-  };
-
-  if (target !== currentPathName) {
-    $('body').addClass('loading');
-    return $.ajax({
-      type: 'GET',
-      url: target
-    })
-      .done(function(html) {
-        replaceContent(html);
-        done();
-      })
-      .fail(function() {
-        window.location.href = target;
-      })
-      .always(function() {
-        $('body').removeClass('loading');
-      });
-  } else {
-    done();
-  }
-};
-
 const isSameDomain = function(here, there) {
   return here.protocol === there.protocol && here.host === there.host;
 };
 
-const init = function() {
-  $(document).on(
-    'click',
-    '[data-dynamic-load] a:not([data-not-dynamic])',
-    linkHandler
-  );
-
-  $(window).on('popstate', function(event) {
-    loadDynamically(document.location.pathname, document.location.hash, false);
-  });
+const defaultLoader = function(url) {
+  if (url.pathname === currentPathName) return Promise.resolve();
+  return $.ajax({ type: 'GET', url: fullPath(url) });
 };
+class DynamicLoader {
+  constructor() {
+    this.loaders = {};
 
-export default { init };
+    this.init = this.init.bind(this);
+    this.addLoader = this.addLoader.bind(this);
+    this.load = this.load.bind(this);
+  }
+
+  init() {
+    $(document).on(
+      'click',
+      '[data-dynamic-load] a:not([data-not-dynamic])',
+      event => {
+        if (event.ctrlKey || event.metaKey) return;
+        if (!isSameDomain(window.location, event.currentTarget)) return;
+        event.preventDefault();
+        this.load(event.currentTarget, true);
+      }
+    );
+
+    $(window).on('popstate', event => {
+      const { pathname, hash, search } = document.location;
+      this.load({ pathname, hash, search }, false);
+    });
+  }
+
+  addLoader(path, handler) {
+    this.loaders[path] = handler;
+  }
+
+  load(url, pushState) {
+    const keys = Object.keys(this.loaders);
+    let matched = false;
+    let i = 0;
+    let loader = defaultLoader;
+
+    while (i < keys.length && !matched) {
+      const pathTest = keys[i];
+      matched = new RegExp(pathTest, 'i').test(fullPath(url));
+      if (matched) loader = this.loaders[pathTest];
+      i++;
+    }
+
+    const { pathname, hash, search } = url;
+    const done = function() {
+      if (pushState) {
+        window.history.pushState(null, document.title, fullPath(url));
+      }
+      if (hash) {
+        const $el = $(hash).get(0);
+        $el.scrollIntoView();
+      }
+      currentPathName = pathname;
+      $(document).trigger('page.didUpdate');
+    };
+
+    $('body').addClass('loading');
+    loader({ pathname, hash, search })
+      .then(html => {
+        $('body').removeClass('loading');
+        window.scrollTo(0, 0);
+        if (html) replaceContent(html);
+        done();
+      })
+      .catch(error => {
+        window.location = fullPath(url);
+      });
+  }
+}
+
+export default new DynamicLoader();

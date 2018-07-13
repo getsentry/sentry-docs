@@ -14,8 +14,9 @@ $(function() {
   PlatformContent.init();
   UserContent.init();
   Tracking.init();
-  DynamicLoad.init();
   Search.init();
+  DynamicLoad.init();
+  DynamicLoad.addLoader('^/search/', Search.loader);
 
   window.User = new User();
   window.User.init();

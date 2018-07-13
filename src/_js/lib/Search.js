@@ -51,39 +51,76 @@ const renderPagination = function({ q, page, pages }) {
   `);
 };
 
-const init = function() {
-  const params = qs.parse(location.search);
-
+const fetchResults = function({ q, page }) {
   const rigidsearchUrl = RIGIDSEARCH_SERVER;
-
-  if (params.q) {
-    $('input[name="q"]').val(params.q);
-
-    $.ajax({
-      type: 'GET',
-      // TODO: Ensure production config points this to the right place
-      // Replaced by ProvidePlugin
-      url: rigidsearchUrl,
-      dataType: 'json',
-      data: {
-        q: params.q,
-        page: params.page || 1,
-        // TODO: make this work like before
-        section: 'hosted'
-      },
-      crossDomain: true,
-      success: function(res) {
-        const $results = $('[data-search-results]');
-        $.each(res.items, function(i, data) {
-          $results.append(renderResult(data));
-        });
-        $results.append(renderPagination({ ...res, q: params.q }));
-      },
-      error: function() {
-        console.error('Failed to search :(');
-      }
-    });
-  }
+  return $.ajax({
+    type: 'GET',
+    // TODO: Ensure production config points this to the right place
+    // Replaced by ProvidePlugin
+    url: rigidsearchUrl,
+    dataType: 'json',
+    data: {
+      q,
+      page: page || 1,
+      // TODO: make this work like before
+      section: 'hosted'
+    },
+    crossDomain: true
+  });
 };
 
-export default { init };
+const renderResults = function(res, params) {
+  const $results = $('[data-search-results]').clone();
+  $.each(res.items, function(i, data) {
+    $results.append(renderResult(data));
+  });
+  $results.append(renderPagination({ ...res, q: params.q }));
+  return $results;
+};
+
+class Search {
+  constructor() {
+    this.results = {};
+    this.pageTemplate = $('html').html();
+
+    this.init = this.init.bind(this);
+    this.loader = this.loader.bind(this);
+  }
+
+  // Fetch search results and attach the results
+  init() {
+    const params = qs.parse(location.search);
+
+    if (!params.q) return Promise.resolve();
+
+    $('input[name="q"]').val(params.q);
+
+    return fetchResults(params)
+      .then(res => {
+        $('[data-search-results]').append(renderResults(res, params));
+      })
+      .catch(error => {
+        if (error instanceof Error) {
+          console.error(error);
+        } else {
+          console.error(`${error.status}: ${error.statusText}`);
+        }
+      });
+  }
+
+  // This is a loader for DynamicLoader. It generates a full HTML page that
+  // DynamicLoader can parse.
+  loader(url) {
+    const { search } = url;
+    const params = qs.parse(search);
+    return fetchResults(params).then(res => {
+      const $page = $(this.pageTemplate);
+      return $page
+        .find('[data-search-results]')
+        .append(renderResults(res, params))
+        .html();
+    });
+  }
+}
+
+export default new Search();
