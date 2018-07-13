@@ -24,6 +24,7 @@ const defaultLoader = function(url) {
   if (url.pathname === currentPathName) return Promise.resolve();
   return $.ajax({ type: 'GET', url: fullPath(url) });
 };
+
 class DynamicLoader {
   constructor() {
     this.loaders = {};
