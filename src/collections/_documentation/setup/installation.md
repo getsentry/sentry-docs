@@ -5,7 +5,7 @@ sidebar_order: 0
 installation_content:
   JavaScript / Browser: |
     Our Browser SDK should be used for any frontend application or Website.
-    By default it will capture JavaScript exceptions and unhandled promises. In addition we provide many integrations to handle framework specific error handling (e.g. React, Angular Vue, ...)
+    By default it will capture JavaScript exceptions and unhandled promises.  In addition we provide many integrations to handle framework specific error handling (e.g. React, Angular Vue, ...)
 
     Our recommended way of using Sentry for your website is to use our Loader.
     Just add this script at the top of your website and you are done, Sentry is fully setup and will catch errors for you.
