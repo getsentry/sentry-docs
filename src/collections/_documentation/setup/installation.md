@@ -2,7 +2,7 @@
 title: Installation
 sidebar_order: 0
 
-example_content:
+installation_content:
   JavaScript / Browser: |
     Our Browser SDK should be used for any frontend application or Website.
     By default it will capture JavaScript exceptions and unhandled promises. In addition we provide many integrations to handle framework specific error handling (e.g. React, Angular Vue, ...)
@@ -65,4 +65,4 @@ Sentry provides many different SDKs for different programming languages / platfo
 
 Please select the language / platform you are looking for:
 
-{% include components/platform_content.html content=page.example_content %}
+{% include components/platform_content.html content=page.installation_content %}
