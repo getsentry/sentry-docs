@@ -470,7 +470,34 @@ $(function() {
   };
 
   hookNavigation();
+  var initFeedback = function() {
+    $('.feedback-btn').click(feedbackHandler);
+  }
+  var feedbackHandler = function(e) {
+    var location = window.location;
 
+    $.ajax({
+      type: 'POST',
+      url: 'https://reload.getsentry.net/event/',
+      crossDomain: true,
+      data: {
+        event_name: 'docs.feedback-sent',
+        useful: $(this).val(),
+        url: location.href,
+        path: location.pathname
+      },
+      xhrFields: {
+        withCredentials: true
+      },
+      success: function(resp) {
+        console.log('SUCCESS POSTING', resp)
+      },
+      error: function() {
+        console.log('FAILURE POSTING')
+      }
+    });
+  }
+  initFeedback();
   var linkHandler = function(e) {
     var here = window.location;
 
