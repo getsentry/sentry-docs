@@ -9,77 +9,32 @@
 
 <hr>
 
-{%- assign __root = "_documentation/" -%}
-
-{% comment %}
-Categories are represented by top level folders. Group together all documents by
-their folder and include any top level documents that match folder names which
-may be used for shallow category documents.
-{% endcomment %}
-{%- assign __documents_by_category = site.documentation
-  | group_by_exp: "item", 'item.path | remove: __root | split: "." | first | split: "/" | first'
--%}
-
-{%- for __category in site.data.categories -%}
-
-{%- assign __documents =  __documents_by_category
-  | where: 'name', __category.slug
+{%- assign __collection = site.document_tree
+  | where: 'name': '_documentation'
   | first
 -%}
-{%- assign __documents = __documents.items -%}
+{% assign __tree = __collection.items %}
+
+{% include sidebar/tree.html
+  data=__tree
+  templates="category,default"
+  categories=site.data.documentation_categories
+  is_category=true
+%}
+
 
 {% comment %}
-Determine if a document exists at the top level with a slug matching the category.
-{% endcomment %}
-{%- assign __category_document_path = __root
-  | append: __category.slug
-  | append: '.md'
--%}
-{%- assign __category_document = __documents
-  | where: 'path', __category_document_path
-  | first
--%}
-
-<div class="mb-2 mb-md-4 text-white">
-
-  {%- if __category_document -%}
-  <a href="{{ __category_document.url }}" class="sidebar-title d-flex align-items-center mb-2">
-    {% include /svg/{{ __category.icon }}.svg %}
-    <h6 class="ml-2">
-      {{- __category.title -}}
-    </h6>
-  </a>
-  {%- else -%}
-  <div class="sidebar-title d-flex align-items-center mb-2">
-    {% include /svg/{{ __category.icon }}.svg %}
-    <h6 class="ml-2">
-      {{- __category.title -}}
-    </h6>
-  </div>
-  {%- endif -%}
-
-  {%- include sidebar/tree.html
-    documents=__documents
-    relative_to=__root
-  -%}
-</div>
-{%- endfor -%}
-
 {%- if jekyll.environment == 'development' -%}
 <hr class="mb-3 mb-md-4">
 
-<div class="text-white">
-
-  <div class="sidebar-title d-flex align-items-center mb-2 text-warning" data-toggle="tooltip" data-placement="bottom" title="Development only">
-    {% include /svg/workflow.svg %}
-    <h6 class="ml-2">
-      Layout Components
-    </h6>
-  </div>
-
-  {%- include sidebar/tree.html
-    documents=site.dev_components
-    relative_to="_dev_components/"
-  -%}
-</div>
+{% assign __paths = site.dev_components | map: "path" %}
+{% include sidebar/tree.html
+  root="_dev_components/"
+  paths=__paths
+  documents=site.dev_components
+  categories=site.data.dev_components_categories
+  templates="category,default"
+  is_category=true
+%}
 {%- endif -%}
+{% endcomment %}

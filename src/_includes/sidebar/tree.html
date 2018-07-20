@@ -1,112 +1,57 @@
 {% comment %}
-
-IMPORTANT
-
-Jekyll does not scope variables. This is a recursive include, so any variable
-that is assigned or captured must be manually scoped so that child includes do
-not clobber parent values. Before assigning a variable, assign a variable with
-the same name, prefixed with __scope_. Then at the end of the context, reassign
-the original value for the variable with the scoped variable value.
-
+Save the previous context so this loop doesn't clobber data from it's parent call
 {% endcomment %}
-{%- if include.documents.size > 0 -%}
-
-{% comment %}
-Sort the input document list, then group the documents by the number of folders
-deep they are from root.
-{% endcomment %}
-
-{% comment %} Set scopes {% endcomment %}
-{%- assign __scope_group_by_exp        = __group_by_exp -%}
-{%- assign __scope_grouped_by_segments = __grouped_by_segments -%}
-
-{% comment %} Define variables {% endcomment %}
-{%- capture __group_by_exp -%}item.path | split: "/" | size{%- endcapture -%}
-{%- assign __grouped_by_segments = include.documents
-  | sort: 'sidebar_order'
-  | group_by_exp: 'item', __group_by_exp
--%}
-
-{% comment %}
-Reduce the list of documents to just those that are at this current level
-{% endcomment %}
-
-{% comment %} Set scopes {% endcomment %}
-{%- assign __scope_relative_segments = __relative_segments -%}
-{%- assign __scope_current_depth = __current_depth -%}
-{%- assign __scope_documents_depth_for_this_level = __documents_depth_for_this_level -%}
-{%- assign __scope_documents_for_this_level = __documents_for_this_level -%}
-
-{% comment %} Define variables {% endcomment %}
-{%- assign __relative_segments = include.relative_to | split: '/' -%}
-{%- assign __current_depth = __relative_segments.size -%}
-{%- assign __documents_depth_for_this_level = __current_depth | plus: 2 -%}
-{%- assign __documents_for_this_level = __grouped_by_segments
-  | where: 'name', __documents_depth_for_this_level
-  | map: 'items'
-  | first
--%}
+{%- assign __CONTEXT_items_at_current_depth = __items_at_current_depth-%}
+{%- assign __CONTEXT_group = __group -%}
 
 <ul class="list-unstyled">
-  {%- for __document in __documents_for_this_level -%}
-  <li>
+{%- for __item in include.data -%}
+<li{% if include.is_category %} class="mb-2 mb-md-4"{% endif %}>
+  {%- include sidebar/preserve_context.html -%}
 
-    {% comment %}
-    Render the sidebar iteme
-    {% endcomment %}
-    <a class="d-block {% if __document.path == page.path %} active{% endif %}" href="{{ __document.url }}">{{ __document.title }}</a>
+  {%- assign __template_list = include.templates
+    | split: ","
+  -%}
+  {%- assign __template_slug = __template_list
+    | first
+  -%}
+  {%- assign __template_path = __template_slug
+    | prepend: "sidebar/"
+    | append: ".html"
+  -%}
 
-    {% comment %}
-    Get a list of all documents that exist within a folder matching the slug of
-    this file. They are children of this document.
-    {% endcomment %}
+  {%- include {{ __template_path }}
+    slug=__item.slug
+    document=__item.document
+    categories=include.categories
+  -%}
 
-    {% comment %} Set scopes {% endcomment %}
-    {%- assign __scope_document_segments = __document_segments -%}
-    {%- assign __scope_new_relative_path = __new_relative_path -%}
-    {%- assign __scope_folder_matching_document_slug = __folder_matching_document_slug -%}
-    {%- assign __scope_where_exp = __where_exp -%}
-    {%- assign __scope_children = __children -%}
-
-    {% comment %} Define variables {% endcomment %}
-    {%- assign __document_segments = __document.path | split: "/" -%}
-    {%- assign __new_relative_path = __document_segments | pop | join: '/' -%}
-    {%- assign __folder_matching_document_slug = __document_segments
-      | last
-      | split: '.'
-      | first
-      | prepend: '/'
-      | prepend: __new_relative_path
-      | append: '/'
+  {%- if __item.items -%}
+    {%- assign __new_template_list_length = __template_list.size
+      | minus: 1
     -%}
-    {%- capture __where_exp -%}item.path contains "{{ __folder_matching_document_slug }}"{%- endcapture -%}
-    {%- assign __children = include.documents
-      | where_exp: 'item', __where_exp
-    -%}
+    {%- if __new_template_list_length < 1 -%}
+      {%- assign __new_template_list = __template_slug -%}
+    {%- else -%}
+      {%- assign __new_template_list = __template_list
+        | slice: 1, __new_template_list_length
+        | join: ','
+      -%}
+    {%- endif -%}
 
-    {% comment %}
-    Render a list of child documents, if any exist.
-    {% endcomment %}
-    {%- include sidebar/tree.html
-      documents=__children
-      relative_to=__new_relative_path
-    -%}
+    {% include sidebar/tree.html
+      data=__item.items
+      templates=__new_template_list
+    %}
+  {%- endif -%}
 
-    {% comment %} Reset scopes {% endcomment %}
-    {%- assign __document_segments = __scope_document_segments -%}
-    {%- assign __new_relative_path = __scope_new_relative_path -%}
-    {%- assign __folder_matching_document_slug = __scope_folder_matching_document_slug -%}
-    {%- assign __where_exp = __scope_where_exp -%}
-    {%- assign __children = __scope_children -%}
-  </li>
-  {%- endfor -%}
+  {%- include sidebar/restore_context.html -%}
+</li>
+{%- endfor -%}
 </ul>
-{%- endif -%}
 
-{% comment %} Reset scopes {% endcomment %}
-{%- assign __group_by_exp = __scope_group_by_exp -%}
-{%- assign __grouped_by_segments = __scope_grouped_by_segments -%}
-{%- assign __relative_segments = __scope_relative_segments -%}
-{%- assign __current_depth = __scope_current_depth -%}
-{%- assign __documents_depth_for_this_level = __scope_documents_depth_for_this_level -%}
-{%- assign __documents_for_this_level = __scope_documents_for_this_level -%}
+{% comment %}
+Reset our variables so the state is clean for the next loop
+{% endcomment %}
+{%- assign __items_at_current_depth = __CONTEXT_items_at_current_depth-%}
+{%- assign __group = __CONTEXT_group -%}
