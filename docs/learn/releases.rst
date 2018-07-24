@@ -2,10 +2,6 @@
 Releases
 ========
 
-************
-Introduction
-************
-
 A release is a version of your code that is deployed to an environment.
 When you give Sentry information about your releases, you unlock a number
 of new features:
@@ -28,6 +24,7 @@ Configuring releases fully is a 3-step process:
 3. :ref:`Tell Sentry When You Deploy a Release <create-deploy>`
 
 .. _tag-errors:
+
 Tag Your Errors
 ===============
 Configure your client SDK with a release ID, which is commonly a git SHA
@@ -49,6 +46,7 @@ and regressions introduced in the release.
 .. image:: img/releases-overview.png
 
 .. _link-repository:
+
 Link a Repository
 =================
 
@@ -66,8 +64,8 @@ commit data, which you will reference in the next step.
 
 b. Associate commits with a release
 -----------------------------------
-When you create a release of your code, tell Sentry which commits in the repository
-are associated with that release. There are 2 ways of doing this:
+When you create a release of your code, create a corresponding release object in Sentry
+and associate it with commits in the repository. There are 2 ways of doing this:
 
 1. Using Sentry’s :ref:`sentry-cli` (**recommended**).
 2. Using the API
@@ -78,6 +76,7 @@ Include this piece of code in your build script:
 
 .. code-block:: bash
 
+  # Assumes you're in a git repository
   export SENTRY_AUTH_TOKEN=...
   export SENTRY_ORG=my-org
   VERSION=$(sentry-cli releases propose-version)
@@ -86,25 +85,28 @@ Include this piece of code in your build script:
   sentry-cli releases new -p project1 -p project2 $VERSION
 
   # Associate commits with the release
-  sentry-cli releases set-commits --commit "my-repo@from..to"
+  sentry-cli releases set-commits --auto $VERSION
 
 **Note:** You need to make sure you're using :ref:`Auth Tokens <auth-tokens>`,
 **not** :ref:`API Keys <api-keys>`, which are deprecated.
 
 In the above example, we’re using the ``propose-version`` sub-command to automatically
 determine the release ID. Then we’re creating a release for the organization ``my-org``
-for projects ``project1`` and ``project2``. Finally we’re associating commits from
-revision ``from`` (earlier) to revision ``to`` (later) in the repository ``my-repo``
-with the release. The repository name should match the name you entered when linking
-the repo in the previous step, and is of the form ``owner-name/repo-name``.
+for projects ``project1`` and ``project2``. Finally we’re using the ``--auto`` flag
+to automatically determine the repository name and associate commits between the previous
+release's revision and the current head, with the release. If you have never associated
+commits before, we'll use the latest 10 commits.
 
-The ``from`` commit is optional but will help Sentry be more accurate when building the
-commit list. If you don’t specify the ``from..`` part, Sentry will use the previous release
-revision as the baseline if you have associated commits previously, or the 10 most recent
-commits up to ``to`` if it’s your first time specifying commits with a release.
+If you want more control over which commits to associate, or are unable to execute the
+command inside the repository, you can manually specify a repository and range:
 
-The CLI also has an ``--auto`` flag you can use when you’re in a git repository, which
-automatically determines the repo name and commit range based on the the previous release.
+``sentry-cli releases set-commits --commit "my-repo@from..to" $VERSION``
+
+Here we are associating commits from ``from`` (earlier) to ``to`` (later) in the repository
+``my-repo``. The repository name should match the name you entered when linking the repo in
+the previous step, and is of the form ``owner-name/repo-name``. The ``from`` commit is optional
+but will help Sentry be more accurate when building the commit list.
+
 For more information, see the `CLI docs <https://docs.sentry.io/learn/cli/releases/>`__.
 
 Using the API
@@ -196,6 +198,7 @@ owners feature, you’ll need to ensure "Keep my email address private" is unche
 GitHub's `account settings <https://github.com/settings/emails>`__.
 
 .. _create-deploy:
+
 Tell Sentry When You Deploy a Release
 =====================================
 Tell Sentry when you deploy a release and we’ll automatically send an email to Sentry
