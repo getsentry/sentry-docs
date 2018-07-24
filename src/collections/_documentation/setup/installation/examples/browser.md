@@ -15,7 +15,7 @@ There are a few other ways to use / install our JavaScript SDK:
 You could use our CDN link directly and load the latest SDK version there:
 
 ```javascript
-<script src="https://browser.sentry-cdn.com/__VERSION:@sentry/browser__/bundle.min.js" crossorigin="anonymous" />
+<script src="https://browser.sentry-cdn.com/{{ site.data.versions['raven-js'] }}:@sentry/browser__/bundle.min.js" crossorigin="anonymous" />
 ```
 
 or if you are using `npm` or `yarn` call:
