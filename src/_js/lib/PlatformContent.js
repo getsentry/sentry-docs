@@ -106,10 +106,12 @@ const init = function() {
     updateLocationPlatform(slug);
   });
 
-  const queryPlatform = qs.parse(location.search).platform;
-  const preferredPlatform = localStorage.getItem(KEY);
-  showPlatform(queryPlatform || preferredPlatform);
-  addPlatformToLinks(queryPlatform);
+  $(document).on('page.didUpdate', function(event) {
+    const queryPlatform = qs.parse(location.search).platform;
+    const preferredPlatform = localStorage.getItem(KEY);
+    showPlatform(queryPlatform || preferredPlatform);
+    addPlatformToLinks(queryPlatform);
+  });
 };
 
 export default { init };
