@@ -1,3 +1,0 @@
----
-title: thing b
----

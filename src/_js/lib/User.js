@@ -1,5 +1,5 @@
-// TODO: point this at the production url
-const API = 'http://dev.getsentry.net:8000/docs/api';
+// This is set in DefinePlugin
+const API = API_URL;
 
 export default class User {
   constructor() {
@@ -9,7 +9,6 @@ export default class User {
       projectPref: -1
     };
 
-    this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.init = this.init.bind(this);
     this.update = this.update.bind(this);
   }
@@ -32,17 +31,18 @@ export default class User {
         withCredentials: true
       }
     })
-      .done(this.onFetchSuccess)
-      .fail(function() {});
-  }
-
-  onFetchSuccess({ projects, api_keys, user }) {
-    const userData = { ...this.userData };
-    if (projects) {
-      userData.projects = projects.map(constructDSNObject);
-      if (userData.projectPref === -1) userData.projectPref = projects[0].id;
-    }
-    this.update(userData);
+      .done(({ projects, api_keys, user }) => {
+        const userData = { ...this.userData };
+        if (projects) {
+          userData.projects = projects.map(constructDSNObject);
+          if (userData.projectPref === -1)
+            userData.projectPref = projects[0].id;
+        }
+        this.update(userData);
+      })
+      .fail(() => {
+        this.update();
+      });
   }
 }
 
@@ -93,7 +93,7 @@ const constructDSNObject = function(project = {}) {
     dsn = {
       scheme: escape(match[1]),
       publicKey: escape(match[2]),
-      secretKey: `<span className="dsn-secret-key">${escape(match[3])}</span>`,
+      secretKey: `${escape(match[3])}`,
       host: escape(match[4]),
       pathSection: escape(match[5]),
       project: parseInt(urlPieces[0].substring(1), 10) || 1
@@ -101,16 +101,16 @@ const constructDSNObject = function(project = {}) {
   } else {
     dsn = {
       scheme: 'https://',
-      publicKey: '<key>',
-      secretKey: '<secret>',
+      publicKey: '&lt;key&gt;',
+      secretKey: '&lt;secret&gt;',
       host: 'sentry.io',
       pathSection: '/',
-      project: '<project>'
+      project: '&lt;project&gt;'
     };
   }
 
   return {
-    id: project.id || '-1',
+    id: project.id || -1,
     group: project.organizationName || 'Example',
     PROJECT_NAME: formatProjectLabel(project) || 'Your Project',
     PROJECT_ID: project.projectSlug || 'your-project',
