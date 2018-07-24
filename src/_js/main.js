@@ -5,6 +5,7 @@ import Tracking from './lib/Tracking';
 import User from './lib/User';
 import DynamicLoad from './lib/DynamicLoad';
 import Search from './lib/Search';
+import HeaderLinker from './lib/HeaderLinker';
 
 $(document).on('page.didUpdate', function(event) {
   $('[data-toggle="tooltip"]').tooltip();
@@ -17,6 +18,7 @@ $(function() {
   Search.init();
   DynamicLoad.init();
   DynamicLoad.addLoader('^/search/', Search.loader);
+  HeaderLinker.init();
 
   window.User = new User();
   window.User.init();
