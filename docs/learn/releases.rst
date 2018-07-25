@@ -72,7 +72,7 @@ and associate it with commits in the repository. There are 2 ways of doing this:
 
 Using the CLI
 ~~~~~~~~~~~~~
-Include this piece of code in your build script:
+Include the following code in your build script:
 
 .. code-block:: bash
 
@@ -91,21 +91,22 @@ Include this piece of code in your build script:
 **not** :ref:`API Keys <api-keys>`, which are deprecated.
 
 In the above example, we’re using the ``propose-version`` sub-command to automatically
-determine the release ID. Then we’re creating a release for the organization ``my-org``
-for projects ``project1`` and ``project2``. Finally we’re using the ``--auto`` flag
-to automatically determine the repository name and associate commits between the previous
-release's revision and the current head, with the release. If you have never associated
-commits before, we'll use the latest 10 commits.
+determine a release ID. Then we’re creating a release tagged ``VERSION`` for the
+organization ``my-org`` for projects ``project1`` and ``project2``. Finally we’re using
+the ``--auto`` flag to automatically determine the repository name, and associate commits
+between the previous release's commit and the current head commit with the release. If
+you have never associated commits before, we'll use the latest 10 commits.
 
 If you want more control over which commits to associate, or are unable to execute the
 command inside the repository, you can manually specify a repository and range:
 
 ``sentry-cli releases set-commits --commit "my-repo@from..to" $VERSION``
 
-Here we are associating commits from ``from`` (earlier) to ``to`` (later) in the repository
-``my-repo``. The repository name should match the name you entered when linking the repo in
-the previous step, and is of the form ``owner-name/repo-name``. The ``from`` commit is optional
-but will help Sentry be more accurate when building the commit list.
+Here we are associating commits between ``from`` and ``to`` with the current release,
+``from`` being the previous release's commit. The repository name ``my-repo`` should
+match the name you entered when linking the repo in the previous step, and is of the
+form ``owner-name/repo-name``. The ``from`` commit is optional and we'll use the previous
+release's commit as the baseline if it is excluded.
 
 For more information, see the `CLI docs <https://docs.sentry.io/learn/cli/releases/>`__.
 
