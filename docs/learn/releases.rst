@@ -1,61 +1,117 @@
+========
 Releases
 ========
 
-.. container:: admonition
+A release is a version of your code that is deployed to an environment.
+When you give Sentry information about your releases, you unlock a number
+of new features:
 
-    **Note:** Some features of releases are still in beta. If you'd like to
-    check them out, consider joining our early adopter program.
+- Determine the issues and regressions introduced in a new release
+- Predict which commit caused an issue and who is likely responsible
+- Resolve issues by including the issue number in your commit message
+- Receive email notifications when your code gets deployed
 
-What is a Release?
-------------------
-
-Releases are used by Sentry to provide you with additional context
-when determining the cause of an issue, as well as for applying
-`sourcemaps <https://docs.sentry.io/clients/javascript/sourcemaps/>`__
+Additionally, releases are used for applying `sourcemaps <https://docs.sentry.io/clients/javascript/sourcemaps/>`__
 to minified JavaScript to view original untransformed source code.
 
-To use the feature, you must set a release context in your SDK.
-Then, you can either create a release via our API or allow Sentry
-to create one automatically when we receive an event with a new
-release version. Once a release is created, we'll provide an overview in the UI:
+********************
+Configuring Releases
+********************
+Configuring releases fully is a 3-step process:
+
+1. :ref:`Tag Your Errors <tag-errors>`
+2. :ref:`Link a Repository <link-repository>`
+3. :ref:`Tell Sentry When You Deploy a Release <create-deploy>`
+
+.. _tag-errors:
+
+Tag Your Errors
+===============
+Configure your client SDK with a release ID, which is commonly a git SHA
+or a custom version dependent on your release process (check language-specific
+docs for exact syntax):
+
+.. code-block:: javascript
+
+  SentryClient.setRelease({
+    release: "6d5a6a446805a06154e25e2fa203d67b9e762f5d"
+  });
+
+This will annotate each event with the release, as well as automatically create
+a release entity in the system the first time it's seen.
+
+After this step, you should see information about the release, such as new issues
+and regressions introduced in the release.
 
 .. image:: img/releases-overview.png
 
-Setting up releases in Sentry is helpful as it will give you access
-to the following features:
+.. _link-repository:
 
-- Marking issues as resolved in the next release
-- Learn which release an issue was first introduced or last seen in
-- Resolving issues via commit messages (requires setting up commits, see below)
-- Suspect commits and suggested assignees on issues (requires setting up commits, see below)
-- Detailed deploy emails to inform Sentry users of when their code is going out (requires setting up commits and deploys, see below)
+Link a Repository
+=================
 
-Releases are better with commits
---------------------------------
+Linking a repository means giving Sentry access to the repository’s commit metadata.
+This is similar to the output of ``git log`` — Sentry doesn’t access your source code.
 
-If you connect a repository in Sentry, we'll create a webhook to start
-collecting commit data. Once you're ready to create a release, you can
-associate commits with a release either by sending us a list of commit
-ids (shas) with their repos or just by including the current HEAD sha
-and, optionally, the previous release's HEAD sha.
+Linking a repository is a 2-step process:
 
-To get started, you'll need to first add the repository. To do this, go to
-your organization's dashboard, click "Repositories", and click
-"Add Repository". You'll need to be an Owner or Manager of your Sentry
-organization to do this.
+a. Add a Repository
+-------------------
+Go to your organization’s dashboard, click "Repositories", and click "Add Repository".
+You’ll need to be an Owner or Manager of your Sentry organization to do this.
+This creates a webhook on the repository and Sentry automatically starts collecting
+commit data, which you will reference in the next step.
 
-Once added, Sentry will automatically collect commits for the repository,
-and you can begin referencing it in releases. To do so, you'll need
-to send ``refs`` along when you create a release. **Note:** You need to
-make sure you're using :ref:`Auth Tokens <auth-tokens>` **not**
-:ref:`API Keys <api-keys>`, which are deprecated.
+b. Associate commits with a release
+-----------------------------------
+When you create a release of your code, create a corresponding release object in Sentry
+and associate it with commits in the repository. There are 2 ways of doing this:
 
-.. container:: admonition
+1. Using Sentry’s :ref:`sentry-cli` (**recommended**).
+2. Using the API
 
-    **Note:** This is a different endpoint than the project releases endpoint, so if
-    you are attempting to add commits to your existing releases configuration, you will
-    need to change the url.
+Using the CLI
+~~~~~~~~~~~~~
+Include the following code in your build script:
 
+.. code-block:: bash
+
+  # Assumes you're in a git repository
+  export SENTRY_AUTH_TOKEN=...
+  export SENTRY_ORG=my-org
+  VERSION=$(sentry-cli releases propose-version)
+
+  # Create a release
+  sentry-cli releases new -p project1 -p project2 $VERSION
+
+  # Associate commits with the release
+  sentry-cli releases set-commits --auto $VERSION
+
+**Note:** You need to make sure you're using :ref:`Auth Tokens <auth-tokens>`,
+**not** :ref:`API Keys <api-keys>`, which are deprecated.
+
+In the above example, we’re using the ``propose-version`` sub-command to automatically
+determine a release ID. Then we’re creating a release tagged ``VERSION`` for the
+organization ``my-org`` for projects ``project1`` and ``project2``. Finally we’re using
+the ``--auto`` flag to automatically determine the repository name, and associate commits
+between the previous release's commit and the current head commit with the release. If
+you have never associated commits before, we'll use the latest 10 commits.
+
+If you want more control over which commits to associate, or are unable to execute the
+command inside the repository, you can manually specify a repository and range:
+
+``sentry-cli releases set-commits --commit "my-repo@from..to" $VERSION``
+
+Here we are associating commits between ``from`` and ``to`` with the current release,
+``from`` being the previous release's commit. The repository name ``my-repo`` should
+match the name you entered when linking the repo in the previous step, and is of the
+form ``owner-name/repo-name``. The ``from`` commit is optional and we'll use the previous
+release's commit as the baseline if it is excluded.
+
+For more information, see the `CLI docs <https://docs.sentry.io/learn/cli/releases/>`__.
+
+Using the API
+~~~~~~~~~~~~~
 .. code-block:: bash
 
     # Create a new release
@@ -75,38 +131,21 @@ make sure you're using :ref:`Auth Tokens <auth-tokens>` **not**
     }
     '
 
-In the above example, we're telling Sentry that this release contains
-the ``owner-name/repo-name`` repository (this name should match the name
-you entered when setting up the repo), in which the current version (HEAD) is
-``2da95dfb052f477380608d59d32b4ab9``. We're also giving it the previous
-version (``previousCommit``), which is optional, but will help Sentry
-be more accurate with building the commit list. If it's your first time
-specifying `refs` with a release and you don't send along ``previousCommit``
-we'll fetch the 10 most recent commits for that repository.
-For subsequent releases, we'll be able to determine the commits
-involved based on the previous release.
+**Note:** We changed releases to be an org-level entity instead of a project-level entity,
+so if you are attempting to add commits to your existing releases configuration that uses
+the project releases endpoint, you will need to change the url.
 
-For a more convenient method you can use the :ref:`sentry-cli` tool which
-can automatically push releases and commits up for you::
-
-    export SENTRY_AUTH_TOKEN=...
-    export SENTRY_ORG=organization-slug
-    VERSION=$(sentry-cli releases propose-version)
-    sentry-cli releases new -p my-project -p my-other-project $VERSION
-    sentry-cli releases set-commits --auto $VERSION
-
-Alternately, if you'd like to have more control over what order the
-commits appear in, you can send us a list of all commits. That might
-look like this:
+If you’d like to have more control over what order the commits appear in, you can send us
+a list of all commits. That might look like this:
 
 .. code-block:: python
 
     import subprocess
     import requests
-
+    
     SENTRY_API_TOKEN = <my_api_token>
     sha_of_previous_release = <previous_sha>
-
+    
     log = subprocess.Popen([
         'git',
         '--no-pager',
@@ -116,107 +155,72 @@ look like this:
         '--pretty=%H',
         '%s..HEAD' % (sha_of_previous_release,),
     ], stdout=subprocess.PIPE)
-
+    
     commits = log.stdout.read().strip().split('\n')
-
+    
     data = {
         'commits': [{'id': c, 'repository': 'my-repo-name'} for c in commits],
         'version': commits[0],
         'projects': ['my-project', 'my-other-project'],
     }
-
+    
     res = requests.post(
         'https://sentry.io/api/0/organizations/my-org/releases/',
         json=data,
         headers={'Authorization': 'Bearer {}'.format(SENTRY_API_TOKEN)},
     )
 
-For more information, you can check out our
-:doc:`API <../api/releases/post-organization-releases/>`
-or :ref:`CLI <sentry-cli-commit-integration>` docs.
+For more information, see the `API reference <https://docs.sentry.io/api/releases/post-organization-releases/>`__.
 
-Resolving issues via commits
-----------------------------
+After linking a repository, **suspect commits** and **suggested assignees** will start
+appearing on the issue page. We suggest this by tying together the commits in the release,
+files touched by those commits, files observed in the stack trace, authors of those files,
+and `ownership rules <https://docs.sentry.io/learn/issue-owners/>`__.
 
-Once you are sending commits (either as ``commits`` or ``refs``), you
-can start including ``fixes <SHORT-ID>`` in your commit messages. Then,
-once we identify a commit as being included in a release, we'll
-automatically resolve that issue. You can find the short issue id at
-the top of the issue details page, next to the assignee dropdown.
+.. image:: img/suspect-commits-highlighted.png
 
-For example, a commit message might look like this:
+Additionally, linking a repository will allow you to resolve issues by including the
+issue number in a commit message. You can find the short issue id at the top of the
+issue details page, next to the assignee dropdown. For example, a commit message might
+look like this:
 
 .. code-block:: bash
 
     Prevent empty queries on users
-
+    
     Fixes SENTRY-317
 
+When Sentry sees this commit, we’ll annotate the issue with a reference to the commit,
+and when you create a release in Sentry, we’ll mark the issue as resolved in that release.
 
-When Sentry sees this commit, we'll automatically annotate the matching
-issue with a reference to the commit, and upon release creation, we'll mark the issue
-as resolved in that release. **Note:** You must either specify ``commits`` or ``refs`` when creating the release.
+**Note:** If you’re using GitHub, you may have a privacy setting enabled which prevents
+Sentry from identifying the user’s real email address. If you wish to use the suggested
+owners feature, you’ll need to ensure "Keep my email address private" is unchecked in
+GitHub's `account settings <https://github.com/settings/emails>`__.
 
-Suspect commits and suggested assignees
----------------------------------------
+.. _create-deploy:
 
-Once we have commit data associated with releases, we'll be able to start
-suggesting commits and owners that likely introduced the issue.
+Tell Sentry When You Deploy a Release
+=====================================
+Tell Sentry when you deploy a release and we’ll automatically send an email to Sentry
+users who have committed to the release that is being deployed.
 
-To do this, we look at the commit author's email
-address and automatically pair it up with any primary or secondary member
-addresses in the system.
+.. image:: img/deploy-emails.png
 
-Once we've identified the authors, we'll compare the stacktrace of the issue
-to the files changed within a given release. If we find any potential commits,
-then we will suggest those commits and its owners on the issues details page.
-
-.. image:: img/releases-commits-issue.png
-
-A note on Github
-~~~~~~~~~~~~~~~~
-
-If you're using GitHub, you may have a privacy setting enabled which prevents
-Sentry from identifying the user's real email address. If you wish to use the
-suggested owners feature, you'll need to ensure "Keep my email address private"
-is unchecked in `GitHub's account settings <https://github.com/settings/emails>`_.
-
-
-Tell Sentry about deploys
--------------------------
-
-Letting Sentry know when you've deployed a given release to an environment
-unlocks another feature: Deploy emails.
-
-You must have environment context set in your SDK in order to use this feature.
-
-To let Sentry know you've deployed, you'd just send an additional request
-after creating a release via our API:
+You must have environment `context <https://docs.sentry.io/learn/context/>`__ set in
+your SDK in order to use this feature. To let Sentry know you’ve deployed, just send
+an additional request after creating a release:
 
 .. code-block:: bash
 
-    # Create a new deploy
-    curl https://sentry.io/api/0/organizations/:organization_slug/releases/:release_version/deploys/ \
-      -X POST \
-      -H 'Authorization: Bearer {TOKEN}' \
-      -H 'Content-Type: application/json' \
-      -d '
-      {
-        "environment": "production",
-        "name": "my-deploy"
-    }
-    '
+    sentry-cli releases deploys VERSION new -e ENVIRONMENT
 
-If you've already configured a repo with Sentry, when you create a deploy,
-we'll automatically send an email to Sentry users who have committed to
-the release that is being deployed.
+You can also use our `API <https://docs.sentry.io/api/releases/post-release-deploys/>`__
+to create a deploy.
 
-For more details, check out our :doc:`API <../api/releases/post-release-deploys/>` docs.
-
-
+*****************
 Release Artifacts
------------------
-
+*****************
 Javascript and iOS projects can utilize release artifacts to unminify or
 symbolicate error stack traces. To learn more, please check out our
 :ref:`iOS <sentry-cocoa-debug-symbols>` and :ref:`JavaScript <raven-js-sourcemaps>` docs.
