@@ -57,7 +57,7 @@ Linking a repository is a 2-step process:
 
 a. Add a Repository
 -------------------
-Go to your organization’s dashboard, click "Repositories", and click "Add Repository".
+Go to your organization’s settings, click "Repositories", and click "Add Repository".
 You’ll need to be an Owner or Manager of your Sentry organization to do this.
 This creates a webhook on the repository and Sentry automatically starts collecting
 commit data, which you will reference in the next step.
@@ -102,7 +102,7 @@ command inside the repository, you can manually specify a repository and range:
 
 ``sentry-cli releases set-commits --commit "my-repo@from..to" $VERSION``
 
-Here we are associating commits between ``from`` and ``to`` with the current release,
+Here we are associating commits (or refs) between ``from`` and ``to`` with the current release,
 ``from`` being the previous release's commit. The repository name ``my-repo`` should
 match the name you entered when linking the repo in the previous step, and is of the
 form ``owner-name/repo-name``. The ``from`` commit is optional and we'll use the previous
