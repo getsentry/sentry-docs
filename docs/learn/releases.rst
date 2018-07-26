@@ -68,6 +68,8 @@ commit data, which you will reference in the next step.
 
 * A GitHub owner needs to make sure Sentry is an `authorized application <https://github.com/settings/apps/authorizations>`__
 
+If you're still having trouble adding it, you can try to `disconnect <https://sentry.io/account/settings/identities/>`__ and then `reconnect <https://sentry.io/account/settings/social/associate/github/>`__ your GitHub identity.
+
 
 b. Associate commits with a release
 -----------------------------------
