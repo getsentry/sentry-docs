@@ -5,7 +5,7 @@ Google Crashpad
 C++ by Google. It supports macOS, Windows and Linux (limited), and features an
 uploader to submit minidumps to a configured URL right when the process crashes.
 
-Follow the `Crashpad developer docs <Developing Crashpad>`_ for instructions on
+Follow the `Crashpad developer docs <Developing Crashpad_>`_ for instructions on
 how to build Crashpad from source. Make sure that crashpad's header files are in
 your include path, then add a call to `StartHandler()`_ during your program
 startup:

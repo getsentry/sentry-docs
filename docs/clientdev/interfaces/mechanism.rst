@@ -80,7 +80,7 @@ descriptions.
 `````````
 
 Error codes set by linux system calls and some library functions as specified in
-ISO C99, POSIX.1-2001 and POSIX.1-2008. See `errno(3) <errno>`_ for more
+ISO C99, POSIX.1-2001 and POSIX.1-2008. See `errno(3)`_ for more
 information.
 
 ``number``:
@@ -146,4 +146,4 @@ Generic unhandled crash
     }
 
 
-.. _errno: http://man7.org/linux/man-pages/man3/errno.3.html
+.. _errno(3): http://man7.org/linux/man-pages/man3/errno.3.html
