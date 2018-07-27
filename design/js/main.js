@@ -475,25 +475,22 @@ $(function() {
   }
   var feedbackHandler = function(e) {
     var location = window.location;
-
-    $.ajax({
-      type: 'POST',
-      url: 'https://reload.getsentry.net/event/',
-      crossDomain: true,
-      data: {
+    var data = {
         event_name: 'docs.feedback-sent',
-        useful: $(this).val(),
+        useful: $(this).val() === "Yes" ? 1 : 0,
         url: location.href,
         path: location.pathname
-      },
+      }
+    $.ajax({
+      url: 'https://reload.getsentry.net/event/',
+      method: 'POST',
+      data: data,
+      crossDomain: true,
       xhrFields: {
         withCredentials: true
       },
-      success: function(resp) {
-        console.log('SUCCESS POSTING', resp)
-      },
       error: function() {
-        console.log('FAILURE POSTING')
+        console.log('Failed to send feedback')
       }
     });
   }
