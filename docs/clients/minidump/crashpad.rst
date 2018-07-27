@@ -58,16 +58,6 @@ platforms, child processes must also register by using `SetHandlerIPCPipe()`_.
 For more information on configuring the crashpad handler, see
 `crashpad_handler`_.
 
-.. admonition:: Known Issue
-
-    Sentry cannot handle gzip compressed minidump submissions and will respond
-    with a 400 error. To fix this, pass the ``--no-upload-gzip`` argument to the
-    handler:
-
-    .. code-block:: cpp
-
-        arguments.push_back("--no-upload-gzip");
-
 If you also want Crashpad to upload crashes to Sentry, additionally configure
 the Crashpad database for automatic uploads:
 
