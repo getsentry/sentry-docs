@@ -477,7 +477,7 @@ $(function() {
     var location = window.location;
     var data = {
         event_name: 'docs.feedback-sent',
-        useful: $(this).val() === "Yes" ? 1 : 0,
+        useful: $(this).val(),
         url: location.href,
         path: location.pathname
       }
