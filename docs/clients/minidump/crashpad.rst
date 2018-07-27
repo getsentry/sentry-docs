@@ -5,7 +5,7 @@ Google Crashpad
 C++ by Google. It supports macOS, Windows and Linux (limited), and features an
 uploader to submit minidumps to a configured URL right when the process crashes.
 
-Follow the `Crashpad developer docs <DevelopingCrashpad>`_ for instructions on
+Follow the `Crashpad developer docs <Developing Crashpad_>`_ for instructions on
 how to build Crashpad from source. Make sure that crashpad's header files are in
 your include path, then add a call to `StartHandler()`_ during your program
 startup:
@@ -91,7 +91,7 @@ this limitation, pass the ``--no-rate-limit`` argument to the handler:
     arguments.push_back("--no-rate-limit");
 
 .. _Crashpad: https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md
-.. _DevelopingCrashpad: https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/doc/developing.md
+.. _Developing Crashpad: https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/doc/developing.md
 .. _StartHandler(): https://crashpad.chromium.org/doxygen/classcrashpad_1_1CrashpadClient.html#a810ad9941bedba543bf60507c31c55da
 .. _SetHandlerIPCPipe(): https://crashpad.chromium.org/doxygen/classcrashpad_1_1CrashpadClient.html#a9f1d5d38e9b4f5781e3821551dcc39d5
 .. _crashpad_handler: https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/handler/crashpad_handler.md
