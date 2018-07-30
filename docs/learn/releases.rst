@@ -62,11 +62,7 @@ You’ll need to be an Owner or Manager of your Sentry organization to do this.
 This creates a webhook on the repository and Sentry automatically starts collecting
 commit data, which you will reference in the next step.
 
-* If it's a public repository, you don't need to be an organization owner in GitHub
-
-* If it's a private repository, you'll need to be an organization owner in GitHub
-
-* A GitHub organization owner needs to make sure Sentry is an `authorized application <https://github.com/settings/apps/authorizations>`__
+If you're linking a GitHub repository, ensure you have Admin or Owner permissions on the repository, and that Sentry is an authorized OAuth app in your `GitHub account settings <https://github.com/settings/applications>`__.
 
 If you're still having trouble adding it, you can try to `disconnect <https://sentry.io/account/settings/identities/>`__ and then `reconnect <https://sentry.io/account/settings/social/associate/github/>`__ your GitHub identity.
 
