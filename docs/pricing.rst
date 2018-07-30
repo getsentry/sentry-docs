@@ -52,10 +52,8 @@ On-demand spending cap
 
 You can set a maximum monthly on-demand bill amount by setting an on-demand spending cap. Once you reach the spending cap, you will still be able to access Sentry and prior event data. However, any additional events you send will be rejected.
 
-Hourly rate limits
+Rate limits
 ``````````````````
-
-Every organization can set an hourly rate limit (1,000 - 1,000,000 events) to prevent massive spikes from consuming your monthly quota.
 
 Large and Enterprise plans have the option to configure rate limits for each project that let you specify the number of events and time interval for rate limiting.
 
@@ -67,9 +65,7 @@ If your projects have a high volume of events, you can control how many errors S
 - Within the SDK you can reduce the data volume you’re sending by sampling.
 - Turn on :ref:`inbound-data-filters` for legacy browsers, browser extensions, localhost, and web crawlers. Any filtered events will not count towards your quota.
 - For JavaScript projects, use `whitelistUrls` and `ignoreErrors`
-- When you migrate to the new plan you’ll also be able to set an organization-wide hourly rate limit to prevent massive spikes from consuming your quota at **[Organization] » Settings » Rate Limit**.
-- Set a per-project rate limit to specify the maximum percentage of your organization-wide rate-limit an individual project can consume at **[Organization] » Settings » Rate Limit**.
-- With the new Large and Enterprise plans, you'll be able to set a per-key rate limit for each DSN key in a project to prevent exhaustion of per-project rate limit at **[Organization] » [Project] » Project Settings » Client Keys (DSN) » Details**. This rate limit is set as number of events to accept during a specific time window (1 minute, 24 hours, etc).
+- With the Large and Enterprise plans, you'll be able to set a per-key rate limit for each DSN key in a project to prevent exhaustion of per-project rate limit at **[Organization] » [Project] » Project Settings » Client Keys (DSN) » Details**. This rate limit is set as number of events to accept during a specific time window (1 minute, 24 hours, etc).
 
 FAQ
 ---
