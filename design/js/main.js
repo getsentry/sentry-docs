@@ -476,23 +476,9 @@ $(function() {
   var feedbackHandler = function(e) {
     var location = window.location;
     var data = {
-        event_name: 'docs.feedback-sent',
         useful: $(this).val(),
-        url: location.href,
-        path: location.pathname
       }
-    $.ajax({
-      url: 'https://reload.getsentry.net/event/',
-      method: 'POST',
-      data: data,
-      crossDomain: true,
-      xhrFields: {
-        withCredentials: true
-      },
-      error: function() {
-        console.log('Failed to send feedback')
-      }
-    });
+    window.ra.event('docs.feedback-sent', data)
   }
   initFeedback();
   var linkHandler = function(e) {
