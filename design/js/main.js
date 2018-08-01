@@ -477,8 +477,9 @@ $(function() {
     var location = window.location;
     var data = {
         useful: $(this).val(),
-      }
-    window.ra.event('docs.feedback-sent', data)
+      };
+    window.ra.event('docs.feedback-sent', data);
+    $(this).toggleClass('highlight');
   }
   initFeedback();
   var linkHandler = function(e) {
