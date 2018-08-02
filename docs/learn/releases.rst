@@ -20,16 +20,15 @@ Configuring Releases
 Configuring releases fully is a 3-step process:
 
 1. :ref:`Tag Your Errors <tag-errors>`
-2. :ref:`Link a Repository <link-repository>`
+2. :ref:`Link a Repository and Associate Commits <link-repository>`
 3. :ref:`Tell Sentry When You Deploy a Release <create-deploy>`
 
 .. _tag-errors:
 
 Tag Your Errors
 ===============
-Configure your client SDK with a release ID, which is commonly a git SHA
-or a custom version dependent on your release process (check language-specific
-docs for exact syntax):
+Include a release ID (a.k.a version) where you configure your client SDK. This is commonly
+a git SHA or a custom version number (check language-specific docs for exact syntax):
 
 .. code-block:: javascript
 
@@ -37,48 +36,55 @@ docs for exact syntax):
     release: "6d5a6a446805a06154e25e2fa203d67b9e762f5d"
   });
 
-This will annotate each event with the release, as well as automatically create
-a release entity in the system the first time it's seen.
+How you make the version available to your code is up to you. For example, you could
+use an environment variable that is set during the build process.
 
-After this step, you should see information about the release, such as new issues
-and regressions introduced in the release.
+This annotates each error with the release. We recommend that you tell Sentry about a
+new release prior to deploying it as this will unlock a few more features (explained
+in Step 2) . But if you don't, Sentry will automatically create a release entity in the
+system the first time it sees an error with that release ID.
+
+After this, you should see information about the release, such as new issues and
+regressions introduced in the release.
 
 .. image:: img/releases-overview.png
 
 .. _link-repository:
 
-Link a Repository
-=================
+Link a Repository and Associate Commits
+=======================================
 
-Linking a repository means giving Sentry access to the repository’s commit metadata.
-This is similar to the output of ``git log`` — Sentry doesn’t access your source code.
+In this step you tell Sentry which commits are associated with a release, allowing Sentry
+to pinpoint which commits likely caused an issue, and allowing you to resolve an issue by
+including the issue number in your commit message.
 
-Linking a repository is a 2-step process:
+This is a 2-step process:
 
-a. Add a Repository
--------------------
+a. Link a Repository
+--------------------
 Go to your organization’s settings, click "Repositories", and click "Add Repository".
 You’ll need to be an Owner or Manager of your Sentry organization to do this.
-This creates a webhook on the repository and Sentry automatically starts collecting
-commit data, which you will reference in the next step.
+This creates a webhook on the repository which sends Sentry metadata about each commit
+(such as authors and files changed).
 
-If you're linking a GitHub repository, ensure you have Admin or Owner permissions on the repository, and that Sentry is an authorized OAuth app in your `GitHub account settings <https://github.com/settings/applications>`__.
+If you're linking a GitHub repository, ensure you have Admin or Owner permissions on the
+repository, and that Sentry is an authorized OAuth app in your
+`GitHub account settings <https://github.com/settings/applications>`__.
 
-If you're still having trouble adding it, you can try to `disconnect <https://sentry.io/account/settings/identities/>`__ and then `reconnect <https://sentry.io/account/settings/social/associate/github/>`__ your GitHub identity.
-
+If you're still having trouble adding it, you can try to `disconnect <https://sentry.io/account/settings/identities/>`__
+and then `reconnect <https://sentry.io/account/settings/social/associate/github/>`__
+your GitHub identity.
 
 b. Associate commits with a release
 -----------------------------------
-When you create a release of your code, create a corresponding release object in Sentry
-and associate it with commits in the repository. There are 2 ways of doing this:
+In your release process, add a step to create a release object in Sentry and associate it with
+commits in your repository. There are 2 ways of doing this:
 
 1. Using Sentry’s :ref:`sentry-cli` (**recommended**).
 2. Using the API
 
 Using the CLI
 ~~~~~~~~~~~~~
-Include the following code in your build script:
-
 .. code-block:: bash
 
   # Assumes you're in a git repository
@@ -177,17 +183,16 @@ a list of all commits. That might look like this:
 
 For more information, see the `API reference <https://docs.sentry.io/api/releases/post-organization-releases/>`__.
 
-After linking a repository, **suspect commits** and **suggested assignees** will start
-appearing on the issue page. We suggest this by tying together the commits in the release,
+After this step, **suspect commits** and **suggested assignees** will start
+appearing on the issue page. We determine these by tying together the commits in the release,
 files touched by those commits, files observed in the stack trace, authors of those files,
 and `ownership rules <https://docs.sentry.io/learn/issue-owners/>`__.
 
 .. image:: img/suspect-commits-highlighted.png
 
-Additionally, linking a repository will allow you to resolve issues by including the
-issue number in a commit message. You can find the short issue id at the top of the
-issue details page, next to the assignee dropdown. For example, a commit message might
-look like this:
+Additionally, you will be able to resolve issues by including the issue ID in your commit
+message. You can find the issue id at the top of the issue details page, next to the assignee
+dropdown. For example, a commit message might look like this:
 
 .. code-block:: bash
 
@@ -195,8 +200,8 @@ look like this:
     
     Fixes SENTRY-317
 
-When Sentry sees this commit, we’ll annotate the issue with a reference to the commit,
-and when you create a release in Sentry, we’ll mark the issue as resolved in that release.
+When Sentry sees this commit, we’ll reference the commit in the issue, and when you create
+a release in Sentry we’ll mark the issue as resolved in that release.
 
 **Note:** If you’re using GitHub, you may have a privacy setting enabled which prevents
 Sentry from identifying the user’s real email address. If you wish to use the suggested
