@@ -470,7 +470,19 @@ $(function() {
   };
 
   hookNavigation();
-
+  var initFeedback = function() {
+    $('.feedback-btn').click(feedbackHandler);
+  }
+  var feedbackHandler = function(e) {
+    $('.feedback-btn').removeClass('highlight');
+    var location = window.location;
+    var data = {
+        useful: $(this).val(),
+      };
+    window.ra.event('docs.feedback-sent', data);
+    $(this).addClass('highlight');
+  }
+  initFeedback();
   var linkHandler = function(e) {
     var here = window.location;
 
