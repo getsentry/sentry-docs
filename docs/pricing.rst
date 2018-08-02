@@ -65,7 +65,7 @@ If your projects have a high volume of events, you can control how many errors S
 - Within the SDK you can reduce the data volume you’re sending by sampling.
 - Turn on :ref:`inbound-data-filters` for legacy browsers, browser extensions, localhost, and web crawlers. Any filtered events will not count towards your quota.
 - For JavaScript projects, use `whitelistUrls` and `ignoreErrors`
-- With the Large and Enterprise plans, you'll be able to set a per-key rate limit for each DSN key in a project to prevent exhaustion of per-project rate limit at **[Organization] » [Project] » Project Settings » Client Keys (DSN) » Details**. This rate limit is set as number of events to accept during a specific time window (1 minute, 24 hours, etc).
+- With the Large and Enterprise plans, you'll be able to set a per-key rate limit for each DSN key in a project at **[Organization] » [Project] » Project Settings » Client Keys (DSN) » Details**. This rate limit is set as number of events to accept during a specific time window (1 minute, 24 hours, etc).
 
 FAQ
 ---
