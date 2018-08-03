@@ -23,6 +23,8 @@ throughput, and if your team needs more, we're happy to help. Reach out to
 your account manager, or send an email to support@sentry.io to learn
 more about increasing capacity.
 
+.. _rate-limiting-projects:
+
 Rate Limiting Projects
 ----------------------
 
@@ -41,7 +43,7 @@ be able to define a rate limit as well as see a breakdown of events received by 
 .. _inbound-data-filters:
 
 Inbound Filters
---------------------
+---------------
 
 In some cases, the data you're receiving in Sentry is hard to filter, or you simply
 don't have the ability to update the SDK's configuration to apply the filters. Due
@@ -134,8 +136,8 @@ Controlling Volume
 ~~~~~~~~~~~~~~~~~~
 
 It's important to note that spike protection is not meant to help you **manage your event volume**
-because it is a moving target. To control event volume, you should rate limit by projects or use
-inbound filters.
+because it is a moving target. To control event volume, you should use
+:ref:`per-project rate limits <rate-limiting-projects>` or :ref:`inbound-data-filters`.
 
 Attributes Limits
 -----------------
