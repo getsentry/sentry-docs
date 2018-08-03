@@ -93,6 +93,54 @@ they ever reach your stream. Matching events will not count towards your quota.
 
 .. note:: Discarding issues is available only on Medium, Large and Enterprise Plans
 
+
+Spike Protection
+----------------
+
+Spike protection helps to mitigate the impact of event spikes on your monthly capacity and
+is available on all plans. Explaining spike protection is broken down into two parts:
+How does Sentry define a spike, and how does Sentry protect you from spikes?
+
+How does Sentry define spike?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A spike is a **large** and **temporary** increase in event volume. The definition of large
+is represented in our equation for determining the **per minute spike protection rate limit**:
+
+``maximum(20, trailing 24 hour average of total events x 6)``
+
+This value is re-calculated once an hour.
+
+Based on this equation, if you start experience a spike, spike protection will
+**temporarily** protect you, but the number of discarded events will gradually and linearly
+decrease until Sentry finally accepts all events.
+
+How does Sentry protect you from spikes?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The biggest pain of spikes (aside from a poor experience for your users) is immediately
+consuming your Sentry capacity for the rest of the month. If it really is a spike (lasting
+an hour or two), spike protection is dramatic, dropping the vast majority of events.
+
+An example
+~~~~~~~~~~
+
+If you have been sending 0 events per hour up until that moment, your spike protection limit
+will be 1,200. If you instantly have a spike of 4,000 events per hour at 12 am, from
+12 am to 1 am, Sentry will discard 3,800 events and keep only 1,200, whereupon you will also
+receive an email notifying you that spike protection has been activated. The next hour, your
+spike protection limit will still be 1,200 because the trailing average (4,000 / 24 * 6 or 1,000
+events per hour) remains **below** the base spike protection rate. Only 2am, when the trailing
+average is 8,000 / 24 * 6 = 2,000 does spike protection adjust, now discarding only 2,000 events
+and keeping 2,000. By 4am, the limit has reached 4,000 events per hour (16,000 / 24 * 6) and all
+events are being accepted.
+
+Controlling Volume
+~~~~~~~~~~~~~~~~~~
+
+It's important to note that spike protection is not meant to help you **manage your event volume**.
+To manage event volume, you should rate limit by projects or use inbound filters.
+
 Attributes Limits
 -----------------
 
