@@ -23,6 +23,8 @@ throughput, and if your team needs more, we're happy to help. Reach out to
 your account manager, or send an email to support@sentry.io to learn
 more about increasing capacity.
 
+.. _rate-limiting-projects:
+
 Rate Limiting Projects
 ----------------------
 
@@ -41,7 +43,7 @@ be able to define a rate limit as well as see a breakdown of events received by 
 .. _inbound-data-filters:
 
 Inbound Filters
---------------------
+---------------
 
 In some cases, the data you're receiving in Sentry is hard to filter, or you simply
 don't have the ability to update the SDK's configuration to apply the filters. Due
@@ -92,6 +94,50 @@ This will delete most data associated with an issue and filter out matching even
 they ever reach your stream. Matching events will not count towards your quota.
 
 .. note:: Discarding issues is available only on Medium, Large and Enterprise Plans
+
+Spike Protection
+----------------
+
+Spike protection helps to mitigate the impact of event spikes on your monthly capacity
+and is available on all plans.
+
+When spike protection is activated, we limit the number of events accepted in any minute to:
+
+``maximum(20, 6 x average events per minute over the last 24 hours)``
+
+**Note:** The 24 hour window ends at the beginning of the current hour, not at the current minute.
+
+What this means is that if you experience a spike, we will temporarily protect you, but if the
+increase in volume is sustained, the spike protection limit will gradually increase until Sentry
+finally accepts all events.
+
+An example
+~~~~~~~~~~
+
+Suppose you start with 0 events. Your spike protection limit is 20/min. At 12am, you start
+receiving errors at a rate of 4000/hr (or 66/min). From 12am to 1am, Sentry will discard
+2800 events and keep only 1200, and send you an email notifying you that spike protection has
+been activated. Between 1am and 2am, your spike protection limit will still be 20/min because the
+trailing average for the 24 hours ending 1 am (6 * 4000 / (24 * 60) or roughly 16/min) remains
+**below** the base spike protection rate of 20/min. Between 2am and 3am, the trailing average
+is 6 * 8,000 / (24 * 60) or roughly 33/min, so spike protection keeps only 33 of the 66 events
+sent per minute. By 5 am, the spike protection limit reaches 6 * 16000 / (24 * 60) or 66/min,
+and all events are accepted.
+
+How does spike protection help?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Because Sentry bills on monthly event volume, spikes can easily consume your Sentry capacity for
+the rest of the month. If it really is a spike (**large** and **temporary** increase in event
+volume), spike protection drops the vast majority of events during the spike and conserves your
+capacity.
+
+Controlling Volume
+~~~~~~~~~~~~~~~~~~
+
+It's important to note that spike protection is not meant to help you **manage your event volume**
+because it is a moving target. To control event volume, you should use
+:ref:`per-project rate limits <rate-limiting-projects>` or :ref:`inbound-data-filters`.
 
 Attributes Limits
 -----------------
