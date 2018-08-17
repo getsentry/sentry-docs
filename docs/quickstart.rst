@@ -20,7 +20,7 @@ Configure an SDK
 ----------------
 
 Sentry captures data by using an SDK within your application's runtime. These
-are platform specific, and allow Sentry to have a deep understanding of both
+are platform specific, and allow Sentry to have a deep understanding of
 how your application works. In case your environment is very specific, you can
 also roll your own SDK using our document :doc:`SDK API <clientdev/index>`.
 
