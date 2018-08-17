@@ -31,6 +31,9 @@ next time they try to hit any page within the organization we'll require
 them to link their account (with the same auth flow you just went
 through).
 
+If they are new to Sentry, then a user account will be provisioned when
+logging into the organization using SSO.
+
 Default Membership
 ------------------
 
