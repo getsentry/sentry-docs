@@ -1,10 +1,9 @@
 import lunr from 'lunr';
 
 class Lunr {
-  constructor({ cacheUrl, indexUrl, excerptLength }) {
+  constructor({ cacheUrl, indexUrl }) {
     this.cacheUrl = cacheUrl;
     this.indexUrl = indexUrl;
-    this.excerptLength = excerptLength;
     this.data = null;
     this.index = null;
     this.cacheKey = null;
@@ -15,23 +14,21 @@ class Lunr {
     this.assembleResults = this.assembleResults.bind(this);
     this.search = this.search.bind(this);
     this.createExcerpt = this.createExcerpt.bind(this);
+    this.fetchCacheKey = this.fetchCacheKey.bind(this);
   }
 
   search(query) {
     return this.fetchCacheKey()
       .then(this.loadIndex)
-      .then(index => this.assembleResults(index, query))
-      .catch(err => {
-        console.log(err);
-      });
+      .then(index => this.assembleResults(index, query));
   }
 
   fetchCacheKey() {
-    if (this.cacheKey) return this.cacheKey;
+    if (this.cacheKey) return Promise.resolve(this.cacheKey);
 
     return $.ajax({
       type: 'GET',
-      url: '/search/cache.json',
+      url: this.cacheUrl,
       dataType: 'json'
     }).then(({ key }) => {
       this.cacheKey = key;
@@ -42,7 +39,7 @@ class Lunr {
   fetchData() {
     return $.ajax({
       type: 'GET',
-      url: '/search/index.json',
+      url: this.indexUrl,
       dataType: 'json'
     }).then(({ index }) =>
       index.map(i => {
@@ -53,7 +50,7 @@ class Lunr {
   }
 
   loadIndex(key) {
-    if (!key) return;
+    if (!key) return null;
     const lsCacheKey = 'searchCacheKeyV1';
     const lsDataKey = 'searchDataKeyV1';
     const lsIndexKey = 'searchIndexV1';
@@ -74,8 +71,9 @@ class Lunr {
           localStorage.setItem(lsCacheKey, key);
           localStorage.setItem(lsDataKey, JSON.stringify(this.data));
           localStorage.setItem(lsIndexKey, JSON.stringify(this.index));
-        } catch (error) {}
-        return this.index;
+        } finally {
+          return this.index;
+        }
       });
     }
   }

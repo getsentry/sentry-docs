@@ -45,8 +45,7 @@ class Search {
     this.$target = $target;
     this.Lunr = new Lunr({
       cacheUrl: '/search/cache.json',
-      searchUrl: '/search/index.json',
-      excerptLength: 300
+      indexUrl: '/search/index.json'
     });
   }
 
