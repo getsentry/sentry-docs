@@ -1,0 +1,47 @@
+<form action="{% link search/index.html %}" method="get" autocomplete="off">
+  <div class="input-group mb-3">
+    <input type="text" class="form-control" name="q" placeholder="Search the docs" aria-label="Search the docs">
+    <div class="input-group-append">
+      <input type="submit" value="Go" class="btn btn-secondary">
+    </div>
+  </div>
+</form>
+
+<hr>
+
+{%- assign __collection = site.document_tree
+  | where: 'slug': '_documentation'
+  | first
+-%}
+{%- assign __tree = __collection.items -%}
+
+{%- if page.collection -%}
+  {%- assign __page_category = page.path | split: '/' | slice: 1,1 | first -%}
+{%- else -%}
+  {%- assign __page_category = site.document_tree[0].items[0].slug -%}
+{%- endif -%}
+
+{% include sidebar/tree.html
+  data=__tree
+  templates="LEGACY_category,default"
+  categories=site.data.documentation_categories
+  is_category=true
+%}
+
+{%- if jekyll.environment == 'development' -%}
+<hr class="mb-3 mb-md-4">
+
+{%- assign __collection = site.document_tree
+  | where: 'slug': '_dev_components'
+  | first
+-%}
+{% assign __tree = __collection.items %}
+
+{% assign __paths = site.dev_components | map: "path" %}
+{% include sidebar/tree.html
+  data=__tree
+  templates="dev_category,default"
+  categories=site.data.dev_components_categories
+  is_category=true
+%}
+{%- endif -%}
