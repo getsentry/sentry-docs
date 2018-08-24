@@ -1,9 +1,10 @@
 import lunr from 'lunr';
 
 class Lunr {
-  constructor({ cacheUrl, indexUrl }) {
+  constructor({ cacheUrl, indexUrl, maxLength }) {
     this.cacheUrl = cacheUrl;
     this.indexUrl = indexUrl;
+    this.maxLength = maxLength || 300;
     this.data = null;
     this.index = null;
     this.cacheKey = null;
@@ -112,31 +113,52 @@ class Lunr {
     });
   }
 
-  createExcerpt(str, matches) {
-    const maxLength = 300;
-    const firstMatch = matches[0];
+  // Truncate the document to a given length, placing the top matching term at
+  // the center, or as close to it as possible if the match is near the
+  // beginning or end of the string.
+  createExcerpt(str, rawMatches) {
+    // rawMatches is ordered by score so the first match is the best. The first
+    // value is the start position in the string and the second is the length
 
-    const term = str.substr(firstMatch[0] - 1, firstMatch[1]);
-    const termHalf = Math.round(term.length / 2);
-    const start = firstMatch[0] - (termHalf - Math.round(maxLength / 2));
-    const end = start + maxLength;
+    // Create some brain friendly variables
+    const termStart = rawMatches[0][0];
+    const termLength = rawMatches[0][1];
+    const termEnd = termStart + termLength;
 
-    let modified = start > 0 ? '…' : '';
-    modified += str.substr(start, maxLength);
-    modified += end < str.length - 1 ? '…' : '';
-    matches.sort((a, b) => b[0] - a[0]);
-    for (let i = 0; i < matches.length; i++) {
-      const match = matches[i];
-      const first = match[0] - start + 1;
-      const last = first + match[1];
-      if (first < 0 || modified.length < last) continue;
-      const before = modified.substring(0, first);
-      const term = modified.substring(first, last);
-      const after = modified.substring(last);
-      modified = `${before}<strong>${term}</strong>${after}`;
-    }
+    // Exact text of the matched item
+    const term = str.substr(termStart, termLength);
 
-    return modified;
+    // Distance from the term from the beginning or end of the string
+    const margin = Math.round(this.maxLength - termLength / 2);
+
+    // First we determine where the start and end point is exactly
+    const excerptStart = margin < termStart ? termStart - margin : 0;
+    const excerptEnd =
+      str.length > termEnd + margin ? termEnd + margin : str.length;
+
+    const prefix = excerptStart > 0 ? '…' : '';
+    const suffix = excerptEnd < str.length ? '…' : '';
+
+    const highlighted = rawMatches
+      // Copy the array
+      .slice(0)
+      // Sort it by start location, in reverse so we can safely iterate
+      .sort((a, b) => b[0] - a[0])
+      // Filter out the terms that don't fall within the excerpt
+      .filter(([i, length]) => excerptStart < i && i + length < excerptEnd)
+      // Make replacements
+      .reduce((excerpt, [i, length]) => {
+        // Account for the offset caused by trimming
+        const start = i - excerptStart;
+        const end = start + length;
+        const before = excerpt.substring(0, start);
+        const term = excerpt.substring(start, end);
+        const after = excerpt.substring(end);
+
+        return `${before}<strong>${term}</strong>${after}`;
+      }, str.substring(excerptStart, excerptEnd));
+
+    return `${prefix}${highlighted}${suffix}`;
   }
 }
 
