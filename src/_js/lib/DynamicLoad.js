@@ -81,8 +81,9 @@ class DynamicLoader {
 
       currentPathName = pathname;
       $('#sidebar').collapse('hide');
+      window.scrollTo(0,0);
+      $('.main-scroll').scrollTop(0)
       $(document).trigger('page.didUpdate');
-      window.ra.page();
     };
 
     $('body').addClass('loading');
