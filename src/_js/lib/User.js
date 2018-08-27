@@ -1,4 +1,4 @@
-const ORIGIN = process.env.JEKYLL_GETSENTRY_ORIGIN || '';
+const ORIGIN = process.env.JEKYLL_GETSENTRY_ORIGIN || 'https://sentry.io';
 
 export default class User {
   constructor() {
