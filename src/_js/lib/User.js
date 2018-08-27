@@ -31,6 +31,7 @@ export default class User {
       }
     })
       .done(({ projects, api_keys, user }) => {
+        window.ra.identify(user.id);
         const userData = { ...this.userData };
         if (projects && projects.length) {
           userData.projects = projects.map(constructDSNObject);
@@ -41,11 +42,13 @@ export default class User {
           'd-none',
           user.isAuthenticated
         );
-
         this.update(userData);
       })
       .fail(() => {
         this.update();
+      })
+      .always(() => {
+        window.ra.page();
       });
   }
 }
