@@ -1,0 +1,35 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args: [
+    '-c',
+    'docker pull us.gcr.io/$PROJECT_ID/$REPO_NAME:builder || true',
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args: [
+    '-c',
+    'docker pull us.gcr.io/$PROJECT_ID/$REPO_NAME:latest || true',
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+    '--target', 'builder',
+    '-t', 'us.gcr.io/$PROJECT_ID/$REPO_NAME:builder',
+    '--cache-from', 'us.gcr.io/$PROJECT_ID/$REPO_NAME:builder',
+    '.'
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+    '-t', 'us.gcr.io/$PROJECT_ID/$REPO_NAME:latest',
+    '-t', 'us.gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA',
+    '--cache-from', 'us.gcr.io/$PROJECT_ID/$REPO_NAME:builder',
+    '--cache-from', 'us.gcr.io/$PROJECT_ID/$REPO_NAME:latest',
+    '.'
+]
+images: [
+  'us.gcr.io/$PROJECT_ID/$REPO_NAME:builder',
+  'us.gcr.io/$PROJECT_ID/$REPO_NAME:latest',
+  'us.gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA',
+]

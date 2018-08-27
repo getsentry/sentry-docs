@@ -1,0 +1,44 @@
+#!/bin/bash
+# usage: bin/server
+#
+# Run the jekyll server
+
+set -e
+
+green="\033[0;32m"
+reset="\033[0;m"
+
+FAST_BUILD=${FAST_BUILD:-true}
+
+echo -e $green
+
+if [ "$FAST_BUILD" = false ]; then
+  echo "🐢  Running in standard build mode. Things will be slow but predictable"
+else
+  echo "🐇  Running in performance mode. The first build will take a while, but the rest will be faster."
+
+  echo "🐇  The following optimizations are applied to builds:"
+
+  export JEKYLL_INCREMENTAL=${JEKYLL_INCREMENTAL:-true}
+  if [ "$JEKYLL_INCREMENTAL" = true ]; then
+    echo "🐇  - Jekyll is running with the --incremental flag"
+  fi
+
+  export JEKYLL_DISABLE_PLATFORM_API=${JEKYLL_DISABLE_PLATFORM_API:-true}
+  if [ "$JEKYLL_DISABLE_PLATFORM_API" = true ]; then
+    echo "🐇  - Platform API generation (docs.sentry.io/_platforms) is disabled"
+  fi
+
+  echo "🐇  - The sidebar is memoized and has no active page indicator"
+
+fi
+
+echo -e $reset
+
+rm -rf _site
+rm -rf .jekyll-cache
+
+yarn
+(bundle check || bundle install)
+
+./bin/webpack-watch & ./bin/jekyll-watch
