@@ -1,5 +1,5 @@
 ---
-title: 'Source Maps'
+title: TypeScript
 sidebar_order: 3
 ---
 
