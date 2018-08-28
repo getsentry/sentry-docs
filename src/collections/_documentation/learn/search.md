@@ -59,11 +59,8 @@ The following tokens are reserved and known to Sentry:
   Exact match on the version of a release.
 
 `user.id`
-
 `user.email`
-
 `user.username`
-
 `user.ip`
 
 : Restrict results to issues affecting the given user.
