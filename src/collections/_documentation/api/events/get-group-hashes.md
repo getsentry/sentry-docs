@@ -13,7 +13,7 @@ GET /api/0/issues/_{issue_id}_/hashes/
 
 ```http
 GET /api/0/issues/1/hashes/ HTTP/1.1
-Authorization: Basic {base64-encoded-key-here}
+Authorization: Bearer {base64-encoded-key-here}
 Host: app.getsentry.com
 ```
 

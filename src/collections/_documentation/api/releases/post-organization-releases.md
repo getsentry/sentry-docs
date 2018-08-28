@@ -13,7 +13,7 @@ POST /api/0/organizations/_{organization_slug}_/releases/
 
 ```http
 POST /api/0/organizations/the-interstellar-jurisdiction/releases/ HTTP/1.1
-Authorization: Basic {base64-encoded-key-here}
+Authorization: Bearer {base64-encoded-key-here}
 Host: app.getsentry.com
 Content-Type: application/json
 

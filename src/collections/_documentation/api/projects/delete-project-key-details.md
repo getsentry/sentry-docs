@@ -13,7 +13,7 @@ DELETE /api/0/projects/_{organization_slug}_/_{project_slug}_/keys/_{key_id}_/
 
 ```http
 DELETE /api/0/projects/the-interstellar-jurisdiction/pump-station/keys/bb6cf36bf2a94bd9b7c57bee5ccb0993/ HTTP/1.1
-Authorization: Basic {base64-encoded-key-here}
+Authorization: Bearer {base64-encoded-key-here}
 Host: app.getsentry.com
 ```
 
