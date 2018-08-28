@@ -13,7 +13,7 @@ GET /api/0/projects/
 
 ```http
 GET /api/0/projects/ HTTP/1.1
-Authorization: Basic {base64-encoded-key-here}
+Authorization: Bearer {base64-encoded-key-here}
 Host: app.getsentry.com
 ```
 

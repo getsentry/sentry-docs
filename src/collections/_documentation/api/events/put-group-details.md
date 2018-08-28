@@ -13,7 +13,7 @@ PUT /api/0/issues/_{issue_id}_/
 
 ```http
 PUT /api/0/issues/1/ HTTP/1.1
-Authorization: Basic {base64-encoded-key-here}
+Authorization: Bearer {base64-encoded-key-here}
 Host: app.getsentry.com
 Content-Type: application/json
 

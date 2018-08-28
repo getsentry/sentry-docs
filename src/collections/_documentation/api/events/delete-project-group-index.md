@@ -17,7 +17,7 @@ DELETE /api/0/projects/_{organization_slug}_/_{project_slug}_/issues/
 
 ```http
 DELETE /api/0/projects/the-interstellar-jurisdiction/amazing-plumbing/issues/?id=5&id=6 HTTP/1.1
-Authorization: Basic {base64-encoded-key-here}
+Authorization: Bearer {base64-encoded-key-here}
 Host: app.getsentry.com
 ```
 

@@ -15,7 +15,7 @@ DELETE /api/0/projects/_{organization_slug}_/_{project_slug}_/
 
 ```http
 DELETE /api/0/projects/the-interstellar-jurisdiction/plain-proxy/ HTTP/1.1
-Authorization: Basic {base64-encoded-key-here}
+Authorization: Bearer {base64-encoded-key-here}
 Host: app.getsentry.com
 ```
 

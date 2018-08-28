@@ -12,7 +12,7 @@ POST /api/0/teams/_{organization_slug}_/_{team_slug}_/projects/
 
 ```http
 POST /api/0/teams/the-interstellar-jurisdiction/powerful-abolitionist/projects/ HTTP/1.1
-Authorization: Basic {base64-encoded-key-here}
+Authorization: Bearer {base64-encoded-key-here}
 Host: app.getsentry.com
 Content-Type: application/json
 
