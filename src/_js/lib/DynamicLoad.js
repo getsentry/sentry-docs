@@ -77,12 +77,12 @@ class DynamicLoader {
       if (hash) {
         const $el = $(hash).get(0);
         if ($el) $el.scrollIntoView();
+      } else {
+        $('.main-scroll').scrollTop(0);
       }
 
       currentPathName = pathname;
       $('#sidebar').collapse('hide');
-      window.scrollTo(0,0);
-      $('.main-scroll').scrollTop(0)
       $(document).trigger('page.didUpdate');
     };
 
@@ -90,7 +90,6 @@ class DynamicLoader {
     loader({ pathname, hash, search })
       .then(html => {
         $('body').removeClass('loading');
-        window.scrollTo(0, 0);
         if (html) replaceContent(html);
         done();
       })
