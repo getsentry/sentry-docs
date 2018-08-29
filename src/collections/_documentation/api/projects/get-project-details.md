@@ -14,7 +14,7 @@ GET /api/0/projects/_{organization_slug}_/_{project_slug}_/
 ```http
 GET /api/0/projects/the-interstellar-jurisdiction/pump-station/ HTTP/1.1
 Authorization: Bearer {base64-encoded-key-here}
-Host: app.getsentry.com
+Host: sentry.io
 ```
 
 ```http

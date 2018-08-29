@@ -14,7 +14,7 @@ GET /api/0/projects/
 ```http
 GET /api/0/projects/ HTTP/1.1
 Authorization: Bearer {base64-encoded-key-here}
-Host: app.getsentry.com
+Host: sentry.io
 ```
 
 ```http

@@ -14,7 +14,7 @@ PUT /api/0/teams/_{organization_slug}_/_{team_slug}_/
 ```http
 PUT /api/0/teams/the-interstellar-jurisdiction/the-obese-philosophers/ HTTP/1.1
 Authorization: Bearer {base64-encoded-key-here}
-Host: app.getsentry.com
+Host: sentry.io
 Content-Type: application/json
 
 {

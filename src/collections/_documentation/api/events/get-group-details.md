@@ -14,7 +14,7 @@ GET /api/0/issues/_{issue_id}_/
 ```http
 GET /api/0/issues/1/ HTTP/1.1
 Authorization: Bearer {base64-encoded-key-here}
-Host: app.getsentry.com
+Host: sentry.io
 ```
 
 ```http

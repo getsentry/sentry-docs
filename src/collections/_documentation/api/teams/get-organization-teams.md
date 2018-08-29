@@ -14,7 +14,7 @@ GET /api/0/organizations/_{organization_slug}_/teams/
 ```http
 GET /api/0/organizations/the-interstellar-jurisdiction/teams/ HTTP/1.1
 Authorization: Bearer {base64-encoded-key-here}
-Host: app.getsentry.com
+Host: sentry.io
 ```
 
 ```http

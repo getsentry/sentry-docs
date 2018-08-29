@@ -213,7 +213,7 @@ You can test your configuration using the provided `artisan` command:
 ```bash
 $ php artisan sentry:test
 [sentry] Client configuration:
--> server: https://app.getsentry.com/api/3235/store/
+-> server: https://sentry.io/api/3235/store/
 -> project: 3235
 -> public_key: e9ebbd88548a441288393c457ec90441
 -> secret_key: 399aaee02d454e2ca91351f29bdc3a07
