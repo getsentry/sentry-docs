@@ -73,6 +73,7 @@ class DynamicLoader {
     const done = function() {
       if (pushState) {
         window.history.pushState(null, document.title, fullPath(url));
+        window.ra.page();
       }
       if (hash) {
         const $el = $(hash).get(0);
