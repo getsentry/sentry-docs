@@ -24,7 +24,6 @@ Sentry integrates seamlessly with your favorite apps and services.
 -   [_SessionStack_]({%- link _documentation/integrations/sessionstack.md -%})
 -   [_Slack_]({%- link _documentation/integrations/slack.md -%})
 -   [_Splunk_]({%- link _documentation/integrations/splunk.md -%})
--   Sprint.ly
 -   Taiga
 -   Teamwork
 -   Trello
