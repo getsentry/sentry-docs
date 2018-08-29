@@ -58,7 +58,7 @@ const formatDsn = function(
   opts = { public: false }
 ) {
   const auth = opts.public ? publicKey : `${publicKey}:${secretKey}`;
-  return `${scheme}${auth}@${host}${pathSection}${project}`;
+  return `${scheme}${auth}@${host}${pathSection}`;
 };
 
 const formatMinidumpURL = function(dsn) {

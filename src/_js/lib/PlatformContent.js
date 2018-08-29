@@ -32,6 +32,53 @@ const updateUrlPlatform = function(url, slug) {
   return `${origin}?${qs.stringify(query)}`;
 };
 
+const initRelatedElements = function() {
+  $('.config-key').each(function() {
+    this.setAttribute('data-config-key', $(this).text());
+  });
+
+  $('.unsupported').each(function() {
+    $('<div class="unsupported-hint"></div>').prependTo(this);
+  });
+};
+
+const syncRelatedElements = function() {
+  let platform = window.platformData[window.activePlatform];
+  let style = platform && platform.case_style || 'canonical';
+
+  $('.config-key').each(function() {
+    let canonical = this.getAttribute('data-config-key');
+    let intended = canonical;
+    switch (style) {
+      case 'snake_case': intended = canonical.replace(/-/g, '_'); break;
+      case 'camelCase': intended = canonical.split(/-/g).map((val, idx) =>
+        idx == 0 ? val : val.charAt(0).toUpperCase() + val.substr(1)
+      ).join(''); break;
+      case 'PascalCase': intended = canonical.split(/-/g).map((val) =>
+        val.charAt(0).toUpperCase() + val.substr(1)
+      ).join(''); break;
+    }
+    let elements = $(this).children();
+    $(this).text(intended).prepend(elements);
+  });
+
+  $('.unsupported').each(function() {
+    let slugs = this.getAttribute('data-unsupported-platforms');
+    let inverse = false;
+    if (!slugs) {
+      slugs = this.getAttribute('data-supported-platforms');
+      inverse = true;
+    }
+    slugs = slugs.split(/\s+/g);
+    if ((slugs.indexOf(window.activePlatform) >= 0) != inverse) {
+      $(this).addClass('is-unsupported');
+      $('div.unsupported-hint', this).text(`Not available for ${platform.name || 'this platform'}.`);
+    } else {
+      $(this).removeClass('is-unsupported');
+    }
+  });
+};
+
 // Update UI state to show content for a given platform. If the platform does
 // not exist,
 //
@@ -40,6 +87,8 @@ const updateUrlPlatform = function(url, slug) {
 // Returns nothing.
 const showPlatform = function(slug) {
   if (!verifyPlatformSlug(slug)) return;
+
+  window.activePlatform = slug;
 
   $('[data-platform-specific-content]').each((i, el) => {
     const $block = $(el);
@@ -70,6 +119,8 @@ const showPlatform = function(slug) {
     // Update dropdown target title
     $block.find('[data-toggle="dropdown"]').text($active.text());
   });
+
+  syncRelatedElements();
 };
 
 // Add the current platform to all links on the page.
@@ -95,6 +146,8 @@ const addPlatformToLinks = function(slug) {
 //
 // Returns nothing.
 const init = function() {
+  initRelatedElements();
+
   $(document).on('click', '[data-toggle="platform"]', function(event) {
     event.preventDefault();
     const $target = $(event.target);

@@ -1,39 +1,7 @@
 ---
 title: Platform Content
 source: components/platform_content.html
-example_string: Hello world
-
-example_1:
-  JavaScript: |
-    ``` javascript
-    console.log("{{ page.example_string }}")
-    ```
-  Python: |
-    ``` python
-    print("{{ page.example_string }}")
-    ```
-  Ruby: |
-    ``` ruby
-    puts "{{ page.example_string }}"
-    ```
-
-example_2:
-  JavaScript: |
-    ## I am an example about JavaScript
-
-    Did you know 0 == false but 0 !== false?
-  Python: |
-    ```
-    # This is a Python example. A python is a snake.
-    ```
-  Ruby: |
-    - In Ruby
-    - You have to
-    - Say `end` a lot.
-
-example_3:
-  Python: Python Example
-  Ruby: Ruby Example
+example_string: Hello world!!!111
 ---
 
 You can customize content by platform. Within a folder in the same directory as your document, add a file for each platform you would like to include, ensuring that name of the file matches a slug in *src/data/platforms.yml*, then use the include to specify which folder to include examples from.
@@ -45,8 +13,6 @@ The switcher will globally remember the prefered language and load it by default
 You may force the platform that is displayed on the page by appending a `platform=javascript` query parameter to the page url. This will cause subsequent pages in the browsing session to display that platform. Removing the query parameter will set the page back to the default behavior of looking for the prefered platform
 
 - `content=[]` _(required)_ A unique key to identify the switcher
-
-<hr>
 
 ### Basic use
 
