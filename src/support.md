@@ -3,11 +3,11 @@ title: Support
 sidebar_order: 8
 ---
 
-As a paying customer of Hosted Sentry or Sentry On-Premise you have access to various forms of support; and if you are using the Open Source version you can get in contact with the Sentry community for questions. All Sentry repositories can be found on [Github](https://github.com/getsentry). 
+As a paying customer of Hosted Sentry or Sentry On-Premise you have access to various forms of support; and if you are using the Open Source version you can get in contact with the Sentry community for questions. All Sentry repositories can be found on [GitHub](https://github.com/getsentry). 
 
 ## System Status
 
-The availability of the Sentry cloud hosted installation is independently monitored from outside the infrastructure. To monitor the availability, get notifications and read status updates about outdates you can visit the status page at [status.getsentry.com](http://status.sentry.io/). There you can also subscribe to email and SMS notifications.
+The availability of the Sentry cloud hosted installation is independently monitored from outside the infrastructure. To monitor the availability, get notifications and read status updates about outdates you can visit the status page at [status.sentry.io](http://status.sentry.io/). There you can also subscribe to email and SMS notifications.
 
 ## Community Support
 
