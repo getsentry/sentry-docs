@@ -18,7 +18,7 @@ POST /api/0/projects/_{organization_slug}_/_{project_slug}_/releases/_{version}_
 ```http
 POST /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/e48e7b5b90327ea1a4d1a4360c735eee7b536f82/files/ HTTP/1.1
 Authorization: Bearer {base64-encoded-key-here}
-Host: app.getsentry.com
+Host: sentry.io
 Content-Type: multipart/form-data; boundary=cde088f87d2f441ea66ea3ab74245f2b
 
 --cde088f87d2f441ea66ea3ab74245f2b
