@@ -54,11 +54,11 @@ export default class User {
 }
 
 const formatDsn = function(
-  { publicKey, secretKey, scheme, host, pathSection, project },
+  { publicKey, secretKey, scheme, host, pathSection },
   opts = { public: false }
 ) {
   const auth = opts.public ? publicKey : `${publicKey}:${secretKey}`;
-  return `${scheme}${auth}@${host}${pathSection}${project}`;
+  return `${scheme}${auth}@${host}${pathSection}`;
 };
 
 const formatMinidumpURL = function(dsn) {
@@ -84,14 +84,13 @@ const constructDSNObject = function(project = {}) {
   if (project.dsn) {
     // Transform the dsn into useful values
     const match = project.dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
-    const urlPieces = match[5].split(/\?/, 2);
+
     dsn = {
       scheme: escape(match[1]),
       publicKey: escape(match[2]),
       secretKey: `${escape(match[3])}`,
       host: escape(match[4]),
-      pathSection: escape(match[5]),
-      project: parseInt(urlPieces[0].substring(1), 10) || 1
+      pathSection: escape(match[5])
     };
   } else {
     dsn = {
@@ -99,8 +98,7 @@ const constructDSNObject = function(project = {}) {
       publicKey: '&lt;key&gt;',
       secretKey: '&lt;secret&gt;',
       host: 'sentry.io',
-      pathSection: '/',
-      project: '&lt;project&gt;'
+      pathSection: '/&lt;project&gt;'
     };
   }
 
