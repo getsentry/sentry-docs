@@ -76,6 +76,7 @@ The following plugins are available and maintained by members of the Sentry comm
 -   [sentry-top](https://github.com/getsentry/sentry-top)
 -   [sentry-unfuddle](https://github.com/rkeilty/sentry-unfuddle)
 -   [sentry-vsts](https://github.com/boylec/sentry-vsts)
+-   [sentry-ldap-auth](https://github.com/Banno/getsentry-ldap-auth)
 -   [sentry-whatsapp](https://github.com/ecarreras/sentry-whatsapp)
 -   [sentry-xmpp](https://github.com/chroto/sentry-xmpp)
 -   [sentry-youtrack](https://github.com/bogdal/sentry-youtrack)
