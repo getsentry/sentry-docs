@@ -1,22 +1,30 @@
 ---
-title: GitHub
-sidebar_order: 2
+title: GitHub Enterprise
+sidebar_order: 3
 ---
-Sentry’s new Github integration has the following features: commit tracking, issue management, and Github SSO.You can now use the data from your commits to Github to help you find and fix bugs faster.
+Sentry’s new Github Enterprise integration has the following features: commit tracking and issue management..You can now use the data from your commits to Github to help you find and fix bugs faster.
 
-## Configure Github
+## Configure Github Enterprise
 
+### Part One: Setup a Github App
+
+1. Make sure you’ve whitelisted Sentry’s outbound request IPs addresses for your Github Enterprise instance.
+2. In your Github Enterprise organization, navigate to Settings > Developer Settings > Github Apps.
+3. Fill out the resulting form as follows:
+
+### Part Two: Installing Your Github App to Sentry
 
 1. In Sentry, navigate to **Organization Settings** > **Integrations**. *Note: only users with Owner and Manager permissions will have access to this page.*
-2. If you have the legacy Github integration installed, you’ll see a button next to Github that says ‘Upgrade.’ If you do not have the legacy Github integration installed, you’ll see a button that says ‘Install.’ Click this button.
-3. In the resulting modal, click ‘Add Installation.’
+2. Next to Github Enterprise, click ‘Install.’
+3. Fill out the corresponding form.
+  You can find your domain and app ID on your Sentry Github App page. Your private key can also be generated on the app page.
 4. A Github install window should pop up. Click ‘Install.’
 5. Select which repositories Sentry should have access to (or, select all repositories).
 6. You should then be redirected back to Sentry.
-7. On your new Github instance in Sentry, click ‘Configure.’
+7. On your new Github Enterprise instance, click ‘Configure.’
 8. Add any repositories from which you want to collect commit data. Note: Make sure you have given Sentry access to these repositories in Github.
 
-Github should now be enabled for all projects under your Sentry organization.
+Github Enterprise should now be enabled for all projects under your Sentry organization.
 
 
 ## Commit Tracking
@@ -51,7 +59,4 @@ You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
 
-## GitHub SSO
-
-[Enable Single Sign-on]({%- link _documentation/learn/sso.md -%})
 
