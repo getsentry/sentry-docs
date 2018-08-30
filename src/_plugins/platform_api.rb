@@ -9,9 +9,9 @@ module Jekyll
       @dir = dir
       @name = "#{platform["slug"]}.json"
       self.process(@name)
-      self.read_yaml(File.join(base, '_layouts'), '_platform/platform.json')
+      self.read_yaml(File.join(base, '_layouts'), 'json.json')
       keys = ["support_level","type","name","doc_link","body"]
-      self.data['platform'] = platform.select {|key,_| keys.include? key}
+      self.data['json'] = platform.select {|key,_| keys.include? key}
     end
   end
 
@@ -22,8 +22,8 @@ module Jekyll
       @dir = dir
       @name = "_index.json"
       self.process(@name)
-      self.read_yaml(File.join(base, '_layouts'), '_platform/_index.json')
-      self.data['payload'] = payload
+      self.read_yaml(File.join(base, '_layouts'), 'json.json')
+      self.data['json'] = payload
     end
   end
 
