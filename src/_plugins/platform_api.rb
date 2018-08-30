@@ -49,7 +49,7 @@ module Jekyll
     end
 
     def generate(site)
-      return if !ENV["JEKYLL_DISABLE_PLATFORM_API"].nil?
+      return if ENV["JEKYLL_DISABLE_PLATFORM_API"] == "true"
 
       # Create an index of all the sections in every document
       docs = {}
