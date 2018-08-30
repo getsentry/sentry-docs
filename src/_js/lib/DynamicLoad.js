@@ -71,9 +71,15 @@ class DynamicLoader {
 
     const { pathname, hash, search } = url;
     const done = function() {
+      // Send reload a pageview if this is a new page
+      if (pathname !== location.pathname) window.ra.page();
+
+      // Update history if necessary
       if (pushState) {
         window.history.pushState(null, document.title, fullPath(url));
       }
+
+      // Handle vertical scroll position of new content
       if (hash) {
         const $el = $(hash).get(0);
         if ($el) $el.scrollIntoView();
