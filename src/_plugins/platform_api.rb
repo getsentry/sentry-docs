@@ -12,6 +12,7 @@ module Jekyll
       self.read_yaml(File.join(base, '_layouts'), 'json.json')
       keys = ["support_level","type","name","doc_link","body"]
       self.data['json'] = platform.select {|key,_| keys.include? key}
+      self.data['json']['doc_link'] = "#{site.config["url"]}#{self.data['json']['doc_link']}"
     end
   end
 
@@ -113,7 +114,7 @@ module Jekyll
         indexPayload[:platforms][platformKey][indexKey] = {
           :type => platform["type"],
           :details => pathData.size > 2 ? File.join(pathData[1], detailName) : detailName,
-          :doc_link => platform["doc_link"],
+          :doc_link => "#{site.config["url"]}#{platform["doc_link"]}",
           :name => platform["name"]
         }
 
