@@ -1,5 +1,6 @@
 {%- assign __path = page.url
   | replace: "collections/_documentation/", ""
+  | replace: "collections/_dev_components/", ""
   | split: '/'
   | pop
 -%}
@@ -16,7 +17,11 @@
     {%- if __page -%}
       <li class="breadcrumb-item"><a href="{{ __page.url }}">{{ __page.breadcrumb | default: __page.title }}</a></li>
     {%- else -%}
-      {%- assign __cateogry = site.data.documentation_categories
+      {%- assign __categories = site.data.documentation_categories -%}
+      {% if jekyll.environment == "development" %}
+      {%- assign __categories = __categories | concat: site.data.dev_components_categories -%}
+      {%- endif -%}
+      {%- assign __cateogry = __categories
         | where: 'slug', __segment
         | first
       -%}
