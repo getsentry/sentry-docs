@@ -2,19 +2,19 @@
 title: GitHub
 sidebar_order: 2
 ---
-Sentry’s new Github integration has the following features: commit tracking, issue management, and Github SSO.You can now use the data from your commits to Github to help you find and fix bugs faster.
+Sentry’s new GitHub integration has the following features: commit tracking, issue management, and Github SSO. You can now use the data from your commits to GitHub to help you find and fix bugs faster.
 
-## Configure Github
+## Configure GitHub
 
 
 1. In Sentry, navigate to Organization Settings > Integrations. *Note: only users with Owner and Manager permissions will have access to this page.*
-2. If you have the legacy Github integration installed, you’ll see a button next to Github that says ‘Upgrade.’ If you do not have the legacy Github integration installed, you’ll see a button that says ‘Install.’ Click this button.
-3. In the resulting modal, click ‘Add Installation.’
-4. A Github install window should pop up. Click ‘Install.’
+2. If you have the legacy GitHub integration installed, you’ll see a button next to Github that says ‘Upgrade’. If you do not have the legacy GitHub integration installed, you’ll see a button that says ‘Install.’ Click this button.
+3. In the resulting modal, click ‘Add Installation’.
+4. A GitHub install window should pop up. Click ‘Install’.
 5. Select which repositories Sentry should have access to (or, select all repositories).
 6. You should then be redirected back to Sentry.
-7. On your new Github instance in Sentry, click ‘Configure.’
-8. Add any repositories from which you want to collect commit data. Note: Make sure you have given Sentry access to these repositories in Github.
+7. On your new GitHub instance in Sentry, click ‘Configure’.
+8. Add any repositories from which you want to collect commit data. Note: Make sure you have given Sentry access to these repositories in GitHub.
 
 Github should now be enabled for all projects under your Sentry organization.
 
