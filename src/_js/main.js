@@ -15,6 +15,10 @@ if (process.env.NODE_ENV === 'production') {
   Raven.config(dsn).install();
 }
 
+$(document).on('page.willUpdate', function(event) {
+  $('[data-toggle="tooltip"]').tooltip('dispose');
+});
+
 $(document).on('page.didUpdate', function(event) {
   $('[data-toggle="tooltip"]').tooltip();
 });
