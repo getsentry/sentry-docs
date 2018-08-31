@@ -7,7 +7,7 @@ Sentry’s new Github integration has the following features: commit tracking, i
 ## Configure Github
 
 
-1. In Sentry, navigate to **Organization Settings** > **Integrations**. *Note: only users with Owner and Manager permissions will have access to this page.*
+1. In Sentry, navigate to Organization Settings > Integrations. *Note: only users with Owner and Manager permissions will have access to this page.*
 2. If you have the legacy Github integration installed, you’ll see a button next to Github that says ‘Upgrade.’ If you do not have the legacy Github integration installed, you’ll see a button that says ‘Install.’ Click this button.
 3. In the resulting modal, click ‘Add Installation.’
 4. A Github install window should pop up. Click ‘Install.’
@@ -42,10 +42,10 @@ Once you’ve navigated to a specific issue, you’ll find the ‘Linked Issues�
 Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
 
 ```
-    Prevent empty queries on users
+Prevent empty queries on users
 
-    Fixes MYAPP-317
-    ```
+Fixes MYAPP-317
+```
 
 You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
 
