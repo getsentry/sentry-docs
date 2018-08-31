@@ -1,5 +1,5 @@
 ---
-title: version_added
+title: Version Added
 arguments:
   - name: first
     type: String
