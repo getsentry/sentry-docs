@@ -95,6 +95,7 @@ class DynamicLoader {
     $('body').addClass('loading');
     loader({ pathname, hash, search })
       .then(html => {
+        $(document).trigger('page.willUpdate');
         $('body').removeClass('loading');
         if (html) replaceContent(html);
         done();
