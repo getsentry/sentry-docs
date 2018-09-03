@@ -1,6 +1,6 @@
 ---
 title: Capturing Events
-sidebar_order: 3
+sidebar_order: 2
 ---
 
 Out of the box SDKs will attempt to hook themselves into your runtime environment

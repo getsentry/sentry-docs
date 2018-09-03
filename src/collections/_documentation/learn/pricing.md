@@ -1,6 +1,6 @@
 ---
 title: Pricing
-sidebar_order: 1
+sidebar_order: 30
 permalink: /pricing/
 ---
 
