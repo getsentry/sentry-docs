@@ -1,6 +1,7 @@
 ---
 title: Environments
 sidebar_order: 5
+example_environment: "staging"
 ---
 
 _Note: The environments feature is only available for early adopters. You can enable early adopter features by navigating to your organization settings._
@@ -35,11 +36,6 @@ If you would like to see Sentry filtered by a certain environment every time you
 
 # How to send environment data
 
-Environment data is sent to Sentry by tagging issues via your SDK. You can send environment data to Sentry using the following SDKs:
+Environment data is sent to Sentry by tagging issues via your SDK:
 
--   [Javascript]({%- link _documentation/clients/javascript/config.md -%})
--   [Node.js]({%- link _documentation/clients/node/config.md -%}#configuration)
--   [Python]({%- link _documentation/clients/python/advanced.md -%})
--   [Ruby]({%- link _documentation/clients/ruby/config.md -%})
--   [php]({%- link _documentation/clients/php/config.md -%})
--   [Java]({%- link _documentation/clients/java/config.md -%})
+{% include components/platform_content.html content_dir='set-environment' %}
