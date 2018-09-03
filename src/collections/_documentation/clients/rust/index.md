@@ -11,7 +11,7 @@ Sentry-Rust is distributed as a normal crate from crates.io. You can add it to y
 
 ```
 [dependencies]
-sentry = "0.6.0"
+sentry = "0.9.0"
 ```
 
 Additionally you can configure a bunch of features to enable or disable functionality in the crate. By default the most common features are compiled into the crate. For a list of features that are available refer to the [API Documentation](https://docs.rs/sentry).
@@ -20,32 +20,33 @@ Additionally you can configure a bunch of features to enable or disable function
 
 The client is configured by calling `sentry::init` with a value that can be converted into a configuration object. These are the most common values:
 
--   _an empty tuple_: in that case the client is configured from the `SENTRY_DSN` environment variable.
+-   _an empty tuple_: in that case the client is configured from the `SENTRY_DSN` environment variably only.
 -   _a string holding a DSN_: if you pass a string then a DSN is parsed and the client is initialized with that DSN.
 -   _a tuple in the form (dsn, options)_: This is a form where the client is configured with a DSN plus an options object that allows you to configure additional features.
+-   _just options_: In that case everything (including the DSN) are configured from the passed options.
 
 This is the most common case for client configuration:
 
 ```rust
-extern  crate  sentry;
+extern crate sentry;
 
 fn main()  {
-  sentry::init("___PUBLIC_DSN___");
-  // code using sentry goes here.
+    sentry::init("___PUBLIC_DSN___");
+    // code using sentry goes here.
 }
 ```
 
 To configure releases automatically you can use the `sentry_crate_release!` macro in combination with the tuple config syntax:
 
 ```rust
-#[macro_use]  extern  crate  sentry;
+#[macro_use] extern crate sentry;
 
 fn main()  {
-  sentry::init(("___PUBLIC_DSN___",  sentry::ClientOptions  {
-  release: sentry_crate_release!(),
-  ..Default::default()
-  }));
-  // code using sentry goes here.
+    sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+        release: sentry_crate_release!(),
+        ..Default::default()
+    }));
+    // code using sentry goes here.
 }
 ```
 
@@ -56,14 +57,14 @@ Once Sentry is configured errors and other events can be emitted. Since Rust has
 For instance to report a `failure::Error` this code can be used:
 
 ```rust
-use  sentry::integrations::failure::capture_error;
+use sentry::integrations::failure::capture_error;
 
-let  result  =  match  a_function_that_might_fail()  {
-  Ok(val)  =>  val,
-  Err(err)  =>  {
-  capture_error(&err);
-  return  Err(err);
-  }
+let result = match a_function_that_might_fail()  {
+    Ok(val) => val,
+    Err(err) => {
+        capture_error(&err);
+        return Err(err);
+    }
 };
 ```
 
@@ -75,8 +76,8 @@ To automatically catch panics the panic integration can be used:
 use  sentry::integrations::panic::register_panic_handler;
 
 fn main()  {
-  sentry::init(...);
-  register_panic_handler();
+    sentry::init(...);
+    register_panic_handler();
 }
 ```
 
@@ -86,7 +87,7 @@ Since Sentry Rust uses a thread to offload event sending it’s possible that pe
 
 ```rust
 fn main()  {
-  let  _guard  =  sentry::init(...);
+    let _guard = sentry::init(...);
 }
 ```
 
