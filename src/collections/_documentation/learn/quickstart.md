@@ -1,6 +1,7 @@
 ---
 title: 'Getting Started'
 permalink: /quickstart/
+sidebar_order: 0
 ---
 
 For an overview of what Sentry does, take a look at the Sentry [workflow](https://blog.sentry.io/2018/03/06/the-sentry-workflow).

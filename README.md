@@ -46,9 +46,11 @@ Documentation is written in Markdown, which is parsed by [kramdown](https://kram
 
 [<kbd>Read the quick reference</kbd>](https://kramdown.gettalong.org/quickref.html)
 
-## Layout components
+While the server is running, you can also view the [Markdown styleguide](http://0.0.0.0:9000/markdown-styleguide/links/)
 
-While in dev mode, the sidebar includes documentation for the special components available for formatting content.
+## Custom components
+
+While in dev mode, the sidebar includes documentation for the special tags and includes available for formatting content.
 
 ## Adding content
 

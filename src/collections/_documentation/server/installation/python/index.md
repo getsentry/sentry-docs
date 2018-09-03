@@ -152,7 +152,9 @@ The configuration inherits all of the server defaults, but you may need to chang
 # ~/.sentry/sentry.conf.py
 
 # for more information on DATABASES, see the Django configuration at:
-# https://docs.djangoproject.com/en/1.6/ref/databases/
+# https://docs.djangoproject.com/en/stable/ref/databases/
+# This documentation refers to a newer Django version than what
+# Sentry uses, so there may be some discrepancies.
 DATABASES = {
     'default': {
         'ENGINE': 'sentry.db.postgres',

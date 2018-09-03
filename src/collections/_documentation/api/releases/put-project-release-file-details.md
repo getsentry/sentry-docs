@@ -14,7 +14,7 @@ PUT /api/0/projects/_{organization_slug}_/_{project_slug}_/releases/_{version}_/
 ```http
 PUT /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/e48e7b5b90327ea1a4d1a4360c735eee7b536f82/files/3/ HTTP/1.1
 Authorization: Bearer {base64-encoded-key-here}
-Host: app.getsentry.com
+Host: sentry.io
 Content-Type: application/json
 
 {

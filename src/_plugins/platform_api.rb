@@ -9,9 +9,10 @@ module Jekyll
       @dir = dir
       @name = "#{platform["slug"]}.json"
       self.process(@name)
-      self.read_yaml(File.join(base, '_layouts'), '_platform/platform.json')
+      self.read_yaml(File.join(base, '_layouts'), 'json.json')
       keys = ["support_level","type","name","doc_link","body"]
-      self.data['platform'] = platform.select {|key,_| keys.include? key}
+      self.data['json'] = platform.select {|key,_| keys.include? key}
+      self.data['json']['doc_link'] = "#{site.config["url"]}#{self.data['json']['doc_link']}"
     end
   end
 
@@ -22,8 +23,8 @@ module Jekyll
       @dir = dir
       @name = "_index.json"
       self.process(@name)
-      self.read_yaml(File.join(base, '_layouts'), '_platform/_index.json')
-      self.data['payload'] = payload
+      self.read_yaml(File.join(base, '_layouts'), 'json.json')
+      self.data['json'] = payload
     end
   end
 
@@ -49,7 +50,7 @@ module Jekyll
     end
 
     def generate(site)
-      return if !ENV["JEKYLL_DISABLE_PLATFORM_API"].nil?
+      return if ENV["JEKYLL_DISABLE_PLATFORM_API"] == "true"
 
       # Create an index of all the sections in every document
       docs = {}
@@ -113,7 +114,7 @@ module Jekyll
         indexPayload[:platforms][platformKey][indexKey] = {
           :type => platform["type"],
           :details => pathData.size > 2 ? File.join(pathData[1], detailName) : detailName,
-          :doc_link => platform["doc_link"],
+          :doc_link => "#{site.config["url"]}#{platform["doc_link"]}",
           :name => platform["name"]
         }
 

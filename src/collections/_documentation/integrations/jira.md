@@ -3,22 +3,28 @@ title: JIRA
 sidebar_order: 5
 ---
 
-Sentry provides two ways to integrate with JIRA.
+## Installing Jira with Sentry
+1. In Sentry, navigate to Organization Settings > Integrations. Note: only users with Owner and Manager permissions will have access to this page.
+2. Next to Jira, click ‘Install.’
+3. Click on the ‘Jira Marketplace’ button to begin installing the Sentry app through the Jira marketplace.
+4. Select which Sentry organizations you’d like to use Jira with, and save settings.
+5. In Sentry, you’ll see a new Jira instance appear on the Integrations page.
 
-## JIRA Service Desk Add-on
+Jira should now be authorized for all projects under your Sentry organization.
 
-See the specific errors affecting your users from within the Service Desk UI.
+## Issue Management
 
--   [Install the Sentry for JIRA add-on](https://marketplace.atlassian.com/plugins/sentry.io.jira_ac/cloud/overview) from the Atlassian Marketplace
--   Click configure to select a Sentry organization to connect to your JIRA account
--   Sentry issues experienced by your users will be displayed in JIRA
+Issue tracking allows you to create Jira issues from within Sentry, and link Sentry issues to existing Jira Issues.
 
-## JIRA Issue Creation from Sentry
+In Sentry, once you’ve navigated to a specific Sentry issue, you’ll find the ‘Linked Issues’ section on the right hand panel. Here, you’ll be able to create or link Jira issues.
 
-Create issues in JIRA based on Sentry events.
+Issue Management is available for organizations on the Small, Medium, Large, and Enterprise plans.
 
--   Go to the project settings page in Sentry that you’d like to link with JIRA
--   Click All Integrations, find the JIRA integration in the list, and click configure
--   Click Enable Plugin
--   Fill in the required information and save
--   The option to create JIRA issues will be displayed from your Sentry issue pages
+## Issue Sync
+
+Sync comments, assignees and status updates for issues in Sentry to Jira, to minimize duplication. When you delegate an issue to an assignee or update a status on Jira, the updates will also populate in Sentry. When you resolve an issue in Sentry, it will automatically update in Jira.
+
+To configure Issue sync, navigate to Organization Settings > Integrations, and click ‘Configure’ next to your Jira instance. On the following page, you’ll see options of what information you’d like synced between Sentry and Jira.
+
+Issue sync is available for organziations on the Medium, Large, and Enterprise plans.
+

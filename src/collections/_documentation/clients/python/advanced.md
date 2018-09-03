@@ -56,7 +56,7 @@ client = raven.Client(
 )
 ```
 
-{% version_added 5.2.0: The _fetch_package_version_ and _fetch_git_sha_ helpers. %}
+{% version_added 5.2.0: The `fetch_package_version` and `fetch_git_sha` helpers. %}
 
 ## Client Arguments
 
