@@ -128,7 +128,7 @@ and PII impact.  Enabled by default on platforms where this is available.
 ## Integration Configuration
 
 For many platform SDKs integrations can be configured alongside it.  On some platforms that
-happens as part of the `init()` call, in some others different patterns apply.
+happen as part of the `init()` call, in some others, different patterns apply.
 
 {:.config-key}
 ### integrations
@@ -172,7 +172,7 @@ support highly specific deployments.
 ### transport
 
 This switches out the transport that is used to send events.  How this works depends on the SDK.  It
-can for instance be used to capture events for unit-testing or to send it through some more complex
+can, for instance, be used to capture events for unit-testing or to send it through some more complex
 setup that requires proxy authentication.
 
 {:.config-key}
@@ -180,8 +180,8 @@ setup that requires proxy authentication.
 
 When set a proxy can be configured that should be used for outbound requests.  This is also used for
 HTTPS requests unless a separate `https-proxy` is configured.  Note however that not all SDKs
-support a separate HTTPS proxy.  SDKs will attempt to default to the system wide configured proxy
-if possible.  For instance on unix systems the `http_proxy` environment variable will be picked up.
+support a separate HTTPS proxy.  SDKs will attempt to default to the system-wide configured proxy
+if possible.  For instance, on unix systems, the `http_proxy` environment variable will be picked up.
 
 {:.config-key}
 ### https-proxy
@@ -199,5 +199,5 @@ Controls how many seconds to wait before shutting down.  Sentry SDKs send events
 queue and this queue is given a certain amount to drain pending events.  The default is SDK specific
 but typically around 2 seconds.  Setting this value too low will most likely cause problems for
 sending events from command line applications.  Setting it too high will cause the application to
-block for long time for users with network connectivity problems.
+block for a long time for users with network connectivity problems.
 {% endunsupported %}
