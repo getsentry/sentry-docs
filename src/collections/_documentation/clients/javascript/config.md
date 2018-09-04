@@ -299,12 +299,14 @@ Those configuration options are documented below:
 
 : `fetch()` init parameters ([https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters)).
 
+  Setting `keepalive: true` parameter will allow SDK to send events in `unload` and `beforeunload` handlers.
+  However, it'll also restrict the size of a single event to 64kB, per [fetch specification](https://fetch.spec.whatwg.org/#http-network-or-cache-fetch) (point 8.5).
+
   Defaults:
 
   ```javascript
   {
       method: 'POST',
-      keepalive: true,
       referrerPolicy: 'origin'
   }
   ```
