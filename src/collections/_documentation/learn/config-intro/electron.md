@@ -1,7 +1,7 @@
 Options are passed to the `init()` as object:
 
 ```javascript
-import * as sentry from '@sentry/electron';
+import * as Sentry from '@sentry/electron';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',

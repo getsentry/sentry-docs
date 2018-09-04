@@ -1,4 +1,4 @@
-To add sentry to your Rust project you just need to add a new dependency to your `Cargo.toml`:
+To add Sentry to your Rust project you just need to add a new dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]

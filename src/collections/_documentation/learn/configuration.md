@@ -66,12 +66,12 @@ are always attached to exceptions but when this is set stacktraces are also sent
 It's important to note that grouping in Sentry is different for events with stacktraces and without.
 This means that you will get new groups as you enable or disable this flag for certain events.
 
-This feature is off by default.
+This feature is `off` by default.
 
 {:.config-key}
 ### send-default-pii
 
-If this flag, is enabled then certain personally identifiable information is added by active
+If this flag is enabled, certain personally identifiable information is added by active
 integrations.  Without this flag they are never added to the event, to begin with.  If possible
 it's recommended to turn on this feature and use the server side PII stripping to remove the
 values instead.
@@ -90,18 +90,15 @@ will attempt to auto-discover this value.
 ### blacklist-urls
 
 {% supported browser %}
-A pattern for error URLs which should not be sent to Sentry.  To whitelist certain errors instead,
-use `whitelist-urls`.  By default, all errors will be sent.  This only applies to events sent
-from browsers.
+A pattern for error URLs which should not be sent to Sentry.  By default, all errors will be sent.
 {% endsupported %}
 
 {:.config-key}
 ### whitelist-urls
 
 {% supported browser %}
-A pattern for error URLs which should exclusively be sent to Sentry.  To
-blacklist certain errors instead, use `blacklist-urls`.  By default, all errors
-will be sent.  This only applies to events sent from browsers.
+A pattern for error URLs which should exclusively be sent to Sentry.  By default, all errors
+will be sent.
 {% endsupported %}
 
 {:.config-key}
@@ -165,7 +162,7 @@ scope.  When nothing is returned from the function the breadcrumb is dropped.
 
 ## Transport Options
 
-Transports are used to send events to sentry.  This can be customized to some degree to better
+Transports are used to send events to Sentry.  This can be customized to some degree to better
 support highly specific deployments.
 
 {:.config-key}

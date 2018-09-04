@@ -14,9 +14,9 @@ Getting started with Sentry is a three step process:
 2.  [Install your SDK](#pick-a-client-integration)
 2.  [Configure it](#configure-the-sdk)
 
-## Configure an SDK {#pick-a-client-integration}
+## Install a SDK {#pick-a-client-integration}
 
-Sentry captures data by using an SDK within your application’s runtime. These are platform specific, and allow Sentry to have a deep understanding of both how your application works. In case your environment is very specific, you can also roll your own SDK using our document [_SDK API_]({%- link _documentation/clientdev/index.md -%}).
+Sentry captures data by using a SDK within your application’s runtime. These are platform specific and allow Sentry to have a deep understanding of both how your application works. In case your environment is very specific, you can also roll your own SDK using our document [_SDK API_]({%- link _documentation/clientdev/index.md -%}).
 
 {% include components/platform_content.html content_dir='getting-started-install' %}
 
@@ -30,7 +30,7 @@ Your platform is not listed?  There are more SDKs we support: [list of SDKs]({%-
 
 ## Configure the SDK {#configure-the-sdk}
 
-After you complete setting up a project in Sentry, you’ll be given a value which we call a _DSN_, or _Data Source Name_. It looks a lot like a standard URL, but it’s actually just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
+After you completed setting up a project in Sentry, you’ll be given a value which we call a _DSN_, or _Data Source Name_. It looks a lot like a standard URL, but it’s actually just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
 {% include components/platform_content.html content_dir='getting-started-config' %}
 

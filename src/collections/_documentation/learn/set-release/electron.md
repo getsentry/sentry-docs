@@ -1,5 +1,5 @@
 ```javascript
-import * as sentry from '@sentry/electron';
+import * as Sentry from '@sentry/electron';
 
 Sentry.init({
   release: "{{ page.release_identifier }}",
