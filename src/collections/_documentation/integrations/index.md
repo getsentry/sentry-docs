@@ -10,6 +10,7 @@ Sentry integrates seamlessly with your favorite apps and services.
 -   Campfire
 -   Flowdock
 -   [_GitHub_]({%- link _documentation/integrations/github.md -%})
+-   [_GitHub Enterprise_]({%- link _documentation/integrations/github-enterprise.md -%})
 -   GitLab
 -   [_Heroku_]({%- link _documentation/integrations/heroku.md -%})
 -   [_HipChat_]({%- link _documentation/integrations/hipchat.md -%})
