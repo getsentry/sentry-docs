@@ -26,7 +26,6 @@ const renderResults = function(results, query) {
   const $results = $('[data-search-results]').clone();
   if (!results || !results.length) {
     const msg = `No results${!!results ? `matching "${query}"` : ''}`;
-    console.log(msg);
     $results.append(`<p>${msg}</p>`);
   }
   $.each(results, function(i, result) {
