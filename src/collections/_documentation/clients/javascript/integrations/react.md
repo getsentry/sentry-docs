@@ -26,7 +26,7 @@ At this point, Raven is ready to capture any uncaught exception.
 
 If you’re using React 16 or above, [Error Boundaries](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html) are an important tool for defining the behavior of your application in the face of errors. Be sure to send errors they catch to Sentry using `Raven.captureException`, and optionally this is also a great opportunity to surface [User Feedback]({%- link _documentation/learn/user-feedback.md -%})
 
-```javascript
+```jsx
 class ExampleBoundary extends Component {
     constructor(props) {
         super(props);
@@ -58,7 +58,7 @@ class ExampleBoundary extends Component {
 }
 ```
 
-```javascript
+```html
 <div>
     <ExampleBoundary>
         <h2>Sidebar</h2>
