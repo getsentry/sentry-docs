@@ -4,7 +4,7 @@ sidebar_order: 1
 ---
 
 SDKs are configurable in many ways.  The options are largely standardized between SDKs but there are
-some differences to better acomodate platform peculiarities.  Options are set when the SDK is first
+some differences to better acommodate platform peculiarities.  Options are set when the SDK is first
 initialized.
 
 {% include components/platform_content.html content_dir='config-intro' %}
@@ -36,12 +36,12 @@ differently.  For more information have a look at [the releases documentation]({
 ### environment
 
 Sets the environment.  This string is freeform and not set by default.  A release can be associated
-with more than one environment to separate them im the UI (think `staging` vs `prod` or similar).
+with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 {:.config-key}
 ### repos
 
-For repository integration the repository identifiers need to be sent along.  For more information
+For repository integration, the repository identifiers need to be sent along.  For more information
 have a look at [the releases documentation]({% link _documentation/learn/releases.md %}).
 
 {:.config-key}
@@ -61,8 +61,7 @@ to `100`.
 ### attach-stacktrace
 
 When enabled stacktraces are automatically attached to all messages logged.  Note that stacktraces
-are always attached to exceptions but when this is set stacktraces are also sent with messages.  This
-for instance means that stacktraces appear next to all log messages.
+are always attached to exceptions but when this is set stacktraces are also sent with messages.  This, for instance, means that stacktraces appear next to all log messages.
 
 It's important to note that grouping in Sentry is different for events with stacktraces and without.
 This means that you will get new groups as you enable or disable this flag for certain events.
@@ -72,8 +71,8 @@ This feature is off by default.
 {:.config-key}
 ### send-default-pii
 
-If this flag is enabled then certain personally identifyable information is added by active
-integrations.  Without this flag they are never added to the event to begin with.  If possible
+If this flag, is enabled then certain personally identifiable information is added by active
+integrations.  Without this flag they are never added to the event, to begin with.  If possible
 it's recommended to turn on this feature and use the server side PII stripping to remove the
 values instead.
 
@@ -84,7 +83,7 @@ values instead.
 Can be used to supply a "server name".  When provided the name of the server is sent along and
 persisted in the event.  Note that for many integrations the server name actually corresponds to
 the device hostname even in situations where the machine is not actually a server.  Most SDKs
-will attempt to auto discover this value.
+will attempt to auto-discover this value.
 {% endunsupported %}
 
 {:.config-key}
@@ -114,7 +113,7 @@ of the following values:
 
 * `never`: request bodies are never sent.
 * `small`: only small request bodies will be captured where the cutoff for small depends on the SDK (typically 4KB)
-* `medium`: medium sized requests and small requests will be captured. (typically 10KB)
+* `medium`: medium-sized requests and small requests will be captured. (typically 10KB)
 * `always`: the SDK will always capture the request body for as long as sentry can make sense of it
 {% endsupported %}
 
@@ -162,7 +161,7 @@ sending.
 ### before-breadcrumb
 
 This function is called with an SDK specific breadcrumb object before the breadcrumb is added to the
-scope.  When nothign is returned from the function the breadcrumb is dropped.
+scope.  When nothing is returned from the function the breadcrumb is dropped.
 
 ## Transport Options
 
