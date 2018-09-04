@@ -24,8 +24,9 @@ const renderResult = function(data) {
 
 const renderResults = function(results, query) {
   const $results = $('[data-search-results]').clone();
-  if (!results.length) {
-    $results.append(`<p>No results matching "${query}"</p>`);
+  if (!results || !results.length) {
+    const msg = `No results${!!results ? ` matching "${query}"` : ''}`;
+    $results.append(`<p>${msg}</p>`);
   }
   $.each(results, function(i, result) {
     $results.append(renderResult(result));
@@ -53,8 +54,11 @@ class Search {
   init() {
     const params = qs.parse(location.search);
 
-    if (!params.q) return Promise.resolve();
-
+    if (!params.q) {
+      return Promise.resolve().then(() => {
+        $('[data-search-results]').append(renderResults());
+      });
+    }
     $('input[name="q"]').val(params.q);
 
     return this.Lunr.search(params.q).then(results => {
