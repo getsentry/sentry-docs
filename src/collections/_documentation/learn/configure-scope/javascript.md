@@ -1,7 +1,5 @@
 ```javascript
-const { configureScope } = require("@sentry/node");
-
-configureScope((scope) => {
+Sentry.configureScope((scope) => {
   scope.setTag("my-tag", "my value");
   scope.setUser({
     id: 42,

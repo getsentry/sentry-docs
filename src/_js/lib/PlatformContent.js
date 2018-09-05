@@ -89,15 +89,27 @@ const showPlatform = function(slug) {
   if (!verifyPlatformSlug(slug)) return;
 
   window.activePlatform = slug;
+  let platform = window.platformData[window.activePlatform];
 
   $('[data-platform-specific-content]').each((i, el) => {
     const $block = $(el);
-    const $dropdownItems = $block.find('[data-toggle="platform"]');
-    const $requested = $dropdownItems.filter(`[data-platform="${slug}"]`);
-    const $preferred = $dropdownItems.filter(
-      `[data-platform="${localStorage.getItem(KEY)}"]`
-    );
-    let $active = $requested;
+    let $dropdownItems;
+    let $requested;
+    let $preferred;
+    let $active;
+    const slugs = [slug, platform.fallback_platform];
+    for (const index in slugs) {
+      $dropdownItems = $block.find('[data-toggle="platform"]');
+      $requested = $dropdownItems.filter(`[data-platform="${slugs[index]}"]`);
+      $preferred = $dropdownItems.filter(
+        `[data-platform="${localStorage.getItem(KEY)}"]`
+      );
+      $active = $requested;
+      if ($active.length) {
+        // We skip and don't use fallback platform
+        break;
+      }
+    }
     if (!$active.length) {
       $active = $preferred.length ? $preferred : $dropdownItems.eq(0);
     }
