@@ -52,7 +52,7 @@ Github Enterprise should now be enabled for all projects under your Sentry organ
 
 ## Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about commit tracking here.
+Commit tracking allows you to hone in on problematic commits. Learn more about commit tracking [here](https://docs.sentry.io/learn/releases/#link-repository).
 
 ## Suspect Commits and Suggested Assignees
 
@@ -80,5 +80,3 @@ Fixes MYAPP-317
 You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
-
-
