@@ -4,10 +4,7 @@ const init = function() {
   const namespace = 'trackersOk';
 
   loadIfTrackersOk.push(google);
-  loadIfTrackersOk.push(twitter);
   loadIfTrackersOk.push(facebook);
-  loadIfTrackersOk.push(linkedin);
-  loadIfTrackersOk.push(bing);
   loadIfTrackersOk.push(hubspot);
 
   // If we've been given permission to track, set a cookie that we can check

@@ -130,3 +130,10 @@ public class MainApplication extends Application implements ReactApplication {
 
 }
 ```
+
+
+Add the following to your `settings.gradle` file:
+```java
+include ':react-native-sentry'
+project(':react-native-sentry').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-sentry/android')
+```
