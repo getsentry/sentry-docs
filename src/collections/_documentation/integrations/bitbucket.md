@@ -1,6 +1,6 @@
 ---
 title: Bitbucket
-sidebar_order: 2
+sidebar_order: 1
 ---
 Sentry’s new Bitbucket integration has the following features: commit tracking and issue management. You can now use the data from your commits to Bitbucket to help you find and fix bugs faster.
 
@@ -10,11 +10,11 @@ Note: This feature is only available for early adopters. To become an early adop
 
 
 1. In Sentry, navigate to Organization Settings > Integrations. *Note: only users with Owner and Manager permissions will have access to this page.*
-2. If you have the legacy Bitbucket integration installed, you’ll see a button next to Bitbucket that says ‘Upgrade’. If you do not have the legacy Bitbucket integration installed, you’ll see a button that says ‘Install.’ Click this button.
-3. In the resulting modal, click ‘Add Installation’.
-4. A Bitbucket install window should pop up. Select the Bitbucket account you'd like to grant Sentry access to, and click ‘Grant Access’.
-5. On your new Bitbucket instance in Sentry, click ‘Configure’.
-6. Add any repositories from which you want to collect commit data.
+1. If you have the legacy Bitbucket integration installed, you’ll see a button next to Bitbucket that says ‘Upgrade’. If you do not have the legacy Bitbucket integration installed, you’ll see a button that says ‘Install.’ Click this button.
+1. In the resulting modal, click ‘Add Installation’.
+1. A Bitbucket install window should pop up. Select the Bitbucket account you'd like to grant Sentry access to, and click ‘Grant Access’.
+1. On your new Bitbucket instance in Sentry, click ‘Configure’.
+1. Add any repositories from which you want to collect commit data.
 
 Bitbucket should now be enabled for all projects under your Sentry organization.
 
