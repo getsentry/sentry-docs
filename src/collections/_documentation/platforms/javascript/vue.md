@@ -7,7 +7,7 @@ sidebar_order: 30
 import * as Sentry from '@sentry/browser'
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: (integrations) => {
+  integrations (integrations) {
     integrations.push(new Sentry.Integrations.Vue({ Vue }))
     return integrations
   }
