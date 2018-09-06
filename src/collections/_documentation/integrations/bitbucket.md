@@ -1,51 +1,23 @@
 ---
 title: Bitbucket
-sidebar_order: 2
+sidebar_order: 1
 ---
-Sentry’s new Bitbucket integration has the following features: commit tracking and issue management. You can now use the data from your commits to Bitbucket to help you find and fix bugs faster.
 
-Note: This feature is only available for early adopters. To become an early adopter, navigate to Organization Settings > General Settings, and enable 'Early Adopter.'
+Sentry integrates with both Bitbucket Issues and Pipelines.
 
-## Configure Bitbucket
+## Set up Bitbucket Issue creation in Sentry
 
+1.  Go to the project settings page in Sentry that you’d like to link with Bitbucket
+2.  Click All Integrations, find the Bitbucket integration in the list, and click configure
+3.  Click Enable Plugin
+4.  Fill in the required information and save
+5.  The option to create Bitbucket issues will be displayed from your Sentry issue pages
 
-1. In Sentry, navigate to Organization Settings > Integrations. *Note: only users with Owner and Manager permissions will have access to this page.*
-2. If you have the legacy Bitbucket integration installed, you’ll see a button next to Bitbucket that says ‘Upgrade’. If you do not have the legacy Bitbucket integration installed, you’ll see a button that says ‘Install.’ Click this button.
-3. In the resulting modal, click ‘Add Installation’.
-4. A Bitbucket install window should pop up. Select the Bitbucket account you'd like to grant Sentry access to, and click ‘Grant Access’.
-5. On your new Bitbucket instance in Sentry, click ‘Configure’.
-6. Add any repositories from which you want to collect commit data.
+## Set up release tracking with Bitbucket Pipelines
 
-Bitbucket should now be enabled for all projects under your Sentry organization.
+1.  Go to the organizations settings page in Sentry
+2.  Click API Keys, New API Key to create a key with ‘project:releases’ permissions.
+3.  Go to Bitbucket and enable Bitbucket Pipelines
+4.  Create a _bitbucket-pipelines.yml_ config at the base level of your repository and add a step that issues a POST request (with the Sentry API key generated in step 2) to Sentry’s release endpoint
 
-
-## Commit Tracking
-
-Commit tracking allows you to hone in on problematic commits. Learn more about commit tracking [here](https://docs.sentry.io/learn/releases/#link-repository).
-
-## Suspect Commits and Suggested Assignees
-
-Once you set up commit tracking, you’ll be able to see the most recent changes to files found in the issue’s stacktrace with suspect commits.
-
-For issues where the files in the stacktrace match files included in commits sent to Sentry, you’ll see the suspect commit, with a link to the commit itself.
-
-You’ll also see that the author of the suspect commit will be listed as a suggested assignee for this issue. To assign the issue to the suggested assignee, click on their icon.
-
-## Issue Management
-
-Issue tracking allows you to create Bitbucket issues from within Sentry, and link Sentry issues to existing Bitbucket Issues.
-
-Once you’ve navigated to a specific issue, you’ll find the ‘Linked Issues’ section on the right hand panel. Here, you’ll be able to create or link Bitbucket issues.
-
-## Resolving in Commit/Pull Request
-
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
-
-```
-Prevent empty queries on users
-
-Fixes MYAPP-317
-```
-
-When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
-
+Still lost? Look through [this example repo](https://bitbucket.org/getsentry/demo-pipelines) for more ideas.
