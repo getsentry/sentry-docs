@@ -1,4 +1,4 @@
-const init = function() {
+$(document).on('page.didUpdate', function() {
   $('h1,h2,h3,h4,h5,h6').each((i, el) => {
     const $el = $(el);
     const id = $el.attr('id');
@@ -11,5 +11,4 @@ const init = function() {
       $el.prepend($link);
     }
   });
-};
-export default { init };
+});
