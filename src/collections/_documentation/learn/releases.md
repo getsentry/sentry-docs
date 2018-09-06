@@ -46,7 +46,11 @@ This is a 2-step process:
 
 #### a. Link a Repository
 
-Go to your organization’s settings, click “Repositories”, and click “Add Repository”. You’ll need to be an Owner or Manager of your Sentry organization to do this. This creates a webhook on the repository which sends Sentry metadata about each commit (such as authors and files changed).
+First, make sure you've installed the global integration for your source code management tool in Organization Settings > Integrations. You’ll need to be an Owner or Manager of your Sentry organization to do this.
+
+Once you are in Organization Settings > Integrations and have installed the integration, click the 'Configure' button next to your instance.
+
+In the 'Repositories' panel, click 'Add Repository', and add any repositories you'd like to track commits from. This creates a webhook on the repository which sends Sentry metadata about each commit (such as authors and files changed).
 
 If you’re linking a GitHub repository, ensure you have Admin or Owner permissions on the repository, and that Sentry is an authorized OAuth app in your [GitHub account settings](https://github.com/settings/applications).
 
