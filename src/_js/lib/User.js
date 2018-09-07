@@ -1,4 +1,5 @@
 const ORIGIN = process.env.JEKYLL_GETSENTRY_ORIGIN || 'https://sentry.io';
+import { escape } from './Helpers';
 
 export default class User {
   constructor() {
@@ -104,10 +105,10 @@ const constructDSNObject = function(project = {}) {
 
   return {
     id: project.id || -1,
-    group: project.organizationName || 'Example',
-    PROJECT_NAME: formatProjectLabel(project) || 'Your Project',
-    PROJECT_ID: project.projectSlug || 'your-project',
-    ORG_NAME: project.organizationSlug || 'your-org',
+    group: escape(project.organizationName) || 'Example',
+    PROJECT_NAME: escape(formatProjectLabel(project)) || 'Your Project',
+    PROJECT_ID: escape(project.projectSlug) || 'your-project',
+    ORG_NAME: escape(project.organizationSlug) || 'your-org',
     DSN: formatDsn(dsn, { public: false }),
     PUBLIC_DSN: formatDsn(dsn, { public: true }),
     PUBLIC_KEY: dsn.publicKey,
