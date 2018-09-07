@@ -94,9 +94,9 @@ init({
 });
 ```
 
-`eventProcessor` (this will be not used that often, but is great for writing custom plugins or share them across multiple projects - in form of an integration, more on this soon):
+`eventProcessor`:
 
-```js
+```javascript
 import * as Sentry from '@sentry/browser';
 
 Sentry.getCurrentHub().configureScope(scope => {
