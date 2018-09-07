@@ -72,11 +72,11 @@ const formatAPIURL = function(dsn) {
 };
 
 const formatProjectLabel = function(project = {}) {
-  const { projectSlug, teamName } = project;
-  if (!projectSlug && !teamName) return null;
+  const { projectSlug, organizationSlug } = project;
+  if (!projectSlug && !organizationSlug) return null;
 
-  return projectSlug.indexOf(teamName) === -1
-    ? `${teamName} / ${projectSlug}`
+  return projectSlug.indexOf(organizationSlug) === -1
+    ? `${organizationSlug} / ${projectSlug}`
     : projectSlug;
 };
 
