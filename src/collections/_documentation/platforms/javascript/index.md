@@ -12,7 +12,7 @@ All of our SDKs provide _Integrations_ which can be seen of some kind of plugins
 
 One thing is the same across all our JavaScript SDKs and that's how you add or remove _Integrations_, e.g.: for `@sentry/browser`.
 
-### Adding a Integration
+### Adding an Integration
 
 ```javascript
 import * as Sentry from '@sentry/browser';
@@ -57,4 +57,58 @@ Sentry.init({
   integrations: [new MyCustomIntegration()],
   // integrations: [...Sentry.defaultIntegrations, new MyCustomIntegration()], 
 })
+```
+
+### Hints
+
+Event and Breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. For events, those are things like `event_id`, `originalException`, `syntheticException` (used internally to generate cleaner stacktrace), and any other arbitrary `data` that user attaches. For breadcrumbs it's all implementation dependent. For XHR requests, hint contains xhr object itself, for user interactions it contains DOM element and event name etc.
+
+They are available in two places. `beforeSend`/`beforeBreadcrumb` and `eventProcessors`. Those are two ways we'll allow users to modify what we put together.
+
+Examples based on your `cause` property (I use `message` for ease of reading, but there's nothing stopping you from modifying event stacktrace frames).
+
+`beforeSend`/`beforeBreadcrumb`:
+
+```javascript
+import * as Sentry from '@sentry/browser';
+
+init({
+  dsn: '___PUBLIC_DSN___',
+  beforeSend(event, hint) {
+    const processedEvent = { ...event };
+    const cause = hint.originalException.cause;
+
+    if (cause) {
+      processedEvent.message = cause.message;
+    }
+
+    return processedEvent;
+  },
+  beforeBreadcrumb(breadcrumb, hint) {
+    if (breadcrumb.category === 'ui.click') {
+      const target = hint.event.target;
+      if (target.ariaLabel) breadcrumb.message = target.ariaLabel;
+    }
+    return breadcrumb;
+  },
+});
+```
+
+`eventProcessor` (this will be not used that often, but is great for writing custom plugins or share them across multiple projects - in form of an integration, more on this soon):
+
+```js
+import * as Sentry from '@sentry/browser';
+
+Sentry.getCurrentHub().configureScope(scope => {
+  scope.addEventProcessor(async (event, hint) => {
+    const processedEvent = { ...event };
+    const cause = hint.originalException.cause;
+
+    if (cause) {
+      processedEvent.message = cause.message;
+    }
+
+    return processedEvent;
+  });
+});
 ```
