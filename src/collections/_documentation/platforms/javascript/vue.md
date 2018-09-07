@@ -5,6 +5,7 @@ sidebar_order: 30
 
 ```javascript
 import * as Sentry from '@sentry/browser'
+
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations (integrations) {
