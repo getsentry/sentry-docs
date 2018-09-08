@@ -3,7 +3,13 @@ title: log4net
 sidebar_order: 10
 ---
 
-## Installing the integration in your app
+Sentry has an integration with log4net through the  `Sentry.Log4Net` NuGet package.
+
+Without any code change, this package is able to initialize the Sentry SDK and capture events while including additional properties like `Exception` data and more.
+
+This package extends `Sentry` main SDK. That means besides the log4net `Appender`, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
+
+## Installation
 
 Using package manager:
 
@@ -20,7 +26,7 @@ dotnet add Sentry.Log4Net
 ## Configuration
 
 Once the log4net integration package is installed in your project, you can modify your configuration file to add the appender.
-This can be done, for example, via the `app.config` or `web.config` in case of ASP.NET.
+This can be done, for example, via the `app.config` for console and desktop apps or `web.config` in case of ASP.NET.
 
 ```xml
   <appender name="SentryAppender" type="Sentry.Log4Net.SentryAppender, Sentry.Log4Net">
@@ -31,26 +37,20 @@ This can be done, for example, via the `app.config` or `web.config` in case of A
     </appender>
 ```
 
-For how it's done in this sample, please refer to [sample app.config](https://github.com/getsentry/sentry-dotnet/blob/master/samples/Sentry.Samples.Log4Net/app.config).
+#### SendIdentity
 
-The example above defines the [DSN](https://docs.sentry.io/quickstart/#configure-the-dsn) so that the `SentryAppender` is able to initialize the SDK.
+In the example above, the `SendIdentity` flag was switched on. The SDK then will take the log4net `Identity` value and report to Sentry as the user's id.
 
-This is only one of the options. If you wish to configure the SDK manually in the app before creating the logging integration, you could **leave the DSN out** of the log4net configuration file and call:
+#### Dsn
 
-```csharp
-using Sentry;
+Also in the example above, you can find the [DSN](https://docs.sentry.io/quickstart/#configure-the-dsn) being set. That will instruct the `SentryAppender` to initialize the SDK.
 
-using (SentrySdk.Init("___PUBLIC_KEY___"))
-{
-    // App code
-}
-```
+> NOTE:
+This is only one of the ways to initialize the SDK. If you wish to configure the SDK programatically, you could **leave the DSN out** from the appender configuration section. The SDK needs to be initialized only **once** and since other integrations (like ASP.NET) are also able to initialize the SDK, you only need to pass the DSN to one of these integrations.
 
-One of the advantages of this approach is that you can pass multiple configurations via the `Init` method. 
 
-Bottom line is that the SDK needs to be initialized only **once** so you can choose where the initialization will happen. Other integrations (like ASP.NET) is also able to initialize the SDK. 
-Make sure you pass the DSN to only one of these integrations, or if you are calling `Init` by yourself, there's no need to pass the DSN to the integration.
+### Sample
 
-Please refer to [the sample](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.Log4Net) to see it in action.
+For a [sample app.config](https://github.com/getsentry/sentry-dotnet/blob/master/samples/Sentry.Samples.Log4Net/app.config) or a complete working [sample](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.Log4Net) to see it in action.
 
 ![Sample event in Sentry](https://github.com/getsentry/sentry-dotnet/blob/master/samples/Sentry.Samples.Log4Net/.assets/log4net-sample.gif?raw=true)
