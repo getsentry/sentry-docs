@@ -7,14 +7,6 @@ Sentry has an integration with `EntityFramework` through the of the `Sentry.Enti
 
 > Looking for `EntityFramework Core`? That integration is achieved through the `Microsoft.Extensions.Logging` package.
 
-## Features
-
-* Queries as breadcrumbs
-* Validation errors
-
-All queries executed are added as breadcrumbs and are sent with any event which happens on the same `Scope`. Besides that, validation errors are also included as `Extra`.
-
-This package extends `Sentry` main SDK. That means that besides the EF features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
 
 ## Installation
 
@@ -29,6 +21,16 @@ Or using the .NET Core CLI:
 ```sh
 dotnet add Sentry.EntityFramework
 ```
+
+This package extends `Sentry` main SDK. That means that besides the EF features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
+
+## Features
+
+* Queries as breadcrumbs
+* Validation errors
+
+All queries executed are added as breadcrumbs and are sent with any event which happens on the same `Scope`. Besides that, validation errors are also included as `Extra`.
+
 
 ## Configuration
 

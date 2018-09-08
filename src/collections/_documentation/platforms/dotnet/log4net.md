@@ -7,7 +7,6 @@ Sentry has an integration with log4net through the  `Sentry.Log4Net` NuGet packa
 
 Without any code change, this package is able to initialize the Sentry SDK and capture events while including additional properties like `Exception` data and more.
 
-This package extends `Sentry` main SDK. That means besides the log4net `Appender`, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
 
 ## Installation
 
@@ -22,6 +21,8 @@ Or using the .NET Core CLI:
 ```sh
 dotnet add Sentry.Log4Net
 ```
+
+This package extends `Sentry` main SDK. That means besides the log4net `Appender`, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
 
 ## Configuration
 
