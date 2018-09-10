@@ -29,3 +29,5 @@ Sentry integrates seamlessly with your favorite apps and services.
 -   Teamwork
 -   Trello
 -   Twilio
+-   [_Visual Studio Team Services_]({%- link _documentation/integrations/visual-studio-team-services.md -%})
+

@@ -27,9 +27,9 @@ An example general error:
 
 ```json
 {
-    'error': {
-        'message': 'You cannot adjust reserved capacity to the value chosen.',
-        'code': 'invalid_param',
+    "error": {
+        "message": "You cannot adjust reserved capacity to the value chosen.",
+        "code": "invalid_param",
     },
 }
 ```
@@ -38,12 +38,12 @@ An example validation error:
 
 ```json
 {
-    'error': {
-        'code': 'invalid_param',
-        'params': {
-            'param_name': {
-                'code': 'invalid_param',
-                'message': 'This param must be a string',
+    "error": {
+        "code": "invalid_param",
+        "params": {
+            "param_name": {
+                "code": "invalid_param",
+                "message": "This param must be a string",
             }
         }
     }

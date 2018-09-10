@@ -132,3 +132,17 @@ The following tokens are reserved and known to Sentry:
   `lastSeen:-2d`
 
 Additionally you can use any tag you’ve specified as a token.
+
+## Saving Searches
+
+You have the ability to save a search by performing the search, clicking the dropdown arraow next to the Current Search, and then "Save Currrent Search".
+
+[{% asset save-current-search.png %}]({% asset save-current-search.png @path %})
+
+## Set a Default Search
+
+You can specify which search should be the default search when the Issues list is first viewed.
+
+This can be done by clicking the dropdown arrow next to the currnet search, clicking "Manage", and then specifying default for yourself or your team.
+
+[{% asset default-search.png %}]({% asset default-search.png @path %})

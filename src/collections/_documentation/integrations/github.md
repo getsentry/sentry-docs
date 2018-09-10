@@ -21,7 +21,7 @@ Github should now be enabled for all projects under your Sentry organization.
 
 ## Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about commit tracking here.
+Commit tracking allows you to hone in on problematic commits. Learn more about commit tracking [here](https://docs.sentry.io/learn/releases/#link-repository).
 
 ## Suspect Commits and Suggested Assignees
 
@@ -54,4 +54,3 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 ## GitHub SSO
 
 [Enable Single Sign-on]({%- link _documentation/learn/sso.md -%})
-
