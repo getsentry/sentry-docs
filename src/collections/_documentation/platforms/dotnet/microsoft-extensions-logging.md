@@ -106,7 +106,7 @@ using (var loggerFactory = new LoggerFactory()
 }
 ```
 
-This approach doesn't include any of the framework's configuration system. Since the SDK is being provided via parameter, the SDK will be initialized.
+This approach doesn't include any of the framework's configuration system. Since the DSN is being provided via parameter, the SDK will be initialized.
 More settings can be passed via the callback configuring the `SentryOptions`.
 
 ## Options and Initialization
