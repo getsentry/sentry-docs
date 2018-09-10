@@ -40,9 +40,9 @@ nitty gritty details.  On platforms such as .NET or on Python 3.7 and later we w
 use "ambient data" to have either the hub flow with your code or the hub is already
 a singleton that internally manages the scope.
 
-Effectively this means that when you spawn a task in .NET and the execution flow is
+Effectively this means that when you spawn a task in .NET and the execution flow is 
 not supressed all the context you have bound to the scope in Sentry will flow along.
-If however you surpress the flow you get new scope data.
+If however you suppress the flow, you get new scope data.
 {% endcapture %}
 {%- include components/alert.html
   title="Note"

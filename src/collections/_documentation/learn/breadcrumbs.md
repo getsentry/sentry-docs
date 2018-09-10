@@ -57,4 +57,4 @@ to record a breadcrumb if the user authenticates or another state change happens
 ## Automatic Breadcrumbs
 
 SDKs will automatically start recording breadcrumbs by enabling integrations.  For instance
-the browser JavaScript SDK will automatically record all lcoation changes.
+the browser JavaScript SDK will automatically record all location changes.

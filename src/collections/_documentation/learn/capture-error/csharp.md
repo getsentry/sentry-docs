@@ -1,11 +1,14 @@
-In .NET you can capture any exception object that you caught:
+In C# you can capture any exception object that you caught:
 
 ```csharp
 using Sentry;
 
-try {
+try 
+{
     AFunctionThatMightFail();
-} catch (Exception err) {
+} 
+catch (Exception err)
+{
     SentrySdk.CaptureException(err);
 }
 ```
