@@ -2,8 +2,11 @@
 title: Django
 sidebar_order: 2
 ---
+*Import name: `sentry_sdk.integrations.django.DjangoIntegration`*
 
-In your ``settings.py``:
+The Django integration adds support for the [Django Web Framework](https://www.djangoproject.com/)
+from Version 1.6 upwards.  To configure the SDK initialize it with the Django
+integration in your ``settings.py`` file:
 
 ```python
 import sentry_sdk
@@ -14,6 +17,10 @@ sentry_sdk.init(
     integrations=[DjangoIntegration()]
 )
 ```
+
+## Behavior
+
+This causes the following this to happen:
 
 * All exceptions are reported.
 
@@ -28,5 +35,10 @@ sentry_sdk.init(
     * If you have ``django.contrib.auth`` installed and configured, user data
       (current user id, email address, username) is attached to the event.
 
-* Logging with any logger will create breadcrumbs. See logging docs for more
-  information.
+* Logging with any logger will create breadcrumbs when the [Logging]({% link _documentation/platforms/python/logging.md %})
+  integration is enabled (done by default).
+
+## User Feedback
+
+The user feedback feature can be used with this integration.  For more information
+see [User Feedback]({% link _documentation/learn/user-feedback.md %}?platform=django).

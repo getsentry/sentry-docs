@@ -2,6 +2,7 @@
 title: Logging
 sidebar_order: 2
 ---
+*Import name: `sentry_sdk.integrations.logging.LoggingIntegration`*
 
 Calling ``sentry_sdk.init()`` already captures any logging message with a level
 higher than or equal to ``INFO``. You can change this behavior by explicitly

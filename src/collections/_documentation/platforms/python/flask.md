@@ -2,6 +2,11 @@
 title: Flask
 sidebar_order: 2
 ---
+*Import name: `sentry_sdk.integrations.flask.FlaskIntegration`*
+
+The Django integration adds support for the [Flask Web
+Framework](http://flask.pocoo.org/).  To configure the SDK initialize it with
+the integration before or after your app has been initialized:
 
 ```python
 import sentry_sdk
@@ -15,8 +20,7 @@ sentry_sdk.init(
 app = Flask(__name__)
 ```
 
-* You can actually run that `init` anywhere. Before or after you define your
-  routes, before or after you register extensions.
+## Behavior
 
 * The Flask integration will be installed for all of your apps. It hooks into
   Flask's signals, not anything on the app object.
@@ -34,5 +38,11 @@ app = Flask(__name__)
 
 * All exceptions leading to a Internal Server Error are reported.
 
-* Logging with `app.logger` or really *any* logger will create breadcrumbs. See
-  logging docs for more information.
+* Logging with `app.logger` or really *any* logger will create breadcrumbs when
+  the [Logging]({% link _documentation/platforms/python/logging.md %})
+  integration is enabled (done by default).
+
+## User Feedback
+
+The user feedback feature can be used with this integration.  For more information
+see [User Feedback]({% link _documentation/learn/user-feedback.md %}?platform=flask).
