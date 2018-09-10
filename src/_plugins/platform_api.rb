@@ -80,6 +80,8 @@ module Jekyll
 
       # Generate each file
       site.data["platforms"].each do |platform|
+        return nil if platform["wizard"].nil?
+        
         body = ""
         platform["wizard"].each do |wiz|
           file, section = wiz.split '#'
