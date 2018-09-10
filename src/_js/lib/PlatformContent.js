@@ -1,6 +1,29 @@
 import qs from 'query-string';
 
+const DEFAULT_PLATFORM = 'javascript';
 const KEY = 'preferredPlatform';
+
+// Platform display priority:
+//
+// - `platform` in url
+// - `preferredPlatform` in localStorage
+// - default platform
+//
+// `preferredPlatform` will update when:
+//
+// - `platform` in url is specified
+// - A new platform is selected in the UI
+//
+// platform displayed may be forced by:
+//
+// - setting the `platform` in the url
+
+// Get the slug for the platform that should be displayed
+//
+// Returns a String.
+const getPlatformSlug = function() {
+  return localStorage.getItem(KEY) || DEFAULT_PLATFORM;
+};
 
 // Get the object associated with a given platform slug.
 //
@@ -8,16 +31,8 @@ const KEY = 'preferredPlatform';
 //
 // Returns an object or null if no platform matches the slug.
 const verifyPlatformSlug = function(slug) {
+  if (!slug) return false;
   return window.supportedPlatforms.find(x => x === slug);
-};
-
-// Update the url of hte page to reflect a current slug
-//
-//  slug - slug matching a platform in data/platforms.yml
-//
-// Returns nothing.
-const updateLocationPlatform = function(slug) {
-  history.replaceState({}, '', updateUrlPlatform(location.href, slug));
 };
 
 // Add or update the platform slug of a url
@@ -86,25 +101,21 @@ const syncRelatedElements = function() {
 //
 // Returns nothing.
 const showPlatform = function(slug) {
-  if (!verifyPlatformSlug(slug)) return;
+  if (verifyPlatformSlug(slug)) localStorage.setItem(KEY, slug);
+  slug = getPlatformSlug();
 
   window.activePlatform = slug;
   let platform = window.platformData[window.activePlatform];
 
   $('[data-platform-specific-content]').each((i, el) => {
     const $block = $(el);
-    let $dropdownItems;
-    let $requested;
-    let $preferred;
+    let $dropdownItems = $block.find('[data-toggle="platform"]');
+    let $preferred = $dropdownItems.filter(`[data-platform="${slug}"]`);
     let $active;
+
     const slugs = [slug, platform.fallback_platform];
     for (const index in slugs) {
-      $dropdownItems = $block.find('[data-toggle="platform"]');
-      $requested = $dropdownItems.filter(`[data-platform="${slugs[index]}"]`);
-      $preferred = $dropdownItems.filter(
-        `[data-platform="${localStorage.getItem(KEY)}"]`
-      );
-      $active = $requested;
+      $active = $dropdownItems.filter(`[data-platform="${slugs[index]}"]`);
       if ($active.length) {
         // We skip and don't use fallback platform
         break;
@@ -114,7 +125,7 @@ const showPlatform = function(slug) {
       $active = $preferred.length ? $preferred : $dropdownItems.eq(0);
     }
 
-    // Updat the active state of the dropdown items
+    // Update the active state of the dropdown items
     $dropdownItems.removeClass('active');
     $dropdownItems.attr('aria-selected', false);
     $active.addClass('active');
@@ -132,25 +143,19 @@ const showPlatform = function(slug) {
     $block.find('[data-toggle="dropdown"]').text($active.text());
   });
 
+  history.replaceState({}, '', updateUrlPlatform(location.href, slug));
   syncRelatedElements();
 };
 
-// Add the current platform to all links on the page.
-//
-//  slug - slug matching a platform in data/platforms.yml
-//
-// Returns nothing.
-const addPlatformToLinks = function(slug) {
-  const validSlug = verifyPlatformSlug(slug);
-  if (!validSlug) return;
+$(document).on('click', '[data-toggle="platform"]', function(event) {
+  event.preventDefault();
+  showPlatform($(event.target).data('platform'));
+});
 
-  $('a').each((i, el) => {
-    const $el = $(el);
-    const href = $el.attr('href');
-    const isDocLink = /(^\/|docs.sentry.io)/.test(href);
-    if (isDocLink) $el.attr('href', updateUrlPlatform(href, validSlug));
-  });
-};
+$(document).on('page.didUpdate', function(event) {
+  // Update the preferredPlatform based on the url.
+  showPlatform(qs.parse(location.search).platform);
+});
 
 // Attach event listeners and set UI state based on the platform supplied via
 // query param, stored in localStorage as the preferred platform, or the
@@ -159,23 +164,6 @@ const addPlatformToLinks = function(slug) {
 // Returns nothing.
 const init = function() {
   initRelatedElements();
-
-  $(document).on('click', '[data-toggle="platform"]', function(event) {
-    event.preventDefault();
-    const $target = $(event.target);
-    const slug = $target.data('platform');
-    localStorage.setItem(KEY, slug);
-    showPlatform(slug);
-    addPlatformToLinks(slug);
-    updateLocationPlatform(slug);
-  });
-
-  $(document).on('page.didUpdate', function(event) {
-    const queryPlatform = qs.parse(location.search).platform;
-    const preferredPlatform = localStorage.getItem(KEY);
-    showPlatform(queryPlatform || preferredPlatform);
-    addPlatformToLinks(queryPlatform);
-  });
 };
 
 export default { init };
