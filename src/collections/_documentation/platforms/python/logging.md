@@ -15,7 +15,10 @@ sentry_logging = LoggingIntegration(
     level=logging.DEBUG,
     event_level=logging.ERROR
 )
-sentry_sdk.init(dsn="https://foo@sentry.io/123", integrations=[sentry_logging])
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[sentry_logging]
+)
 ```
 
 The above configuration captures *all* messages, now including ``DEBUG``, as

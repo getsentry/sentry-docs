@@ -7,7 +7,10 @@ sidebar_order: 2
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 
-sentry_sdk.init(dsn="https://foo@sentry.io/123", integrations=[FlaskIntegration()])
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[FlaskIntegration()]
+)
 
 app = Flask(__name__)
 ```
