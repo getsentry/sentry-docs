@@ -18,8 +18,11 @@ And the template that brings up the dialog
 
 {% if sentry_event_id %}
 <script>
-  Sentry.showReportDialog({
-    eventId: '{{ sentry_event_id }}',
+  Sentry.forceLoad();
+  Sentry.onLoad(() => {
+    Sentry.showReportDialog({
+      eventId: '{{ sentry_event_id }}',
+    });
   });
 </script>
 {% endif %}
