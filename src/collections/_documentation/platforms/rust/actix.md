@@ -15,7 +15,7 @@ objects and highly concurrent this middleware creates a new hub per request.
 As a result many of the sentry integrations such as breadcrumbs do not work
 unless you bind the actix hub.
 
-# Example
+## Example
 
 ```rust
 extern crate actix_web;
@@ -33,7 +33,7 @@ fn failing(_req: &HttpRequest) -> Result<String, Error> {
 }
 
 fn main() {
-    let _guard = sentry::init("https://public@sentry.io/1234");
+    let _guard = sentry::init("___PUBLIC_DSN___");
     env::set_var("RUST_BACKTRACE", "1");
     sentry::integrations::panic::register_panic_handler();
 
@@ -47,7 +47,7 @@ fn main() {
 }
 ```
 
-# Reusing the Hub
+## Reusing the Hub
 
 If you use this integration the `Hub::current()` returned hub is typically the wrong one.
 To get the request specific one you need to use the `ActixWebHubExt` trait:

@@ -3,8 +3,8 @@ title: Python
 sidebar_order: 3
 ---
 
-The [Sentry Python SDK](https://pypi.org/project/sentry-sdk) provides Sentry support
-for Python 2.7 and 3.5 or later.
+The [Sentry Python SDK](https://pypi.org/project/sentry-sdk) provides Sentry
+support for Python 2.7 and 3.4 or later.
 
 The Python SDK follows the new unified SDK architecture.  To get started
 have a look at the [quickstart]({% link _documentation/learn/quickstart.md
@@ -36,4 +36,3 @@ the following are supported:
 In addition to framework integrations there are also a few other integrations:
 
 * [Default integrations]({% link _documentation/platforms/python/default-integrations.md %})
-* [Requests integration]({% link _documentation/platforms/python/requests.md %})

@@ -1,6 +1,7 @@
 ---
 title: 'React Native'
 sidebar_order: 11
+sidebar_relocation: platforms
 ---
 
 This is the documentation for our React-Native SDK. The React-Native SDK uses a native extension for iOS and Android but will fall back to a pure JavaScript version if necessary.
