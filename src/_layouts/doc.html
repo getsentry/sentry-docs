@@ -26,6 +26,25 @@ layout: default
 
       <section class="pt-3 px-3 content-max prose" data-searchable data-dynamic-load="main">
 
+        {%- for platform in site.data.platforms -%}
+          {%- if platform.superseded_by %}
+            {%- assign __is_active = page.url | url_starts_with: platform.doc_link %}
+            {%- if __is_active %}
+              {%- assign __new_platform = site.data.platforms | where: 'slug', platform.superseded_by | first %}
+              {% capture __alert_content -%}
+              This SDK has been superseded by a new unified one.  The documentation here is
+              preserved for customers using the old client.  For new projects have a look
+              at the new client documentation:
+              <a href="{{ __new_platform.doc_link }}">Unified {{ __new_platform.name }} SDK</a>.
+              {%- endcapture -%}
+              {%- include components/alert.html
+                level="info"
+                title="Deprecated Client"
+                content=__alert_content
+              %}
+            {%- endif %}
+          {%- endif %}
+        {%- endfor %}
 
         <h1 class="mb-3">{{ page.title }}</h1>
 

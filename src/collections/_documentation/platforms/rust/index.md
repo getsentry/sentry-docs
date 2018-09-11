@@ -16,9 +16,15 @@ look at the [quickstart]({% link _documentation/learn/quickstart.md
 *Integrations* extend the functionality of the SDK for some common frameworks
 and libraries.
 
+### Framework integrations
+
+Sentry-Rust supports the following application frameworks:
+
+* [actix-web]({% link _documentation/platforms/rust/actix.md %})
+
 ### Error handling integrations
 
-The Rust SDK supports the most commonly used libraries for advanced error management:
+Sentry-Rust supports the most commonly used libraries for advanced error management:
 
 * [failure]({% link _documentation/platforms/rust/failure.md %})
 * [error-chain]({% link _documentation/platforms/rust/error_chain.md %})
