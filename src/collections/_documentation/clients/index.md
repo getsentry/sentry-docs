@@ -1,8 +1,8 @@
 ---
-title: SDKs
-sidebar_order: 2
+title: Legacy Clients
+sidebar_order: 4
 ---
 
-To report to Sentry you’ll need to use a language-specific SDK. The Sentry team builds and maintains these for most popular languages, but there’s also a large ecosystem supported by the community. If your favorite language isn’t listed below, we encourage you to start a discussion about supporting it on our [community forum](https://forum.sentry.io).
+Some of the clients that report to Sentry have been replaced by newer SDKs or are no longer maintained.  We document them here for users who are still using those clients but they are recommended against for new projects. 
 
 {% include LEGACY_platform_icon_links.html %}
