@@ -1,6 +1,7 @@
 ---
 title: Go
 sidebar_order: 5
+sidebar_relocation: platforms
 ---
 
 {% capture __alert_content -%}

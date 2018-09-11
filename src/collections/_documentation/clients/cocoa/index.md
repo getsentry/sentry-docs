@@ -1,6 +1,7 @@
 ---
 title: Cocoa
 sidebar_order: 1
+sidebar_relocation: platforms
 ---
 
 This is the documentation for our official clients for Cocoa (Swift and Objective-C). Starting with version `3.0.0` we’ve switched our interal code from Swift to Objective-C to maximize compatiblity. Also we trimmed the public API of our sdk to a minimum. Some of the lesser used features that where present before are gone now, check out [Migration Guide]({%- link _documentation/clients/cocoa/migration.md -%}#migration) or [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%}#advanced) for details.

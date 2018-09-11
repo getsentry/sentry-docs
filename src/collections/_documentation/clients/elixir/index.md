@@ -1,6 +1,7 @@
 ---
 title: Elixir
 sidebar_order: 4
+sidebar_relocation: platforms
 ---
 
 The Elixir SDK for Sentry.

@@ -1,6 +1,6 @@
 ---
 title: Default Integrations
-sidebar_order: 4
+sidebar_order: 10
 ---
 
 System integrations are integrations enabled by default that integrate into the
