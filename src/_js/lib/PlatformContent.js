@@ -47,16 +47,6 @@ const updateUrlPlatform = function(url, slug) {
   return `${origin}?${qs.stringify(query)}`;
 };
 
-const initRelatedElements = function() {
-  $('.config-key').each(function() {
-    this.setAttribute('data-config-key', $(this).text());
-  });
-
-  $('.unsupported').each(function() {
-    $('<div class="unsupported-hint"></div>').prependTo(this);
-  });
-};
-
 const syncRelatedElements = function() {
   let platform = window.platformData[window.activePlatform];
   let style = platform && platform.case_style || 'canonical';
@@ -144,6 +134,16 @@ const showPlatform = function(slug) {
   });
 
   history.replaceState({}, '', updateUrlPlatform(location.href, slug));
+
+  $('.config-key').each(function() {
+    this.setAttribute('data-config-key', $(this).text());
+  });
+
+  $('.unsupported-hint').remove();
+  $('.unsupported').each(function() {
+    $('<div class="unsupported-hint"></div>').prependTo(this);
+  });
+
   syncRelatedElements();
 };
 
@@ -156,14 +156,3 @@ $(document).on('page.didUpdate', function(event) {
   // Update the preferredPlatform based on the url.
   showPlatform(qs.parse(location.search).platform);
 });
-
-// Attach event listeners and set UI state based on the platform supplied via
-// query param, stored in localStorage as the preferred platform, or the
-// default platform, in that order.
-//
-// Returns nothing.
-const init = function() {
-  initRelatedElements();
-};
-
-export default { init };

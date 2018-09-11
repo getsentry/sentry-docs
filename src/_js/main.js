@@ -1,11 +1,11 @@
 import Raven from 'raven-js';
 import 'bootstrap';
-import PlatformContent from './lib/PlatformContent';
 import UserContent from './lib/UserContent';
 import Tracking from './lib/Tracking';
 import User from './lib/User';
 import DynamicLoad from './lib/DynamicLoad';
 import Search from './lib/Search';
+import './lib/PlatformContent';
 import './lib/HeaderLinker';
 import './lib/Feedback';
 import './lib/Sidebar';
@@ -24,7 +24,6 @@ $(document).on('page.didUpdate', function(event) {
 });
 
 $(function() {
-  PlatformContent.init();
   UserContent.init();
   Tracking.init();
   Search.init();
