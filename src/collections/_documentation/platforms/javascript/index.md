@@ -1,6 +1,6 @@
 ---
 title: JavaScript
-sidebar_order: 20
+sidebar_order: 10
 ---
 
 All our JavaScript related SDKs provide the same API still there are some differences between them

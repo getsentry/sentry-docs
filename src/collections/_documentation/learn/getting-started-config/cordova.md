@@ -1,5 +1,4 @@
-You need to inform the sentry electron SDK about your CDN somewhere before
-application startup:
+You should `init` the SDK in the `deviceReady` function, to make sure the native integrations runs. For more details about Cordova [click here]({%- link _documentation/platforms/javascript/cordova.md -%})  
 
 ```javascript
 onDeviceReady: function() {

@@ -1,6 +1,6 @@
 ---
 title: Vue
-sidebar_order: 30
+sidebar_order: 40
 ---
 
 To use Sentry with your Vue application, you will need to use `@sentry/browser` (Sentry’s browser JavaScript SDK).  

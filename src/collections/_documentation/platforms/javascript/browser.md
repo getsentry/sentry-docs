@@ -1,6 +1,6 @@
 ---
 title: Browser
-sidebar_order: 2
+sidebar_order: 20
 ---
 
 We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/learn/quickstart.md %}?platform=browser#pick-a-client-integration).
