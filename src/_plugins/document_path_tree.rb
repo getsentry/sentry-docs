@@ -1,5 +1,3 @@
-require 'pp'
-
 Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
   def tree_for(docs, root)
     tree = []
@@ -62,7 +60,6 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
       other_sidebar = item["document"].data["sidebar_relocation"]
       if !other_sidebar.nil? && parent["items"]
         parent["items"].each do |parent_item|
-          pp [parent_item["slug"], other_sidebar]
           if parent_item["slug"] == other_sidebar
             parent_item["items"].push item
             return nil
