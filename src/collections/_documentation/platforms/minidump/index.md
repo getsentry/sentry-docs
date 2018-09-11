@@ -4,7 +4,7 @@ sidebar_order: 8
 sidebar_relocation: platforms
 ---
 
-Sentry can process Minidump crash reports, a memory dump used on Windows and by open-source libraries like [_Breakpad_]({%- link _documentation/clients/minidump/breakpad.md -%}) or [_Crashpad_]({%- link _documentation/clients/minidump/crashpad.md -%}). You can either choose to generate and upload minidumps yourself or use a higher-level SDK for platforms with built-in support for native crashes:
+Sentry can process Minidump crash reports, a memory dump used on Windows and by open-source libraries like [_Breakpad_]({%- link _documentation/platforms/minidump/breakpad.md -%}) or [_Crashpad_]({%- link _documentation/platforms/minidump/crashpad.md -%}). You can either choose to generate and upload minidumps yourself or use a higher-level SDK for platforms with built-in support for native crashes:
 
 -   [_Cocoa_]({%- link _documentation/clients/cocoa/index.md -%})
 -   [_Electron_]({%- link _documentation/clients/electron/index.md -%})
@@ -44,8 +44,8 @@ In addition to this information, you can add further meta data specific to Sentr
 
 Depending on your operating system and programming language, there are various alternatives to create minidumps and upload them to Sentry. See the following resources for libraries that support generating minidump crash reports:
 
--   [Google Breakpad]({%- link _documentation/clients/minidump/breakpad.md -%})
--   [Google Crashpad]({%- link _documentation/clients/minidump/crashpad.md -%})
+-   [Google Breakpad]({%- link _documentation/platforms/minidump/breakpad.md -%})
+-   [Google Crashpad]({%- link _documentation/platforms/minidump/crashpad.md -%})
 
 If you have already integrated a library that generates minidumps and would just like to upload them to Sentry, you need to configure the _Minidump Endpoint URL_, which can be found at _Project Settings > Client Keys (DSN)_. This endpoint expects a `POST` request with the minidump in the `upload_file_minidump` field:
 
