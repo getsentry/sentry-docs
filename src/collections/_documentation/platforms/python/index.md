@@ -4,8 +4,11 @@ sidebar_order: 3
 ---
 
 The [Sentry Python SDK](https://pypi.org/project/sentry-sdk) provides Sentry support
-for Python 2.7 and 3.5 or later.  It follows the new unified SDK architecture.  To
-get started have a look at the [quickstart]({% link _documentation/learn/quickstart.md %}?platform=python) docs.
+for Python 2.7 and 3.5 or later.
+
+The Python SDK follows the new unified SDK architecture.  To get started
+have a look at the [quickstart]({% link _documentation/learn/quickstart.md
+%}?platform=python) docs.
 
 This documentation goes over some Python specific things such as integrations to
 frameworks.
@@ -18,7 +21,7 @@ SDK.  Integrations are configured by a call to `sentry_sdk.init`.  Any default
 integration not in the list is automatically added unless `default_integrations` is
 set to `False`.
 
-## Framework Integrations
+### Framework Integrations
 
 Framework integrations are opt-in integrations for large frameworks or libraries.  Currently
 the following are supported:
@@ -28,7 +31,7 @@ the following are supported:
 * [Flask]({% link _documentation/platforms/python/flask.md %})
 * [Logging]({% link _documentation/platforms/python/logging.md %})
 
-## Other Integrations
+### Other Integrations
 
 In addition to framework integrations there are also a few other integrations:
 
