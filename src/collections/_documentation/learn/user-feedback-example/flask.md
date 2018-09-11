@@ -13,15 +13,14 @@ And the template that brings up the dialog:
 
 {% raw %}
 ```html
-<script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
+<script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js"  
+data-lazy="no"
+crossorigin="anonymous"></script>
 
 {% if sentry_event_id %}
 <script>
-  Sentry.forceLoad();
-  Sentry.onLoad(() => {
-    Sentry.showReportDialog({
-      eventId: '{{ sentry_event_id }}',
-    });
+  Sentry.showReportDialog({
+    eventId: '{{ sentry_event_id }}',
   });
 </script>
 {% endif %}

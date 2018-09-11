@@ -46,9 +46,7 @@ The _Loader_ also provides a function called `forceLoad()` which does the same, 
 <script>
   Sentry.forceLoad();
   Sentry.onLoad(() => {
-    Sentry.showReportDialog({
-      eventId: '{{ sentry_event_id }}',
-    });
+    // Use whatever Sentry.* function you want
   });
 </script>
 {% endif %}{% endraw %}

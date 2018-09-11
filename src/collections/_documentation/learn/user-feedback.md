@@ -27,6 +27,8 @@ An override for Sentry’s automatic language detection (e.g. `lang=de`)
 
 | Param | Default |
 | --- | --- |
+| `eventId` | Manually set the id of the event. |
+| `dsn` | Manually set dsn to report to. |
 | `lang` | _[automatic]_ – **override for Sentry’s language code** |
 | `title` | It looks like we’re having issues. |
 | `subtitle` | Our team has been notified. |
