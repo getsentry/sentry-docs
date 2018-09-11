@@ -1,5 +1,5 @@
 ---
-title: Actix-Web
+title: actix-web
 sidebar_order: 2
 ---
 
