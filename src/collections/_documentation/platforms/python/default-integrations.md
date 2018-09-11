@@ -36,3 +36,8 @@ cause duplicate error logging in the Flask framework.
 
 The stdlib integration instruments certain modules in the standard library to emit
 breadcrumbs.  This is enabled by default and rarely makes sense to disable.
+
+In detail it provides:
+
+* Breadcrumbs for HTTP requests done using `httplib`, which also includes
+  traffic going through `requests`.

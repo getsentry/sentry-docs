@@ -36,4 +36,3 @@ the following are supported:
 In addition to framework integrations there are also a few other integrations:
 
 * [Default integrations]({% link _documentation/platforms/python/default-integrations.md %})
-* [Requests integration]({% link _documentation/platforms/python/requests.md %})
