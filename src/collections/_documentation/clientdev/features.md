@@ -23,7 +23,7 @@ This behavior is typically provided by a default integration that can be disable
 
 Scopes should be provided by SDKs to set common attributes and context data on events sent to Sentry emitted from the current scope. They should be inherited to lower scopes so that they can be set "globally" on startup.  Note that some attributes can only be set in the client options (`release`, `environment`) and not on scopes.
 
-What scope means depends on the application, for a web framework it is most likely a single request/response cycle. For a mobile application there is often just one single scope that represents the single user and their actions. Scoping can be difficult to implement because it often has to deal with threads or concurrency and can involve deep integration with frameworks. [See the scopes page]({%- link _documentation/clientdev/scopes.md -%}#scope) for more information.
+What scope means depends on the application, for a web framework it is most likely a single request/response cycle. For a mobile application there is often just one single scope that represents the single user and their actions. Scoping can be difficult to implement because it often has to deal with threads or concurrency and can involve deep integration with frameworks. [See the scopes page]({%- link _documentation/clientdev/unified-api.md -%}#scope) for more information.
 
 ## Automatic Context Data
 
