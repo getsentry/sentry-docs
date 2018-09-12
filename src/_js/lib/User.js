@@ -104,7 +104,7 @@ const constructDSNObject = function(project = {}) {
     id: project.id || -1,
     group: escape(project.organizationName) || 'Example',
     PROJECT_NAME: escape(formatProjectLabel(project)) || 'Your Project',
-    PROJECT_ID: escape(project.projectSlug) || 'your-project',
+    PROJECT_ID: escape(project.projectSlug) || '<project-id>',
     ORG_NAME: escape(project.organizationSlug) || 'your-org',
     DSN: formatDsn(dsn, { public: false }),
     PUBLIC_DSN: formatDsn(dsn, { public: true }),
