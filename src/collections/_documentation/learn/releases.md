@@ -146,7 +146,7 @@ res = requests.post(
 
 For more information, see the [API reference]({%- link _documentation/api/releases/post-organization-releases.md -%}).
 
-After this step, **suspect commits** and **suggested assignees** will start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and [ownership rules]({%- link _documentation/learn/issue-owners.md -%}).
+After this step, **suspect commits** and **suggested assignees** will start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and [ownership rules]({%- link _documentation/product/issue-owners.md -%}).
 
 {% asset suspect-commits-highlighted.png %}
 
