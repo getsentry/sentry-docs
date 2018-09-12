@@ -2,5 +2,5 @@ To add Sentry to your Rust project you just need to add a new dependency to your
 
 ```toml
 [dependencies]
-sentry = "0.7.0"
+sentry = "{% sdk_version sentry.rust %}"
 ```
