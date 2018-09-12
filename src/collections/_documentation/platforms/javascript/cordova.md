@@ -12,7 +12,9 @@ When you [install]({%- link _documentation/learn/quickstart.md -%}?platform=cord
 
 You have to whitelist `sentry.io` in your `config.xml` like:
 
-> <access origin=”sentry.io” />
+```xml
+<access origin=”sentry.io” />
+```
 
 Keep in mind if you use an on-premise installation, adjust this domain accordingly.
 
@@ -32,26 +34,27 @@ If the wizard ran successfully, it should have done setup all the necessary step
 
 If you want to run the debug symbol upload during building your app. You can add this as a run script phase in Xcode. Also make sure to set the `DEBUG_INFORMATION_FORMAT` in your project settings to `DWARF and dSYM file`.
 
-> ```bash
-> export SENTRY_PROPERTIES=sentry.properties
-> function getProperty {
->     PROP_KEY=$1
->     PROP_VALUE=`cat $SENTRY_PROPERTIES | grep "$PROP_KEY" | cut -d'=' -f2`
->     echo $PROP_VALUE
-> }
-> if [ ! -f $SENTRY_PROPERTIES ]; then
->     echo "warning: SENTRY: sentry.properties file not found! Skipping symbol upload."
->     exit 0
-> fi
-> echo "# Reading property from $SENTRY_PROPERTIES"
-> SENTRY_CLI=$(getProperty "cli.executable")
-> SENTRY_COMMAND="../../$SENTRY_CLI upload-dsym"
-> $SENTRY_COMMAND
-> ```
+```bash
+export SENTRY_PROPERTIES=sentry.properties
+function getProperty {
+    PROP_KEY=$1
+    PROP_VALUE=`cat $SENTRY_PROPERTIES | grep "$PROP_KEY" | cut -d'=' -f2`
+    echo $PROP_VALUE
+}
+if [ ! -f $SENTRY_PROPERTIES ]; then
+    echo "warning: SENTRY: sentry.properties file not found! Skipping symbol upload."
+    exit 0
+fi
+echo "# Reading property from $SENTRY_PROPERTIES"
+SENTRY_CLI=$(getProperty "cli.executable")
+SENTRY_COMMAND="../../$SENTRY_CLI upload-dsym"
+$SENTRY_COMMAND
+```
 
-The next script makes sure that all unused architectures are strip from you binary when submitting the build to iTunes Connect.
+The next script makes sure that all unused architectures are striped from your binary when submitting the build to iTunes Connect.
 
 If you are getting an error while submitting your build to iTunes Connect, this script is probably missing. Also re-adding the plugin helped some people.
+
 {% raw %}
 ```bash
 # SENTRY_FRAMEWORK_PATCH
