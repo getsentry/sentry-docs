@@ -17,9 +17,9 @@ Ability to set attributes on events sent to Sentry. They should be configurable 
 
 Automatic addition of useful attributes such as `tags` or `extra`. Typically means the SDK hooks into a framework so that it can set attributes that are known to be useful for most users.
 
-## Context system
+## Scopes system
 
-A system for storing data that has to do with a given context. What context means depends on the application, for a web framework it is most likely a single request/response cycle. For a mobile application there is often just one single context that represents the single user and their actions. Context can be difficult to implement because it often has to deal with threads or concurrency and can involve deep integration with frameworks. [See the context page]({%- link _documentation/clientdev/context.md -%}#context) for more information.
+A system for storing data that has to do with a given scope. What scope means depends on the application, for a web framework it is most likely a single request/response cycle. For a mobile application there is often just one single scope that represents the single user and their actions. Scopin g can be difficult to implement because it often has to deal with threads or concurrency and can involve deep integration with frameworks. [See the scopes page]({%- link _documentation/clientdev/scopes.md -%}#scope) for more information.
 
 ## Breadcrumbs
 

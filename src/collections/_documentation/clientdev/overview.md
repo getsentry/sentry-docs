@@ -26,7 +26,6 @@ Additionally, the following features are highly encouraged:
 -   Automated error capturing (e.g. uncaught exception handlers)
 -   Logging framework integration
 -   Non-blocking event submission
--   Basic data sanitization (e.g. filtering out values that look like passwords)
 -   Context data helpers (e.g. setting the current user, recording breadcrumbs)
 -   Event sampling
 -   Honor Sentry’s HTTP 429 Retry-After header
@@ -42,24 +41,38 @@ Generally, using an SDK consists of three steps for the end user, which should l
 1.  Creation of the SDK (sometimes this is hidden from the user):
 
     ```javascript
-    var myClient = new SentryClient('{DSN}');
+    Sentry.init({dsn: '___DSN___'});
     ```
+
+    ```python
+    sentry_sdk.init('___DSN___')
+    ```
+
 2.  Capturing an event:
 
     ```javascript
-    var resultId = myClient.captureException(myException);
+    var resultId = Sentry.captureException(myException);
+    ```
+
+    ```python
+    result_id = sentry_sdk.capture_exception(my_exception);
     ```
 3.  Using the result of an event capture:
 
-    ```python
-    println('Your exception was recorded as %s', resultId);
+    ```javascript
+    alert(`Your exception was recorded as ${resultId}`);
     ```
 
-The constructor ideally allows several configuration methods. The first argument should always be the DSN value (if possible), followed by an optional secondary argument which is a map of options:
+    ```python
+    println('Your exception was recorded as %s', result_id);
+    ```
+
+`init` ideally allows several configuration methods. The first argument should always be the DSN value (if possible):
 
 ```javascript
-client = new SentryClient('{DSN}', {
-    'tags': {'foo': 'bar'}
+Sentry.init({
+    'dsn': '___DSN___',
+    'foo': 'bar'
 })
 ```
 
@@ -71,49 +84,18 @@ If an empty DSN is passed, you should treat it as valid option which signifies d
   content=__alert_content
 %}
 
-Which options you support is up to you, but ideally you would provide defaults for generic values that can be passed to the capture methods.
+Additionally, you should provide global functions which allow for capturing of
+a basic message or exception:
 
-Once you accept the options, you should output a logging message describing whether the SDK has been configured actively (as in, it will send to the remote server), or if it has been disabled. This should be done with whatever standard logging module is available for your platform.
-
-Additionally, you should provide methods (depending on the platform) which allow for capturing of a basic message and an exception-type:
-
--   `SentryClient.captureMessage(message)`
--   `SentryClient.captureException(exception)`
-
-The above methods should also allow optional arguments (or a map of arguments). For example:
-
-```javascript
-client.captureException(myException, {
-    'tags': {'foo': 'bar'},
-})
-```
+-   `Sentry.captureMessage(message)`
+-   `Sentry.captureException(exception)`
 
 If your platform supports block statements, it is recommended that you provide something like the following:
 
 ```
-with client.captureExceptions(tags={'foo': 'bar'}):
+with capture_exceptions():
     # do something that will cause an error
     1 / 0
-```
-
-{% capture __alert_content -%}
-In the above example, we’re passing any options that would normally be passed to the capture methods along with the block wrapper.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
-
-Finally, provide a CLI to test your SDK’s configuration. Python example:
-
-```bash
-raven test {DSN}
-```
-
-Ruby example:
-
-```bash
-rake raven:test {DSN}
 ```
 
 ## Parsing the DSN
@@ -133,7 +115,7 @@ The final endpoint you’ll be sending requests to is constructed per the follow
 For example, given the following constructor:
 
 ```javascript
-new SentryClient('https://public:secret@sentry.example.com/1')
+Sentry.init({dsn: 'https://public:secret@sentry.example.com/1'})
 ```
 
 You should parse the following settings:
@@ -328,52 +310,12 @@ def should_try(self):
     return time.time() - self.last_check > interval
 ```
 
-## Tags
+## Contextual data and concurrency (scopes, contexts, hubs)
 
-Tags are key/value pairs that describe an event. They should be configurable in the following contexts:
+Most of our SDKs allow the user to:
 
--   Environment (SDK-level)
--   Thread (block-level)
--   Event (as part of capture)
+* Configure multiple clients (i.e. use multiple DSNs)
+* Attach additional data to events
 
-Each of these should inherit its parent. So for example, if you configure your SDK as so:
-
-```python
-client = Client(..., {
-    'tags': {'foo': 'bar'},
-})
-```
-
-And then you capture an event:
-
-```python
-client.captureMessage('test', {
-    'tags': {'foo': 'baz'},
-})
-```
-
-The SDK should send the following upstream for `tags`:
-
-```python
-{
-    "tags": [
-        ["foo", "bar"],
-        ["foo", "baz"]
-    ],
-}
-```
-
-## Contextual Data
-
-You should also provide relevant contextual interfaces. These should last for the lifecycle of a request, and the general interface is “bind some kind of context”, and then at the end of a request lifecycle, clear any present context.
-
-This interface consists of _*_context_ methods, access to the _context_ dictionary as well as a _clear_ and _merge_ context method. Method methods exist usually depend on the SDK. The following methods generally make sense:
-
--   `client.user_context`
--   `client.tags_context`
--   `client.http_context`
--   `client.extra_context`
--   `client.context.merge`
--   `client.context.clear`
-
-For more information about this (specifically about how to deal with concurrency) please make sure to read [_Context Management_]({%- link _documentation/clientdev/context.md -%}).
+Please make sure to read [_Scopes_]({%- link
+_documentation/clientdev/scopes.md -%}) to learn how most SDKs implement this.

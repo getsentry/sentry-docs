@@ -10,4 +10,5 @@ The following is a guide for implementing a new Sentry SDK. It covers the protoc
 -   [Attributes]({%- link _documentation/clientdev/attributes.md -%})
 -   [Interfaces]({%- link _documentation/clientdev/interfaces/index.md -%})
 -   [Data Handling]({%- link _documentation/clientdev/data-handling.md -%})
--   [Context Management]({%- link _documentation/clientdev/context.md -%})
+-   [Scopes]({%- link _documentation/clientdev/scopes.md -%})
+-   [Terminology]({%- link _documentation/clientdev/terminology.md -%})
