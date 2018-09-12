@@ -1,6 +1,5 @@
 ---
 title: 'Native Usage'
-sidebar_order: 2
 ---
 
 Sentry can process Minidumps created when the Electron process or one of its renderers crashes. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event meta data including user information and breadcrumbs are included in these uploads.
