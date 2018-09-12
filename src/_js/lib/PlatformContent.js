@@ -136,7 +136,9 @@ const showPlatform = function(slug) {
   history.replaceState({}, '', updateUrlPlatform(location.href, slug));
 
   $('.config-key').each(function() {
-    this.setAttribute('data-config-key', $(this).text());
+    if (!this.getAttribute('data-config-key')) {
+      this.setAttribute('data-config-key', $(this).text().trim());
+    }
   });
 
   $('.unsupported-hint').remove();

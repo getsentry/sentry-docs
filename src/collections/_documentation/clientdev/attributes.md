@@ -1,6 +1,6 @@
 ---
 title: Attributes
-sidebar_order: 1
+sidebar_order: 3
 ---
 
 Attributes are simple data that Sentry understands to provide the most basic information about events. These are things like the unique ID of an event, the human readable message etc.
