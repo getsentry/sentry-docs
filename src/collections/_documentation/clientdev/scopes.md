@@ -1,6 +1,6 @@
 ---
 title: 'Scopes'
-sidebar_order: 6
+sidebar_order: 3
 ---
 
 All SDKs should have the concept of concurrency safe context storage. What this means depends on the language. The basic idea is that a user of the SDK can call a method to safely provide additional context information for all events that are about to be recorded.

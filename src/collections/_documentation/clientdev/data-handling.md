@@ -1,7 +1,9 @@
 ---
 title: 'Data Handling'
-sidebar_order: 5
+sidebar_order: 30
 ---
+
+Data handling is the standardized context in how we want SDKs help users filter data.
 
 ## Sensitive Data
 

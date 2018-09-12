@@ -1,6 +1,6 @@
 ---
 title: Interfaces
-sidebar_order: 4
+sidebar_order: 20
 ---
 
 Any additional value in the payload of an event which is not an attribute ([_Attributes_]({%- link _documentation/clientdev/attributes.md -%})) is assumed to be a data interface, where the key is the Python path to the interface class name, and the value is the data expected by the interface. Interfaces are used in a variety of ways including storing stacktraces, HTTP request information, and other metadata.

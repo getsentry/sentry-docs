@@ -1,6 +1,6 @@
 ---
 title: Attributes
-sidebar_order: 3
+sidebar_order: 10
 ---
 
 Attributes are simple data that Sentry understands to provide the most basic information about events. These are things like the unique ID of an event, the human readable message etc.
@@ -117,17 +117,21 @@ Additionally, there are several optional values which Sentry recognizes and are 
   -   `info`
   -   `debug`
 
-`culprit`
+`transaction`
 
-: The name of the transaction (or culprit) which caused this exception.
+: The name of the transaction which caused this exception
 
   For example, in a web app, this might be the route name: `/welcome/`
 
   ```json
   {
-    "culprit": "my.module.function_name"
+    "transaction": "/users/<username>/"
   }
   ```
+
+`culprit`
+
+: The name of the culprit which caused this exception.  This attribute is deprecated.
 
 `server_name`
 
