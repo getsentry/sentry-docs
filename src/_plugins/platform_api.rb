@@ -80,11 +80,12 @@ module Jekyll
 
       # Generate each file
       site.data["platforms"].each do |platform|
-        return nil if platform["wizard"].nil?
-        
+        return nil if platform["legacy_wizard"].nil?
+
         body = ""
-        platform["wizard"].each do |wiz|
+        platform["legacy_wizard"].each do |wiz|
           file, section = wiz.split '#'
+          p docs[file], file
           section ||= :document
           if docs[file][section].nil?
             raise "Cannot find section '#{section}' in #{file}"
