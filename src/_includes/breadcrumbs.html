@@ -14,6 +14,23 @@
       | where: "url", __url
       | first
     -%}
+    {%- assign __next_segment = __path[forloop.index] %}
+    {%- if __next_segment %}
+      {%- assign __next_url = __url | append: __next_segment | append: '/' %}
+      {%- assign __next_page = site.pages | concat: site.documentation
+        | where: "url", __next_url
+        | first
+      -%}
+    {%- else %}
+      {%- assign __next_page = page %}
+    {%- endif %}
+    {%- if __next_page and __next_page.sidebar_relocation %}
+      {%- assign __relocation_url = __slugs | pop | push: __next_page.sidebar_relocation | join: '/' | append: '/' %}
+      {%- assign __page = site.pages | concat: site.documentation
+        | where: "url", __relocation_url
+        | first
+      -%}
+    {%- endif %}
     {%- if __page -%}
       <li class="breadcrumb-item"><a href="{{ __page.url }}">{{ __page.breadcrumb | default: __page.title }}</a></li>
     {%- else -%}
