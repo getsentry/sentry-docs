@@ -7,3 +7,5 @@ using (SentrySdk.Init(...))
     // App code
 }
 ```
+
+In case of an unhandled exception that will crash the app, the SDK automatically disposes itself.
