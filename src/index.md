@@ -2,6 +2,8 @@
 title: 'Sentry Documentation'
 ---
 
+Welcome to the Sentry documentation.
+
 ## Getting Started
 
 To get you started, you might find some of these links relevant:
