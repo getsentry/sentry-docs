@@ -86,7 +86,3 @@ done
   title="Note"
   content=__alert_content
 %}
-
-## Deep Dive
-
--   [Using Sentry with Ionic]({%- link _documentation/clients/cordova/ionic.md -%})

@@ -8,6 +8,8 @@ On its own, `@sentry/browser` will report any uncaught exceptions triggered from
 
 Additionally, the Vue _integration_ will capture the name and props state of the active component where the error was thrown. This is reported via Vue’s `config.errorHandler` hook.
 
+Passing in `Vue` is optional, if you not pass it `window.Vue` has to be present.
+
 ```javascript
 import * as Sentry from '@sentry/browser'
 

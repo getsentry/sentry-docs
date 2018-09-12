@@ -1,5 +1,6 @@
 ---
-title: 'Using Sentry with Ionic'
+title: Ionic
+sidebar_order: 201
 ---
 
 To use Sentry with [Ionic](https://ionicframework.com/) you have to add _sentry-cordova_ as a depenendcy to you package.json.
