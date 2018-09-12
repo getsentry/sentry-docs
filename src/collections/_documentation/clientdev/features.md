@@ -1,5 +1,6 @@
 ---
 title: 'Expected Features'
+sidebar_order: 2
 ---
 
 The following is a description of features that are commonly expected in Sentry SDKs.

@@ -1,6 +1,6 @@
 ---
 title: 'Data Handling'
-sidebar_order: 3
+sidebar_order: 5
 ---
 
 ## Sensitive Data

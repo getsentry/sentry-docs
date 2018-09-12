@@ -1,6 +1,6 @@
 ---
 title: 'Context Management'
-sidebar_order: 2
+sidebar_order: 6
 ---
 
 All SDKs should have the concept of concurrency safe context storage. What this means depends on the language. The basic idea is that a user of the SDK can call a method to safely provide additional context information from whererever the user has access to the client object.
