@@ -56,46 +56,66 @@ module Jekyll
       docs = {}
       site.collections["documentation"].docs.each do |doc|
         content = doc.to_s
-        sections = {
-          :document => content
-        }
-        headings = get_headings(content)
-        headings.each do |heading|
-          startLine = heading[:line]
-          close = headings.find {|h| h[:line] > startLine && heading[:level] >= h[:level]}
-          if !close.nil?
-            endLine = close[:line]
-            sections[heading[:slug]] = content.lines[startLine, endLine - startLine].join
-          else
-            sections[heading[:slug]] = content.lines[startLine..-1].join
-          end
-        end
 
-        docs[doc.relative_path] = sections
+        if content =~ /<!-- WIZARD -->/
+          rendered = Jekyll::Renderer.new(site, doc, site.site_payload).run
+          wizard = /<!-- WIZARD -->([\s\S]+?)<!-- ENDWIZARD -->/.match(rendered).captures
+          docs[doc.relative_path] = { :content => wizard.first }
+        else
+          sections = {
+            :document => content
+          }
+          headings = get_headings(content)
+          headings.each do |heading|
+            startLine = heading[:line]
+            close = headings.find {|h| h[:line] > startLine && heading[:level] >= h[:level]}
+            if !close.nil?
+              endLine = close[:line]
+              sections[heading[:slug]] = content.lines[startLine, endLine - startLine].join
+            else
+              sections[heading[:slug]] = content.lines[startLine..-1].join
+            end
+          end
+
+          docs[doc.relative_path] = { :sections => sections }
+
+        end
       end
 
       indexPayload = {
         :platforms => {}
       }
 
+
+
       # Generate each file
       site.data["platforms"].each do |platform|
-        return nil if platform["legacy_wizard"].nil?
+        next if platform["legacy_wizard"].nil? && platform["wizard"].nil?
 
-        body = ""
-        platform["legacy_wizard"].each do |wiz|
-          file, section = wiz.split '#'
-          p docs[file], file
-          section ||= :document
-          if docs[file][section].nil?
-            raise "Cannot find section '#{section}' in #{file}"
+        if platform["legacy_wizard"]
+          body = ""
+          platform["legacy_wizard"].each do |wiz|
+            file, section = wiz.split '#'
+            section ||= :document
+            doc = docs[file]
+            if doc[:sections]
+              section_content = doc[:sections][section]
+              if section_content.nil?
+                raise "Cannot find section '#{section}' in #{file}"
+              end
+              body += section_content
+            else
+              body = doc[:content]
+            end
+
           end
-          body += docs[file][section]
-        end
 
-        platform["body"] = site.find_converter_instance(
-          Jekyll::Converters::Markdown
-        ).convert(body)
+          platform["body"] = site.find_converter_instance(
+            Jekyll::Converters::Markdown
+          ).convert(body)
+        else
+          platform["body"] = docs['_documentation/learn/quickstart.md'][:content]
+        end
 
         pathData = Pathname(platform["doc_link"]).each_filename.to_a
 
