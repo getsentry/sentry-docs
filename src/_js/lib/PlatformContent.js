@@ -104,9 +104,13 @@ const showPlatform = function(slug) {
     let $active;
 
     const slugs = [slug, platform.fallback_platform];
+
     for (const index in slugs) {
       $active = $dropdownItems.filter(`[data-platform="${slugs[index]}"]`);
       if ($active.length) {
+        if (index > 0) { // means we are in fallback platform
+          $active.data('platform', platform.slug); // But if we click on it we want to keep our inital platform
+        }
         // We skip and don't use fallback platform
         break;
       }
