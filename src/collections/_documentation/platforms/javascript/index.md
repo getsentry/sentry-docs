@@ -28,6 +28,7 @@ Sentry.init({
     integrations.push(new MyCustomIntegration())
     return integrations
   }
+  // integrations: [new MyCustomIntegration()]
 })
 ```
 
