@@ -3,9 +3,9 @@ title: EntityFramework
 sidebar_order: 8
 ---
 
-Sentry has an integration with `EntityFramework` through the of the `Sentry.EntityFramework` NuGet package.
+Sentry has an integration with `EntityFramework` through the of the [Sentry.EntityFramework NuGet package](https://www.nuget.org/packages/Sentry.EntityFramework).
 
-> Looking for `EntityFramework Core`? That integration is achieved through the `Microsoft.Extensions.Logging` package.
+> Looking for `EntityFramework Core`? That integration is achieved through the [Sentry.Extensions.Logging]({%- link _documentation/platforms/dotnet/microsoft-extensions-logging.md -%}) package.
 
 
 ## Installation
@@ -13,13 +13,13 @@ Sentry has an integration with `EntityFramework` through the of the `Sentry.Enti
 Using package manager:
 
 ```powershell
-Install-Package Sentry.EntityFramework
+Install-Package Sentry.EntityFramework -Version {% sdk_version sentry.dotnet.ef %}
 ```
 
 Or using the .NET Core CLI:
 
 ```sh
-dotnet add Sentry.EntityFramework
+dotnet add Sentry.EntityFramework -v {% sdk_version sentry.dotnet.ef %}
 ```
 
 This package extends `Sentry` main SDK. That means that besides the EF features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
