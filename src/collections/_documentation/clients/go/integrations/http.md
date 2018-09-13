@@ -4,6 +4,7 @@ title: net/http
 
 Raven Go provides middleware that can be used with the stdlib `net/http` library to automatically handle panics that occur during an http request.
 
+<!-- WIZARD -->
 ## Installation
 
 Simply install `raven-go` through `go get`:
@@ -36,3 +37,4 @@ func root(w http.ResponseWriter, r *http.Request) {
 }
 http.HandleFunc("/", raven.RecoveryHandler(root))
 ```
+<!-- ENDWIZARD -->

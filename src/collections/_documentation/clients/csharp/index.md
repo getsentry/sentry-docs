@@ -4,6 +4,7 @@ title: 'C#'
 
 Raven is the C# client for Sentry. Raven relies on the most popular logging libraries to capture and convert logs before sending details to a Sentry instance.
 
+<!-- WIZARD -->
 ## Installation
 
 A [NuGet Package](https://www.nuget.org/packages/SharpRaven) is available for SharpRaven if you don’t want to compile it yourself.
@@ -29,6 +30,7 @@ catch (Exception exception)
     ravenClient.Capture(new SentryEvent(exception));
 }
 ```
+<!-- ENDWIZARD -->
 
 ## Logging Non-Exceptions
 

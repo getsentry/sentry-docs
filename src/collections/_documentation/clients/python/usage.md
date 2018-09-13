@@ -4,6 +4,7 @@ title: 'Basic Usage'
 
 This gives a basic overview of how to use the raven client with Python directly.
 
+<!-- WIZARD -->
 ## Capture an Error
 
 The most basic use for raven is to record one specific error that occurs:
@@ -26,6 +27,7 @@ To report an arbitrary event you can use the [`capture()`]({%- link _documentati
 ```python
 client.captureMessage('Something went fundamentally wrong')
 ```
+<!-- ENDWIZARD -->
 
 ## Adding Context
 

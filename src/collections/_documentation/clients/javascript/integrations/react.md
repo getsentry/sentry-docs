@@ -3,6 +3,7 @@ title: React
 sidebar_order: 10
 ---
 
+<!-- WIZARD -->
 ## Installation
 
 Start by adding the `raven.js` script tag to your page. It should be loaded as early as possible, before your main javascript bundle.
@@ -21,7 +22,7 @@ Raven.config('___PUBLIC_DSN___').install()
 ```
 
 At this point, Raven is ready to capture any uncaught exception.
-
+<!-- ENDWIZARD -->
 ## Expanded Usage
 
 If you’re using React 16 or above, [Error Boundaries](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html) are an important tool for defining the behavior of your application in the face of errors. Be sure to send errors they catch to Sentry using `Raven.captureException`, and optionally this is also a great opportunity to surface [User Feedback]({%- link _documentation/learn/user-feedback.md -%})

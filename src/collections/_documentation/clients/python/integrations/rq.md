@@ -5,6 +5,7 @@ sidebar_order: 12
 
 Starting with RQ version 0.3.1, support for Sentry has been built in.
 
+<!-- WIZARD -->
 ## Usage
 
 RQ natively supports binding with Sentry by passing your `SENTRY_DSN` through `rqworker`:
@@ -27,3 +28,4 @@ register_sentry(client, worker)
 ```
 
 Please see `rq`‘s documentation for more information: [http://python-rq.org/patterns/sentry/](http://python-rq.org/patterns/sentry/)
+<!-- ENDWIZARD -->

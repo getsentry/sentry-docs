@@ -5,6 +5,7 @@ sidebar_order: 5
 
 Symfony is supported via the [sentry-symfony](https://github.com/getsentry/sentry-symfony) package as a native bundle.
 
+<!-- WIZARD -->
 ## Symfony 2+
 
 Install the `sentry/sentry-symfony` package:
@@ -40,3 +41,4 @@ Add your DSN to `app/config/config.yml`:
 sentry:
     dsn: "___PUBLIC_DSN___"
 ```
+<!-- ENDWIZARD -->

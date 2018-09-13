@@ -10,6 +10,7 @@ Sentry can process Minidump crash reports, a memory dump used on Windows and by 
 
 In order to receive symbolicated stack traces, you have to upload debug information to Sentry. For more information, see [Uploading Debug Information](#minidump-dif).
 
+<!-- WIZARD -->
 ## Platform and Language Support
 
 Minidumps are currently supported for **Windows, macOS and Linux**. There is no limitation as to which programming language can be used. Sentry can also demangle symbols from the following languages; other languages will show the mangled name instead:
@@ -18,6 +19,7 @@ Minidumps are currently supported for **Windows, macOS and Linux**. There is no 
 -   ObjectiveC and ObjectiveC++
 -   Swift
 -   Rust
+<!-- ENDWIZARD -->
 
 ## What is a Minidump? {#what-is-a-minidump}
 
@@ -39,6 +41,7 @@ Minidumps are memory dumps of the process at the moment it crashes. As such, the
 
 In addition to this information, you can add further meta data specific to Sentry, which can help in organizing and analyzing issues. For more information, see [Passing Additional Data](#minidump-additional).
 
+<!-- WIZARD -->
 ## Creating and Uploading Minidumps {#minidump-integration}
 
 Depending on your operating system and programming language, there are various alternatives to create minidumps and upload them to Sentry. See the following resources for libraries that support generating minidump crash reports:
@@ -55,6 +58,7 @@ $ curl -X POST \
 ```
 
 To send additional information, simply add more form fields to this request. For a full description of fields accepted by Sentry, see [Passing Additional Data](#minidump-additional).
+<!-- ENDWIZARD -->
 
 ## Passing Additional Data {#minidump-additional}
 

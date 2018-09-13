@@ -3,6 +3,7 @@ title: 'Ruby on Rails'
 sidebar_order: 7
 ---
 
+<!-- WIZARD -->
 In Rails, all uncaught exceptions will be automatically reported.
 
 We support Rails 4 and newer.
@@ -55,3 +56,4 @@ end
 ## Caveats
 
 Currently, custom exception applications (_config.exceptions_app_) are not supported. If you are using a custom exception app, you must manually integrate Raven yourself.
+<!-- ENDWIZARD -->

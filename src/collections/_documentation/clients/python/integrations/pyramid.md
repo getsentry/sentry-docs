@@ -11,6 +11,7 @@ If you haven’t already, start by downloading Raven. The easiest way is with _p
 pip install raven --upgrade
 ```
 
+<!-- WIZARD -->
 ## PasteDeploy Filter
 
 A filter factory for [PasteDeploy](https://pastedeploy.readthedocs.io/en/latest/) exists to allow easily inserting Raven into a WSGI pipeline:
@@ -83,3 +84,4 @@ You may want to setup other loggers as well. See the [Pyramid Logging Documentat
 %}
 
 Instead of defining the DSN in the _.ini_ file you can also use the environment variable `SENTRY_DSN` which overwrites the setting in this file. Because of a syntax check you cannot remove the `args` setting completely, as workaround you can define an empty list of arguments `args = ()`.
+<!-- ENDWIZARD -->
