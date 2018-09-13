@@ -1,5 +1,27 @@
 require 'json'
 
+# The platform api is generated based on the `wizard` key in platforms.yml. This
+# key can either be an array of documents with optional section slugs, or `true`
+# which sets the value to `_documentation/quickstart.md` and renders only
+# the content for that platform.
+#
+# In the targeted files, the wizard section is indicated by a comment, like so:
+#   <!-- WIZARD optional-slug -->
+#   <!-- ENDWIZARD -->
+#
+# Slugs are optional and are only useful for documents where only one of many
+# sections must be referenced, or when sections must be reordered.
+#
+# When a file is specified without a section, all wizard blocks will be
+# concatinated. If a section is specified, only the matching block will be used.
+#
+# Example:
+#
+#   wizard: true
+#   wizard:
+#     - _documentation/path/to/doc.md
+#     - _documentation/path/to/doc-with-section.md#section-name
+
 module Jekyll
 
   class CategoryPage < Page
