@@ -1,0 +1,14 @@
+```python
+import sentry_sdk
+
+def before_send(event, hint):
+    if 'exc_info' in hint:
+        exc_type, exc_value, tb = hint['exc_info']
+        if isinstance(exc_value, DatabaseUnavailable):
+            event['fingerprint'] = ['database-unavailable']
+    return event
+
+sentry_sdk.init(before_send=before_send)
+```
+
+For information about which hints are available see [hints in python]({% link _documentation/platforms/python/index.md %}#hints).
