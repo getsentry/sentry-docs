@@ -15,9 +15,15 @@ The list of common options across SDKs.  These work more or less the same in all
 subtle differences will exist to better support the platform.
 
 {:.config-key}
+### dsn
+
+The _DSN_ tells the SDK where to send the events to. This option is always required and different SDKs might pick this up from an environment 
+variable (`SENTRY_DSN`) or in the case if you are using the CDN version or the Browser SDK, it's already configured for you.
+
+{:.config-key}
 ### debug
 
-Turns debug mode on or off.  If debug is enabled SKD will attempt to print out useful debugging
+Turns debug mode on or off.  If debug is enabled SDK will attempt to print out useful debugging
 information if something goes wrong with sending the event.  The default is always `false` and
 it's generally not recommended to turn it on in production but doing so will not cause any
 safety concerns.

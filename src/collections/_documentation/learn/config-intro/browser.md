@@ -4,5 +4,5 @@ Options are passed to the `init()` as object:
 Sentry.init({
   maxBreadcrumbs: 50,
   debug: true,
-})
+});
 ```
