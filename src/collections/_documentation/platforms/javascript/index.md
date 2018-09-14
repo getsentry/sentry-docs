@@ -26,15 +26,11 @@ import * as Sentry from '@sentry/browser';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: (integrations) => {
-    integrations.push(new MyCustomIntegration())
-    return integrations
-  }
-  // integrations: [new MyCustomIntegration()]
+  integrations: [new MyAwesomeIntegration()],
 })
 ```
 
-### Removing a default Integration
+### Removing an Integration
 
 In this example we will remove the by default enabled integration for adding breadcrumbs to the event:
 
@@ -51,14 +47,20 @@ Sentry.init({
 
 ### Alternative way of setting an Integration
 
-You can also set an array of wanted _Integrations_:
 ```javascript
 import * as Sentry from '@sentry/browser';
 
+// All integration that come with an SDK can be found in 
+// Sentry.Integrations
+// Custom integration must conform this interface:
+// https://github.com/getsentry/sentry-javascript/blob/1ebeb9edec4b6c7b07a61e0caac426a66eedaf2a/packages/types/src/index.ts#L205
+
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: [new MyCustomIntegration()],
-  // integrations: [...Sentry.defaultIntegrations, new MyCustomIntegration()], 
+  integrations: (integrations) => {
+    integrations.push(new MyCustomIntegration())
+    return integrations
+  }
 })
 ```
 
@@ -68,7 +70,7 @@ Event and Breadcrumb `hints` are objects containing various information used to 
 
 They are available in two places. `beforeSend`/`beforeBreadcrumb` and `eventProcessors`. Those are two ways we'll allow users to modify what we put together.
 
-Examples based on your `cause` property (I use `message` for ease of reading, but there's nothing stopping you from modifying event stacktrace frames).
+Examples based on your `cause` property.
 
 `beforeSend`/`beforeBreadcrumb`:
 
@@ -82,7 +84,7 @@ init({
     const cause = hint.originalException.cause;
 
     if (cause) {
-      processedEvent.message = cause.message;
+      processedEvent.extra.cause = cause.message;
     }
 
     return processedEvent;
@@ -97,7 +99,11 @@ init({
 });
 ```
 
-`eventProcessor`:
+### EventProcessors
+
+With `eventProcessors` you are able to hook into the process of enriching the event with additional data.
+You can add you own `eventProcessor` on the current scope. The difference to `beforeSend` is that
+`eventProcessors` run on the scope level where `beforeSend` runs globally not matter in which scope you are.
 
 ```javascript
 import * as Sentry from '@sentry/browser';
@@ -108,7 +114,7 @@ Sentry.getCurrentHub().configureScope(scope => {
     const cause = hint.originalException.cause;
 
     if (cause) {
-      processedEvent.message = cause.message;
+      processedEvent.extra.cause = cause.message;
     }
 
     return processedEvent;

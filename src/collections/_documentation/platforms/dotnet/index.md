@@ -7,9 +7,6 @@ sidebar_order: 10
 
 This section will describe features, configurations and general functionality which are specific to the .NET SDK.
 
-> New to Sentry and the SDKs in general? Check out our [getting started]({%- link _documentation/learn/quickstart.md -%}) section and learn about our unified SDK API.
-If you already have the main concepts covered, continue reading for a deep dive into specifics of the .NET SDK.
-
 # Compatibility
 
 The main [Sentry NuGet package](https://www.nuget.org/packages/Sentry) targets .NET Standard 2.0. That means, according to the [compatibility table](https://docs.microsoft.com/en-us/dotnet/standard/net-standard), it is compatible with the following versions or newer:
