@@ -63,8 +63,8 @@ the browser JavaScript SDK will automatically record all location changes.
 
 SDKs following the unified API support customizing breadcrumbs through the `before_breadcrumb`
 hook.  This hook is passed an already assembled breadcrumb and in some SDKs an optional
-hint.  The hint object is platform specific and typically carries a reference to the source
-of the breadcrumb.  The `before_breadcrumb` function can then modify the breadcrumb or
-discard it.
+hint.  The function can modify the breadcrumb or decide to discard it entirely:
 
 {% include components/platform_content.html content_dir='before-breadcrumb' %}
+
+For information about what can be done with the hint see [hints]({% link _documentation/learn/hints.md %}).
