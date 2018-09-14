@@ -3,6 +3,8 @@ title: JavaScript
 sidebar_order: 10
 ---
 
+{% include learn-sdk.md platform="javascript" %}
+
 All our JavaScript related SDKs provide the same API still there are some differences between them
 which this section of the docs explains.
 

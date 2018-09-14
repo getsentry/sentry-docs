@@ -3,6 +3,8 @@ title: .NET
 sidebar_order: 10
 ---
 
+{% include learn-sdk.md platform="csharp" %}
+
 This section will describe features, configurations and general functionality which are specific to the .NET SDK.
 
 > New to Sentry and the SDKs in general? Check out our [getting started]({%- link _documentation/learn/quickstart.md -%}) section and learn about our unified SDK API.

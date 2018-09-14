@@ -3,6 +3,8 @@ title: Python
 sidebar_order: 3
 ---
 
+{% include learn-sdk.md platform="python" %}
+
 The [Sentry Python SDK](https://pypi.org/project/sentry-sdk) provides Sentry
 support for Python 2.7 and 3.4 or later.
 
