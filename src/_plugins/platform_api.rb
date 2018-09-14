@@ -1,4 +1,5 @@
-require 'json'
+require "Nokogiri"
+require "json"
 
 # The platform api is generated based on the `wizard` key in platforms.yml. This
 # key can either be an array of documents with optional section slugs, or `true`
@@ -22,151 +23,98 @@ require 'json'
 #     - _documentation/path/to/doc.md
 #     - _documentation/path/to/doc-with-section.md#section-name
 
-module Jekyll
+Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
 
-  class CategoryPage < Page
-    def initialize(site, base, dir, platform)
+  class PlatformAPIError < StandardError
+  end
+
+  class CategoryPage < Jekyll::Page
+    def initialize(site, base, dir, platform, name)
       @site = site
       @base = base
       @dir = dir
-      @name = "#{platform["slug"]}.json"
+      @name = name
       self.process(@name)
-      self.read_yaml(File.join(base, '_layouts'), 'json.json')
       keys = ["support_level","type","name","doc_link","body"]
-      self.data['json'] = platform.select {|key,_| keys.include? key}
-      self.data['json']['doc_link'] = "#{site.config["url"]}#{self.data['json']['doc_link']}"
+      payload = platform.select {|key,_| keys.include? key}
+      payload["doc_link"] = "#{site.config["url"]}#{payload['doc_link']}"
+      self.output = payload.to_json
     end
   end
 
-  class IndexPage < Page
-    def initialize(site, base, dir, payload)
+  class IndexPage < Jekyll::Page
+    def initialize(site, base, dir, payload, name)
       @site = site
       @base = base
       @dir = dir
-      @name = "_index.json"
+      @name = name
       self.process(@name)
-      self.read_yaml(File.join(base, '_layouts'), 'json.json')
-      self.data['json'] = payload
+      self.output = payload.to_json
     end
   end
 
-  class CategoryPageGenerator < Generator
-    safe true
+  index_payload = {
+    :platforms => {}
+  }
 
-    def get_headings(md)
-      headings = []
-      enabled = true
-      # Make an index of all headings and their line numbers in the file
-      md.each_line.with_index do |line, i|
-        enabled = !enabled if line =~ /^```/
-        if enabled && line =~ /^(#+)/
-          headings << {
-            line: i,
-            level: $1.size,
-            # Remove initial hash or trailing attribute list
-            slug: Utils.slugify(line.gsub(/(^#+ |\s?\{.*\}$)/,''))
-          }
-        end
-      end
-      headings
+  site.data["platforms"].each do |platform|
+    next if platform["wizard"].nil? || platform["wizard_parent"].nil?
+
+    # Create entry for _platforms/_index.json
+    file_name = "#{platform["slug"]}.json"
+    group_slug = platform["wizard_parent"]
+    is_self = group_slug === platform["slug"]
+    platform_slug = is_self ? "_self" : platform["slug"]
+    index_payload[:platforms][group_slug] ||= {}
+    index_payload[:platforms][group_slug][platform_slug] = {
+      :type => platform["type"],
+      :details => group_slug === platform_slug ? platform_slug : "#{group_slug}/#{file_name}",
+      :doc_link => "#{site.config["url"]}#{platform["doc_link"]}",
+      :name => platform["name"]
+    }
+
+    documentation = site.collections["documentation"].docs
+
+    directives = case platform["wizard"]
+    when TrueClass
+      ["_documentation/learn/quickstart.md"]
+    when Array
+      platform["wizard"]
+    when NilClass
+    else
+      raise PlatformAPIError, "Unsupported value for `wizard` in #{platform["slug"]}: Must be `true` or an array of file paths."
     end
 
-    def generate(site)
-      return if ENV["JEKYLL_DISABLE_PLATFORM_API"] == "true"
+    # Create entry for _platforms/<platform>.json or _platforms/<parent>/<platform>.json
+    wizard_snippets = directives.map do |directive|
+      file_path, section_id = directive.split "#"
+      document = documentation.find { |d| d.relative_path === file_path }
+      blocks = document.content.scan(/<!--\s?WIZARD\s?([^\s]*?)\s?-->([\s\S]+?)<!--\s?ENDWIZARD\s?-->/)
 
-      # Create an index of all the sections in every document
-      docs = {}
-      site.collections["documentation"].docs.each do |doc|
-        content = doc.to_s
-
-        if content =~ /<!-- WIZARD -->/
-          rendered = Jekyll::Renderer.new(site, doc, site.site_payload).run
-          wizard = /<!-- WIZARD -->([\s\S]+?)<!-- ENDWIZARD -->/.match(rendered).captures
-          docs[doc.relative_path] = { :content => wizard.first }
-        else
-          sections = {
-            :document => content
-          }
-          headings = get_headings(content)
-          headings.each do |heading|
-            startLine = heading[:line]
-            close = headings.find {|h| h[:line] > startLine && heading[:level] >= h[:level]}
-            if !close.nil?
-              endLine = close[:line]
-              sections[heading[:slug]] = content.lines[startLine, endLine - startLine].join
-            else
-              sections[heading[:slug]] = content.lines[startLine..-1].join
-            end
-          end
-
-          docs[doc.relative_path] = { :sections => sections }
-
-        end
+      body = if section_id.nil?
+        blocks.map { |b| b[1] }.join
+      else
+        match = blocks.find { |b| b[0] === section_id }
+        raise PlatformAPIError, "Could not find wizard section '#{section_id}' in #{file_path}" if match.nil?
+        match[1]
       end
 
-      indexPayload = {
-        :platforms => {}
-      }
-
-
-
-      # Generate each file
-      site.data["platforms"].each do |platform|
-        next if platform["legacy_wizard"].nil? && platform["wizard"].nil?
-
-        if platform["legacy_wizard"]
-          body = ""
-          platform["legacy_wizard"].each do |wiz|
-            file, section = wiz.split '#'
-            section ||= :document
-            doc = docs[file]
-            if doc[:sections]
-              section_content = doc[:sections][section]
-              if section_content.nil?
-                raise "Cannot find section '#{section}' in #{file}"
-              end
-              body += section_content
-            else
-              body = doc[:content]
-            end
-
-          end
-
-          platform["body"] = site.find_converter_instance(
-            Jekyll::Converters::Markdown
-          ).convert(body)
-        else
-          platform["body"] = docs['_documentation/learn/quickstart.md'][:content]
-        end
-
-        pathData = Pathname(platform["doc_link"]).each_filename.to_a
-
-        if pathData.size > 2
-          dir = "_platforms/#{pathData[1]}"
-          indexKey = platform["slug"]
-        else
-          dir = "_platforms"
-          indexKey = "_self"
-        end
-
-        platformKey = pathData[1]
-
-        detailName = "#{platform["slug"]}.json"
-
-        # In which the javascript guy pretends to ruby
-        indexPayload[:platforms][platformKey] ||= {}
-        indexPayload[:platforms][platformKey][indexKey] ||= {}
-        indexPayload[:platforms][platformKey][indexKey] = {
-          :type => platform["type"],
-          :details => pathData.size > 2 ? File.join(pathData[1], detailName) : detailName,
-          :doc_link => "#{site.config["url"]}#{platform["doc_link"]}",
-          :name => platform["name"]
-        }
-
-        site.pages << CategoryPage.new(site, site.source, dir, platform)
+      # Strip out platform content that doesn't relate to the current platform
+      noko_doc = Nokogiri::HTML(body)
+      noko_doc.css(".platform-specific-content").each do |node|
+        platform_content = node.css("[data-slug='#{platform["slug"]}']").children
+        raise PlatformAPIError, "Could not find platform content for '#{platform["slug"]}' in #{file_path}" if platform_content.empty?
+        node.replace platform_content
       end
-
-      site.pages << IndexPage.new(site, site.source, "_platforms", indexPayload)
+      noko_doc.css("body").children.to_s
     end
+
+    platform["body"] = wizard_snippets.join.strip
+
+    dir = is_self ? "_platforms" : "_platforms/#{group_slug}"
+
+    site.pages << CategoryPage.new(site, site.source, dir, platform, file_name)
   end
+
+  site.pages << IndexPage.new(site, site.source, "_platforms", index_payload, "_index.json")
 end
