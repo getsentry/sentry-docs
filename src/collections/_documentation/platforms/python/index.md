@@ -41,9 +41,17 @@ The Python SDK provides some common [hints]({% link _documentation/learn/hints.m
 and events.  These hints are passed as the `hint` parameter to `before_send` and `before_breadcrumb`
 (as well as event processors) as a dictionary.  More than one hint can be supplied but this is rare.
 
-* `exc_info`: If this hint is set then it's an exc info tuple in the form `(exc_type, exc_value, tb)`.  This
+`exc_info`
+
+: If this hint is set then it's an exc info tuple in the form `(exc_type, exc_value, tb)`.  This
   can be used to extract additional information from the original error object.
-* `log_record`: This hint is passed to breadcrumbs and contains the log record that crated it.  It can be used
+
+`log_record`
+
+: This hint is passed to breadcrumbs and contains the log record that crated it.  It can be used
   to extract additional information from the original `logging` log record that is not extracted by default.
   Likewise it can be useful to discard uninteresting breadcrumbs.
-* `httplib_request`: An `httplib` request object for breadcrumbs created from HTTP requests.
+
+`httplib_request`
+
+: An `httplib` request object for breadcrumbs created from HTTP requests.

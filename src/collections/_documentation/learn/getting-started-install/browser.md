@@ -6,6 +6,6 @@ The quickest way to get started is to use the CDN hosted version of the JavaScri
 
 {% include components/alert.html
   title="Don't like the CDN?"
-  content="You can also NPM install our `@sentry/browser` package instead of using the CDN version."
+  content="You can also [NPM install our browser library](?platform=browsernpm)"
   level="info"
 %}
