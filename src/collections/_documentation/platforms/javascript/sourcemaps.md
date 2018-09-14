@@ -7,7 +7,7 @@ Sentry supports un-minifying JavaScript via [Source Maps](http://blog.sentry.io/
 
 ## Specify the release
 
-If you are uploading sourcemap artifacts yourself, you must specify the release in your SDK see: [Releases]({%- link _documentation/learn/releases.md -%}).  Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/learn/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting sourcemaps on the remote server.
+If you are uploading source map artifacts yourself, you must specify the release in your SDK see: [Releases]({%- link _documentation/learn/releases.md -%}).  Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/learn/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
 
 ## Generating a Source Map
 
@@ -188,7 +188,7 @@ $ sentry-cli releases files <release_name> upload-sourcemaps --ext ts,map /path/
 Unfortunately, it can be quite challenging to ensure that source maps are actually valid and uploaded correctly. To ensure that everything is working as intended, you can add the `--validate` flag when uploading source maps. It attempts to parse the source maps and verify source references locally. Note that this flag might produce false positives if you have references to external source maps.
 {%- endcapture -%}
 {%- include components/alert.html
-  title="Validating Sourcemaps with Sentry CLI"
+  title="Validating source maps with Sentry CLI"
   content=__alert_content
 %}
 
@@ -200,7 +200,7 @@ $ sentry-cli releases finalize <release_name>
 
 For convenience, you can alternatively pass the `--finalize` flag to the `new` command which will immediately finalize the release.
 
-Note: You dont _have_ to upload the source files (ref’d by sourcemaps), but without them the grouping algorithm will not be as strong, and the UI will not show any contextual source.
+Note: You dont _have_ to upload the source files (ref’d by source maps), but without them the grouping algorithm will not be as strong, and the UI will not show any contextual source.
 
 Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
 
@@ -222,7 +222,7 @@ In this situation, **identical** JavaScript and source map files may be located 
 
     > ~/js/app.js
 
-The ~ prefix tells Sentry that for a given URL, **any** combination of protocol and hostname whose path is `/js/app.js` should use this artifact. **ONLY** use this method if your source/sourcemap files are identical at all possible protocol/hostname combinations. Note that Sentry will prioritize full URLs over tilde prefixed paths if found.
+The ~ prefix tells Sentry that for a given URL, **any** combination of protocol and hostname whose path is `/js/app.js` should use this artifact. **ONLY** use this method if your source/source map files are identical at all possible protocol/hostname combinations. Note that Sentry will prioritize full URLs over tilde prefixed paths if found.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Assets Accessible at Multiple Origins"
@@ -230,16 +230,16 @@ The ~ prefix tells Sentry that for a given URL, **any** combination of protocol 
 %}
 
 {% capture __alert_content -%}
-Unfortunately it can be quite challenging to ensure that sourcemaps are actually valid themselves and uploaded correctly. To ensure that everything is working as intended you can use the _–validate_ flag when uploading sourcemaps which will attempt to locally parse the sourcemap and look up the references. Note that there are known cases where the validate flag will indicate failures when the setup is correct (if you have references to external sourcemaps then the validation tool will indicate a failure).
+Unfortunately it can be quite challenging to ensure that source maps are actually valid themselves and uploaded correctly. To ensure that everything is working as intended you can use the _–validate_ flag when uploading source maps which will attempt to locally parse the source map and look up the references. Note that there are known cases where the validate flag will indicate failures when the setup is correct (if you have references to external source maps then the validation tool will indicate a failure).
 
 Here are some things you can check in addition to the validation step:
 
 -   Make sure that the URL prefix is correct for your files. This is easy to get wrong.
--   Make sure you upload the matching sourcemaps for your minimized files.
+-   Make sure you upload the matching source maps for your minimized files.
 -   Make sure that your minified files you have on your servers actually have references to your files.
 {%- endcapture -%}
 {%- include components/alert.html
-  title="Validating Sourcemaps with Sentry CLI"
+  title="Validating source maps with Sentry CLI"
   content=__alert_content
 %}
 
@@ -249,7 +249,7 @@ Source maps can sometimes be tricky to get going. If you’re having trouble, tr
 
 ### Verify your source maps are built correctly
 
-We maintain an online validation tool that can be used to test your source (and sourcemaps) against: [sourcemaps.io](http://sourcemaps.io).
+We maintain an online validation tool that can be used to test your source (and source maps) against: [sourcemaps.io](http://sourcemaps.io).
 
 Alternatively, if you are using Sentry CLI to upload source maps to Sentry, you can use the _–validate_ command line option to verify your source maps are correct.
 
