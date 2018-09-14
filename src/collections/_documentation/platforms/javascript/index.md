@@ -21,8 +21,7 @@ import * as Sentry from '@sentry/browser';
 
 // All integration that come with an SDK can be found in 
 // Sentry.Integrations
-// Custom integration must conform this interface:
-// https://github.com/getsentry/sentry-javascript/blob/1ebeb9edec4b6c7b07a61e0caac426a66eedaf2a/packages/types/src/index.ts#L205
+// Custom integration must conform this interface: https://bit.ly/2xdcbAR
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
@@ -50,11 +49,6 @@ Sentry.init({
 ```javascript
 import * as Sentry from '@sentry/browser';
 
-// All integration that come with an SDK can be found in 
-// Sentry.Integrations
-// Custom integration must conform this interface:
-// https://github.com/getsentry/sentry-javascript/blob/1ebeb9edec4b6c7b07a61e0caac426a66eedaf2a/packages/types/src/index.ts#L205
-
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: (integrations) => { // integrations will be all default integrations
@@ -64,60 +58,53 @@ Sentry.init({
 })
 ```
 
-### Hints
+## Hints
 
 Event and Breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. For events, those are things like `event_id`, `originalException`, `syntheticException` (used internally to generate cleaner stacktrace), and any other arbitrary `data` that user attaches. For breadcrumbs it's all implementation dependent. For XHR requests, hint contains xhr object itself, for user interactions it contains DOM element and event name etc.
 
 They are available in two places. `beforeSend`/`beforeBreadcrumb` and `eventProcessors`. Those are two ways we'll allow users to modify what we put together.
 
-Examples based on your `cause` property.
+These common hints currently exist for events:
 
-`beforeSend`/`beforeBreadcrumb`:
+`originalException`
 
-```javascript
-import * as Sentry from '@sentry/browser';
+: The original exception that caused the event to be created.  This is useful for changing how events
+  are grouped or to extract additional information.
 
-init({
-  dsn: '___PUBLIC_DSN___',
-  beforeSend(event, hint) {
-    const processedEvent = { ...event };
-    const cause = hint.originalException.cause;
+`syntheticException`
 
-    if (cause) {
-      processedEvent.extra.cause = cause.message;
-    }
+: When a string or a non error object is raised, Sentry creates a synthetic exception so you can get a
+  basic stacktrace.  This exception is stored here for further data extraction.
 
-    return processedEvent;
-  },
-  beforeBreadcrumb(breadcrumb, hint) {
-    if (breadcrumb.category === 'ui.click') {
-      const target = hint.event.target;
-      if (target.ariaLabel) breadcrumb.message = target.ariaLabel;
-    }
-    return breadcrumb;
-  },
-});
-```
+And these exist for breadcrumbs:
 
-### EventProcessors
+`event`
+
+: For breadcrumbs created from browser events the event is often supplied to the breadcrumb as hint.  This
+  for instance can be used to extract data from the target DOM element into a breadcrumb.
+
+`level` / `input`
+
+: For breadcrumbs created from console log interceptions this holds the original console log level and the
+  original input data to the log function.
+
+`response` / `input`
+
+: For breadcrumbs created from HTTP requests this holds the response object
+  (from the fetch api) and the input parameters to the fetch function.
+
+`request` / `response` / `event`
+
+: For breadcrumbs created from HTTP requests this holds the request and response object
+  (from the node HTTP API) as well as the node event (`response` or `error`).
+
+`xhr`
+
+: For breadcrumnbs created from HTTP requests done via the legacy `XMLHttpRequest` API this holds
+  the original xhr object.
+
+## EventProcessors
 
 With `eventProcessors` you are able to hook into the process of enriching the event with additional data.
 You can add you own `eventProcessor` on the current scope. The difference to `beforeSend` is that
 `eventProcessors` run on the scope level where `beforeSend` runs globally not matter in which scope you are.
-
-```javascript
-import * as Sentry from '@sentry/browser';
-
-Sentry.getCurrentHub().configureScope(scope => {
-  scope.addEventProcessor(async (event, hint) => {
-    const processedEvent = { ...event };
-    const cause = hint.originalException.cause;
-
-    if (cause) {
-      processedEvent.extra.cause = cause.message;
-    }
-
-    return processedEvent;
-  });
-});
-```
