@@ -39,7 +39,7 @@ import * as Sentry from '@sentry/browser';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: (integrations) => {
+  integrations: (integrations) => { // integrations will be all default integrations
     return integrations.filter(integration => integration.name !== 'Breadcrumbs');
   }
 })
@@ -57,7 +57,7 @@ import * as Sentry from '@sentry/browser';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: (integrations) => {
+  integrations: (integrations) => { // integrations will be all default integrations
     integrations.push(new MyCustomIntegration())
     return integrations
   }
