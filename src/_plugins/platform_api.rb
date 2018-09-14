@@ -86,7 +86,7 @@ module Jekyll
         platform["wizard"].each do |wiz|
           file, section = wiz.split '#'
           section ||= :document
-          if docs[file][section].nil?
+          if docs[file].nil? || docs[file][section].nil?
             raise "Cannot find section '#{section}' in #{file}"
           end
           body += docs[file][section]
