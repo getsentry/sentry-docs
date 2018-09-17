@@ -116,19 +116,30 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
 
     dir = is_self ? "_platforms" : "_platforms/#{group_slug}"
 
-    site.pages << CategoryPage.new(site, site.source, dir, platform, file_name)
-
-    # Generate legacy docs
+    # The first two cases are legacy structure for docs
     case platform['slug']
-    when "objc", "cocoa"
-      index_payload[:platforms][platform['slug']] ||= {}
-      index_payload[:platforms][platform['slug']]["_self"] = {
+    when "cocoa"
+      index_payload[:platforms]["react-native"] ||= {}
+      index_payload[:platforms]["react-native"]["_self"] = {
         :type => platform["type"],
         :details => file_name,
         :doc_link => "#{site.config["url"]}#{doc_link}",
         :name => platform["name"]
       }
       site.pages << CategoryPage.new(site, site.source, "_platforms", platform, file_name)
+      index_payload[:platforms]["react-native"].delete "cocoa"
+    when "objc"
+      index_payload[:platforms]["cocoa"] ||= {}
+      index_payload[:platforms]["cocoa"]["_self"] = {
+        :type => platform["type"],
+        :details => file_name,
+        :doc_link => "#{site.config["url"]}#{doc_link}",
+        :name => platform["name"]
+      }
+      site.pages << CategoryPage.new(site, site.source, "_platforms", platform, file_name)
+      site.pages << CategoryPage.new(site, site.source, dir, platform, file_name)
+    else
+      site.pages << CategoryPage.new(site, site.source, dir, platform, file_name)
     end
   end
 
