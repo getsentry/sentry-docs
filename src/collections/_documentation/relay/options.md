@@ -3,6 +3,8 @@ title: 'Configuration Options'
 sidebar_order: 2
 ---
 
+The base configuration for Relay lives in the file `.semaphore/config.yml`. All keys are `snake_case`.
+
 ## Relay
 
 {:.config-key}

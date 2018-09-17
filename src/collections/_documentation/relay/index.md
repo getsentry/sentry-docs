@@ -9,5 +9,7 @@ of a downtime. It is supposed to combine some of the benefits of on-premise
 hosting (control over data) with the benefits of SaaS (less administrational
 effort).
 
--   [Getting started]({%- link _documentation/relay/quickstart.md -%})
--   [Configuration options]({%- link _documentation/relay/options.md -%})
+-   [Getting Started]({%- link _documentation/relay/quickstart.md -%})
+-   [Configuration]({%- link _documentation/relay/options.md -%})
+-   [Project Configuration]({%- link _documentation/relay/project-config.md -%})
+-   [PII Configuration]({%- link _documentation/relay/pii-config.md -%})
