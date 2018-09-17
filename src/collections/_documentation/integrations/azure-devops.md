@@ -34,7 +34,17 @@ Issue tracking allows you to create Azure Devops issues from within Sentry, and 
 
 Once you’ve navigated to a specific issue, you’ll find the ‘Linked Issues’ section on the right hand panel. Here, you’ll be able to create or link Azure Devops issues.
 
-## Resolving in Commit/Pull Request
+Issue Management is available on the Small, Medium, Large, and Enterprise plans.
+
+## Issue Sync
+
+Sync comments, assignees and status updates for issues in Sentry to Azure Devops, to minimize duplication. When you delegate an issue to an assignee or update a status on Azure Devops, the updates will also populate in Sentry. When you resolve an issue in Sentry, it will automatically update in Azure Devops.
+
+To configure Issue sync, navigate to Organization Settings > Integrations, and click ‘Configure’ next to your Azure Devops instance. On the following page, you’ll see options of what information you’d like synced between Sentry and Azure Devops.
+
+Issue sync is available for organziations on the Medium, Large, and Enterprise plans.
+
+## Resolving in Commit
 
 Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
 
