@@ -8,6 +8,7 @@ sidebar_order: 2
 Adds support for automatic breadcrumb capturing from logs with `env_logger`.
 
 ## Configuration
+
 In the most trivial version you call this crate's init function instead of the
 one from `env_logger` and pass `None` as logger:
 

@@ -90,26 +90,18 @@ a basic message or exception:
 -   `Sentry.captureMessage(message)`
 -   `Sentry.captureException(exception)`
 
-If your platform supports block statements, it is recommended that you provide something like the following:
-
-```
-with capture_exceptions():
-    # do something that will cause an error
-    1 / 0
-```
-
 ## Parsing the DSN
 
 SDKs are encouraged to allow arbitrary options via the constructor, but must allow the first argument as a DSN string. This string contains the following bits:
 
 ```
-'{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+'{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PROJECT_ID}'
 ```
 
 The final endpoint you’ll be sending requests to is constructed per the following:
 
 ```
-'{URI}/api/{PROJECT ID}/store/'
+'{URI}/api/{PROJECT_ID}/store/'
 ```
 
 For example, given the following constructor:
@@ -132,7 +124,9 @@ The resulting POST request would then transmit to:
 ```
 
 {% capture __alert_content -%}
-If any of configuration values are not present, the SDK should notify the user immediately that they’ve misconfigured the SDK.
+Note that the secret part of the DSN is optional and effectively deprecated at this point.  While clients are
+still supposed to honor it if supplied future versions of Sentry will entirely ignore it.  The DSN parsing
+code must not require the secret key to be set.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -146,22 +140,27 @@ The body of the post is a string representation of a JSON object. For example, w
 ```json
 {
   "event_id": "fc6d8c0c43fc4630ad850ee518f1b9d0",
-  "culprit": "my.module.function_name",
+  "transaction": "my.module.function_name",
   "timestamp": "2011-05-02T17:41:36",
   "tags": {
     "ios_version": "4.0"
   },
-  "exception": [{
+  "exception": {"values":[{
     "type": "SyntaxError",
     "value": "Wattttt!",
     "module": "__builtins__"
-  }]
+  }]}
 }
 ```
 
-The body of the event can carry attributes or interface values. The difference between them is that attributes are very barebones key/value pairs (for the most part) and interfaces are rich styled interface elements. Examples of attribute are `event_id` or `tags` whereas the `exception` key is an interface.
+The body of the event can carry attributes or interface values. The difference
+between them is that attributes are very barebones key/value pairs (for the
+most part) and interfaces are rich styled interface elements. Examples of
+attribute are `event_id` or `tags` whereas the `exception` key is an interface.
 
-For a list of all supported attributes see [_Attributes_]({%- link _documentation/clientdev/attributes.md -%}). For a list of built-in interfaces see [_Interfaces_]({%- link _documentation/clientdev/interfaces/index.md -%}).
+For a list of all supported attributes see [_Attributes_]({%- link
+_documentation/clientdev/attributes.md -%}). For a list of built-in interfaces
+see [_Interfaces_]({%- link _documentation/clientdev/interfaces/index.md -%}).
 
 ## Authentication
 
@@ -174,6 +173,9 @@ X-Sentry-Auth: Sentry sentry_version=5,
   sentry_key=<public api key>,
   sentry_secret=<secret api key>
 ```
+
+The `secret_secret` must only be included if a secret key portion was contained in the DSN.  Future versions
+of the protocol will fully deprecate the secret key.
 
 {% capture __alert_content -%}
 You should include the SDK version string in the User-Agent portion of the header, and it will be used if `sentry_client` is not sent in the auth header.
@@ -213,13 +215,9 @@ In situations where it’s not possible to send the custom `X-Sentry-Auth` heade
 
 : The secret key which should be provided as part of the SDK configuration.
 
-  {% capture __alert_content -%}
-  You should only pass the secret key if you’re communicating via secure communication to the server. Client-side behavior (such as JavaScript) should use CORS, and only pass the public key.
-  {%- endcapture -%}
-  {%- include components/alert.html
-    title="Note"
-    content=__alert_content
-  %}
+  This key is effectively deprecated but for the time being should still be
+  emitted by SDKs as some older Sentry versions required it in most situations.
+  The secret key will be phased out entirely in future versions of Sentry.
 
 ## A Working Example
 
@@ -246,11 +244,15 @@ X-Sentry-Auth: Sentry sentry_version=7,
   "culprit": "my.module.function_name",
   "timestamp": "2011-05-02T17:41:36",
   "message": "SyntaxError: Wattttt!",
-  "exception": [{
-    "type": "SyntaxError",
-    "value": "Wattttt!",
-    "module": "__builtins__"
-  }]
+  "exception": {
+    "values": [
+      {
+        "type": "SyntaxError",
+        "value": "Wattttt!",
+        "module": "__builtins__"
+      }
+    ]
+  }
 }
 ```
 
@@ -283,9 +285,7 @@ Client request error: Missing client version identifier
 ```
 
 {% capture __alert_content -%}
-The X-Sentry-Error header will always be present with the precise error message and it is the preferred way to identify the root cause.
-
-If it’s not available, it’s likely the request was not handled by the API server, or a critical system failure has occurred.
+The X-Sentry-Error header will not always be present but it can be used to debug clients.  When it can be emitted it will contain the precise error message.  This header is a good way to identify the root cause.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -294,28 +294,18 @@ If it’s not available, it’s likely the request was not handled by the API se
 
 ## Handling Failures
 
-It is **highly encouraged** that your SDK handles failures from the Sentry server gracefully. This means taking care of several key things:
+It is **highly encouraged** that your SDK handles failures from the Sentry server gracefully.  SDKs are expected to honor the 429 status code and to not try sending until the retry-after kicks in.  It's acceptable for SDKs to drop events if Sentry is unavailable instead of retrying.
 
--   Soft failures when the Sentry server fails to respond in a reasonable amount of time (e.g. 3s)
--   Exponential backoff when Sentry fails (don’t continue trying if the server is offline)
--   Failover to a standard logging module on errors.
+## Concurrency (Scope and Hubs)
 
-For example, the Python SDK will log any failed requests to the Sentry server to a named logger, `sentry.errors`. It will also only retry every few seconds, based on how many consecutive failures its seen. The code for this is simple:
+SDKs are supposed to provide standardized concurrency handling through the
+concept of hubs and scopes.  This is explained in more details in the
+[_Concurrency_]({%- link _documentation/clientdev/unified-api.md -%}#concurrency) chapter of the unified API docs.
 
-```python
-def should_try(self):
-    if self.status == self.ONLINE:
-        return True
-    interval = min(self.retry_number, 6) ** 2
-    return time.time() - self.last_check > interval
-```
+## Layer of Integratiom
 
-## Contextual data and concurrency (scopes, contexts, hubs)
-
-Most of our SDKs allow the user to:
-
-* Configure multiple clients (i.e. use multiple DSNs)
-* Attach additional data to events
-
-Please make sure to read [_Scopes_]({%- link
-_documentation/clientdev/scopes.md -%}) to learn how most SDKs implement this.
+SDKs when possible are supposed to integrate on a low level which will capture as much of the runtime
+as possible.  This means that if an SDK can hook the runtime or a framework directly this is preferred
+over requiring users to subclass specific base classes (or mix in helpers).  For instance the Python
+SDK will monkey patch core functionality in frameworks to automatically pick up on errors and to integrate
+scope handling.

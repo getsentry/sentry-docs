@@ -1,13 +1,15 @@
 ---
 title: 'Data Handling'
-sidebar_order: 5
+sidebar_order: 30
 ---
+
+Data handling is the standardized context in how we want SDKs help users filter data.
 
 ## Sensitive Data
 
 In older SDKs you might sometimes see elaborate constructs to allow the user to strip away sensitive data. Newer SDKs no longer have this feature as it turned out to be too hard to maintain per-SDK. Instead, only two simple config options are left:
 
-- [_send-default-pii_]({%- link _documentation/learn/configuration.md -%}#send-default-pii) is **enabled by default**, meaning that data that is naturally sensitive is stripped entirely. That means, for example:
+- [_send-default-pii_]({%- link _documentation/learn/configuration.md -%}#send-default-pii) is **disabled by default**, meaning that data that is naturally sensitive is not sent by default. That means, for example:
 
   - When attaching HTTP requests to events, "raw" bodies (bodies which cannot be parsed as JSON or formdata) are removed, and known sensitive headers such as `Authentication` or `Cookies` are removed too.
 

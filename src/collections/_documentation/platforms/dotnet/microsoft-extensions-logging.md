@@ -3,23 +3,25 @@ title: Microsoft.Extensions.Logging
 sidebar_order: 12
 ---
 
-Sentry has an integration with `Microsoft.Extensions.Logging` through the of the `Sentry.Extensions.Logging` NuGet package.
+Sentry has an integration with `Microsoft.Extensions.Logging` through the [Sentry.Extensions.Logging NuGet package](https://www.nuget.org/packages/Sentry.Extensions.Logging).
 
 ## Installation
 
 Using package manager:
 
 ```powershell
-Install-Package Sentry.Extensions.Logging
+Install-Package Sentry.Extensions.Logging -Version {% sdk_version sentry.dotnet.extensions.logging %}
 ```
 
 Or using the .NET Core CLI:
 
 ```sh
-dotnet add Sentry.Extensions.Logging
+dotnet add Sentry.Extensions.Logging -v {% sdk_version sentry.dotnet.extensions.logging %}
 ```
 
 This package extends `Sentry` main SDK. That means that besides the logging related features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
+
+> NOTE: Messages logged from assemblies with the name starting with `Sentry` will not generate events.
 
 ## Features
 

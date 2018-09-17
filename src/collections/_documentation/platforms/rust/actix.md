@@ -17,6 +17,16 @@ unless you bind the actix hub.
 
 ## Example
 
+In your `Cargo.toml`:
+
+```toml
+[dependencies]
+sentry = "{% sdk_version sentry.rust %}"
+sentry-actix = "{% package_version cargo:sentry-actix %}"
+```
+
+And your Rust code:
+
 ```rust
 extern crate actix_web;
 extern crate sentry;

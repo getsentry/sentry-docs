@@ -41,3 +41,8 @@ In detail it provides:
 
 * Breadcrumbs for HTTP requests done using `httplib`, which also includes
   traffic going through `requests`.
+
+## Modules
+*Import name: `sentry_sdk.integrations.modules.ModulesIntegration`*
+
+Send a list of installed Python packages along with each event.

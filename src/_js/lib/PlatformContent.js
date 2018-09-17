@@ -104,9 +104,13 @@ const showPlatform = function(slug) {
     let $active;
 
     const slugs = [slug, platform.fallback_platform];
+
     for (const index in slugs) {
       $active = $dropdownItems.filter(`[data-platform="${slugs[index]}"]`);
       if ($active.length) {
+        if (index > 0) { // means we are in fallback platform
+          $active.data('platform', platform.slug); // But if we click on it we want to keep our inital platform
+        }
         // We skip and don't use fallback platform
         break;
       }
@@ -149,12 +153,21 @@ const showPlatform = function(slug) {
   syncRelatedElements();
 };
 
+$(document).on('click', 'a[href^="?platform="]', function(event) {
+  event.preventDefault();
+  const { query } = qs.parseUrl(this.href);
+  showPlatform(query.platform);
+});
+
 $(document).on('click', '[data-toggle="platform"]', function(event) {
   event.preventDefault();
   showPlatform($(event.target).data('platform'));
 });
 
 $(document).on('page.didUpdate', function(event) {
+  // cameron help me. why do i need to do this -- mitsuhiko
+  $('a[href^="?platform"]').attr('data-not-dynamic', '1');
+
   // Update the preferredPlatform based on the url.
   showPlatform(qs.parse(location.search).platform);
 });

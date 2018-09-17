@@ -15,9 +15,6 @@ import * as Sentry from '@sentry/browser'
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations (integrations) {
-    integrations.push(new Sentry.Integrations.Vue({ Vue }))
-    return integrations
-  }
+  integrations: [new Sentry.Integrations.Vue({ Vue })]
 })
 ```

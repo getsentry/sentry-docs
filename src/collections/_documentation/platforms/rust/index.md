@@ -3,6 +3,8 @@ title: Rust
 sidebar_order: 15
 ---
 
+{% include learn-sdk.md platform="rust" %}
+
 Sentry-Rust is the official Rust SDK for Sentry. It maps the entire Sentry
 protocol for Rust and provides convenient helpers for sending common types of
 events to Sentry.

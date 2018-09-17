@@ -9,10 +9,6 @@ module Jekyll
       @params = text.split(/\s+/)
     end
 
-    def render(context)
-      get_info["version"]
-    end
-
     def entity
       raise NotImplementedError.new
     end
@@ -47,14 +43,33 @@ module Jekyll
     def entity
       "packages"
     end
+
+    def render(context)
+      get_info["version"]
+    end
   end
 
   class SdkVersionTag < ReleaseRegistryTag
     def entity
       "sdks"
     end
+
+    def render(context)
+      get_info["version"]
+    end
+  end
+
+  class SdkRepoUrlTag < ReleaseRegistryTag
+    def entity
+      "sdks"
+    end
+
+    def render(context)
+      get_info["repo_url"]
+    end
   end
 end
 
 Liquid::Template.register_tag('package_version', Jekyll::PackageVersionTag)
 Liquid::Template.register_tag('sdk_version', Jekyll::SdkVersionTag)
+Liquid::Template.register_tag('sdk_repo_url', Jekyll::SdkRepoUrlTag)

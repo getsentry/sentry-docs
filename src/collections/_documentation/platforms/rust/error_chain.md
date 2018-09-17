@@ -12,6 +12,15 @@ Errors created by the `error-chain` crate can be logged with the
 
 ## Example
 
+In your `Cargo.toml`:
+
+```
+[dependencies]
+sentry = { version = "{% sdk_version sentry.rust %}", features = ["with_error_chain"] }
+```
+
+And your Rust code:
+
 ```rust
 use sentry::integrations::error_chain::capture_error_chain;
 let result = match function_that_might_fail() {

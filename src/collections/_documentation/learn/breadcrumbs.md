@@ -58,3 +58,13 @@ to record a breadcrumb if the user authenticates or another state change happens
 
 SDKs will automatically start recording breadcrumbs by enabling integrations.  For instance
 the browser JavaScript SDK will automatically record all location changes.
+
+## Breadcrumb Customization
+
+SDKs following the unified API support customizing breadcrumbs through the `before_breadcrumb`
+hook.  This hook is passed an already assembled breadcrumb and in some SDKs an optional
+hint.  The function can modify the breadcrumb or decide to discard it entirely:
+
+{% include components/platform_content.html content_dir='before-breadcrumb' %}
+
+For information about what can be done with the hint see [hints]({% link _documentation/learn/hints.md %}).
