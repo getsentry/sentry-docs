@@ -1,4 +1,4 @@
-require "Nokogiri"
+require "nokogiri"
 require "json"
 
 # The platform api is generated based on the `wizard` key in platforms.yml. This
