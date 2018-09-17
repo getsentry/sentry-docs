@@ -1,19 +1,19 @@
 ---
-title: Azure Devops
+title: Azure DevOps
 sidebar_order: 2
 ---
-Sentry’s new Azure Devops integration, formerly known as Visual Studio Team Services (VSTS), has the following features: commit tracking, issue management, issue sync, and sign in with Azure Devops. You can now use the data from your commits to VSTS to help you find and fix bugs faster.
+Sentry’s new Azure DevOps integration, formerly known as Visual Studio Team Services (VSTS), has the following features: commit tracking, issue management, issue sync, and sign in with Azure Devops. You can now use the data from your commits to Azure DevOps to help you find and fix bugs faster.
 
-## Configure Azure Devops
+## Configure Azure DevOps
 
 
 1. In Sentry, navigate to Organization Settings > Integrations. *Note: only users with Owner and Manager permissions will have access to this page.*
-2. If you have the legacy VSTS integration installed, you’ll see a button next to Azure Devops that says ‘Upgrade’. If you do not have the legacy VSTS integration installed, you’ll see a button that says ‘Install.’ Click this button.
+2. If you have the legacy VSTS integration installed, you’ll see a button next to Azure DevOps that says ‘Upgrade’. If you do not have the legacy VSTS integration installed, you’ll see a button that says ‘Install.’ Click this button.
 3. In the resulting modal, click ‘Add Installation’.
-4. An Azure Devops install window should pop up. Select the Azure Devops account you'd like to link with Sentry, and press 'Submit.'
+4. An Azure DevOps install window should pop up. Select the Azure DevOps account you'd like to link with Sentry, and press 'Submit.'
 
 
-Azure Devops should now be enabled for all projects under your Sentry organization, but you'll need to configure the features below.
+Azure DevOps should now be enabled for all projects under your Sentry organization, but you'll need to configure the features below.
 
 
 ## Commit Tracking
@@ -30,17 +30,17 @@ You’ll also see that the author of the suspect commit will be listed as a sugg
 
 ## Issue Management
 
-Issue tracking allows you to create Azure Devops issues from within Sentry, and link Sentry issues to existing Azure Devops Issues.
+Issue tracking allows you to create Azure DevOps issues from within Sentry, and link Sentry issues to existing Azure DevOps Issues.
 
-Once you’ve navigated to a specific issue, you’ll find the ‘Linked Issues’ section on the right hand panel. Here, you’ll be able to create or link Azure Devops issues.
+Once you’ve navigated to a specific issue, you’ll find the ‘Linked Issues’ section on the right hand panel. Here, you’ll be able to create or link Azure DevOps issues.
 
 Issue Management is available on the Small, Medium, Large, and Enterprise plans.
 
 ## Issue Sync
 
-Sync comments, assignees and status updates for issues in Sentry to Azure Devops, to minimize duplication. When you delegate an issue to an assignee or update a status on Azure Devops, the updates will also populate in Sentry. When you resolve an issue in Sentry, it will automatically update in Azure Devops.
+Sync comments, assignees and status updates for issues in Sentry to Azure DevOps, to minimize duplication. When you delegate an issue to an assignee or update a status on Azure DevOps, the updates will also populate in Sentry. When you resolve an issue in Sentry, it will automatically update in Azure DevOps.
 
-To configure Issue sync, navigate to Organization Settings > Integrations, and click ‘Configure’ next to your Azure Devops instance. On the following page, you’ll see options of what information you’d like synced between Sentry and Azure Devops.
+To configure Issue sync, navigate to Organization Settings > Integrations, and click ‘Configure’ next to your Azure DevOps instance. On the following page, you’ll see options of what information you’d like synced between Sentry and Azure DevOps.
 
 Issue sync is available for organziations on the Medium, Large, and Enterprise plans.
 
