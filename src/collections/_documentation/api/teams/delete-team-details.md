@@ -1,12 +1,14 @@
 ---
-title: 'Delete a Team'
-sidebar_order: 2
+{
+  "authentication": "", 
+  "description": "Schedules a team for deletion.**Note:** Deletion happens asynchronously and therefor is notimmediate.  However once deletion has begun the state of a projectchanges and will be hidden from most public views.", 
+  "example_request": "", 
+  "example_response": "", 
+  "method": "DELETE", 
+  "parameters": null, 
+  "path_parameters": null, 
+  "query_parameters": null, 
+  "sidebar_order": 5, 
+  "title": "Teams"
+}
 ---
-
-DELETE /api/0/teams/_{organization_slug}_/_{team_slug}_/
-
-: Schedules a team for deletion.
-
-  **Note:** Deletion happens asynchronously and therefor is not immediate. However once deletion has begun the state of a project changes and will be hidden from most public views.
-
-  <table class="table"><tbody valign="top"><tr><th>Method:</th><td>DELETE</td></tr><tr><th>Path:</th><td>/api/0/teams/<em>{organization_slug}</em>/<em>{team_slug}</em>/</td></tr></tbody></table>

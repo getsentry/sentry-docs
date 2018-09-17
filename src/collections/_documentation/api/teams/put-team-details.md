@@ -1,49 +1,25 @@
 ---
-title: 'Update a Team'
-sidebar_order: 7
+{
+  "authentication": "required", 
+  "description": "Update various attributes and configurable settings for the giventeam.", 
+  "example_request": "PUT /api/0/teams/the-interstellar-jurisdiction/the-obese-philosophers/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}\nContent-Type: application/json\n\n{\n  \"name\": \"The Inflated Philosophers\"\n}", 
+  "example_response": "HTTP/1.1\nContent-Length: 246\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"avatar\": {\n    \"avatarType\": \"letter_avatar\", \n    \"avatarUuid\": null\n  }, \n  \"dateCreated\": \"2018-09-10T20:37:04.882Z\", \n  \"hasAccess\": true, \n  \"id\": \"4\", \n  \"isMember\": false, \n  \"isPending\": false, \n  \"name\": \"The Inflated Philosophers\", \n  \"slug\": \"the-obese-philosophers\"\n}", 
+  "method": "PUT", 
+  "parameters": null, 
+  "path_parameters": [
+    {
+      "description": "the slug of the organization the team belongs to.", 
+      "name": "organization_slug", 
+      "type": "string"
+    }, 
+    {
+      "description": "the slug of the team to get.", 
+      "name": "team_slug", 
+      "type": "string"
+    }
+  ], 
+  "query_parameters": null, 
+  "sidebar_order": 4, 
+  "title": "Teams"
+}
 ---
-
-PUT /api/0/teams/_{organization_slug}_/_{team_slug}_/
-
-: Update various attributes and configurable settings for the given team.
-
-  <table class="table"><tbody valign="top"><tr><th>Path Parameters:</th><td><ul><li><strong>organization_slug</strong> (<em>string</em>) – the slug of the organization the team belongs to.</li><li><strong>team_slug</strong> (<em>string</em>) – the slug of the team to get.</li></ul></td></tr><tr><th>Parameters:</th><td><ul><li><strong>name</strong> (<em>string</em>) – the new name for the team.</li><li><strong>slug</strong> (<em>string</em>) – a new slug for the team. It has to be unique and available.</li></ul></td></tr><tr><th>Authentication:</th><td>required</td></tr><tr><th>Method:</th><td>PUT</td></tr><tr><th>Path:</th><td>/api/0/teams/<em>{organization_slug}</em>/<em>{team_slug}</em>/</td></tr></tbody></table>
-
-## Example
-
-```http
-PUT /api/0/teams/the-interstellar-jurisdiction/the-obese-philosophers/ HTTP/1.1
-Authorization: Bearer {base64-encoded-key-here}
-Host: sentry.io
-Content-Type: application/json
-
-{
-  "name": "The Inflated Philosophers"
-}
-```
-
-```http
-HTTP/1.1 200 OK
-Allow: GET, PUT, DELETE, HEAD, OPTIONS
-Content-Language: en
-Content-Length: 246
-Content-Type: application/json
-Vary: Accept-Language, Cookie
-X-Content-Type-Options: nosniff
-X-Frame-Options: deny
-X-Xss-Protection: 1; mode=block
-
-{
-  "slug": "the-obese-philosophers",
-  "name": "The Inflated Philosophers",
-  "hasAccess": true,
-  "isPending": false,
-  "dateCreated": "2018-08-22T18:24:15.867Z",
-  "avatar": {
-    "avatarUuid": null,
-    "avatarType": "letter_avatar"
-  },
-  "isMember": false,
-  "id": "4"
-}
-```

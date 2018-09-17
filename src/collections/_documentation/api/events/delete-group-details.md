@@ -1,29 +1,20 @@
 ---
-title: 'Remove an Issue'
-sidebar_order: 7
+{
+  "authentication": "required", 
+  "description": "Removes an individual issue.", 
+  "example_request": "DELETE /api/0/issues/5/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}", 
+  "example_response": "HTTP/1.1\nContent-Length: 0\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny", 
+  "method": "DELETE", 
+  "parameters": null, 
+  "path_parameters": [
+    {
+      "description": "the ID of the issue to delete.", 
+      "name": "issue_id", 
+      "type": "string"
+    }
+  ], 
+  "query_parameters": null, 
+  "sidebar_order": 8, 
+  "title": "Events"
+}
 ---
-
-DELETE /api/0/issues/_{issue_id}_/
-
-: Removes an individual issue.
-
-  <table class="table"><tbody valign="top"><tr><th>Path Parameters:</th><td><strong>issue_id</strong> (<em>string</em>) – the ID of the issue to delete.</td></tr><tr><th>Authentication:</th><td>required</td></tr><tr><th>Method:</th><td>DELETE</td></tr><tr><th>Path:</th><td>/api/0/issues/<em>{issue_id}</em>/</td></tr></tbody></table>
-
-## Example
-
-```http
-DELETE /api/0/issues/5/ HTTP/1.1
-Authorization: Bearer {base64-encoded-key-here}
-Host: sentry.io
-```
-
-```http
-HTTP/1.1 202 ACCEPTED
-Allow: GET, PUT, DELETE, HEAD, OPTIONS
-Content-Language: en
-Content-Length: 0
-Vary: Accept-Language, Cookie
-X-Content-Type-Options: nosniff
-X-Frame-Options: deny
-X-Xss-Protection: 1; mode=block
-```
