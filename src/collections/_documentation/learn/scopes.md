@@ -31,7 +31,7 @@ As you start using an SDK a scope and hub are automatically created for you out
 of the box.  The hub you are unlikely to be interacting with directly unless you
 are writing an integration or you want to create or destroy scopes.  Scopes on the
 other hand are more user facing.  You can at any point in time call
-`configure_scope` to modify data stored on the scope.  This is for instance
+`configure-scope` to modify data stored on the scope.  This is for instance
 used to [modify the context]({% link _documentation/learn/context.md %}).
 
 {% capture __alert_content -%}
@@ -55,7 +55,7 @@ then merge the event with the topmost scope's data.
 
 ## Configuring the Scope
 
-The most useful operation when working with scopes is the `configure_scope` function.
+The most useful operation when working with scopes is the `configure-scope` function.
 It can be used to reconfigure the current scope.  This for instance can be used to
 add custom tags or to inform sentry about the currently authenticated user.
 
@@ -64,19 +64,20 @@ add custom tags or to inform sentry about the currently authenticated user.
 To learn what useful information can be associated with scopes see
 [the context documentation]({% link _documentation/learn/context.md %}).
 
-## Local Scope
+## Local Scopes
 
-We also have a function called `with_scope` which is also very helpful 
-if you only want to send data with one specific event.
-In the following example we are using `with_scope` to attach a `level` and a `tag` to only 
-one specific `captureException`:
+We also have support for pushing and configuring a scope in one go.  This is
+typically called `with-scope` or `push-scope` which is also very helpful 
+if you only want to send data with one specific event.  In the following example we are using
+that function to attach a `level` and a `tag` to only one specific error:
 
 {% include components/platform_content.html content_dir='with-scope' %}
 
-While this example looks similar to `configure_scope` it very different, in the sense that 
-`configure_scope` actually changes the current active scope, all successive calls to `configure_scope` 
-will keep the changes.  
-While on the other hand using `with_scope` creates a clone of the current scope
+While this example looks similar to `configure-scope` it very different, in the sense that 
+`configure-scope` actually changes the current active scope, all successive calls to `configure-scope` 
+will keep the changes.
+
+While on the other hand using `with-scope` creates a clone of the current scope
 and will stay isolated until the function call is completed.  
 So you can either set context information in there that you don't want to be somewhere 
 else or create do not attach any context information at all
