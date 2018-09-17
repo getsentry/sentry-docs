@@ -116,6 +116,13 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
     dir = is_self ? "_platforms" : "_platforms/#{group_slug}"
 
     site.pages << CategoryPage.new(site, site.source, dir, platform, file_name)
+
+    # Special cases for legacy docs
+    case platform['slug']
+    when "objc", "cocoa", "swift"
+      site.pages << CategoryPage.new(site, site.source, "_platforms", platform, file_name)
+      site.pages << CategoryPage.new(site, site.source, "_platforms", platform, file_name)
+    end
   end
 
   site.pages << IndexPage.new(site, site.source, "_platforms", index_payload, "_index.json")
