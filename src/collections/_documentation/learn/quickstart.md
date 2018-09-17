@@ -14,9 +14,9 @@ Getting started with Sentry is a three step process:
 2.  [Install your SDK](#pick-a-client-integration)
 2.  [Configure it](#configure-the-sdk)
 
-## Install a SDK {#pick-a-client-integration}
+## Install an SDK {#pick-a-client-integration}
 
-Sentry captures data by using a SDK within your application’s runtime. These are platform specific and allow Sentry to have a deep understanding of both how your application works. In case your environment is very specific, you can also roll your own SDK using our document [_SDK API_]({%- link _documentation/clientdev/index.md -%}).
+Sentry captures data by using an SDK within your application’s runtime. These are platform specific and allow Sentry to have a deep understanding of both how your application works. In case your environment is very specific, you can also roll your own SDK using our document [_SDK API_]({%- link _documentation/clientdev/index.md -%}).
 
 {% include components/platform_content.html content_dir='getting-started-install' %}
 
