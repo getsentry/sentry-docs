@@ -38,7 +38,6 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
       self.process(@name)
       keys = ["support_level","type","name","doc_link","body"]
       payload = platform.select {|key,_| keys.include? key}
-      payload["doc_link"] = "#{site.config["url"]}#{payload['doc_link']}"
       self.output = payload.to_json
     end
   end
@@ -67,11 +66,12 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
     group_slug = platform["wizard_parent"]
     is_self = group_slug === platform["slug"]
     platform_slug = is_self ? "_self" : platform["slug"]
+    doc_link = platform["wizard"] === true ? "/quickstart/" : platform["doc_link"]
     index_payload[:platforms][group_slug] ||= {}
     index_payload[:platforms][group_slug][platform_slug] = {
       :type => platform["type"],
-      :details => group_slug === platform_slug ? platform_slug : "#{group_slug}/#{file_name}",
-      :doc_link => "#{site.config["url"]}#{platform["doc_link"]}",
+      :details => group_slug === platform["slug"] ? file_name : "#{group_slug}/#{file_name}",
+      :doc_link => "#{site.config["url"]}#{doc_link}",
       :name => platform["name"]
     }
 
