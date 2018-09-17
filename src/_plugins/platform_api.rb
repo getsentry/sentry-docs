@@ -25,10 +25,10 @@ require "json"
 
 Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
 
-  class PlatformAPIError < StandardError
+  PlatformAPIError = Class.new(StandardError) do
   end
 
-  class CategoryPage < Jekyll::Page
+  CategoryPage = Class.new(Jekyll::Page) do
     def initialize(site, base, dir, platform, name)
       @site = site
       @base = base
@@ -42,7 +42,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
     end
   end
 
-  class IndexPage < Jekyll::Page
+  IndexPage = Class.new(Jekyll::Page) do
     def initialize(site, base, dir, payload, name)
       @site = site
       @base = base
