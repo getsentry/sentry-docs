@@ -3,9 +3,11 @@ title: 'Configuration Options'
 sidebar_order: 2
 ---
 
-The base configuration for Relay lives in the file `.semaphore/config.yml`. All keys are `snake_case`.
+The base configuration for Relay lives in the file `.semaphore/config.yml`.  All keys are `snake_case`.
 
 ## Relay
+
+General relay settings.
 
 {:.config-key}
 ### relay.upstream
@@ -21,14 +23,14 @@ It is not a good idea to set this to a value that will make the relay send error
 
 *string, default: `127.0.0.1`*
 
-The host the relay should bind to (network interface). Example: `0.0.0.0`
+The host the relay should bind to (network interface).  Example: `0.0.0.0`
 
 {:.config-key}
 ### relay.port
 
 *integer, default: `3000`*
 
-The port to bind for the unencrypted relay HTTP server. Example: `3000`
+The port to bind for the unencrypted relay HTTP server.  Example: `3000`
 
 {:.config-key}
 ### relay.tls_port
@@ -46,7 +48,7 @@ This is in addition to the `port` option: If you set up a HTTPS server at
 *string, optional*
 
 The filesystem path to the identity (DER-encoded PKCS12) to use for the HTTPS
-server. Example: `relay_dev.pfx`
+server.  Example: `relay_dev.pfx`
 
 {:.config-key}
 ### relay.tls_identity_password
@@ -82,7 +84,7 @@ Fine-tune caching of project state.
 
 *integer, default: `300` (5 minutes)*
 
-The cache timeout for project configurations in seconds. Irrelevant if you use
+The cache timeout for project configurations in seconds.  Irrelevant if you use
 the "simple proxy mode", where your project config is stored in a local file.
 
 {:.config-key}
@@ -122,7 +124,7 @@ Interval for watching local cache override files in seconds.
 
 ## Size Limits
 
-Controls various HTTP-related limits. All values are human-readable strings of a number and a human-readable unit, such as:
+Controls various HTTP-related limits.  All values are human-readable strings of a number and a human-readable unit, such as:
 
 - `1KiB`
 - `1MB`

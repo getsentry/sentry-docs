@@ -3,33 +3,25 @@ title: 'Getting started'
 sidebar_order: 1
 ---
 
-Download one of the binaries at
-[GitHub](https://github.com/getsentry/semaphore/releases), and store the
-downloaded binary somewhere in your `$PATH`. After that, you can use the config
-wizard:
+The relay server is called "semaphore".  Binaries can be downloaded from the
+[GitHub releases page](https://github.com/getsentry/semaphore/releases).  After
+downloading place the binary somewhere on your `PATH` and make it executable.
 
-    # The codename of Relay is semaphore
+The `config init` command is provided to initialize the initial config.  The
+config will be created the folder it's run from in a hidden `.semaphore`
+subdirectory:
+
     $ semaphore config init
-    Initializing relay in /Users/untitaker/projects/semaphore/.semaphore
-    There is no relay config yet. Do you want to create one?
-    > yes, create default config
-      yes, create custom config
-      no, abort
-    Do you want to enable the internal crash reporting?
-    > yes, share relay internal crash reports with sentry.io
-      no, do not share crash reports
-    There are currently no credentials set up. Do you want to create some?
-    > no, just use relay without setting up credentials (simple proxy mode, recommended)
-      yes, set up relay with credentials (currently requires own Sentry installation)
-    All done!
 
-{% capture __alert_content -%}
-If you're using on-prem, you need to create a custom config for your relay. Answer accordingly to the first question of the wizard.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
+The wizard will ask a few questions:
+
+1. default vs custom config.  In the default config the relay will connect to
+   sentry.io for sending and will generally use the defaults.  In the custom
+   config a different upstream can be configured.
+2. Relay internal crash reporting can be enabled or disabled.  When enabled the
+   relay will report its own internal errors to sentry.io to help us debug it.
+3. Lastly the relay will ask it should run authenticated with credentials or
+   not.  Currently we do not yet support authenticated mode against sentry.io.
 
 You now have a folder named `.semaphore` in your current working directory. To
 launch the server, run:
@@ -40,14 +32,14 @@ If you moved your config folder somewhere else, you can use the `-c` option:
 
     semaphore run -c ./my/custom/semaphore_folder/
 
-## Setting up a project
+## Setting up a Project
 
 Right now Relay is only really usable in "simple proxy mode" (without
 credentials), and as such calls the same exact endpoints on Sentry that an SDK
-would. That unfortunately also means you have to configure each project
-individually in Relay for now.
+would.  That also means you have to configure each project individually in
+Relay.
 
-Create a new file named:
+Create a new file in the form `project_id.json`:
 
 ```
 .semaphore/project/___PROJECT_ID___.json
@@ -67,9 +59,9 @@ With the following content:
 ```
 
 The relay has to know all public keys (i.e. the secret part of the DSN) that
-will send events to it. DSNs unknown for this project will be rejected.
+will send events to it.  DSNs unknown for this project will be rejected.
 
-## Sending a test event
+## Sending a Test Event
 
 Launch the server with `semaphore run`, and set up any SDK with the following DSN:
 
@@ -82,7 +74,7 @@ Relay setup. You should be able to use the SDK normally at this point. Events
 arrive at the Sentry instance that Relay is configured to use in
 `.semaphore/config.yml`.
 
-## PII stripping
+## PII Stripping
 
 Now let's get to the entire point of this proxy setup: Stripping sensitive
 data.

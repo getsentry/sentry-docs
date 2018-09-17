@@ -43,4 +43,4 @@ This is basically the same as the "Allowed Domains" setting in the Sentry UI.
 {:.config-key}
 ## config.piiConfig
 
-See [_PII Configuration_]({%- link _documentation/relay/pii-config.md -%}).
+See [_PII Configuration_]({%- link _documentation/relay/pii-config/index.md -%}).
