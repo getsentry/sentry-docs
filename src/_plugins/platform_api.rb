@@ -55,7 +55,25 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
   end
 
   index_payload = {
-    :platforms => {}
+    :platforms => {
+      # These are legacy cases
+      "cocoa": {
+        "_self": {
+          :type => "language",
+          :details => "objc.json",
+          :doc_link => "https://docs.sentry.io/clients/cocoa/",
+          :name => "Objective-C"
+        }
+      },
+      "react-native": {
+        "_self": {
+          :type => "language",
+          :details => "cocoa.json",
+          :doc_link => "https://docs.sentry.io/clients/react-native/",
+          :name => "React-Native"
+        }
+      },
+    }
   }
 
   site.data["platforms"].each do |platform|
@@ -117,9 +135,9 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
 
     site.pages << CategoryPage.new(site, site.source, dir, platform, file_name)
 
-    # Special cases for legacy docs
+    # Generate legacy docs
     case platform['slug']
-    when "objc", "cocoa", "swift"
+    when "objc", "cocoa"
       site.pages << CategoryPage.new(site, site.source, "_platforms", platform, file_name)
     end
   end
