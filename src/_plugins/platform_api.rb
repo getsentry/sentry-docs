@@ -121,7 +121,6 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
     case platform['slug']
     when "objc", "cocoa", "swift"
       site.pages << CategoryPage.new(site, site.source, "_platforms", platform, file_name)
-      site.pages << CategoryPage.new(site, site.source, "_platforms", platform, file_name)
     end
   end
 
