@@ -87,7 +87,7 @@ arrive at the Sentry instance that Relay is configured to use in
 Now let's get to the entire point of this proxy setup: Stripping sensitive
 data.
 
-The easiest way to go about this is if you already have a raw JSON payload from some SDK. Go to our PII config editor [PIInGUIn](https://getsentry.github.io/piinguin/), and:
+The easiest way to go about this is if you already have a raw JSON payload from some SDK. Go to our PII config editor [Piinguin](https://getsentry.github.io/piinguin/), and:
 
 1. Paste in a raw event
 2. Click on data you want eliminated
