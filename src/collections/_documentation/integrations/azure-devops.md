@@ -44,9 +44,9 @@ To configure Issue sync, navigate to Organization Settings > Integrations, and c
 
 Issue sync is available for organziations on the Medium, Large, and Enterprise plans.
 
-## Resolving in Commit
+## Resolve in Commit
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you send commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
