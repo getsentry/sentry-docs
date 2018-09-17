@@ -4,7 +4,7 @@ sidebar_order: 2
 ---
 Sentry’s new Azure Devops integration, formerly known as Visual Studio Team Services (VSTS), has the following features: commit tracking, issue management, issue sync, and sign in with Azure Devops. You can now use the data from your commits to VSTS to help you find and fix bugs faster.
 
-## Configure VSTS
+## Configure Azure Devops
 
 
 1. In Sentry, navigate to Organization Settings > Integrations. *Note: only users with Owner and Manager permissions will have access to this page.*
