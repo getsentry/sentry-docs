@@ -34,6 +34,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
       @base = base
       @dir = dir
       @name = name
+      @data ||= {}
       self.process(@name)
       keys = ["support_level","type","name","doc_link","body"]
       payload = platform.select {|key,_| keys.include? key}
@@ -48,6 +49,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
       @base = base
       @dir = dir
       @name = name
+      @data ||= {}
       self.process(@name)
       self.output = payload.to_json
     end
