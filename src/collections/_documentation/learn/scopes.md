@@ -3,7 +3,7 @@ title: Scopes and Hubs
 sidebar_order: 4
 ---
 
-When an event is captured and sent to Sentry SDKs will merge that event data with extra
+When an event is captured and sent to Sentry, SDKs will merge that event data with extra
 information from the current scope.  SDKs will typically automatically mange the scopes
 for you in the framework integrations and you don't need to think about them.  However
 you should know what a scope is and how you can use it for your advantage.
@@ -63,3 +63,21 @@ add custom tags or to inform sentry about the currently authenticated user.
 
 To learn what useful information can be associated with scopes see
 [the context documentation]({% link _documentation/learn/context.md %}).
+
+## Local Scope
+
+We also have a function called `with_scope` which is also very helpful 
+if you only want to send data with one specific event.
+In the following example we are using `with_scope` to attach a `level` and a `tag` to only 
+one specific `captureException`:
+
+{% include components/platform_content.html content_dir='with-scope' %}
+
+While this example looks similar to `configure_scope` it very different, in the sense that 
+`configure_scope` actually changes the current active scope, all successive calls to `configure_scope` 
+will keep the changes.  
+While on the other hand using `with_scope` creates a clone of the current scope
+and will stay isolated until the function call is completed.  
+So you can either set context information in there that you don't want to be somewhere 
+else or create do not attach any context information at all
+by calling `clear` on the scope, while the "global" scope remains unchanged.
