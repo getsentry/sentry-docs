@@ -96,10 +96,10 @@ For example:
 
 ```json
 {
-    "allowedDomains": ["*"],
-    "trustedRelays": [],
     "publicKeys": ["___PUBLIC_KEY___"],
     "config": {
+        "allowedDomains": ["*"],
+        "trustedRelays": [],
         "piiConfig": {
             "rules": {
                 "device_id": {
@@ -108,10 +108,10 @@ For example:
                     "redaction": {
                         "method": "hash"
                     }
-                },
-                "applications": {
-                    "freeform": ["device_id"]
                 }
+            },
+            "applications": {
+                "freeform": ["device_id"]
             }
         }
     }
