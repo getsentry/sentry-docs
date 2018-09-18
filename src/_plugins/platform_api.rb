@@ -113,6 +113,14 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
           raise PlatformAPIError, "Could not find platform content for '#{platform["slug"]}' in #{file_path}" if platform_content.empty?
           node.replace platform_content
         end
+
+        # Extract nested highlights so sentry CSS can target the `pre`s
+        noko_doc.css(".highlighter-rouge").each do |node|
+          highlighted_content = node.css("pre.highlight")
+          p highlighted_content
+          node.replace highlighted_content
+        end
+
         noko_doc.css("body").children.to_s
       end
 
