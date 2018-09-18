@@ -109,7 +109,7 @@ Shell: _/bin/bash_
 ```bash
 if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_NAME___
-export SENTRY_PROJECT=___PROJECT_NAME___
+export SENTRY_PROJECT=___PROJECT_ID___
 export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
 ERROR=$(sentry-cli upload-dsym 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
