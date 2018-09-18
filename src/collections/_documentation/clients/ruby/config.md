@@ -110,7 +110,7 @@ end
 
   Check out `Raven::Processor::SanitizeData` to see how a Processor is implemented.
 
-  You can also specify values to be sanitized. Any strings matched will be replaced with the string mask (********). One good use for this is to copy Rails’ filter_parameters:
+  You can also specify values to be sanitized. Any strings matched will be replaced with the string mask (********), and integers that are matched will be replaced with 0. Only String and Integer values can be sanitized, though the client will recursively traverse Hashes and Arrays to look for sanitizable values. One good use for this is to copy Rails’ filter_parameters:
 
   ```ruby
   config.sanitize_fields = Rails.application.config.filter_parameters.map(&:to_s)
