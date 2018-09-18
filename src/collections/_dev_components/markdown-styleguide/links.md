@@ -1,5 +1,6 @@
 ---
 title: Links
+layout: doc
 ---
 
 ```liquid
