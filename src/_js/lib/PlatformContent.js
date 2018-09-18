@@ -134,7 +134,7 @@ const showPlatform = function(slug) {
     $activePane.addClass('show active');
 
     // Update dropdown target title
-    $block.find('[data-toggle="dropdown"]').text($active.text());
+    $block.find('[data-platform-switcher-target]').text($active.text());
   });
 
   history.replaceState({}, '', updateUrlPlatform(location.href, slug));
