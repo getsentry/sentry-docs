@@ -135,7 +135,7 @@ buildscript {
 The plugin will then automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assembleRelease`. The credentials for the upload step are loaded from a `sentry.properties` file in your project root _or_ via environment variables, for more information [see the sentry-cli documentation]({%- link _documentation/learn/cli/configuration.md -%}#configuration-values). At the very minimum you will need something like this:
 
 ```gradle
-defaults.project=___PROJECT_NAME___
+defaults.project=___PROJECT_ID___
 defaults.org=___ORG_NAME___
 auth.token=YOUR_AUTH_TOKEN
 ```

@@ -71,12 +71,6 @@ const formatAPIURL = function(dsn) {
   return `${dsn.scheme}${dsn.host}/api`;
 };
 
-const formatProjectLabel = function(project = {}) {
-  const { projectSlug, organizationSlug } = project;
-  if (!projectSlug && !organizationSlug) return null;
-  return `${organizationSlug} / ${projectSlug}`;
-};
-
 const constructDSNObject = function(project = {}) {
   let dsn;
   if (project.dsn) {
@@ -103,7 +97,7 @@ const constructDSNObject = function(project = {}) {
   return {
     id: project.id || -1,
     group: escape(project.organizationName) || 'Example',
-    PROJECT_NAME: escape(formatProjectLabel(project)) || 'Your Project',
+    PROJECT_NAME: escape(project.name) || 'Your Project',
     PROJECT_ID: escape(project.projectSlug) || 'your-project',
     ORG_NAME: escape(project.organizationSlug) || 'your-org',
     DSN: formatDsn(dsn, { public: false }),
