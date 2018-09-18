@@ -96,7 +96,9 @@ For example:
 
 ```json
 {
-    "publicKeys": ["___PUBLIC_KEY___"],
+    "publicKeys": {
+        "___PUBLIC_KEY___": true
+    },
     "config": {
         "allowedDomains": ["*"],
         "trustedRelays": [],
