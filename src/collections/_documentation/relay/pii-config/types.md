@@ -131,9 +131,9 @@ Matches a local path (e.g. `C:/Users/foo/`).
 ```
 
 {:.config-key}
-#### remove
+#### anything
 
-Matches anything. This is basically equivalent to a wildcard regex.
+Matches any value. This is basically equivalent to a wildcard regex.
 
 For example, to remove all data with the PII kind `freeform`:
 
@@ -141,7 +141,7 @@ For example, to remove all data with the PII kind `freeform`:
 {
   "rules": {
     "remove_everything": {
-      "type": "remove",
+      "type": "anything",
       "redaction": {
         "method": "remove"
       }
