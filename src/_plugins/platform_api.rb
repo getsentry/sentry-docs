@@ -23,37 +23,36 @@ require "json"
 #     - _documentation/path/to/doc.md
 #     - _documentation/path/to/doc-with-section.md#section-name
 
+class PlatformAPIError < StandardError
+end
+
+class CategoryPage < Jekyll::Page
+  def initialize(site, base, dir, platform, name)
+    @site = site
+    @base = base
+    @dir = dir
+    @name = name
+    @data ||= {}
+    self.process(@name)
+    keys = ["support_level","type","name","doc_link","body"]
+    payload = platform.select {|key,_| keys.include? key}
+    self.output = payload.to_json
+  end
+end
+
+class IndexPage < Jekyll::Page
+  def initialize(site, base, dir, payload, name)
+    @site = site
+    @base = base
+    @dir = dir
+    @name = name
+    @data ||= {}
+    self.process(@name)
+    self.output = payload.to_json
+  end
+end
+
 Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
-
-  PlatformAPIError = Class.new(StandardError) do
-  end
-
-  CategoryPage = Class.new(Jekyll::Page) do
-    def initialize(site, base, dir, platform, name)
-      @site = site
-      @base = base
-      @dir = dir
-      @name = name
-      @data ||= {}
-      self.process(@name)
-      keys = ["support_level","type","name","doc_link","body"]
-      payload = platform.select {|key,_| keys.include? key}
-      self.output = payload.to_json
-    end
-  end
-
-  IndexPage = Class.new(Jekyll::Page) do
-    def initialize(site, base, dir, payload, name)
-      @site = site
-      @base = base
-      @dir = dir
-      @name = name
-      @data ||= {}
-      self.process(@name)
-      self.output = payload.to_json
-    end
-  end
-
   index_payload = {
     :platforms => {}
   }
