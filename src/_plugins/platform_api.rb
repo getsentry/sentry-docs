@@ -66,13 +66,13 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
     group_slug = platform["wizard_parent"]
     is_self = group_slug === platform["slug"]
     platform_slug = is_self ? "_self" : platform["slug"]
-    platform["doc_link"] = platform["wizard"] === true ? "/quickstart?platform=#{platform["slug"]}" : platform["doc_link"]
+    platform["doc_link"] = "#{site.config["url"]}#{ platform["wizard"] === true ? "/quickstart?platform=#{platform["slug"]}" : platform["doc_link"] }"
 
     index_payload[:platforms][group_slug] ||= {}
     index_payload[:platforms][group_slug][platform_slug] = {
       :type => platform["type"],
       :details => group_slug === platform["slug"] ? file_name : "#{group_slug}/#{file_name}",
-      :doc_link => "#{site.config["url"]}#{platform["doc_link"]}",
+      :doc_link => platform["doc_link"],
       :name => platform["name"]
     }
 
@@ -123,7 +123,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
       index_payload[:platforms]["react-native"]["_self"] = {
         :type => platform["type"],
         :details => file_name,
-        :doc_link => "#{site.config["url"]}#{platform["doc_link"]}",
+        :doc_link => platform["doc_link"],
         :name => platform["name"]
       }
       site.pages << CategoryPage.new(site, site.source, "_platforms", platform, file_name)
@@ -133,7 +133,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
       index_payload[:platforms]["cocoa"]["_self"] = {
         :type => platform["type"],
         :details => file_name,
-        :doc_link => "#{site.config["url"]}#{platform["doc_link"]}",
+        :doc_link => platform["doc_link"],
         :name => platform["name"]
       }
       site.pages << CategoryPage.new(site, site.source, "_platforms", platform, file_name)
