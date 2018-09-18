@@ -71,12 +71,6 @@ const formatAPIURL = function(dsn) {
   return `${dsn.scheme}${dsn.host}/api`;
 };
 
-const formatProjectLabel = function(project = {}) {
-  const { projectSlug, organizationSlug } = project;
-  if (!projectSlug && !organizationSlug) return null;
-  return `${organizationSlug} / ${projectSlug}`;
-};
-
 const constructDSNObject = function(project = {}) {
   let dsn;
   if (project.dsn) {
