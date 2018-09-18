@@ -10,10 +10,7 @@
 # The container will dump the generated documentation in markdown and JSON
 # formats into the /usr/src/output directory which you should mount as a volume
 #
-FROM python:2.7.11-slim
-
-RUN groupadd -r redis --gid=998 && useradd -r -g redis --uid=998 redis \
-    && groupadd -r postgres --gid=999 && useradd -r -g postgres --uid=999 postgres
+FROM python:2.7.15-slim-jessie
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         clang \
@@ -27,9 +24,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libxml2-dev \
         libxslt-dev \
         libyaml-dev \
-        llvm-3.5 \
+        llvm \
         bzip2 \
         make \
+        redis-server \
         unzip \
     && rm -rf /var/lib/apt/lists/*
 
@@ -37,10 +35,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PIP_NO_CACHE_DIR off
 ENV PIP_DISABLE_PIP_VERSION_CHECK on
 ENV PYTHONUNBUFFERED 1
-
-# Install Redis
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y --no-install-recommends redis-server
 
 RUN mkdir -p /usr/src/bin
 COPY scripts/build-api-docs /usr/bin
