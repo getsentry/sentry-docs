@@ -66,7 +66,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
     group_slug = platform["wizard_parent"]
     is_self = group_slug === platform["slug"]
     platform_slug = is_self ? "_self" : platform["slug"]
-    doc_link = platform["wizard"] === true ? "/quickstart/" : platform["doc_link"]
+    doc_link = platform["wizard"] === true ? "/quickstart?platform=#{platform["slug"]}" : platform["doc_link"]
 
     index_payload[:platforms][group_slug] ||= {}
     index_payload[:platforms][group_slug][platform_slug] = {
