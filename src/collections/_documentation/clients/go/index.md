@@ -15,11 +15,12 @@ The Go SDK is maintained and supported by Sentry but currently under development
 
 Raven-Go provides a Sentry client implementation for the Go programming language.
 
+<!-- WIZARD -->
 ## Installation
 
 Raven-Go can be installed like any other Go library through `go get`:
 
-```python
+```bash
 $ go get github.com/getsentry/raven-go
 ```
 
@@ -60,6 +61,7 @@ raven.CapturePanic(func() {
     // do all of the scary things here
 }, nil)
 ```
+<!-- ENDWIZARD -->
 
 ## Additional Context
 
@@ -89,11 +91,11 @@ func init() {
 
 For more detailed information about how to get the most out of `raven-go` there is additional documentation available that covers all the rest:
 
--   [Integrations]({%- link _documentation/clients/go/integrations/index.md -%})
-    -   [net/http]({%- link _documentation/clients/go/integrations/http.md -%})
+- [Integrations]({%- link _documentation/clients/go/integrations/index.md -%})
+  - [net/http]({%- link _documentation/clients/go/integrations/http.md -%})
 
 Resources:
 
--   [Bug Tracker](https://github.com/getsentry/raven-go/issues)
--   [GitHub Project](https://github.com/getsentry/raven-go)
--   [Godocs](https://godoc.org/github.com/getsentry/raven-go)
+- [Bug Tracker](https://github.com/getsentry/raven-go/issues)
+- [GitHub Project](https://github.com/getsentry/raven-go)
+- [Godocs](https://godoc.org/github.com/getsentry/raven-go)

@@ -3,6 +3,7 @@ title: Koa
 sidebar_order: 8
 ---
 
+<!-- WIZARD -->
 ```javascript
 var koa = require('koa');
 var Raven = require('raven');
@@ -18,3 +19,4 @@ app.on('error', function (err) {
 
 app.listen(3000);
 ```
+<!-- ENDWIZARD -->

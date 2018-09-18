@@ -3,6 +3,7 @@ title: Express
 sidebar_order: 7
 ---
 
+<!-- WIZARD -->
 ```javascript
 var app = require('express')();
 var Raven = require('raven');
@@ -30,3 +31,4 @@ app.use(function onError(err, req, res, next) {
 
 app.listen(3000);
 ```
+<!-- ENDWIZARD -->

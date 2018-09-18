@@ -13,6 +13,7 @@ If you haven’t already, start by downloading Raven. The easiest way is with _p
 pip install raven --upgrade
 ```
 
+<!-- WIZARD -->
 ## WSGI Middleware
 
 A Pylons-specific middleware exists to enable easy configuration from settings:
@@ -80,3 +81,4 @@ You may want to setup other loggers as well.
   title="Note"
   content=__alert_content
 %}
+<!-- ENDWIZARD -->

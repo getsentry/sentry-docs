@@ -18,8 +18,6 @@ Getting started with Sentry is a three step process:
 
 Sentry captures data by using an SDK within your application’s runtime. These are platform specific and allow Sentry to have a deep understanding of both how your application works. In case your environment is very specific, you can also roll your own SDK using our document [_SDK API_]({%- link _documentation/clientdev/index.md -%}).
 
-{% include components/platform_content.html content_dir='getting-started-install' %}
-
 {% capture __alert_content -%}
 Your platform is not listed?  There are more SDKs we support: [list of SDKs]({%- link _documentation/platforms/index.md -%})
 {%- endcapture -%}
@@ -27,6 +25,9 @@ Your platform is not listed?  There are more SDKs we support: [list of SDKs]({%-
   title="Note"
   content=__alert_content
 %}
+
+<!-- WIZARD -->
+{% include components/platform_content.html content_dir='getting-started-install' %}
 
 ## Configure the SDK {#configure-the-sdk}
 
@@ -36,6 +37,7 @@ After you completed setting up a project in Sentry, you’ll be given a value wh
 
 Most SDKs will now automatically collect data if available, some require some extra configuration as automatic error collecting is not
 available due to platform limitations.
+<!-- ENDWIZARD -->
 
 {% capture __alert_content -%}
 As of Sentry 9, we removed the need to provide the secret key. Older versions of SDKs may still require you to provide the DSN including the secret which is now called DSN (Legacy). Please check the corresponding docs of the SDK you are using if you still need to provide the secret.

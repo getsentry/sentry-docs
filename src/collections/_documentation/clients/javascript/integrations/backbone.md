@@ -3,6 +3,7 @@ title: Backbone
 sidebar_order: 8
 ---
 
+<!-- WIZARD -->
 ## Installation
 
 Start by adding the `raven.js` script tag to your page. It should be loaded as early as possible.
@@ -21,3 +22,4 @@ Raven.config('___PUBLIC_DSN___').install()
 ```
 
 At this point, Raven is ready to capture any uncaught exception.
+<!-- ENDWIZARD -->

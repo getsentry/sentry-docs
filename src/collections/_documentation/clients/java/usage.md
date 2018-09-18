@@ -5,6 +5,7 @@ sidebar_order: 2
 
 **Note:** The following page provides examples on how to configure and use Sentry directly. It is **highly recommended** that you use one of the [provided integrations]({%- link _documentation/clients/java/modules/index.md -%}#integrations) if possible. Once the integration is configured you can _also_ use Sentry’s static API, as shown below, in order to do things like record breadcrumbs, set the current user, or manually send events.
 
+<!-- WIZARD installation -->
 ## Installation
 
 Using Maven:
@@ -30,7 +31,9 @@ libraryDependencies += "io.sentry" % "sentry" % "1.7.5"
 ```
 
 For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.5%7Cjar).
+<!-- ENDWIZARD -->
 
+<!-- WIZARD capture-an-error -->
 ## Capture an Error
 
 To report an event manually you need to initialize a `SentryClient`. It is recommended that you use the static API via the `Sentry` class, but you can also construct and manage your own `SentryClient` instance. An example of each style is shown below:
@@ -140,6 +143,7 @@ public class MyClass {
     }
 }
 ```
+<!-- ENDWIZARD -->
 
 ### Building More Complex Events
 

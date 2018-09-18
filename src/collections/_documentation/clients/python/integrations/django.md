@@ -13,6 +13,7 @@ If you haven’t already, start by downloading Raven. The easiest way is with _p
 pip install raven --upgrade
 ```
 
+<!-- WIZARD -->
 ## Setup
 
 Using the Django integration is as simple as adding `raven.contrib.django.raven_compat` to your installed apps:
@@ -58,6 +59,7 @@ from raven.contrib.django.raven_compat.models import client
 
 client.captureException()
 ```
+<!-- ENDWIZARD -->
 
 ## Using with Raven.js {#using-with-raven-js}
 

@@ -13,6 +13,7 @@ An `UncaughtExceptionHandler` is configured so that crash events will be stored 
 
 The `AndroidEventBuilderHelper` is enabled by default, which will automatically enrich events with data about the current state of the device, such as memory usage, storage usage, display resolution, connectivity, battery level, model, Android version, whether the device is rooted or not, etc.
 
+<!-- WIZARD -->
 ## Installation
 
 Using Gradle (Android Studio) in your `app/build.gradle` add:
@@ -22,6 +23,7 @@ compile 'io.sentry:sentry-android:1.7.5'
 ```
 
 For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-android%7C1.7.5%7Cjar).
+<!-- ENDWIZARD -->
 
 ## Initialization
 
@@ -58,6 +60,7 @@ public class MainActivity extends Activity {
 
 You can optionally configure other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
 
+<!-- WIZARD -->
 ## Usage
 
 Now you can use `Sentry` to capture events anywhere in your application:
@@ -109,6 +112,7 @@ public class MyClass {
     }
 }
 ```
+<!-- ENDWIZARD -->
 
 ## ProGuard
 
