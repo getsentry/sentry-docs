@@ -117,21 +117,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
 
     dir = is_self ? "_platforms" : "_platforms/#{group_slug}"
 
-    # The first two cases are legacy structure for docs
-    case platform['slug']
-    when "objc"
-      index_payload[:platforms]["cocoa"] ||= {}
-      index_payload[:platforms]["cocoa"]["_self"] = {
-        :type => platform["type"],
-        :details => file_name,
-        :doc_link => platform["doc_link"],
-        :name => platform["name"]
-      }
-      site.pages << CategoryPage.new(site, site.source, "_platforms", platform, file_name)
-      site.pages << CategoryPage.new(site, site.source, dir, platform, file_name)
-    else
-      site.pages << CategoryPage.new(site, site.source, dir, platform, file_name)
-    end
+    site.pages << CategoryPage.new(site, site.source, dir, platform, file_name)
   end
 
   site.pages << IndexPage.new(site, site.source, "_platforms", index_payload, "_index.json")
