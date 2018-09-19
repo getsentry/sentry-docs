@@ -94,11 +94,13 @@ const constructDSNObject = function(project = {}) {
     };
   }
 
+  const projectID = project && project.id ? project.id.toString() : null
+
   return {
     id: project.id || -1,
     group: escape(project.organizationName) || 'Example',
     PROJECT_NAME: escape(project.projectSlug) || 'your-project',
-    PROJECT_ID: project && project.id.toString() || '&lt;project-id&gt;',
+    PROJECT_ID: projectID || '&lt;project-id&gt;',
     ORG_NAME: escape(project.organizationSlug) || 'your-org',
     DSN: formatDsn(dsn, { public: false }),
     PUBLIC_DSN: formatDsn(dsn, { public: true }),
