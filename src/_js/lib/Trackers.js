@@ -27,4 +27,14 @@ export const google = function() {
   }
   gtag('js', new Date());
   gtag('config', 'UA-47053361-1');
+
+  const script = document.createElement('script');
+  script.setAttribute(
+    'src',
+    'https://www.googletagmanager.com/gtag/js?id=UA-30327640-1'
+  );
+  script.setAttribute('type', 'text/javascript');
+  script.setAttribute('async', true);
+  script.setAttribute('defer', true);
+  document.body.appendChild(script);
 };

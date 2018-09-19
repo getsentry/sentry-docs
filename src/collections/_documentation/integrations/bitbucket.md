@@ -4,8 +4,6 @@ sidebar_order: 1
 ---
 Sentry’s new Bitbucket integration has the following features: commit tracking and issue management. You can now use the data from your commits to Bitbucket to help you find and fix bugs faster.
 
-Note: This feature is only available for early adopters. To become an early adopter, navigate to Organization Settings > General Settings, and enable 'Early Adopter.'
-
 ## Configure Bitbucket
 
 
@@ -37,7 +35,7 @@ Issue tracking allows you to create Bitbucket issues from within Sentry, and lin
 
 Once you’ve navigated to a specific issue, you’ll find the ‘Linked Issues’ section on the right hand panel. Here, you’ll be able to create or link Bitbucket issues.
 
-## Resolving in Commit/Pull Request
+## Resolving in Commit
 
 Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
 
@@ -47,5 +45,5 @@ Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
+When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit, and, later, when that commit is part of a release, we’ll mark the issue as resolved.
 
