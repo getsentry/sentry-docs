@@ -73,7 +73,7 @@ Raven.config('your-dsn', {
 
 Note: You dont _have_ to use _RELEASE_ environment variables. You can provide them in any way you want.
 
-Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
+Additional information can be found in the [Releases API documentation]({%- link _api/releases/index.md -%}).
 
 ## Updating Raven configuration to support Source Maps
 

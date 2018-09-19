@@ -7,7 +7,7 @@ Sentry supports un-minifying JavaScript via [Source Maps](http://blog.sentry.io/
 
 ## Specify the release in Raven.js {#specify-the-release-in-raven-js}
 
-If you are uploading sourcemap artifacts yourself, you must specify the release in your Raven.js client configuration. Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/learn/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting sourcemaps on the remote server.
+If you are uploading sourcemap artifacts yourself, you must specify the release in your Raven.js client configuration. Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _api/releases/index.md -%}), [sentry-cli]({%- link _documentation/learn/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting sourcemaps on the remote server.
 
 ```javascript
 Raven.config('your-dsn', {
@@ -193,7 +193,7 @@ Raven.config('your-dsn', {
 
 Note: You dont _have_ to upload the source files (ref’d by sourcemaps), but without them the grouping algorithm will not be as strong, and the UI will not show any contextual source.
 
-Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
+Additional information can be found in the [Releases API documentation]({%- link _api/releases/index.md -%}).
 
 {% capture __alert_content -%}
 It’s not uncommon for a web application to be accessible at multiple origins. For example:

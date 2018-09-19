@@ -13,7 +13,7 @@ Configuring Data Forwarding is done by visiting **[Project] » Settings » Data 
 
 Integration with Amazon SQS makes it quick and easy to pipe exceptions back into your own systems.
 
-The payload for Amazon is identical is our standard API event payload, and will evolve over time. For more details on the format of this data, see our [API documentation]({%- link _documentation/api/events/get-project-event-details.md -%}).
+The payload for Amazon is identical is our standard API event payload, and will evolve over time. For more details on the format of this data, see our [API documentation]({%- link _api/events/get-project-event-details.md -%}).
 
 ## Segment {#id2}
 

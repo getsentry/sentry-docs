@@ -4,7 +4,8 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
     tree = []
 
     groups = docs.group_by do |doc|
-      doc.relative_path.gsub(root, '').split('/').first
+      p doc.data["tree_path"]
+      doc.data["tree_path"].gsub(root, '').split('/').first
     end
 
     groups.each do |name, docs_for_group|
@@ -49,8 +50,30 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
     tree
   end
 
+#
+#
+#
+#
+#
+#
+# TODO: I"m trying to join these collections but the sidebar is having trouble handling the path splitting
+#
+#
+#
+#
+#
+#
+#
+#
 
-  mapped = site.collections.map {|c| c[1].docs}
+  mapped = site.collections.map do |key, collection|
+    config = site.config["collections"][key]
+    root = config["treat_as"] ? config["treat_as"] : key
+    collection.docs.each do |d|
+      d.data["tree_path"] = d.relative_path.gsub /^.+?(?=\/)/, "_#{root}"
+    end
+    collection.docs
+  end
   documents = mapped.flatten()
   tree = treeFor(documents, "")
 
