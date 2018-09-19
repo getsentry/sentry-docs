@@ -3,34 +3,20 @@ title: Node
 sidebar_order: 1000
 ---
 
+{% include learn-sdk.md platform="node" %}
 
+### Running on serverless architecture
 
-# Express
+If you are running our SDK in a serverless architecture like AWS Lambda, Google Cloud Functions you might want to wait until all errors are sent.
+Here is an example, specific to node to wait for 2000ms for the request buffer to drain.
 
 ```javascript
-const express = require('express');
-const app = express();
-const Sentry = require('@sentry/node') ;
+import { getCurrentHub } from '@sentry/node';
 
-Sentry.init({ dsn:'___PUBLIC_DSN___' });
-
-// The request handler must be the first middleware on the app
-app.use(Sentry.Handlers.requestHandler());
-
-app.get('/', function mainHandler(req, res) {
-    throw new Error('Broke!');
-});
-
-// The error handler must be before any other error middleware
-app.use(Sentry.Handlers.errorHandler());
-
-// Optional fallthrough error handler
-app.use(function onError(err, req, res, next) {
-    // The error id is attached to `res.sentry` to be returned
-    // and optionally displayed to the user for support.
-    res.statusCode = 500;
-    res.end(res.sentry + '\n');
-});
-
-app.listen(3000);
+getCurrentHub().getClient().close(2000).then(result => {
+    if (!result) {
+        console.log('We reached the timeout for emptying the request buffer, still exiting now!');
+    }
+    global.process.exit(1);
+})
 ```

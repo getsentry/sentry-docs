@@ -2,6 +2,7 @@
 title: Django
 sidebar_order: 2
 ---
+<!-- WIZARD -->
 *Import name: `sentry_sdk.integrations.django.DjangoIntegration`*
 
 The Django integration adds support for the [Django Web Framework](https://www.djangoproject.com/)
@@ -17,7 +18,7 @@ sentry_sdk.init(
     integrations=[DjangoIntegration()]
 )
 ```
-
+<!-- ENDWIZARD -->
 ## Behavior
 
 This causes the following this to happen:

@@ -1,5 +1,4 @@
-You need to inform the sentry node SDK about your DSN somewhere before
-application startup:
+You need to inform the Sentry Node SDK about your DSN:
 
 ```javascript
 const Sentry = require('@sentry/node');

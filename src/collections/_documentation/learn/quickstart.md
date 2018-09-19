@@ -26,18 +26,20 @@ Your platform is not listed?  There are more SDKs we support: [list of SDKs]({%-
   content=__alert_content
 %}
 
-<!-- WIZARD -->
+{% wizard %}
 {% include components/platform_content.html content_dir='getting-started-install' %}
 
+{% wizard hide %}
 ## Configure the SDK {#configure-the-sdk}
 
 After you completed setting up a project in Sentry, you’ll be given a value which we call a _DSN_, or _Data Source Name_. It looks a lot like a standard URL, but it’s actually just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
+{% endwizard %}
 
 {% include components/platform_content.html content_dir='getting-started-config' %}
 
 Most SDKs will now automatically collect data if available, some require some extra configuration as automatic error collecting is not
 available due to platform limitations.
-<!-- ENDWIZARD -->
+{% endwizard %}
 
 {% capture __alert_content -%}
 As of Sentry 9, we removed the need to provide the secret key. Older versions of SDKs may still require you to provide the DSN including the secret which is now called DSN (Legacy). Please check the corresponding docs of the SDK you are using if you still need to provide the secret.
