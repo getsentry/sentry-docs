@@ -5,7 +5,7 @@ sidebar_order: 6
 
 ## Features
 
-The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options]({%- link _documentation/clients/java/config.md -%}), and more. Adding version `1.7.5` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
+The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options]({%- link _documentation/clients/java/config.md -%}), and more. Adding version `1.7.10` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
 
 Events will be [buffered to disk]({%- link _documentation/clients/java/config.md -%}#buffering-events-to-disk) (in the application’s cache directory) by default. This allows events to be sent at a later time if the device does not have connectivity when an event is created. This can be disabled by [setting the option]({%- link _documentation/clients/java/config.md -%}#configuration) `buffer.enabled` to `false`.
 
@@ -19,10 +19,10 @@ The `AndroidEventBuilderHelper` is enabled by default, which will automatically 
 Using Gradle (Android Studio) in your `app/build.gradle` add:
 
 ```groovy
-compile 'io.sentry:sentry-android:1.7.5'
+compile 'io.sentry:sentry-android:1.7.10'
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-android%7C1.7.5%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-android%7C1.7.10%7Cjar).
 <!-- ENDWIZARD -->
 
 ## Initialization
@@ -131,7 +131,7 @@ And declare a dependency in your toplevel `build.gradle`:
 ```groovy
 buildscript {
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.5'
+        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.10'
     }
 }
 ```

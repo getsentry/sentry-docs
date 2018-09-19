@@ -14,23 +14,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
-    <version>1.7.5</version>
+    <version>1.7.10</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry:1.7.5'
+compile 'io.sentry:sentry:1.7.10'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry" % "1.7.5"
+libraryDependencies += "io.sentry" % "sentry" % "1.7.10"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.5%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.10%7Cjar).
 <!-- ENDWIZARD -->
 
 <!-- WIZARD capture-an-error -->
