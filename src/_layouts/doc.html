@@ -2,93 +2,56 @@
 layout: default
 ---
 
-<div class="document-wrapper">
 
-  <div class="sidebar bg-dark">
-    {% meminclude global_brand.html %}
+{%- assign __is_active = page.url | url_starts_with: "/relay" %}
+{%- if __is_active %}
+  {% capture __alert_content -%}
+  Relay is currently in alpha.  Not all functionality is currently available and
+  the user experience did not receive the necessary polishing yet.
+  {%- endcapture -%}
+  {%- include components/alert.html
+    level="warning"
+    title="Alpha Functionality"
+    content=__alert_content
+  %}
+{%- endif %}
 
-    <div class="toc collapse navbar-collapse" id="sidebar">
-      <div class="text-white p-3" data-dynamic-load="sidebar" data-sidebar-root>
-        {% meminclude sidebar.html %}
-      </div>
-    </div>
+{%- for platform in site.data.platforms -%}
+  {%- if platform.superseded_by %}
+    {%- assign __is_active = page.url | url_starts_with: platform.doc_link %}
+    {%- if __is_active %}
+      {%- assign __new_platform = site.data.platforms | where: 'slug', platform.superseded_by | first %}
+      {%- assign __quickstart_link = '/quickstart?platform=' | append: __new_platform.slug -%}
+      {% capture __alert_content -%}
+      This SDK has been superseded by a new unified one.  The documentation here is
+      preserved for customers using the old client.  For new projects have a look
+      at the new client documentation:
+      <a href="{{ __new_platform.doc_link | default: __quickstart_link }}">Unified {{ __new_platform.name }} SDK</a>.
+      {%- endcapture -%}
+      {%- include components/alert.html
+        level="info"
+        title="Deprecated Client"
+        content=__alert_content
+      %}
+    {%- endif %}
+  {%- endif %}
+{%- endfor %}
 
-    {% meminclude tracking_widget.html %}
-  </div>
+{{content}}
 
-
-  <main role="main" class="px-0">
-    <div class="flex-grow-1 main-scroll">
-      <div class="d-none d-md-block">
-        {% meminclude global_navbar.html %}
-        {% include breadcrumbs.html %}
-      </div>
-
-      <section class="pt-3 px-3 content-max prose" data-searchable data-dynamic-load="main">
-
-        {%- assign __is_active = page.url | url_starts_with: "/relay" %}
-        {%- if __is_active %}
-          {% capture __alert_content -%}
-          Relay is currently in alpha.  Not all functionality is currently available and
-          the user experience did not receive the necessary polishing yet.
-          {%- endcapture -%}
-          {%- include components/alert.html
-            level="warning"
-            title="Alpha Functionality"
-            content=__alert_content
-          %}
-        {%- endif %}
-
-        {%- for platform in site.data.platforms -%}
-          {%- if platform.superseded_by %}
-            {%- assign __is_active = page.url | url_starts_with: platform.doc_link %}
-            {%- if __is_active %}
-              {%- assign __new_platform = site.data.platforms | where: 'slug', platform.superseded_by | first %}
-              {%- assign __quickstart_link = '/quickstart?platform=' | append: __new_platform.slug -%}
-              {% capture __alert_content -%}
-              This SDK has been superseded by a new unified one.  The documentation here is
-              preserved for customers using the old client.  For new projects have a look
-              at the new client documentation:
-              <a href="{{ __new_platform.doc_link | default: __quickstart_link }}">Unified {{ __new_platform.name }} SDK</a>.
-              {%- endcapture -%}
-              {%- include components/alert.html
-                level="info"
-                title="Deprecated Client"
-                content=__alert_content
-              %}
-            {%- endif %}
-          {%- endif %}
-        {%- endfor %}
-
-        <h1 class="mb-3">{{ page.title }}</h1>
-
-        {%- if page.description -%}
-        <p>{{ page.description }}</p>
-        {%- endif -%}
-
-        {{content}}
-
-        <aside>
-          <p class="mt-3 mb-4 font-italic small">
-            Found an error?
-            {%- if page.collection -%}
-              {%- assign doclink = 'https://github.com/getsentry/sentry-docs/blob/master/src/collections/'
-                | append: page.relative_path
-              -%}
-            {%- else -%}
-              {%- assign doclink = 'https://github.com/getsentry/sentry-docs/blob/master/src/'
-                | append: page.path
-              -%}
-            {%- endif %}
-            <a href="{{ doclink }}">Help us fix it</a>
-          </p>
-        </aside>
-      </section>
-    </div>
-
-    <footer class="border-top bg-white px-3 py-2 flex-grow-0">
-      {% include feedback_footer.html %}
-    </footer>
-  </main>
-
-</div>
+<aside>
+  <p class="mt-3 mb-4 font-italic small">
+    Found an error?
+    {%- if page.collection -%}
+      {%- assign doclink = 'https://github.com/getsentry/sentry-docs/blob/master/src/collections/'
+        | append: page.relative_path
+      -%}
+    {%- else -%}
+      {%- assign doclink = 'https://github.com/getsentry/sentry-docs/blob/master/src/'
+        | append: page.path
+      -%}
+    {%- endif %}
+    <a href="{{ doclink }}">Help us fix it</a>
+  </p>
+</aside>
+</section>
