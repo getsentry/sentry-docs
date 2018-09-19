@@ -1,5 +1,6 @@
 ---
 title: Overview
+sidebar_order: 1
 ---
 
 The following is a guide for implementing a new Sentry SDK. It covers the protocol for event submission as well as guidelines for how clients should typically look and behave.
@@ -25,7 +26,6 @@ Additionally, the following features are highly encouraged:
 -   Automated error capturing (e.g. uncaught exception handlers)
 -   Logging framework integration
 -   Non-blocking event submission
--   Basic data sanitization (e.g. filtering out values that look like passwords)
 -   Context data helpers (e.g. setting the current user, recording breadcrumbs)
 -   Event sampling
 -   Honor Sentry’s HTTP 429 Retry-After header
@@ -41,24 +41,38 @@ Generally, using an SDK consists of three steps for the end user, which should l
 1.  Creation of the SDK (sometimes this is hidden from the user):
 
     ```javascript
-    var myClient = new SentryClient('{DSN}');
+    Sentry.init({dsn: '___DSN___'});
     ```
+
+    ```python
+    sentry_sdk.init('___DSN___')
+    ```
+
 2.  Capturing an event:
 
     ```javascript
-    var resultId = myClient.captureException(myException);
+    var resultId = Sentry.captureException(myException);
+    ```
+
+    ```python
+    result_id = sentry_sdk.capture_exception(my_exception);
     ```
 3.  Using the result of an event capture:
 
-    ```python
-    println('Your exception was recorded as %s', resultId);
+    ```javascript
+    alert(`Your exception was recorded as ${resultId}`);
     ```
 
-The constructor ideally allows several configuration methods. The first argument should always be the DSN value (if possible), followed by an optional secondary argument which is a map of options:
+    ```python
+    println('Your exception was recorded as %s', result_id);
+    ```
+
+`init` ideally allows several configuration methods. The first argument should always be the DSN value (if possible):
 
 ```javascript
-client = new SentryClient('{DSN}', {
-    'tags': {'foo': 'bar'}
+Sentry.init({
+    'dsn': '___DSN___',
+    'foo': 'bar'
 })
 ```
 
@@ -70,69 +84,30 @@ If an empty DSN is passed, you should treat it as valid option which signifies d
   content=__alert_content
 %}
 
-Which options you support is up to you, but ideally you would provide defaults for generic values that can be passed to the capture methods.
+Additionally, you should provide global functions which allow for capturing of
+a basic message or exception:
 
-Once you accept the options, you should output a logging message describing whether the SDK has been configured actively (as in, it will send to the remote server), or if it has been disabled. This should be done with whatever standard logging module is available for your platform.
-
-Additionally, you should provide methods (depending on the platform) which allow for capturing of a basic message and an exception-type:
-
--   `SentryClient.captureMessage(message)`
--   `SentryClient.captureException(exception)`
-
-The above methods should also allow optional arguments (or a map of arguments). For example:
-
-```javascript
-client.captureException(myException, {
-    'tags': {'foo': 'bar'},
-})
-```
-
-If your platform supports block statements, it is recommended that you provide something like the following:
-
-```
-with client.captureExceptions(tags={'foo': 'bar'}):
-    # do something that will cause an error
-    1 / 0
-```
-
-{% capture __alert_content -%}
-In the above example, we’re passing any options that would normally be passed to the capture methods along with the block wrapper.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
-
-Finally, provide a CLI to test your SDK’s configuration. Python example:
-
-```bash
-raven test {DSN}
-```
-
-Ruby example:
-
-```bash
-rake raven:test {DSN}
-```
+-   `Sentry.captureMessage(message)`
+-   `Sentry.captureException(exception)`
 
 ## Parsing the DSN
 
 SDKs are encouraged to allow arbitrary options via the constructor, but must allow the first argument as a DSN string. This string contains the following bits:
 
 ```
-'{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+'{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PROJECT_ID}'
 ```
 
 The final endpoint you’ll be sending requests to is constructed per the following:
 
 ```
-'{URI}/api/{PROJECT ID}/store/'
+'{URI}/api/{PROJECT_ID}/store/'
 ```
 
 For example, given the following constructor:
 
 ```javascript
-new SentryClient('https://public:secret@sentry.example.com/1')
+Sentry.init({dsn: 'https://public:secret@sentry.example.com/1'})
 ```
 
 You should parse the following settings:
@@ -149,7 +124,9 @@ The resulting POST request would then transmit to:
 ```
 
 {% capture __alert_content -%}
-If any of configuration values are not present, the SDK should notify the user immediately that they’ve misconfigured the SDK.
+Note that the secret part of the DSN is optional and effectively deprecated at this point.  While clients are
+still supposed to honor it if supplied future versions of Sentry will entirely ignore it.  The DSN parsing
+code must not require the secret key to be set.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -163,22 +140,27 @@ The body of the post is a string representation of a JSON object. For example, w
 ```json
 {
   "event_id": "fc6d8c0c43fc4630ad850ee518f1b9d0",
-  "culprit": "my.module.function_name",
+  "transaction": "my.module.function_name",
   "timestamp": "2011-05-02T17:41:36",
   "tags": {
     "ios_version": "4.0"
   },
-  "exception": [{
+  "exception": {"values":[{
     "type": "SyntaxError",
     "value": "Wattttt!",
     "module": "__builtins__"
-  }]
+  }]}
 }
 ```
 
-The body of the event can carry attributes or interface values. The difference between them is that attributes are very barebones key/value pairs (for the most part) and interfaces are rich styled interface elements. Examples of attribute are `event_id` or `tags` whereas the `exception` key is an interface.
+The body of the event can carry attributes or interface values. The difference
+between them is that attributes are very barebones key/value pairs (for the
+most part) and interfaces are rich styled interface elements. Examples of
+attribute are `event_id` or `tags` whereas the `exception` key is an interface.
 
-For a list of all supported attributes see [_Attributes_]({%- link _documentation/clientdev/attributes.md -%}). For a list of built-in interfaces see [_Interfaces_]({%- link _documentation/clientdev/interfaces/index.md -%}).
+For a list of all supported attributes see [_Attributes_]({%- link
+_documentation/clientdev/attributes.md -%}). For a list of built-in interfaces
+see [_Interfaces_]({%- link _documentation/clientdev/interfaces/index.md -%}).
 
 ## Authentication
 
@@ -191,6 +173,9 @@ X-Sentry-Auth: Sentry sentry_version=5,
   sentry_key=<public api key>,
   sentry_secret=<secret api key>
 ```
+
+The `secret_secret` must only be included if a secret key portion was contained in the DSN.  Future versions
+of the protocol will fully deprecate the secret key.
 
 {% capture __alert_content -%}
 You should include the SDK version string in the User-Agent portion of the header, and it will be used if `sentry_client` is not sent in the auth header.
@@ -230,13 +215,9 @@ In situations where it’s not possible to send the custom `X-Sentry-Auth` heade
 
 : The secret key which should be provided as part of the SDK configuration.
 
-  {% capture __alert_content -%}
-  You should only pass the secret key if you’re communicating via secure communication to the server. Client-side behavior (such as JavaScript) should use CORS, and only pass the public key.
-  {%- endcapture -%}
-  {%- include components/alert.html
-    title="Note"
-    content=__alert_content
-  %}
+  This key is effectively deprecated but for the time being should still be
+  emitted by SDKs as some older Sentry versions required it in most situations.
+  The secret key will be phased out entirely in future versions of Sentry.
 
 ## A Working Example
 
@@ -263,11 +244,15 @@ X-Sentry-Auth: Sentry sentry_version=7,
   "culprit": "my.module.function_name",
   "timestamp": "2011-05-02T17:41:36",
   "message": "SyntaxError: Wattttt!",
-  "exception": [{
-    "type": "SyntaxError",
-    "value": "Wattttt!",
-    "module": "__builtins__"
-  }]
+  "exception": {
+    "values": [
+      {
+        "type": "SyntaxError",
+        "value": "Wattttt!",
+        "module": "__builtins__"
+      }
+    ]
+  }
 }
 ```
 
@@ -300,9 +285,7 @@ Client request error: Missing client version identifier
 ```
 
 {% capture __alert_content -%}
-The X-Sentry-Error header will always be present with the precise error message and it is the preferred way to identify the root cause.
-
-If it’s not available, it’s likely the request was not handled by the API server, or a critical system failure has occurred.
+The X-Sentry-Error header will not always be present but it can be used to debug clients.  When it can be emitted it will contain the precise error message.  This header is a good way to identify the root cause.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -311,68 +294,18 @@ If it’s not available, it’s likely the request was not handled by the API se
 
 ## Handling Failures
 
-It is **highly encouraged** that your SDK handles failures from the Sentry server gracefully. This means taking care of several key things:
+It is **highly encouraged** that your SDK handles failures from the Sentry server gracefully.  SDKs are expected to honor the 429 status code and to not try sending until the retry-after kicks in.  It's acceptable for SDKs to drop events if Sentry is unavailable instead of retrying.
 
--   Soft failures when the Sentry server fails to respond in a reasonable amount of time (e.g. 3s)
--   Exponential backoff when Sentry fails (don’t continue trying if the server is offline)
--   Failover to a standard logging module on errors.
+## Concurrency (Scope and Hubs)
 
-For example, the Python SDK will log any failed requests to the Sentry server to a named logger, `sentry.errors`. It will also only retry every few seconds, based on how many consecutive failures its seen. The code for this is simple:
+SDKs are supposed to provide standardized concurrency handling through the
+concept of hubs and scopes.  This is explained in more details in the
+[_Concurrency_]({%- link _documentation/clientdev/unified-api.md -%}#concurrency) chapter of the unified API docs.
 
-```python
-def should_try(self):
-    if self.status == self.ONLINE:
-        return True
-    interval = min(self.retry_number, 6) ** 2
-    return time.time() - self.last_check > interval
-```
+## Layer of Integratiom
 
-## Tags
-
-Tags are key/value pairs that describe an event. They should be configurable in the following contexts:
-
--   Environment (SDK-level)
--   Thread (block-level)
--   Event (as part of capture)
-
-Each of these should inherit its parent. So for example, if you configure your SDK as so:
-
-```python
-client = Client(..., {
-    'tags': {'foo': 'bar'},
-})
-```
-
-And then you capture an event:
-
-```python
-client.captureMessage('test', {
-    'tags': {'foo': 'baz'},
-})
-```
-
-The SDK should send the following upstream for `tags`:
-
-```python
-{
-    "tags": [
-        ["foo", "bar"],
-        ["foo", "baz"]
-    ],
-}
-```
-
-## Contextual Data
-
-You should also provide relevant contextual interfaces. These should last for the lifecycle of a request, and the general interface is “bind some kind of context”, and then at the end of a request lifecycle, clear any present context.
-
-This interface consists of _*_context_ methods, access to the _context_ dictionary as well as a _clear_ and _merge_ context method. Method methods exist usually depend on the SDK. The following methods generally make sense:
-
--   `client.user_context`
--   `client.tags_context`
--   `client.http_context`
--   `client.extra_context`
--   `client.context.merge`
--   `client.context.clear`
-
-For more information about this (specifically about how to deal with concurrency) please make sure to read [_Context Management_]({%- link _documentation/clientdev/context.md -%}).
+SDKs when possible are supposed to integrate on a low level which will capture as much of the runtime
+as possible.  This means that if an SDK can hook the runtime or a framework directly this is preferred
+over requiring users to subclass specific base classes (or mix in helpers).  For instance the Python
+SDK will monkey patch core functionality in frameworks to automatically pick up on errors and to integrate
+scope handling.

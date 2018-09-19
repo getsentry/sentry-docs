@@ -95,6 +95,7 @@ api_host: 'https://mysentry.invalid/'
   content=__alert_content
 %}
 
+<!-- WIZARD -->
 ### Upload Symbols with _sentry-cli_
 
 Your project’s dSYM can be upload during the build phase as a “Run Script”. For this you need to st the _DEBUG_INFORMATION_FORMAT_ to be _DWARF with dSYM File_. By default, an Xcode project will only have _DEBUG_INFORMATION_FORMAT_ set to _DWARF with dSYM File_ in _Release_ so make sure everything is set in your build settings properly.
@@ -133,6 +134,7 @@ export SENTRY_URL=https://mysentry.invalid/
   title="On Prem"
   content=__alert_content
 %}
+<!-- ENDWIZARD -->
 
 ### Manually with _sentry-cli_
 

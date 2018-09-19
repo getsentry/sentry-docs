@@ -1,10 +1,12 @@
 ---
 title: Elixir
 sidebar_order: 4
+sidebar_relocation: platforms
 ---
 
 The Elixir SDK for Sentry.
 
+<!-- WIZARD -->
 ## Installation
 
 Edit your mix.exs file to add it as a dependency and add the `:sentry` package to your applications:
@@ -63,6 +65,7 @@ If using an environment with Plug or Phoenix add the following to your router:
 use Plug.ErrorHandler
 use Sentry.Plug
 ```
+<!-- ENDWIZARD -->
 
 ## Filtering Events
 

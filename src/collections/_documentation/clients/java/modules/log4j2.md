@@ -9,6 +9,7 @@ The source can be found [on Github](https://github.com/getsentry/sentry-java/tre
 
 **Note:** The old `raven-log4j2` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j2` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j2` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j2.rst).
 
+<!-- WIZARD -->
 ## Installation
 
 Using Maven:
@@ -63,6 +64,7 @@ Example configuration using the `log4j2.xml` format:
 ```
 
 Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
+<!-- ENDWIZARD -->
 
 ## Additional Data
 

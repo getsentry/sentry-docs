@@ -5,6 +5,7 @@ sidebar_order: 3
 
 Laravel is supported via a native package, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
+<!-- WIZARD -->
 ## Laravel 5.x {#laravel-5-x}
 
 Install the `sentry/sentry-laravel` package:
@@ -205,7 +206,7 @@ return array(
     // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
 );
 ```
-
+<!-- ENDWIZARD -->
 ## Testing with Artisan
 
 You can test your configuration using the provided `artisan` command:

@@ -7,6 +7,7 @@ Raven.js is the official browser JavaScript client for Sentry. It automatically 
 
 **Note**: If you’re using Node.js on the server, you’ll need [raven-node]({%- link _documentation/clients/node/index.md -%}).
 
+<!-- WIZARD -->
 ## Installation
 
 The easiest way to load Raven.js is to load it directly from our CDN. This script tag should be included after other libraries are loaded, but before your main application code (e.g. app.js):
@@ -52,6 +53,7 @@ try {
 ```
 
 There are more ways to report errors. For a complete guide on this see [Reporting Errors Correctly]({%- link _documentation/clients/javascript/usage.md -%}#raven-js-reporting-errors).
+<!-- ENDWIZARD -->
 
 ## Adding Context
 

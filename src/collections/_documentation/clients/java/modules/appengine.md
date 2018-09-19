@@ -7,6 +7,7 @@ The `sentry-appengine` library provides [Google App Engine](https://cloud.google
 
 The source can be found [on Github](https://github.com/getsentry/sentry-java/tree/master/sentry-appengine).
 
+<!-- WIZARD -->
 ## Installation
 
 Using Maven:
@@ -38,6 +39,7 @@ For other dependency managers see the [central Maven repository](https://search.
 This module provides a new `SentryClientFactory` implementation which replaces the default async system with a Google App Engine compatible one. You’ll need to configure Sentry to use the `io.sentry.appengine.AppEngineSentryClientFactory` as its factory.
 
 The queue size and thread options will not be used as they are specific to the default Java threading system.
+<!-- ENDWIZARD -->
 
 ## Queue Name
 

@@ -1,42 +1,23 @@
 ---
 title: 'Data Handling'
-sidebar_order: 3
+sidebar_order: 30
 ---
+
+Data handling is the standardized context in how we want SDKs help users filter data.
 
 ## Sensitive Data
 
-SDKs should provide some mechanism for scrubbing data. Ideally through an extensible interface that the user can customize the behavior of.
+In older SDKs you might sometimes see elaborate constructs to allow the user to strip away sensitive data. Newer SDKs no longer have this feature as it turned out to be too hard to maintain per-SDK. Instead, only two simple config options are left:
 
-This is generally done as part of the SDK configuration:
+- [_send-default-pii_]({%- link _documentation/learn/configuration.md -%}#send-default-pii) is **disabled by default**, meaning that data that is naturally sensitive is not sent by default. That means, for example:
 
-```php
-client = Client(..., {
-    'processors': ['processor.className'],
-})
-```
+  - When attaching HTTP requests to events, "raw" bodies (bodies which cannot be parsed as JSON or formdata) are removed, and known sensitive headers such as `Authentication` or `Cookies` are removed too.
 
-Each processor listed would be some sort of extensible class or a function callback. It would have a single designated method that is passed the data (after it’s been populated), and would then return the data fully intact, or modified with various bits filtered out.
+  - User-specific information (e.g. the current user ID according to the used webframework) is not sent at all.
 
-For example, if you simply supported callbacks for processors, it might look like this:
+  - Note that if a user explicitly sets a request on the scope, nothing is stripped from that request. The above rules only apply to integrations that come with the SDK.
 
-```php
-function my_processor($data) {
-    foreach ($data['extra'] as $key => $value) {
-        if (strpos($value, 'password')) {
-            $data[$key] = '********';
-        }
-    }
-}
-```
-
-We recommend scrubbing the following values:
-
--   Values where the keyname matches ‘password’, ‘passwd’, or ‘secret’.
--   Values that match the regular expression of `r'^(?:\d[ -]*?){13,16}$'` (credit card-like).
--   Session cookies.
--   The Authentication header (HTTP).
-
-Keep in mind that if your SDK is passing extra interface data (e.g. HTTP POST variables) you will also want to scrub those interfaces. Given that, it is a good idea to simply recursively scrub most variables other than predefined things (like HTTP headers).
+- [_before-send_]({%- link _documentation/learn/configuration.md -%}#before-send) can be used to register a callback with custom logic to remove sensitive data.
 
 ## Variable Size
 

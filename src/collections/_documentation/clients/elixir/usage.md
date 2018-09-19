@@ -3,6 +3,7 @@ title: Usage
 sidebar_order: 1
 ---
 
+<!-- WIZARD -->
 ## Capturing Errors
 
 If you use the error logger and setup Plug/Phoenix then you are already done, all errors will bubble up to sentry.
@@ -17,6 +18,7 @@ rescue
     Sentry.capture_exception(my_exception, [stacktrace: System.stacktrace(), extra: %{extra: information}])
 end
 ```
+<!-- ENDWIZARD -->
 
 ## Optional Attributes
 

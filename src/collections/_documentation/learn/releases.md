@@ -1,6 +1,7 @@
 ---
 title: Releases
 sidebar_order: 3
+release_identifier: "my-project-name@2.3.12"
 ---
 
 A release is a version of your code that is deployed to an environment. When you give Sentry information about your releases, you unlock a number of new features:
@@ -22,13 +23,9 @@ Configuring releases fully is a 3-step process:
 
 ### Tag Your Errors {#tag-errors}
 
-Include a release ID (a.k.a version) where you configure your client SDK. This is commonly a git SHA or a custom version number (check language-specific docs for exact syntax):
+Include a release ID (a.k.a version) where you configure your client SDK. This is commonly a git SHA or a custom version number. Note that releases are global per organization so make sure to prefix them with something project specific if needed:
 
-```javascript
-SentryClient.setRelease({
-  release: "6d5a6a446805a06154e25e2fa203d67b9e762f5d"
-});
-```
+{% include components/platform_content.html content_dir='set-release' %}
 
 How you make the version available to your code is up to you. For example, you could use an environment variable that is set during the build process.
 
@@ -149,7 +146,7 @@ res = requests.post(
 
 For more information, see the [API reference]({%- link _documentation/api/releases/post-organization-releases.md -%}).
 
-After this step, **suspect commits** and **suggested assignees** will start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and [ownership rules]({%- link _documentation/learn/issue-owners.md -%}).
+After this step, **suspect commits** and **suggested assignees** will start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and [ownership rules]({%- link _documentation/product/issue-owners.md -%}).
 
 {% asset suspect-commits-highlighted.png %}
 

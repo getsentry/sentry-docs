@@ -11,6 +11,7 @@ Additionally, Raven.js can be configured to catch any Angular-specific (2.x) exc
 
 Raven.js ships with a [TypeScript declaration file](https://github.com/getsentry/raven-js/blob/master/packages/raven-js/typescript/raven.d.ts), which helps static checking correctness of Raven.js API calls, and facilitates auto-complete in TypeScript-aware IDEs like Visual Studio Code.
 
+<!-- WIZARD -->
 ## Installation
 
 Raven.js should be installed via npm.
@@ -107,3 +108,4 @@ export class AppModule { }
 ```
 
 Once you’ve completed that step, you are done.
+<!-- ENDWIZARD -->

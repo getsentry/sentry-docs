@@ -13,6 +13,7 @@ The most important part is the creation of the raven client. Create it once and 
 $sentryClient = new Raven_Client('___PUBLIC_DSN___');
 ```
 
+<!-- WIZARD -->
 ## Capturing Errors
 
 Sentry includes basic functionality for reporting any uncaught exceptions or PHP errors. This is done via the error handler, and appropriate hooks for each of PHP’s built-in reporting:
@@ -31,6 +32,7 @@ Calling `install()` on a Raven_Client instance will automatically register these
   title="Note"
   content=__alert_content
 %}
+<!-- ENDWIZARD -->
 
 ## Reporting Exceptions
 

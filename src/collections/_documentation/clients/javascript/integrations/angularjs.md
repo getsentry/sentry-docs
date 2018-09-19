@@ -11,6 +11,7 @@ Additionally, the Raven.js AngularJS plugin will catch any AngularJS-specific ex
 
 **Note**: This documentation is for Angular 1.x. See also: [_Angular 2.x_]({%- link _documentation/clients/javascript/integrations/angular.md -%})
 
+<!-- WIZARD -->
 ## Installation
 
 Raven.js and the Raven.js Angular plugin are distributed using a few different methods.
@@ -126,3 +127,4 @@ angular.module(moduleName, [
 
 module.exports = moduleName;
 ```
+<!-- ENDWIZARD -->

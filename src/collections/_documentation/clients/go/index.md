@@ -1,6 +1,7 @@
 ---
 title: Go
 sidebar_order: 5
+sidebar_relocation: platforms
 ---
 
 {% capture __alert_content -%}
@@ -14,6 +15,7 @@ The Go SDK is maintained and supported by Sentry but currently under development
 
 Raven-Go provides a Sentry client implementation for the Go programming language.
 
+<!-- WIZARD -->
 ## Installation
 
 Raven-Go can be installed like any other Go library through `go get`:
@@ -59,6 +61,7 @@ raven.CapturePanic(func() {
     // do all of the scary things here
 }, nil)
 ```
+<!-- ENDWIZARD -->
 
 ## Additional Context
 

@@ -3,6 +3,7 @@ title: Monolog
 sidebar_order: 4
 ---
 
+<!-- WIZARD -->
 ## Capturing Errors
 
 Monolog supports Sentry out of the box, so you’ll just need to configure a handler:
@@ -50,3 +51,4 @@ $client = new Raven_Client('___PUBLIC_DSN___');
 $handler = new \Raven_Breadcrumbs_MonologHandler($client);
 $monolog->pushHandler($handler);
 ```
+<!-- ENDWIZARD -->

@@ -1,10 +1,12 @@
 ---
 title: Ruby
 sidebar_order: 14
+sidebar_relocation: platforms
 ---
 
 Raven for Ruby is a client and integration layer for the Sentry error reporting API. It supports Ruby 1.9.3 and 2.x. JRuby support is provided but experimental.
 
+<!-- WIZARD -->
 ## Installation
 
 Raven Ruby comes as a gem and is straightforward to install. If you are using Bundler just add this to your `Gemfile`:
@@ -45,6 +47,7 @@ rescue ZeroDivisionError => exception
   Raven.capture_exception(exception)
 end
 ```
+<!-- ENDWIZARD -->
 
 ## Additional Context
 
