@@ -2,7 +2,7 @@
 title: React
 sidebar_order: 30
 ---
-
+<!-- WIZARD -->
 To use Sentry with your React application, you will need to use `@sentry/browser` (Sentry’s browser JavaScript SDK).  
 On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
 
@@ -41,3 +41,4 @@ class ExampleBoundary extends Component {
     }
 }
 ```
+<!-- ENDWIZARD -->
