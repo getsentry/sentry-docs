@@ -1,0 +1,134 @@
+---
+layout: default
+---
+
+{%- if page.method or page.api_path -%}
+<p>
+  <strong>{{ page.method }} {{ page.api_path }}</strong>
+</p>
+{%- endif -%}
+
+{%- if page.description -%}
+<div class="pb-3 content-flush-bottom">
+  {{ page.description | markdownify }}
+</div>
+{%- endif -%}
+
+{{ content }}
+
+{%- if
+  page.query_parameters or
+  page.path_parameters or
+  page.parameters or
+  page.authentication or
+  page.method
+-%}
+<table class="table">
+
+  {%- if page.query_parameters.size -%}
+  <tr>
+    <td>
+      <strong>Query Parameters:</strong>
+    </td>
+    <td class="content-flush-bottom">
+      {%- include api/params.html params= page.query_parameters -%}
+    </td>
+  </tr>
+  {%- endif -%}
+
+  {%- if page.path_parameters.size -%}
+  <tr>
+    <td>
+      <strong>Path Parameters:</strong>
+    </td>
+    <td class="content-flush-bottom">
+      {%- include api/params.html params= page.path_parameters -%}
+    </td>
+  </tr>
+  {%- endif -%}
+
+  {%- if page.parameters.size -%}
+  <tr>
+    <td>
+      <strong>Parameters:</strong>
+    </td>
+    <td class="content-flush-bottom">
+      {%- include api/params.html params= page.parameters -%}
+    </td>
+  </tr>
+  {%- endif -%}
+
+  {%- if page.authentication and page.authentication != empty -%}
+  <tr>
+    <td>
+      <strong>Authentication:</strong>
+    </td>
+    <td>
+      {{ page.authentication }}
+    </td>
+  </tr>
+  {%- endif -%}
+
+  {%- if page.method -%}
+  <tr>
+    <td>
+      <strong>Method:</strong>
+    </td>
+    <td>
+      {{ page.method }}
+    </td>
+  </tr>
+  {%- endif -%}
+
+  {%- if page.api_path -%}
+  <tr>
+    <td>
+      <strong>Path:</strong>
+    </td>
+    <td>
+      {{ page.api_path }}
+    </td>
+  </tr>
+  {%- endif -%}
+
+</table>
+{%- endif -%}
+
+{%- if
+  page.example_request and page.example_request != empty or
+  page.example_response and page.example_response != empty
+-%}
+<h2>Example</h2>
+{%- endif -%}
+
+{%- if page.example_request and page.example_request != empty -%}
+{%- highlight http -%}{{ page.example_request }}{%- endhighlight -%}
+{%- endif -%}
+
+{%- if page.example_response and page.example_response != empty -%}
+{%- highlight http -%}{{ page.example_response }}{%- endhighlight -%}
+{%- endif -%}
+
+<aside>
+  <p class="mt-3 mb-4 font-italic small">
+    Found an error?
+    {%- if page.collection -%}
+      {%- assign doclink = 'https://github.com/getsentry/sentry-docs/blob/master/src/collections/'
+        | append: page.relative_path
+      -%}
+    {%- else -%}
+      {%- assign doclink = 'https://github.com/getsentry/sentry-docs/blob/master/src/'
+        | append: page.path
+      -%}
+    {%- endif %}
+    {% capture body -%}
+    Hello,
+
+    I found an error in {{ page.url | prepend: site.url }}
+
+    Thanks
+    {%- endcapture -%}
+    <a href="{% include mailto.html email="support@sentry.io" subject="API Documentation Error" body=body %}">Let us know</a>
+  </p>
+</aside>
+</section>
