@@ -192,7 +192,7 @@ The following keys control the authentication support.
 
   If provided, Sentry will set the Access-Control-Allow-Origin header to this value on /api/store/ responses. In addition, the Access-Control-Allow-Headers header will be set to ‘X-Sentry-Auth’. This allows JavaScript clients to submit cross-domain error reports.
 
-  You can read more about these headers in the [Mozilla developer docs](https://developer.mozilla.org/En/HTTP_access_control#Simple_requests).
+  You can read more about these headers in the [Mozilla developer docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
 
   Defaults to `None` (don’t add the Access-Control headers)
 

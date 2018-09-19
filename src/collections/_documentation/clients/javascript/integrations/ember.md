@@ -7,7 +7,7 @@ To use Sentry with your Ember application, you will need to use both Raven.js (S
 
 On its own, Raven.js will report any uncaught exceptions triggered from your application. For advanced usage examples of Raven.js, please read [_Raven.js usage_]({%- link _documentation/clients/javascript/usage.md -%}).
 
-Additionally, the Raven.js Ember plugin will catch any Ember-specific exceptions reported through Ember’s [onerror](https://guides.emberjs.com/v3.0.2/configuring-ember/debugging/#toc_implement-an-ember-onerror-hook-to-log-all-errors-in-production). hook and any [RSVP promises](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_errors-within-an-code-rsvp-promise-code) that would otherwise be swallowed.
+Additionally, the Raven.js Ember plugin will catch any Ember-specific exceptions reported through Ember’s [onerror](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_implement-an-ember-onerror-hook-to-log-all-errors-in-production). hook and any [RSVP promises](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_errors-within-an-code-rsvp-promise-code) that would otherwise be swallowed.
 
 <!-- WIZARD -->
 ## Installation
