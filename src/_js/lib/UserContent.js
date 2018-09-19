@@ -21,7 +21,7 @@ const tokenRegex = function() {
 const renderDropdownItem = function(item) {
   return `<a href="#" class="dropdown-item" data-interactive-content-item data-id="${
     item.id
-  }">${item.ORG_NAME} / ${item.PROJECT_ID}</a>`;
+  }">${item.ORG_NAME} / ${item.PROJECT_NAME}</a>`;
 };
 
 const renderDropdownHeader = function(item) {
@@ -40,7 +40,7 @@ const renderDropdown = function(list, selected) {
   return `
     <div class="dropdown">
       <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-not-dynamic>
-        ${current.ORG_NAME} / ${current.PROJECT_ID}
+        ${current.ORG_NAME} / ${current.PROJECT_NAME}
       </a>
 
       <div class="dropdown-menu" aria-hidden="true">${Object.keys(grouped)
