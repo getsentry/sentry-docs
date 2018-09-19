@@ -10,7 +10,7 @@ Single Sign-On (or SSO) allows you to manage your organization’s entire member
 Before you get around to actually turning on SSO, you’ll want to keep in mind that once it’s activated, all existing users will need to link their account before they are able to continue using Sentry. Because of that we recommend coordinating with your team during off-peak hours. That said, it’s super quick to link accounts, so we don’t consider it a true hurdle.
 
 {% capture __alert_content -%}
-SSO is not available on certain grandfathered plans.
+SSO is not available on free, trial or certain grandfathered plans.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -19,7 +19,7 @@ SSO is not available on certain grandfathered plans.
 
 ## Getting Started
 
-With that out of the way, head on over to your organization home. You’ll see an “Auth” link in the sidebar. Start by hitting that, and then continue to the “Configure” link next to provider you wish to configure.
+With that out of the way, head on over to your organization home. You’ll see an “Auth” link in the sidebar if you have access to SSO. Start by hitting that, and then continue to the “Configure” link next to provider you wish to configure.
 
 Additionally we’ll automatically send each pre-existing member an email with instructions on linking their account. This will happen automatically once SSO is successfully configured. Even if they dont click the link, the next time they try to hit any page within the organization we’ll require them to link their account (with the same auth flow you just went through).
 
@@ -49,8 +49,8 @@ Sentry provides [SAML2 based authentication](https://en.wikipedia.org/wiki/SAML_
 
 Sentry supports the following SAML services:
 
--   Identity and Service Provider initiated SSO
--   Identity Provider initiated SLO (Single Logout)
+- Identity and Service Provider initiated SSO
+- Identity Provider initiated SLO (Single Logout)
 
 Sentry’s Assertion Consumer Service uses the HTTP-POST bindings.
 
