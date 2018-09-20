@@ -41,10 +41,10 @@ const verifyPlatformSlug = function(slug) {
 //  slug - slug matching a platform in data/platforms.yml
 //
 // Returns a string
-const updateUrlPlatform = function(url, slug) {
+const updateUrlPlatform = function(url, slug, anchor) {
   const { url: origin, query } = qs.parseUrl(url);
   query.platform = slug;
-  return `${origin}?${qs.stringify(query)}`;
+  return `${origin}?${qs.stringify(query)}${anchor}`;
 };
 
 const syncRelatedElements = function() {
@@ -137,7 +137,7 @@ const showPlatform = function(slug) {
     $block.find('[data-platform-switcher-target]').text($active.text());
   });
 
-  history.replaceState({}, '', updateUrlPlatform(location.href, slug));
+  history.replaceState({}, '', updateUrlPlatform(location.href, slug, location.hash));
 
   $('.config-key').each(function() {
     if (!this.getAttribute('data-config-key')) {
