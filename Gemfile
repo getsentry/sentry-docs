@@ -12,7 +12,6 @@ group :jekyll_plugins do
   }
   gem 'jekyll-assets', '3.0.11'
   gem 'terminal-notifier'
-  gem 'uglifier'
   gem 'autoprefixer-rails'
   gem 'jekyll-extlinks'
   gem 'liquid-md5'
