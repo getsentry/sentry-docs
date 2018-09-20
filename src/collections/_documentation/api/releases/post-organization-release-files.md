@@ -25,7 +25,7 @@
       "type": "string"
     }, 
     {
-      "description": "this parameter can be supplied multiple times to attach headers to the file.  Each header is a string in the format  key:value .  For instance it can be used to define a content type.", 
+      "description": "this parameter can be supplied multiple times to attach headers to the file.  Each header is a string in the format `key:value`.  For instance it can be used to define a content type.", 
       "name": "header", 
       "type": "string"
     }

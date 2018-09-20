@@ -6,7 +6,7 @@
   "authentication": "required", 
   "description": "Return a set of points representing a normalized timestamp and the\nnumber of events seen in the period.\n\nQuery ranges are limited to Sentry's configured time-series\nresolutions.", 
   "example_request": "GET /api/0/projects/the-interstellar-jurisdiction/pump-station/stats/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}", 
-  "example_response": "HTTP/1.1 200 OK\nContent-Length: 520\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n[\n  [\n    1537308000.0, \n    459\n  ], \n  [\n    1537311600.0, \n    1290\n  ], \n  [\n    1537315200.0, \n    1460\n  ], \n  [\n    1537318800.0, \n    1059\n  ], \n  [\n    1537322400.0, \n    1154\n  ], \n  [\n    1537326000.0, \n    943\n  ], \n  [\n    1537329600.0, \n    1849\n  ], \n  [\n    1537333200.0, \n    545\n  ], \n  [\n    1537336800.0, \n    832\n  ], \n  [\n    1537340400.0, \n    1726\n  ], \n  [\n    1537344000.0, \n    1174\n  ], \n  [\n    1537347600.0, \n    653\n  ], \n  [\n    1537351200.0, \n    935\n  ], \n  [\n    1537354800.0, \n    1383\n  ], \n  [\n    1537358400.0, \n    1766\n  ], \n  [\n    1537362000.0, \n    1341\n  ], \n  [\n    1537365600.0, \n    1508\n  ], \n  [\n    1537369200.0, \n    1142\n  ], \n  [\n    1537372800.0, \n    1259\n  ], \n  [\n    1537376400.0, \n    959\n  ], \n  [\n    1537380000.0, \n    1591\n  ], \n  [\n    1537383600.0, \n    1571\n  ], \n  [\n    1537387200.0, \n    834\n  ], \n  [\n    1537390800.0, \n    1343\n  ]\n]", 
+  "example_response": "HTTP/1.1 200 OK\nContent-Length: 517\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n[\n  [\n    1537372800.0, \n    561\n  ], \n  [\n    1537376400.0, \n    639\n  ], \n  [\n    1537380000.0, \n    845\n  ], \n  [\n    1537383600.0, \n    780\n  ], \n  [\n    1537387200.0, \n    1339\n  ], \n  [\n    1537390800.0, \n    382\n  ], \n  [\n    1537394400.0, \n    876\n  ], \n  [\n    1537398000.0, \n    1010\n  ], \n  [\n    1537401600.0, \n    1616\n  ], \n  [\n    1537405200.0, \n    1848\n  ], \n  [\n    1537408800.0, \n    940\n  ], \n  [\n    1537412400.0, \n    1128\n  ], \n  [\n    1537416000.0, \n    1404\n  ], \n  [\n    1537419600.0, \n    609\n  ], \n  [\n    1537423200.0, \n    535\n  ], \n  [\n    1537426800.0, \n    732\n  ], \n  [\n    1537430400.0, \n    1784\n  ], \n  [\n    1537434000.0, \n    655\n  ], \n  [\n    1537437600.0, \n    1294\n  ], \n  [\n    1537441200.0, \n    1042\n  ], \n  [\n    1537444800.0, \n    1751\n  ], \n  [\n    1537448400.0, \n    1358\n  ], \n  [\n    1537452000.0, \n    1136\n  ], \n  [\n    1537455600.0, \n    2405\n  ]\n]", 
   "method": "GET", 
   "parameters": null, 
   "path_parameters": [
@@ -23,7 +23,7 @@
   ], 
   "query_parameters": [
     {
-      "description": "the name of the stat to query ( \"received\" ,  \"rejected\" ,  \"blacklisted\" ,  generated )", 
+      "description": "the name of the stat to query (`\"received\"`, `\"rejected\"`, `\"blacklisted\"`, `generated`)", 
       "name": "stat", 
       "type": "string"
     }, 
@@ -38,7 +38,7 @@
       "type": "timestamp"
     }, 
     {
-      "description": "an explicit resolution to search for (eg:  10s ).  This should not be used unless you are familiar with Sentry's internals as it's restricted to pre-defined values.", 
+      "description": "an explicit resolution to search for (eg: `10s`).  This should not be used unless you are familiar with Sentry's internals as it's restricted to pre-defined values.", 
       "name": "resolution", 
       "type": "string"
     }

@@ -5,8 +5,8 @@
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/files/{file_id}/", 
   "authentication": "required", 
   "description": "Return details on an individual file within a release.  This does\nnot actually return the contents of the file, just the associated\nmetadata.", 
-  "example_request": "GET /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/4fbabfcf8ea7042126fa6888d9bf89d7473d7014/files/2/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}", 
-  "example_response": "HTTP/1.1 200 OK\nContent-Length: 219\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"dateCreated\": \"2018-09-19T21:07:18.698Z\", \n  \"dist\": null, \n  \"headers\": {\n    \"Content-Type\": \"text/plain; encoding=utf-8\"\n  }, \n  \"id\": \"2\", \n  \"name\": \"/demo/readme.txt\", \n  \"sha1\": \"2ef7bde608ce5404e97d5f042f95f89f1c232871\", \n  \"size\": 12\n}", 
+  "example_request": "GET /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/593e1e1f7222205faf2729e8d7766864717b48f6/files/2/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}", 
+  "example_response": "HTTP/1.1 200 OK\nContent-Length: 219\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"dateCreated\": \"2018-09-20T15:48:20.289Z\", \n  \"dist\": null, \n  \"headers\": {\n    \"Content-Type\": \"text/plain; encoding=utf-8\"\n  }, \n  \"id\": \"2\", \n  \"name\": \"/demo/readme.txt\", \n  \"sha1\": \"2ef7bde608ce5404e97d5f042f95f89f1c232871\", \n  \"size\": 12\n}", 
   "method": "GET", 
   "parameters": null, 
   "path_parameters": [

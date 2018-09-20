@@ -29,7 +29,7 @@
   ], 
   "query_parameters": null, 
   "sidebar_order": 6, 
-  "title": "Upload a New Files", 
+  "title": "Upload a New File", 
   "warning": null
 }
 ---

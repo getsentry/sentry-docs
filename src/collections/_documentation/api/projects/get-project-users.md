@@ -28,7 +28,7 @@
   ], 
   "query_parameters": [
     {
-      "description": "Limit results to users matching the given query. Prefixes should be used to suggest the field to match on:  id ,  email ,  username ,  ip . For example,  query=email:foo@example.com", 
+      "description": "Limit results to users matching the given query. Prefixes should be used to suggest the field to match on: `id`, `email`, `username`, `ip`. For example, `query=email:foo@example.com`", 
       "name": "query", 
       "type": "string"
     }

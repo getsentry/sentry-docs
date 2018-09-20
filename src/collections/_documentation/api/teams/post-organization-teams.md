@@ -6,7 +6,7 @@
   "authentication": "required", 
   "description": "Create a new team bound to an organization.  Only the name of the\nteam is needed to create it, the slug can be auto generated.", 
   "example_request": "POST /api/0/organizations/the-interstellar-jurisdiction/teams/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}\nContent-Type: application/json\n\n{\n  \"name\": \"Ancient Gabelers\"\n}", 
-  "example_response": "HTTP/1.1 201 CREATED\nContent-Length: 231\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, POST, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"avatar\": {\n    \"avatarType\": \"letter_avatar\", \n    \"avatarUuid\": null\n  }, \n  \"dateCreated\": \"2018-09-19T21:07:06.285Z\", \n  \"hasAccess\": true, \n  \"id\": \"3\", \n  \"isMember\": false, \n  \"isPending\": false, \n  \"name\": \"Ancient Gabelers\", \n  \"slug\": \"ancient-gabelers\"\n}", 
+  "example_response": "HTTP/1.1 201 CREATED\nContent-Length: 231\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, POST, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"avatar\": {\n    \"avatarType\": \"letter_avatar\", \n    \"avatarUuid\": null\n  }, \n  \"dateCreated\": \"2018-09-20T15:48:07.803Z\", \n  \"hasAccess\": true, \n  \"id\": \"3\", \n  \"isMember\": false, \n  \"isPending\": false, \n  \"name\": \"Ancient Gabelers\", \n  \"slug\": \"ancient-gabelers\"\n}", 
   "method": "POST", 
   "parameters": [
     {

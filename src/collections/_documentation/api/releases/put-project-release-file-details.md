@@ -5,8 +5,8 @@
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/files/{file_id}/", 
   "authentication": "required", 
   "description": "Update metadata of an existing file.  Currently only the name of\nthe file can be changed.", 
-  "example_request": "PUT /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/4fbabfcf8ea7042126fa6888d9bf89d7473d7014/files/3/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}\nContent-Type: application/json\n\n{\n  \"name\": \"/demo/goodbye.txt\"\n}", 
-  "example_response": "HTTP/1.1 200 OK\nContent-Length: 220\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"dateCreated\": \"2018-09-19T21:07:22.762Z\", \n  \"dist\": null, \n  \"headers\": {\n    \"Content-Type\": \"text/plain; encoding=utf-8\"\n  }, \n  \"id\": \"3\", \n  \"name\": \"/demo/goodbye.txt\", \n  \"sha1\": \"94d6b21e962a9fc65889617ec1f17a1e2fe11b65\", \n  \"size\": 15\n}", 
+  "example_request": "PUT /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/593e1e1f7222205faf2729e8d7766864717b48f6/files/3/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}\nContent-Type: application/json\n\n{\n  \"name\": \"/demo/goodbye.txt\"\n}", 
+  "example_response": "HTTP/1.1 200 OK\nContent-Length: 220\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"dateCreated\": \"2018-09-20T15:48:24.245Z\", \n  \"dist\": null, \n  \"headers\": {\n    \"Content-Type\": \"text/plain; encoding=utf-8\"\n  }, \n  \"id\": \"3\", \n  \"name\": \"/demo/goodbye.txt\", \n  \"sha1\": \"94d6b21e962a9fc65889617ec1f17a1e2fe11b65\", \n  \"size\": 15\n}", 
   "method": "PUT", 
   "parameters": [
     {

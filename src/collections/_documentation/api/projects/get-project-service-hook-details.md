@@ -28,7 +28,7 @@
   ], 
   "query_parameters": null, 
   "sidebar_order": 9, 
-  "title": "Retrieve a Service Hooks", 
+  "title": "Retrieve a Service Hook", 
   "warning": null
 }
 ---

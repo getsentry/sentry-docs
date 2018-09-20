@@ -23,7 +23,7 @@
   ], 
   "query_parameters": [
     {
-      "description": "the name of the stat to query ( \"received\" ,  \"rejected\" )", 
+      "description": "the name of the stat to query (`\"received\"`, `\"rejected\"`)", 
       "name": "stat", 
       "type": "string"
     }, 
@@ -38,7 +38,7 @@
       "type": "timestamp"
     }, 
     {
-      "description": "an explicit resolution to search for (eg:  10s ).  This should not be used unless you are familiar with Sentry's internals as it's restricted to pre-defined values.", 
+      "description": "an explicit resolution to search for (eg: `10s`).  This should not be used unless you are familiar with Sentry's internals as it's restricted to pre-defined values.", 
       "name": "resolution", 
       "type": "string"
     }

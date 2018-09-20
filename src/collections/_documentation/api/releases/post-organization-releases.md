@@ -6,7 +6,7 @@
   "authentication": "required", 
   "description": "Create a new release for the given Organization.  Releases are used by\nSentry to improve its error reporting abilities by correlating\nfirst seen events with the release that might have introduced the\nproblem.\nReleases are also necessary for sourcemaps and other debug features\nthat require manual upload for functioning well.", 
   "example_request": "POST /api/0/organizations/the-interstellar-jurisdiction/releases/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}\nContent-Type: application/json\n\n{\n  \"projects\": [\n    \"pump-station\"\n  ], \n  \"ref\": \"6ba09a7c53235ee8a8fa5ee4c1ca8ca886e7fdbb\", \n  \"version\": \"2.0rc2\"\n}", 
-  "example_response": "HTTP/1.1 201 CREATED\nContent-Length: 413\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, POST, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"authors\": [], \n  \"commitCount\": 0, \n  \"data\": {}, \n  \"dateCreated\": \"2018-09-19T21:07:06.078Z\", \n  \"dateReleased\": null, \n  \"deployCount\": 0, \n  \"firstEvent\": null, \n  \"lastCommit\": null, \n  \"lastDeploy\": null, \n  \"lastEvent\": null, \n  \"newGroups\": 0, \n  \"owner\": null, \n  \"projects\": [\n    {\n      \"name\": \"Pump Station\", \n      \"slug\": \"pump-station\"\n    }\n  ], \n  \"ref\": \"6ba09a7c53235ee8a8fa5ee4c1ca8ca886e7fdbb\", \n  \"shortVersion\": \"2.0rc2\", \n  \"url\": null, \n  \"version\": \"2.0rc2\"\n}", 
+  "example_response": "HTTP/1.1 201 CREATED\nContent-Length: 413\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, POST, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"authors\": [], \n  \"commitCount\": 0, \n  \"data\": {}, \n  \"dateCreated\": \"2018-09-20T15:48:07.561Z\", \n  \"dateReleased\": null, \n  \"deployCount\": 0, \n  \"firstEvent\": null, \n  \"lastCommit\": null, \n  \"lastDeploy\": null, \n  \"lastEvent\": null, \n  \"newGroups\": 0, \n  \"owner\": null, \n  \"projects\": [\n    {\n      \"name\": \"Pump Station\", \n      \"slug\": \"pump-station\"\n    }\n  ], \n  \"ref\": \"6ba09a7c53235ee8a8fa5ee4c1ca8ca886e7fdbb\", \n  \"shortVersion\": \"2.0rc2\", \n  \"url\": null, \n  \"version\": \"2.0rc2\"\n}", 
   "method": "POST", 
   "parameters": [
     {
@@ -35,12 +35,12 @@
       "type": "datetime"
     }, 
     {
-      "description": "an optional list of commit data to be associated with the release. Commits must include parameters  id  (the sha of the commit), and can optionally include  repository ,  message ,  author_name ,  author_email , and  timestamp .", 
+      "description": "an optional list of commit data to be associated with the release. Commits must include parameters `id` (the sha of the commit), and can optionally include `repository`, `message`, `author_name`, `author_email`, and `timestamp`.", 
       "name": "commits", 
       "type": "array"
     }, 
     {
-      "description": "an optional way to indicate the start and end commits for each repository included in a release. Head commits must include parameters  repository  and  commit  (the HEAD sha). They can optionally include  previousCommit  (the sha of the HEAD of the previous release), which should be specified if this is the first time you've sent commit data.", 
+      "description": "an optional way to indicate the start and end commits for each repository included in a release. Head commits must include parameters `repository` and `commit` (the HEAD sha). They can optionally include `previousCommit` (the sha of the HEAD of the previous release), which should be specified if this is the first time you've sent commit data.", 
       "name": "refs", 
       "type": "array"
     }

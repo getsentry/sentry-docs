@@ -10,7 +10,7 @@
   "method": "PUT", 
   "parameters": [
     {
-      "description": "the new status for the issues.  Valid values are  \"resolved\" ,  \"resolvedInNextRelease\" ,  \"unresolved\" , and  \"ignored\" .", 
+      "description": "the new status for the issues.  Valid values are `\"resolved\"`, `\"resolvedInNextRelease\"`, `\"unresolved\"`, and `\"ignored\"`.", 
       "name": "status", 
       "type": "string"
     }, 
@@ -59,12 +59,12 @@
   ], 
   "query_parameters": [
     {
-      "description": "a list of IDs of the issues to be mutated.  This parameter shall be repeated for each issue.  It is optional only if a status is mutated in which case an implicit  update all  is assumed.", 
+      "description": "a list of IDs of the issues to be mutated.  This parameter shall be repeated for each issue.  It is optional only if a status is mutated in which case an implicit update all is assumed.", 
       "name": "id", 
       "type": "int"
     }, 
     {
-      "description": "optionally limits the query to issues of the specified status.  Valid values are  \"resolved\" ,  \"unresolved\"  and  \"ignored\" .", 
+      "description": "optionally limits the query to issues of the specified status.  Valid values are `\"resolved\"`, `\"unresolved\"` and `\"ignored\"`.", 
       "name": "status", 
       "type": "string"
     }
