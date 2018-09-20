@@ -108,3 +108,25 @@ And these exist for breadcrumbs:
 With `eventProcessors` you are able to hook into the process of enriching the event with additional data.
 You can add you own `eventProcessor` on the current scope. The difference to `beforeSend` is that
 `eventProcessors` run on the scope level where `beforeSend` runs globally not matter in which scope you are.
+
+```javascript
+// This will be set globally for every succeeding event send
+Sentry.configureScope(scope => {
+  scope.addEventProcessor(async event => {
+    // Add anything to the event here
+    // returning null will drop the event
+    return event;
+  });
+});
+
+// Using withScope, will only call the event processor for all "sends"
+// that happen within withScope
+Sentry.withScope(scope => {
+  scope.addEventProcessor(async event => {
+    // Add anything to the event here
+    // returning null will drop the event
+    return event;
+  });
+  Sentry.captureMessage('Test');
+});
+```
