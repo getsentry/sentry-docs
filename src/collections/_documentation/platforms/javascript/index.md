@@ -100,7 +100,7 @@ And these exist for breadcrumbs:
 
 `xhr`
 
-: For breadcrumnbs created from HTTP requests done via the legacy `XMLHttpRequest` API this holds
+: For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API this holds
   the original xhr object.
 
 ## EventProcessors
