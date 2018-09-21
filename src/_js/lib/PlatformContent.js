@@ -45,7 +45,8 @@ const updateUrlPlatform = function(url, slug) {
   const url_split = url.split("#");
   const { url: path, query } = qs.parseUrl(url_split[0]);
   query.platform = slug;
-  return `${path}?${qs.stringify(query)}#${url_split[1]}`;
+  const hash = url_split[1] ? `#${url_split[1]}` : "";
+  return `${path}?${qs.stringify(query)}${hash}`;
 };
 
 const syncRelatedElements = function() {
