@@ -103,7 +103,7 @@ Next, create `resources/views/errors/500.blade.php`, and embed the feedback code
             Raven.showReportDialog({
                 eventId: '{{ Sentry::getLastEventID() }}',
                 // use the public DSN (dont include your secret!)
-                dsn: 'https://e9ebbd88548a441288393c457ec90441@sentry.io/3235',
+                dsn: '___PUBLIC_DSN___',
                 user: {
                     'name': 'Jane Doe',
                     'email': 'jane.doe@example.com',
