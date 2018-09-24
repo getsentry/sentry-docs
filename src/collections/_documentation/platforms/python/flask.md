@@ -6,21 +6,28 @@ sidebar_order: 2
 <!-- WIZARD -->
 *Import name: `sentry_sdk.integrations.flask.FlaskIntegration`*
 
-The Django integration adds support for the [Flask Web
-Framework](http://flask.pocoo.org/).  To configure the SDK initialize it with
-the integration before or after your app has been initialized:
+The Flask integration adds support for the [Flask Web
+Framework](http://flask.pocoo.org/).
 
-```python
-import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
+1. Install `sentry-sdk` from PyPI with the `flask` extra:
 
-sentry_sdk.init(
-    dsn="___PUBLIC_DSN___",
-    integrations=[FlaskIntegration()]
-)
+    ```bash
+    $ pip install --upgrade sentry-sdk[flask]=={% sdk_version sentry.python %}
+    ```
 
-app = Flask(__name__)
-```
+2.  To configure the SDK initialize it with the integration before or after your app has been initialized:
+
+    ```python
+    import sentry_sdk
+    from sentry_sdk.integrations.flask import FlaskIntegration
+
+    sentry_sdk.init(
+        dsn="___PUBLIC_DSN___",
+        integrations=[FlaskIntegration()]
+    )
+
+    app = Flask(__name__)
+    ```
 
 <!-- ENDWIZARD -->
 
