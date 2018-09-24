@@ -5,7 +5,7 @@ sidebar_order: 2
 
 Pagination in the API is handled via the Link header standard:
 
-```python
+```bash
 $ curl -i https://sentry.io/api/0/projects/1/groups/
 ```
 

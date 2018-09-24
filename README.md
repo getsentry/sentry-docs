@@ -27,7 +27,7 @@ This will run Bundler to install all the necessary dependencies and then run a w
 
 ## Development mode
 
-There are a number of inhancements in place that are only available when developing locally.
+There are a number of enhancements in place that are only available when developing locally.
 
 - Numerous optimizations have been made to speed up builds. See [environment-variables] for more info.
 - Pressing the `\`` key reveals a drawer with meta info for each page.
@@ -80,4 +80,3 @@ Categories are manually defined.
 
 Category hierarchy is automatically defined by folder structure. Add a markdown file to a folder within _src/collections/_documentation_. Order is alphabetical by default, or you may force sorting order by adding an  `sidebar_order` integer value in the frontmatter of the document.
 
-## Environment Variables
