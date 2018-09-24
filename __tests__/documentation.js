@@ -1,6 +1,7 @@
 import { getJekyllData, printOnFail } from '../lib/helpers';
 import { existsSync } from 'fs';
 import path from 'path';
+import glob from 'glob-promise';
 
 describe('Documentation', function() {
   beforeAll(() => {
@@ -16,5 +17,14 @@ describe('Documentation', function() {
         expect(doc.title).toBeTruthy();
       });
     });
+  });
+
+  test('urls should not change unexpectedly', () => {
+    expect.assertions(1);
+    return glob(path.join(process.cwd(), '_site/**/*.{html,json,xml}')).then(
+      paths => {
+        expect(paths).toMatchSnapshot();
+      }
+    );
   });
 });
