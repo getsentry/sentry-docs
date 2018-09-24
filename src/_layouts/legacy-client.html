@@ -1,0 +1,29 @@
+---
+layout: doc
+---
+
+{%- capture where_exp -%}
+"{{ page.url }}" contains platform.doc_link
+{%- endcapture -%}
+{%- assign __page_platform = site.data.platforms
+  | where_exp: "platform", where_exp
+  | first
+-%}
+
+{%- if __page_platform.superseded_by -%}
+  {%- assign __new_platform = site.data.platforms | where: 'slug', __page_platform.superseded_by | first %}
+  {%- assign __quickstart_link = '/quickstart?platform=' | append: __new_platform.slug -%}
+  {% capture __alert_content -%}
+  This SDK has been superseded by a new unified one.  The documentation here is
+  preserved for customers using the old client.  For new projects have a look
+  at the new client documentation:
+  <a href="{{ __new_platform.doc_link | default: __quickstart_link }}">Unified {{ __new_platform.name }} SDK</a>.
+  {%- endcapture -%}
+  {%- include components/alert.html
+    level="info"
+    title="Deprecated Client"
+    content=__alert_content
+  %}
+{%- endif -%}
+
+{{ content }}

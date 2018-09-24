@@ -20,4 +20,4 @@ To get you started, you might find some of these links relevant:
 ## Contributing
 
 Looking to get started contributing to Sentry? Our [_internal documentation_]({%- link _documentation/internal/index.md -%}) has you covered.  Also
-have a look at our [_Forums_](https://forums.sentry.io/) and our [_Github org_](https://github.com/getsentry).
+have a look at our [_Forums_](https://forum.sentry.io/) and our [_Github org_](https://github.com/getsentry).

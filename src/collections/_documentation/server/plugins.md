@@ -82,5 +82,3 @@ The following plugins are available and maintained by members of the Sentry comm
 -   [sentry-youtrack](https://github.com/bogdal/sentry-youtrack)
 -   [sentry-zabbix](https://github.com/m0n5t3r/sentry-zabbix)
 -   [sentry-zendesk](https://github.com/ESSS/sentry-zendesk)
-
-Have an extension that should be listed here? Submit a [pull request](https://github.com/getsentry/sentry/edit/master/docs/plugins.rst) and we’ll get it added.

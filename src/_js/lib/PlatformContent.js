@@ -42,9 +42,11 @@ const verifyPlatformSlug = function(slug) {
 //
 // Returns a string
 const updateUrlPlatform = function(url, slug) {
-  const { url: origin, query } = qs.parseUrl(url);
+  const url_split = url.split("#");
+  const { url: path, query } = qs.parseUrl(url_split[0]);
   query.platform = slug;
-  return `${origin}?${qs.stringify(query)}`;
+  const hash = url_split[1] ? `#${url_split[1]}` : "";
+  return `${path}?${qs.stringify(query)}${hash}`;
 };
 
 const syncRelatedElements = function() {
