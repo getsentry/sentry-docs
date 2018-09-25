@@ -2,6 +2,8 @@
 title: Flask
 sidebar_order: 2
 ---
+
+<!-- WIZARD -->
 *Import name: `sentry_sdk.integrations.flask.FlaskIntegration`*
 
 The Django integration adds support for the [Flask Web
@@ -19,6 +21,8 @@ sentry_sdk.init(
 
 app = Flask(__name__)
 ```
+
+<!-- ENDWIZARD -->
 
 ## Behavior
 
