@@ -33,4 +33,26 @@ app.use(function onError(err, req, res, next) {
 
 app.listen(3000);
 ```
+
+If you use TypeScript, you need to cast our handlers to express specific types.
+They are fully compatible, so the only things you need to change are:
+
+```javascript
+// from
+const express = require('express');
+// to
+import * as express from 'express';
+
+
+// from
+app.use(Sentry.Handlers.requestHandler());
+// to
+app.use(Sentry.Handlers.requestHandler() as express.RequestHandler);
+
+
+// from
+app.use(Sentry.Handlers.errorHandler());
+// to
+app.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
+```
 <!-- ENDWIZARD -->
