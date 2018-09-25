@@ -53,4 +53,4 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 ## GitHub SSO
 
-[Enable Single Sign-on]({%- link _documentation/learn/sso.md -%})
+[Enable Single Sign-on]({%- link _documentation/product/sso.md -%})

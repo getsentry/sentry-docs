@@ -5,6 +5,7 @@ sidebar_order: 3
 
 Laravel is supported via a native package, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
+<!-- WIZARD -->
 ## Laravel 5.x {#laravel-5-x}
 
 Install the `sentry/sentry-laravel` package:
@@ -102,7 +103,7 @@ Next, create `resources/views/errors/500.blade.php`, and embed the feedback code
             Raven.showReportDialog({
                 eventId: '{{ Sentry::getLastEventID() }}',
                 // use the public DSN (dont include your secret!)
-                dsn: 'https://e9ebbd88548a441288393c457ec90441@sentry.io/3235',
+                dsn: '___PUBLIC_DSN___',
                 user: {
                     'name': 'Jane Doe',
                     'email': 'jane.doe@example.com',
@@ -205,7 +206,7 @@ return array(
     // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
 );
 ```
-
+<!-- ENDWIZARD -->
 ## Testing with Artisan
 
 You can test your configuration using the provided `artisan` command:

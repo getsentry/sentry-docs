@@ -1,6 +1,5 @@
-
 Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
-  def treeFor(docs, root)
+  def tree_for(docs, root)
     tree = []
 
     groups = docs.group_by do |doc|
@@ -24,7 +23,7 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
 
       docs_without_index = docs_for_group.reject {|doc| doc.path.include? "#{new_root}index." }
 
-      items = new_root.nil? ? nil : treeFor(docs_without_index, new_root)
+      items = new_root.nil? ? nil : tree_for(docs_without_index, new_root)
 
       if !items.nil?
         items.sort_by! do |i|
@@ -49,10 +48,33 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
     tree
   end
 
-
   mapped = site.collections.map {|c| c[1].docs}
   documents = mapped.flatten()
-  tree = treeFor(documents, "")
+  tree = tree_for(documents, "")
+
+  # relocate some items
+  def adjacent_move(item, stack)
+    # TODO: we might have to support direct parent as well
+    parent = stack[stack.size - 2]
+    if !parent.nil? && !item["document"].nil?
+      other_sidebar = item["document"].data["sidebar_relocation"]
+      if !other_sidebar.nil? && parent["items"]
+        parent["items"].each do |parent_item|
+          if parent_item["slug"] == other_sidebar
+            parent_item["items"].push item
+            return nil
+          end
+        end
+      end
+    end
+
+    if !item["items"].nil?
+      item["items"] = item["items"].map { |child| adjacent_move(child, stack + [item]) }.compact
+    end
+    item
+  end
+
+  tree = tree.map { |item| adjacent_move(item, []) }
 
   tree.each do |collection|
     config_slug = "#{collection["name"]}_categories"

@@ -9,6 +9,7 @@ The source can be found [on Github](https://github.com/getsentry/sentry-java/tre
 
 **Note:** The old `raven-logback` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-logback` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-logback` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/logback.rst).
 
+<!-- WIZARD -->
 ## Installation
 
 Using Maven:
@@ -17,23 +18,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-logback</artifactId>
-    <version>1.7.5</version>
+    <version>1.7.10</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-logback:1.7.5'
+compile 'io.sentry:sentry-logback:1.7.10'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-logback" % "1.7.5"
+libraryDependencies += "io.sentry" % "sentry-logback" % "1.7.10"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-logback%7C1.7.5%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-logback%7C1.7.10%7Cjar).
 
 ## Usage
 
@@ -67,6 +68,7 @@ Example configuration using the `logback.xml` format:
 ```
 
 Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#setting-the-dsn) for ways you can do this.
+<!-- ENDWIZARD -->
 
 ## Additional Data
 

@@ -13,6 +13,7 @@ If you haven’t already, start by downloading Raven. The easiest way is with _p
 pip install raven --upgrade
 ```
 
+<!-- WIZARD -->
 ## Setup
 
 The first thing you’ll need to do is to disable catchall in your Bottle app:
@@ -65,3 +66,4 @@ Log a generic message with `captureMessage`:
 ```python
 request.app.sentry.captureMessage('Hello, world!')
 ```
+<!-- ENDWIZARD -->

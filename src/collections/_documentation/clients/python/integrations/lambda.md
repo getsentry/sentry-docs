@@ -29,6 +29,6 @@ def handler(event, context):
 
 By default this will report unhandled exceptions and errors to Sentry.
 
-Additional settings for the client are configured using environment variables or subclassing _LambdaClient_.
+The `LambdaClient` accepts the same arguments as the regular `Client`, see [_Configuring the Client_]({%- link _documentation/clients/python/advanced.md -%}#python-client-config).
 
 The integration was inspired by [raven python lambda](https://github.com/Netflix-Skunkworks/raven-python-lambda), another implementation that also integrates with Serverless Framework and has SQS transport support.

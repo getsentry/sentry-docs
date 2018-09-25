@@ -7,6 +7,7 @@ raven-node is the official Node.js client for Sentry.
 
 **Note**: If you’re using JavaScript in the browser, you’ll need [raven-js](https://docs.sentry.io/clients/javascript).
 
+<!-- WIZARD installation -->
 ## Installation
 
 Raven is distributed via `npm`:
@@ -14,7 +15,9 @@ Raven is distributed via `npm`:
 ```bash
 $ npm install raven --save
 ```
+<!-- ENDWIZARD -->
 
+<!-- WIZARD configuration -->
 ## Configuring the Client
 
 Next you need to initialize the Raven client and configure it to use your [Sentry DSN]({%- link _documentation/learn/quickstart.md -%}#configure-the-dsn):
@@ -27,7 +30,9 @@ Raven.config('___PUBLIC_DSN___').install();
 At this point, Raven is set up to capture and report any uncaught exceptions.
 
 You can optionally pass an object of configuration options as the 2nd argument to _Raven.config_. For more information, see [_Configuration_]({%- link _documentation/clients/node/config.md -%}).
+<!-- ENDWIZARD -->
 
+<!-- WIZARD reporting-errors -->
 ## Reporting Errors
 
 Raven’s `install` method sets up a global handler to automatically capture any uncaught exceptions. You can also report errors manually with `try...catch` and a call to `captureException`:
@@ -39,6 +44,7 @@ try {
     Raven.captureException(e);
 }
 ```
+<!-- ENDWIZARD -->
 
 You can also use `wrap` and `context` to have Raven wrap a function and automatically capture any exceptions it throws:
 

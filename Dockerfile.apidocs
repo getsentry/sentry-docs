@@ -1,0 +1,45 @@
+# Sentry api documentation generation environment
+#
+# Instructions:
+#
+#   Build the container:
+#     $ docker build -t sentry:apidocs -f Dockerfile.apidocs .
+#   Run the container:
+#     $ docker run --rm -v $(pwd):/usr/src/output sentry:apidocs
+#
+# The container will dump the generated documentation in markdown and JSON
+# formats into the /usr/src/output directory which you should mount as a volume
+#
+FROM python:2.7.15-slim-jessie
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        clang \
+        curl \
+        g++ \
+        gcc \
+        git \
+        libffi-dev \
+        libjpeg-dev \
+        libpq-dev \
+        libxml2-dev \
+        libxslt-dev \
+        libyaml-dev \
+        llvm \
+        bzip2 \
+        make \
+        redis-server \
+        unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Sane defaults for pip
+ENV PIP_NO_CACHE_DIR off
+ENV PIP_DISABLE_PIP_VERSION_CHECK on
+ENV PYTHONUNBUFFERED 1
+
+RUN mkdir -p /usr/src/bin
+COPY scripts/build-api-docs /usr/bin
+
+WORKDIR /usr/src
+VOLUME /usr/src/output
+
+CMD [ "/usr/bin/build-api-docs" ]

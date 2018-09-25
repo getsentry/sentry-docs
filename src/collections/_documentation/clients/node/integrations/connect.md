@@ -3,6 +3,7 @@ title: Connect
 sidebar_order: 6
 ---
 
+<!-- WIZARD -->
 ```javascript
 var connect = require('connect');
 var Raven = require('raven');
@@ -36,3 +37,4 @@ connect(
     onError,
 ).listen(3000);
 ```
+<!-- ENDWIZARD -->

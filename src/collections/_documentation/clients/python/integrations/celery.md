@@ -13,6 +13,7 @@ If you haven’t already, start by downloading Raven. The easiest way is with _p
 pip install raven --upgrade
 ```
 
+<!-- WIZARD -->
 ## Setup
 
 To capture errors, you need to register a couple of signals to hijack Celery error handling:
@@ -61,3 +62,4 @@ class Celery(celery.Celery):
 app = Celery(__name__)
 app.config_from_object('django.conf:settings')
 ```
+<!-- ENDWIZARD -->

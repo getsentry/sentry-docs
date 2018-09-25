@@ -16,25 +16,13 @@ end
 
 `async`
 
-: When an error or message occurs, the notification is immediately sent to Sentry. Raven can be configured to send asynchronously:
+: When an error or message occurs, the notification is immediately sent to Sentry, synchronously. This means that returning a response to a user may be delayed. 
+
+  We recommend creating a background job, using your background job processor, that will send Sentry notifications. The client will pass a JSON-compatible Hash representation of the Event into the callback.
 
   ```ruby
   config.async = lambda { |event|
-    Thread.new { Raven.send_event(event) }
-  }
-  ```
-
-  Using a thread to send events will be adequate for truly parallel Ruby platforms such as JRuby, though the benefit on MRI/CRuby will be limited.
-
-  The example above is extremely basic. For example, exceptions in Rake tasks will not be reported because the Rake task will probably exit before the thread can completely send the event to Sentry. Threads also won’t report any exceptions raised inside of them, so be careful!
-
-  If the async callback raises an exception, Raven will attempt to send synchronously.
-
-  We recommend creating a background job, using your background job processor, that will send Sentry notifications in the background. Rather than enqueuing an entire Raven::Event object, we recommend providing the Hash representation of an event as a job argument. Here’s an example for ActiveJob:
-
-  ```ruby
-  config.async = lambda { |event|
-    SentryJob.perform_later(event.to_hash)
+    SentryJob.perform_later(event)
   }
   ```
 
@@ -47,6 +35,8 @@ end
     end
   end
   ```
+
+  If the async callback raises an exception, Raven will attempt to send synchronously.
 
 `encoding`
 
@@ -110,7 +100,7 @@ end
 
   Check out `Raven::Processor::SanitizeData` to see how a Processor is implemented.
 
-  You can also specify values to be sanitized. Any strings matched will be replaced with the string mask (********). One good use for this is to copy Rails’ filter_parameters:
+  You can also specify values to be sanitized. Any strings matched will be replaced with the string mask (********), and integers that are matched will be replaced with 0. Only String and Integer values can be sanitized, though the client will recursively traverse Hashes and Arrays to look for sanitizable values. One good use for this is to copy Rails’ filter_parameters:
 
   ```ruby
   config.sanitize_fields = Rails.application.config.filter_parameters.map(&:to_s)
