@@ -1,3 +1,4 @@
+import { logPageview } from './Page';
 import { fullPath } from './Helpers';
 
 const isDifferentDomain = function(here, there) {
@@ -54,7 +55,7 @@ $(document).on('click', '[data-dynamic-load] a', function(event) {
       event.preventDefault();
       load(event.currentTarget, true);
       // Send reload a pageview
-      window.ra.page();
+      logPageview();
   }
 });
 
