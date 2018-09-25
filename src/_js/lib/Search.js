@@ -41,7 +41,6 @@ class Search {
     this.pageTemplate = $('html').html();
 
     this.init = this.init.bind(this);
-    this.loader = this.loader.bind(this);
 
     this.$target = $target;
     this.Lunr = new Lunr({
@@ -63,20 +62,6 @@ class Search {
 
     return this.Lunr.search(params.q).then(results => {
       $('[data-search-results]').append(renderResults(results, params.q));
-    });
-  }
-
-  // This is a loader for DynamicLoader. It generates a full HTML page that
-  // DynamicLoader can parse.
-  loader(url) {
-    const { search } = url;
-    const params = qs.parse(search);
-    return fetchResults(params).then(res => {
-      const $page = $(this.pageTemplate);
-      return $page
-        .find('[data-search-results]')
-        .append(renderResults(res, params))
-        .html();
     });
   }
 }
