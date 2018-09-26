@@ -37,7 +37,7 @@ In addition to framework integrations there are also a few other integrations:
 
 ## Hints
 
-The Python SDK provides some common [hints]({% link _documentation/learn/hints.md %}) for breadcrumbs
+The Python SDK provides some common [hints]({% link _documentation/learn/filtering.md %}#event-hints) for breadcrumbs
 and events.  These hints are passed as the `hint` parameter to `before_send` and `before_breadcrumb`
 (as well as event processors) as a dictionary.  More than one hint can be supplied but this is rare.
 

@@ -1,6 +1,6 @@
 ---
 title: Breadcrumbs
-sidebar_order: 3
+sidebar_order: 4
 ---
 
 Sentry supports a concept called Breadcrumbs, which is a trail of events which
@@ -67,4 +67,4 @@ hint.  The function can modify the breadcrumb or decide to discard it entirely:
 
 {% include components/platform_content.html content_dir='before-breadcrumb' %}
 
-For information about what can be done with the hint see [hints]({% link _documentation/learn/hints.md %}).
+For information about what can be done with the hint see [_Filtering Events_]({% link _documentation/learn/filtering.md %}#before-breadcrumb).
