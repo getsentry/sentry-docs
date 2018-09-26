@@ -44,9 +44,7 @@ If you’ve accidentally sent sensitive data to the server it’s likely you’r
 
 ## Custom Event Processing in the SDK
 
-In the SDKs you can also set a function `before-send` which is invoked before events are sent which can be used to modify the events and remove bad data:
-
-{% include components/platform_content.html content_dir='before-send' %}
+In the SDKs you can also set a function `before-send` which is invoked before events are sent which can be used to modify the events and remove bad data. See [_Filtering Events_]({%- link _documentation/learn/filtering.md -%}) for more information.
 
 ## Custom Event Processing using Relay
 
