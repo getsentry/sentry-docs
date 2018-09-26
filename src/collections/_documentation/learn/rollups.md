@@ -58,12 +58,6 @@ To work around these the Sentry protocol supports a `fingerprint` attribute.
 
 In supported SDKs, this attribute can be passed with the event information, and should be an array of strings:
 
-```javascript
-Raven.captureException(ex, {fingerprint: ['my', 'custom', 'fingerprint']})
-```
+{% include components/platform_content.html content_dir='set-fingerprint' %}
 
-Additionally if you simply wish to append information, thus making the grouping slightly less aggressive, you can do that as well:
-
-```javascript
-{% raw %}Raven.captureException(ex, {fingerprint: ['{{ default }}', 'other', 'data']}){% endraw %}
-```
+Additionally if you simply wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{% raw %}{{ default }}{% endraw %}` as one of the items.

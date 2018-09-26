@@ -72,7 +72,10 @@ class DynamicLoader {
     const { pathname, hash, search } = url;
     const done = function() {
       // Send reload a pageview if this is a new page
-      if (pathname !== location.pathname) window.ra.page();
+      if (pathname !== location.pathname) {
+        window.ra.page();
+        $('[data-feedback-toggle] label').removeClass('active');
+      }
 
       // Update history if necessary
       if (pushState) {

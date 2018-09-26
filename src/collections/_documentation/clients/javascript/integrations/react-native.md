@@ -89,7 +89,7 @@ Therefore in this example, you should name your artifacts as â€œ/main.jsbundleâ€
 
 When developing with the simulator, it is not necessary to build source maps manually, as they are generated automatically on-demand.
 
-Note however that artifact names are completely different when using the simulator. This is because instead of those files existing on a path on a device, they are served over HTTP via the [React Native packager](https://github.com/facebook/react-native/tree/master/packager).
+Note however that artifact names are completely different when using the simulator. This is because instead of those files existing on a path on a device, they are served over HTTP via the [React Native packager](https://github.com/facebook/metro).
 
 Typically, simulator assets are served at the following URLs:
 

@@ -1,0 +1,11 @@
+The .NET SDK automatically shuts down and waits `ShutdownTimeout` seconds before that happens
+when the `Init`'s return value is disposed:
+
+```csharp
+using (SentrySdk.Init(...))
+{
+    // App code
+}
+```
+
+In case of an unhandled exception that will crash the app, the SDK automatically disposes itself.

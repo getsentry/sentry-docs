@@ -1,35 +1,40 @@
-const filterDepth = depth => {
-  return (i, el) => {
-    const $parents = $(el).parentsUntil(
-      '[data-sidebar-root]',
-      '[data-sidebar-tree]'
-    );
-    return $parents.length === depth;
-  };
-};
-
 $(document).on('page.didUpdate', function(event) {
   const $links = $('[data-sidebar-link]');
-  let $active = $links.filter(`[href="${location.pathname}"]`);
-  const $categoryTree = $('[data-sidebar-tree]').filter(filterDepth(1));
-  $active = !!$active.length
-    ? $active
-    : $categoryTree.first().siblings('[data-sidebar-link]');
+  const $sections = $('[data-sidebar-root] > [data-sidebar-tree]').find(
+    '> [data-sidebar-branch]'
+  );
+
+  let $active = $links.filter(`[href="${location.pathname}"]`).last();
+
+  if (!$active.length) {
+    $active = $sections
+      .first()
+      .find('> [data-sidebar-tree]')
+      .find('> [data-sidebar-branch]')
+      .first()
+      .find('> [data-sidebar-link]');
+  }
 
   $links.each((i, el) => {
     const $el = $(el);
     $el.toggleClass('active', $el.is($active));
   });
 
-  const $sectionTree = $('[data-sidebar-tree]').filter(filterDepth(0));
+  $('[data-sidebar-branch]').each((i, el) => {
+    const $branch = $(el);
+    const $parentBranch = $branch
+      .parent()
+      .closest('[data-sidebar-branch],[data-sidebar-root]');
+    const hideWhenNoActiveChild =
+      $branch.data('hide-when-inactive') !== undefined;
+    const parentTreeContainsActive = $parentBranch
+      .find('[data-sidebar-link]')
+      .is($active);
 
-  const $trees = $('[data-sidebar-tree]');
-  $trees.each((i, el) => {
-    const $el = $(el);
-    const containsActive = !!$el.has($active.get(0)).length;
-    const isChildOfActive = $el.parent().is($active.parent());
-    const isSection = $sectionTree.is($el);
-    const leaveVisble = containsActive || isChildOfActive || isSection;
-    $el.toggleClass('collapse', !leaveVisble);
+    const containsActive = $branch.find('[data-sidebar-link]').is($active);
+
+    const leaveVisble =
+      containsActive || (parentTreeContainsActive && !hideWhenNoActiveChild);
+    $branch.toggleClass('collapse', !leaveVisble);
   });
 });

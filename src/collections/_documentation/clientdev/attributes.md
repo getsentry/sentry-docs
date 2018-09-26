@@ -1,11 +1,15 @@
 ---
 title: Attributes
-sidebar_order: 1
+sidebar_order: 10
 ---
 
-Attributes are simple data that Sentry understands to provide the most basic information about events. These are things like the unique ID of an event, the human readable message etc.
+Attributes are simple data that Sentry understands to provide the most basic
+information about events. These are things like the unique ID of an event, the
+human readable message etc.
 
-Attributes are separate from [_Interfaces_]({%- link _documentation/clientdev/interfaces/index.md -%}) which provide very specific and tailored data such as exception data, stacktraces, etc.
+Attributes are separate from [_Interfaces_]({%- link
+_documentation/clientdev/interfaces/index.md -%}) which provide very specific
+and tailored data such as exception data, stacktraces, etc.
 
 ## Required Attributes
 
@@ -13,9 +17,8 @@ The following attributes are required for all events:
 
 `event_id`
 
-: Hexadecimal string representing a uuid4 value.
-
-  The length is exactly 32 characters (no dashes!)
+: Hexadecimal string representing a uuid4 value. The length is exactly 32
+  characters. Dashes are not allowed.
 
   ```json
   {
@@ -25,11 +28,9 @@ The following attributes are required for all events:
 
 `timestamp`
 
-: Indicates when the logging record was created (in the Sentry SDK).
-
-  The Sentry server assumes the time is in UTC.
-
-  The timestamp should be in ISO 8601 format, without a timezone.
+: Indicates when the logging record was created (in the Sentry SDK). The Sentry
+  server assumes the time is in UTC. The timestamp should be in ISO 8601 format,
+  without a timezone.
 
   ```json
   {
@@ -49,7 +50,8 @@ The following attributes are required for all events:
 
 `platform`
 
-: A string representing the platform the SDK is submitting from. This will be used by the Sentry interface to customize various components in the interface.
+: A string representing the platform the SDK is submitting from. This will be
+  used by the Sentry interface to customize various components in the interface.
 
   ```json
   {
@@ -77,7 +79,9 @@ The following attributes are required for all events:
 
 `sdk`
 
-: Information about the SDK sending the event. Note that the `integrations` key is optional and used to list any of the SDK and language specific integrations that the user is actively using.
+: Information about the SDK sending the event. Note that the `integrations` key
+  is optional and used to list any of the SDK and language specific integrations
+  that the user is actively using.
 
   ```json
   {
@@ -93,7 +97,8 @@ The following attributes are required for all events:
 
 ## Optional Attributes
 
-Additionally, there are several optional values which Sentry recognizes and are highly encouraged:
+Additionally, there are several optional values which Sentry recognizes and are
+highly encouraged:
 
 `level`
 
@@ -117,17 +122,22 @@ Additionally, there are several optional values which Sentry recognizes and are 
   -   `info`
   -   `debug`
 
-`culprit`
+`transaction`
 
-: The name of the transaction (or culprit) which caused this exception.
+: The name of the transaction which caused this exception
 
   For example, in a web app, this might be the route name: `/welcome/`
 
   ```json
   {
-    "culprit": "my.module.function_name"
+    "transaction": "/users/<username>/"
   }
   ```
+
+`culprit`
+
+: The name of the culprit which caused this exception. This attribute is
+  deprecated.
 
 `server_name`
 
@@ -143,7 +153,8 @@ Additionally, there are several optional values which Sentry recognizes and are 
 
 : The release version of the application.
 
-  This value will generally be something along the lines of the git SHA for the given project.
+  This value will generally be something along the lines of the git SHA for the
+  given project.
 
   ```json
   {
@@ -164,18 +175,9 @@ Additionally, there are several optional values which Sentry recognizes and are 
   }
   ```
 
-  ```json
-  {
-    "tags": [
-      ["ios_version", "4.0"],
-      ["context", "production"]
-    ]
-  }
-  ```
-
 `environment`
 
-: The environment name, such as ‘production’ or ‘staging’.
+: The environment name, such as `production` or `staging`.
 
   ```json
   {
@@ -212,22 +214,30 @@ Additionally, there are several optional values which Sentry recognizes and are 
 
 `fingerprint`
 
-: An array of strings used to dictate the deduplication of this event.
-
-  A value of `{% raw %}{{ default }}{% endraw %}` will be replaced with the built-in behavior, thus allowing you to extend it, or completely replace it.
+: A list of strings used to dictate the deduplication of this event. A value
+  of `{% raw %}{{ default }}{% endraw %}` will be replaced with the built-in
+  behavior, thus allowing you to extend it, or completely replace it.
 
   ```json
   {
-    "fingerprint": ["myrpc", "POST", "/foo.bar"]
+    "fingerprint": [
+      "myrpc",
+      "POST",
+      "/foo.bar"
+    ]
   }
   ```
 
   ```json
   {% raw %}{
-    "fingerprint": ["{{ default }}", "http://example.com/my.url"]
+    "fingerprint": [
+      "{{ default }}",
+      "http://example.com/my.url"
+    ]
   }{% endraw %}
   ```
 
-  {% version_added Protocol: version ‘7’ %}
+  {% version_added Protocol: 7 %}
 
-For information about overriding grouping see [Customize Grouping with Fingerprints]({%- link _documentation/learn/rollups.md -%}#custom-grouping).
+For information about overriding grouping see [Customize Grouping with
+Fingerprints]({%- link _documentation/learn/rollups.md -%}#custom-grouping).

@@ -3,6 +3,7 @@ title: 'Rack (Sinatra etc.)'
 sidebar_order: 8
 ---
 
+<!-- WIZARD -->
 ## Installation
 
 Install the SDK via Rubygems by adding it to your `Gemfile`:
@@ -24,3 +25,4 @@ end
 
 use Raven::Rack
 ```
+<!-- ENDWIZARD -->

@@ -18,6 +18,7 @@ On its own, Raven.js will report any uncaught exceptions triggered from your app
 
 Additionally, the Raven.js Vue plugin will capture the name and props state of the active component where the error was thrown. This is reported via Vue’s _config.errorHandler_ hook.
 
+<!-- WIZARD -->
 ## Installation
 
 Raven.js and the Raven.js Vue plugin are distributed using a few different methods.
@@ -96,3 +97,5 @@ Raven
     .addPlugin(RavenVue, Vue)
     .install();
 ```
+
+<!-- ENDWIZARD -->

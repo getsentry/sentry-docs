@@ -3,7 +3,7 @@ title: Splunk
 sidebar_order: 8
 ---
 
-Connect Splunk to Sentry with the [Data Forwarding]({%- link _documentation/learn/data-forwarding.md -%}) feature.
+Connect Splunk to Sentry with the [Data Forwarding]({%- link _documentation/product/data-forwarding.md -%}) feature.
 
 {% capture __alert_content -%}
 See the [Splunk documentation](http://dev.splunk.com/view/event-collector/SP-CAAAE7F) for specific details on your Splunk installation.

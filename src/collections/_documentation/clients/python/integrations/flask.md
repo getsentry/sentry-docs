@@ -3,6 +3,7 @@ title: Flask
 sidebar_order: 7
 ---
 
+<!-- WIZARD -->
 ## Installation
 
 If you haven’t already, install raven with its explicit Flask dependencies:
@@ -21,6 +22,7 @@ sentry = Sentry(app, dsn='___DSN___')
 ```
 
 If you don’t specify the `dsn` value, we will attempt to read it from your environment under the `SENTRY_DSN` key.
+<!-- ENDWIZARD -->
 
 ## Extended Setup
 

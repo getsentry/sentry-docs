@@ -1,10 +1,12 @@
 ---
 title: Cocoa
 sidebar_order: 1
+sidebar_relocation: platforms
 ---
 
 This is the documentation for our official clients for Cocoa (Swift and Objective-C). Starting with version `3.0.0` we’ve switched our interal code from Swift to Objective-C to maximize compatiblity. Also we trimmed the public API of our sdk to a minimum. Some of the lesser used features that where present before are gone now, check out [Migration Guide]({%- link _documentation/clients/cocoa/migration.md -%}#migration) or [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%}#advanced) for details.
 
+<!-- WIZARD -->
 ## Installation
 
 The SDK can be installed using [CocoaPods](http://cocoapods.org) or [Carthage](https://github.com/Carthage/Carthage). This is the recommended client for both Swift and Objective-C.
@@ -84,7 +86,7 @@ Before you can start capturing crashes you will need to tell Sentry about the de
 
 -   [With Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#dsym-with-bitcode)
 -   [Without Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#dsym-without-bitcode)
-
+<!-- ENDWIZARD -->
 ## Testing a Crash
 
 If you would like to test the crash reporting you will need to cause a crash. While, the seemingly obvious method would be make it crash on launch, this will not give the Sentry client a chance to actually submit the crash report. Instead, we recommend triggering a crash from a button tap.

@@ -1,6 +1,7 @@
 ---
 title: Java
 sidebar_order: 6
+sidebar_relocation: platforms
 ---
 
 Sentry for Java is the official Java SDK for Sentry. At its core it provides a raw client for sending events to Sentry, but it is highly recommended that you use one of the included library or framework integrations listed below if at all possible.

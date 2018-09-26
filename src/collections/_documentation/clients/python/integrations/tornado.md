@@ -12,7 +12,7 @@ If you haven’t already, start by downloading Raven. The easiest way is with _p
 ```bash
 pip install raven --upgrade
 ```
-
+<!-- WIZARD -->
 ## Setup
 
 The first thing you’ll need to do is to initialize sentry client under your application
@@ -48,6 +48,7 @@ class UncaughtExceptionExampleHandler(
 ```
 
 You can also send events manually using the shortcuts defined in _SentryMixin_. The shortcuts can be used for both asynchronous and synchronous usage.
+<!-- ENDWIZARD -->
 
 ### Asynchronous
 

@@ -1,10 +1,12 @@
 ---
 title: 'React Native'
 sidebar_order: 11
+sidebar_relocation: platforms
 ---
 
 This is the documentation for our React-Native SDK. The React-Native SDK uses a native extension for iOS and Android but will fall back to a pure JavaScript version if necessary.
 
+<!-- WIZARD -->
 ## Installation
 
 Start by adding Sentry and then linking it:
@@ -35,6 +37,7 @@ Upon linking the following changes will be performed:
 To see what is happening during linking you can refer to [_Manual Setup_]({%- link _documentation/clients/react-native/manual-setup.md -%}) which will give you all the details.
 
 Note that we only support `react-native >= 0.38` at the moment.
+<!-- ENDWIZARD -->
 
 ## Upgrading
 
@@ -53,6 +56,7 @@ When you use Xcode you can hook directly into the build process to upload debug 
 
 For Android we hook into gradle for the sourcemap build process. When you run `react-native link` the gradle files are automatically updated. When you run `./gradlew assembleRelease` sourcemaps are automatically built and uploaded to Sentry.
 
+<!-- WIZARD -->
 ## Client Configuration
 
 Note: When you run `react-native link` we will automatically update your _index.ios.js_ / _index.android.js_ with the following changes:
@@ -63,6 +67,7 @@ Sentry.config('___PUBLIC_DSN___').install();
 ```
 
 You can pass additional configuration options to the _config()_ method if you want to do so.
+<!-- ENDWIZARD -->
 
 ## Mixed Stacktraces
 

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+echo "--> Fetching sentry source"
+curl -Ls https://github.com/getsentry/sentry/archive/master.zip --output sentry.zip
+unzip sentry.zip
+
+echo "--> Installing sentry dependencies"
+cd sentry-master
+
+export SENTRY_LIGHT_BUILD=1
+pip install -e '.[dev]'
+
+echo "--> Starting Redis"
+redis-server &
+
+echo "--> Building API docs"
+python api-docs/generator.py --output-path=/usr/src/output --output-format=both
