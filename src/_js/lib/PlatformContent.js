@@ -167,7 +167,7 @@ $(document).on('click', '[data-toggle="platform"]', function(event) {
 });
 
 $(document).on('page.didUpdate', function(event) {
-  if (!$('[data-platform-specific-content]').length) return
+  if (!$('[data-platform-specific-content]').length) return;
   // cameron help me. why do i need to do this -- mitsuhiko
   $('a[href^="?platform"]').attr('data-not-dynamic', '1');
 
