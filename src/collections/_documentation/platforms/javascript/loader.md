@@ -1,11 +1,11 @@
 ---
 title: Loader
-sidebar_order: 21
+sidebar_order: 30000
 ---
 
 We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/learn/quickstart.md %}?platform=browser#pick-a-client-integration).
 
-But we also offer an alternative which is still in beta, we call it the _Loader_.
+But we also offer an alternative which is still in *beta*, we call it the _Loader_.
 
 You install by just adding this script to you website instead of the SDK bundle.
 This line is everything you need, this script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
@@ -14,7 +14,7 @@ This line is everything you need, this script is <1kB gzipped and includes the `
 <script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
 ```
 
-### What does the Loader version provide?
+### What does the Loader provide?
 
 It's small wrapper around our SDK.  
 The _Loader_ does a few things:
