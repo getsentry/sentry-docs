@@ -1,7 +1,7 @@
 import { fullPath } from './Helpers';
 
 const isDifferentDomain = function(here, there) {
-  return here.protocol !== there.protocol && here.host !== there.host;
+  return here.protocol !== there.protocol || here.host !== there.host;
 };
 
 const isSamePage = function(here, there) {
