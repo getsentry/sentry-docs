@@ -27,7 +27,7 @@ raised interactive interpreter sessions will not be reported.
 ## Deduplication
 *Import name: `sentry_sdk.integrations.dedupe.DedupeIntegration`*
 
-This integration deduplicates certian events.  This is enabled by default and should not
+This integration deduplicates certain events.  This is enabled by default and should not
 be disabled except in rare circumstances.  Disabling this integration for instance will
 cause duplicate error logging in the Flask framework.
 

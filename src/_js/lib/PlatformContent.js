@@ -167,6 +167,7 @@ $(document).on('click', '[data-toggle="platform"]', function(event) {
 });
 
 $(document).on('page.didUpdate', function(event) {
+  if (!$('[data-platform-specific-content]').length) return;
   // Update the preferredPlatform based on the url.
   showPlatform(qs.parse(location.search).platform);
 });

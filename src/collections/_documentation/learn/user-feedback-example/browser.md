@@ -5,7 +5,8 @@
   Sentry.init({
     dsn: '___PUBLIC_DSN___',
     beforeSend: (event) => {
-      event.exception && Sentry.showReportDialog({ eventId: event.event_id });
+      // Check if it is an exception -> Show report dialog
+      event.exception && Sentry.showReportDialog();
       return event;
     }
   });
