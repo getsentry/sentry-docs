@@ -4,7 +4,7 @@ sidebar_order: 1
 sidebar_relocation: platforms
 ---
 
-This is the documentation for our official clients for Cocoa (Swift and Objective-C). Starting with version `3.0.0` we’ve switched our interal code from Swift to Objective-C to maximize compatiblity. Also we trimmed the public API of our sdk to a minimum. Some of the lesser used features that where present before are gone now, check out [Migration Guide]({%- link _documentation/clients/cocoa/migration.md -%}#migration) or [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%}#advanced) for details.
+This is the documentation for our official clients for Cocoa (Swift and Objective-C). Starting with version `3.0.0` we’ve switched our internal code from Swift to Objective-C to maximize compatibility. Also we trimmed the public API of our sdk to a minimum. Some of the lesser used features that where present before are gone now, check out [Migration Guide]({%- link _documentation/clients/cocoa/migration.md -%}#migration) or [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%}#advanced) for details.
 
 <!-- WIZARD -->
 ## Installation
@@ -25,8 +25,6 @@ target 'YourApp' do
 end
 ```
 
-If you want to use Sentry without KSCrash you can just remove it from the subspecs. Keep in mind that if you are not using KSCrash no events will be reported whenever your app crashes. Also some functions might do nothing if they are related to KSCrash.
-
 Afterwards run `pod install`. In case you encounter problems with dependencies and you are on a newer CocoaPods you might have to run `pod repo update` first.
 
 To integrate Sentry into your Xcode project using Carthage, specify it in your _Cartfile_:
@@ -37,9 +35,7 @@ github "getsentry/sentry-cocoa" "4.1.0"
 
 Run `carthage update` to download the framework and drag the built _Sentry.framework_ into your Xcode project.
 
-Note that for Carthage we had to bundle KSCrash into the `Sentry.framework` to make everything work. So you will always get KSCrash with Sentry when using Carthage.
-
-We also provide a prebuilt version for every release which can be downloaded at [releases on github](https://github.com/getsentry/sentry-cocoa/releases).
+We also provide a pre-built version for every release which can be downloaded at [releases on github](https://github.com/getsentry/sentry-cocoa/releases).
 
 ## Configuration
 
@@ -57,7 +53,6 @@ func application(application: UIApplication,
         try Client.shared?.startCrashHandler()
     } catch let error {
         print("\(error)")
-        // Wrong DSN or KSCrash not installed
     }
 
     return true
@@ -77,8 +72,6 @@ if (nil != error) {
     NSLog(@"%@", error);
 }
 ```
-
-Note that if you call `startCrashHandler` will only catch errors if KSCrash is present.
 
 ## Debug Symbols {#sentry-cocoa-debug-symbols}
 

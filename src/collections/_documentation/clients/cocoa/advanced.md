@@ -2,8 +2,6 @@
 title: 'Advanced Usage'
 ---
 
-With Senty `3.0.0` we introduced some breaking changes. We removed some of the functions that were available before and added a few for more flexibility. KSCrash is optional with `3.0.0` so if you call `startCrashHandler` it will only do something if you also have KSCrash installed. We’ve switched our code from Swift to Objective-C, so the code below shows mostly Swift code. Even though Sentry is perfectly compatible with Objective-C all classes are prefixed with _Sentry_.
-
 ## Capturing uncaught exceptions on macOS
 
 By default macOS application do not crash whenever an uncaught exception occurs. There are some additional steps you have to take to make this work with Sentry. You have to open the applications `Info.plist` file and look for `Principal class`. The content of it which should be `NSApplication` should be replaced with `SentryCrashExceptionApplication`.
@@ -52,17 +50,17 @@ All of the above (_user_, _tags_, and _extra_) can be set at anytime. Call `Clie
 
 ## User Feedback {#cocoa-user-feedback}
 
-The _User Feedback_ feature has been removed as of version `3.0.0`. But if you want to show you own Controller or handle stuff after a crash you can use our [Change event before sending it](#before-serialize-event) callback. We are now also sending a notification whenever an event has been sent. The name of the notifcation is `Sentry/eventSentSuccessfully` and it contains the serialzed event as `userInfo`. Additionally the Client has a new property `Client.shared?.lastEvent` which always contains the most recent event.
+The _User Feedback_ feature has been removed as of version `3.0.0`. But if you want to show you own Controller or handle stuff after a crash you can use our [Change event before sending it](#before-serialize-event) callback. We are now also sending a notification whenever an event has been sent. The name of the notification is `Sentry/eventSentSuccessfully` and it contains the serialized event as `userInfo`. Additionally the Client has a new property `Client.shared?.lastEvent` which always contains the most recent event.
 
 ## Breadcrumbs
 
-Breadcrumbs are used as a way to trace how an error occured. They will queue up in a`Client` and will be sent with every event.
+Breadcrumbs are used as a way to trace how an error occurred. They will queue up in a`Client` and will be sent with every event.
 
 ```swift
 Client.shared?.breadcrumbs.add(Breadcrumb(level: .info, category: "test"))
 ```
 
-The client will queue up a maximum of 50 breadcrumbs by default. To change the maximum amout of breadcrumbs call:
+The client will queue up a maximum of 50 breadcrumbs by default. To change the maximum amount of breadcrumbs call:
 
 ```swift
 Client.shared?.breadcrumbs.maxBreadcrumbs = 100
@@ -78,7 +76,7 @@ If called this will track every action sent from a Storyboard and every _viewDid
 
 ## Change event before sending it {#before-serialize-event}
 
-With version _1.3.0_ we added the possiblity to change an event before it will be sent to the server. You have to set the block somewhere in you code.
+With version _1.3.0_ we added the possibility to change an event before it will be sent to the server. You have to set the block somewhere in you code.
 
 ```swift
 Client.shared?.beforeSerializeEvent = { event in
