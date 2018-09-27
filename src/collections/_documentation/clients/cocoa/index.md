@@ -25,7 +25,7 @@ target 'YourApp' do
 end
 ```
 
-If you want to use Sentry without KSCrash you can just remove it from the subspecs. Keep in mind that if you are not using KSCrash no events will be reported whenever you app crashes. Also some function might do nothing if they are related to KSCrash.
+If you want to use Sentry without KSCrash you can just remove it from the subspecs. Keep in mind that if you are not using KSCrash no events will be reported whenever your app crashes. Also some functions might do nothing if they are related to KSCrash.
 
 Afterwards run `pod install`. In case you encounter problems with dependencies and you are on a newer CocoaPods you might have to run `pod repo update` first.
 
