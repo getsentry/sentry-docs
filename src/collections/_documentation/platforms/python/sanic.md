@@ -45,9 +45,6 @@ Framework](https://github.com/huge-success/sanic).
 
     * Request data is attached to all events.
 
-    * If you have Flask-Login installed and configured, user data is attached to
-      the event.
-
 * All exceptions leading to a Internal Server Error are reported.
 
 * Logging with any logger will create breadcrumbs when
