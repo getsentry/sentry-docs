@@ -127,7 +127,7 @@ The following options exist to change the behavior of the upload command:
 
 `--ext`
 
-: Overrides the list of file extensions to upload. By default the following file extensions are processed: `js`, `map`, `jsbundle` and `bundle`. The tool will automatically detect the type of the file by the file contents (eg: sources, minified sources, and source maps) and act appropriately.
+: Overrides the list of file extensions to upload. By default the following file extensions are processed: `js`, `map`, `jsbundle` and `bundle`. The tool will automatically detect the type of the file by the file contents (eg: sources, minified sources, and source maps) and act appropriately. For multiple extensions you need to repeat the option, e.g.: `--ext js --ext map`.
 
 `--ignore`
 
