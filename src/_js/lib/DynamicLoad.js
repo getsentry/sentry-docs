@@ -14,12 +14,13 @@ const load = function(url, pushState) {
   $.ajax({ type: 'GET', url: fullPath(url) })
     .then(html => {
       // Expose the jQuery object via an event for pre-render manipulation
-      const $page = $(html.replace('<!DOCTYPE html>', ''));
+      const $page = $('<div/>').append($(html.replace('<!DOCTYPE html>', '')));
+
       $(document).trigger('page.willUpdate', $page);
 
       // Update the title
-      const $title = $page.filter('title').eq(0);
-      $('head title').text($title.text());
+      const $title = $page.find('title').eq(0);
+      $('title').text($title.text());
 
       // Update each dynamic section
       $page.find('[data-dynamic-load]').each(function(i, el) {
