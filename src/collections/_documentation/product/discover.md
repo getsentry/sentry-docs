@@ -1,6 +1,146 @@
 ---
 title: 'Discover'
 sidebar_order: 15
+standard_fields:
+
+  "General":
+    - name: event_id
+      type: string
+    - name: project_id
+      type: number
+    - name: timestamp
+      type: string
+    - name: platform
+      type: string
+    - name: message
+      type: string
+
+  "User attributes":
+    - name: user_id
+      type: string
+    - name: username
+      type: string
+    - name: email
+      type: string
+    - name: ip_address
+      type: string
+
+  "SDK":
+    - name: sdk_ame
+      type: string
+    - name: sdk_version
+      type: string
+
+  "OS":
+    - name: os_build
+      type: string
+    - name: os_kernel_version
+      type: string
+
+  "Device":
+    - name: device_name
+      type: string
+    - name: device_brand
+      type: string
+    - name: device_locale
+      type: string
+    - name: device_uuid
+      type: string
+    - name: device_model_id
+      type: string
+    - name: device_arch
+      type: string
+    - name: device_battery_level
+      type: number
+    - name: device_orientation
+      type: string
+    - name: device_simulator
+      type: string
+    - name: device_online
+      type: string
+    - name: device_charging
+      type: string
+
+  "Tags":
+    - name: tags_key
+      type: string
+    - name: tags_value
+      type: string
+
+  "HTTP":
+    - name: http_method
+      type: string
+    - name: http_referer
+      type: string
+
+  "Stack traces":
+    - name: exception_stacks.type
+      type: string
+    - name: exception_stacks.value
+      type: string
+    - name: exception_stacks.mechanism_type
+      type: string
+    - name: exception_stacks.mechanism_handled
+      type: string
+    - name: exception_frames.abs_path
+      type: string
+    - name: exception_frames.filename
+      type: string
+    - name: exception_frames.package
+      type: string
+    - name: exception_frames.module
+      type: string
+    - name: exception_frames.function
+      type: string
+    - name: exception_frames.in_app
+      type: boolean
+    - name: exception_frames.colno
+      type: number
+    - name: exception_frames.lineno
+      type: number
+    - name: exception_frames.stack_levvel
+      type: number
+
+common_tags:
+
+  "General":
+    - name: tags[level]
+      type: string
+    - name: tags[logger]
+      type: string
+    - name: tags[server_name]
+      type: string
+    - name: tags[transaction]
+      type: string
+    - name: tags[environment]
+      type: string
+    - name: tags[site]
+      type: string
+    - name: tags[url]
+      type: string
+    - name: tags[app_device]
+      type: string
+    - name: tags[device_family]
+      type: string
+    - name: tags[runtime]
+      type: string
+    - name: tags[runtime_name]
+      type: string
+    - name: tags[browser]
+      type: string
+    - name: tags[browser_name]
+      type: string
+    - name: tags[os]
+      type: string
+    - name: tags[os_name]
+      type: string
+    - name: tags[os_rooted]
+      type: boolean
+    - name: tags[sentry:release]
+      type: string
+    - name: tags[sentry:user]
+      type: string
+
 ---
 
 {% capture __alert_content -%}
@@ -85,50 +225,17 @@ Events have a number of built in fields as well as custom tags.
 #### Standard fields
 
 <table class="table">
-  <thead><tr><th>Category</th><th>Attribute name</th><th>Type</th></tr></thead>
-  <tbody valign="top">
-    <tr><td>General</td><td><code>event_id</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>project_id</code></td><td><code>number</code></td></tr>
-    <tr><td></td><td><code>timestamp</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>platform</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>message</code></td><td><code>string</code></td></tr>
-    <tr><td>User attributes</td><td><code>user_id</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>username</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>email</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>ip_address</code></td><td><code>string</code></td></tr>
-    <tr><td>SDK</td><td><code>sdk_ame</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>sdk_version</code></td><td><code>string</code></td></tr>
-    <tr><td>OS</td><td><code>os_build</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>os_kernel_version</code></td><td><code>string</code></td></tr>
-    <tr><td>Device</td><td><code>device_name</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>device_brand</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>device_locale</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>device_uuid</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>device_model_id</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>device_arch</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>device_battery_level</code></td><td><code>number</code></td></tr>
-    <tr><td></td><td><code>device_orientation</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>device_simulator</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>device_online</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>device_charging</code></td><td><code>string</code></td></tr>
-    <tr><td>Tags</td><td><code>tags_key</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags_value</code></td><td><code>string</code></td></tr>
-    <tr><td>HTTP</td><td><code>http_method</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>http_referer</code></td><td><code>string</code></td></tr>
-    <tr><td>Stack traces</td><td><code>exception_stacks.type</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>exception_stacks.value</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>exception_stacks.mechanism_type</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>exception_stacks.mechanism_handled</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>exception_frames.abs_path</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>exception_frames.filename</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>exception_frames.package</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>exception_frames.module</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>exception_frames.function</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>exception_frames.in_app</code></td><td><code>boolean</code></td></tr>
-    <tr><td></td><td><code>exception_frames.colno</code></td><td><code>number</code></td></tr>
-    <tr><td></td><td><code>exception_frames.lineno</code></td><td><code>number</code></td></tr>
-    <tr><td></td><td><code>exception_frames.stack_levvel</code></td><td><code>number</code></td></tr>
-  </tbody>
+{%- for category in page.standard_fields -%}
+  <tr>
+    <td>
+      <strong>{{ category[0] }}</strong>
+    </td>
+    <td class="content-flush-bottom">
+      {%- assign items = category[1]-%}
+      {%- include api/params.html params=items -%}
+    </td>
+  </tr>
+{%- endfor -%}
 </table>
 
 
@@ -137,27 +244,17 @@ Events have a number of built in fields as well as custom tags.
 These tags are commonly used / implemented in Sentry's SDKs
 
 <table class="table">
-  <thead><tr><th>Category</th><th>Attribute name</th><th>Type</th></tr></thead>
-  <tbody valign="top">
-    <tr><td>General</td><td><code>tags[level]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[logger]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[server_name]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[transaction]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[environment]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[site]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[url]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[app_device]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[device_family]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[runtime]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[runtime_name]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[browser]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[browser_name]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[os]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[os_name]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[os_rooted]</code></td><td><code>boolean</code></td></tr>
-    <tr><td></td><td><code>tags[sentry:release]</code></td><td><code>string</code></td></tr>
-    <tr><td></td><td><code>tags[sentry:user]</code></td><td><code>string</code></td></tr>
-  </tbody>
+{%- for category in page.common_tags -%}
+  <tr>
+    <td>
+      <strong>{{ category[0] }}</strong>
+    </td>
+    <td class="content-flush-bottom">
+      {%- assign items = category[1]-%}
+      {%- include api/params.html params=items -%}
+    </td>
+  </tr>
+{%- endfor -%}
 </table>
 
 
