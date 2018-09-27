@@ -45,6 +45,11 @@ Sets the environment.  This string is freeform and not set by default.  A releas
 with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 {:.config-key}
+### enabled
+
+Specifies whether this SDK should activate and send events to Sentry. Disabling the SDK reduces all overhead from instrumentation, collecting breadcrumbs and capturing events. Defaults to `true`.
+
+{:.config-key}
 ### repos
 
 For repository integration, the repository identifiers need to be sent along.  For more information
