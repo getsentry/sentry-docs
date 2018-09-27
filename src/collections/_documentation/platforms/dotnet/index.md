@@ -7,7 +7,14 @@ sidebar_order: 10
 
 This section will describe features, configurations and general functionality which are specific to the .NET SDK.
 
-# Compatibility
+## Integrations
+
+- [_ASP.NET Core_]({% link _documentation/platforms/dotnet/aspnetcore.md %})
+- [_EntityFramework_]({% link _documentation/platforms/dotnet/entityframework.md %})
+- [_log4net_]({% link _documentation/platforms/dotnet/log4net.md %})
+- [_Microsoft.Extensions.Logging_]({% link _documentation/platforms/dotnet/microsoft-extensions-logging.md %})
+
+## Compatibility
 
 The main [Sentry NuGet package](https://www.nuget.org/packages/Sentry) targets .NET Standard 2.0. That means, according to the [compatibility table](https://docs.microsoft.com/en-us/dotnet/standard/net-standard), it is compatible with the following versions or newer:
 
