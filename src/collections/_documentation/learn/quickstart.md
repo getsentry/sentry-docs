@@ -61,6 +61,7 @@ Note: If you’re using Heroku, and you’ve added Hosted Sentry via the standar
 
 Now that you’ve got basic reporting setup, you’ll want to explore adding additional context to your data.
 
+{% include components/platform_content.html content_dir='getting-started-next-steps' %}
 -   [_manual error and event capturing_]({%- link _documentation/learn/capturing.md -%})
 -   [_configuration options_]({%- link _documentation/learn/configuration.md -%})
 -   [_identifying users via context_]({%- link _documentation/learn/context.md -%})
