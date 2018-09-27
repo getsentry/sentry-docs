@@ -188,7 +188,7 @@ All conditions are joined with AND syntax.
 The condition operators available are:
 - `IS NULL`, `IS NOT NULL` (for all column types)
 - `=`, `!=`, `LIKE` (for strings)
-  - Note that values used with `LIKE` are case sensitive and can be used with wildcard characters 
+  - Note that values used with `LIKE` are case sensitive and can be used with wildcard characters
   - e.g. `exception_stacks.type LIKE Validation`
 
 
@@ -201,7 +201,6 @@ This field should update automatically as you update your query parameters to li
 ## Limit
 
 Any integer between 1 and 1000 is valid.
-
 
 
 ## Project selector
@@ -238,7 +237,6 @@ Events have a number of built in fields as well as custom tags.
 {%- endfor -%}
 </table>
 
-
 #### Commonly used tags
 
 These tags are commonly used / implemented in Sentry's SDKs
@@ -257,9 +255,4 @@ These tags are commonly used / implemented in Sentry's SDKs
 {%- endfor -%}
 </table>
 
-
 Additionally, any custom user-defined tags can also be accessed with the `tags[...]` syntax
-
-
-
-
