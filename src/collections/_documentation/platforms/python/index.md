@@ -27,6 +27,7 @@ the following are supported:
 * [Celery]({% link _documentation/platforms/python/celery.md %})
 * [Django]({% link _documentation/platforms/python/django.md %})
 * [Flask]({% link _documentation/platforms/python/flask.md %})
+* [Sanic]({% link _documentation/platforms/python/sanic.md %})
 * [Logging]({% link _documentation/platforms/python/logging.md %})
 
 ### Other Integrations
