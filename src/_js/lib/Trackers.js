@@ -39,7 +39,7 @@ export const google = function() {
   document.body.appendChild(script);
 };
 
-export const ampltiude = function() {
+export const amplitude = function() {
   // Loading this script adds a network hop but ensures that no tracking
   // cookies are added unless explicit permission is granted. It also allows
   // the stubbed Amplitude function calls to queue up until the library is
