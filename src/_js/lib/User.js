@@ -1,5 +1,6 @@
 const ORIGIN = process.env.JEKYLL_GETSENTRY_ORIGIN || 'https://sentry.io';
 import { escape } from './Helpers';
+import { logPageview } from './Page';
 
 export default class User {
   constructor() {
@@ -33,6 +34,7 @@ export default class User {
     })
       .done(({ projects, api_keys, user }) => {
         window.ra.identify(user.id);
+        window.amplitude.getInstance().setUserId(user.id);
         const userData = { ...this.userData };
         if (projects && projects.length) {
           userData.projects = projects.map(constructDSNObject);
@@ -49,7 +51,7 @@ export default class User {
         this.update();
       })
       .always(() => {
-        window.ra.page();
+        logPageview();
       });
   }
 }
