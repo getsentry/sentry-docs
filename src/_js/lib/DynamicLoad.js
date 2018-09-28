@@ -1,112 +1,104 @@
 import { fullPath } from './Helpers';
 
-let currentPathName = document.location.pathname;
-
-const replaceContent = function(html) {
-  const $page = $(html.replace('<!DOCTYPE html>', ''));
-  const $new = $page.find('[data-dynamic-load]');
-  const $title = $page.filter('title').eq(0);
-  $('head title').text($title.text());
-
-  $new.each(function(i, el) {
-    const $el = $(el);
-    const slug = $el.data('dynamic-load');
-    const content = $el.html();
-    $(`[data-dynamic-load="${slug}"]`).html(content);
-  });
+const isDifferentDomain = function(here, there) {
+  return here.protocol !== there.protocol || here.host !== there.host;
 };
 
-const isSameDomain = function(here, there) {
-  return here.protocol === there.protocol && here.host === there.host;
+const isSamePage = function(here, there) {
+  return (
+    here.pathname.replace(/\/$/, '') === there.pathname.replace(/\/$/, '') &&
+    here.host === there.host
+  );
 };
 
-const defaultLoader = function(url) {
-  if (url.pathname === currentPathName) return Promise.resolve();
-  return $.ajax({ type: 'GET', url: fullPath(url) });
-};
-
-class DynamicLoader {
+class DynamicLoad {
   constructor() {
-    this.loaders = {};
-
-    this.init = this.init.bind(this);
-    this.addLoader = this.addLoader.bind(this);
     this.load = this.load.bind(this);
-  }
-
-  init() {
-    $(document).on(
-      'click',
-      '[data-dynamic-load] a:not([data-not-dynamic])',
-      event => {
-        if (event.ctrlKey || event.metaKey) return;
-        if (!isSameDomain(window.location, event.currentTarget)) return;
-        event.preventDefault();
-        this.load(event.currentTarget, true);
-      }
-    );
-
-    $(window).on('popstate', event => {
-      const { pathname, hash, search } = document.location;
-      this.load({ pathname, hash, search }, false);
-    });
-  }
-
-  addLoader(path, handler) {
-    this.loaders[path] = handler;
+    this.linkClickHandler = this.linkClickHandler.bind(this);
+    this.didUpdateHandler = this.didUpdateHandler.bind(this);
+    this.registerHandlers = this.registerHandlers.bind(this);
+    this.popstateHandler = this.popstateHandler.bind(this);
   }
 
   load(url, pushState) {
-    const keys = Object.keys(this.loaders);
-    let matched = false;
-    let i = 0;
-    let loader = defaultLoader;
-
-    while (i < keys.length && !matched) {
-      const pathTest = keys[i];
-      matched = new RegExp(pathTest, 'i').test(fullPath(url));
-      if (matched) loader = this.loaders[pathTest];
-      i++;
-    }
-
-    const { pathname, hash, search } = url;
-    const done = function() {
-      // Send reload a pageview if this is a new page
-      if (pathname !== location.pathname) {
-        window.ra.page();
-        $('[data-feedback-toggle] label').removeClass('active');
-      }
-
-      // Update history if necessary
-      if (pushState) {
-        window.history.pushState(null, document.title, fullPath(url));
-      }
-
-      // Handle vertical scroll position of new content
-      if (hash) {
-        const $el = $(hash).get(0);
-        if ($el) $el.scrollIntoView();
-      } else {
-        $('.main-scroll').scrollTop(0);
-      }
-
-      currentPathName = pathname;
-      $('#sidebar').collapse('hide');
-      $(document).trigger('page.didUpdate');
-    };
-
     $('body').addClass('loading');
-    loader({ pathname, hash, search })
+
+    return $.ajax({ type: 'GET', url: fullPath(url) })
       .then(html => {
-        $(document).trigger('page.willUpdate');
+        // Expose the jQuery object via an event for pre-render manipulation
+        const $page = $('<div/>').append(
+          $(html.replace('<!DOCTYPE html>', ''))
+        );
+
+        $(document).trigger('page.willUpdate', $page);
+
+        // Update the title
+        const $title = $page.find('title').eq(0);
+        $('title').text($title.text());
+
+        // Update each dynamic section
+        $page.find('[data-dynamic-load]').each(function(i, el) {
+          const $el = $(el);
+          const slug = $el.data('dynamic-load');
+          const content = $el.html();
+          $(`[data-dynamic-load="${slug}"]`).html(content);
+        });
+
+        if (pushState) {
+          window.history.pushState(null, document.title, fullPath(url));
+        }
+
         $('body').removeClass('loading');
-        if (html) replaceContent(html);
-        done();
+
+        $(document).trigger('page.didUpdate');
       })
       .catch(error => {
         window.location = fullPath(url);
       });
   }
+
+  linkClickHandler(event) {
+    // if (event.test) console.log(event);
+    switch (true) {
+      // Just follow the default behavior in these scenarios
+      case event.ctrlKey:
+      case event.metaKey:
+      case isDifferentDomain(window.location, event.currentTarget):
+      case isSamePage(window.location, event.currentTarget):
+        return Promise.resolve();
+      // Load the content if this is a new page within the site.
+      default:
+        event.preventDefault();
+        return this.load(event.currentTarget, true).then(() => {
+          // Send reload a pageview
+          window.ra.page();
+        });
+    }
+  }
+
+  didUpdateHandler(event) {
+    // Handle vertical scroll position of new content
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+      const $el = $(hash).get(0);
+      if ($el) $el.scrollIntoView();
+    } else {
+      $('.main-scroll').scrollTop(0);
+    }
+
+    // Collapse the mobile sidebar
+    $('#sidebar').collapse('hide');
+  }
+
+  popstateHandler(event) {
+    this.load(document.location);
+  }
+
+  registerHandlers() {
+    $(document).on('click', '[data-dynamic-load] a', this.linkClickHandler);
+    $(document).on('page.didUpdate', this.didUpdateHandler);
+    $(window).on('popstate', this.popstateHandler);
+  }
 }
 
-export default new DynamicLoader();
+export default DynamicLoad;

@@ -1,3 +1,4 @@
+// Send an event to reload whenever a feedback button is clicked
 $(document).on('change', '[data-feedback-toggle]', function(event) {
   event.preventDefault();
   const $el = $(event.currentTarget);
@@ -5,4 +6,9 @@ $(document).on('change', '[data-feedback-toggle]', function(event) {
   window.ra.event('docs.feedback-sent', {
     useful: $selected.val()
   });
+});
+
+// Reset the feedback widget for the new page
+$(document).on('page.didUpdate', function(event) {
+  $('[data-feedback-toggle] label').removeClass('active');
 });
