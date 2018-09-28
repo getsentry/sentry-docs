@@ -16,9 +16,9 @@ Because releases work on projects you will need to specify the organization and 
 
 Releases are created with the `sentry-cli releases new` command. It takes at the very least a version identifier that uniquely identifies the relases. It can be arbitrary but for certain platforms recommendations exist:
 
--   for mobile devices use `VERSION_NUMBER` or `VERSION_NUMBER (BUILD_NUMBER)`. So for instance `1.0.0` or `1.0.0 (1234)`.
--   if you use a DVCS we recommed using the identifying hash (eg: the commit SHA, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). You can let sentry-cli automatically determine this hash for supported version control systems with `sentry-cli releases propose-version`.
--   if you tag releases we recommend using the release tag (eg: `v1.0.0`).
+- for mobile devices use `VERSION_NUMBER` or `VERSION_NUMBER (BUILD_NUMBER)`. So for instance `1.0.0` or `1.0.0 (1234)`.
+- if you use a DVCS we recommed using the identifying hash (eg: the commit SHA, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). You can let sentry-cli automatically determine this hash for supported version control systems with `sentry-cli releases propose-version`.
+- if you tag releases we recommend using the release tag (eg: `v1.0.0`).
 
 Releases can also be auto created by different systems. For instance upon uploading a sourcemap a release is automatically created. Likewise releases are created by some clients when an event for a release comes in.
 
@@ -59,7 +59,7 @@ In case you are deploying without access to the git repository you can manually 
 sentry-cli releases set-commits "$VERSION" --commit "my-repo@deadbeef"
 ```
 
-To see which repos are available for the organization you can run `sentry-cli repos` which will return a list of configured repositories.
+To see which repos are available for the organization you can run `sentry-cli repos list` which will return a list of configured repositories.
 
 Note that you need to refer to releases you need to use the actual full commit SHA. If you want to refer to tags or references (like _HEAD_) the repository needs to he checked out and reachable from the path where you invoke _sentry-cli_.
 
@@ -109,9 +109,9 @@ The following options exist to change the behavior of the upload command:
 
 : When this option is provided `sentry-cli` will rewrite the source maps before upload. This does two things:
 
-  1.  it flattens out indexed source maps. This has the advantage that it can compress source maps sometimes which might improve your processing times and can work with tools that embed local paths for sourcemap references which would not work on the server. This is useful when working with source maps for development purposes in particular.
-  2.  local file references in source maps for source contents are inlined. This works particularly well with react-native projects which might reference thousands of files you probably do not want to upload separately.
-  3.  It automatically validates source maps before upload very accurately which can spot errors you would not find otherwise until an event comes in. This is an improved version of what `--validate` does otherwise.
+1.  it flattens out indexed source maps. This has the advantage that it can compress source maps sometimes which might improve your processing times and can work with tools that embed local paths for sourcemap references which would not work on the server. This is useful when working with source maps for development purposes in particular.
+2.  local file references in source maps for source contents are inlined. This works particularly well with react-native projects which might reference thousands of files you probably do not want to upload separately.
+3.  It automatically validates source maps before upload very accurately which can spot errors you would not find otherwise until an event comes in. This is an improved version of what `--validate` does otherwise.
 
 `--strip-prefix` / `--strip-common-prefix`
 
