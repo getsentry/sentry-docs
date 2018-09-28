@@ -19,6 +19,7 @@ any point in the future.
 - [Exception Interface]({%- link _documentation/clientdev/interfaces/exception.md -%})
 - [Log Entry Interface]({%- link _documentation/clientdev/interfaces/message.md -%})
 - [Stacktrace Interface]({%- link _documentation/clientdev/interfaces/stacktrace.md -%})
+- [Exception Mechanism Interface]({%- link _documentation/clientdev/interfaces/mechanism.md -%})
 - [Template Interface]({%- link _documentation/clientdev/interfaces/template.md -%})
 
 ## Scope
@@ -32,6 +33,4 @@ any point in the future.
 ## Misc
 
 - [Debug Interface]({%- link _documentation/clientdev/interfaces/debug.md -%})
-- [Exception Mechanism Interface]({%- link _documentation/clientdev/interfaces/mechanism.md -%})
-- [Repos Interface]({%- link _documentation/clientdev/interfaces/repos.md -%})
 - [SDK Interface]({%- link _documentation/clientdev/interfaces/sdk.md -%})

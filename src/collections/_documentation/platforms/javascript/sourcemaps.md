@@ -181,7 +181,7 @@ $ sentry-cli releases files <release_name> upload-sourcemaps /path/to/files
 This command will upload all files ending in _.js_ and _.map_ to the specified release. If you wish to change these extensions – e.g. to upload typescript sources – use the `--ext` option:
 
 ```sh
-$ sentry-cli releases files <release_name> upload-sourcemaps --ext ts,map /path/to/files
+$ sentry-cli releases files <release_name> upload-sourcemaps --ext ts --ext map /path/to/files
 ```
 
 {% capture __alert_content -%}

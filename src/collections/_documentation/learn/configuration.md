@@ -45,12 +45,6 @@ Sets the environment.  This string is freeform and not set by default.  A releas
 with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 {:.config-key}
-### repos
-
-For repository integration, the repository identifiers need to be sent along.  For more information
-have a look at [the releases documentation]({% link _documentation/learn/releases.md %}).
-
-{:.config-key}
 ### sample-rate
 
 Configures the sample rate as a percentage of events to be sent in the range of `0.0` to `1.0`.  The

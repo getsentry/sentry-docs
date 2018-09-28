@@ -27,17 +27,19 @@ the following are supported:
 * [Celery]({% link _documentation/platforms/python/celery.md %})
 * [Django]({% link _documentation/platforms/python/django.md %})
 * [Flask]({% link _documentation/platforms/python/flask.md %})
+* [Sanic]({% link _documentation/platforms/python/sanic.md %})
 * [Logging]({% link _documentation/platforms/python/logging.md %})
 
 ### Other Integrations
 
 In addition to framework integrations there are also a few other integrations:
 
+* [AWS Lambda]({% link _documentation/platforms/python/aws_lambda.md %})
 * [Default integrations]({% link _documentation/platforms/python/default-integrations.md %})
 
 ## Hints
 
-The Python SDK provides some common [hints]({% link _documentation/learn/hints.md %}) for breadcrumbs
+The Python SDK provides some common [hints]({% link _documentation/learn/filtering.md %}#event-hints) for breadcrumbs
 and events.  These hints are passed as the `hint` parameter to `before_send` and `before_breadcrumb`
 (as well as event processors) as a dictionary.  More than one hint can be supplied but this is rare.
 

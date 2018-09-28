@@ -7,7 +7,7 @@ Sentry supports un-minifying JavaScript via [Source Maps](http://blog.sentry.io/
 
 ## Specify the release in Raven.js {#specify-the-release-in-raven-js}
 
-If you are uploading sourcemap artifacts yourself, you must specify the release in your Raven.js client configuration. Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/learn/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting sourcemaps on the remote server.
+If you are uploading source map artifacts yourself, you must specify the release in your Raven.js client configuration. Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/learn/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
 
 ```javascript
 Raven.config('your-dsn', {
@@ -128,15 +128,15 @@ If you want to keep your source maps secret and choose not to upload your source
 
 In many cases your application may sit behind firewalls or you simply can’t expose source code to the public. Sentry provides an abstraction called **Releases** which you can attach source artifacts to.
 
-The release API is intended to allow you to store source files (and sourcemaps) within Sentry. This removes the requirement for them to be web-accessible, and also removes any inconsistency that could come from network flakiness (on either your end, or Sentry’s end).
+The release API is intended to allow you to store source files (and source maps) within Sentry. This removes the requirement for them to be web-accessible, and also removes any inconsistency that could come from network flakiness (on either your end, or Sentry’s end).
 
-You can either interact with the API directly, upload sourcemaps with the help of the Sentry CLI ([Using Sentry CLI](#upload-sourcemaps-with-cli)) or you can use `sentry-webpack-plugin`.
+You can either interact with the API directly, upload source maps with the help of the Sentry CLI ([Using Sentry CLI](#upload-sourcemaps-with-cli)) or you can use `sentry-webpack-plugin`.
 
 -   Start by creating a new authentication token under [**[Account] > API**](https://sentry.io/api/).
 -   Ensure you have `project:write` selected under scopes.
 -   You’ll use the Authorization header with the value of `Bearer: {TOKEN}` with API requests.
 
-Now you need to setup your build system to create a release, and attach the various source files. You will want to upload all dist files (i.e. the minified/shipped JS), the referenced sourcemaps, and the files that those sourcemaps point to.
+Now you need to setup your build system to create a release, and attach the various source files. For Sentry to de-minify your stacktraces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
 ```bash
 # Create a new release
@@ -152,7 +152,7 @@ $ curl https://sentry.io/api/0/projects/:organization_slug/:project_slug/release
 }
 ```
 
-When uploading the file, you’ll need to reference it just as it would be referenced if a browser (or filesystem) had to resolve its path. So for example, if your sourcemap reference is just a relative path, it’s **relative to the location of the referencing file**.
+When uploading the file, you’ll need to reference it just as it would be referenced if a browser (or filesystem) had to resolve its path. So for example, if your source map reference is just a relative path, it’s **relative to the location of the referencing file**.
 
 So for example, if you have `http://example.com/app.min.js`, and the file contains the reference to `app.js.map`, the name of the uploaded file should be `http://example.com/app.js.map`.
 
@@ -191,8 +191,6 @@ Raven.config('your-dsn', {
 });
 ```
 
-Note: You dont _have_ to upload the source files (ref’d by sourcemaps), but without them the grouping algorithm will not be as strong, and the UI will not show any contextual source.
-
 Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
 
 {% capture __alert_content -%}
@@ -213,7 +211,7 @@ In this situation, **identical** JavaScript and source map files may be located 
 
     > ~/js/app.js
 
-The ~ prefix tells Sentry that for a given URL, **any** combination of protocol and hostname whose path is `/js/app.js` should use this artifact. **ONLY** use this method if your source/sourcemap files are identical at all possible protocol/hostname combinations. Note that Sentry will prioritize full URLs over tilde prefixed paths if found.
+The ~ prefix tells Sentry that for a given URL, **any** combination of protocol and hostname whose path is `/js/app.js` should use this artifact. **ONLY** use this method if your source/source map files are identical at all possible protocol/hostname combinations. Note that Sentry will prioritize full URLs over tilde prefixed paths if found.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Assets Accessible at Multiple Origins"
@@ -222,13 +220,13 @@ The ~ prefix tells Sentry that for a given URL, **any** combination of protocol 
 
 ## Using Sentry CLI {#upload-sourcemaps-with-cli}
 
-You can also use the Sentry [Command Line Interface]({%- link _documentation/learn/cli/index.md -%}#sentry-cli) to manage releases and sourcemaps on Sentry. If you have it installed you can create releases with the following command:
+You can also use the Sentry [Command Line Interface]({%- link _documentation/learn/cli/index.md -%}#sentry-cli) to manage releases and source maps on Sentry. If you have it installed you can create releases with the following command:
 
 ```bash
 $ sentry-cli releases -o MY_ORG -p MY_PROJECT new 2da95dfb052f477380608d59d32b4ab9
 ```
 
-After you have run this, you can use the _files_ command to automatically add all javascript files and sourcemaps below a folder. They are automatically prefixed with a URL or your choice:
+After you have run this, you can use the _files_ command to automatically add all javascript files and source maps below a folder. They are automatically prefixed with a URL or your choice:
 
 ```bash
 $ sentry-cli releases -o MY_ORG -p MY_PROJECT files \
@@ -247,7 +245,7 @@ If you leave out the `--url-prefix` parameter the paths will be prefixed with `~
 All files that end with _.js_ and _.map_ below _/path/to/assets_ are automatically uploaded to the release _2da95dfb052f477380608d59d32b4ab9_ in this case. If you want to use other extensions you can provide it with the `--ext` parameter.
 
 {% capture __alert_content -%}
-Unfortunately it can be quite challenging to ensure that sourcemaps are actually valid themselves and uploaded correctly. To ensure that everything is working as intended you can use the _–validate_ flag when uploading sourcemaps which will attempt to locally parse the sourcemap and look up the references. Note that there are known cases where the validate flag will indicate failures when the setup is correct (if you have references to external sourcemaps then the validation tool will indicate a failure).
+Unfortunately it can be quite challenging to ensure that source maps are actually valid themselves and uploaded correctly. To ensure that everything is working as intended you can use the _–validate_ flag when uploading source maps which will attempt to locally parse the source map and look up the references. Note that there are known cases where the validate flag will indicate failures when the setup is correct (if you have references to external source maps then the validation tool will indicate a failure).
 
 Here are some things you can check in addition to the validation step:
 
@@ -256,13 +254,13 @@ Here are some things you can check in addition to the validation step:
 -   Make sure that your minified files you have on your servers actually have references to your files.
 {%- endcapture -%}
 {%- include components/alert.html
-  title="Validating Sourcemaps with Sentry CLI"
+  title="Validating Source Maps with Sentry CLI"
   content=__alert_content
 %}
 
 ### Using Sentry Webpack Plugin
 
-Another way to manage releases and sourcemaps on Sentry, is to use the Sentry Webpack Plugin.
+Another way to manage releases and source maps on Sentry, is to use the Sentry Webpack Plugin.
 
 -   Start by creating a new authentication token under [**[Account] > API**](https://sentry.io/api/).
 -   Ensure you have `project:write` selected under scopes.
@@ -293,7 +291,7 @@ Source maps can sometimes be tricky to get going. If you’re having trouble, tr
 
 ### Verify your source maps are built correctly
 
-We maintain an online validation tool that can be used to test your source (and sourcemaps) against: [sourcemaps.io](http://sourcemaps.io).
+We maintain an online validation tool that can be used to test your source (and source maps) against: [sourcemaps.io](http://sourcemaps.io).
 
 Alternatively, if you are using Sentry CLI to upload source maps to Sentry, you can use the _–validate_ command line option to verify your source maps are correct.
 
