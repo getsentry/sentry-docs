@@ -4,7 +4,7 @@ import UserContent from './lib/UserContent';
 import Tracking from './lib/Tracking';
 import User from './lib/User';
 import Search from './lib/Search';
-import './lib/DynamicLoad';
+import DynamicLoad from './lib/DynamicLoad';
 import './lib/PlatformContent';
 import './lib/HeaderLinker';
 import './lib/Feedback';
@@ -27,6 +27,7 @@ $(function() {
   UserContent.init();
   Tracking.init();
   Search.init();
+  new DynamicLoad().registerHandlers();
 
   window.User = new User();
   window.User.init();
