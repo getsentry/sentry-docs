@@ -35,6 +35,7 @@ describe('DynamicLoad', function() {
     });
 
     window.ra = { page: jest.fn() };
+    window.amplitude = { getInstance: jest.fn(() => { return { logEvent: jest.fn() } }) };
 
     document.body.innerHTML = `
     <!DOCTYPE html>

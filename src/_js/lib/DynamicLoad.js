@@ -1,3 +1,4 @@
+import { logPageview } from './Page';
 import { fullPath } from './Helpers';
 
 const isDifferentDomain = function(here, there) {
@@ -71,7 +72,7 @@ class DynamicLoad {
         event.preventDefault();
         return this.load(event.currentTarget, true).then(() => {
           // Send reload a pageview
-          window.ra.page();
+          logPageview();
         });
     }
   }
