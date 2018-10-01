@@ -59,7 +59,7 @@ const preferredProject = function() {
   const project = projects.find(({ id }) => id === projectPref);
 
   if (!project) {
-    Raven.capture('No preferredProject found', {
+    Sentry.captureMessage('No preferredProject found', {
       extra: {
         typeOfProjectPref: typeof projectPref,
         projectCount: projects.length,
