@@ -65,7 +65,7 @@ const updateTokens = function() {
     const $el = $(el);
     const key = $el.data('user-content');
     const data = preferredProject();
-    $el.html(unescape(data[key]));
+    if (data) $el.html(unescape(data[key]));
   });
 
   $('[data-user-content-switcher-mount]').each(function(i, el) {
