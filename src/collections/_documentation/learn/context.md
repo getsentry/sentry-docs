@@ -27,7 +27,7 @@ Sentry supports additional context with events. Often this context is shared amo
 : Arbitrary unstructured data which is stored with an event sample.
 
 Context is held on the current scope and thus is cleared out at the end of each operation (request etc.).  For more information
-[have a look at the scopes and hub documentation](({%- link _documentation/learn/scopes.md -%}).
+[have a look at the scopes and hub documentation]({%- link _documentation/learn/scopes.md -%}).
 
 ## Tagging Events
 
