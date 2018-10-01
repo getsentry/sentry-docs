@@ -4,7 +4,7 @@ import Lunr from './Lunr';
 const renderResult = function(data) {
   const relativePath = data.path.replace(/^\/|\/$/g, '');
 
-  const url = `${window.location.origin}/${relativePath}`;
+  const url = `${window.location.origin}/${relativePath}/`;
   const path = relativePath
     .split(/[#\/]/)
     .map(segment => {
