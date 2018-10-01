@@ -56,7 +56,19 @@ const renderDropdown = function(list, selected) {
 
 const preferredProject = function() {
   const { projectPref, projects } = User.userData;
-  return projects.find(({ id }) => id === projectPref);
+  const project = projects.find(({ id }) => id === projectPref);
+
+  if (!project) {
+    Raven.capture('No preferredProject found', {
+      extra: {
+        typeOfProjectPref: typeof projectPref,
+        projectCount: projects.length,
+        project0isdefault: projects[0] === -1
+      }
+    });
+  }
+
+  return project;
 };
 
 // Updates all tokens to show values based on the values stored in localStorage
