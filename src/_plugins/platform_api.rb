@@ -1,5 +1,6 @@
 require "nokogiri"
 require "json"
+require "uri"
 
 # The platform api is generated based on the `wizard` key in platforms.yml. This
 # key can either be an array of documents with optional section slugs, or `true`
@@ -125,7 +126,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
         end
 
         noko_doc.css("a").each do |node|
-          node["href"] = Jekyll.configuration({})["url"] + node["href"]
+          node["href"] = URI(node["href"]).host ? node["href"] : "#{site.config["url"]}#{node["href"]}"
         end
 
         # Extract nested highlights so sentry CSS can target the `pre`s
