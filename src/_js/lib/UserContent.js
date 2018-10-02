@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/browser';
+
 // These are the variables that can be replaced in the document
 export const tokens = [
   'DSN',
