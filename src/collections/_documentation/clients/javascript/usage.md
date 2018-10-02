@@ -127,9 +127,9 @@ The `captureMessage`, `captureException`, `context`, and `wrap` functions all al
   Raven.setTagsContext(tags);         // Add back the tags you want to keep.
   ```
 
-**Be aware of maximal payload size** - There are times, when you want to send a whole application state as an extra data.
-This can be quite a large object, which can easily weigh more than 200kB, which is currently maximamal payload size of a single event sent to Sentry.
-When this happens, you'll get an `HTTP Error 413 Payload Too Large` as the server response or (when `keepalive: true` is set as `fetch` parameter) request will stay in `pending` state forever (eg. in Chrome).
+**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data.
+This can be quite a large object, which can easily weigh more than 200kB. This 200kB is currently the maximum payload size of a single event you can send to Sentry.
+When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when `keepalive: true` is set as `fetch` parameter), the request will stay in the `pending` state forever (eg. in Chrome).
 
 `extra`
 
