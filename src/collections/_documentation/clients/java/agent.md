@@ -19,4 +19,4 @@ You will still need to install and configure the [Sentry Java SDK]({%- link _doc
 
 With the SDK configured the agent should automatically enhance your events where applicable.
 
-![Example of local variable state in the Sentry UI](/src/collections/_documentation/clients/java/agent.png)
+![Example of local variable state in the Sentry UI]({% asset java-agent.png @path %})
