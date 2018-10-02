@@ -1,3 +1,5 @@
+import Raven from 'raven-js';
+
 // These are the variables that can be replaced in the document
 export const tokens = [
   'DSN',
