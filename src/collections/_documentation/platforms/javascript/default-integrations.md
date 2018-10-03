@@ -37,13 +37,6 @@ as well as blacklist/whitelist urls which exception originates from.
 
 To configure it, use `ignoreErrors`, `blacklistUrls` and `whitelistUrls` SDK options directly.
 
-### SDKInformation
-
-_Import name: `Sentry.Integrations.SDKInformation`_
-
-This integration provides used SDK name and version to the Sentry, so it's easier to debug
-in case of any issues.
-
 ## Browser specific
 
 ### Breadcrumbs
