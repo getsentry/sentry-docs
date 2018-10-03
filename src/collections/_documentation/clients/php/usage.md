@@ -162,7 +162,7 @@ $sentryClient->getLastEventID();
 
 ## User Feedback {#php-user-feedback}
 
-To enable user feedback for crash reports you will need to create an error handler which is aware of the last event ID.
+To enable user feedback for crash reports, you will need to create an error handler which is aware of the last event ID.
 
 ```php
 <?php

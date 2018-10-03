@@ -6,7 +6,7 @@ sidebar_order: 2
 *Import name: `sentry_sdk.integrations.django.DjangoIntegration`*
 
 The Django integration adds support for the [Django Web Framework](https://www.djangoproject.com/)
-from Version 1.6 upwards.  To configure the SDK initialize it with the Django
+from Version 1.6 upwards.  To configure the SDK, initialize it with the Django
 integration in your ``settings.py`` file:
 
 ```python

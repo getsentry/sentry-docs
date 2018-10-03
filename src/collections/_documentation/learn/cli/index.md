@@ -2,7 +2,7 @@
 title: 'Command Line Interface'
 ---
 
-For certain actions you can use the `sentry-cli` command line executable. It can connect to the Sentry API and manage some data for your projects. It’s primarily used for managing debug information files for iOS, Android as well as release and sourcemaps management for other platforms.
+For certain actions, you can use the `sentry-cli` command line executable. It can connect to the Sentry API and manage some data for your projects. It’s primarily used for managing debug information files for iOS, Android as well as release and sourcemaps management for other platforms.
 
 -   [Installation]({%- link _documentation/learn/cli/installation.md -%})
     -   [Manual Download]({%- link _documentation/learn/cli/installation.md -%}#manual-download)

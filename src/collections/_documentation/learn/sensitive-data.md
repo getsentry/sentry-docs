@@ -7,7 +7,7 @@ As with any third party service it’s important to understand what data is bein
 
 ## Server-Side Filtering
 
-Within your project settings you’ll find a **Data Scrubber** option. By default this is enabled, and we highly recommend you keep it that way. With it enabled Sentry will scrub the following:
+Within your project settings you’ll find a **Data Scrubber** option. By default this is enabled, and we highly recommend you keep it that way. With it enabled, Sentry will scrub the following:
 
 -   Values that look like they contain credit cards (using a basic regular expression)
 -   Keys that contain any of the following values:
@@ -26,7 +26,7 @@ Within your project settings you’ll find a **Data Scrubber** option. By defaul
 
 You can choose to expand the keys which are scrubbed by the server, as well as prevent IP addresses from being stored. The latter is particularly important if you’re concerned about PII and using our Browser JavaScript SDK.
 
-Additionally some SDKs will also allow you to filter data ahead of time following similar patterns.
+Additionally, some SDKs will also allow you to filter data ahead of time following similar patterns.
 
 ## Restricting Emails
 

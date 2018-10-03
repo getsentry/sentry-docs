@@ -50,7 +50,7 @@ and events.  These hints are passed as the `hint` parameter to `before_send` and
 
 `log_record`
 
-: This hint is passed to breadcrumbs and contains the log record that crated it.  It can be used
+: This hint is passed to breadcrumbs and contains the log record that created it.  It can be used
   to extract additional information from the original `logging` log record that is not extracted by default.
   Likewise it can be useful to discard uninteresting breadcrumbs.
 

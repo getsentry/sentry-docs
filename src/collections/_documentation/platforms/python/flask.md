@@ -15,7 +15,7 @@ Framework](http://flask.pocoo.org/).
     $ pip install --upgrade sentry-sdk[flask]=={% sdk_version sentry.python %}
     ```
 
-2.  To configure the SDK initialize it with the integration before or after your app has been initialized:
+2.  To configure the SDK, initialize it with the integration before or after your app has been initialized:
 
     ```python
     import sentry_sdk
