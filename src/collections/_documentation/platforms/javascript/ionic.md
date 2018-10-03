@@ -37,7 +37,7 @@ If you want to skip the automatic release version and set the release completly 
   content=__alert_content
 %}
 
-To setup Sentry in your codebase add this to your `app.module.ts`:
+To setup Sentry in your codebase, add this to your `app.module.ts`:
 
 ```javascript
 import * as Sentry from 'sentry-cordova';
@@ -45,7 +45,7 @@ import * as Sentry from 'sentry-cordova';
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
 ```
 
-In order to also use the Ionic provided `IonicErrorHandler` we need to add `SentryIonicErrorHandler`:
+In order to also use the Ionic provided `IonicErrorHandler`, we need to add `SentryIonicErrorHandler`:
 
 ```javascript
 import { IonicErrorHandler } from 'ionic-angular';

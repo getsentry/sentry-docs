@@ -9,9 +9,9 @@ The `sentry-actix` *crate* adds a middleware for
 [`actix-web`](https://actix.rs/) that captures errors and report them to
 `Sentry`.
 
-To use this middleware just configure Sentry and then add it to your actix web
+To use this middleware, just configure Sentry and then add it to your actix web
 app as a middleware.  Because actix is generally working with non sendable
-objects and highly concurrent this middleware creates a new hub per request.
+objects and is highly concurrent, this middleware creates a new hub per request.
 As a result many of the sentry integrations such as breadcrumbs do not work
 unless you bind the actix hub.
 
