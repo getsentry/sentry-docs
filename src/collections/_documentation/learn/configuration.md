@@ -61,7 +61,7 @@ to `100`.
 ### attach-stacktrace
 
 {% unsupported python %}
-When enabled stacktraces are automatically attached to all messages logged.  Note that stacktraces
+When enabled, stacktraces are automatically attached to all messages logged.  Note that stacktraces
 are always attached to exceptions but when this is set stacktraces are also sent with messages.  This, for instance, means that stacktraces appear next to all log messages.
 
 It's important to note that grouping in Sentry is different for events with stacktraces and without.
