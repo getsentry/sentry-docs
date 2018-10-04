@@ -73,7 +73,7 @@ that function to attach a `level` and a `tag` to only one specific error:
 
 {% include components/platform_content.html content_dir='with-scope' %}
 
-While this example looks similar to `configure-scope` it very different, in the sense that 
+While this example looks similar to `configure-scope` it's very different, in the sense that 
 `configure-scope` actually changes the current active scope, all successive calls to `configure-scope` 
 will keep the changes.
 
