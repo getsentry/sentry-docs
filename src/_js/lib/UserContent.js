@@ -1,4 +1,4 @@
-import Raven from 'raven-js';
+import * as Sentry from '@sentry/browser';
 
 // These are the variables that can be replaced in the document
 export const tokens = [
@@ -61,7 +61,7 @@ const preferredProject = function() {
   const project = projects.find(({ id }) => id === projectPref);
 
   if (!project) {
-    Raven.captureMessage('No preferredProject found', {
+    Sentry.captureMessage('No preferredProject found', {
       extra: {
         typeOfProjectPref: typeof projectPref,
         projectCount: projects.length,
