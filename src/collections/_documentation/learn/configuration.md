@@ -60,6 +60,7 @@ to `100`.
 {:.config-key}
 ### attach-stacktrace
 
+{% unsupported python %}
 When enabled stacktraces are automatically attached to all messages logged.  Note that stacktraces
 are always attached to exceptions but when this is set stacktraces are also sent with messages.  This, for instance, means that stacktraces appear next to all log messages.
 
@@ -67,6 +68,7 @@ It's important to note that grouping in Sentry is different for events with stac
 This means that you will get new groups as you enable or disable this flag for certain events.
 
 This feature is `off` by default.
+{% endunsupported %}
 
 {:.config-key}
 ### send-default-pii
