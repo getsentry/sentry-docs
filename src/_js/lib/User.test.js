@@ -1,4 +1,4 @@
-import User, { constructDSNObject, defaultProject } from './User';
+import User, { constructDSNObject, defaultProject, defaultUser } from './User';
 import 'jest-localstorage-mock';
 
 const sampleProject1 = {
@@ -29,6 +29,13 @@ const sampleProject2 = {
   teamName: 'Test2',
   organizationSlug: 'test2',
   projectSlug: 'test2'
+};
+
+const sampleUser = {
+  name: 'Test User',
+  id: 1,
+  isAuthenticated: true,
+  avatarUrl: 'https://foo.bar.com'
 };
 
 describe('User', function() {
@@ -103,7 +110,8 @@ describe('User', function() {
     test('gets stored values', () => {
       const user = new User();
       user.setUserData({
-        projects: [sampleProject1, sampleProject2]
+        projects: [sampleProject1, sampleProject2],
+        user: sampleUser
       });
       expect(user.getUserData()).toMatchSnapshot();
     });
@@ -121,12 +129,7 @@ describe('User', function() {
 
   describe('.init', () => {
     const authedUser = {
-      user: {
-        name: 'Test User',
-        id: 1,
-        isAuthenticated: true,
-        avatarUrl: 'https://foo.bar.com'
-      },
+      user: sampleUser,
       projects: [sampleProject1, sampleProject2],
       api_keys: []
     };
@@ -157,9 +160,15 @@ describe('User', function() {
 
       return user.init().then(() => {
         expect(updateMock).toHaveBeenCalledTimes(1);
+        expect(updateMock.mock.calls[0][1]).toEqual({
+          preferred: constructDSNObject(defaultProject),
+          projects: [constructDSNObject(defaultProject)],
+          user: defaultUser
+        });
         expect(JSON.parse(localStorage.__STORE__[user.namespace])).toEqual({
           preferred: defaultProject,
-          projects: [defaultProject]
+          projects: [defaultProject],
+          user: defaultUser
         });
       });
     });
@@ -174,7 +183,8 @@ describe('User', function() {
         expect(updateMock).toHaveBeenCalledTimes(1);
         expect(JSON.parse(localStorage.__STORE__[user.namespace])).toEqual({
           preferred: sampleProject1,
-          projects: [sampleProject1, sampleProject2]
+          projects: [sampleProject1, sampleProject2],
+          user: sampleUser
         });
       });
     });
@@ -193,7 +203,8 @@ describe('User', function() {
         expect(updateMock).toHaveBeenCalledTimes(1);
         expect(JSON.parse(localStorage.__STORE__[user.namespace])).toEqual({
           preferred: defaultProject,
-          projects: [defaultProject]
+          projects: [defaultProject],
+          user: defaultUser
         });
       });
     });
@@ -203,7 +214,8 @@ describe('User', function() {
 
       localStorage.__STORE__[user.namespace] = JSON.stringify({
         preferred: sampleProject2,
-        projects: [sampleProject1, sampleProject2]
+        projects: [sampleProject1, sampleProject2],
+        user: sampleUser
       });
 
       const updateMock = jest.fn();
@@ -222,17 +234,36 @@ describe('User', function() {
           projects: [
             constructDSNObject(sampleProject1),
             constructDSNObject(sampleProject2)
-          ]
+          ],
+          user: sampleUser
         });
         expect(updateMock.mock.calls[1][1]).toEqual({
           preferred: constructDSNObject(sampleProject1),
-          projects: [constructDSNObject(sampleProject1)]
+          projects: [constructDSNObject(sampleProject1)],
+          user: sampleUser
         });
         expect(JSON.parse(localStorage.__STORE__[user.namespace])).toEqual({
           preferred: sampleProject1,
-          projects: [sampleProject1]
+          projects: [sampleProject1],
+          user: sampleUser
         });
       });
+    });
+  });
+
+  describe('.setPreference()', () => {
+    test('works', () => {
+      const user = new User();
+      localStorage.__STORE__[user.namespace] = JSON.stringify({
+        preferred: sampleProject2,
+        projects: [sampleProject1, sampleProject2]
+      });
+      const updateMock = jest.fn();
+      $(document).on('user.didUpdate', updateMock);
+      user.setPreference(1);
+      const result = JSON.parse(localStorage.__STORE__[user.namespace]);
+      expect(result.preferred.id).toBe(1);
+      expect(updateMock).toHaveBeenCalledTimes(1);
     });
   });
 });

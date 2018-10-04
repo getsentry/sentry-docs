@@ -25,7 +25,7 @@ export default class User {
       // the object and start fresh.
     }
 
-    const { projects: tmpProjects, preferred: tmpPref } = {
+    const { projects: tmpProjects, preferred: tmpPref, user } = {
       ...userData,
       ...newData
     };
@@ -41,7 +41,7 @@ export default class User {
       preferred = projects.find(({ id }) => id === tmpPref.id) || preferred;
     }
 
-    const payload = { projects, preferred };
+    const payload = { projects, preferred, user: user || defaultUser };
     localStorage.setItem(this.namespace, JSON.stringify(payload));
     return payload;
   }
@@ -54,16 +54,22 @@ export default class User {
       // If the parse failed, we'll just purge the data
     }
 
-    const { preferred, projects } = data || this.setUserData();
+    const { preferred, projects, user } = data || this.setUserData();
     return {
       preferred: constructDSNObject(preferred),
-      projects: projects.map(constructDSNObject)
+      projects: projects.map(constructDSNObject),
+      user
     };
   }
 
-  init() {
-    $('[data-hide-when-logged-in]').addClass('d-none');
+  setPreference(newID) {
+    const { projects } = this.getUserData();
+    const preferred = projects.find(({ id }) => id === newID);
+    this.setUserData({ preferred });
+    this.update();
+  }
 
+  init() {
     const cached = JSON.parse(localStorage.getItem(this.namespace));
     if (cached) this.update(cached);
 
@@ -80,7 +86,7 @@ export default class User {
         window.amplitude.getInstance().setUserId(user.id);
         const { isAuthenticated } = user;
         $('[data-hide-when-logged-in]').toggleClass('d-none', isAuthenticated);
-        this.setUserData({ projects });
+        this.setUserData({ projects, user });
         this.update();
       })
       .catch(error => {
@@ -109,6 +115,10 @@ const formatAPIURL = function(dsn) {
   return `${dsn.scheme}${dsn.host}/api`;
 };
 
+export const defaultUser = {
+  isAuthenticated: false
+};
+
 export const defaultProject = {
   projectName: 'your-project',
   secretKey: '<secret>',
@@ -116,7 +126,6 @@ export const defaultProject = {
   dsnPublic: 'https://<key>@sentry.io/<project>',
   id: -1,
   dsn: 'https://<key>:<secret>@sentry.io/<project>',
-  organizationName: 'Example',
   organizationSlug: 'your-org',
   projectSlug: 'your-project'
 };
@@ -136,7 +145,7 @@ export const constructDSNObject = function(project = {}) {
 
   return {
     id: project.id,
-    group: escape(project.organizationName),
+    group: escape(project.organizationSlug),
     PROJECT_NAME: escape(project.projectSlug),
     PROJECT_ID: project.id.toString(),
     ORG_NAME: escape(project.organizationSlug),
