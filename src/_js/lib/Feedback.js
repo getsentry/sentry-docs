@@ -4,7 +4,7 @@ $(document).on('change', '[data-feedback-toggle]', function(event) {
   const $el = $(event.currentTarget);
   const $selected = $el.find('input:checked');
   window.ra.event('docs.feedback-sent', {
-    useful: $selected.val()
+    useful: parseInt($selected.val(), 10)
   });
 });
 
