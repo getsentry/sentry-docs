@@ -18,7 +18,7 @@ curl -sL https://sentry.io/get-cli/ | bash
 
 This will automatically download the correct version of `sentry-cli` for your operating system and install it. If necessarily, it will prompt for your admin password for `sudo`.
 
-To verify if it’s installed correctly, you can bring up the help:
+To verify it’s installed correctly you can bring up the help:
 
 ```bash
 $ sentry-cli --help

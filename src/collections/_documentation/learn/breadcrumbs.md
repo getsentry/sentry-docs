@@ -48,7 +48,7 @@ Type
 
 ## Recording Crumbs
 
-Manual breadcrumb recording is also available and easy to use.  In this way, breadcrumbs
+Manual breadcrumb recording is also available and easy to use.  This way breadcrumbs
 can be added whenever something interesting happens.  For instance, it might make sense
 to record a breadcrumb if the user authenticates or another state change happens.
 
