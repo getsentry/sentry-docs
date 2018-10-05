@@ -34,7 +34,7 @@ Level
 
 Type
 
-: Additionally a semi internal attribute `type` exists which can control the type
+: Additionally, a semi internal attribute `type` exists which can control the type
   of the breadcrumb.  By default all breadcrumbs are recoded as `default` which
   makes it appear as a log entry.  Other types are available which will
   influence how they are rendered.  The following types currently exist:
@@ -49,14 +49,14 @@ Type
 ## Recording Crumbs
 
 Manual breadcrumb recording is also available and easy to use.  This way breadcrumbs
-can be added whenever something interesting happens.  For instance it might make sense
+can be added whenever something interesting happens.  For instance, it might make sense
 to record a breadcrumb if the user authenticates or another state change happens.
 
 {% include components/platform_content.html content_dir='breadcrumbs-example' %}
 
 ## Automatic Breadcrumbs
 
-SDKs will automatically start recording breadcrumbs by enabling integrations.  For instance
+SDKs will automatically start recording breadcrumbs by enabling integrations.  For instance,
 the browser JavaScript SDK will automatically record all location changes.
 
 ## Breadcrumb Customization

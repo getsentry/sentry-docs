@@ -60,7 +60,7 @@ There are a few options you can supply for the upload process
 
 ## Symbol Maps
 
-If you are hiding debug symbols from Apple the debug files will not contain many useful symbols. In that case the sentry-cli upload will warn you that it needs BCSymbolMaps:
+If you are hiding debug symbols from Apple, the debug files will not contain many useful symbols. In that case, the sentry-cli upload will warn you that it needs BCSymbolMaps:
 
 ```bash
 $ sentry-cli upload-dif ...

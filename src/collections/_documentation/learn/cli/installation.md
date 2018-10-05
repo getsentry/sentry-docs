@@ -2,7 +2,7 @@
 title: Installation
 ---
 
-Depending on your platform there are different methods available to install _sentry-cli_.
+Depending on your platform, there are different methods available to install _sentry-cli_.
 
 ## Manual Download
 
@@ -10,13 +10,13 @@ You can find the list of releases on [the github release page](https://github.co
 
 ## Automatic Installation
 
-If you are on OS X or Linux you can use the automated downloader which will fetch the latest release version for you and install it:
+If you are on OS X or Linux, you can use the automated downloader which will fetch the latest release version for you and install it:
 
 ```bash
 curl -sL https://sentry.io/get-cli/ | bash
 ```
 
-This will automatically download the correct version of `sentry-cli` for your operating system and install it. If necessarily it will prompt for your admin password for `sudo`.
+This will automatically download the correct version of `sentry-cli` for your operating system and install it. If necessarily, it will prompt for your admin password for `sudo`.
 
 To verify it’s installed correctly you can bring up the help:
 
@@ -26,7 +26,7 @@ $ sentry-cli --help
 
 ## Installation via NPM
 
-There is also the option to install _sentry-cli_ via npm for specialized use cases. This for instance is useful for build servers. The package is called `@sentry/cli` and in the post installation it will download the appropriate release binary:
+There is also the option to install _sentry-cli_ via npm for specialized use cases. This, for instance, is useful for build servers. The package is called `@sentry/cli` and in the post installation it will download the appropriate release binary:
 
 ```bash
 $ npm install @sentry/cli
@@ -70,7 +70,7 @@ Another option is to use the environment variable _SENTRYCLI_CDNURL_.
 
 ## Installation via Homebrew
 
-If you are on OS X you can install _sentry-cli_ via homebrew:
+If you are on OS X, you can install _sentry-cli_ via homebrew:
 
 ```bash
 $ brew install getsentry/tools/sentry-cli
@@ -78,7 +78,7 @@ $ brew install getsentry/tools/sentry-cli
 
 ## Docker Image
 
-For unsupported distributions and CI systems we offer a Docker image that comes with `sentry-cli` preinstalled. It is recommended to use the `latest` tag, but you can also pin to a specific verison. By default, the command runs inside the `/work` directory. Mount relevant project folders and build outputs there to allow `sentry-cli` to scan for resources:
+For unsupported distributions and CI systems, we offer a Docker image that comes with `sentry-cli` preinstalled. It is recommended to use the `latest` tag, but you can also pin to a specific verison. By default, the command runs inside the `/work` directory. Mount relevant project folders and build outputs there to allow `sentry-cli` to scan for resources:
 
 ```bash
 $ docker pull getsentry/sentry-cli
