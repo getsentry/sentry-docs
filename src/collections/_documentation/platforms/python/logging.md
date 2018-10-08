@@ -12,8 +12,8 @@ import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 sentry_logging = LoggingIntegration(
-    level=logging.INFO,  # Capture info and above as breadcrumbs
-    event_level=None     # Send no events from log messages
+    level=logging.INFO,        # Capture info and above as breadcrumbs
+    event_level=logging.ERROR  # Send no events from log messages
 )
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
@@ -29,6 +29,6 @@ If you want to send events for a log record, set `event_level` to a log level.
   `level` will be recorded as breadcrumbs. Any log record with a level lower
   than this one is completely ignored.
 
-* `event_level` (default `None`): Log records with a level higher than or equal
+* `event_level` (default `ERROR`): Log records with a level higher than or equal
   to `event_level` will additionally be reported as event. A value of `None`
   means that no log records will be sent as events.
