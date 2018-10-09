@@ -10,7 +10,10 @@ If you’re using React 16 or above, Error Boundaries are an important tool for 
 
 ```jsx
 import * as Sentry from '@sentry/browser';
-// Sentry.init has to be called in the somewhere before
+// Sentry.init has to be called before sending an error to Sentry.
+
+// Uncomment the line below and copy your DSN key found in Settings > Data > Client Keys (DSN).
+// Sentry.init({ dsn: 'PASTE_YOUR_DSN_HERE' });
 
 class ExampleBoundary extends Component {
     constructor(props) {
