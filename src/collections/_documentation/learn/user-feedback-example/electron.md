@@ -3,11 +3,13 @@ const { init, showReportDialog } = require('@sentry/electron');
 
 init({
   dsn: '___PUBLIC_DSN___',
-  beforeSend: event => {
-    // Check if it is an exception -> Show report dialog
+  beforeSend(event) {
+    // Check if it is an exception, if so, show the report dialog
     // Note that this only will work in the renderer process, it's a noop on the main process
-    event.exception && showReportDialog();
+    if (event.exception) {
+      Sentry.showReportDialog();
+    }
     return event;
-  },
+  }
 });
 ```
