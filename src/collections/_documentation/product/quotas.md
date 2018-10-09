@@ -15,7 +15,7 @@ Per-key rate limits allow you to set the maximum volume of events a key will acc
 
 For example, you may have a project in production that generates a lot of noise. With a rate limit you could set the maximum amount of data to “500 events per minute”. Additionally, you could create a second key for the same project for your staging environment which is unlimited, ensuring your QA process is still untouched.
 
-To setup rate limits, navigate to the Project you wish to limit, go to **[Project] » Client Keys**. Select an individual key or create a new one, and you’ll be able to define a rate limit as well as see a breakdown of events received by that key.
+To setup rate limits, navigate to the Project you wish to limit, go to **[Project] » Client Keys » Details**. Select an individual key or create a new one, and you’ll be able to define a rate limit as well as see a breakdown of events received by that key.
 
 {% capture __alert_content -%}
 Per-key rate limiting is available only on Large and Enterprise Plans
@@ -87,7 +87,9 @@ What this means is that if you experience a spike, we will temporarily protect y
 
 ### How does spike protection help? {#how-does-spike-protection-help}
 
-Because Sentry bills on monthly event volume, spikes can easily consume your Sentry capacity for the rest of the month. If it really is a spike (**large** and **temporary** increase in event volume), spike protection drops the vast majority of events during the spike and conserves your capacity.
+Because Sentry bills on monthly event volume, spikes can consume your Sentry capacity for the rest of the month. If it really is a spike (**large** and **temporary** increase in event volume), spike protection drops events during the spike to try and conserve your capacity. We also send an email notification to the Owner when spike protection is activated.
+
+
 
 ### Controlling Volume
 
