@@ -3,7 +3,7 @@ title: Ionic
 sidebar_order: 201
 ---
 
-To use Sentry with [Ionic](https://ionicframework.com/) you have to add _sentry-cordova_ as a depenendcy to you package.json.
+To use Sentry with [Ionic](https://ionicframework.com/) you have to add _sentry-cordova_ as a dependency to you package.json.
 
 First run `npm i --save sentry-cordova` and make sure you already added the the platfroms you want to support with `ionic cordova platform add ios` and/or `ionic cordova platform add android`.
 
