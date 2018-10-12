@@ -64,6 +64,6 @@ Now that you’ve got basic reporting setup, you’ll want to explore adding add
 {% include components/platform_content.html content_dir='getting-started-next-steps' %}
 -   [_manual error and event capturing_]({%- link _documentation/learn/capturing.md -%})
 -   [_configuration options_]({%- link _documentation/learn/configuration.md -%})
--   [_identifying users via context_]({%- link _documentation/learn/context.md -%})
+-   [_Adding context (tags, user and extra information)_]({%- link _documentation/learn/context.md -%})
 -   [_tracing issues with breadcrumbs_]({%- link _documentation/learn/breadcrumbs.md -%})
 -   [_capturing user feedback on crashes_]({%- link _documentation/learn/user-feedback.md -%})
