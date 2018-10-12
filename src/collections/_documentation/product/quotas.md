@@ -3,11 +3,11 @@ title: 'Quotas & Filtering'
 sidebar_order: 11
 ---
 
-A subscription to Sentry primarily entails a resource quota on the number of events you can send within a month long period. The server will respond with a 429 HTTP status code when this threshold has been reached.
+Each subscription tier in Sentry provides different monthly quotas for your event capacity. You can pre-pay for reserved event capacity or specify a spending cap for on-demand capacity. If you consume your reserved and on-demand capacity for the month, the server will respond with a 429 HTTP status code. 
 
 ## Increasing Quotas
 
-Each tiered plan in Sentry has a predefined rate limit. The more expensive the plan, the more data you’re allowed to send. While the plans available will fit most individual and small business needs, there often arises a need for more. Fear not, Sentry is designed to handle large throughput, and if your team needs more, we’re happy to help. Reach out to our sales team at [sales@sentry.io](mailto:sales%40sentry.io) to learn more about increasing capacity.
+You can add additional quota at any time during your billing period, either by upgrading to a higer tier or increasing your on-demand capacity. While the available plans will fit most individual and business needs, Sentry is designed to handle large throughput so if your team needs more, we’re happy to help. Reach out to our sales team at [sales@sentry.io](mailto:sales%40sentry.io) to learn more about increasing capacity.
 
 ## Rate Limiting Projects {#id1}
 
