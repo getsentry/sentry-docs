@@ -1,3 +1,5 @@
+var obj = document.getElementsByClassName('feedback-footer')[0];
+
 // Send an event to reload whenever a feedback button is clicked
 $(document).on('change', '[data-feedback-toggle]', function(event) {
   event.preventDefault();
@@ -6,21 +8,29 @@ $(document).on('change', '[data-feedback-toggle]', function(event) {
   window.ra.event('docs.feedback-sent', {
     useful: parseInt($selected.val(), 10)
   });
+  obj.style.display="none";
+});
+
+// Send an event to reload whenever a feedback button is dismissed
+$(document).on('click', '[feedback-close]', function(event) {
+  event.preventDefault();
+  window.ra.event('docs.feedback-dismissed');
+  obj.style.display="none";
   dismissFeedback()
 });
 
 // Reset the feedback widget for the new page
 $(document).on('page.didUpdate', function(event) {
-	const showFeedback = window.localStorage.getItem('showFeedback');
-	if(!showFeedback){
-		$(".feedback-footer").remove();
-	} else{
+	const dismissFeedback = window.localStorage.getItem('dismissFeedback');
+
+	if(dismissFeedback === 'true'){
+		obj.style.display = "none";
+	 } else {
+		obj.style.display = "";
 		$('[data-feedback-toggle] label').removeClass('active');
-  }
+	 }
 });
 
-// dismiss the footer if they send feedback or close it out
 var dismissFeedback = function() {
-	window.localStorage.setItem('showFeedback', 'false')
-	$(".feedback-footer").remove();
+	window.localStorage.setItem('dismissFeedback', 'true')
 };
