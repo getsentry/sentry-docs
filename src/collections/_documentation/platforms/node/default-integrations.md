@@ -8,8 +8,8 @@ standard library or the interpreter itself. They are documented so you can see
 what they do and that they can be disabled if they cause issues. To disable
 system integrations set `defaultIntegrations: false` when calling `init()`.
 To override their settings, provide a new instance with your config
-to `integrations` option, for example to turn off browser capturing console calls
-`integrations: [new Sentry.Integrations.Breadcrumbs({ console: false })]`.
+to `integrations` option, for example to change fatal error handler
+`integrations: [new Sentry.Integrations.OnUncaughtException({ onFatalError: () => { /** your implementation */ } })]`.
 
 ## Core
 
@@ -37,42 +37,37 @@ as well as blacklist/whitelist urls which exception originates from.
 
 To configure it, use `ignoreErrors`, `blacklistUrls` and `whitelistUrls` SDK options directly.
 
-## Browser specific
+### Console
 
-### Breadcrumbs
+_Import name: `Sentry.Integrations.Console`_
 
-_Import name: `Sentry.Integrations.Breadcrumbs`_
+This integration wraps `console` module to treat all it's calls as breadcrumbs.
 
-This integration wrap native APIs to capture breadcrumbs. By default, all APIs are wrapped.
+### Http
 
-Available options:
+_Import name: `Sentry.Integrations.Http`_
 
-```js
-{
-  beacon: boolean;
-  console: boolean;
-  dom: boolean;
-  fetch: boolean;
-  history: boolean;
-  sentry: boolean;
-  xhr: boolean;
-}
-```
+This integration wraps `http` and `https` modules to capture all network requests as breadcrumbs.
 
-### GlobalHandlers
+### OnUncaughtException
 
-_Import name: `Sentry.Integrations.GlobalHandlers`_
+_Import name: `Sentry.Integrations.OnUncaughtException`_
 
-This integration attaches global handlers to capture uncaught exceptions and unhandled rejections.
+This integration attaches global uncaught exception handler. Can be modified to provide a custom shutdown function.
 
 Available options:
 
 ```js
 {
-  onerror: boolean;
-  onunhandledrejection: boolean;
+  onFatalError: (firstError: Error, secondError?: Error) => void;
 }
 ```
+
+### OnUnhandledRejection
+
+_Import name: `Sentry.Integrations.OnUnhandledRejection`_
+
+This integration attaches global unhandled rejection handlers.
 
 ### LinkedErrors
 
@@ -89,32 +84,3 @@ Available options:
   limit: number;
 }
 ```
-
-### ReportingObserver
-
-_Import name: `Sentry.Integrations.ReportingObserver`_
-
-This integration hooks into ReportingObserver API and sends captured events through to Sentry.
-Can be configured to handle only specific issue types.
-
-Available options:
-
-```js
-{
-  types: <'crash'|'deprecation'|'intervention'>[];
-}
-```
-
-### TryCatch
-
-_Import name: `Sentry.Integrations.TryCatch`_
-
-This integration wraps native time and events APIs (`setTimeout`, `setInterval`, `requestAnimationFrame`,
-`addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions.
-
-### UserAgent
-
-_Import name: `Sentry.Integrations.UserAgent`_
-
-This integration attaches user-agent information to the event, which allows us to correctly
-catalogue and tag them with specific OS, Browser and version informations.

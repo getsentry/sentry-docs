@@ -7,4 +7,4 @@ To report to Sentry you’ll need to use a language-specific SDK. The Sentry tea
 
 {% include platform_icon_links.html %}
 
-Some platforms have been phased out or have been replaced with new SDKs.  For those legacy integrations head over to the [legacy clients]({% link _documentation/clients/index.md %}) page.  Your favorite language still cannot be found? Then we encourage you to start a discussion about supporting it on our [community forum](https://forum.sentry.io).
+Some platforms have been phased out or have been replaced with new SDKs. For those legacy integrations head over to the [legacy clients]({% link _documentation/clients/index.md %}) page. Your favorite language still cannot be found? Then we encourage you to start a discussion about supporting it on our [community forum](https://forum.sentry.io).
