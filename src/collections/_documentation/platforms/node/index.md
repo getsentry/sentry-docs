@@ -1,9 +1,9 @@
 ---
-title: JavaScript
-sidebar_order: 3
+title: Node.js
+sidebar_order: 2
 ---
 
-{% include learn-sdk.md platform="javascript" %}
+{% include learn-sdk.md platform="node" %}
 
 All our JavaScript related SDKs provide the same API still there are some differences between them which this section of the docs explains.
 
@@ -11,12 +11,12 @@ All our JavaScript related SDKs provide the same API still there are some differ
 
 All of our SDKs provide _Integrations_ which can be seen of some kind of plugins. All JavaScript SDKs provide default _Integrations_ please check details of a specific SDK to see which _Integrations_ they provides.
 
-One thing is the same across all our JavaScript SDKs and that's how you add or remove _Integrations_, e.g.: for `@sentry/browser`.
+One thing is the same across all our JavaScript SDKs and that's how you add or remove _Integrations_, e.g.: for `@sentry/node`.
 
 ### Adding an Integration
 
 ```javascript
-import * as Sentry from '@sentry/browser';
+import * as Sentry from '@sentry/node';
 
 // All integration that come with an SDK can be found on Sentry.Integrations object
 // Custom integration must conform Integration interface: https://github.com/getsentry/sentry-javascript/blob/master/packages/types/src/index.ts
@@ -32,13 +32,13 @@ Sentry.init({
 In this example we will remove the by default enabled integration for adding breadcrumbs to the event:
 
 ```javascript
-import * as Sentry from '@sentry/browser';
+import * as Sentry from '@sentry/node';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: integrations => {
     // integrations will be all default integrations
-    return integrations.filter(integration => integration.id !== 'Breadcrumbs');
+    return integrations.filter(integration => integration.id !== 'Console');
   }
 });
 ```
@@ -46,7 +46,7 @@ Sentry.init({
 ### Alternative way of setting an Integration
 
 ```javascript
-import * as Sentry from '@sentry/browser';
+import * as Sentry from '@sentry/node';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
@@ -77,30 +77,15 @@ basic stacktrace. This exception is stored here for further data extraction.
 
 And these exist for breadcrumbs:
 
-`event`
-
-: For breadcrumbs created from browser events the event is often supplied to the breadcrumb as hint. This
-for instance can be used to extract data from the target DOM element into a breadcrumb.
-
 `level` / `input`
 
 : For breadcrumbs created from console log interceptions this holds the original console log level and the
 original input data to the log function.
 
-`response` / `input`
-
-: For breadcrumbs created from HTTP requests this holds the response object
-(from the fetch api) and the input parameters to the fetch function.
-
 `request` / `response` / `event`
 
 : For breadcrumbs created from HTTP requests this holds the request and response object
 (from the node HTTP API) as well as the node event (`response` or `error`).
-
-`xhr`
-
-: For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API this holds
-the original xhr object.
 
 ## EventProcessors
 
