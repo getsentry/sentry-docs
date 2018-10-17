@@ -84,3 +84,7 @@ Additionally you can provide arbitrary key/value pairs beyond the reserved names
 In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which will be stored alongside the event. These are not indexed and are simply used to add additional information about what might be happening:
 
 {% include components/platform_content.html content_dir='set-extra' %}
+
+**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data.
+This is not recommended as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads.
+When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when `keepalive: true` is set as `fetch` parameter), the request will stay in the `pending` state forever (eg. in Chrome).
