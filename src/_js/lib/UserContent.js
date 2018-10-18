@@ -20,19 +20,19 @@ const tokenRegex = function() {
   return re;
 };
 
-const renderDropdownItem = function(item) {
-  return `<a href="#" class="dropdown-item" data-interactive-content-item data-id="${
-    item.id
-  }">${item.ORG_NAME} / ${item.PROJECT_NAME}</a>`;
+const renderDropdownItem = function(item, selected) {
+  return `<a href="#" class="dropdown-item${
+    item.id === selected.id ? ' active' : ''
+  }" data-interactive-content-item data-id="${item.id}">${item.ORG_NAME} / ${
+    item.PROJECT_NAME
+  }</a>`;
 };
 
 const renderDropdownHeader = function(item) {
   return `<h6 class="dropdown-header">${item}</h6>`;
 };
 
-const renderDropdown = function(list, selected) {
-  if (!list) return;
-  let current = preferredProject();
+const renderDropdown = function(list, preferred) {
   const grouped = list.reduce((obj, item) => {
     if (obj[item.group] === undefined) obj[item.group] = [];
     obj[item.group].push(item);
@@ -42,13 +42,13 @@ const renderDropdown = function(list, selected) {
   return `
     <div class="dropdown">
       <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-not-dynamic>
-        ${current.ORG_NAME} / ${current.PROJECT_NAME}
+        ${preferred.ORG_NAME} / ${preferred.PROJECT_NAME}
       </a>
 
       <div class="dropdown-menu" aria-hidden="true">${Object.keys(grouped)
         .map(key => {
           return `${renderDropdownHeader(key)}${grouped[key]
-            .map(renderDropdownItem)
+            .map(item => renderDropdownItem(item, preferred))
             .join('')}`;
         })
         .join('')}</div>
@@ -56,35 +56,16 @@ const renderDropdown = function(list, selected) {
   `;
 };
 
-const preferredProject = function() {
-  const { projectPref, projects } = User.userData;
-  const project = projects.find(({ id }) => id === projectPref);
-
-  if (!project) {
-    Raven.captureMessage('No preferredProject found', {
-      extra: {
-        typeOfProjectPref: typeof projectPref,
-        projectCount: projects.length,
-        project0isdefault: projects[0] === -1
-      }
-    });
-  }
-
-  return project;
-};
-
 // Updates all tokens to show values based on the values stored in localStorage
-const updateTokens = function() {
+const updateTokens = function({ projects, preferred }) {
   $('[data-user-content]').each(function(i, el) {
     const $el = $(el);
     const key = $el.data('user-content');
-    const data = preferredProject();
-    if (data) $el.html(unescape(data[key]));
+    $el.html(unescape(preferred[key]));
   });
 
-  $('[data-user-content-switcher-mount]').each(function(i, el) {
-    const $el = $(el);
-    $el.html(renderDropdown(User.userData.projects, User.userData.projectPref));
+  $('[data-user-content-switcher-mount]').each(function() {
+    $(this).html(renderDropdown(projects, preferred));
   });
 
   $(document).trigger('userContent.didLoad');
@@ -117,14 +98,16 @@ const wrapTokens = function() {
 };
 
 const init = function() {
+  $('[data-hide-when-logged-in]').addClass('d-none');
+
   // Update tokens whenever the User data updates
-  $(document).on('user.didUpdate', function(event) {
+  $(document).on('user.didUpdate', function(event, userData) {
     wrapTokens();
-    updateTokens();
+    updateTokens(userData);
 
     $(document).on('page.didUpdate', function() {
       wrapTokens();
-      updateTokens();
+      updateTokens(userData);
     });
   });
 
@@ -132,7 +115,7 @@ const init = function() {
   $(document).on('click', ucSelector, function(event) {
     event.preventDefault();
     const id = $(event.target).data('id');
-    if (id) User.update({ projectPref: id });
+    User.setPreference(id);
   });
 };
 
