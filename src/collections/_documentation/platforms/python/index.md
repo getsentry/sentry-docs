@@ -37,6 +37,14 @@ In addition to framework integrations there are also a few other integrations:
 * [AWS Lambda]({% link _documentation/platforms/python/aws_lambda.md %})
 * [Default integrations]({% link _documentation/platforms/python/default-integrations.md %})
 
+{% capture __alert_content -%}
+Looking for [the legacy Python SDK "Raven"?]({%- link _documentation/clients/python/index.md -%})
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
 ## Hints
 
 The Python SDK provides some common [hints]({% link _documentation/learn/filtering.md %}#event-hints) for breadcrumbs
