@@ -212,7 +212,7 @@ processors = (
 
 `sanitize_keys`
 
-: A required set of keys to santize when using `raven.processors.SanitizeKeysProcessor` in `processors`:
+: A required set of keys to sanitize when using `raven.processors.SanitizeKeysProcessor` in `processors`:
 
 ```python
 sanitize_keys = ["sensitive_key_1", "sensitive_key_2"]
