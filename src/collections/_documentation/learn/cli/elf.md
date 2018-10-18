@@ -10,7 +10,7 @@ Unlike other platforms, there is no standardized container for debug symbols. Th
 # There is an executable called "binary" in the CWD
 objcopy --only-keep-debug binary binary.debug
 strip -g binary
-objcopy --add-gnu-debug-link=binary.debug binary
+objcopy --add-gnu-debuglink=binary.debug binary
 ```
 
 Shared libraries installed via package managers usually provide their debugging information in separate `*-dev` packages and put it in locations like `/usr/local/debug/...`. To receive symbolicated stack traces from those libraries, make sure to also upload their symbols in addition to your app’s symbols.
