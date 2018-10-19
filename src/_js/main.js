@@ -1,5 +1,5 @@
 import 'bootstrap';
-import UserContent from './lib/UserContent';
+import UserContentUI from './lib/UserContentUI';
 import Tracking from './lib/Tracking';
 import User from './lib/User';
 import Search from './lib/Search';
@@ -18,7 +18,7 @@ $(document).on('page.didUpdate', function(event) {
 });
 
 $(function() {
-  UserContent.init();
+  UserContentUI.init();
   Tracking.init();
   Search.init();
   new DynamicLoad().registerHandlers();
