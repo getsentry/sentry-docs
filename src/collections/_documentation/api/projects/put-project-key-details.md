@@ -33,7 +33,7 @@
     }
   ], 
   "query_parameters": null, 
-  "sidebar_order": 14, 
+  "sidebar_order": 15, 
   "title": "Update a Client Key", 
   "warning": null
 }

@@ -3,7 +3,7 @@
 # Do not manually this file.
 {
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/hooks/{hook_id}/", 
-  "authentication": "", 
+  "authentication": "required", 
   "description": "Return a service hook bound to a project.", 
   "example_request": "", 
   "example_response": "", 
@@ -27,7 +27,7 @@
     }
   ], 
   "query_parameters": null, 
-  "sidebar_order": 9, 
+  "sidebar_order": 10, 
   "title": "Retrieve a Service Hook", 
   "warning": null
 }
