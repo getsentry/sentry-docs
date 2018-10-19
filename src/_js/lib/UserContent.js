@@ -1,5 +1,3 @@
-import Raven from 'raven-js';
-
 // These are the variables that can be replaced in the document
 export const tokens = [
   'DSN',
@@ -23,9 +21,7 @@ const tokenRegex = function() {
 const renderDropdownItem = function(item, selected) {
   return `<a href="#" class="dropdown-item${
     item.id === selected.id ? ' active' : ''
-  }" data-interactive-content-item data-id="${item.id}">${item.ORG_NAME} / ${
-    item.PROJECT_NAME
-  }</a>`;
+  }" data-id="${item.id}">${item.ORG_NAME} / ${item.PROJECT_NAME}</a>`;
 };
 
 const renderDropdownHeader = function(item) {
@@ -79,13 +75,11 @@ const wrapTokens = function() {
     if (!tokenRegex().test($el.html())) return true;
 
     // Wrap all tokens with an element that can be used for updating
-    if (tokenRegex().test($el.html())) {
-      const content = $el.html().replace(tokenRegex(), function(match) {
-        const token = match.replace(/___/g, '');
-        return `<span data-user-content="${token}"></span>`;
-      });
-      $el.html(content);
-    }
+    const content = $el.html().replace(tokenRegex(), function(match) {
+      const token = match.replace(/___/g, '');
+      return `<span data-user-content="${token}"></span>`;
+    });
+    $el.html(content);
 
     // Add a dropdown for switching the data.
     $el.before(`
