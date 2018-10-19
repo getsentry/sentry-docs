@@ -29,6 +29,9 @@ An override for Sentry’s automatic language detection (e.g. `lang=de`)
 | --- | --- |
 | `eventId` | Manually set the id of the event. |
 | `dsn` | Manually set dsn to report to. |
+| `user` | Manually set user data _[an object with keys listed above]_. |
+| `user.email` | User's email address. |
+| `user.name` | User's name. |
 | `lang` | _[automatic]_ – **override for Sentry’s language code** |
 | `title` | It looks like we’re having issues. |
 | `subtitle` | Our team has been notified. |

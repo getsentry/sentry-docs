@@ -53,8 +53,8 @@ $ pip install datadog
 ```python
 SENTRY_METRICS_BACKEND = 'sentry.metrics.datadog.DogStatsdMetricsBackend'
 SENTRY_METRICS_OPTIONS = {
-    'host': 'localhost',
-    'port': 8125,
+    'statsd_host': 'localhost',
+    'statsd_port': 8125,
     'tags': {},
 }
 ```

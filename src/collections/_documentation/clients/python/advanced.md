@@ -210,6 +210,14 @@ processors = (
 )
 ```
 
+`sanitize_keys`
+
+: A required set of keys to sanitize when using `raven.processors.SanitizeKeysProcessor` in `processors`:
+
+```python
+sanitize_keys = ["sensitive_key_1", "sensitive_key_2"]
+```
+
 ## Sanitizing Data
 
 Several processors are included with Raven to assist in data sanitiziation. These are configured with the `processors` value.
@@ -225,6 +233,10 @@ Several processors are included with Raven to assist in data sanitiziation. Thes
 `raven.processors.RemovePostDataProcessor`
 
 : Removes the `body` of all HTTP data.
+
+`raven.processors.SanitizeKeysProcessor`
+
+: Removes all keys provided in the configuable set `sanitize_keys`, which must be provided as a client argument.
 
 ## Custom Grouping Behavior
 

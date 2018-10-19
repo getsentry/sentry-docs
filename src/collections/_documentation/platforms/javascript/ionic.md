@@ -3,9 +3,9 @@ title: Ionic
 sidebar_order: 201
 ---
 
-To use Sentry with [Ionic](https://ionicframework.com/) you have to add _sentry-cordova_ as a depenendcy to you package.json.
+To use Sentry with [Ionic](https://ionicframework.com/) you have to add _sentry-cordova_ as a dependency to you package.json.
 
-First run `npm i --save sentry-cordova` and make sure you already added the the platfroms you want to support with `ionic cordova platform add ios` and/or `ionic cordova platform add android`.
+First run `npm i --save sentry-cordova` and make sure you already added the platforms you want to support with `ionic cordova platform add ios` and/or `ionic cordova platform add android`.
 
 After that it’s important to run `cordova plugin add sentry-cordova` without the ionic wrapper.
 
@@ -29,7 +29,7 @@ When building your app with ionic for production make sure you have sourcemaps e
 Otherwise we are not able to upload sourcemaps to Sentry.
 
 {% capture __alert_content -%}
-If you want to skip the automatic release version and set the release completly for yourself. You have to add this env var to disable it e.g.: `SENTRY_SKIP_AUTO_RELEASE=true ionic cordova emulate ios --prod`
+If you want to skip the automatic release version and set the release completely for yourself. You have to add this env var to disable it e.g.: `SENTRY_SKIP_AUTO_RELEASE=true ionic cordova emulate ios --prod`
 {%- endcapture -%}
 {%- include components/alert.html
   level="warning"

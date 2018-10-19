@@ -10,7 +10,12 @@ If you’re using React 16 or above, Error Boundaries are an important tool for 
 
 ```jsx
 import * as Sentry from '@sentry/browser';
-// Sentry.init has to be called in the somewhere before
+
+// Sentry.init({
+//  dsn: "___PUBLIC_DSN___"
+// });
+// should have been called before using it here
+// ideally before even rendering your react app 
 
 class ExampleBoundary extends Component {
     constructor(props) {
@@ -20,12 +25,12 @@ class ExampleBoundary extends Component {
 
     componentDidCatch(error, errorInfo) {
       this.setState({ error });
-      Sentry.configureScope(scope => {
+      Sentry.withScope(scope => {
         Object.keys(errorInfo).forEach(key => {
           scope.setExtra(key, errorInfo[key]);
         });
+        Sentry.captureException(error);
       });
-      Sentry.captureException(error);
     }
 
     render() {

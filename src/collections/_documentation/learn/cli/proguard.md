@@ -22,7 +22,7 @@ sentry-cli upload-proguard \
     app/build/outputs/mapping/release/mapping.txt
 ```
 
-Since the sentry-java client needs to know the UIUD of the mapping file you will need to embed it in a `sentry-debug-meta.properties` file. If you supply `--write-properties` that is done automatically:
+Since the sentry-java client needs to know the UIUD of the mapping file, you will need to embed it in a `sentry-debug-meta.properties` file. If you supply `--write-properties` that is done automatically:
 
 ```bash
 sentry-cli upload-proguard \

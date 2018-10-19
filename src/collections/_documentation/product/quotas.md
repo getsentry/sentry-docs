@@ -3,21 +3,27 @@ title: 'Quotas & Filtering'
 sidebar_order: 11
 ---
 
-A subscription to Sentry primarily entails a resource quota on the number of events you can send within a window of time. These windows apply to a 60-second bucket for old plans and a one month bucket for new plans. Your subscription will provide a rate limit which is the maximum number of events the server will accept during that period on old plans, and the same can be configured for new plans. The server will respond with a 429 HTTP status code when this threshold has been reached.
-
-Additionally, some plans may also include a daily rate limit. For example, you’ll be restricted to a maximum of 250 events per day if you’re on the Limited plan.
+Each subscription tier in Sentry provides different monthly quotas for your event capacity. The tiers let you pre-pay for reserved event capacity, and you can also specify a spending cap for on-demand capacity if you need additioanl events. When you consume your reserved and on-demand capacity for the month, the server will respond with a 429 HTTP status code when it receives an event over quota. 
 
 ## Increasing Quotas
 
-Each tiered plan in Sentry has a predefined rate limit. The more expensive the plan, the more data you’re allowed to send. While the plans available will fit most individual and small business needs, there often arises a need for more. Fear not, Sentry is designed to handle large throughput, and if your team needs more, we’re happy to help. Reach out to your account manager, or send an email to [support@sentry.io](mailto:support%40sentry.io) to learn more about increasing capacity.
+You can add additional quota at any time during your billing period, either by upgrading to a higer tier or increasing your on-demand capacity. While the available plans will fit most individual and business needs, Sentry is designed to handle large throughput so if your team needs more, we’re happy to help. Reach out to our sales team at [sales@sentry.io](mailto:sales%40sentry.io) to learn more about increasing capacity.
 
 ## Rate Limiting Projects {#id1}
 
-If you’re on our Large or Enterprise plan we support per-key rate limits. These allow you to set the maximum volume of events a key will accept during a period of time.
+Per-key rate limits allow you to set the maximum volume of events a key will accept during a period of time.
 
 For example, you may have a project in production that generates a lot of noise. With a rate limit you could set the maximum amount of data to “500 events per minute”. Additionally, you could create a second key for the same project for your staging environment which is unlimited, ensuring your QA process is still untouched.
 
-To setup rate limits, navigate to the Project you wish to limit, go to **[Project] » Client Keys**. Select on an individual key or create a new one, and you’ll be able to define a rate limit as well as see a breakdown of events received by that key.
+To setup rate limits, navigate to the Project you wish to limit, go to **[Project] » Client Keys » Details**. Select an individual key or create a new one, and you’ll be able to define a rate limit as well as see a breakdown of events received by that key.
+
+{% capture __alert_content -%}
+Per-key rate limiting is available only on Large and Enterprise Plans
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
 
 ## Inbound Filters {#inbound-data-filters}
 
@@ -69,7 +75,7 @@ Discarding issues is available only on Medium, Large and Enterprise Plans
 
 ## Spike Protection
 
-Spike protection helps to mitigate the impact of event spikes on your monthly capacity and is available on all plans.
+Spike protection helps prevent huge overages from consuming your event capacity. We use your historical event volume to implement a dynamic rate limit which discards events when you hit its threshold. This dynamic rate limit is designed to protect you from short-term spikes and the threshold will increase if your increased volume persists for many hours.
 
 When spike protection is activated, we limit the number of events accepted in any minute to:
 
@@ -79,17 +85,19 @@ When spike protection is activated, we limit the number of events accepted in an
 
 What this means is that if you experience a spike, we will temporarily protect you, but if the increase in volume is sustained, the spike protection limit will gradually increase until Sentry finally accepts all events.
 
-### An example
-
-Suppose you start with 0 events. Your spike protection limit is 20/min. At 12am, you start receiving errors at a rate of 4000/hr (or 66/min). From 12am to 1am, Sentry will discard 2800 events and keep only 1200, and send you an email notifying you that spike protection has been activated. Between 1am and 2am, your spike protection limit will still be 20/min because the trailing average for the 24 hours ending 1 am (6 * 4000 / (24 * 60) or roughly 16/min) remains **below** the base spike protection rate of 20/min. Between 2am and 3am, the trailing average is 6 * 8,000 / (24 * 60) or roughly 33/min, so spike protection keeps only 33 of the 66 events sent per minute. By 5 am, the spike protection limit reaches 6 * 16000 / (24 * 60) or 66/min, and all events are accepted.
-
 ### How does spike protection help? {#how-does-spike-protection-help}
 
-Because Sentry bills on monthly event volume, spikes can easily consume your Sentry capacity for the rest of the month. If it really is a spike (**large** and **temporary** increase in event volume), spike protection drops the vast majority of events during the spike and conserves your capacity.
+Because Sentry bills on monthly event volume, spikes can consume your Sentry capacity for the rest of the month. If it really is a spike (**large** and **temporary** increase in event volume), spike protection drops events during the spike to try and conserve your capacity. We also send an email notification to the Owner when spike protection is activated.
+
+
 
 ### Controlling Volume
 
-It’s important to note that spike protection is not meant to help you **manage your event volume** because it is a moving target. To control event volume, you should use [per-project rate limits](#rate-limiting-projects) or [Inbound Filters](#inbound-data-filters).
+If your projects have a high volume of events, you can control how many errors Sentry receives in a few ways:
+
+-   [Configure]({%- link _documentation/learn/configuration.md -%}#common-options) the SDK to reduce the volume of data you’re sending
+-   Turn on [Inbound Filters]({%- link _documentation/product/quotas.md -%}#inbound-data-filters) for legacy browsers, browser extensions, localhost, and web crawlers. Any filtered events will not count towards your quota
+-   Set a [per-key rate limits]({%- link _documentation/product/quotas.md -%}#id1) for each DSN key in a project
 
 ## Attributes Limits
 

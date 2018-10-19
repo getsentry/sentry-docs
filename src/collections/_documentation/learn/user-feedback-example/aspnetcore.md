@@ -1,10 +1,10 @@
 With ASP.NET Core MVC, the `Error.cshtml` razor page:
 
-{% raw %}
-```html
-@using Sentry
 
+```html
 <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous"></script>
+
+@using Sentry
 
 @if (SentrySdk.LastEventId != Guid.Empty)
 {
@@ -14,4 +14,3 @@ With ASP.NET Core MVC, the `Error.cshtml` razor page:
     </script>
 }
 ```
-{% endraw %}

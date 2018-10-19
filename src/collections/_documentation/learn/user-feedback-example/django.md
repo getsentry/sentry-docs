@@ -12,15 +12,15 @@ def handler500(request, *args, **argv):
 
 And the template that brings up the dialog
 
-{% raw %}
+
 ```html
 <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous"></script>
-
+{% raw %}
 {% if sentry_event_id %}
 <script>
   Sentry.init({ dsn: '___PUBLIC_DSN___' });
   Sentry.showReportDialog({ eventId: '{{ sentry_event_id }}' })
 </script>
 {% endif %}
-```
 {% endraw %}
+```

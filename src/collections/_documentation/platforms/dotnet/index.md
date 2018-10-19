@@ -33,6 +33,12 @@ Of those, we run our unit/integration tests against:
 * .NET Core 2.0 Windows, macOS and Linux
 * .NET Core 2.1 Windows, macOS and Linux
 
+{% include components/alert.html
+  title="Using an older version of .NET Framework or Mono?"
+  content="[Our legacy SDK](https://docs.sentry.io/clients/csharp/) supports .NET Framework as early as 3.5."
+  level="info"
+%}
+
 ## Automatically discovering release version
 
 The SDK attempts to locate the release to add that to the events sent to Sentry.
