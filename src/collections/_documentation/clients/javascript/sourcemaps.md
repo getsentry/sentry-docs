@@ -301,6 +301,8 @@ Some CDNs automatically strip comments from static files, including JavaScript f
 
 Double-check that your deployed, final JavaScript files have `sourceMappingURL` present.
 
+Alternately, you can set a SourceMap HTTP header. If you're using `sentry-cli`, the `upload-sourcemaps` option sets the SourceMap HTTP header automatically, or you will need to configure your web server or CDN.
+
 ### Verify artifact names match sourceMappingURL
 
 When [uploading source maps to Sentry](#uploading-source-maps-to-sentry), you must name your source map files with the same name found in `sourceMappingURL`.
