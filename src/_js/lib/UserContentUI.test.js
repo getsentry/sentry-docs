@@ -1,4 +1,4 @@
-import UserContent, { init } from './UserContent';
+import UserContentUI, { init } from './UserContentUI';
 import User from './User';
 import 'jest-localstorage-mock';
 
@@ -56,7 +56,7 @@ const sampleUser = {
   avatarUrl: 'https://foo.bar.com'
 };
 
-describe('UserContent', function() {
+describe('UserContentUI', function() {
   beforeEach(() => {
     const $ = require('jquery');
     global.$ = $;
@@ -68,12 +68,12 @@ describe('UserContent', function() {
   describe('.init', () => {
     test('hide-when-logged-in', () => {
       expect($('[data-hide-when-logged-in]').attr('class')).toBe(undefined);
-      UserContent.init();
+      UserContentUI.init();
       expect($('[data-hide-when-logged-in]').attr('class')).toBe('d-none');
     });
 
     test('user.didUpdate', () => {
-      UserContent.init();
+      UserContentUI.init();
       $(document).trigger('user.didUpdate', [
         {
           preferred: sampleProject2,
@@ -84,7 +84,7 @@ describe('UserContent', function() {
     });
 
     test('clicks on new projects switch the project', () => {
-      UserContent.init();
+      UserContentUI.init();
       global.User.setPreference = jest.fn();
       $(document).trigger('user.didUpdate', [
         {
@@ -98,7 +98,7 @@ describe('UserContent', function() {
     });
 
     test('rewraps after page update', () => {
-      UserContent.init();
+      UserContentUI.init();
       global.User.setPreference = jest.fn();
       $(document).trigger('user.didUpdate', [
         {

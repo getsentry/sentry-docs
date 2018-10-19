@@ -64,7 +64,7 @@ const updateTokens = function({ projects, preferred }) {
     $(this).html(renderDropdown(projects, preferred));
   });
 
-  $(document).trigger('userContent.didLoad');
+  $(document).trigger('UserContentUI.didLoad');
 };
 
 const wrapTokens = function() {
