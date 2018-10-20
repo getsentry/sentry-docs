@@ -1,5 +1,6 @@
 import qs from 'query-string';
 import Lunr from './Lunr';
+import { escape } from './Helpers';
 
 const renderResult = function(data) {
   const relativePath = data.path.replace(/^\/|\/$/g, '');
@@ -8,15 +9,17 @@ const renderResult = function(data) {
   const path = relativePath
     .split(/[#\/]/)
     .map(segment => {
-      return `<span class="path-segment">${segment}</span>`;
+      return `<span class="path-segment">${escape(segment)}</span>`;
     })
     .join('');
   return $(`
     <div class="mb-3">
-      <h3 class="h5 mb-0"><a href="${url}">${data.title}</a></h3>
+      <h3 class="h5 mb-0"><a href="${escape(url)}">${escape(
+    data.title
+  )}</a></h3>
       <div class="pl-2">
-        <aside>(${path})</aside>
-        <p class="mb-0">${data.excerpt}</p>
+        <aside>(${escape(path)})</aside>
+        <p class="mb-0">${escape(data.excerpt)}</p>
       </div>
     </div>
   `);
