@@ -5,7 +5,7 @@ import { escape } from './Helpers';
 const renderResult = function(data) {
   const relativePath = data.path.replace(/^\/|\/$/g, '');
 
-  const url = `${window.location.origin}/${relativePath}/`;
+  const url = escape(`${window.location.origin}/${relativePath}/`);
   const path = relativePath
     .split(/[#\/]/)
     .map(segment => {
@@ -14,9 +14,7 @@ const renderResult = function(data) {
     .join('');
   return $(`
     <div class="mb-3">
-      <h3 class="h5 mb-0"><a href="${escape(url)}">${escape(
-    data.title
-  )}</a></h3>
+      <h3 class="h5 mb-0"><a href="${url}">${escape(data.title)}</a></h3>
       <div class="pl-2">
         <aside>(${escape(path)})</aside>
         <p class="mb-0">${escape(data.excerpt)}</p>
