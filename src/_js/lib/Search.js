@@ -1,22 +1,23 @@
 import qs from 'query-string';
 import Lunr from './Lunr';
+import { escape } from './Helpers';
 
 const renderResult = function(data) {
   const relativePath = data.path.replace(/^\/|\/$/g, '');
 
-  const url = `${window.location.origin}/${relativePath}/`;
+  const url = escape(`${window.location.origin}/${relativePath}/`);
   const path = relativePath
     .split(/[#\/]/)
     .map(segment => {
-      return `<span class="path-segment">${segment}</span>`;
+      return `<span class="path-segment">${escape(segment)}</span>`;
     })
     .join('');
   return $(`
     <div class="mb-3">
-      <h3 class="h5 mb-0"><a href="${url}">${data.title}</a></h3>
+      <h3 class="h5 mb-0"><a href="${url}">${escape(data.title)}</a></h3>
       <div class="pl-2">
-        <aside>(${path})</aside>
-        <p class="mb-0">${data.excerpt}</p>
+        <aside>(${escape(path)})</aside>
+        <p class="mb-0">${escape(data.excerpt)}</p>
       </div>
     </div>
   `);
@@ -25,7 +26,7 @@ const renderResult = function(data) {
 const renderResults = function(results, query) {
   const $results = $('[data-search-results]').clone();
   if (!results || !results.length) {
-    const msg = `No results${!!results ? ` matching "${query}"` : ''}`;
+    const msg = `No results${!!results ? ` matching "${escape(query)}"` : ''}`;
     $results.append(`<p>${msg}</p>`);
   }
   $.each(results, function(i, result) {
