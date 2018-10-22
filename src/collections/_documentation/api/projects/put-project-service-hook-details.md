@@ -3,7 +3,7 @@
 # Do not manually this file.
 {
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/hooks/{hook_id}/", 
-  "authentication": "", 
+  "authentication": "required", 
   "description": "", 
   "example_request": "", 
   "example_response": "", 
@@ -38,7 +38,7 @@
     }
   ], 
   "query_parameters": null, 
-  "sidebar_order": 10, 
+  "sidebar_order": 11, 
   "title": "Update a Service Hook", 
   "warning": null
 }
