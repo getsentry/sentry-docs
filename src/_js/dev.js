@@ -1,4 +1,4 @@
-import { tokens as userContentTokens } from './lib/UserContent';
+import { tokens as userContentTokens } from './lib/UserContentUI';
 
 $(function() {
   const namespace = 'hidePeek';
