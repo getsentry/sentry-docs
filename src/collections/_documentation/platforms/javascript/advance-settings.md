@@ -1,5 +1,5 @@
 ---
-title: Advanced Settings
+title: Advanced Usage
 sidebar_order: 30001
 ---
 
