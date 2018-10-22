@@ -143,6 +143,6 @@ You have the ability to save a search by performing the search, clicking the dro
 
 You can specify which search should be the default search when the Issues list is first viewed.
 
-This can be done by clicking the dropdown arrow next to the currnet search, clicking "Manage", and then specifying default for yourself or your team.
+This can be done by clicking the dropdown arrow next to the current search, clicking "Manage", and then specifying default for yourself or your team.
 
 [{% asset default-search.png %}]({% asset default-search.png @path %})
