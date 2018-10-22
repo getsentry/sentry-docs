@@ -6,7 +6,7 @@ sidebar_order: 30001
 ## Using a Client directly
 
 To be able to manage several Sentry instances without any conflicts between them you need to create your own `Client`.
-This also helps to prevent tracking of any parent application errors in case if your application is integrated
+This also helps to prevent tracking of any parent application errors in case your application is integrated
 inside of it. In this example we use `@sentry/browser` but it's also applicable to `@sentry/node`.
 
 ```javascript
