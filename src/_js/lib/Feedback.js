@@ -1,4 +1,3 @@
-var obj = document.getElementsByClassName('feedback-footer')[0];
 
 // Send an event to reload whenever a feedback button is clicked
 $(document).on('change', '[data-feedback-toggle]', function(event) {
@@ -8,29 +7,35 @@ $(document).on('change', '[data-feedback-toggle]', function(event) {
   window.ra.event('docs.feedback-sent', {
     useful: parseInt($selected.val(), 10)
   });
-  obj.style.display="none";
+  $('.feedback-footer').addClass('d-none');
 });
 
 // Send an event to reload whenever a feedback button is dismissed
-$(document).on('click', '[feedback-close]', function(event) {
+$(document).on('click', '[data-feedback-close]', function(event) {
+
   event.preventDefault();
   window.ra.event('docs.feedback-dismissed');
-  obj.style.display="none";
+  $('.feedback-footer').addClass('d-none');
   dismissFeedback()
 });
 
 // Reset the feedback widget for the new page
 $(document).on('page.didUpdate', function(event) {
-	const dismissFeedback = window.localStorage.getItem('dismissFeedback');
+	const dismissTimestamp = window.localStorage.getItem('dismissTimestamp');
 
-	if(dismissFeedback === 'true'){
-		obj.style.display = "none";
+	if(dismissTimestamp && !pastDismissWindow(dismissTimestamp)){
+    $('.feedback-footer').addClass('d-none');
 	 } else {
-		obj.style.display = "";
-		$('[data-feedback-toggle] label').removeClass('active');
+    $('.feedback-footer').removeClass('d-none');
+    $('[data-feedback-toggle] label').removeClass('active');
 	 }
 });
 
 var dismissFeedback = function() {
-	window.localStorage.setItem('dismissFeedback', 'true')
+	window.localStorage.setItem('dismissTimestamp', Date.now())
+};
+
+// dismiss for 30mins
+var pastDismissWindow = function(dismissTimestamp) {
+  return ((Date.now() - dismissTimestamp)/ (1000*60)) > 30;
 };
