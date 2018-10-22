@@ -16,7 +16,7 @@ const renderResult = function(data) {
     <div class="mb-3">
       <h3 class="h5 mb-0"><a href="${url}">${escape(data.title)}</a></h3>
       <div class="pl-2">
-        <aside>(${escape(path)})</aside>
+        <aside>(${path})</aside>
         <p class="mb-0">${escape(data.excerpt)}</p>
       </div>
     </div>
