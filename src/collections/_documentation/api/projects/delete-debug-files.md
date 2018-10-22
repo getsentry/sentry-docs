@@ -21,7 +21,13 @@
       "type": "string"
     }
   ], 
-  "query_parameters": null, 
+  "query_parameters": [
+    {
+      "description": "The id of the DIF to delete.", 
+      "name": "id", 
+      "type": "string"
+    }
+  ], 
   "sidebar_order": 7, 
   "title": "Delete a specific Project's Debug Information File", 
   "warning": null

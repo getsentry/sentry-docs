@@ -21,7 +21,18 @@
       "type": "string"
     }
   ], 
-  "query_parameters": null, 
+  "query_parameters": [
+    {
+      "description": "If set, this parameter is used to locate DIFs with.", 
+      "name": "query", 
+      "type": "string"
+    }, 
+    {
+      "description": "If set, the specified DIF will be sent in the response.", 
+      "name": "id", 
+      "type": "string"
+    }
+  ], 
   "sidebar_order": 5, 
   "title": "List a Project's Debug Information Files", 
   "warning": null
