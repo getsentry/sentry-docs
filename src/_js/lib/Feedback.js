@@ -23,12 +23,12 @@ $(document).on('click', '[data-feedback-close]', function(event) {
 $(document).on('page.didUpdate', function(event) {
 	const dismissTimestamp = window.localStorage.getItem('dismissTimestamp');
 
-	if(dismissTimestamp && !pastDismissWindow(dismissTimestamp)){
+  if(dismissTimestamp && !pastDismissWindow(dismissTimestamp)){
     $('.feedback-footer').addClass('d-none');
-	 } else {
+  } else {
     $('.feedback-footer').removeClass('d-none');
     $('[data-feedback-toggle] label').removeClass('active');
-	 }
+	}
 });
 
 var dismissFeedback = function() {
