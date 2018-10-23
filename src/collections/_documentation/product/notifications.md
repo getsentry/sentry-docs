@@ -3,7 +3,7 @@ title: Notifications
 sidebar_order: 8
 ---
 
-Notifications in Sentry come in many flavors, but by default are aimed at Email. Additionally notifications are categorized into two categories:
+Notifications in Sentry can be routed to many supported [_integrations_]({%- link _documentation/integrations/index.md-%}), but by default are aimed at Email. Additionally notifications are categorized into two categories:
 
 Alerts
 
@@ -66,17 +66,3 @@ Core workflow notifications include:
 -   Comments
 -   Regressions – when Sentry changes state of an issue from **resolved** to **unresolved**
 
-## Integrations
-
-The following third-party notifications are available via Sentry extensions:
-
--   [Campfire](https://github.com/mkhattab/sentry-campfire)
--   [Flowdock](https://github.com/getsentry/sentry-flowdock)
--   [Grove.io](https://github.com/mattrobenolt/sentry-groveio)
--   [Hipchat](https://github.com/linovia/sentry-hipchat)
--   [IRC](https://github.com/gisce/sentry-irc)
--   [Pushover](https://github.com/getsentry/sentry-plugins)
--   [Whatsapp](https://github.com/ecarreras/sentry-whatsapp)
--   [XMPP](https://github.com/chroto/sentry-xmpp)
--   [Slack]({%- link _documentation/integrations/slack.md -%})
--   [Zabbix](https://github.com/m0n5t3r/sentry-zabbix)
