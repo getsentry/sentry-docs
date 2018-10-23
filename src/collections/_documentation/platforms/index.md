@@ -26,7 +26,9 @@ These SDK's are [maintained and supported](https://forum.sentry.io) by the Sentr
 * [_Nuxt_](https://github.com/nuxt-community/sentry-module)
 * [_OCaml_](https://github.com/brendanlong/sentry-ocaml)
 * [_Scrapy_](https://github.com/llonchj/scrapy-sentry)
+* [_Terraform_](https://github.com/jianyuan/terraform-provider-sentry)
 * [_Wordpress_](https://github.com/stayallive/wp-sentry)
+* [_Zend_](https://github.com/cloud-solutions/zend-sentry)
 
 ## Other platforms
 
