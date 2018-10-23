@@ -12,7 +12,6 @@ $(document).on('change', '[data-feedback-toggle]', function(event) {
 
 // Send an event to reload whenever a feedback button is dismissed
 $(document).on('click', '[data-feedback-close]', function(event) {
-
   event.preventDefault();
   window.ra.event('docs.feedback-dismissed');
   $('.feedback-footer').addClass('d-none');
@@ -21,18 +20,18 @@ $(document).on('click', '[data-feedback-close]', function(event) {
 
 // Reset the feedback widget for the new page
 $(document).on('page.didUpdate', function(event) {
-	const dismissTimestamp = window.localStorage.getItem('dismissTimestamp');
+  const dismissTimestamp = window.localStorage.getItem('dismissTimestamp');
 
   if(dismissTimestamp && !pastDismissWindow(dismissTimestamp)){
     $('.feedback-footer').addClass('d-none');
   } else {
     $('.feedback-footer').removeClass('d-none');
     $('[data-feedback-toggle] label').removeClass('active');
-	}
+  }
 });
 
 var dismissFeedback = function() {
-	window.localStorage.setItem('dismissTimestamp', Date.now())
+  window.localStorage.setItem('dismissTimestamp', Date.now())
 };
 
 // dismiss for 30mins
