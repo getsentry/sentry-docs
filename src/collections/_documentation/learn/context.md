@@ -14,23 +14,23 @@ Sentry supports additional context with events. Often this context is shared amo
 
 : Specific structured contexts (OS info, runtime information etc.).  This is normally set automatically.
 
-**User**
+[**User**](#capturing-the-user)
 
 : Information about the current actor
 
-**Tags**
+[**Tags**](#tagging-events)
 
 : Key/value pairs which generate breakdowns charts and search filters
 
-**Level**
+[**Level**](#setting-the-level)
 
 : An event's severity 
 
-**Fingerprint**
+[**Fingerprint**](#setting-the-fingerprint)
 
 : A value used for grouping events into issues
 
-**Unstructured Extra**
+[**Unstructured Extra Data**](#extra-context)
 
 : Arbitrary unstructured data which is stored with an event sample
 
@@ -95,7 +95,7 @@ You can set the severity of an event to one of five values: 'fatal', 'error', 'w
 
 ## Setting the Fingerprint
 
-Sentry uses one or more "fingerprints" to decide how to group errors into issues. More information can be found [here]({%- link _documentation/learn/rollups.md#custom-grouping -%}).
+Sentry uses one or more "fingerprints" to decide how to group errors into issues. More information can be found [here]({%- link _documentation/learn/rollups.md -%}#custom-grouping).
 
 ## Extra Context
 
