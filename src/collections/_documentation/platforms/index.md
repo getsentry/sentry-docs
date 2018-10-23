@@ -5,17 +5,17 @@ sidebar_order: 2
 
 To report to Sentry you’ll need to use a language-specific SDK. The Sentry team builds and maintains these for most popular languages, but there’s also a large ecosystem supported by the community.
 
-## Sentry-supported SDK's
+## Sentry-supported SDKs
 
-These SDK's are [maintained](https://github.com/getsentry) and [supported](https://sentry.io/contact/support/) by Sentry staff.
+These SDKs are [maintained](https://github.com/getsentry) and [supported](https://sentry.io/contact/support/) by Sentry staff.
 
 {% include platform_icon_links.html %}
 
 Some platforms have been phased out or have been replaced with new SDKs. For those legacy integrations head over to the [legacy clients]({% link _documentation/clients/index.md %}) page.
 
-## Community-supported SDK's
+## Community-supported SDKs
 
-These SDK's are [maintained and supported](https://forum.sentry.io) by the Sentry community.
+These SDKs are [maintained and supported](https://forum.sentry.io) by the Sentry community.
 
 * [_Clojure_](https://github.com/sethtrain/raven-clj#alternatives)
 * [_Crystal_](https://github.com/Sija/raven.cr)
