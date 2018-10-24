@@ -90,14 +90,14 @@ will attempt to auto-discover this value.
 ### blacklist-urls
 
 {% supported browser %}
-A pattern for error URLs which should not be sent to Sentry.  By default, all errors will be sent.
+A list of strings or regex patterns that match error URLs which should not be sent to Sentry.  By default, all errors will be sent.
 {% endsupported %}
 
 {:.config-key}
 ### whitelist-urls
 
 {% supported browser %}
-A pattern for error URLs which should exclusively be sent to Sentry.  By default, all errors
+A list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry.  By default, all errors
 will be sent.
 {% endsupported %}
 
