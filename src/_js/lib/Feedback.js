@@ -7,14 +7,14 @@ $(document).on('change', '[data-feedback-toggle]', function(event) {
   window.ra.event('docs.feedback-sent', {
     useful: parseInt($selected.val(), 10)
   });
-  $('.feedback-footer').addClass('d-none');
+  $('.js-feedback-footer').addClass('d-none');
 });
 
 // Send an event to reload whenever a feedback button is dismissed
 $(document).on('click', '[data-feedback-close]', function(event) {
   event.preventDefault();
   window.ra.event('docs.feedback-dismissed');
-  $('.feedback-footer').addClass('d-none');
+  $('.js-feedback-footer').addClass('d-none');
   dismissFeedback()
 });
 
@@ -23,9 +23,9 @@ $(document).on('page.didUpdate', function(event) {
   const dismissTimestamp = window.localStorage.getItem('dismissTimestamp');
 
   if(dismissTimestamp && !pastDismissWindow(dismissTimestamp)){
-    $('.feedback-footer').addClass('d-none');
+    $('.js-feedback-footer').addClass('d-none');
   } else {
-    $('.feedback-footer').removeClass('d-none');
+    $('.js-feedback-footer').removeClass('d-none');
     $('[data-feedback-toggle] label').removeClass('active');
   }
 });
