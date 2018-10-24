@@ -36,7 +36,9 @@ logging.error("I am an event", bar=43)
 
 {% version_added 0.5.0: Ability to add data to `extra` %}
 
-## Config
+## Options
+
+The following keyword arguments can be passed to `LoggingIntegration()`:
 
 * `level` (default `INFO`): Log records with a level higher than or equal to
   `level` will be recorded as breadcrumbs. Any log record with a level lower

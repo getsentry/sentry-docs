@@ -54,3 +54,21 @@ Framework](https://trypyramid.com/).
 * Logging with *any* logger will create breadcrumbs when
   the [Logging]({% link _documentation/platforms/python/logging.md %})
   integration is enabled (done by default).
+
+## Options
+
+The following keyword arguments can be passed to `PyramidIntegration()`:
+
+* `transaction_style`:
+
+  ```python
+  config.add_route("myroute", "/myurl/{id}")
+  config.add_view(myfunction, route_name="myroute")
+  ```
+
+  In the above code, the transaction would be set to:
+
+  * `/myurl/{id}` if you set `transaction_style="route_pattern"`
+  * `myroute` if you set `transaction_style="route_name"`
+
+  The default is `"route_name"`.

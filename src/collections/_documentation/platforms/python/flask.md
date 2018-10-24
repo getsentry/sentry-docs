@@ -53,6 +53,25 @@ Framework](http://flask.pocoo.org/).
   the [Logging]({% link _documentation/platforms/python/logging.md %})
   integration is enabled (done by default).
 
+## Options
+
+The following keyword arguments can be passed to `FlaskIntegration()`:
+
+* `transaction_style`:
+
+  ```python
+  @app.route("/myurl/<foo>")
+  def myendpoint():
+      return "ok"
+  ```
+
+  In the above code, the transaction would be set to:
+
+  * `/myurl/<foo>` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
+  * `myendpoint` if you set `transaction_style="endpoint"`
+
+  The default is `"endpoint"`.
+
 ## User Feedback
 
 The user feedback feature can be used with this integration.  For more information

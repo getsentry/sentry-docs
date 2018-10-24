@@ -39,6 +39,29 @@ This causes the following this to happen:
 * Logging with any logger will create breadcrumbs when the [Logging]({% link _documentation/platforms/python/logging.md %})
   integration is enabled (done by default).
 
+## Options
+
+The following keyword arguments can be passed to `DjangoIntegration()`:
+
+* `transaction_style`:
+
+  ```python
+  @app.route("/myurl/<foo>")
+  def my_function(request):
+      return "ok"
+
+  urlpatterns = [
+      url(r"^myurl/(?P<myid>\d+)/$", my_function)
+  ]
+  ```
+
+  In the above code, the transaction would be set to:
+
+  * `/myurl/{myid}` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
+  * `my_function` if you set `transaction_style="function_name"`
+
+  The default is `"url"`.
+
 ## User Feedback
 
 The user feedback feature can be used with this integration.  For more information
