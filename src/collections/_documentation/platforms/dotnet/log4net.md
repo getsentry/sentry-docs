@@ -54,4 +54,4 @@ This is only one of the ways to initialize the SDK. If you wish to configure the
 
 For a [sample app.config](https://github.com/getsentry/sentry-dotnet/blob/master/samples/Sentry.Samples.Log4Net/app.config) or a complete working [sample](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.Log4Net) to see it in action.
 
-![Sample event in Sentry](https://github.com/getsentry/sentry-dotnet/blob/master/samples/Sentry.Samples.Log4Net/.assets/log4net-sample.gif?raw=true)
+![Sample event in Sentry]({% asset log4net-sample.gif @path %})
