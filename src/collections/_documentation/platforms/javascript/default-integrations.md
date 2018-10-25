@@ -51,7 +51,7 @@ Available options:
 {
   beacon: boolean;  // Log HTTP requests done with the Beacon API
   console: boolean; // Log calls to `console.log`, `console.debug`, etc
-  dom: boolean;     // Log click and keypress events that bubbled up to `document`
+  dom: boolean;     // Log all click and keypress events
   fetch: boolean;   // Log HTTP requests done with the Fetch API
   history: boolean; // Log calls to `history.pushState` and friends
   sentry: boolean;  // Log whenever we send an event to the server
