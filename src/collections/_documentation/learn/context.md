@@ -34,8 +34,6 @@ Sentry supports additional context with events. Often this context is shared amo
 
 : Arbitrary unstructured data which is stored with an event sample
 
-Context is held on the current scope and thus is cleared out at the end of each operation (request etc.).  For more information
-[have a look at the scopes and hub documentation]({%- link _documentation/learn/scopes.md -%}).
 
 ## Capturing the User
 
@@ -106,3 +104,11 @@ In addition to the structured context that Sentry understands, you can send arbi
 **Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data.
 This is not recommended as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads.
 When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when `keepalive: true` is set as `fetch` parameter), the request will stay in the `pending` state forever (eg. in Chrome).
+
+
+## Unsetting Context
+
+Context is held in the current scope and thus is cleared out at the end of each operation (request etc.). You can also push and pop your own scopes to apply context data to a specific codeblock or function.
+
+For more information [have a look at the scopes and hub documentation]({%- link
+_documentation/learn/scopes.md -%}).
