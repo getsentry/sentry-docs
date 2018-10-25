@@ -20,6 +20,16 @@ from sentry_sdk.integrations.celery import RqIntegration
 sentry_sdk.init(integrations=[RqIntegration()])
 ```
 
+{% capture __alert_content -%}
+Make sure that the code above is loaded on worker startup. E.g. put it in a `settings.py` and run the worker with `rq worker -c settings`.
+
+Putting this code just anywhere means the SDK will only be partially initialized.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
 Additionally the transaction on the event will be set to the task name and
 the grouping will be improved for global errors such as timeouts.
 <!-- ENDWIZARD -->
