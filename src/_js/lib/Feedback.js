@@ -1,3 +1,4 @@
+
 // Send an event to reload whenever a feedback button is clicked
 $(document).on('change', '[data-feedback-toggle]', function(event) {
   event.preventDefault();
@@ -6,9 +7,34 @@ $(document).on('change', '[data-feedback-toggle]', function(event) {
   window.ra.event('docs.feedback-sent', {
     useful: parseInt($selected.val(), 10)
   });
+  $('.js-feedback-footer').addClass('d-none');
+});
+
+// Send an event to reload whenever a feedback button is dismissed
+$(document).on('click', '[data-feedback-close]', function(event) {
+  event.preventDefault();
+  window.ra.event('docs.feedback-dismissed');
+  $('.js-feedback-footer').addClass('d-none');
+  dismissFeedback()
 });
 
 // Reset the feedback widget for the new page
 $(document).on('page.didUpdate', function(event) {
-  $('[data-feedback-toggle] label').removeClass('active');
+  const dismissTimestamp = window.localStorage.getItem('dismissTimestamp');
+
+  if(dismissTimestamp && !pastDismissWindow(dismissTimestamp)){
+    $('.js-feedback-footer').addClass('d-none');
+  } else {
+    $('.js-feedback-footer').removeClass('d-none');
+    $('[data-feedback-toggle] label').removeClass('active');
+  }
 });
+
+var dismissFeedback = function() {
+  window.localStorage.setItem('dismissTimestamp', Date.now())
+};
+
+// dismiss for 30mins
+var pastDismissWindow = function(dismissTimestamp) {
+  return ((Date.now() - dismissTimestamp)/ (1000*60)) > 30;
+};

@@ -46,3 +46,10 @@ In detail it provides:
 *Import name: `sentry_sdk.integrations.modules.ModulesIntegration`*
 
 Send a list of installed Python packages along with each event.
+
+## Argv
+*Import name: `sentry_sdk.integrations.modules.ModulesIntegration`*
+
+{% version_added 0.5.0 %}
+
+Add `sys.argv` as `extra` attribute to each event.

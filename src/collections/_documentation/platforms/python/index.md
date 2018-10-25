@@ -28,7 +28,9 @@ the following are supported:
 * [Django]({% link _documentation/platforms/python/django.md %})
 * [Flask]({% link _documentation/platforms/python/flask.md %})
 * [Sanic]({% link _documentation/platforms/python/sanic.md %})
+* [Pyramid]({% link _documentation/platforms/python/pyramid.md %})
 * [Logging]({% link _documentation/platforms/python/logging.md %})
+* [RQ (Redis Queue)]({% link _documentation/platforms/python/rq.md %})
 
 ### Other Integrations
 

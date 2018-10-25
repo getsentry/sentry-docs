@@ -13,7 +13,7 @@ Microsoft PDB files are not yet supported directly by Sentry. Until we provide o
 
 ### “CoCreateInstance CLSID_DiaSource failed (msdia80.dll unregistered?)” {#cocreateinstance-clsid-diasource-failed-msdia80-dll-unregistered}
 
-Download a copy of `msdia80.dll` and put it in `C:Program FilesCommon FilesMicrosoft SharedVC`. Then as administrator, run:
+Download a copy of `msdia80.dll` and put it in `C:\Program Files\Common Files\Microsoft Shared\VC\`. Then as administrator, run:
 
 ```
 > regsvr32 "C:\Program Files\Common Files\Microsoft Shared\VC\msdia80.dll"

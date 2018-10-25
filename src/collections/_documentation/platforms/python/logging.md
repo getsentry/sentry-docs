@@ -11,9 +11,10 @@ equivalent to this explicit configuration:
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 
+# All of this is already happening by default!
 sentry_logging = LoggingIntegration(
     level=logging.INFO,        # Capture info and above as breadcrumbs
-    event_level=logging.ERROR  # Send no events from log messages
+    event_level=logging.ERROR  # Send errors as events
 )
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
@@ -21,13 +22,28 @@ sentry_sdk.init(
 )
 ```
 
-If you want to send events for a log record, set `event_level` to a log level.
+## Usage
 
-## Config
+```
+import logging
+logging.debug("I am a breadcrumb")
+logging.error("I am an event", bar=43)
+```
+
+* There will be an error event with the message `"I am an event"`.
+* `"I am a breadcrumb"` will be attached as breadcrumb to that event.
+* `bar` will end up in the event's `extra` attributes.
+
+{% version_added 0.5.0: Ability to add data to `extra` %}
+
+## Options
+
+The following keyword arguments can be passed to `LoggingIntegration()`:
 
 * `level` (default `INFO`): Log records with a level higher than or equal to
   `level` will be recorded as breadcrumbs. Any log record with a level lower
-  than this one is completely ignored.
+  than this one is completely ignored. A value of `None` means that no log
+  records will be sent as breadcrumbs.
 
 * `event_level` (default `ERROR`): Log records with a level higher than or equal
   to `event_level` will additionally be reported as event. A value of `None`
