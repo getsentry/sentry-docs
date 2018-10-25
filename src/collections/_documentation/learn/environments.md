@@ -4,8 +4,6 @@ sidebar_order: 5
 example_environment: "staging"
 ---
 
-_Note: The environments feature is only available for early adopters. You can enable early adopter features by navigating to your organization settings._
-
 As of Sentry 9, you can easily filter issues, releases, and user feedback by environment. On the top right of your screen, you’ll see a dropdown of different environments. Toggling between environments will allow you to see issue data, release data, and user feedback data filtered by environment.
 
 [{% asset environment_filter.png %}]({% asset environment_filter.png @path %})
