@@ -1,6 +1,6 @@
 ---
 title: Configuration
-sidebar_order: 1
+sidebar_order: 2
 ---
 
 SDKs are configurable in many ways.  The options are largely standardized between SDKs but there are

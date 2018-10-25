@@ -165,4 +165,4 @@ parameter however is reserved for this purpose.
 
 ## Options
 
-Many options are standardized across SDKs.  For a list of these refer to [the main options documentation]({% link _documentation/learn/configuration.md %}).
+Many options are standardized across SDKs.  For a list of these refer to [the main options documentation]({% link _documentation/error-reporting/configuration/index.md %}).

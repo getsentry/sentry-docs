@@ -5,7 +5,7 @@ sidebar_order: 200
 
 This is the documentation for our Cordova SDK. The SDK uses a native extension for iOS and Android but will fall back to a pure JavaScript version (@sentry/browser) if needed.
 
-When you [install]({%- link _documentation/learn/quickstart.md -%}?platform=cordova) `sentry-cordova` 
+When you [install]({%- link _documentation/error-reporting/quickstart.md -%}?platform=cordova) `sentry-cordova` 
 [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will help you to configure your project. We also add a build step to your Xcode project to upload debug symbols we need to symbolicate iOS crashes.
 
 ## Configuration

@@ -95,7 +95,7 @@ Because Sentry bills on monthly event volume, spikes can consume your Sentry cap
 
 If your projects have a high volume of events, you can control how many errors Sentry receives in a few ways:
 
--   [Configure]({%- link _documentation/learn/configuration.md -%}#common-options) the SDK to reduce the volume of data you’re sending
+-   [Configure]({%- link _documentation/error-reporting/configuration/index.md -%}#common-options) the SDK to reduce the volume of data you’re sending
 -   Turn on [Inbound Filters]({%- link _documentation/product/quotas.md -%}#inbound-data-filters) for legacy browsers, browser extensions, localhost, and web crawlers. Any filtered events will not count towards your quota
 -   Set a [per-key rate limits]({%- link _documentation/product/quotas.md -%}#id1) for each DSN key in a project
 

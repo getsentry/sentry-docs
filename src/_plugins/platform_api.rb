@@ -93,7 +93,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
 
       directives = case platform["wizard"]
       when TrueClass
-        ["_documentation/learn/quickstart.md"]
+        ["_documentation/error-reporting/quickstart.md"]
       when Array
         platform["wizard"]
       when NilClass

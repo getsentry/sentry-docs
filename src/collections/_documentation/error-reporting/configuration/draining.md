@@ -1,6 +1,6 @@
 ---
 title: 'Shutdown and Draining'
-sidebar_order: 16
+sidebar_order: 1
 ---
 
 Most SDKs use a background queue to send out events.  Because the queue sends asynchronously in the background

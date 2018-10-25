@@ -1,6 +1,6 @@
 ---
 title: Filtering events
-sidebar_order: 3
+sidebar_order: 0
 ---
 
 In case you want to run custom logic on all events, you can do so in the `before-send` callback:
