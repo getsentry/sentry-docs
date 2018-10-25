@@ -80,4 +80,4 @@ public class MvcApplication : System.Web.HttpApplication
 
 Check out a complete working [sample](https://github.com/getsentry/sentry-dotnet-ef/tree/master/samples/Sentry.Samples.AspNet.Mvc) to see it in action.
 
-![Sample breadcrumbs in Sentry](https://github.com/getsentry/sentry-dotnet-ef/blob/master/.assets/ef.PNG?raw=true)
+![Sample breadcrumbs in Sentry]({% asset dotnet-entityframework.png @path %})
