@@ -48,7 +48,7 @@ In detail it provides:
 Send a list of installed Python packages along with each event.
 
 ## Argv
-*Import name: `sentry_sdk.integrations.modules.ModulesIntegration`*
+*Import name: `sentry_sdk.integrations.argv.ArgvIntegration`*
 
 {% version_added 0.5.0 %}
 
