@@ -101,7 +101,7 @@ The `captureMessage`, `captureException`, `context`, and `wrap` functions all al
 
 `tags`
 
-: [Tags]({%- link _documentation/learn/context.md -%}#tagging-events) to assign to the event.
+: [Tags]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events) to assign to the event.
 
   ```javascript
   Raven.wrap({
@@ -184,7 +184,7 @@ Raven.captureBreadcrumb({
 });
 ```
 
-To learn more about what types of data can be collected via breadcrumbs, see the [breadcrumbs client API specification]({%- link _documentation/learn/breadcrumbs.md -%}).
+To learn more about what types of data can be collected via breadcrumbs, see the [breadcrumbs client API specification]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}).
 
 Note that you can also disable automatic breadcrumb collection entirely or disable specific collectors:
 
@@ -228,7 +228,7 @@ try {
 }
 ```
 
-For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/learn/user-feedback.md -%}).
+For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
 
 ## Verify Raven Setup
 

@@ -16,8 +16,8 @@ blank scope are created on it.  That hub is then associated with the current
 thread and will internally hold a stack of scopes.
 
 The scope will hold useful information that should be sent along with the
-event.  For instance [contexts]({% link _documentation/learn/context.md %}) or
-[breadcrumbs]({% link _documentation/learn/breadcrumbs.md %}) are stored on
+event.  For instance [contexts]({% link _documentation/enriching-error-data/context.md %}) or
+[breadcrumbs]({% link _documentation/enriching-error-data/breadcrumbs.md %}) are stored on
 the scope.  When a scope is pushed, it inherits all data from the parent scope
 and when it pops all modifications are reverted.
 
@@ -32,7 +32,7 @@ of the box.  The hub you are unlikely to be interacting with directly unless you
 are writing an integration or you want to create or destroy scopes.  Scopes on the
 other hand are more user facing.  You can at any point in time call
 `configure-scope` to modify data stored on the scope.  This is for instance
-used to [modify the context]({% link _documentation/learn/context.md %}).
+used to [modify the context]({% link _documentation/enriching-error-data/context.md %}).
 
 {% capture __alert_content -%}
 If you are very curious about how this thread locality thing works here are the
@@ -62,7 +62,7 @@ add custom tags or to inform sentry about the currently authenticated user.
 {% include components/platform_content.html content_dir='configure-scope' %}
 
 To learn what useful information can be associated with scopes see
-[the context documentation]({% link _documentation/learn/context.md %}).
+[the context documentation]({% link _documentation/enriching-error-data/context.md %}).
 
 ## Local Scopes
 

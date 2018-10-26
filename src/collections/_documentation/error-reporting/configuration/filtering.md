@@ -8,7 +8,7 @@ In case you want to run custom logic on all events, you can do so in the `before
 
 ## Filtering breadcrumbs
 
-Breadcrumbs can also be individually filtered, see [_Breadcrumbs_]({%- link _documentation/learn/breadcrumbs.md -%}#breadcrumb-customization).
+Breadcrumbs can also be individually filtered, see [_Breadcrumbs_]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}#breadcrumb-customization).
 
 ## Event hints
 

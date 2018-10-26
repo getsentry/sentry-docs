@@ -11,7 +11,7 @@ issue group or be added to an already existing once based on Sentry's grouping
 algorithm.  Separately to capturing you can also record "breadcrumbs" that lead
 up to an event.  Breadcrumbs are different in that they will not create an event
 in Sentry but will be buffered until the next event is sent.  For more information
-have a look at [the breadcrumbs documentation]({% link _documentation/learn/breadcrumbs.md %}).
+have a look at [the breadcrumbs documentation]({% link _documentation/enriching-error-data/breadcrumbs.md %}).
 
 ## Capturing Errors / Exceptions
 

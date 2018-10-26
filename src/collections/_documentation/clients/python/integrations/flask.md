@@ -161,7 +161,7 @@ And in the error template (`500.html`) you can then do this:
 
 That’s it!
 
-For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/learn/user-feedback.md -%}).
+For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
 
 ## Dealing With Proxies
 
