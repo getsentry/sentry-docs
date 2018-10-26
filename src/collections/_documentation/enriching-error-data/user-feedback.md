@@ -1,6 +1,6 @@
 ---
 title: 'User Feedback'
-sidebar_order: 15
+sidebar_order: 3
 ---
 
 Sentry provides the ability to collect additional feedback from the user upon hitting an error. This is primarily useful in situations where you might generally render a plain error page (the classic `500.html`). To collect the feedback, an embeddable JavaScript widget is available, which can then be shown on demand to your users.

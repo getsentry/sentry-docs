@@ -1,6 +1,6 @@
 ---
 title: Environments
-sidebar_order: 5
+sidebar_order: 1
 example_environment: "staging"
 ---
 

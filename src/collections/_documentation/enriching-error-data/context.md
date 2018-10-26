@@ -1,6 +1,6 @@
 ---
 title: Context
-sidebar_order: 4
+sidebar_order: 0
 example_tag_name: page_locale
 example_tag_value: de-at
 example_user_email: 'john.doe@example.com'

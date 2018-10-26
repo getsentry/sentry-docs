@@ -1,6 +1,6 @@
 ---
 title: Breadcrumbs
-sidebar_order: 4
+sidebar_order: 2
 ---
 
 Sentry supports a concept called Breadcrumbs, which is a trail of events which
