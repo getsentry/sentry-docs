@@ -21,20 +21,13 @@ sentry_sdk.init(
 <!-- ENDWIZARD -->
 ## Behavior
 
-This causes the following this to happen:
+* All exceptions leading to a Internal Server Error are reported.
 
-* All exceptions are reported.
+* {% include platforms/python/request-data.md %}
 
-* A bit of data is attached to each event:
+* If you use ``django.contrib.auth`` and have set ``send_default_pii=True`` in your call to ``init``, user data (current user id, email address, username) is attached to the event.
 
-    * Personally identifiable information (such as user ids, usernames,
-      cookies, authorization headers, ip addresses) is excluded unless
-      ``send_default_pii`` is set to ``True``.
-
-    * Request data is attached to all events.
-
-    * If you have ``django.contrib.auth`` installed and configured, user data
-      (current user id, email address, username) is attached to the event.
+* SQL queries will be attached as breadcrumbs.
 
 * Logging with any logger will create breadcrumbs when the [Logging]({% link _documentation/platforms/python/logging.md %})
   integration is enabled (done by default).

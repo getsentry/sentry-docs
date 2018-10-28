@@ -37,15 +37,9 @@ Framework](https://github.com/huge-success/sanic).
 
 * The Sanic integration will be installed for all of your apps.
 
-* A bit of data is attached to each event:
-
-    * Personally identifiable information (such as user ids, usernames,
-      cookies, authorization headers, ip addresses) is excluded unless
-      ``send_default_pii`` is set to ``true``.
-
-    * Request data is attached to all events.
-
 * All exceptions leading to a Internal Server Error are reported.
+
+* {% include platforms/python/request-data.md %}
 
 * Logging with any logger will create breadcrumbs when
   the [Logging]({% link _documentation/platforms/python/logging.md %})
