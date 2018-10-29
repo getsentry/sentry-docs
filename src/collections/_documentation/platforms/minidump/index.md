@@ -96,11 +96,19 @@ Besides the minidump file, Sentry can optionally store additional files uploaded
 in the same request, such as log files. Simply add more files to the multipart
 form body. Note that the entire request must not exceed **20MB** in size. Sentry
 will use the provided file names and mime types and list those files in the
-_Event Attachments_ section at the bottom of the _Issue Details_ page.
+_Event Attachments_ section at the bottom of the _Issue Details_ page:
+
+```bash
+$ curl -X POST \
+  '___MINIDUMP_URL___' \
+  -F upload_file_minidump=@mini.dmp \
+  -F some_file=@some_file.txt \
+  -F db_log=@db.log
+```
 
 The organization and project setting _Store Native Crash Reports_ also enables
 storage of the original minidump files. For data privacy reasons, this setting
-is by default disabled. Crash reports are deleted permanently with their issues
+is by default disabled. Raw minidumps are deleted permanently with their issues
 or after 30 days.
 
 {% capture __alert_content -%}
