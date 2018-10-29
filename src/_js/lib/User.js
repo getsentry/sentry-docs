@@ -108,7 +108,7 @@ const formatDsn = function(
 
 const formatMinidumpURL = function(dsn) {
   const { scheme, host, pathSection, publicKey } = dsn;
-  return `${scheme}${host}/api${pathSection}/minidump?sentry_key=${publicKey}`;
+  return `${scheme}${host}/api${pathSection}/minidump/?sentry_key=${publicKey}`;
 };
 
 const formatAPIURL = function(dsn) {
