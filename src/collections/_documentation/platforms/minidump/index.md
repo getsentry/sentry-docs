@@ -90,6 +90,35 @@ $ curl -X POST \
 
 For the full list of supported attributes, see [Attributes]({%- link _documentation/clientdev/attributes.md -%}#attributes) and linked documents.
 
+## Event Attachments (Preview)
+
+Besides the minidump file, Sentry can optionally store additional files uploaded
+in the same request, such as log files. Simply add more files to the multipart
+form body. Note that the entire request must not exceed **20MB** in size. Sentry
+will use the provided file names and mime types and list those files in the
+_Event Attachments_ section at the bottom of the _Issue Details_ page:
+
+```bash
+$ curl -X POST \
+  '___MINIDUMP_URL___' \
+  -F upload_file_minidump=@mini.dmp \
+  -F some_file=@some_file.txt \
+  -F db_log=@db.log
+```
+
+The organization and project setting _Store Native Crash Reports_ also enables
+storage of the original minidump files. For data privacy reasons, this setting
+is by default disabled. Raw minidumps are deleted permanently with their issues
+or after 30 days.
+
+{% capture __alert_content -%}
+Event attachments are not yet available to all organizations. If interested, please contact our friendly support team to enroll your organization and receive more information. We are working to bring this feature to all customers in near future.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Early Access"
+  content=__alert_content
+%}
+
 ## Uploading Debug Information {#minidump-dif}
 
 To allow Sentry to fully process native crashes and provide you with symbolicated stack traces, you need to upload _Debug Information Files_ (sometimes also referred to as _Debug Symbols_ or just _Symbols_). We recommend to upload debug information during your build or release process.
