@@ -15,7 +15,7 @@ accept any arguments and will automatically report errors from all celery tasks:
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.celery import RqIntegration
+from sentry_sdk.integrations.rq import RqIntegration
 
 sentry_sdk.init(integrations=[RqIntegration()])
 ```
