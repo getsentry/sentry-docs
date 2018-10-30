@@ -30,7 +30,7 @@ been caught:
 
 ### Before Breadcrumb
 
-Similar to `before-breadcrumb` hints are also supported here.  This is particularly useful when
+Similar to `before-send` hints are also supported in `before-breadcrumb`.  This is particularly useful when
 breadcrumbs should be augmented or changed with some extra data from log records or events.  The
 following example shows a typical situation where you might want to extract extra information and
 how to do it:
