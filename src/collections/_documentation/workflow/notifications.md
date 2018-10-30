@@ -1,9 +1,9 @@
 ---
 title: Notifications
-sidebar_order: 8
+sidebar_order: 1
 ---
 
-Notifications in Sentry can be routed to many supported [_integrations_]({%- link _documentation/integrations/index.md-%}), but by default are aimed at Email. Additionally notifications are categorized into two categories:
+Notifications in Sentry can be routed to many supported [_integrations_]({%- link _documentation/workflow/integrations/index.md-%}), but by default are aimed at email. Additionally, notifications fall into two categories:
 
 Alerts
 
@@ -65,4 +65,3 @@ Core workflow notifications include:
 -   Assignment
 -   Comments
 -   Regressions – when Sentry changes state of an issue from **resolved** to **unresolved**
-

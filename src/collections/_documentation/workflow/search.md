@@ -1,6 +1,6 @@
 ---
 title: Search
-sidebar_order: 10
+sidebar_order: 3
 ---
 
 Search in Sentry currently exists in a limited fashion. You can perform basic CONTAINS matches on the title of an issue or exact matches on tags.

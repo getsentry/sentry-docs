@@ -21,7 +21,7 @@ Github should now be enabled for all projects under your Sentry organization.
 
 ## Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about commit tracking [here](https://docs.sentry.io/learn/releases/#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about commit tracking [here]({%- link _documentation/workflow/releases.md -%}#link-repository).
 
 ## Suspect Commits and Suggested Assignees
 

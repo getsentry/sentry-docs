@@ -1,6 +1,6 @@
 ---
 title: 'Issue Owners'
-sidebar_order: 7
+sidebar_order: 2
 ---
 
 The Issue Owners feature allows you to reduce noise by directing notifications to specific teams or users based on a path or URL. This allows you to get issues into the hands of the developer who can fix them, faster.

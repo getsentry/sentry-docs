@@ -19,7 +19,7 @@ Bitbucket should now be enabled for all projects under your Sentry organization.
 
 ## Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about commit tracking [here](https://docs.sentry.io/learn/releases/#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about commit tracking [here]({%- link _documentation/workflow/releases.md -%}#link-repository).
 
 ## Suspect Commits and Suggested Assignees
 
@@ -46,4 +46,3 @@ Fixes MYAPP-317
 ```
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit, and, later, when that commit is part of a release, we’ll mark the issue as resolved.
-
