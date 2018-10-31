@@ -1,6 +1,6 @@
 ---
 title: 'Sensitive Data'
-sidebar_order: 12
+sidebar_order: 1
 ---
 
 As with any third party service it’s important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored. Our primary approach to this problem is a pessimitic view: you accidentally sent data to Sentry and you either want to remove it, or you want to ensure it doesn’t get stored.
@@ -48,4 +48,4 @@ In the SDKs you can also set a function `before-send` which is invoked before ev
 
 ## Custom Event Processing using Relay
 
-In addition you have the option to put a proxy between your applications and Sentry that can strip sensitive data from your events. Head over to [_Relay_]({%- link _documentation/relay/index.md -%}).
+In addition you have the option to put a proxy between your applications and Sentry that can strip sensitive data from your events. Head over to [_Relay_]({%- link _documentation/data-management/relay/index.md -%}).

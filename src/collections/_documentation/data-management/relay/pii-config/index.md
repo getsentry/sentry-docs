@@ -53,7 +53,7 @@ come in. The following rules exist by default:
 
 Rules generally consist of two parts:
 
-- *Rule types* describe what to match. See [_PII Rule Types_]({%- link _documentation/relay/pii-config/types.md -%}) for an exhaustive list.
-- *Rule redaction methods* describe what to do with the match. See [_PII Rule Redaction Methods_]({%- link _documentation/relay/pii-config/methods.md -%}) for a list.  
+- *Rule types* describe what to match. See [_PII Rule Types_]({%- link _documentation/data-management/relay/pii-config/types.md -%}) for an exhaustive list.
+- *Rule redaction methods* describe what to do with the match. See [_PII Rule Redaction Methods_]({%- link _documentation/data-management/relay/pii-config/methods.md -%}) for a list.  
 
 Each page comes with examples. Try those examples out by pasting them into the "PII config" column of [_Piinguin_](https://getsentry.github.io/piinguin) and clicking on fields to get suggestions.

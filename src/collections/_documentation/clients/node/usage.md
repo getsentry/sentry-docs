@@ -160,7 +160,7 @@ All optional attributes are passed as part of the options to `captureException` 
 
 `fingerprint`
 
-: The fingerprint for grouping this event. Learn more how [Sentry groups errors]({%- link _documentation/learn/rollups.md -%}).
+: The fingerprint for grouping this event. Learn more how [Sentry groups errors]({%- link _documentation/data-management/rollups.md -%}).
 
   ```javascript
   {% raw %}{

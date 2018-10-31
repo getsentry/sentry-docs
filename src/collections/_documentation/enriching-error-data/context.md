@@ -93,7 +93,7 @@ You can set the severity of an event to one of five values: 'fatal', 'error', 'w
 
 ## Setting the Fingerprint
 
-Sentry uses one or more "fingerprints" to decide how to group errors into issues. More information can be found [here]({%- link _documentation/learn/rollups.md -%}#custom-grouping).
+Sentry uses one or more "fingerprints" to decide how to group errors into issues. More information can be found [here]({%- link _documentation/data-management/rollups.md -%}#custom-grouping).
 
 ## Extra Context
 

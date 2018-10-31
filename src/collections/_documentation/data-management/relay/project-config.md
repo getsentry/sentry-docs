@@ -3,7 +3,7 @@ title: 'Project Configuration'
 sidebar_order: 3
 ---
 
-A Relay will generally not accept or forward events where it doesn't know the project. See [_Getting Started_]({%- link _documentation/relay/quickstart.md -%}) for a short introduction to project configs. This page enumerates all possible options.
+A Relay will generally not accept or forward events where it doesn't know the project. See [_Getting Started_]({%- link _documentation/data-management/relay/quickstart.md -%}) for a short introduction to project configs. This page enumerates all possible options.
 
 The configuration for a project with the ID `123` lives in the file `.semaphore/projects/123.json`. You can get the project ID from the path section of a DSN.
 
@@ -43,4 +43,4 @@ This is basically the same as the "Allowed Domains" setting in the Sentry UI.
 {:.config-key}
 ## config.piiConfig
 
-See [_PII Configuration_]({%- link _documentation/relay/pii-config/index.md -%}).
+See [_PII Configuration_]({%- link _documentation/data-management/relay/pii-config/index.md -%}).

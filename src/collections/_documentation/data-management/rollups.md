@@ -1,6 +1,6 @@
 ---
 title: 'Rollups & Grouping'
-sidebar_order: 9
+sidebar_order: 0
 ---
 
 An important part of Sentry is how it aggregates similar events together and creates rollups. This turns out to be a pretty complex issue and it can be confusing for users about why some information might not be grouped correctly.

@@ -1,6 +1,6 @@
 ---
 title: 'Data Forwarding'
-sidebar_order: 14
+sidebar_order: 3
 ---
 
 Sentry provides the ability to forward processed events to certain third party providers such as [Segment](https://segment.com) and [Amazon SQS](https://aws.amazon.com/sqs/).

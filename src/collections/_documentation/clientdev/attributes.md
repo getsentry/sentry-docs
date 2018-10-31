@@ -240,4 +240,4 @@ highly encouraged:
   {% version_added Protocol: 7 %}
 
 For information about overriding grouping see [Customize Grouping with
-Fingerprints]({%- link _documentation/learn/rollups.md -%}#custom-grouping).
+Fingerprints]({%- link _documentation/data-management/rollups.md -%}#custom-grouping).
