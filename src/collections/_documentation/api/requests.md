@@ -1,5 +1,6 @@
 ---
 title: Requests
+sidebar_order: 0
 ---
 
 All API requests should be made to the `/api/0/` prefix, and will return JSON as the response:
