@@ -43,7 +43,7 @@ This is a 2-step process:
 
 #### a. Link a Repository
 
-First, make sure you've installed the global integration for your source code management tool in Organization Settings > Integrations. You’ll need to be an Owner or Manager of your Sentry organization to do this. Read more about roles in Sentry [here]({%- link _documentation/product/membership.md -%}).
+First, make sure you've installed the global integration for your source code management tool in Organization Settings > Integrations. You’ll need to be an Owner or Manager of your Sentry organization to do this. Read more about roles in Sentry [here]({%- link _documentation/accounts/membership.md -%}).
 
 Once you are in Organization Settings > Integrations and have installed the integration, click the 'Configure' button next to your instance.
 

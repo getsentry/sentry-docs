@@ -1,6 +1,6 @@
 ---
 title: Pricing
-sidebar_order: 30
+sidebar_order: 4
 permalink: /pricing/
 ---
 
@@ -57,7 +57,7 @@ Large and Enterprise plans have the option to configure rate limits for each pro
 If your projects have a high volume of events, you can control how many errors Sentry receives in a few ways:
 
 -   Within the SDK you can reduce the data volume you’re sending by sampling.
--   Turn on [Inbound Filters]({%- link _documentation/product/quotas.md -%}#inbound-data-filters) for legacy browsers, browser extensions, localhost, and web crawlers. Any filtered events will not count towards your quota.
+-   Turn on [Inbound Filters]({%- link _documentation/accounts/quotas.md -%}#inbound-data-filters) for legacy browsers, browser extensions, localhost, and web crawlers. Any filtered events will not count towards your quota.
 -   For JavaScript projects, use _whitelistUrls_ and _ignoreErrors_
 -   With the Large and Enterprise plans, you’ll be able to set a per-key rate limit for each DSN key in a project at **[Organization] » [Project] » Project Settings » Client Keys (DSN) » Details**. This rate limit is set as number of events to accept during a specific time window (1 minute, 24 hours, etc).
 
