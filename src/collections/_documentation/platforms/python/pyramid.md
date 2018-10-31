@@ -22,11 +22,11 @@ Framework](https://trypyramid.com/).
     ```python
     import sentry_sdk
 
-    from sentry_sdk.integrations.flask import FlaskIntegration
+    from sentry_sdk.integrations.pyramid import PyramidIntegration
 
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
-        integrations=[FlaskIntegration()]
+        integrations=[PyramidIntegration()]
     )
 
     from pyramid.config import Configurator
