@@ -1,6 +1,6 @@
 ---
 title: 'Write Buffers'
-sidebar_order: 2
+sidebar_order: 7
 ---
 
 Sentry manages database row contention by buffering writes and flushing bulk changes to the database over a period of time. This is extremely helpful if you have high concurrency, especially if they’re frequently the same event.

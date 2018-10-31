@@ -1,6 +1,6 @@
 ---
 title: 'Node Storage'
-sidebar_order: 1
+sidebar_order: 4
 ---
 
 Sentry provides an abstraction called ‘nodestore’ which is used for storing key/value blobs.

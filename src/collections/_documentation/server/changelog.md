@@ -1,5 +1,6 @@
 ---
 title: Changelog
+sidebar_order: 22
 ---
 
 Here you can see the full list of changes between each Sentry server release.

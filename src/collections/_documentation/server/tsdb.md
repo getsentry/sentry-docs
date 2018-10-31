@@ -1,6 +1,6 @@
 ---
 title: 'Time-series Storage'
-sidebar_order: 4
+sidebar_order: 10
 ---
 
 Sentry provides a service to store time-series data. Primarily this is used to display aggregate information for events and projects, as well as calculating (in real-time) the rates of events.

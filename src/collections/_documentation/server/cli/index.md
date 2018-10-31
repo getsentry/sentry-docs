@@ -1,6 +1,6 @@
 ---
 title: 'Command Line Usage'
-sidebar_order: 4
+sidebar_order: 15
 ---
 
 Sentry installs a command line script under the name `sentry`. This will allow you to perform most required operations that are unachievable within the web UI.

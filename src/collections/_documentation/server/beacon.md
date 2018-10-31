@@ -1,6 +1,6 @@
 ---
 title: Beacon
-sidebar_order: 1
+sidebar_order: 17
 ---
 
 Sentry will periodically communicate with a remote beacon server. This is utilized for a couple of things, primarily:
