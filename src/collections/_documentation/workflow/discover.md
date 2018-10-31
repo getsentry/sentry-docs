@@ -1,6 +1,6 @@
 ---
 title: 'Discover'
-sidebar_order: 15
+sidebar_order: 4
 standard_fields:
 
   "General":

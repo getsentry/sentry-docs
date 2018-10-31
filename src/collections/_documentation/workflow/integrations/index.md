@@ -1,6 +1,6 @@
 ---
 title: Integrations
-sidebar_order: 4
+sidebar_order: 5
 ---
 
 Sentry integrates seamlessly with your favorite apps and services.
