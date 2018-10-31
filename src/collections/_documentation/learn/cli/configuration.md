@@ -1,5 +1,6 @@
 ---
 title: 'Configuration and Authentication'
+sidebar_order: 1
 ---
 
 For most functionality you need to authenticate with Sentry. To sign in via the CLI tool, you can use the _login_ command which will guide you through it:

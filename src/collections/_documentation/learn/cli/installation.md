@@ -1,5 +1,6 @@
 ---
 title: Installation
+sidebar_order: 0
 ---
 
 Depending on your platform, there are different methods available to install `sentry-cli`.

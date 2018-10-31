@@ -1,5 +1,6 @@
 ---
 title: 'Release Management'
+sidebar_order: 2
 ---
 
 The `sentry-cli` tool can be used for release management on Sentry. It allows you to create, edit and delete releases as well as upload release artifacts for them.

@@ -1,5 +1,6 @@
 ---
 title: 'Sending Events'
+sidebar_order: 4
 ---
 
 The `sentry-cli` tool can also be used for sending events. If you want to use it, you need to export the `SENTRY_DSN` environment variable and point it to the DSN of a project of yours:
