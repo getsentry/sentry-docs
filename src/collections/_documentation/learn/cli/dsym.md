@@ -21,7 +21,7 @@ dSYM or folder containing dSYMs as command line argument.
 By default, `sentry-cli` uploads executables, libaries and frameworks alongside
 the dSYM files. This is required to achieve high quality stack traces for
 [Minidump]({%- link _documentation/platforms/minidump/index.md -%}) crash
-reports. For iOS apps using our [Cocoa]({%- link
+reports. For iOS apps using our [Cocoa SDK]({%- link
 _documentation/clients/cocoa/index.md -%}) this is not required.
 
 Since dSYMs have a unique signature, you do not need to associate them with
