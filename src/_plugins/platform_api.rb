@@ -1,5 +1,6 @@
 require "nokogiri"
 require "json"
+require "uri"
 
 # The platform api is generated based on the `wizard` key in platforms.yml. This
 # key can either be an array of documents with optional section slugs, or `true`
@@ -62,20 +63,20 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
 
     site.data["platforms"].each do |platform|
       next if platform["wizard"].nil? || platform["wizard_parent"].nil?
-      
+
       # Create entry for _platforms/_index.json
       file_name = "#{platform["slug"]}.json"
       group_slug = platform["wizard_parent"]
       is_self = group_slug === platform["slug"]
       grouped_file = group_slug === platform["slug"] ? file_name : "#{group_slug}/#{file_name}"
-      
+
       # This is a workaround to match javascript to browser docs now
       if platform["wizard"] === true and platform["slug"] == "javascript"
         platform["slug"] = "browser"
         is_self = true
         grouped_file = file_name
       end
-        
+
       platform_slug = is_self ? "_self" : platform["slug"]
       doc_link = platform["wizard"] === true ? "/quickstart?platform=#{platform["slug"]}" : platform["doc_link"]
       platform["doc_link"] = "#{site.config["url"]}#{ doc_link }"
@@ -115,7 +116,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
         end
 
         body = body.gsub(/<!--\s?WIZARDHIDE\s?([^\s]*?)\s?-->[\s\S]+?<!--\s?ENDWIZARDHIDE\s?-->/, "")
-        
+
         # Strip out platform content that doesn't relate to the current platform
         noko_doc = Nokogiri::HTML(body)
         noko_doc.css(".platform-specific-content").each do |node|
@@ -123,15 +124,15 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
           raise PlatformAPIError, "Could not find platform content for '#{platform["slug"]}' in #{file_path}" if platform_content.empty?
           node.replace platform_content
         end
-        
+
         noko_doc.css("a").each do |node|
-          node["href"] = Jekyll.configuration({})["url"] + node["href"]
+          node["href"] = URI(node["href"]).host ? node["href"] : "#{site.config["url"]}#{node["href"]}"
         end
 
         # Extract nested highlights so sentry CSS can target the `pre`s
         noko_doc.css(".highlighter-rouge").each do |node|
           highlighted_content = node.css("pre.highlight")
-          node.replace highlighted_content
+          node.replace highlighted_content if highlighted_content.any?
         end
 
         noko_doc.css("body").children.to_s

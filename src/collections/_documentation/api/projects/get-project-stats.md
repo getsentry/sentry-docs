@@ -6,7 +6,7 @@
   "authentication": "required", 
   "description": "Return a set of points representing a normalized timestamp and the\nnumber of events seen in the period.\n\nQuery ranges are limited to Sentry's configured time-series\nresolutions.", 
   "example_request": "GET /api/0/projects/the-interstellar-jurisdiction/pump-station/stats/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}", 
-  "example_response": "HTTP/1.1 200 OK\nContent-Length: 517\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n[\n  [\n    1537372800.0, \n    561\n  ], \n  [\n    1537376400.0, \n    639\n  ], \n  [\n    1537380000.0, \n    845\n  ], \n  [\n    1537383600.0, \n    780\n  ], \n  [\n    1537387200.0, \n    1339\n  ], \n  [\n    1537390800.0, \n    382\n  ], \n  [\n    1537394400.0, \n    876\n  ], \n  [\n    1537398000.0, \n    1010\n  ], \n  [\n    1537401600.0, \n    1616\n  ], \n  [\n    1537405200.0, \n    1848\n  ], \n  [\n    1537408800.0, \n    940\n  ], \n  [\n    1537412400.0, \n    1128\n  ], \n  [\n    1537416000.0, \n    1404\n  ], \n  [\n    1537419600.0, \n    609\n  ], \n  [\n    1537423200.0, \n    535\n  ], \n  [\n    1537426800.0, \n    732\n  ], \n  [\n    1537430400.0, \n    1784\n  ], \n  [\n    1537434000.0, \n    655\n  ], \n  [\n    1537437600.0, \n    1294\n  ], \n  [\n    1537441200.0, \n    1042\n  ], \n  [\n    1537444800.0, \n    1751\n  ], \n  [\n    1537448400.0, \n    1358\n  ], \n  [\n    1537452000.0, \n    1136\n  ], \n  [\n    1537455600.0, \n    2405\n  ]\n]", 
+  "example_response": "HTTP/1.1 200 OK\nContent-Length: 524\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n[\n  [\n    1539896400.0, \n    1154\n  ], \n  [\n    1539900000.0, \n    975\n  ], \n  [\n    1539903600.0, \n    1760\n  ], \n  [\n    1539907200.0, \n    1216\n  ], \n  [\n    1539910800.0, \n    1670\n  ], \n  [\n    1539914400.0, \n    634\n  ], \n  [\n    1539918000.0, \n    1599\n  ], \n  [\n    1539921600.0, \n    1285\n  ], \n  [\n    1539925200.0, \n    1042\n  ], \n  [\n    1539928800.0, \n    1470\n  ], \n  [\n    1539932400.0, \n    1104\n  ], \n  [\n    1539936000.0, \n    1063\n  ], \n  [\n    1539939600.0, \n    1706\n  ], \n  [\n    1539943200.0, \n    1767\n  ], \n  [\n    1539946800.0, \n    1065\n  ], \n  [\n    1539950400.0, \n    1094\n  ], \n  [\n    1539954000.0, \n    1181\n  ], \n  [\n    1539957600.0, \n    940\n  ], \n  [\n    1539961200.0, \n    1221\n  ], \n  [\n    1539964800.0, \n    1264\n  ], \n  [\n    1539968400.0, \n    1192\n  ], \n  [\n    1539972000.0, \n    671\n  ], \n  [\n    1539975600.0, \n    1320\n  ], \n  [\n    1539979200.0, \n    2355\n  ]\n]", 
   "method": "GET", 
   "parameters": null, 
   "path_parameters": [
@@ -43,7 +43,7 @@
       "type": "string"
     }
   ], 
-  "sidebar_order": 16, 
+  "sidebar_order": 17, 
   "title": "Retrieve Event Counts for a Project", 
   "warning": "This endpoint may change in the future without notice."
 }

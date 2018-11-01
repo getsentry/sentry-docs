@@ -18,7 +18,7 @@ The grouping switches behavior based on the interfaces ([_Interfaces_]({%- link 
 
 ### Grouping by Stacktrace
 
-When Sentry detects a stacktrace in the event data (either directly or as part of an exception) the grouping effectively is based entirely on the stacktrace. This grouping is fairly involved but easy enough to understand.
+When Sentry detects a stacktrace in the event data (either directly or as part of an exception), the grouping effectively is based entirely on the stacktrace. This grouping is fairly involved but easy enough to understand.
 
 The first and most important part is that Sentry only groups by stack trace frames reported in the application. Not all SDKs might report this, but if that information is provided, it’s used for grouping. This means that if the stacktrace is modified from one event to another exclusively in parts of the stack that is not related to the application, it still groups the same.
 

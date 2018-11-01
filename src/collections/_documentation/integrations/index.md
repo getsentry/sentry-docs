@@ -6,6 +6,7 @@ sidebar_order: 3
 Sentry integrates seamlessly with your favorite apps and services.
 
 -   [_Asana_]({%- link _documentation/integrations/asana.md -%})
+-   [_Azure DevOps_]({%- link _documentation/integrations/azure-devops.md -%})
 -   [_Bitbucket_]({%- link _documentation/integrations/bitbucket.md -%})
 -   Campfire
 -   Flowdock
@@ -29,5 +30,4 @@ Sentry integrates seamlessly with your favorite apps and services.
 -   Teamwork
 -   Trello
 -   Twilio
--   [_Visual Studio Team Services_]({%- link _documentation/integrations/azure-devops.md -%})
 

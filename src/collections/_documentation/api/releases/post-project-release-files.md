@@ -5,8 +5,8 @@
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/files/", 
   "authentication": "required", 
   "description": "Upload a new file for the given release.\n\nUnlike other API requests, files must be uploaded using the\ntraditional multipart/form-data content-type.\n\nThe optional 'name' attribute should reflect the absolute path\nthat this file will be referenced as. For example, in the case of\nJavaScript you might specify the full web URI.", 
-  "example_request": "POST /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/593e1e1f7222205faf2729e8d7766864717b48f6/files/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}\nContent-Type: multipart/form-data; boundary=b25119b807fa4420a68f3848a53a5818\n\n\"--b25119b807fa4420a68f3848a53a5818\\r\\nContent-Disposition: form-data; name=\\\"header\\\"\\r\\n\\r\\nContent-Type:text/plain; encoding=utf-8\\r\\n--b25119b807fa4420a68f3848a53a5818\\r\\nContent-Disposition: form-data; name=\\\"name\\\"\\r\\n\\r\\n/demo/hello.py\\r\\n--b25119b807fa4420a68f3848a53a5818\\r\\nContent-Disposition: form-data; name=\\\"file\\\"; filename=\\\"hello.py\\\"\\r\\n\\r\\nprint \\\"Hello World!\\\"\\r\\n--b25119b807fa4420a68f3848a53a5818--\\r\\n\"", 
-  "example_response": "HTTP/1.1 201 CREATED\nContent-Length: 217\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, POST, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"dateCreated\": \"2018-09-20T15:48:24.317Z\", \n  \"dist\": null, \n  \"headers\": {\n    \"Content-Type\": \"text/plain; encoding=utf-8\"\n  }, \n  \"id\": \"4\", \n  \"name\": \"/demo/hello.py\", \n  \"sha1\": \"7dc0876d778eae1093028f7bf368d0b95a53ec1a\", \n  \"size\": 20\n}", 
+  "example_request": "POST /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/5f3ece034d330cfa818abec184eb6de6bbf3e8a6/files/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}\nContent-Type: multipart/form-data; boundary=a00872e0400948cbba6812a0f09f6ba2\n\n\"--a00872e0400948cbba6812a0f09f6ba2\\r\\nContent-Disposition: form-data; name=\\\"header\\\"\\r\\n\\r\\nContent-Type:text/plain; encoding=utf-8\\r\\n--a00872e0400948cbba6812a0f09f6ba2\\r\\nContent-Disposition: form-data; name=\\\"name\\\"\\r\\n\\r\\n/demo/hello.py\\r\\n--a00872e0400948cbba6812a0f09f6ba2\\r\\nContent-Disposition: form-data; name=\\\"file\\\"; filename=\\\"hello.py\\\"\\r\\n\\r\\nprint \\\"Hello World!\\\"\\r\\n--a00872e0400948cbba6812a0f09f6ba2--\\r\\n\"", 
+  "example_response": "HTTP/1.1 201 CREATED\nContent-Length: 217\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, POST, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"dateCreated\": \"2018-09-25T15:37:23.071Z\", \n  \"dist\": null, \n  \"headers\": {\n    \"Content-Type\": \"text/plain; encoding=utf-8\"\n  }, \n  \"id\": \"4\", \n  \"name\": \"/demo/hello.py\", \n  \"sha1\": \"7dc0876d778eae1093028f7bf368d0b95a53ec1a\", \n  \"size\": 20\n}", 
   "method": "POST", 
   "parameters": [
     {
@@ -49,7 +49,7 @@
   ], 
   "query_parameters": null, 
   "sidebar_order": 18, 
-  "title": "Upload a New File", 
+  "title": "Upload a New Project Release File", 
   "warning": null
 }
 ---

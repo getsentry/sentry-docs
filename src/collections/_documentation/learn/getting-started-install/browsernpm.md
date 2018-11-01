@@ -12,6 +12,6 @@ $ npm install @sentry/browser@{% sdk_version sentry.javascript.browser %}
 
 {% include components/alert.html
   title="Want a CDN?"
-  content="You can also [use our more comfortable CDN version](?platform=browser)"
+  content="You can also [use our more convenient CDN version](?platform=browser)"
   level="info"
 %}

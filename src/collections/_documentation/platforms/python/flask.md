@@ -15,7 +15,7 @@ Framework](http://flask.pocoo.org/).
     $ pip install --upgrade sentry-sdk[flask]=={% sdk_version sentry.python %}
     ```
 
-2.  To configure the SDK initialize it with the integration before or after your app has been initialized:
+2.  To configure the SDK, initialize it with the integration before or after your app has been initialized:
 
     ```python
     import sentry_sdk
@@ -36,22 +36,34 @@ Framework](http://flask.pocoo.org/).
 * The Flask integration will be installed for all of your apps. It hooks into
   Flask's signals, not anything on the app object.
 
-* A bit of data is attached to each event:
-
-    * Personally identifiable information (such as user ids, usernames,
-      cookies, authorization headers, ip addresses) is excluded unless
-      ``send_default_pii`` is set to ``true``.
-
-    * Request data is attached to all events.
-
-    * If you have Flask-Login installed and configured, user data is attached to
-      the event.
-
 * All exceptions leading to a Internal Server Error are reported.
+
+* {% include platforms/python/request-data.md %}
+
+* If you use ``flask-login`` and have set ``send_default_pii=True`` in your call to ``init``, user data (current user id, email address, username) is attached to the event.
 
 * Logging with `app.logger` or really *any* logger will create breadcrumbs when
   the [Logging]({% link _documentation/platforms/python/logging.md %})
   integration is enabled (done by default).
+
+## Options
+
+The following keyword arguments can be passed to `FlaskIntegration()`:
+
+* `transaction_style`:
+
+  ```python
+  @app.route("/myurl/<foo>")
+  def myendpoint():
+      return "ok"
+  ```
+
+  In the above code, the transaction would be set to:
+
+  * `/myurl/<foo>` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
+  * `myendpoint` if you set `transaction_style="endpoint"`
+
+  The default is `"endpoint"`.
 
 ## User Feedback
 

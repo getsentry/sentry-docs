@@ -24,7 +24,7 @@ Roles include:
 | Can join and leave teams. |   | X | X | X | X |
 | Can change Project Settings |   |   | X | X | X |
 | Can add/remove projects |   |   | X | X | X |
-| Can edit Global Integrations |   |   | X | X | X |
+| Can edit Global Integrations |   |   |   | X | X |
 | Can add/remove/change members |   |   |   | X | X |
 | Can add/remove teams |   |   |   | X | X |
 | Can add Repositories |   |   |   | X | X |

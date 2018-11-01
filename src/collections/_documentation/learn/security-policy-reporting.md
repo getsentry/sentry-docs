@@ -9,7 +9,7 @@ The integration process consists of configuring the the appropriate header with 
 
 ## Content-Security-Policy
 
-[Content Security Policy](https://en.wikipedia.org/wiki/Content_Security_Policy) (CSP) is a security standard which helps prevent cross-site scripting (XSS), clickjacking and other code injection attacks resulting from execution of malicious content in the trusted web page context. It’s enforced by browser vendors, and Sentry supports capturing CSP violations using the standard reporting hooks.
+[Content-Security-Policy](https://en.wikipedia.org/wiki/Content_Security_Policy) (CSP) is a security standard which helps prevent cross-site scripting (XSS), clickjacking and other code injection attacks resulting from execution of malicious content in the trusted web page context. It’s enforced by browser vendors, and Sentry supports capturing CSP violations using the standard reporting hooks.
 
 To configure CSP reports in Sentry, you’ll need to send a header from your server describing your policy, as well specifying the authenticated Sentry endpoint:
 

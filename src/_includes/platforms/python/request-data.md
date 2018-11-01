@@ -1,0 +1,1 @@
+Request data is attached to all events: **HTTP method, URL, headers, formdata, JSON payloads**. Raw bodies and multipart file uploads are excluded. Personally identifiable information (such as user ids, usernames, cookies, authorization headers, ip addresses) is excluded unless ``send_default_pii`` is set to ``True``.

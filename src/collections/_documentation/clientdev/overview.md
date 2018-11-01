@@ -302,7 +302,7 @@ SDKs are supposed to provide standardized concurrency handling through the
 concept of hubs and scopes.  This is explained in more details in the
 [_Concurrency_]({%- link _documentation/clientdev/unified-api.md -%}#concurrency) chapter of the unified API docs.
 
-## Layer of Integratiom
+## Layer of Integration
 
 SDKs when possible are supposed to integrate on a low level which will capture as much of the runtime
 as possible.  This means that if an SDK can hook the runtime or a framework directly this is preferred

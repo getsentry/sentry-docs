@@ -42,7 +42,7 @@ The `environment_name` and `included_environments` work together to determine if
 An alternative is to use `Mix.env` in your general configuration file:
 
 ```elixir
-config :sentry, dsn: "___PUBLIC_DSN___"
+config :sentry, dsn: "___PUBLIC_DSN___",
    included_environments: [:prod],
    environment_name: Mix.env
 ```
@@ -52,7 +52,7 @@ This will set the environment name to whatever the current Mix environment atom 
 You can even rely on more custom determinations of the environment name. It’s not uncommon for most applications to have a “staging” environment. In order to handle this without adding an additional Mix environment, you can set an environment variable that determines the release level.
 
 ```elixir
-config :sentry, dsn: "___PUBLIC_DSN___"
+config :sentry, dsn: "___PUBLIC_DSN___",
   included_environments: ~w(production staging),
   environment_name: System.get_env("RELEASE_LEVEL") || "development"
 ```

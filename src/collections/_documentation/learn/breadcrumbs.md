@@ -1,6 +1,6 @@
 ---
 title: Breadcrumbs
-sidebar_order: 3
+sidebar_order: 4
 ---
 
 Sentry supports a concept called Breadcrumbs, which is a trail of events which
@@ -34,7 +34,7 @@ Level
 
 Type
 
-: Additionally a semi internal attribute `type` exists which can control the type
+: Additionally, a semi internal attribute `type` exists which can control the type
   of the breadcrumb.  By default all breadcrumbs are recoded as `default` which
   makes it appear as a log entry.  Other types are available which will
   influence how they are rendered.  The following types currently exist:
@@ -49,14 +49,14 @@ Type
 ## Recording Crumbs
 
 Manual breadcrumb recording is also available and easy to use.  This way breadcrumbs
-can be added whenever something interesting happens.  For instance it might make sense
+can be added whenever something interesting happens.  For instance, it might make sense
 to record a breadcrumb if the user authenticates or another state change happens.
 
 {% include components/platform_content.html content_dir='breadcrumbs-example' %}
 
 ## Automatic Breadcrumbs
 
-SDKs will automatically start recording breadcrumbs by enabling integrations.  For instance
+SDKs will automatically start recording breadcrumbs by enabling integrations.  For instance,
 the browser JavaScript SDK will automatically record all location changes.
 
 ## Breadcrumb Customization
@@ -67,4 +67,4 @@ hint.  The function can modify the breadcrumb or decide to discard it entirely:
 
 {% include components/platform_content.html content_dir='before-breadcrumb' %}
 
-For information about what can be done with the hint see [hints]({% link _documentation/learn/hints.md %}).
+For information about what can be done with the hint see [_Filtering Events_]({% link _documentation/learn/filtering.md %}#before-breadcrumb).

@@ -1,10 +1,11 @@
 import qs from 'query-string';
 import Lunr from './Lunr';
+import { escape } from './Helpers';
 
 const renderResult = function(data) {
   const relativePath = data.path.replace(/^\/|\/$/g, '');
 
-  const url = `${window.location.origin}/${relativePath}`;
+  const url = `${window.location.origin}/${relativePath}/`;
   const path = relativePath
     .split(/[#\/]/)
     .map(segment => {
@@ -25,7 +26,7 @@ const renderResult = function(data) {
 const renderResults = function(results, query) {
   const $results = $('[data-search-results]').clone();
   if (!results || !results.length) {
-    const msg = `No results${!!results ? ` matching "${query}"` : ''}`;
+    const msg = `No results${!!results ? ` matching "${escape(query)}"` : ''}`;
     $results.append(`<p>${msg}</p>`);
   }
   $.each(results, function(i, result) {
@@ -41,7 +42,6 @@ class Search {
     this.pageTemplate = $('html').html();
 
     this.init = this.init.bind(this);
-    this.loader = this.loader.bind(this);
 
     this.$target = $target;
     this.Lunr = new Lunr({
@@ -63,20 +63,6 @@ class Search {
 
     return this.Lunr.search(params.q).then(results => {
       $('[data-search-results]').append(renderResults(results, params.q));
-    });
-  }
-
-  // This is a loader for DynamicLoader. It generates a full HTML page that
-  // DynamicLoader can parse.
-  loader(url) {
-    const { search } = url;
-    const params = qs.parse(search);
-    return fetchResults(params).then(res => {
-      const $page = $(this.pageTemplate);
-      return $page
-        .find('[data-search-results]')
-        .append(renderResults(res, params))
-        .html();
     });
   }
 }

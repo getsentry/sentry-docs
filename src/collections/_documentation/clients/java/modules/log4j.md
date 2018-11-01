@@ -9,7 +9,7 @@ The source can be found [on Github](https://github.com/getsentry/sentry-java/tre
 
 **Note:** The old `raven-log4j` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j.rst).
 
-<!-- ENDWIZARD -->
+<!-- WIZARD -->
 ## Installation
 
 Using Maven:

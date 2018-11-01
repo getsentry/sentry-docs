@@ -7,7 +7,14 @@ sidebar_order: 10
 
 This section will describe features, configurations and general functionality which are specific to the .NET SDK.
 
-# Compatibility
+## Integrations
+
+- [_ASP.NET Core_]({% link _documentation/platforms/dotnet/aspnetcore.md %})
+- [_EntityFramework_]({% link _documentation/platforms/dotnet/entityframework.md %})
+- [_log4net_]({% link _documentation/platforms/dotnet/log4net.md %})
+- [_Microsoft.Extensions.Logging_]({% link _documentation/platforms/dotnet/microsoft-extensions-logging.md %})
+
+## Compatibility
 
 The main [Sentry NuGet package](https://www.nuget.org/packages/Sentry) targets .NET Standard 2.0. That means, according to the [compatibility table](https://docs.microsoft.com/en-us/dotnet/standard/net-standard), it is compatible with the following versions or newer:
 
@@ -25,6 +32,12 @@ Of those, we run our unit/integration tests against:
 * Mono 5.12 macOS and Linux
 * .NET Core 2.0 Windows, macOS and Linux
 * .NET Core 2.1 Windows, macOS and Linux
+
+{% include components/alert.html
+  title="Using an older version of .NET Framework or Mono?"
+  content="[Our legacy SDK](https://docs.sentry.io/clients/csharp/) supports .NET Framework as early as 3.5."
+  level="info"
+%}
 
 ## Automatically discovering release version
 

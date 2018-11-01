@@ -4,7 +4,7 @@ sidebar_order: 1
 ---
 
 SDKs are configurable in many ways.  The options are largely standardized between SDKs but there are
-some differences to better acommodate platform peculiarities.  Options are set when the SDK is first
+some differences to better accommodate platform peculiarities.  Options are set when the SDK is first
 initialized.
 
 {% include components/platform_content.html content_dir='config-intro' %}
@@ -45,12 +45,6 @@ Sets the environment.  This string is freeform and not set by default.  A releas
 with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 {:.config-key}
-### repos
-
-For repository integration, the repository identifiers need to be sent along.  For more information
-have a look at [the releases documentation]({% link _documentation/learn/releases.md %}).
-
-{:.config-key}
 ### sample-rate
 
 Configures the sample rate as a percentage of events to be sent in the range of `0.0` to `1.0`.  The
@@ -66,7 +60,7 @@ to `100`.
 {:.config-key}
 ### attach-stacktrace
 
-When enabled stacktraces are automatically attached to all messages logged.  Note that stacktraces
+When enabled, stacktraces are automatically attached to all messages logged.  Note that stacktraces
 are always attached to exceptions but when this is set stacktraces are also sent with messages.  This, for instance, means that stacktraces appear next to all log messages.
 
 It's important to note that grouping in Sentry is different for events with stacktraces and without.
@@ -78,7 +72,7 @@ This feature is `off` by default.
 ### send-default-pii
 
 If this flag is enabled, certain personally identifiable information is added by active
-integrations.  Without this flag they are never added to the event, to begin with.  If possible
+integrations.  Without this flag they are never added to the event, to begin with.  If possible,
 it's recommended to turn on this feature and use the server side PII stripping to remove the
 values instead.
 
@@ -86,7 +80,7 @@ values instead.
 ### server-name
 
 {% unsupported browser %}
-Can be used to supply a "server name".  When provided the name of the server is sent along and
+Can be used to supply a "server name".  When provided, the name of the server is sent along and
 persisted in the event.  Note that for many integrations the server name actually corresponds to
 the device hostname even in situations where the machine is not actually a server.  Most SDKs
 will attempt to auto-discover this value.
@@ -96,14 +90,14 @@ will attempt to auto-discover this value.
 ### blacklist-urls
 
 {% supported browser %}
-A pattern for error URLs which should not be sent to Sentry.  By default, all errors will be sent.
+A list of strings or regex patterns that match error URLs which should not be sent to Sentry.  By default, all errors will be sent.
 {% endsupported %}
 
 {:.config-key}
 ### whitelist-urls
 
 {% supported browser %}
-A pattern for error URLs which should exclusively be sent to Sentry.  By default, all errors
+A list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry.  By default, all errors
 will be sent.
 {% endsupported %}
 
@@ -137,8 +131,8 @@ happen as part of the `init()` call, in some others, different patterns apply.
 ### integrations
 
 {% unsupported csharp aspnetcore rust %}
-In some SDKs the integrations are configured through this parameter on library initialization.
-For more information have a look at the specific integration documentation.
+In some SDKs, the integrations are configured through this parameter on library initialization.
+For more information, have a look at the specific integration documentation.
 {% endunsupported %}
 
 {:.config-key}

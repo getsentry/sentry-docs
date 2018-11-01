@@ -1,4 +1,4 @@
-import { google, twitter, facebook, linkedin, bing, hubspot } from './Trackers';
+import { google, twitter, facebook, linkedin, bing, hubspot, amplitude } from './Trackers';
 
 const init = function() {
   const namespace = 'trackersOk';
@@ -6,6 +6,7 @@ const init = function() {
   loadIfTrackersOk.push(google);
   loadIfTrackersOk.push(facebook);
   loadIfTrackersOk.push(hubspot);
+  loadIfTrackersOk.push(amplitude);
 
   // If we've been given permission to track, set a cookie that we can check
   // later to hide the banner, then load all of the trackers we have deferred.

@@ -1,18 +1,16 @@
 With ASP.NET Core MVC, the `Error.cshtml` razor page:
 
-{% raw %}
-```html
-@using Sentry
 
-<script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
+```html
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous"></script>
+
+@using Sentry
 
 @if (SentrySdk.LastEventId != Guid.Empty)
 {
     <script>
-        Sentry.showReportDialog({
-            eventId: '@SentrySdk.LastEventId'
-        });
+        Sentry.init({ dsn: '___PUBLIC_DSN___' });
+        Sentry.showReportDialog({ eventId: '@SentrySdk.LastEventId' });
     </script>
 }
 ```
-{% endraw %}

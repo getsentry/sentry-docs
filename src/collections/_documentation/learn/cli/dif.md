@@ -1,5 +1,6 @@
 ---
 title: 'Debug Information Files'
+sidebar_order: 3
 ---
 
 `sentry-cli` can be used to validate and upload debug information files (dSYM, Proguard files, etc.).

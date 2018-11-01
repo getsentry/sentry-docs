@@ -4,8 +4,8 @@ sidebar_order: 4
 ---
 
 When an event is captured and sent to Sentry, SDKs will merge that event data with extra
-information from the current scope.  SDKs will typically automatically mange the scopes
-for you in the framework integrations and you don't need to think about them.  However
+information from the current scope.  SDKs will typically automatically manage the scopes
+for you in the framework integrations and you don't need to think about them.  However,
 you should know what a scope is and how you can use it for your advantage.
 
 ## What's a Scope, what's a Hub
@@ -18,7 +18,7 @@ thread and will internally hold a stack of scopes.
 The scope will hold useful information that should be sent along with the
 event.  For instance [contexts]({% link _documentation/learn/context.md %}) or
 [breadcrumbs]({% link _documentation/learn/breadcrumbs.md %}) are stored on
-the scope.  When a scope is pushed it inherits all data from the parent scope
+the scope.  When a scope is pushed, it inherits all data from the parent scope
 and when it pops all modifications are reverted.
 
 The default SDK integrations will push and pop scopes intelligently.  For
@@ -73,7 +73,7 @@ that function to attach a `level` and a `tag` to only one specific error:
 
 {% include components/platform_content.html content_dir='with-scope' %}
 
-While this example looks similar to `configure-scope` it very different, in the sense that 
+While this example looks similar to `configure-scope` it's very different, in the sense that 
 `configure-scope` actually changes the current active scope, all successive calls to `configure-scope` 
 will keep the changes.
 

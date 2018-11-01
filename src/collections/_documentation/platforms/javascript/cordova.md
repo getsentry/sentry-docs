@@ -16,11 +16,11 @@ You have to whitelist `sentry.io` in your `config.xml` like:
 <access origin=”sentry.io” />
 ```
 
-Keep in mind if you use an on-premise installation, adjust this domain accordingly.
+Keep in mind that if you use an on-premise installation, adjust this domain accordingly.
 
 ## iOS Specifics
 
-When you use Xcode you can hook directly into the build process to upload debug symbols. If you however are using bitcode you will need to disable the “Upload Debug Symbols to Sentry” build phase and then separately upload debug symbols from iTunes Connect to Sentry.
+When you use Xcode, you can hook directly into the build process to upload debug symbols. If you however are using bitcode you will need to disable the “Upload Debug Symbols to Sentry” build phase and then separately upload debug symbols from iTunes Connect to Sentry.
 
 ## Run Script Phase
 

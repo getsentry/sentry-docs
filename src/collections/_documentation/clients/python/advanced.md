@@ -66,168 +66,157 @@ The following are valid arguments which may be passed to the Raven client:
 
 : A Sentry compatible DSN as mentioned before:
 
-  ```python
-  dsn = '___DSN___'
-  ```
+```python
+dsn = '___DSN___'
+```
 
 `transport`
 
 : The HTTP transport class to use. By default this is an asynchronous worker thread that runs in-process.
 
-  For more information see [_Transports_]({%- link _documentation/clients/python/transports.md -%}).
+For more information see [_Transports_]({%- link _documentation/clients/python/transports.md -%}).
 
 `site`
 
 : An optional, arbitrary string to identify this client installation:
 
-  ```python
-  site = 'my site name'
-  ```
+```python
+site = 'my site name'
+```
 
 `name`
 
 : This will override the `server_name` value for this installation. Defaults to `socket.gethostname()`:
 
-  ```python
-  name = 'sentry_rocks_' + socket.gethostname()
-  ```
+```python
+name = 'sentry_rocks_' + socket.gethostname()
+```
 
 `release`
 
 : The version of your application. This will map up into a Release in Sentry:
 
-  ```python
-  release = '1.0.3'
-  ```
+```python
+release = '1.0.3'
+```
 
 `environment`
 
 : The environment your application is running in:
 
-  ```python
-  environment = 'staging'
-  ```
+```python
+environment = 'staging'
+```
 
 `tags`
 
 : Default tags to send with events:
 
-  ```python
-  tags = {'site': 'foo.com'}
-  ```
-
-`repos`
-
-: This describes local repositories that are reflected in your source code:
-
-  ```python
-  repos = {
-      'raven': {
-          # the name of the repository as registered in Sentry
-          'name': 'getsentry/raven-python',
-          # the prefix where the local source code is found in the repo
-          'prefix': 'src',
-      }
-  }
-  ```
-
-  The repository key can either be a module name or the absolute path. When a module name is given it will be automatically converted to its absolute path.
-
-  For more information, see the [_repos interface_]({%- link _documentation/clientdev/interfaces/repos.md -%}) docs.
+```python
+tags = {'site': 'foo.com'}
+```
 
 `exclude_paths`
 
 : Extending this allow you to ignore module prefixes when we attempt to discover which function an error comes from (typically a view):
 
-  ```python
-  exclude_paths = [
-      'django',
-      'sentry',
-      'raven',
-      'lxml.objectify',
-  ]
-  ```
+```python
+exclude_paths = [
+    'django',
+    'sentry',
+    'raven',
+    'lxml.objectify',
+]
+```
 
 `include_paths`
 
 : For example, in Django this defaults to your list of `INSTALLED_APPS`, and is used for drilling down where an exception is located:
 
-  ```python
-  include_paths = [
-      'django',
-      'sentry',
-      'raven',
-      'lxml.objectify',
-  ]
-  ```
+```python
+include_paths = [
+    'django',
+    'sentry',
+    'raven',
+    'lxml.objectify',
+]
+```
 
 `ignore_exceptions`
 
 : A list of exceptions to ignore:
 
-  ```python
-  ignore_exceptions = [
-      'Http404',
-      'django.exceptions.http.Http404',
-      'django.exceptions.*',
-      ValueError,
-  ]
-  ```
+```python
+ignore_exceptions = [
+    'Http404',
+    'django.exceptions.http.Http404',
+    'django.exceptions.*',
+    ValueError,
+]
+```
 
-  Each item can be either a string or a class. String declaration is strict (ie. does not work for child exceptions) whereas class declaration handle inheritance (ie. child exceptions are also ignored).
+Each item can be either a string or a class. String declaration is strict (ie. does not work for child exceptions) whereas class declaration handle inheritance (ie. child exceptions are also ignored).
 
 `sample_rate`
 
 : The sampling factor to apply to events. A value of 0.00 will deny sending any events, and a value of 1.00 will send 100% of events.
 
-  ```python
-  # send 50% of events
-  sample_rate = 0.5
-  ```
+```python
+# send 50% of events
+sample_rate = 0.5
+```
 
 `list_max_length`
 
 : The maximum number of items a list-like container should store.
 
-  If an iterable is longer than the specified length, the left-most elements up to length will be kept.
+If an iterable is longer than the specified length, the left-most elements up to length will be kept.
 
-  {% capture __alert_content -%}
-  This affects sets as well, which are unordered.
-  {%- endcapture -%}
-  {%- include components/alert.html
+{% capture __alert_content -%}
+This affects sets as well, which are unordered.
+{%- endcapture -%}
+{%- include components/alert.html
     title="Note"
     content=__alert_content
   %}```python
-  list_max_length = 50
-  ```
+list_max_length = 50
 
+````
 `string_max_length`
 
 : The maximum characters of a string that should be stored.
 
-  If a string is longer than the given length, it will be truncated down to the specified size:
+If a string is longer than the given length, it will be truncated down to the specified size:
 
-  ```python
-  string_max_length = 200
-  ```
+```python
+string_max_length = 200
+````
 
 `auto_log_stacks`
 
 : Should Raven automatically log frame stacks (including locals) for all calls as it would for exceptions:
 
-  ```python
-  auto_log_stacks = True
-  ```
+```python
+auto_log_stacks = True
+```
 
 `processors`
 
 : A list of processors to apply to events before sending them to the Sentry server. Useful for sending additional global state data or sanitizing data that you want to keep off of the server:
 
-  ```python
-  processors = (
-      'raven.processors.SanitizePasswordsProcessor',
-  )
-  ```
+```python
+processors = (
+    'raven.processors.SanitizePasswordsProcessor',
+)
+```
+
+`sanitize_keys`
+
+: A required set of keys to sanitize when using `raven.processors.SanitizeKeysProcessor` in `processors`:
+
+```python
+sanitize_keys = ["sensitive_key_1", "sensitive_key_2"]
+```
 
 ## Sanitizing Data
 
@@ -244,6 +233,10 @@ Several processors are included with Raven to assist in data sanitiziation. Thes
 `raven.processors.RemovePostDataProcessor`
 
 : Removes the `body` of all HTTP data.
+
+`raven.processors.SanitizeKeysProcessor`
+
+: Removes all keys provided in the configuable set `sanitize_keys`, which must be provided as a client argument.
 
 ## Custom Grouping Behavior
 
@@ -263,13 +256,13 @@ For more information, see [Customize Grouping with Fingerprints]({%- link _docum
 
 There are two ways to sample messages:
 
--   Add sample_rate to the Client object - This sends a percentage of messages the reaching the Client to Sentry
+- Add sample_rate to the Client object - This sends a percentage of messages the reaching the Client to Sentry
 
 ```python
 client = Client('___DSN___', sample_rate=0.5) # send 50% of events
 ```
 
--   Sample individual messages
+- Sample individual messages
 
 ```python
 client = Client('___DSN___') # No sample_rate provided

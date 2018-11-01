@@ -7,7 +7,7 @@ Sentry’s new Slack integration creates workflows for your team, instead of a n
 
 ## Configure Slack
 
-You can authorize the Slack integration globally by clicking on **All Integrations** under your **Project settings**.
+You can authorize the Slack integration globally by clicking on **All Integrations** under your **Organization settings**.
 
 {% capture __alert_content -%}
 We’re planning to move more legacy integrations to this style of Global Integrations soon. In the future, your Global Integrations will live in your Organization settings.
@@ -17,14 +17,11 @@ We’re planning to move more legacy integrations to this style of Global Integr
   content=__alert_content
 %}
 
-At the top of the page, you’ll see the available Global Integrations list, which includes Slack. Click **Configure** to integrate your Slack workspace(s) with your project.
+At the top of the page, you’ll see the available Global Integrations list, which includes Slack. Click **Install** to integrate your Slack workspace(s) with your project.
 
 > [{% asset slack-all-integrations-page.png %}]({% asset slack-all-integrations-page.png @path %})
 
 Click **Add workspace**:
-
-> [{% asset slack-global-integration-project-settings-add-workspace.png %}]({% asset slack-global-integration-project-settings-add-workspace.png @path %})
-
 A new window will open to connect your Slack workspace with Sentry:
 
 > [{% asset slack-auth-choose-workspace.png %}]({% asset slack-auth-choose-workspace.png @path %})
@@ -45,9 +42,9 @@ On the next page, you can choose the scope of channels you’d like Sentry to ac
 
 > [{% asset slack-auth-channel-pref.png %}]({% asset slack-auth-channel-pref.png @path %})
 
-Click **Authorize**.
+Click **Install**.
 
-Your Project Integrations page will refresh and show the Slack workspace you just added.
+Your Organization Integrations page will refresh and show the Slack workspace you just added.
 
 > [{% asset slack-add-workspace-success.png %}]({% asset slack-add-workspace-success.png @path %})
 
@@ -59,9 +56,9 @@ Now your Slack integration is available to all projects in your Sentry organizat
 
 ## Configure Alert Rules for specific Slack channels
 
-Confirm your Slack workspace is configured globally for your Sentry organization by clicking on **All Integrations** from your **Project Settings**
+Confirm your Slack workspace is configured globally for your Sentry organization by clicking on **Integrations** from your **Organization Settings**
 
-> [{% asset slack-all-integrations-page.png %}]({% asset slack-all-integrations-page.png @path %})
+> [{% asset slack-add-workspace-success.png %}]({% asset slack-add-workspace-success.png @path %})
 
 Click **Configure** and you’ll see the available Slack workspaces for your project. From this page, you can click on **Add an Alert Rule for this project** to go directly to your Alert Rule settings.
 

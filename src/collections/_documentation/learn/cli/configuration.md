@@ -1,25 +1,26 @@
 ---
 title: 'Configuration and Authentication'
+sidebar_order: 1
 ---
 
-For most functionality you need to authenticate with Sentry. To sign the CLI tool in you can use the _login_ command which will guide you through it:
+For most functionality you need to authenticate with Sentry. To sign in via the CLI tool, you can use the _login_ command which will guide you through it:
 
 ```bash
 $ sentry-cli login
 ```
 
-If you want to manually authenticate `sentry-cli` you can to your to your auth token settings in your user account (User Icon -> API) and generate a new token with at least the following scopes:
+If you want to manually authenticate `sentry-cli` you can go to your to your auth token settings in your user account (User Icon -> API) and generate a new token with at least the following scopes:
 
 -   `project:read`
 -   `project:releases`
 
-Afterwards you can export the `SENTRY_AUTH_TOKEN` environment variable:
+Afterwards, you can export the `SENTRY_AUTH_TOKEN` environment variable:
 
 ```bash
 export SENTRY_AUTH_TOKEN=your-auth-token
 ```
 
-Alternatively you can provide the `--auth-token` command line parameter whenever you invoke _sentry-cli_ or add it to your _.sentryclirc_ config file.
+Alternatively, you can provide the `--auth-token` command line parameter whenever you invoke _sentry-cli_ or add it to your _.sentryclirc_ config file.
 
 By default `sentry-cli` will connect to sentry.io but for on-premise you can also sign in elsewhere:
 
@@ -116,7 +117,7 @@ The following settings are available (first is the environment variable, the val
 
 `SENTRY_DISABLE_UPDATE_CHECK` (_update.disable_check_):
 
-: If set to `true` then the automatic update check in sentry-cli is disabled. This was introduced in 1.17. Versions before that did not include an update check. The update check is also not enabled for npm based installations of sentry-cli at the moment.
+: If set to `true`, then the automatic update check in sentry-cli is disabled. This was introduced in 1.17. Versions before that did not include an update check. The update check is also not enabled for npm based installations of sentry-cli at the moment.
 
 `DEVICE_FAMILY` (_device.family_):
 

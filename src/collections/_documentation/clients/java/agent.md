@@ -18,3 +18,5 @@ java -agentpath:/path/to/libsentry_agent_linux-x86_64.so -jar app.jar
 You will still need to install and configure the [Sentry Java SDK]({%- link _documentation/clients/java/index.md -%}). In addition, **you must set the** `stacktrace.app.packages` option. Only exceptions that contain at least one frame from your application will be processed by the agent. You can find details about this option [on the configuration page]({%- link _documentation/clients/java/config.md -%}#in-application-stack-frames).
 
 With the SDK configured the agent should automatically enhance your events where applicable.
+
+![Example of local variable state in the Sentry UI]({% asset java-agent.png @path %})

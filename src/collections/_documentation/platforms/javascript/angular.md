@@ -21,7 +21,7 @@ Sentry.init({
 });
 
 @Injectable()
-class SentryErrorHandler implements ErrorHandler {
+export class SentryErrorHandler implements ErrorHandler {
   constructor() {}
   handleError(error) {
     Sentry.captureException(error.originalError || error);
