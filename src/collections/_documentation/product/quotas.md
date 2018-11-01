@@ -109,7 +109,7 @@ Generic attributes like the event’s label also have limits but are more flexib
 
 The following limitations will be automatically enforced:
 
--   Events greater than 100k are immediately dropped.
+-   Events greater than 200k are immediately dropped.
 -   Stacktraces with large frame counts will be trimmed (the middle frames are dropped).
 -   Collections exceeding the max items will be trimmed down to the maximum size.
 -   Individual values exceeding the maximum length will be trimmed down to the maximum size.
