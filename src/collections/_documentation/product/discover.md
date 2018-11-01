@@ -8,8 +8,12 @@ standard_fields:
       type: string
     - name: project_id
       type: number
-    - name: timestamp
+    - name: project_name
       type: string
+    - name: timestamp
+      type: datetime
+    - name: received
+      type: datetime
     - name: platform
       type: string
     - name: message
@@ -158,63 +162,73 @@ Discover is currently available as an alpha release to select customers only.
 Discover lets you query raw event data in Sentry, across any number of projects within your organization.
 
 
-## Summarize
+## Using the query builder
 
-Select the event attributes you want to summarize over.
+Summarize
 
-If there are no aggregations present, raw event data is returned and this selects the columns we want to display.
+: Select the event attributes you want to summarize over.
 
-If there are aggregations in the query, this is effectively a groupby clause.
+: If there are no aggregations present, raw event data is returned and this selects the columns we want to display.
 
-See [here](#fields) for the list of fields available.
+: If there are aggregations in the query, this is effectively a groupby clause.
+
+: See [here](#fields) for the list of fields available.
 
 
-## Aggregations
+Aggregations
 
-Leave blank if you want a table of raw event data, otherwise the selected function is run over the event attributes selected in Summarize above.
+: Leave blank if you want a table of raw event data, otherwise the selected function is run over the event attributes selected in Summarize above.
 
-Available functions are:
+: Available functions are:
 - `count` - count of rows
 - `uniq` - count of distinct rows
 - `avg` - mathematical average on a number field
 
 
-## Conditions
+Conditions
 
-You can use conditions to filter events from results by field (see [here](#fields) for the list of fields).
+: You can use conditions to filter events from results by field (see [here](#fields) for the list of fields).
 
-All conditions are joined with AND syntax.
+: All conditions are joined with AND syntax.
 
-The condition operators available are:
+: The condition operators available are:
 - `IS NULL`, `IS NOT NULL` (for all column types)
 - `=`, `!=`, `LIKE` (for strings)
   - Note that values used with `LIKE` are case sensitive and can be used with wildcard characters
   - e.g. `exception_stacks.type LIKE Validation`
 
 
+Order by
 
-## Order by
-
-This field should update automatically as you update your query parameters to list allowable aggregations or fields for sorting.
-
-
-## Limit
-
-Any integer between 1 and 1000 is valid.
+: This field should update automatically as you update your query parameters to list allowable aggregations or fields for sorting.
 
 
-## Project selector
+Limit
 
-By default Discover searches events across all projects that you are a member of within the organization.
+: Any integer between 1 and 1000 is valid.
 
 
-## Date range
+Project selector
 
-You need to provide either a relative date (e.g. last 14 days) or an explicit start and end date (in UTC).
+: By default Discover searches events across all projects that you are a member of within the organization.
 
-This defaults to the last 14 days.
 
-In most cases data is retained by Sentry for 90 days.
+Date range
+
+: You need to provide either a relative date (e.g. last 14 days) or an explicit start and end date (in UTC).
+
+: This defaults to the last 14 days.
+
+: In most cases data is retained by Sentry for 90 days.
+
+
+## Saved queries
+
+Any user within the organization can create, view, edit and delete the saved queries for that organization.
+
+Save a query by clicking "save" in the sidebar. The query will be saved with an auto-generated name. 
+
+View all saved queries for the organization by navigating to the saved query tab.
 
 
 ## List of event fields {#fields}
