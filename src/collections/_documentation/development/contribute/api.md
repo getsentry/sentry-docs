@@ -1,6 +1,6 @@
 ---
 title: 'Web API'
-sidebar_order: 4
+sidebar_order: 3
 ---
 
 This document describes general guidelines for development within our REST API.

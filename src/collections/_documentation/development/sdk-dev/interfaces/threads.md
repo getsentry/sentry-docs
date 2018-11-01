@@ -9,7 +9,7 @@ This interface supports multiple thread values in the `values` key. The followin
 
 `stacktrace`:
 
-: You can also optionally bind a [_stacktrace_]({%- link _documentation/clientdev/interfaces/stacktrace.md -%}) to the thread.
+: You can also optionally bind a [_stacktrace_]({%- link _documentation/development/sdk-dev/interfaces/stacktrace.md -%}) to the thread.
 
 `id`:
 

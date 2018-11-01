@@ -1,6 +1,6 @@
 ---
 title: 'Unified API'
-sidebar_order: 2
+sidebar_order: 1
 ---
 
 New Sentry SDKs should follow the unified API, use consistent terms to refer to concepts.  This
@@ -30,7 +30,7 @@ meant that certain integrations (such as breadcrumbs) were often not possible.
 
 - **client options**: Are parameters that are language and runtime specific and used to configure the client. This can be release and environment but also things like which integrations to configure, how in-app works etc.
 
-- **context**: Contexts give extra data to sentry. There are the special contexts (user and similar) and the generic ones (runtime, os, device) etc.  Check out [_Contexts_]({%- link _documentation/clientdev/interfaces/contexts.md -%}) for valid keys. *Note: In older SDKs you might encounter an unrelated concept of context, which is now deprecated by scopes*
+- **context**: Contexts give extra data to sentry. There are the special contexts (user and similar) and the generic ones (runtime, os, device) etc.  Check out [_Contexts_]({%- link _documentation/development/sdk-dev/interfaces/contexts.md -%}) for valid keys. *Note: In older SDKs you might encounter an unrelated concept of context, which is now deprecated by scopes*
 
 - **tags**: Tags can be arbitrary string→string pairs by which events can be searched. Contexts are converted into tags.
 
@@ -82,7 +82,7 @@ Under normal circumstances the hub consists of a client and a stack of scopes.
 
 The SDK maintains two variables: The *main hub* (a global variable) and the *current hub* (a variable local to the current thread or execution context, also sometimes known as async local or context local)
 
-The `init()` you saw in the [_Overview_]({%- link _documentation/clientdev/overview.md -%}) typically creates / reinitializes the global hub which is propagated to all new threads/execution contexts, or a hub is created per thread/execution context. 
+The `init()` you saw in the [_Overview_]({%- link _documentation/development/sdk-dev/overview.md -%}) typically creates / reinitializes the global hub which is propagated to all new threads/execution contexts, or a hub is created per thread/execution context. 
 
 - `Hub::new(client, scope)`: Creates a new hub with the given client and scope.  The client can be reused between hubs. The scope should be owned by the hub (make a clone if necessary)
 

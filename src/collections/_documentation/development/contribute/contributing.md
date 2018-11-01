@@ -1,6 +1,9 @@
 ---
 title: Contributing
+sidebar_order: 0
 ---
+
+This documentation serves as reference points for developing against Sentry.
 
 ## Code Review
 

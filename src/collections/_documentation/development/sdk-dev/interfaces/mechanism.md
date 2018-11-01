@@ -2,7 +2,7 @@
 title: 'Exception Mechanism Interface'
 ---
 
-The exception mechanism is an optional field residing in the [_Exception Interface_]({%- link _documentation/clientdev/interfaces/exception.md -%}). It carries additional information about the way the exception was created on the target system. This includes general exception values obtained from operating system or runtime APIs, as well as mechanism-specific values.
+The exception mechanism is an optional field residing in the [_Exception Interface_]({%- link _documentation/development/sdk-dev/interfaces/exception.md -%}). It carries additional information about the way the exception was created on the target system. This includes general exception values obtained from operating system or runtime APIs, as well as mechanism-specific values.
 
 ## Attributes
 

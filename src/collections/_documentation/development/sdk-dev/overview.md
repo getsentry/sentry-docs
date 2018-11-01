@@ -1,6 +1,6 @@
 ---
 title: Overview
-sidebar_order: 1
+sidebar_order: 0
 ---
 
 The following is a guide for implementing a new Sentry SDK. It covers the protocol for event submission as well as guidelines for how clients should typically look and behave.
@@ -32,7 +32,7 @@ Additionally, the following features are highly encouraged:
 -   Pre and Post event send hooks
 -   Local variable values in stacktrace (on platforms where this is possible)
 
-[Please see the features page]({%- link _documentation/clientdev/features.md -%}#features) for descriptions of commonly expected Sentry SDK features.
+[Please see the features page]({%- link _documentation/development/sdk-dev/features.md -%}#features) for descriptions of commonly expected Sentry SDK features.
 
 ## Usage for End-users
 
@@ -159,8 +159,8 @@ most part) and interfaces are rich styled interface elements. Examples of
 attribute are `event_id` or `tags` whereas the `exception` key is an interface.
 
 For a list of all supported attributes see [_Attributes_]({%- link
-_documentation/clientdev/attributes.md -%}). For a list of built-in interfaces
-see [_Interfaces_]({%- link _documentation/clientdev/interfaces/index.md -%}).
+_documentation/development/sdk-dev/attributes.md -%}). For a list of built-in interfaces
+see [_Interfaces_]({%- link _documentation/development/sdk-dev/interfaces/index.md -%}).
 
 ## Authentication
 
@@ -300,7 +300,7 @@ It is **highly encouraged** that your SDK handles failures from the Sentry serve
 
 SDKs are supposed to provide standardized concurrency handling through the
 concept of hubs and scopes.  This is explained in more details in the
-[_Concurrency_]({%- link _documentation/clientdev/unified-api.md -%}#concurrency) chapter of the unified API docs.
+[_Concurrency_]({%- link _documentation/development/sdk-dev/unified-api.md -%}#concurrency) chapter of the unified API docs.
 
 ## Layer of Integration
 
