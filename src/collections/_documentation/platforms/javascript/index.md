@@ -7,7 +7,7 @@ sidebar_order: 3
 
 All our JavaScript related SDKs provide the same API still there are some differences between them which this section of the docs explains.
 
-## Browser Compatability
+## Browser Compatibility
 
 Our JavaScript SDK supports all major browsers. In older browsers, error reports may have a degraded level of detail – for example, missing stack trace data or missing source code column numbers.
 
