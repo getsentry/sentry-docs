@@ -5,19 +5,19 @@ import { escape } from './Helpers';
 const renderResult = function(data) {
   const relativePath = data.path.replace(/^\/|\/$/g, '');
 
-  const url = escape(`${window.location.origin}/${relativePath}/`);
+  const url = `${window.location.origin}/${relativePath}/`;
   const path = relativePath
     .split(/[#\/]/)
     .map(segment => {
-      return `<span class="path-segment">${escape(segment)}</span>`;
+      return `<span class="path-segment">${segment}</span>`;
     })
     .join('');
   return $(`
     <div class="mb-3">
-      <h3 class="h5 mb-0"><a href="${url}">${escape(data.title)}</a></h3>
+      <h3 class="h5 mb-0"><a href="${url}">${data.title}</a></h3>
       <div class="pl-2">
         <aside>(${path})</aside>
-        <p class="mb-0">${escape(data.excerpt)}</p>
+        <p class="mb-0">${data.excerpt}</p>
       </div>
     </div>
   `);
