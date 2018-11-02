@@ -1,6 +1,6 @@
 ---
 title: 'dSYM Upload'
-sidebar_order: 1
+sidebar_order: 0
 ---
 
 `sentry-cli` can upload dSYM files to Sentry to allow symbolication of iOS app

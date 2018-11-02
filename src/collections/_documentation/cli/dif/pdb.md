@@ -1,6 +1,6 @@
 ---
 title: 'PDB Upload'
-sidebar_order: 3
+sidebar_order: 2
 ---
 
 Microsoft PDB files are not yet supported directly by Sentry. Until we provide official support, you can convert them to Breakpad symbols and upload those instead:
