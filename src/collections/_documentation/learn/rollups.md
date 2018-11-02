@@ -3,7 +3,7 @@ title: 'Rollups & Grouping'
 sidebar_order: 9
 ---
 
-An important part of Sentry is how it aggregates similar events together and creates rollups. This turns out to be a pretty complex issue and it can be confusing for users about why some information might not be grouped correctly.
+An important part of Sentry is how it aggregates similar events together and creates rollups. This turns out to be a pretty complex issue and it can be confusing for users about why some information might not be grouped correctly. HERE IS MY CHANGE!!!
 
 The structured data of an event dictates how a rollup is created. This varies depending on the data available as well as the language.
 
