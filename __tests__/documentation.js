@@ -23,8 +23,8 @@ describe('Documentation', function() {
     expect.assertions(1);
     return glob(path.join(process.cwd(), '_site/**/*.{html,json,xml}')).then(
       paths => {
-        paths.sort();
-        expect(paths).toMatchSnapshot();
+        const relativePaths = paths.sort().map(p => p.split('_site/')[1]);
+        expect(relativePaths).toMatchSnapshot();
       }
     );
   });
