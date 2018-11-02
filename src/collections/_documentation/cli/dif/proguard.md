@@ -1,5 +1,6 @@
 ---
 title: 'ProGuard Mapping Upload'
+sidebar_order: 5
 ---
 
 `sentry-cli` can be used to upload proguard files to Sentry however in most situations you would use the [gradle plugin](https://github.com/getsentry/sentry-java) to do that. There are some situations however where you would upload proguard files manually (for instance when you only release some of the builds you are creating).

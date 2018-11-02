@@ -1,5 +1,6 @@
 ---
 title: 'ELF Symbol Upload'
+sidebar_order: 2
 ---
 
 `sentry-cli` can upload ELF symbols generated on various Linux distributions to

@@ -1,17 +1,17 @@
 ---
 title: 'Debug Information Files'
-sidebar_order: 3
+sidebar_order: 0
 ---
 
 `sentry-cli` can be used to validate and upload debug information files (dSYM, Proguard files, etc.).
 
 Debug information files are additional files that help us provide better information about your crash reports. We currently support the following formats:
 
--   [_dSYM files_]({%- link _documentation/cli/dsym.md -%}) for iOS, tvOS and macOS
--   [_ELF symbols_]({%- link _documentation/cli/elf.md -%}) for Linux and Android
--   [_PDB files_]({%- link _documentation/cli/pdb.md -%}) for Windows
--   [_Breakpad symbols_]({%- link _documentation/cli/breakpad.md -%}) for Breakpad or Crashpad
--   [_Proguard mappings_]({%- link _documentation/cli/proguard.md -%}) for Android
+-   [_dSYM files_]({%- link _documentation/cli/dif/dsym.md -%}) for iOS, tvOS and macOS
+-   [_ELF symbols_]({%- link _documentation/cli/dif/elf.md -%}) for Linux and Android
+-   [_PDB files_]({%- link _documentation/cli/dif/pdb.md -%}) for Windows
+-   [_Breakpad symbols_]({%- link _documentation/cli/dif/breakpad.md -%}) for Breakpad or Crashpad
+-   [_Proguard mappings_]({%- link _documentation/cli/dif/proguard.md -%}) for Android
 
 Note that sourcemaps, while also being debug information files, are handled differently in Sentry. For more information see [Sourcemaps in sentry-cli]({%- link _documentation/cli/releases.md -%}#sentry-cli-sourcemaps).
 
@@ -45,8 +45,8 @@ Additionally, `sentry-cli upload-dif` can automatically search for files in a fo
 
 Options for the debug file upload depend on the upload environment and debug format. For detailed instructions, please refer to the resources linked below:
 
--   [_dSYM Upload_]({%- link _documentation/cli/dsym.md -%})
--   [_ELF Symbol Upload_]({%- link _documentation/cli/elf.md -%})
--   [_PDB Upload_]({%- link _documentation/cli/pdb.md -%})
--   [_Breakpad Symbol Upload_]({%- link _documentation/cli/breakpad.md -%})
--   [_Proguard Mapping Upload_]({%- link _documentation/cli/proguard.md -%})
+-   [_dSYM Upload_]({%- link _documentation/cli/dif/dsym.md -%})
+-   [_ELF Symbol Upload_]({%- link _documentation/cli/dif/elf.md -%})
+-   [_PDB Upload_]({%- link _documentation/cli/dif/pdb.md -%})
+-   [_Breakpad Symbol Upload_]({%- link _documentation/cli/dif/breakpad.md -%})
+-   [_Proguard Mapping Upload_]({%- link _documentation/cli/dif/proguard.md -%})
