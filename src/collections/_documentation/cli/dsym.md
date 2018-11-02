@@ -6,10 +6,7 @@ title: 'dSYM Upload'
 crashes. It is also used behind the scenes if you use systems like fastlane or
 build system integrations.
 
-For general information about dSYM handling, please refer to [Uploading Debug
-Symbols]({%- link _documentation/clients/cocoa/dsym.md -%}#uploading-dsyms) as
-well as [_Debug Information Files_]({%- link _documentation/learn/cli/dif.md
--%}) for an introduction.
+For general information about dSYM handling, please refer to [Uploading Debug Symbols]({%- link _documentation/clients/cocoa/dsym.md -%}#uploading-dsyms) as well as [_Debug Information Files_]({%- link _documentation/cli/dif.md -%}) for an introduction.
 
 ## Basic Upload
 
@@ -28,7 +25,7 @@ Since dSYMs have a unique signature, you do not need to associate them with
 releases. `sentry-cli` uses their UUID to associate symbols with crash events.
 
 {% capture __alert_content -%}
-Because debug files belong to projects, you will need to specify the organization and project you are working with. For more information about this refer to [Working with Projects]({%- link _documentation/learn/cli/configuration.md -%}#sentry-cli-working-with-projects).
+Because debug files belong to projects, you will need to specify the organization and project you are working with. For more information about this refer to [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

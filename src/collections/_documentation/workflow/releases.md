@@ -57,7 +57,7 @@ If you’re still having trouble adding it, you can try to [disconnect](https://
 
 In your release process, add a step to create a release object in Sentry and associate it with commits in your repository. There are 2 ways of doing this:
 
-1.  Using Sentry’s [Command Line Interface]({%- link _documentation/learn/cli/index.md -%}#sentry-cli) (**recommended**).
+1.  Using Sentry’s [Command Line Interface]({%- link _documentation/cli/index.md -%}#sentry-cli) (**recommended**).
 2.  Using the API
 
 ##### Using the CLI
@@ -85,7 +85,7 @@ If you want more control over which commits to associate, or are unable to execu
 
 Here we are associating commits (or refs) between `from` and `to` with the current release, `from` being the previous release’s commit. The repository name `my-repo` should match the name you entered when linking the repo in the previous step, and is of the form `owner-name/repo-name`. The `from` commit is optional and we’ll use the previous release’s commit as the baseline if it is excluded.
 
-For more information, see the [CLI docs]({%- link _documentation/learn/cli/releases.md -%}).
+For more information, see the [CLI docs]({%- link _documentation/cli/releases.md -%}).
 
 ##### Using the API
 

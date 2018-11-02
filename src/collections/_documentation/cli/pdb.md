@@ -7,7 +7,7 @@ Microsoft PDB files are not yet supported directly by Sentry. Until we provide o
 1.  Obtain the `.pdb` file and put it on a Windows machine
 2.  Download our [Breakpad Tools for Windows](https://s3.amazonaws.com/getsentry-builds/getsentry/breakpad-tools/windows/breakpad-tools-windows.zip) and extract `dump_syms.exe`
 3.  Run `dump_syms foo.pdb > foo.sym`
-4.  Follow instructions at [_Breakpad Symbol Upload_]({%- link _documentation/learn/cli/breakpad.md -%}).
+4.  Follow instructions at [_Breakpad Symbol Upload_]({%- link _documentation/cli/breakpad.md -%}).
 
 ## Troubleshooting
 
