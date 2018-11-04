@@ -24,7 +24,7 @@ sentry_sdk.init(
 
 ## Usage
 
-```
+```python
 import logging
 logging.debug("I am a breadcrumb")
 logging.error("I am an event", bar=43)
@@ -35,6 +35,25 @@ logging.error("I am an event", bar=43)
 * `bar` will end up in the event's `extra` attributes.
 
 {% version_added 0.5.0: Ability to add data to `extra` %}
+
+## Ignoring a logger
+
+Sometimes a logger is extremely noisy and spams you with errors you don't care
+about. You can completely ignore that logger by calling `ignore_logger`:
+
+```python
+from sentry_sdk.integrations.logging import ignore_logger
+
+
+ignore_logger("a.spammy.logger")
+
+logger = logging.getLogger("a.spammy.logger")
+logger.error("hi")  # no error sent to sentry
+```
+
+You can also use `before-send` and `before-breadcrumb` to ignore
+only certain messages. See [_Filtering Events_]({%- link
+_documentation/learn/filtering.md -%}) for more information.
 
 ## Options
 
