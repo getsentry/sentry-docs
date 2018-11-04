@@ -48,3 +48,18 @@ The following keyword arguments can be passed to `LoggingIntegration()`:
 * `event_level` (default `ERROR`): Log records with a level higher than or equal
   to `event_level` will additionally be reported as event. A value of `None`
   means that no log records will be sent as events.
+
+## Handler classes
+
+The integration also exports two regular logging `logging.Handler` subclasses
+that can be used instead of using `LoggingIntegration`.
+
+**Usually you do not need to use this yourself.** You *can* use this together
+with `default_integrations=False` if you want to opt in to what Sentry
+captures. The disadvantage is that setting up logging correctly is hard, and
+that an opt-in approach to capturing data will miss errors you never would have
+thought of looking for in the first place.
+
+See the [API
+documentation](https://getsentry.github.io/sentry-python/integrations/logging.m.html#header-classes)
+for more information.
