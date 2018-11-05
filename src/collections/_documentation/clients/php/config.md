@@ -116,7 +116,7 @@ The following settings are available for the client:
   ```php
   'send_callback' => function(&$data) {
       // strip HTTP data
-      unset($data['request']);
+      @unset($data['request']);
   },
   ```
 
