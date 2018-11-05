@@ -19,6 +19,8 @@ The integration process consists of running our JavaScript SDK (2.1 or newer), a
 
 {% include components/platform_content.html content_dir='user-feedback-example' %}
 
+If you don't want to use Sentry's native widget, you can also send feedback using our [_User Feedback API_]({%- link _documentation/api/projects/post-project-user-reports.md -%}).
+
 ## Customizing the Widget
 
 Several parameters are available to customize the widget, specifically for localization. All options can be passed through the `showReportDialog` call.
