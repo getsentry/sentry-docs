@@ -114,7 +114,7 @@ The following settings are available for the client:
 : A function which will be called whenever data is ready to be sent. Within the function you can mutate the data, or alternatively return `false` to instruct the SDK to not send the event.
 
   ```php
-  'send_callback' => function($data) {
+  'send_callback' => function(&$data) {
       // strip HTTP data
       @unset($data['request']);
   },
