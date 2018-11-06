@@ -6,7 +6,7 @@
   "authentication": "required", 
   "description": "Update various attributes and configurable settings for the given\nteam.", 
   "example_request": "PUT /api/0/teams/the-interstellar-jurisdiction/the-obese-philosophers/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}\nContent-Type: application/json\n\n{\n  \"name\": \"The Inflated Philosophers\"\n}", 
-  "example_response": "HTTP/1.1 200 OK\nContent-Length: 246\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"avatar\": {\n    \"avatarType\": \"letter_avatar\", \n    \"avatarUuid\": null\n  }, \n  \"dateCreated\": \"2018-09-20T15:48:24.280Z\", \n  \"hasAccess\": true, \n  \"id\": \"4\", \n  \"isMember\": false, \n  \"isPending\": false, \n  \"name\": \"The Inflated Philosophers\", \n  \"slug\": \"the-obese-philosophers\"\n}", 
+  "example_response": "HTTP/1.1 200 OK\nContent-Length: 264\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"avatar\": {\n    \"avatarType\": \"letter_avatar\", \n    \"avatarUuid\": null\n  }, \n  \"dateCreated\": \"2018-11-06T17:24:21.127Z\", \n  \"hasAccess\": true, \n  \"id\": \"4\", \n  \"isMember\": false, \n  \"isPending\": false, \n  \"memberCount\": 0, \n  \"name\": \"The Inflated Philosophers\", \n  \"slug\": \"the-obese-philosophers\"\n}", 
   "method": "PUT", 
   "parameters": [
     {
