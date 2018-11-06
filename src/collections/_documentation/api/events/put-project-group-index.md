@@ -5,7 +5,7 @@
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/issues/", 
   "authentication": "required", 
   "description": "Bulk mutate various attributes on issues.  The list of issues\nto modify is given through the `id` query parameter.  It is repeated\nfor each issue that should be modified.\n\n- For non-status updates, the `id` query parameter is required.\n- For status updates, the `id` query parameter may be omitted\nfor a batch \"update all\" query.\n- An optional `status` query parameter may be used to restrict\nmutations to only events with the given status.\n\nThe following attributes can be modified and are supplied as\nJSON object in the body:\n\nIf any ids are out of scope this operation will succeed without\nany data mutation.", 
-  "example_request": "PUT /api/0/projects/the-interstellar-jurisdiction/pump-station/issues/?id=1&id=2 HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}\nContent-Type: application/json\n\n{\n  \"isPublic\": false, \n  \"status\": \"unresolved\"\n}", 
+  "example_request": "PUT /api/0/projects/the-interstellar-jurisdiction/pump-station/issues/?id=1&id=2 HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>\nContent-Type: application/json\n\n{\n  \"isPublic\": false, \n  \"status\": \"unresolved\"\n}", 
   "example_response": "HTTP/1.1 200 OK\nContent-Length: 64\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"isPublic\": false, \n  \"status\": \"unresolved\", \n  \"statusDetails\": {}\n}", 
   "method": "PUT", 
   "parameters": [
