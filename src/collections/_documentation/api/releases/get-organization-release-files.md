@@ -23,7 +23,7 @@
   ], 
   "query_parameters": null, 
   "sidebar_order": 6, 
-  "title": "List a Release's Files", 
+  "title": "List an Organization Release's Files", 
   "warning": null
 }
 ---

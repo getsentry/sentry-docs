@@ -5,7 +5,7 @@
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/files/{file_id}/", 
   "authentication": "required", 
   "description": "Permanently remove a file from a release.\n\nThis will also remove the physical file from storage.", 
-  "example_request": "DELETE /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/76bfa7a9209b74959bdc30b31d2bd164a086a77a/files/1/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}", 
+  "example_request": "DELETE /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/17642328ead24b51867165985996d04b29310337/files/1/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>", 
   "example_response": "HTTP/1.1 204 NO CONTENT\nContent-Length: 0\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny", 
   "method": "DELETE", 
   "parameters": null, 
