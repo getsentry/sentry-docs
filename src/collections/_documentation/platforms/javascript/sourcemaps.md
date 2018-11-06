@@ -5,11 +5,16 @@ sidebar_order: 60
 
 Sentry supports un-minifying JavaScript via [Source Maps](http://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps.html). This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (e.g. UglifyJS), or transpiled code from a higher-level language (e.g. TypeScript, ES6).
 
-## Specify the release
+-   [Specify the Release](#specify-release)
+-   [Generating a Source Map](#source-map-generation)
+-   [Making Source Maps Available to Sentry](#source-map-availability)
+-   [Troubleshooting](#source-map-troubleshooting)
 
-If you are uploading source map artifacts yourself, you must specify the release in your SDK see: [Releases]({%- link _documentation/learn/releases.md -%}).  Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/learn/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
+## Specify the Release {#specify-release}
 
-## Generating a Source Map
+If you are uploading source map artifacts yourself, you must specify the release in your SDK. Please refer to the [releases]({%- link _documentation/learn/releases.md -%}) page for more information on how to configure this.  Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/learn/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
+
+## Generating a Source Map {#source-map-generation}
 
 Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
 
@@ -109,7 +114,7 @@ The TypeScript compiler can output source maps. Configure the `sourceRoot` prope
 }
 ```
 
-## Making Source Maps Available to Sentry
+## Making Source Maps Available to Sentry {#source-map-availability}
 
 Source maps can be either:
 
@@ -243,7 +248,7 @@ Here are some things you can check in addition to the validation step:
   content=__alert_content
 %}
 
-## Troubleshooting
+## Troubleshooting {#source-map-troubleshooting}
 
 Source maps can sometimes be tricky to get going. If you’re having trouble, try the following tips.
 
