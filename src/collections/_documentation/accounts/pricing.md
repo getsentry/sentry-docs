@@ -1,7 +1,6 @@
 ---
 title: Pricing
 sidebar_order: 4
-permalink: /pricing/
 ---
 
 {% capture __alert_content -%}

@@ -1,6 +1,5 @@
 ---
 title: 'Getting Started'
-permalink: /quickstart/
 sidebar_order: 0
 ---
 
