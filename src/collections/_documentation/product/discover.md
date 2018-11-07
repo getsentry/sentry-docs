@@ -20,49 +20,49 @@ standard_fields:
       type: string
 
   "User attributes":
-    - name: user_id
+    - name: user.id
       type: string
-    - name: username
+    - name: user.username
       type: string
-    - name: email
+    - name: user.email
       type: string
-    - name: ip_address
+    - name: user.ip
       type: string
 
   "SDK":
-    - name: sdk_ame
+    - name: sdk.name
       type: string
-    - name: sdk_version
+    - name: sdk.version
       type: string
 
   "OS":
-    - name: os_build
+    - name: os.build
       type: string
-    - name: os_kernel_version
+    - name: os.kernel_version
       type: string
 
   "Device":
-    - name: device_name
+    - name: device.name
       type: string
-    - name: device_brand
+    - name: device.brand
       type: string
-    - name: device_locale
+    - name: device.locale
       type: string
-    - name: device_uuid
+    - name: device.uuid
       type: string
-    - name: device_model_id
+    - name: device.model_id
       type: string
-    - name: device_arch
+    - name: device.arch
       type: string
-    - name: device_battery_level
+    - name: device.battery_level
       type: number
-    - name: device_orientation
+    - name: device.orientation
       type: string
-    - name: device_simulator
+    - name: device.simulator
       type: string
-    - name: device_online
+    - name: device.online
       type: string
-    - name: device_charging
+    - name: device.charging
       type: string
 
   "Tags":
@@ -72,37 +72,37 @@ standard_fields:
       type: string
 
   "HTTP":
-    - name: http_method
+    - name: http.method
       type: string
-    - name: http_referer
+    - name: http.url
       type: string
 
   "Stack traces":
-    - name: exception_stacks.type
+    - name: error.type
       type: string
-    - name: exception_stacks.value
+    - name: error.value
       type: string
-    - name: exception_stacks.mechanism_type
+    - name: error.mechanism_type
       type: string
-    - name: exception_stacks.mechanism_handled
+    - name: error.mechanism_handled
       type: string
-    - name: exception_frames.abs_path
+    - name: stack.abs_path
       type: string
-    - name: exception_frames.filename
+    - name: stack.filename
       type: string
-    - name: exception_frames.package
+    - name: stack.package
       type: string
-    - name: exception_frames.module
+    - name: stack.module
       type: string
-    - name: exception_frames.function
+    - name: stack.function
       type: string
-    - name: exception_frames.in_app
+    - name: stack.in_app
       type: boolean
-    - name: exception_frames.colno
+    - name: stack.colno
       type: number
-    - name: exception_frames.lineno
+    - name: stack.lineno
       type: number
-    - name: exception_frames.stack_levvel
+    - name: stack.stack_levvel
       type: number
 
 common_tags:
