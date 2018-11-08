@@ -7,6 +7,8 @@ Sentry integrates seamlessly with your favorite apps and services.
 
 ### Global Integrations
 
+These integrations are set up once per organization, and are then usable in all projects.
+
 -   [_Azure DevOps_]({%- link _documentation/workflow/integrations/azure-devops.md -%})
 -   [_Bitbucket_]({%- link _documentation/workflow/integrations/bitbucket.md -%})
 -   [_GitHub_]({%- link _documentation/workflow/integrations/github.md -%})
@@ -15,7 +17,9 @@ Sentry integrates seamlessly with your favorite apps and services.
 -   [_Slack_]({%- link _documentation/workflow/integrations/slack.md -%})
 
 
-### Legacy Integrations
+### Per-Project Integrations (Legacy)
+
+These integrations are set up once per project, and are only usable in projects in which they're been set up. 
 
 -   [_Asana_]({%- link _documentation/workflow/integrations/asana.md -%})
 -   Campfire

@@ -1,6 +1,6 @@
 ---
 title: GitHub Enterprise
-sidebar_order: 3
+sidebar_order: 5
 ---
 Sentry’s new Github Enterprise integration has the following features: commit tracking and issue management. You can now use the data from your commits to Github to help you find and fix bugs faster.
 

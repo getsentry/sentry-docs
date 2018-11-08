@@ -1,5 +1,6 @@
 ---
 title: Asana
+sidebar_order: 0
 ---
 
 ## Asana Issue Creation from Sentry

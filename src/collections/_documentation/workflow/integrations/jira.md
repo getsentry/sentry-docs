@@ -1,6 +1,6 @@
 ---
 title: JIRA
-sidebar_order: 5
+sidebar_order: 8
 ---
 
 ## Installing Jira with Sentry
@@ -27,4 +27,3 @@ Sync comments, assignees and status updates for issues in Sentry to Jira, to min
 To configure Issue sync, navigate to Organization Settings > Integrations, and click ‘Configure’ next to your Jira instance. On the following page, you’ll see options of what information you’d like synced between Sentry and Jira.
 
 Issue sync is available for organziations on the Medium, Large, and Enterprise plans.
-

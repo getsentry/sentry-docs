@@ -1,6 +1,6 @@
 ---
 title: Splunk
-sidebar_order: 8
+sidebar_order: 11
 ---
 
 Connect Splunk to Sentry with the [Data Forwarding]({%- link _documentation/data-management/data-forwarding.md -%}) feature.

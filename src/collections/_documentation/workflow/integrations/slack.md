@@ -1,6 +1,6 @@
 ---
 title: Slack
-sidebar_order: 7
+sidebar_order: 10
 ---
 
 Sentry’s new Slack integration creates workflows for your team, instead of a notification stream. Now you can triage, resolve, and ignore issues directly from Slack.

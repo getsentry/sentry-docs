@@ -1,6 +1,6 @@
 ---
 title: GitHub
-sidebar_order: 2
+sidebar_order: 4
 ---
 Sentry’s new GitHub integration has the following features: commit tracking, issue management, and Github SSO. You can now use the data from your commits to GitHub to help you find and fix bugs faster.
 

@@ -1,6 +1,6 @@
 ---
 title: Bitbucket
-sidebar_order: 1
+sidebar_order: 3
 ---
 Sentry’s new Bitbucket integration has the following features: commit tracking and issue management. You can now use the data from your commits to Bitbucket to help you find and fix bugs faster.
 
