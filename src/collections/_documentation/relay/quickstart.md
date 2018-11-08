@@ -42,18 +42,18 @@ Relay.
 Create a new file in the form `project_id.json`:
 
 ```
-.semaphore/project/___PROJECT_ID___.json
+.semaphore/projects/___PROJECT_ID___.json
 ```
 
 With the following content:
 
 ```json
 {
-    "allowedDomains": ["*"],
-    "trustedRelays": [],
-    "publicKeys": ["___PUBLIC_KEY___"],
+    "publicKeys": {"___PUBLIC_KEY___": true},
     "config": {
-        "piiConfig": {}
+        "piiConfig": {},
+        "allowedDomains": ["*"],
+        "trustedRelays": []
     }
 }
 ```
@@ -88,7 +88,7 @@ The easiest way to go about this is if you already have a raw JSON payload from 
 After iterating on the config, paste it back into the project config you created earlier:
 
 ```
-.semaphore/project/___PROJECT_ID___.json
+.semaphore/projects/___PROJECT_ID___.json
 ```
 
 
