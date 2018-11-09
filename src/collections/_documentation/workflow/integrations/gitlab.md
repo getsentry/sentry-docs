@@ -3,7 +3,7 @@ title: GitLab
 sidebar_order: 6
 ---
 
-Sentry’s new GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry.
+Sentry’s new GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry. _Note: this feature is currently available for Early Adopters. You can become an Early Adopter by navigating to your Organization Settings > General Settings._
 
 ## Configure GitLab
 
