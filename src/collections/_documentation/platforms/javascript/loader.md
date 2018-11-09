@@ -3,7 +3,7 @@ title: Loader
 sidebar_order: 30000
 ---
 
-We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/learn/quickstart.md %}?platform=browser#pick-a-client-integration).
+We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration).
 
 But we also offer an alternative which is still in *beta*, we call it the _Loader_.
 
@@ -24,7 +24,7 @@ The _Loader_ does a few things:
 - It lazy injects our SDK into your website.
 - After the SDK is loaded everything will be sent to Sentry.
 
-By default, the _Loader_ contains all information needed for our SDK to function, like the `DSN`.  In case you want to set additional [options]({% link _documentation/learn/configuration.md %}) you have to set them like this:
+By default, the _Loader_ contains all information needed for our SDK to function, like the `DSN`.  In case you want to set additional [options]({% link _documentation/error-reporting/configuration/index.md %}) you have to set them like this:
 
 
 ```javascript

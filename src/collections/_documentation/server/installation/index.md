@@ -1,5 +1,6 @@
 ---
 title: Installation
+sidebar_order: 0
 ---
 
 Before running Sentry itself, there are a few minimum services that are required for Sentry to communicate with.

@@ -110,7 +110,7 @@ public class LoggingModule : NancyModule
 
 ## Breadcrumbs
 
-Sentry supports a concept called [Breadcrumbs]({%- link _documentation/learn/breadcrumbs.md -%}), which is a trail of events which happened prior to an issue. Often times these events are very similar to traditional logs, but also have the ability to record more rich structured data.
+Sentry supports a concept called [Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}), which is a trail of events which happened prior to an issue. Often times these events are very similar to traditional logs, but also have the ability to record more rich structured data.
 
 ```csharp
 public class ExampleController : ApiController

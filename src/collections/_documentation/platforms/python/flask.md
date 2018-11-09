@@ -68,4 +68,4 @@ The following keyword arguments can be passed to `FlaskIntegration()`:
 ## User Feedback
 
 The user feedback feature can be used with this integration.  For more information
-see [User Feedback]({% link _documentation/learn/user-feedback.md %}?platform=flask).
+see [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md %}?platform=flask).

@@ -1,6 +1,6 @@
 ---
 title: 'Internal Metrics'
-sidebar_order: 2
+sidebar_order: 13
 ---
 
 Sentry provides an abstraction called ‘metrics’ which is used for internal monitoring, generally timings and various counters.

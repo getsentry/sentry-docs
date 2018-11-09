@@ -120,7 +120,7 @@ public class MyClass {
 
 ## ProGuard
 
-In order to use ProGuard with Sentry you will need to upload the proguard mapping files to Sentry by using our Gradle integration (recommended) or manually by using [_sentry-cli_]({%- link _documentation/learn/cli/proguard.md -%})
+In order to use ProGuard with Sentry you will need to upload the proguard mapping files to Sentry by using our Gradle integration (recommended) or manually by using [_sentry-cli_]({%- link _documentation/cli/dif/proguard.md -%})
 
 ### Gradle Integration
 
@@ -140,7 +140,7 @@ buildscript {
 }
 ```
 
-The plugin will then automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assembleRelease`. The credentials for the upload step are loaded from a `sentry.properties` file in your project root _or_ via environment variables, for more information [see the sentry-cli documentation]({%- link _documentation/learn/cli/configuration.md -%}#configuration-values). At the very minimum you will need something like this:
+The plugin will then automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assembleRelease`. The credentials for the upload step are loaded from a `sentry.properties` file in your project root _or_ via environment variables, for more information [see the sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values). At the very minimum you will need something like this:
 
 ```gradle
 defaults.project=___PROJECT_NAME___
@@ -148,7 +148,7 @@ defaults.org=___ORG_NAME___
 auth.token=YOUR_AUTH_TOKEN
 ```
 
-You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options see _/learn/cli/configuration_.
+You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options see _/cli/configuration_.
 
 #### Gradle Configuration
 
@@ -186,7 +186,7 @@ First, you need to add the following to your ProGuard rules file:
 After ProGuard files are generated you will need to embed the UUIDs of the ProGuard mapping files in a properties file named `sentry-debug-meta.properties` in the assets folder. The Java SDK will look for the UUIDs there to link events to the correct mapping files on the server side.
 
 {% capture __alert_content -%}
-Sentry calculates UUIDs for proguard files. For more information about how this works see [UUID Format]({%- link _documentation/learn/cli/proguard.md -%}#proguard-uuids).
+Sentry calculates UUIDs for proguard files. For more information about how this works see [UUID Format]({%- link _documentation/cli/dif/proguard.md -%}#proguard-uuids).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

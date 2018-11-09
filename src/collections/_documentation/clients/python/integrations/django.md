@@ -253,7 +253,7 @@ By default Django will render `500.html`, so simply drop the following snippet i
 
 That’s it!
 
-For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/learn/user-feedback.md -%}).
+For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
 
 ## Additional Settings
 

@@ -1,5 +1,6 @@
 ---
 title: Plugins
+sidebar_order: 18
 ---
 
 There are several interfaces currently available to extend Sentry. These are a work in progress and the API is not frozen.

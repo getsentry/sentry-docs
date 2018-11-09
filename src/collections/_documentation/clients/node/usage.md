@@ -160,7 +160,7 @@ All optional attributes are passed as part of the options to `captureException` 
 
 `fingerprint`
 
-: The fingerprint for grouping this event. Learn more how [Sentry groups errors]({%- link _documentation/learn/rollups.md -%}).
+: The fingerprint for grouping this event. Learn more how [Sentry groups errors]({%- link _documentation/data-management/rollups.md -%}).
 
   ```javascript
   {% raw %}{
@@ -206,7 +206,7 @@ Raven.context(function () {
 });
 ```
 
-To learn more about what types of data can be collected via breadcrumbs, see the [breadcrumbs client API specification]({%- link _documentation/learn/breadcrumbs.md -%}).
+To learn more about what types of data can be collected via breadcrumbs, see the [breadcrumbs client API specification]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}).
 
 Raven can be configured to automatically capture breadcrubs for certain events including:
 

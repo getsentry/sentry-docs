@@ -88,7 +88,7 @@ $ curl -X POST \
   -F 'sentry[tags][mytag]=value'
 ```
 
-For the full list of supported attributes, see [Attributes]({%- link _documentation/clientdev/attributes.md -%}#attributes) and linked documents.
+For the full list of supported attributes, see [Attributes]({%- link _documentation/development/sdk-dev/attributes.md -%}#attributes) and linked documents.
 
 ## Event Attachments (Preview)
 
@@ -131,4 +131,4 @@ builds. CFI is usually part of the executables and not copied to debug symbols.
 Unless you are uploading Breakpad symbols, be sure to also include the binaries
 when uploading files to Sentry.
 
-For more information on uploading debug information and their supported formats, see [Debug Information Files]({%- link _documentation/learn/cli/dif.md -%}#sentry-cli-dif).
+For more information on uploading debug information and their supported formats, see [Debug Information Files]({%- link _documentation/cli/dif/index.md -%}#sentry-cli-dif).

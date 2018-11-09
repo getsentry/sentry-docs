@@ -49,7 +49,7 @@ Looking for [the legacy Python SDK "Raven"?]({%- link _documentation/clients/pyt
 
 ## Hints
 
-The Python SDK provides some common [hints]({% link _documentation/learn/filtering.md %}#event-hints) for breadcrumbs
+The Python SDK provides some common [hints]({% link _documentation/error-reporting/configuration/filtering.md %}#event-hints) for breadcrumbs
 and events.  These hints are passed as the `hint` parameter to `before_send` and `before_breadcrumb`
 (as well as event processors) as a dictionary.  More than one hint can be supplied but this is rare.
 
