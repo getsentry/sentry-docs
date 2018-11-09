@@ -3,7 +3,7 @@ title: 'Source Maps'
 sidebar_order: 3
 ---
 
-To find out why Sentry needs your source maps and how to provide them visit: [Source Maps]({%- link _documentation/platforms/javascript/sourcemaps.md -%}) 
+To find out why Sentry needs your source maps and how to provide them visit: [Source Maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}) 
 
 ## Native Application
 
