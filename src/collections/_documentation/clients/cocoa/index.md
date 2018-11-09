@@ -4,7 +4,7 @@ sidebar_order: 1
 sidebar_relocation: platforms
 ---
 
-This is the documentation for our official clients for Cocoa (Swift and Objective-C). Starting with version `3.0.0` we’ve switched our internal code from Swift to Objective-C to maximize compatibility. Also we trimmed the public API of our sdk to a minimum. Some of the lesser used features that where present before are gone now, check out [Migration Guide]({%- link _documentation/clients/cocoa/migration.md -%}#migration) or [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%}#advanced) for details.
+This is the documentation for our official clients for Cocoa (Swift and Objective-C). Starting with version `3.0.0` we’ve switched our internal code from Swift to Objective-C to maximize compatibility. Also we trimmed the public API of our sdk to a minimum. Some of the lesser used features that were present before are gone now, check out [Migration Guide]({%- link _documentation/clients/cocoa/migration.md -%}#migration) or [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%}#advanced) for details.
 
 <!-- WIZARD -->
 ## Installation
@@ -44,8 +44,8 @@ To use the client, change your AppDelegate’s _application_ method to instantia
 ```swift
 import Sentry
 
-func application(application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+func application(_ application: UIApplication, 
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
     // Create a Sentry client and start crash handler
     do {
@@ -82,7 +82,7 @@ Before you can start capturing crashes you will need to tell Sentry about the de
 <!-- ENDWIZARD -->
 ## Testing a Crash
 
-If you would like to test the crash reporting you will need to cause a crash. While, the seemingly obvious method would be make it crash on launch, this will not give the Sentry client a chance to actually submit the crash report. Instead, we recommend triggering a crash from a button tap.
+If you would like to test the crash reporting you will need to cause a crash. While the seemingly obvious method would be to make it crash on launch, this will not give the Sentry client a chance to actually submit the crash report. Instead, we recommend triggering a crash from a button tap.
 
 You can use the following methods to cause a crash:
 
