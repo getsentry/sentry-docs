@@ -3,8 +3,6 @@ title: 'Hosting / Uploading'
 sidebar_order: 2
 ---
 
-<!-- ## Making Source Maps Available to Sentry -->
-
 Source maps can be either:
 
 1.  Served publicly over HTTP alongside your source files.

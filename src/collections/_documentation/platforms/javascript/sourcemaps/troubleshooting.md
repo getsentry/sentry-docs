@@ -3,8 +3,6 @@ title: 'Troubleshooting'
 sidebar_order: 3
 ---
 
-<!-- ## Troubleshooting -->
-
 Source maps can sometimes be tricky to get going. If you’re having trouble, try the following tips.
 
 ### Verify your source maps are built correctly

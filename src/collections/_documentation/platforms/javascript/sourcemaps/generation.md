@@ -3,8 +3,6 @@ title: 'Generating'
 sidebar_order: 1
 ---
 
-<!-- ## Generating a Source Map -->
-
 Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
 
 ### UglifyJS
