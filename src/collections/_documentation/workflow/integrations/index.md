@@ -19,7 +19,7 @@ These integrations are set up once per organization, and are then usable in all 
 
 ### Per-Project Integrations (Legacy)
 
-These integrations are set up once per project, and are only usable in projects in which they're been set up. 
+These integrations are set up once per project, and are only usable in projects in which they've been set up. 
 
 -   [_Asana_]({%- link _documentation/workflow/integrations/asana.md -%})
 -   Campfire
