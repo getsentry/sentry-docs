@@ -58,7 +58,7 @@ If you want to keep your source maps secret and choose not to upload your source
 
 ### Uploading Source Maps to Sentry
 
-Except for webpack, the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/learn/cli/index.md -%}). If you have used _Sentry Wizard_ to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/learn/cli/configuration.md -%}) to set up your project.
+Except for webpack, the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used _Sentry Wizard_ to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
 
 Sentry uses **Releases** to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
 

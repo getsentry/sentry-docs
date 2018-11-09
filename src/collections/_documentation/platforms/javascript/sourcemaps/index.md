@@ -7,7 +7,7 @@ Sentry supports un-minifying JavaScript via source maps. This lets you view sour
 
 ## Specify the release
 
-If you are uploading source map artifacts yourself, you must specify the release in your SDK see: [Releases]({%- link _documentation/learn/releases.md -%}).  Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/learn/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
+If you are uploading source map artifacts yourself, you must [specify the release]({%- link _documentation/workflow/releases.md -%}) in your SDK.  Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
 
 ## Next Steps
 
@@ -17,6 +17,6 @@ If you are uploading source map artifacts yourself, you must specify the release
 
 ## Additional Resources
 
-* [Using sentry-cli]({%- link _documentation/learn/cli/releases.md -%})
+* [Using sentry-cli to Upload Source Maps]({%- link _documentation/cli/releases.md -%}#sentry-cli-sourcemaps)
 * [Debuggable JavaScript with Source Maps](http://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps.html)
 * [4 Reasons Why Your Source Maps Are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)

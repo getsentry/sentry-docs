@@ -30,7 +30,7 @@ $ npm install --save-dev @sentry/webpack-plugin
 $ yarn add --dev @sentry/webpack-plugin
 ```
 
-To allow the plugin to upload source maps automatically, create a `.sentryclirc` or configure environment variables as described in the [CLI configuration docs]({%- link _documentation/learn/cli/configuration.md -%}). Then, add the plugin to your `webpack.config.js`:
+To allow the plugin to upload source maps automatically, create a `.sentryclirc` or configure environment variables as described in the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}). Then, add the plugin to your `webpack.config.js`:
 
 ```javascript
 const SentryWebpackPlugin = require('@sentry/webpack-plugin');
