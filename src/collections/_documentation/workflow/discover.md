@@ -67,6 +67,14 @@ standard_fields:
     - name: device.charging
       type: string
 
+  "Geo":
+    - name: geo.country_code
+      type: string
+    - name: geo.region
+      type: string
+    - name: geo.city
+      type: string
+
   "Tags":
     - name: tags_key
       type: string
