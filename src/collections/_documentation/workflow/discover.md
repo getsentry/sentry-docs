@@ -6,6 +6,8 @@ standard_fields:
   "General":
     - name: event_id
       type: string
+    - name: issue
+      type: string
     - name: project_id
       type: number
     - name: project_name
