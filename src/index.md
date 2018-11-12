@@ -1,5 +1,6 @@
 ---
 title: 'Sentry Documentation'
+toc: true
 ---
 
 <div class="index-illustration">
