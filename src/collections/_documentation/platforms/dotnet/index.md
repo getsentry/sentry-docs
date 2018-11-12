@@ -59,7 +59,7 @@ If that's your case, you can use 2 abstractions:
 * `ISentryClient`
 * `IHub`
 
-The `ISentryClient` exposes the `CaptureEvent` method and it's implementation `SentryClient` is responsible to queueing the event to be sent to Sentry. It also abstracts away the internal transport.
+The `ISentryClient` exposes the `CaptureEvent` method and its implementation `SentryClient` is responsible to queueing the event to be sent to Sentry. It also abstracts away the internal transport.
 
 The `IHub` on the other hand, holds a client and the current scope. In fact, it extends `ISentryClient` and is able to dispatch calls to the right client depending on the current scope.
 
