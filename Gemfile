@@ -11,6 +11,7 @@ group :jekyll_plugins do
     require: false
   }
   gem 'jekyll-assets', '3.0.11'
+  gem 'jekyll-toc', '0.9.0'
   gem 'autoprefixer-rails'
   gem 'jekyll-extlinks'
   gem 'liquid-md5'
