@@ -53,3 +53,8 @@ Send a list of installed Python packages along with each event.
 {% version_added 0.5.0 %}
 
 Add `sys.argv` as `extra` attribute to each event.
+
+## Logging
+*Import name: `sentry_sdk.integrations.logging.LoggingIntegration`*
+
+See [_Logging_]({% link _documentation/platforms/python/logging.md %})
