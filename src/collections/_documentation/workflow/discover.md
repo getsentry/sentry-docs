@@ -118,41 +118,41 @@ standard_fields:
 common_tags:
 
   "General":
-    - name: tags[level]
+    - name: level
       type: string
-    - name: tags[logger]
+    - name: logger
       type: string
-    - name: tags[server_name]
+    - name: server_name
       type: string
-    - name: tags[transaction]
+    - name: transaction
       type: string
-    - name: tags[environment]
+    - name: environment
       type: string
-    - name: tags[site]
+    - name: site
       type: string
-    - name: tags[url]
+    - name: url
       type: string
-    - name: tags[app_device]
+    - name: app_device
       type: string
-    - name: tags[device_family]
+    - name: device_family
       type: string
-    - name: tags[runtime]
+    - name: runtime
       type: string
-    - name: tags[runtime_name]
+    - name: runtime_name
       type: string
-    - name: tags[browser]
+    - name: browser
       type: string
-    - name: tags[browser_name]
+    - name: browser_name
       type: string
-    - name: tags[os]
+    - name: os
       type: string
-    - name: tags[os_name]
+    - name: os_name
       type: string
-    - name: tags[os_rooted]
+    - name: os_rooted
       type: boolean
-    - name: tags[sentry:release]
+    - name: sentry:release
       type: string
-    - name: tags[sentry:user]
+    - name: sentry:user
       type: string
 
 ---
@@ -279,4 +279,4 @@ These tags are commonly used / implemented in Sentry's SDKs
 {%- endfor -%}
 </table>
 
-Additionally, any custom user-defined tags can also be accessed with the `tags[...]` syntax
+Additionally, any custom user-defined tags can also be queried in the same way
