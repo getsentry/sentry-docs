@@ -27,7 +27,7 @@ sentry_sdk.init(
 ```python
 import logging
 logging.debug("I am a breadcrumb")
-logging.error("I am an event", bar=43)
+logging.error("I am an event", extra=dict(bar=43))
 ```
 
 * There will be an error event with the message `"I am an event"`.
