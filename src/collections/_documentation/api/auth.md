@@ -5,7 +5,7 @@ sidebar_order: 1
 
 ## Auth Tokens {#id1}
 
-Authentication tokens are passed using a the auth header, and are used to authenticate as a user account with the API.
+Authentication tokens are passed using an auth header, and are used to authenticate as a user account with the API.
 
 ```bash
 $ curl -H 'Authorization: Bearer {TOKEN}' https://sentry.io/api/0/projects/
