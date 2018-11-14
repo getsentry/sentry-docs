@@ -22,7 +22,8 @@ Framework](https://github.com/huge-success/sanic).
     ```python
     import sentry_sdk
     from sentry_sdk.integrations.sanic import SanicIntegration
-
+    from sanic import Sanic
+    
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
         integrations=[SanicIntegration()]
