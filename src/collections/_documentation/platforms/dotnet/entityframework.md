@@ -1,5 +1,5 @@
 ---
-title: EntityFramework
+title: Entity Framework
 sidebar_order: 8
 ---
 
