@@ -122,6 +122,13 @@ When enabled local variables are sent along with stackframes.  This can have a p
 and PII impact.  Enabled by default on platforms where this is available.
 {% endsupported %}
 
+{:.config-key}
+### ca-certs
+
+{% supported python %}
+A path to an alternative CA bundle file in PEM-format.
+{% endsupported %}
+
 ## Integration Configuration
 
 For many platform SDKs integrations can be configured alongside it.  On some platforms that
