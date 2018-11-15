@@ -4,17 +4,15 @@ sidebar_order: 4
 standard_fields:
 
   "General":
-    - name: event_id
+    - name: id
       type: string
-    - name: issue
+    - name: issue.id
       type: string
-    - name: project_id
+    - name: project.id
       type: number
-    - name: project_name
+    - name: project.name
       type: string
     - name: timestamp
-      type: datetime
-    - name: received
       type: datetime
     - name: platform
       type: string
