@@ -113,6 +113,15 @@ project.ext.sentryCli = [
 
 We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavors name.
 
+Include the project by adding it to our dependency list in `app/build.gradle`:
+
+```java
+dependencies {
+    // ... other dependencies listed here //
+    implementation project(':react-native-sentry')
+}
+```
+
 Please make sure your `MainApplication.java` looks something like this:
 
 ```java
