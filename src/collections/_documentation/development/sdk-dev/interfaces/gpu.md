@@ -5,41 +5,41 @@ sidebar_order: 13
 
 An interface which describes the main GPU of the device.
 
-`name`
+### `name`
 
 : **Required**. The name of the graphics device.
 
-`version`
+### `version`
 
 : _Optional_. The Version of graphics device.
 
-`id`
+### `id`
 
 : _Optional_. The PCI Id of the graphics device.
 
-`vendor_id`
+### `vendor_id`
 
 : _Optional_. The PCI vendor Id of the graphics device.
 
-`vendor_name`
+### `vendor_name`
 
 : _Optional_. The vendor name as reported by the graphics device.
 
-`memory_size`
+### `memry_size`
 
 : _Optional_. The total GPU memory available in Megabytes.
 
-`api_type`
+### `api_type`
 
 : _Optional_. The device low level API type. 
 
 Examples: `Apple Metal` or `Direct3D11`
 
-`multi_threaded_rendering`
+### `multi_threaded_rendering`
 
 : _Optional_. Whether the GPU has multi-threaded rendering or not.
 
-`npot_support`
+### `npot_support`
 
 : _Optional_. The Non-Power-Of-Two-Support support
 
