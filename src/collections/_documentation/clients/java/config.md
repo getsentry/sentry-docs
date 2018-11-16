@@ -247,7 +247,7 @@ If a buffer directory is provided, a background thread will periodically attempt
 buffer.flushtime=10000
 ```
 
-{% include components/alert.html title="Security Warning" content="The Java SDK currently uses the native Java serialization system to dump out events to the file system.  Due to weakenesses in the Java serialization system it is possible for users that have control to the `buffer.dir` interface to inject arbitrary Java classes. In extreme cases this might lead to the ability to execute code." level="warning" %} 
+{% include components/alert.html title="Security Warning" content="The Java SDK currently uses the native Java serialization system to write out events to the filesystem when buffering is enabled. Due to weaknesses in the Java serialization system it is possible for users that have write access to the `buffer.dir` directory to cause the Java SDK to deserialize arbitrary Java classes. In extreme cases this might lead to the ability to execute code." level="warning" %} 
 
 #### Graceful Shutdown of Buffering (Advanced)
 
