@@ -247,6 +247,8 @@ If a buffer directory is provided, a background thread will periodically attempt
 buffer.flushtime=10000
 ```
 
+{% include components/alert.html title="Security Warning" content="The Java SDK currently uses the native Java serialization system to write out events to the filesystem when buffering is enabled. Due to weaknesses in the Java serialization system it is possible for users that have write access to the `buffer.dir` directory to cause the Java SDK to deserialize arbitrary Java classes. In extreme cases this might lead to the ability to execute code." level="warning" %} 
+
 #### Graceful Shutdown of Buffering (Advanced)
 
 In order to shutdown the buffer flushing thread gracefully, a `ShutdownHook` is created. By default, the buffer flushing thread is given 1 second to shutdown gracefully, but this can be adjusted via `buffer.shutdowntimeout` (represented in milliseconds):
