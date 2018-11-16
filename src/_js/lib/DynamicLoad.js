@@ -12,6 +12,10 @@ const isSamePage = function(here, there) {
   );
 };
 
+const isSameHash = function(here, there) {
+  return here.hash === there.hash;
+};
+
 class DynamicLoad {
   constructor() {
     this.load = this.load.bind(this);
@@ -62,7 +66,9 @@ class DynamicLoad {
     // if (event.test) console.log(event);
     switch (true) {
       case isSamePage(window.location, event.currentTarget):
-        event.preventDefault();
+        if (isSameHash(window.location, event.currentTarget)) {
+          event.preventDefault();
+        }
       // Just follow the default behavior in these scenarios
       case event.ctrlKey:
       case event.metaKey:
