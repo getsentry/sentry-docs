@@ -1,70 +1,46 @@
-import qs from 'query-string';
-import Lunr from './Lunr';
-import { escape } from './Helpers';
-
-const renderResult = function(data) {
-  const relativePath = data.path.replace(/^\/|\/$/g, '');
-
-  const url = escape(`${window.location.origin}/${relativePath}/`);
-  const path = relativePath
-    .split(/[#\/]/)
-    .map(segment => {
-      return `<span class="path-segment">${escape(segment)}</span>`;
-    })
-    .join('');
-  return $(`
-    <div class="mb-3">
-      <h3 class="h5 mb-0"><a href="${url}">${escape(data.title)}</a></h3>
-      <div class="pl-2">
-        <aside>(${path})</aside>
-        <p class="mb-0">${escape(data.excerpt)}</p>
-      </div>
-    </div>
-  `);
-};
-
-const renderResults = function(results, query) {
-  const $results = $('[data-search-results]').clone();
-  if (!results || !results.length) {
-    const msg = `No results${!!results ? ` matching "${escape(query)}"` : ''}`;
-    $results.append(`<p>${msg}</p>`);
-  }
-  $.each(results, function(i, result) {
-    $results.append(renderResult(result));
-  });
-  return $results;
-};
-
-class Search {
-  constructor($target) {
-    this.data;
-    this.results = {};
-    this.pageTemplate = $('html').html();
-
-    this.init = this.init.bind(this);
-
-    this.$target = $target;
-    this.Lunr = new Lunr({
-      cacheUrl: '/search/cache.json',
-      indexUrl: '/search/index.json'
-    });
-  }
-
-  // Fetch search results and attach the results
-  init() {
-    const params = qs.parse(location.search);
-
-    if (!params.q) {
-      return Promise.resolve().then(() => {
-        $('[data-search-results]').append(renderResults());
-      });
+import instantsearch from 'instantsearch.js';
+import { searchBox, hits } from 'instantsearch.js/es/widgets';
+$(function() {
+  const search = instantsearch({
+    appId: 'OOK48W9UCL',
+    apiKey: '2d64ec1106519cbc672d863b0d200782',
+    indexName: 'sentry-docs',
+    searchFunction: function(helper) {
+      var $hits = $('#hits');
+      if (helper.state.query === '') {
+        $hits.addClass('d-none');
+      } else {
+        helper.search();
+        $hits.removeClass('d-none');
+      }
     }
-    $('input[name="q"]').val(params.q);
+  });
 
-    return this.Lunr.search(params.q).then(results => {
-      $('[data-search-results]').append(renderResults(results, params.q));
-    });
-  }
-}
+  search.addWidget(
+    searchBox({
+      container: '#search-box',
+      placeholder: 'Search the docs',
+      magnifier: false,
+      reset: false,
+      cssClasses: {
+        input: 'form-control'
+      }
+    })
+  );
 
-export default new Search();
+  search.addWidget(
+    hits({
+      container: '#hits',
+      cssClasses: {
+        root: 'list-group search-results'
+      },
+      templates: {
+        empty: '<div class="list-group-item">No results</div>',
+        allItems:
+          '{{#hits}}<a href="{{ url }}" class="list-group-item list-group-item-action"><h6 class="mb-1">{{{ _highlightResult.title.value }}}</h6>{{{ _snippetResult.content.value }}}</a>{{/hits}}'
+      }
+    })
+  );
+
+  search.start();
+});

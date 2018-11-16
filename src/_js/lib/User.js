@@ -90,6 +90,7 @@ export default class User {
         this.update();
       })
       .catch(error => {
+        $('[data-hide-when-logged-in]').toggleClass('d-none', false);
         this.update();
       })
       .then(() => {
