@@ -17,7 +17,7 @@ At this point, Raven is ready to capture any uncaught exception.
 
 ```javascript
 Raven.config('___PUBLIC_DSN___', {
-    release: '1.3.0'
+    release: 'myapp@1.3.0'
 }).install()
 ```
 
@@ -43,7 +43,7 @@ Those configuration options are documented below:
   }
   ```
 
-  Can also be defined with `Raven.setRelease('721e41770371db95eee98ca2707686226b993eda')`.
+  Can also be defined with `Raven.setRelease('721e41770371db95eee98ca2707686226b993eda')`. To learn more about configuring releases and deploys, click [here]({%- link _documentation/workflow/releases.md -%}).
 
 `environment`
 
