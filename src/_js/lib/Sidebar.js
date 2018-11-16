@@ -6,15 +6,6 @@ $(document).on('page.didUpdate', function(event) {
 
   let $active = $links.filter(`[href="${location.pathname}"]`).last();
 
-  if (!$active.length) {
-    $active = $sections
-      .first()
-      .find('> [data-sidebar-tree]')
-      .find('> [data-sidebar-branch]')
-      .first()
-      .find('> [data-sidebar-link]');
-  }
-
   $links.each((i, el) => {
     const $el = $(el);
     $el.toggleClass('active', $el.is($active));

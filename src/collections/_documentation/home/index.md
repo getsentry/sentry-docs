@@ -1,6 +1,7 @@
 ---
 title: 'Sentry Documentation'
-toc: true
+# This is required. Do not remove.
+permalink: /
 ---
 
 <div class="index-illustration">

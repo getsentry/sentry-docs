@@ -3,9 +3,13 @@ title: 'Sensitive Data'
 sidebar_order: 1
 ---
 
-As with any third party service it’s important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored. Our primary approach to this problem is a pessimitic view: you accidentally sent data to Sentry and you either want to remove it, or you want to ensure it doesn’t get stored.
+As with any third party service it’s important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored. We recommend filtering or scrubbing sensitive data within the SDK, so that data is not sent with the event, and also configuring server-side scrubbing to ensure the data is not stored.
 
-## Server-Side Filtering
+## Custom Event Processing in the SDK
+
+In the SDKs you can configure a `before-send` function which is invoked before an event is sent and can be used to modify the event data and remove sensitive data. See [_Filtering Events_]({%- link _documentation/error-reporting/configuration/filtering.md -%}) for more information.
+
+## Server-Side Scrubbing
 
 Within your project settings you’ll find a **Data Scrubber** option. By default this is enabled, and we highly recommend you keep it that way. With it enabled, Sentry will scrub the following:
 
@@ -26,7 +30,7 @@ Within your project settings you’ll find a **Data Scrubber** option. By defaul
 
 You can choose to expand the keys which are scrubbed by the server, as well as prevent IP addresses from being stored. The latter is particularly important if you’re concerned about PII and using our Browser JavaScript SDK.
 
-Additionally, some SDKs will also allow you to filter data ahead of time following similar patterns.
+As mentioned earlier, configure scrubbing within SDK if possible so that sensitive data is not sent with the request.
 
 ## Restricting Emails
 
@@ -41,10 +45,6 @@ If you’ve accidentally sent sensitive data to the server it’s likely you’r
 -   If you send it as a tagged value, removing the event is not enough. You can visit Project Settings and under Tags you’ll find a way to permanently remove any related data for a given tag.
 -   If you need to wipe just a single event, you’ll find the ability to bulk delete all sampled events under a rollup by visiting the rollup details page and selecting “Delete”.
 -   If you send sparse events to a project (potentially all of them), your only option is to remove the project and re-create it. Keep in mind this will revoke API credentials, so you likely want to do this in the reverse order.
-
-## Custom Event Processing in the SDK
-
-In the SDKs you can also set a function `before-send` which is invoked before events are sent which can be used to modify the events and remove bad data. See [_Filtering Events_]({%- link _documentation/error-reporting/configuration/filtering.md -%}) for more information.
 
 ## Custom Event Processing using Relay
 

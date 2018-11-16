@@ -26,6 +26,7 @@ any point in the future.
 
 - [Breadcrumbs Interface]({%- link _documentation/development/sdk-dev/interfaces/breadcrumbs.md -%})
 - [Contexts Interface]({%- link _documentation/development/sdk-dev/interfaces/contexts.md -%})
+- [GPU Interface]({%- link _documentation/development/sdk-dev/interfaces/gpu.md -%})
 - [HTTP Interface]({%- link _documentation/development/sdk-dev/interfaces/http.md -%})
 - [Threads Interface]({%- link _documentation/development/sdk-dev/interfaces/threads.md -%})
 - [User Interface]({%- link _documentation/development/sdk-dev/interfaces/user.md -%})

@@ -8,28 +8,29 @@ sidebar_order: 2
 <!-- WIZARD -->
 *Import name: `sentry_sdk.integrations.rq.RqIntegration`*
 
-The celery integration adds support for the [RQ Job Queue System](https://python-rq.org/).
+The RQ integration adds support for the [RQ Job Queue System](https://python-rq.org/).
 
-Just add ``RqIntegration()`` to your ``integrations`` list.  The integration does not
-accept any arguments and will automatically report errors from all celery tasks:
+Create a file called `mysettings.py` with the following content:
 
 ```python
 import sentry_sdk
 from sentry_sdk.integrations.rq import RqIntegration
 
-sentry_sdk.init(integrations=[RqIntegration()])
+sentry_sdk.init("___PUBLIC_DSN___", integrations=[RqIntegration()])
 ```
 
-{% capture __alert_content -%}
-Make sure that the code above is loaded on worker startup. E.g. put it in a `settings.py` and run the worker with `rq worker -c settings`.
+Start your worker with:
 
-Putting this code just anywhere means the SDK will only be partially initialized.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
+```shell
+rq worker \
+    -c mysettings \  # module name of mysettings.py
+    --sentry-dsn=""  # Keep this empty! Disables RQ's own Sentry plugin
+```
 
-Additionally the transaction on the event will be set to the task name and
-the grouping will be improved for global errors such as timeouts.
 <!-- ENDWIZARD -->
+
+The integration will automatically report errors from all RQ jobs.
+
+Generally, make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your jobs are defined. Otherwise the initialization happens too late and events might end up not being reported.
+
+The `--sentry-dsn=""` is necessary if you use the `SENTRY_DSN` environment variable to configure the new SDK. RQ will otherwise attempt to install its own Sentry integration (using Raven) next to the one of `sentry-sdk`, which will cause issues such as doubly reported events. See [the relevant RQ issue](https://github.com/rq/rq/issues/1003).

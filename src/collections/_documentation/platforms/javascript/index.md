@@ -46,7 +46,7 @@ Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: integrations => {
     // integrations will be all default integrations
-    return integrations.filter(integration => integration.id !== 'Breadcrumbs');
+    return integrations.filter(integration => integration.name !== 'Breadcrumbs');
   }
 });
 ```
