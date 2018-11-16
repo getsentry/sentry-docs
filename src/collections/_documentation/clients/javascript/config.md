@@ -43,7 +43,7 @@ Those configuration options are documented below:
   }
   ```
 
-  Can also be defined with `Raven.setRelease('721e41770371db95eee98ca2707686226b993eda')`. See the [releases]({%- link _documentation/workflow/releases.md -%}) page for more information about releases.
+  Can also be defined with `Raven.setRelease('721e41770371db95eee98ca2707686226b993eda')`. To learn more about configuring releases and deploys, click [here]({%- link _documentation/workflow/releases.md -%}).
 
 `environment`
 
