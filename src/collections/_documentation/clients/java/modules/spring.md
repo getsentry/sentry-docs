@@ -84,3 +84,25 @@ public ServletContextInitializer sentryServletContextInitializer() {
 ```
 
 After that, your Sentry events should contain information such as HTTP request headers.
+
+## Spring Boot Integration
+
+Since version 1.7.16, Sentry provides a new module `sentry-spring-boot-starter` which auto-configure all you need.
+
+Using Maven:
+
+```xml
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-spring-boot-starter</artifactId>
+    <version>1.7.16</version>
+</dependency>
+```
+
+Using Gradle:
+
+```groovy
+compile 'io.sentry:sentry-spring-boot-starter:1.7.16'
+```
+
+Also, the starter provides a property `sentry.enabled` which allow to turn on/off Sentry's integration.
