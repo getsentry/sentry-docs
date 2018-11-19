@@ -156,11 +156,11 @@ common_tags:
 ---
 
 {% capture __alert_content -%}
-Discover is currently available as an alpha release to select customers only.
+Discover is currently available as an beta release to business plans and select customers only.
 {%- endcapture -%}
 {%- include components/alert.html
   level="warning"
-  title="Alpha functionality"
+  title="Beta functionality"
   content=__alert_content
 %}
 
