@@ -2,7 +2,7 @@
 title: GitHub
 sidebar_order: 4
 ---
-You can now use the data from your commits to GitHub to help you find and fix bugs faster.
+You can now use the data from your GitHub commits to help you find and fix bugs faster.
 
 ## Configure GitHub
 
