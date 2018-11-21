@@ -5,17 +5,17 @@ sidebar_order: 3
 
 Source maps can sometimes be tricky to get going. If you’re having trouble, try the following tips.
 
-### Verify release is configured
+### Verify release is configured in your SDK
 
-It's possible to have created a release and not have tagged your errors with the same release. 
+In order for uploaded source maps to be located and applied, the release needs to be created by the CLI or API (and the correct files uploaded with it), and the name of that newly-created release needs to be included in your SDK configuration.
 
-Open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors]({%- link _documentation/workflow/releases.md -%}#tag-errors). If this is properly set up you'll see "Release: my_example_release". 
+To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors]({%- link _documentation/workflow/releases.md -%}#tag-errors). If this is properly set up you'll see "Release: my_example_release". 
 
 ### Verify artifacts are uploaded
 
-Once your release is properly configured and issues are tagged, you can then click on the release >> Artifacts (or **Releases >> your specific release >> Artifacts**) to check that they are in fact uploaded to the correct release (or at all).
+Once your release is properly configured and issues are tagged, you can then click on the release >> Artifacts (or **Releases >> your specific release >> Artifacts**) to check that your source maps and the associated files are in fact uploaded to the correct release (or at all).
 
-Additionally, make sure the correct files are available. For Sentry to de-minify your stacktraces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
+Additionally, make sure all of the necessary are available. For Sentry to de-minify your stacktraces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
 ### Verify sourceMappingURL is present
 
@@ -25,48 +25,89 @@ Double-check that your deployed, final JavaScript files have `sourceMappingURL` 
 
 Alternately, instead of `sourceMappingURL`, you can set a `SourceMap` HTTP header on your minified file. If this header is present, Sentry will use it to discover the location of your source map.
 
-### Verify artifact names match sourceMappingURL
+### Verify artifact names match `sourceMappingURL` value
 
-When [uploading source maps to Sentry]({%- link _documentation/platforms/javascript/sourcemaps/availability.md -%}), you must name your source map files with the same name found in `sourceMappingURL`.
+The `sourceMappingURL` comment on the last line of your bundled or minified JavaScript file tells Sentry (or the browser) where to locate the corresponding source map. This can either be a fully qualified URL, a relative path, or the filename itself. When uploading artifacts to Sentry, you must name your source map files with the same name found in the  `sourceMappingURL` comment.
 
-For example, if you have the following in a minified application file, `app.min.js`:
-
-```javascript
-//-- end app.min.js
-//# sourceMappingURL=https://example.com/dist/js/app.min.js.map
-```
-
-Sentry will look for a matching artifact named exactly `https://example.com/dist/js/app.min.js.map`.
-
-Note also that Sentry will resolve relative paths. For example, if you have the following:
+i. e. if your file is similar to:
 
 ```javascript
-// -- end app.min.js (located at https://example.com/dist/js/app.min.js)
-//# sourceMappingURL=app.min.js.map
+    // -- end script.min.js
+    //# sourceMappingURL=script.min.js.map
 ```
 
-Sentry will resolve `sourceMappingURL` relative to `https://example.com/dist/js/` (the root path from which `app.min.js` was served). You will again need to name your source map with the full URL: `https://example.com/dist/js/app.min.js.map`.
+then your uploaded artifact should also be named `script.min.js.map`. 
 
-If you serve the same assets from multiple origins, you can also alternatively use our tilde (~) path prefix to ignore matching against protocol + hostname. In which case, `~/dist/js/app.min.js.map`, will also work. See: [Assets Accessible at Multiple Origins]({%- link _documentation/platforms/javascript/sourcemaps/availability.md -%}#uploading-source-maps-to-sentry).
+or if your file is similar to: 
+
+```javascript
+    //-- end script.min.js
+    //# sourceMappingURL=https://example.com/dist/js/script.min.js.map
+```
+
+then your uploaded artifact should also be named `https://example.com/dist/js/script.min.js.map`
 
 
 ### Verify artifact names and file path are correct
 
-For a given lookup, there are up to four variations of the filename which it will attempt to match: 
+If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the filename in the stack trace frames, for example, `/scripts/script.min.js`. You can also open up the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js`
 
-- The original URL, verbatim 
-- The full URL, but with scheme and domain replaced by `~`
-- (Additionally, when applicable, each of these options but with any query string removed)
+If your `sourceMappingURL` comment is similar to:
 
-**Note:** The `~` will only match scheme and domain name, it is not a glob!
+```javascript
+// -- end script.min.js (located at http://localhost:8000/scripts/script.min.js)
+//# sourceMappingURL=script.min.js.map
+```
 
-`http://mysite.com/foo/bar/baz.js` will match
+an example `sentry-cli` command would look like this (assuming you’re in the `/scripts` directory, running your web server from one directory higher, which is why we’re using the `--url-prefix` option):
 
-`~/foo/bar/baz.js` or `http://mysite.com/foo/bar/baz.js` 
+```curl
+sentry-cli releases files VERSION upload-sourcemaps . --url-prefix '~/scripts'
+```
 
-but will NOT match `~/baz.js`. 
+{% capture __alert_content -%}
+The `~` is used in Sentry to replace the scheme and domain. It is not a glob!
 
-You can also verify that those artifacts match the `abs_path` of the frames (or the full path with a ~ instead of the scheme and domain). From a Sentry issue click the JSON link and locate the `abs_path` to check this. 
+`http://example.com/dist/js/script.js` will match `~/dist/js/script.js` or `http://example.com/dist/js/script.js`
+
+but will NOT match `~/script.js`.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note:"
+  content=__alert_content
+%}
+
+This command uploads all JavaScript files in the current directory. The Artifacts page in Sentry should now look like:
+```
+~/scripts/script.js
+~/scripts/script.min.js
+~/scripts/script.min.js.map
+```
+
+alternately you can specify which files to upload, i.e. 
+
+```
+sentry-cli releases files VERSION upload-sourcemaps script.min.js script.min.js.map --url-prefix '~/scripts'
+```
+
+You can also upload it with the fully qualified URL i.e.
+```
+sentry-cli releases files VERSION upload-sourcemaps . --url-prefix 'http://localhost:8000/scripts'
+```
+
+You can alternately [use our API]({%- link _documentation/api/releases/post-organization-release-files.md -%}) to upload artifacts, following the same naming convention explained here.
+
+
+
+```curl
+curl -X POST \
+  https://sentry.io/api/0/organizations/ORG_NAME/releases/VERSION/files/ \
+  -H 'Authorization: Bearer AUTH_TOKEN' \
+  -H 'content-type: multipart/form-data' \
+  -F file=@script.min.js.map \
+  -F 'name=~/scripts/script.min.js.map'
+```
+
 
 ### Verify artifacts are uploaded before errors occur
 
@@ -76,7 +117,7 @@ If you upload artifacts **after** an error is captured by Sentry, Sentry will no
 
 ### Verify your source maps are built correctly
 
-We maintain an online validation tool that can be used to test your **hosted** source (and source maps) against: [sourcemaps.io](http://sourcemaps.io).
+We maintain an online validation tool that can be used to test your **hosted** source (and source maps): [sourcemaps.io](http://sourcemaps.io).
 
 Alternatively, if you are using Sentry CLI to upload source maps to Sentry, you can use the `–validate` command line option to verify your source maps are correct.
 
