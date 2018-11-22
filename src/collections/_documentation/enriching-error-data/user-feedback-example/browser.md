@@ -4,7 +4,7 @@
 <script>
   Sentry.init({
     dsn: '___PUBLIC_DSN___',
-    beforeSend(event) {
+    beforeSend: (event) => {
       // Check if it is an exception, if so, show the report dialog
       if (event.exception) {
         Sentry.showReportDialog();
