@@ -15,7 +15,7 @@ as part of [shutdown and draining]({% link _documentation/error-reporting/config
 
 ## Uncaught Exception Handler
 
-Ability for the SDK to be set as a hook to record any uncaught exceptions. At the language level this is typically a global hook provided by the language itself. For framework intergations this might be part of middleware or some other system.
+Ability for the SDK to be set as a hook to record any uncaught exceptions. At the language level this is typically a global hook provided by the language itself. For framework integrations this might be part of middleware or some other system.
 
 This behavior is typically provided by a default integration that can be disabled.
 
