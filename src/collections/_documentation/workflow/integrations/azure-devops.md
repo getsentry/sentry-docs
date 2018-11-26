@@ -31,7 +31,7 @@ Azure DevOps should now be enabled for all projects under your Sentry organizati
 
 ## Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. [Learn more]({%- link _documentation/workflow/releases.md -%}#link-repository)
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
 
 ## Suspect Commits and Suggested Assignees
 
