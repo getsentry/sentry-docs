@@ -126,7 +126,11 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
         end
 
         noko_doc.css("a").each do |node|
-          node["href"] = URI(node["href"]).host ? node["href"] : "#{site.config["url"]}#{node["href"]}"
+          begin
+            node["href"] = URI(node["href"]).host ? node["href"] : "#{site.config["url"]}#{node["href"]}"
+          rescue ArgumentError
+            puts "Skipping node.href"
+          end
         end
 
         # Extract nested highlights so sentry CSS can target the `pre`s
