@@ -41,8 +41,6 @@ Enabling the Google integration will ask you to authenticate against a Google Ap
 
 The GitHub integration will authenticate against all organizations, and once complete prompt you for the organization which you wish to restrict access by.
 
-Currently GitHub Enterprise is not supported. If your company needs support for GE, [let us know](mailto:support%40sentry.io).
-
 ### SAML2 Identity Provider
 
 Sentry provides [SAML2 based authentication](https://en.wikipedia.org/wiki/SAML_2.0) which may be configured manually using the generic SAML2 provider, or a specific provider which provides defaults specific to that identity provider.
