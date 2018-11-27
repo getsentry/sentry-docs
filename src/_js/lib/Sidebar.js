@@ -30,8 +30,16 @@ $(document).on('page.didUpdate', function(event) {
 
     const containsActive = $branch.find('[data-sidebar-link]').is($active);
 
-    const leaveVisble =
-      containsActive || (parentTreeContainsActive && !hideWhenNoActiveChild);
-    $branch.toggleClass('collapse', !leaveVisble);
+    const isSection = $sections.is(el);
+
+    switch (true) {
+      case containsActive:
+      case isSection:
+      case parentTreeContainsActive && !hideWhenNoActiveChild:
+        $branch.removeClass('collapse');
+        break;
+      default:
+        $branch.addClass('collapse');
+    }
   });
 });
