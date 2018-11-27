@@ -1,10 +1,16 @@
+const trimEndSlash = str => str.replace(/\/$/g, '');
+
 $(document).on('page.didUpdate', function(event) {
   const $links = $('[data-sidebar-link]');
   const $sections = $('[data-sidebar-root] > [data-sidebar-tree]').find(
     '> [data-sidebar-branch]'
   );
 
-  let $active = $links.filter(`[href="${location.pathname}"]`).last();
+  const pathname = trimEndSlash(location.pathname);
+
+  let $active = $links
+    .filter((i, l) => pathname === trimEndSlash($(l).attr('href')))
+    .last();
 
   $links.each((i, el) => {
     const $el = $(el);
