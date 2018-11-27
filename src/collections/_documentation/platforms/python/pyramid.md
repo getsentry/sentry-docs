@@ -22,11 +22,11 @@ Framework](https://trypyramid.com/).
     ```python
     import sentry_sdk
 
-    from sentry_sdk.integrations.flask import FlaskIntegration
+    from sentry_sdk.integrations.pyramid import PyramidIntegration
 
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
-        integrations=[FlaskIntegration()]
+        integrations=[PyramidIntegration()]
     )
 
     from pyramid.config import Configurator
@@ -41,15 +41,9 @@ Framework](https://trypyramid.com/).
 
 * The Pyramid integration will be installed for all of your apps. It hooks into Pyramid itself, not any of your apps specifically.
 
-* A bit of data is attached to each event:
+* All exceptions leading to a Internal Server Error are reported.
 
-    * Personally identifiable information (such as user ids, usernames,
-      cookies, authorization headers, ip addresses) is excluded unless
-      ``send_default_pii`` is set to ``true``.
-
-    * Request data is attached to all events.
-
-* All exceptions are reported.
+* {% include platforms/python/request-data.md %}
 
 * Logging with *any* logger will create breadcrumbs when
   the [Logging]({% link _documentation/platforms/python/logging.md %})

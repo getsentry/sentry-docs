@@ -7,7 +7,7 @@ Sentry supports un-minifying JavaScript via [Source Maps](http://blog.sentry.io/
 
 ## Specify the release in Raven.js {#specify-the-release-in-raven-js}
 
-If you are uploading source map artifacts yourself, you must specify the release in your Raven.js client configuration. Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/learn/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
+If you are uploading source map artifacts yourself, you must specify the release in your Raven.js client configuration. Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
 
 ```javascript
 Raven.config('your-dsn', {
@@ -220,7 +220,7 @@ The ~ prefix tells Sentry that for a given URL, **any** combination of protocol 
 
 ## Using Sentry CLI {#upload-sourcemaps-with-cli}
 
-You can also use the Sentry [Command Line Interface]({%- link _documentation/learn/cli/index.md -%}#sentry-cli) to manage releases and source maps on Sentry. If you have it installed you can create releases with the following command:
+You can also use the Sentry [Command Line Interface]({%- link _documentation/cli/index.md -%}#sentry-cli) to manage releases and source maps on Sentry. If you have it installed you can create releases with the following command:
 
 ```bash
 $ sentry-cli releases -o MY_ORG -p MY_PROJECT new 2da95dfb052f477380608d59d32b4ab9

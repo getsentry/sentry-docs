@@ -1,5 +1,6 @@
 ---
 title: 'Asynchronous Workers'
+sidebar_order: 6
 ---
 
 Sentry comes with a built-in queue to process tasks in a more asynchronous fashion. For example when an event comes in instead of writing it to the database immediately, it sends a job to the queue so that the request can be returned right away, and the background workers handle actually saving that data.

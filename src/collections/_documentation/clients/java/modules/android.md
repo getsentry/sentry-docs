@@ -5,7 +5,7 @@ sidebar_order: 6
 
 ## Features
 
-The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options]({%- link _documentation/clients/java/config.md -%}), and more. Adding version `1.7.10` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
+The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options]({%- link _documentation/clients/java/config.md -%}), and more. Adding version `1.7.14` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
 
 Events will be [buffered to disk]({%- link _documentation/clients/java/config.md -%}#buffering-events-to-disk) (in the application’s cache directory) by default. This allows events to be sent at a later time if the device does not have connectivity when an event is created. This can be disabled by [setting the option]({%- link _documentation/clients/java/config.md -%}#configuration) `buffer.enabled` to `false`.
 
@@ -19,14 +19,14 @@ The `AndroidEventBuilderHelper` is enabled by default, which will automatically 
 Using Gradle (Android Studio) in your `app/build.gradle` add:
 
 ```groovy
-compile 'io.sentry:sentry-android:1.7.10'
+compile 'io.sentry:sentry-android:1.7.14'
 
 // this dependency is not required if you are already using your own
 // slf4j implementation
 compile 'org.slf4j:slf4j-nop:1.7.25'
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-android%7C1.7.10%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-android%7C1.7.14%7Cjar).
 <!-- ENDWIZARD -->
 
 ## Initialization
@@ -120,7 +120,13 @@ public class MyClass {
 
 ## ProGuard
 
-In order to use ProGuard with Sentry you will need to upload the proguard mapping files to Sentry by using our Gradle integration (recommended) or manually by using [_sentry-cli_]({%- link _documentation/learn/cli/proguard.md -%})
+In order to use ProGuard with Sentry you will need to upload the proguard mapping files to Sentry by using our Gradle integration (recommended) or manually by using [_sentry-cli_]({%- link _documentation/cli/dif/proguard.md -%})
+
+Note that Sentry currently only supports ProGuard minification, and not the experimental R8 Shrinker. Ensure R8 is disabled by adding the following to your `gradle.properties` file:
+
+```gradle
+android.enableR8=false
+```
 
 ### Gradle Integration
 
@@ -135,12 +141,14 @@ And declare a dependency in your toplevel `build.gradle`:
 ```groovy
 buildscript {
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.10'
+        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.14'
     }
 }
 ```
 
-The plugin will then automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assembleRelease`. The credentials for the upload step are loaded from a `sentry.properties` file in your project root _or_ via environment variables, for more information [see the sentry-cli documentation]({%- link _documentation/learn/cli/configuration.md -%}#configuration-values). At the very minimum you will need something like this:
+The plugin will then automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assembleRelease`. The credentials for the upload step are loaded via environment variables _or_ from a `sentry.properties` file in your project root. Please note the `sentry.properties` in your project root that configures `sentry-cli` is *different* than the one you include in your application resources to configure the Sentry SDK at runtime (as seen in the [configuration documentation]({%- link _documentation/clients/java/config.md -%})).
+
+For more information [see the sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values). At the very minimum you will need something like this:
 
 ```gradle
 defaults.project=___PROJECT_NAME___
@@ -148,7 +156,7 @@ defaults.org=___ORG_NAME___
 auth.token=YOUR_AUTH_TOKEN
 ```
 
-You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options see _/learn/cli/configuration_.
+You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options see _/cli/configuration_.
 
 #### Gradle Configuration
 
@@ -186,7 +194,7 @@ First, you need to add the following to your ProGuard rules file:
 After ProGuard files are generated you will need to embed the UUIDs of the ProGuard mapping files in a properties file named `sentry-debug-meta.properties` in the assets folder. The Java SDK will look for the UUIDs there to link events to the correct mapping files on the server side.
 
 {% capture __alert_content -%}
-Sentry calculates UUIDs for proguard files. For more information about how this works see [UUID Format]({%- link _documentation/learn/cli/proguard.md -%}#proguard-uuids).
+Sentry calculates UUIDs for proguard files. For more information about how this works see [UUID Format]({%- link _documentation/cli/dif/proguard.md -%}#proguard-uuids).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

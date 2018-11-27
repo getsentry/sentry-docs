@@ -1,6 +1,6 @@
 ---
 title: 'Inbound Mail'
-sidebar_order: 7
+sidebar_order: 12
 ---
 
 Sentry provides support for handling incoming email in various situations. Currently it only supports processing replies to error and note notifications.

@@ -90,7 +90,7 @@ config :sentry, filter: MyApp.SentryEventFilter,
 
 ## Context and Breadcrumbs
 
-Sentry has multiple options for including contextual information. They are organized into “Tags”, “User”, and “Extra”, and Sentry’s documentation on them is [here]({%- link _documentation/learn/context.md -%}). Breadcrumbs are a similar concept and Sentry’s documentation covers them [here]({%- link _documentation/learn/breadcrumbs.md -%}).
+Sentry has multiple options for including contextual information. They are organized into “Tags”, “User”, and “Extra”, and Sentry’s documentation on them is [here]({%- link _documentation/enriching-error-data/context.md -%}). Breadcrumbs are a similar concept and Sentry’s documentation covers them [here]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}).
 
 In Elixir this can be complicated due to processes being isolated from one another. Tags context can be set globally through configuration, and all contexts can be set within a process, and on individual events. If an event is sent within a process that has some context configured it will include that context in the event. Examples of each are below, and for more information see the documentation of [Sentry.Context](https://hexdocs.pm/sentry/Sentry.html#module-filtering-exceptions).
 
@@ -114,7 +114,7 @@ Sentry.capture_exception(exception, [tags: %{locale: "en-us", }, user: %{id: 34}
 
 ## Fingerprinting
 
-By default, Sentry aggregates reported events according to the attributes of the event, but users may need to override this functionality via [fingerprinting]({%- link _documentation/learn/rollups.md -%}#customize-grouping-with-fingerprints).
+By default, Sentry aggregates reported events according to the attributes of the event, but users may need to override this functionality via [fingerprinting]({%- link _documentation/data-management/rollups.md -%}#customize-grouping-with-fingerprints).
 
 To achieve that in Sentry Elixir, one can use the `before_send_event` configuration callback. If there are certain types of errors you would like to have grouped differently, they can be matched on in the callback, and have the fingerprint attribute changed before the event is sent.
 

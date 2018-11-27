@@ -1,5 +1,6 @@
 ---
 title: 'Single Sign-On'
+sidebar_order: 8
 ---
 
 SSO in Sentry is handled in one of two ways:

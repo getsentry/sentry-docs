@@ -4,9 +4,21 @@ title: 'Manual Setup'
 
 If you can’t (or don’t want) to run the linking step you can see here what is happening on each platform.
 
+## General
+
+You will want to make sure you have already created a `sentry.properties` file at the root of your react native project.  An example of this properties file can be found in the [examples github](https://github.com/getsentry/examples/blob/master/react-native/sentry.properties).
+
 ## iOS
 
+### Linking the Native Library
+
+You must link the native Sentry project with your project.  This can be done by following the [Linking Libraries](https://facebook.github.io/react-native/docs/linking-libraries-ios.html) steps described in React Native documentation.
+
+The library you need to link is `node_modules/react-native-sentry/ios/RNSentry.xcodeproj`.
+
 ### AppDelegate
+
+Update your `AppDelegate.m` file to pull in the proper native library and initialize it.
 
 ```objc
 #if __has_include(<React/RNSentry.h>)
@@ -23,6 +35,8 @@ If you can’t (or don’t want) to run the linking step you can see here what i
 
 When you use Xcode you can hook directly into the build process to upload debug symbols. When linking one build phase script is changed and two more are added.
 
+#### Bundle React Native code and images
+
 We modify the react-native build phase (“Bundle React Native code and images”) slightly from this:
 
 ```bash
@@ -34,7 +48,7 @@ To this:
 
 ```bash
 export NODE_BINARY=node
-export SENTRY_PROPERTIES=sentry.properties
+export SENTRY_PROPERTIES=../sentry.properties
 
 # If you are using RN 0.46+
 ../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
@@ -46,6 +60,16 @@ export SENTRY_PROPERTIES=sentry.properties
 ```
 
 Additionally we add a build script called “Upload Debug Symbols to Sentry” which uploads debug symbols to Sentry.
+
+#### Upload Debug Symbols to Sentry
+
+If you wish to upload the sourcemaps and symbols to Sentry, create a new Run Script build phase with the following script:
+
+```bash
+export SENTRY_PROPERTIES=../sentry.properties
+
+../node_modules/@sentry/cli/bin/sentry-cli upload-dsym
+``` 
 
 However this will not work for bitcode enabled builds. If you are using bitcode you need to remove that line (`sentry-cli upload-dsym`) and consult the documentation on dsym handling instead (see [With Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#dsym-with-bitcode)).
 
@@ -111,7 +135,18 @@ project.ext.sentryCli = [
 ]
 ```
 
+The corresponding flavor files should also be placed within the specific build type folder you intend to use them.  For example the "Android release" flavor would be `react-native/android/sentry-release.properties`.
+
 We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavors name.
+
+Include the project by adding it to our dependency list in `app/build.gradle`:
+
+```java
+dependencies {
+    // ... other dependencies listed here //
+    implementation project(':react-native-sentry')
+}
+```
 
 Please make sure your `MainApplication.java` looks something like this:
 

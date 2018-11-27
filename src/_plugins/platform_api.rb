@@ -78,7 +78,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
       end
 
       platform_slug = is_self ? "_self" : platform["slug"]
-      doc_link = platform["wizard"] === true ? "/quickstart?platform=#{platform["slug"]}" : platform["doc_link"]
+      doc_link = platform["wizard"] === true ? "/error-reporting/quickstart/?platform=#{platform["slug"]}" : platform["doc_link"]
       platform["doc_link"] = "#{site.config["url"]}#{ doc_link }"
 
       index_payload[:platforms][group_slug] ||= {}
@@ -93,7 +93,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
 
       directives = case platform["wizard"]
       when TrueClass
-        ["_documentation/learn/quickstart.md"]
+        ["_documentation/error-reporting/quickstart.md"]
       when Array
         platform["wizard"]
       when NilClass

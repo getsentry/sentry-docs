@@ -10,7 +10,7 @@ protocol for Rust and provides convenient helpers for sending common types of
 events to Sentry.
 
 The Rust SDK follows the new unified SDK architecture.  To get started have a
-look at the [quickstart]({% link _documentation/learn/quickstart.md
+look at the [quickstart]({% link _documentation/error-reporting/quickstart.md
 %}?platform=rust) docs.
 
 ## Integrations

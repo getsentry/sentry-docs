@@ -1,6 +1,6 @@
 ---
 title: 'Throttles and Rate Limiting'
-sidebar_order: 5
+sidebar_order: 9
 ---
 
 With the way Sentry works you may find yourself in a situation where you’ll see too much inbound traffic without a good way to drop excess messages. There’s a few solutions to this, and you’ll likely want to employ them all if you are faced with this problem.

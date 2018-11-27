@@ -20,7 +20,7 @@ For installation using npm or other package managers, see [_Installation_]({%- l
 
 ## Configuring the Client
 
-Next you need to configure Raven.js to use your [Sentry DSN]({%- link _documentation/learn/quickstart.md -%}#configure-the-dsn):
+Next you need to configure Raven.js to use your [Sentry DSN]({%- link _documentation/error-reporting/quickstart.md -%}#configure-the-dsn):
 
 ```javascript
 Raven.config('___PUBLIC_DSN___').install()

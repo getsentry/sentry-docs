@@ -1,6 +1,6 @@
 ---
 title: 'Health Checks'
-sidebar_order: 1
+sidebar_order: 16
 ---
 
 Sentry provides several ways to monitor the system status. This may be as simple as “is the backend serving requests” to more in-depth and gauging potential configuration problems. In some cases these checks will be exposed in the UI though generally only to superusers.

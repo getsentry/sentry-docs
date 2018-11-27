@@ -1,5 +1,6 @@
 ---
 title: 'Deploying Sentry with Nginx'
+sidebar_order: 3
 ---
 
 Nginx provides a very powerful platform for running in front of Sentry as it gives us features like rate limiting.

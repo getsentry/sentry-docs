@@ -200,7 +200,7 @@ Then in your template you can load up the feedback widget:
 
 That’s it!
 
-For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/learn/user-feedback.md -%}).
+For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
 
 ## Handling Failures
 

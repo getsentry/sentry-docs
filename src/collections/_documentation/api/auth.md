@@ -5,7 +5,7 @@ sidebar_order: 1
 
 ## Auth Tokens {#id1}
 
-Authentication tokens are passed using a the auth header, and are used to authenticate as a user account with the API.
+Authentication tokens are passed using an auth header, and are used to authenticate as a user account with the API.
 
 ```bash
 $ curl -H 'Authorization: Bearer {TOKEN}' https://sentry.io/api/0/projects/
@@ -38,3 +38,11 @@ You **must** pass a value for the password, which is the reason the `:` is prese
   title="Note"
   content=__alert_content
 %}
+
+## DSN Authentication {#id3}
+
+Some API endpoints may allow DSN-based authentication. This is generally very limited and an endpoint will describe if its supported. This works similar to Bearer token authentication, but uses your DSN (Client Key).
+
+```bash
+$ curl -H 'Authorization: DSN {DSN}' https://sentry.io/api/0/projects/
+```

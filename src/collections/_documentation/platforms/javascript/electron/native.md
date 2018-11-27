@@ -34,7 +34,7 @@ $ sentry-cli upload-dif -t breakpad electron-$VERSION-win32-x64-symbols.zip
 $ sentry-cli upload-dif -t breakpad electron-$VERSION-win32-ia32-symbols.zip
 ```
 
-Likewise, if your app uses custom native extensions or you wish to symbolicate crashes from a spawned child process, upload its debug information manually during your build or release process. For more information on uploading debug information and their supported formats, see [Debug Information Files]({%- link _documentation/learn/cli/dif.md -%}#sentry-cli-dif).
+Likewise, if your app uses custom native extensions or you wish to symbolicate crashes from a spawned child process, upload its debug information manually during your build or release process. For more information on uploading debug information and their supported formats, see [Debug Information Files]({%- link _documentation/cli/dif/index.md -%}#sentry-cli-dif).
 
 ## Child Processes
 

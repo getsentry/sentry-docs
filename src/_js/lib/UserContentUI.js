@@ -41,13 +41,15 @@ const renderDropdown = function(list, preferred) {
         ${preferred.ORG_NAME} / ${preferred.PROJECT_NAME}
       </a>
 
-      <div class="dropdown-menu" aria-hidden="true">${Object.keys(grouped)
+      <div class="dropdown-menu user-content-menu" aria-hidden="true">
+      ${Object.keys(grouped)
         .map(key => {
           return `${renderDropdownHeader(key)}${grouped[key]
             .map(item => renderDropdownItem(item, preferred))
             .join('')}`;
         })
-        .join('')}</div>
+        .join('')}
+      </div>
     </div>
   `;
 };

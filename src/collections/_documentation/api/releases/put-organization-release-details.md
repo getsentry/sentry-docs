@@ -5,7 +5,7 @@
   "api_path": "/api/0/organizations/{organization_slug}/releases/{version}/", 
   "authentication": "required", 
   "description": "Update a release. This can change some metadata associated with\nthe release (the ref, url, and dates).", 
-  "example_request": "PUT /api/0/organization/the-interstellar-jurisdiction/releases/3000/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}\nContent-Type: application/json\n\n{\n  \"ref\": \"deadbeef1337\", \n  \"url\": \"https://vcshub.invalid/user/project/refs/deadbeef1337\"\n}", 
+  "example_request": "PUT /api/0/organization/the-interstellar-jurisdiction/releases/3000/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>\nContent-Type: application/json\n\n{\n  \"ref\": \"deadbeef1337\", \n  \"url\": \"https://vcshub.invalid/user/project/refs/deadbeef1337\"\n}", 
   "example_response": "HTTP/1.1 404 NOT FOUND\nContent-Length: 0\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nX-Frame-Options: deny\nContent-Type: text/html; charset=utf-8", 
   "method": "PUT", 
   "parameters": [

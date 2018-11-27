@@ -13,7 +13,6 @@ The Sentry Server is the core Python application that powers all of our Sentry i
 -   [File Storage]({%- link _documentation/server/filestore.md -%})
 -   [Asynchronous Workers]({%- link _documentation/server/queue.md -%})
 -   [Write Buffers]({%- link _documentation/server/buffer.md -%})
--   [File Storage]({%- link _documentation/server/filestore.md -%})
 -   [Single Sign-On]({%- link _documentation/server/sso.md -%})
 -   [Throttles and Rate Limiting]({%- link _documentation/server/throttling.md -%})
 -   [Time-series Storage]({%- link _documentation/server/tsdb.md -%})

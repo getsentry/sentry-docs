@@ -3,6 +3,8 @@ title: Vue
 sidebar_order: 40
 ---
 
+<!-- WIZARD -->
+
 To use Sentry with your Vue application, you will need to use `@sentry/browser` (Sentry’s browser JavaScript SDK).  
 On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
 
@@ -18,3 +20,5 @@ Sentry.init({
   integrations: [new Sentry.Integrations.Vue({ Vue })]
 })
 ```
+
+<!-- ENDWIZARD -->

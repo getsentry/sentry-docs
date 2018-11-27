@@ -25,7 +25,7 @@ $ sentry-cli react-native appcenter YourApp ios ./build/codePush
 ```
 
 {% capture __alert_content -%}
-Exporting the `SENTRY_PROPERTIES` will tell sentry-cli to use the properties in your project. Alternatively, you can either pass it via parameters or a global settings file. To find more about this refer to [Working with Projects]({%- link _documentation/learn/cli/configuration.md -%}#sentry-cli-working-with-projects).
+Exporting the `SENTRY_PROPERTIES` will tell sentry-cli to use the properties in your project. Alternatively, you can either pass it via parameters or a global settings file. To find more about this refer to [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

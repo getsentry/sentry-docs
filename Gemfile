@@ -12,6 +12,7 @@ group :jekyll_plugins do
   }
   gem 'jekyll-assets', '3.0.11'
   gem 'jekyll-algolia', '~> 1.0'
+  gem 'jekyll-toc', '0.9.0'
   gem 'autoprefixer-rails'
   gem 'jekyll-extlinks'
   gem 'liquid-md5'

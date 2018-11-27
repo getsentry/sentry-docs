@@ -24,10 +24,10 @@ sentry_sdk.init(
 
 ## Usage
 
-```
+```python
 import logging
 logging.debug("I am a breadcrumb")
-logging.error("I am an event", bar=43)
+logging.error("I am an event", extra=dict(bar=43))
 ```
 
 * There will be an error event with the message `"I am an event"`.
@@ -35,6 +35,25 @@ logging.error("I am an event", bar=43)
 * `bar` will end up in the event's `extra` attributes.
 
 {% version_added 0.5.0: Ability to add data to `extra` %}
+
+## Ignoring a logger
+
+Sometimes a logger is extremely noisy and spams you with errors you don't care
+about. You can completely ignore that logger by calling `ignore_logger`:
+
+```python
+from sentry_sdk.integrations.logging import ignore_logger
+
+
+ignore_logger("a.spammy.logger")
+
+logger = logging.getLogger("a.spammy.logger")
+logger.error("hi")  # no error sent to sentry
+```
+
+You can also use `before-send` and `before-breadcrumb` to ignore
+only certain messages. See [_Filtering Events_]({%- link
+_documentation/error-reporting/configuration/filtering.md -%}) for more information.
 
 ## Options
 
@@ -48,3 +67,18 @@ The following keyword arguments can be passed to `LoggingIntegration()`:
 * `event_level` (default `ERROR`): Log records with a level higher than or equal
   to `event_level` will additionally be reported as event. A value of `None`
   means that no log records will be sent as events.
+
+## Handler classes
+
+The integration also exports two regular logging `logging.Handler` subclasses
+that can be used instead of using `LoggingIntegration`.
+
+**Usually you do not need to use this yourself.** You *can* use this together
+with `default_integrations=False` if you want to opt in to what Sentry
+captures. The disadvantage is that setting up logging correctly is hard, and
+that an opt-in approach to capturing data will miss errors you never would have
+thought of looking for in the first place.
+
+See the [API
+documentation](https://getsentry.github.io/sentry-python/integrations/logging.m.html#header-classes)
+for more information.

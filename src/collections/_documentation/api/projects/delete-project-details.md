@@ -5,8 +5,8 @@
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/", 
   "authentication": "required", 
   "description": "Schedules a project for deletion.\n\nDeletion happens asynchronously and therefor is not immediate.\nHowever once deletion has begun the state of a project changes and\nwill be hidden from most public views.", 
-  "example_request": "DELETE /api/0/projects/the-interstellar-jurisdiction/plain-proxy/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer {base64-encoded-key-here}", 
-  "example_response": "HTTP/1.1 500 INTERNAL SERVER ERROR\nContent-Length: 75\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"detail\": \"Internal Error\", \n  \"errorId\": \"4a7d9055f20540e69712e0e939fac33b\"\n}", 
+  "example_request": "DELETE /api/0/projects/the-interstellar-jurisdiction/plain-proxy/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>", 
+  "example_response": "HTTP/1.1 500 INTERNAL SERVER ERROR\nContent-Length: 75\nX-XSS-Protection: 1; mode=block\nContent-Language: en\nX-Content-Type-Options: nosniff\nVary: Accept-Language, Cookie\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nX-Frame-Options: deny\nContent-Type: application/json\n\n{\n  \"detail\": \"Internal Error\", \n  \"errorId\": \"618a27f122eb40a4bc619b6480d9f10e\"\n}", 
   "method": "DELETE", 
   "parameters": null, 
   "path_parameters": [

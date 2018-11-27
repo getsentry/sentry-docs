@@ -1,0 +1,37 @@
+---
+title: 'Command Line Interface'
+---
+
+For certain actions, you can use the `sentry-cli` command line executable. It can connect to the Sentry API and manage some data for your projects. It’s primarily used for managing debug information files for iOS, Android as well as release and sourcemaps management for other platforms.
+
+-   [Installation]({%- link _documentation/cli/installation.md -%})
+    -   [Manual Download]({%- link _documentation/cli/installation.md -%}#manual-download)
+    -   [Automatic Installation]({%- link _documentation/cli/installation.md -%}#automatic-installation)
+    -   [Installation via NPM]({%- link _documentation/cli/installation.md -%}#installation-via-npm)
+    -   [Installation via Homebrew]({%- link _documentation/cli/installation.md -%}#installation-via-homebrew)
+    -   [Docker Image]({%- link _documentation/cli/installation.md -%}#docker-image)
+    -   [Updating and Uninstalling]({%- link _documentation/cli/installation.md -%}#updating-and-uninstalling)
+-   [Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
+    -   [Configuration File]({%- link _documentation/cli/configuration.md -%}#configuration-file)
+    -   [Configuration Values]({%- link _documentation/cli/configuration.md -%}#configuration-values)
+    -   [Validating The Config]({%- link _documentation/cli/configuration.md -%}#validating-the-config)
+    -   [Working with Projects]({%- link _documentation/cli/configuration.md -%}#working-with-projects)
+-   [Release Management]({%- link _documentation/cli/releases.md -%})
+    -   [Creating Releases]({%- link _documentation/cli/releases.md -%}#creating-releases)
+    -   [Finalizing Releases]({%- link _documentation/cli/releases.md -%}#finalizing-releases)
+    -   [Commit Integration]({%- link _documentation/cli/releases.md -%}#commit-integration)
+    -   [Managing Release Artifacts]({%- link _documentation/cli/releases.md -%}#managing-release-artifacts)
+    -   [Creating Deploys]({%- link _documentation/cli/releases.md -%}#creating-deploys)
+-   [Debug Information Files]({%- link _documentation/cli/dif/index.md -%})
+    -   [dSYM Upload]({%- link _documentation/cli/dif/dsym.md -%})
+    -   [ELF Symbol Upload]({%- link _documentation/cli/dif/elf.md -%})
+    -   [PDB Upload]({%- link _documentation/cli/dif/pdb.md -%})
+    -   [Breakpad Symbol Upload]({%- link _documentation/cli/dif/breakpad.md -%})
+    -   [ProGuard Mapping Upload]({%- link _documentation/cli/dif/proguard.md -%})
+-   [Sending Events]({%- link _documentation/cli/send-event.md -%})
+    -   [Basic Events]({%- link _documentation/cli/send-event.md -%}#basic-events)
+    -   [Events with Parameters]({%- link _documentation/cli/send-event.md -%}#events-with-parameters)
+    -   [Sending Breadcrumbs]({%- link _documentation/cli/send-event.md -%}#sending-breadcrumbs)
+    -   [Extra Data]({%- link _documentation/cli/send-event.md -%}#extra-data)
+    -   [Specifying Releases]({%- link _documentation/cli/send-event.md -%}#specifying-releases)
+    -   [Bash Hook]({%- link _documentation/cli/send-event.md -%}#bash-hook)

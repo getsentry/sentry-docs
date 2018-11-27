@@ -1,6 +1,6 @@
 ---
 title: 'Notification Digests'
-sidebar_order: 6
+sidebar_order: 11
 ---
 
 Sentry provides a service that will collect notifications as they occur and schedule them for delivery as aggregated “digest” notifications.

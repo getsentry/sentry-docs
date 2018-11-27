@@ -38,10 +38,4 @@ With the AWS Lambda integration enabled, the Python SDK will:
       content=__alert_content
     %}
 
-* Attach environment data to your event:
-
-    * Personally identifiable information (such as user ids, usernames,
-      cookies, authorization headers, ip addresses) is excluded unless
-      ``send_default_pii`` is set to ``true``.
-
-    * Request data is attached to all events, if available.
+* {% include platforms/python/request-data.md %}

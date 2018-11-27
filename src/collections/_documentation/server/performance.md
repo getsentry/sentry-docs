@@ -1,6 +1,6 @@
 ---
 title: 'Performance Tuning'
-sidebar_order: 3
+sidebar_order: 14
 ---
 
 This document describes a set of best practices which may help you squeeze more performance out of various Sentry configurations.

@@ -1,5 +1,5 @@
 ---
-title: Sentry.AspNetCore
+title: ASP.NET Core
 sidebar_order: 2
 ---
 

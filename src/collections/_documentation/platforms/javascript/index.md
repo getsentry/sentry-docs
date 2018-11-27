@@ -7,6 +7,14 @@ sidebar_order: 3
 
 All our JavaScript related SDKs provide the same API still there are some differences between them which this section of the docs explains.
 
+## Browser Compatibility
+
+Our JavaScript SDK supports all major browsers. In older browsers, error reports may have a degraded level of detail – for example, missing stack trace data or missing source code column numbers.
+
+The table below shows supported browsers:
+
+![Sauce Test Status](https://saucelabs.com/browser-matrix/sentryio.svg)
+
 ## Integrations
 
 All of our SDKs provide _Integrations_ which can be seen of some kind of plugins. All JavaScript SDKs provide default _Integrations_ please check details of a specific SDK to see which _Integrations_ they provides.
@@ -38,7 +46,7 @@ Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: integrations => {
     // integrations will be all default integrations
-    return integrations.filter(integration => integration.id !== 'Breadcrumbs');
+    return integrations.filter(integration => integration.name !== 'Breadcrumbs');
   }
 });
 ```

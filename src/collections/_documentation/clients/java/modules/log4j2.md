@@ -18,23 +18,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-log4j2</artifactId>
-    <version>1.7.10</version>
+    <version>1.7.14</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-log4j2:1.7.10'
+compile 'io.sentry:sentry-log4j2:1.7.14'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-log4j2" % "1.7.10"
+libraryDependencies += "io.sentry" % "sentry-log4j2" % "1.7.14"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j2%7C1.7.10%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j2%7C1.7.14%7Cjar).
 
 ## Usage
 

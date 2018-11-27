@@ -20,7 +20,7 @@ $ npm install raven --save
 <!-- WIZARD configuration -->
 ## Configuring the Client
 
-Next you need to initialize the Raven client and configure it to use your [Sentry DSN]({%- link _documentation/learn/quickstart.md -%}#configure-the-dsn):
+Next you need to initialize the Raven client and configure it to use your [Sentry DSN]({%- link _documentation/error-reporting/quickstart.md -%}#configure-the-dsn):
 
 ```javascript
 var Raven = require('raven');

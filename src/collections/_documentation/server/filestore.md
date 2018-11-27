@@ -1,6 +1,6 @@
 ---
 title: 'File Storage'
-sidebar_order: 3
+sidebar_order: 5
 ---
 
 Sentry provides an abstraction called ‘filestore’ which is used for storing files (such as release artifacts).
