@@ -128,8 +128,8 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
         noko_doc.css("a").each do |node|
           begin
             node["href"] = URI(node["href"]).host ? node["href"] : "#{site.config["url"]}#{node["href"]}"
-          rescue ArgumentError
-            puts "Skipping node.href"
+          rescue ArgumentError => e
+            puts "Error while parsing URL from node.href #{e}"
           end
         end
 
