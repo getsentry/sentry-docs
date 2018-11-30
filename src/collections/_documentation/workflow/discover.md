@@ -197,7 +197,7 @@ Conditions
 - `IS NULL`, `IS NOT NULL` (for all column types)
 - `=`, `!=`, `LIKE` (for strings)
   - Note that values used with `LIKE` are case sensitive and can be used with wildcard characters
-  - e.g. `exception_stacks.type LIKE Validation`
+  - e.g. `exception_stacks.type LIKE Validation%`
 
 
 Order by
