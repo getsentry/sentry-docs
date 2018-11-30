@@ -114,7 +114,7 @@ LOGGING = {
         }
     },
     'loggers': {
-        'celery': {  # Celery must be set explicitly
+        'celery': {  # Log unhandled exceptions from tasks
             'level': 'WARNING',
             'handlers': ['console', 'sentry'],
             'propagate': False
