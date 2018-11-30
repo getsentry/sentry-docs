@@ -67,6 +67,10 @@ The following keyword arguments can be passed to `LoggingIntegration()`:
 * `event_level` (default `ERROR`): Log records with a level higher than or equal
   to `event_level` will additionally be reported as event. A value of `None`
   means that no log records will be sent as events.
+  
+Note that the configured level of each logger will still be honored. That means
+that you will not see any `INFO` events from a logger with the level set to `WARNING`,
+regardless of how you configure the integration.
 
 ## Handler classes
 
