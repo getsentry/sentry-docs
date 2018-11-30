@@ -90,9 +90,9 @@ standard_fields:
       type: string
     - name: error.value
       type: string
-    - name: error.mechanism_type
+    - name: error.mechanism
       type: string
-    - name: error.mechanism_handled
+    - name: error.handled
       type: string
     - name: stack.abs_path
       type: string
