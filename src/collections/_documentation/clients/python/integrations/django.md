@@ -114,6 +114,11 @@ LOGGING = {
         }
     },
     'loggers': {
+        'celery': {  # Celery must be set explicitly
+            'level': 'WARNING',
+            'handlers': ['console', 'sentry'],
+            'propagate': False
+        },
         'django.db.backends': {
             'level': 'ERROR',
             'handlers': ['console'],
