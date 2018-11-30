@@ -23,10 +23,12 @@ variable (`SENTRY_DSN`) or in the case if you are using the CDN version or the B
 {:.config-key}
 ### debug
 
+{% unsupported php %}
 Turns debug mode on or off.  If debug is enabled SDK will attempt to print out useful debugging
 information if something goes wrong with sending the event.  The default is always `false` and
 it's generally not recommended to turn it on in production but doing so will not cause any
 safety concerns.
+{% endunsupported %}
 
 {:.config-key}
 ### release
@@ -145,7 +147,7 @@ For more information, have a look at the specific integration documentation.
 {:.config-key}
 ### default-integrations
 
-{% unsupported csharp aspnetcore rust %}
+{% unsupported csharp aspnetcore rust php %}
 This can be used to disable integrations that are added by default.  When set to `false` no
 default integrations are added.
 {% endunsupported %}
