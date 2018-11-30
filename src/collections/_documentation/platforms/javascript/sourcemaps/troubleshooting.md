@@ -13,9 +13,9 @@ To verify this, open up the issue from the Sentry UI and check if the release is
 
 ### Verify artifacts are uploaded
 
-Once your release is properly configured and issues are tagged, you can then click on the release >> Artifacts (or **Releases >> your specific release >> Artifacts**) to check that your source maps and the associated files are in fact uploaded to the correct release (or at all).
+Once your release is properly configured and issues are tagged, from within an issue you can then click on the release >> Artifacts (or **Releases >> your specific release >> Artifacts**) to check that your source maps and the associated files are in fact uploaded to the correct release.
 
-Additionally, make sure all of the necessary are available. For Sentry to de-minify your stacktraces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
+Additionally, make sure all of the necessary files are available. For Sentry to de-minify your stacktraces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
 ### Verify sourceMappingURL is present
 
@@ -48,9 +48,9 @@ or if your file is similar to:
 then your uploaded artifact should also be named `https://example.com/dist/js/script.min.js.map`
 
 
-### Verify artifact names and file path are correct
+### Verify artifact names match stack trace frames
 
-If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the filename in the stack trace frames, for example, `/scripts/script.min.js`. You can also open up the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js`
+If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the filename in the stack trace frames, for example, `/scripts/script.min.js`. You can also open up the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js`. This value needs to match the uploaded artifact names.
 
 If your `sourceMappingURL` comment is similar to:
 
@@ -59,7 +59,7 @@ If your `sourceMappingURL` comment is similar to:
 //# sourceMappingURL=script.min.js.map
 ```
 
-an example `sentry-cli` command would look like this (assuming you’re in the `/scripts` directory, running your web server from one directory higher, which is why we’re using the `--url-prefix` option):
+an example `sentry-cli` command to upload these files correctly would look like this (assuming you’re in the `/scripts` directory, running your web server from one directory higher, which is why we’re using the `--url-prefix` option):
 
 ```curl
 sentry-cli releases files VERSION upload-sourcemaps . --url-prefix '~/scripts'
@@ -117,7 +117,7 @@ If you upload artifacts **after** an error is captured by Sentry, Sentry will no
 
 ### Verify your source maps are built correctly
 
-We maintain an online validation tool that can be used to test your **hosted** source (and source maps): [sourcemaps.io](http://sourcemaps.io).
+We maintain an online validation tool that can be used to test your source maps against your **hosted** source: [sourcemaps.io](http://sourcemaps.io).
 
 Alternatively, if you are using Sentry CLI to upload source maps to Sentry, you can use the `–validate` command line option to verify your source maps are correct.
 
