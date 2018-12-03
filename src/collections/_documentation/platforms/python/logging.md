@@ -28,13 +28,19 @@ sentry_sdk.init(
 import logging
 logging.debug("I am a breadcrumb")
 logging.error("I am an event", extra=dict(bar=43))
+logging.error("An exception happened", exc_info=True)
 ```
 
 * There will be an error event with the message `"I am an event"`.
 * `"I am a breadcrumb"` will be attached as breadcrumb to that event.
 * `bar` will end up in the event's `extra` attributes.
+* `"An exception happened"` will send the current exception from
+  `sys.exc_info()` with stacktrace and everything to Sentry. If there's no
+  exception, the current stack will be attached.
 
 {% version_added 0.5.0: Ability to add data to `extra` %}
+
+{% version_added 0.6.0: `exc_info=True` now always attaches a stacktrace %}
 
 ## Ignoring a logger
 

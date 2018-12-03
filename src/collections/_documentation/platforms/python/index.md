@@ -37,6 +37,7 @@ the following are supported:
 In addition to framework integrations there are also a few other integrations:
 
 * [AWS Lambda]({% link _documentation/platforms/python/aws_lambda.md %})
+* [WSGI]({% link _documentation/platforms/python/wsgi.md %})
 * [Default integrations]({% link _documentation/platforms/python/default-integrations.md %})
 
 {% capture __alert_content -%}
