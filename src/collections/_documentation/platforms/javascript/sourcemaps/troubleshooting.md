@@ -50,7 +50,9 @@ then your uploaded artifact should also be named `https://example.com/dist/js/sc
 
 ### Verify artifact names match stack trace frames
 
-If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the filename in the stack trace frames, for example, `/scripts/script.min.js`. You can also open up the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js`. This value needs to match the uploaded artifact names.
+If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the filename in the stack trace frames, for example, `/scripts/script.min.js`. You can also open up the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js`. The uploaded artifact names must match one of these values.
+
+#### Using sentry-cli
 
 If your `sourceMappingURL` comment is similar to:
 
@@ -64,18 +66,6 @@ an example `sentry-cli` command to upload these files correctly would look like 
 ```curl
 sentry-cli releases files VERSION upload-sourcemaps . --url-prefix '~/scripts'
 ```
-
-{% capture __alert_content -%}
-The `~` is used in Sentry to replace the scheme and domain. It is not a glob!
-
-`http://example.com/dist/js/script.js` will match `~/dist/js/script.js` or `http://example.com/dist/js/script.js`
-
-but will NOT match `~/script.js`.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note:"
-  content=__alert_content
-%}
 
 This command uploads all JavaScript files in the current directory. The Artifacts page in Sentry should now look like:
 ```
@@ -95,6 +85,8 @@ You can also upload it with the fully qualified URL i.e.
 sentry-cli releases files VERSION upload-sourcemaps . --url-prefix 'http://localhost:8000/scripts'
 ```
 
+#### Using the API
+
 You can alternately [use our API]({%- link _documentation/api/releases/post-organization-release-files.md -%}) to upload artifacts, following the same naming convention explained here.
 
 
@@ -107,6 +99,14 @@ curl -X POST \
   -F file=@script.min.js.map \
   -F 'name=~/scripts/script.min.js.map'
 ```
+
+#### Using the `~`
+
+The `~` is used in Sentry to replace the scheme and domain. It is not a glob!
+
+`http://example.com/dist/js/script.js` will match `~/dist/js/script.js` or `http://example.com/dist/js/script.js`
+
+but will NOT match `~/script.js`.
 
 
 ### Verify artifacts are uploaded before errors occur
