@@ -9,7 +9,7 @@ what they do and that they can be disabled if they cause issues.  To disable
 system integrations, set `default_integrations=False` when calling `init()`.
 
 ## Atexit
-*Import name: `sentry_sdk.integrations.atexit.AtExitIntegration`*
+*Import name: `sentry_sdk.integrations.atexit.AtexitIntegration`*
 
 This integrates with the interpreter's `atexit` system to automatically flush
 events from the background queue on interpreter shutdown.  Typically, one does
