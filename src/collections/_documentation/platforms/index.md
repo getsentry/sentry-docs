@@ -17,6 +17,7 @@ Some platforms have been phased out or have been replaced with new SDKs. For tho
 
 These SDKs are [maintained and supported](https://forum.sentry.io) by the Sentry community.
 
+* [_C++_](https://github.com/nlohmann/crow)
 * [_Clojure_](https://github.com/sethtrain/raven-clj#alternatives)
 * [_Crystal_](https://github.com/Sija/raven.cr)
 * [_Dart_](https://github.com/flutter/sentry)
