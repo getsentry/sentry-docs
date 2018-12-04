@@ -21,7 +21,6 @@ The AIOHTTP integration adds support for the [AIOHTTP-Server Web Framework](http
     ```python
     import sentry_sdk
     from sentry_sdk.integrations.aiohttp import AioHttpIntegration
-    from sanic import Sanic
     
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
