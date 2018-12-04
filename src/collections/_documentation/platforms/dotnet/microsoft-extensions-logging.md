@@ -138,7 +138,7 @@ A `LogLevel` which indicates the minimum level a log message has to be to be sen
 
 #### InitializeSdk
 
-Whether or not this integration should initialize the SDK. If you intend to call `SentrySdk.Init` yourself you should set this flag to `true`.
+Whether or not this integration should initialize the SDK. If you intend to call `SentrySdk.Init` yourself, you should set this flag to `false`.
 
 #### Filters
 
