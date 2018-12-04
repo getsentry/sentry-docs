@@ -19,15 +19,15 @@ The table below shows supported browsers:
 Our SDK needs a polyfill for `Promise` in older browsers like IE 11 and below.
 Please add  
 `<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Promise"></script>`  
-this before loading our SDK.
-If you are using the npm package please use a polyfill library respectively.
+this script tag before loading our SDK.
+If you are using the npm package please use a polyfill for `Promise` respectively.
 
-Additionally keep in mind to also have define `<!doctype html>` on top of your html page 
+Additionally, keep in mind to also define `<!doctype html>` on top of your html page, 
 to make sure IE does not go into compatibility mode.
 {% endcapture %}
 
 {% include components/alert.html
-  title="Support for < IE 11"
+  title="Support for <= IE 11"
   content=__alert
   level="warning"
 %}
