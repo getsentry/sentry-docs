@@ -147,7 +147,7 @@ For more information, have a look at the specific integration documentation.
 {:.config-key}
 ### default-integrations
 
-{% unsupported csharp aspnetcore rust php %}
+{% unsupported csharp aspnetcore rust %}
 This can be used to disable integrations that are added by default.  When set to `false` no
 default integrations are added.
 {% endunsupported %}
