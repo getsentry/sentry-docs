@@ -45,7 +45,7 @@ You can configure the Sentry Serilog sink as follows:
 Log.Logger = new LoggerConfiguration()
   .WriteTo.Sentry(o =>
   {
-    // Debug and higher are stored as breadcrumbs (default os Information)
+    // Debug and higher are stored as breadcrumbs (default is Information)
     o.MinimumBreadcrumbLevel = LogEventLevel.Debug;
     // Warning and higher is sent as event (default is Error)
     o.MinimumEventLevel = LogEventLevel.Warning;
