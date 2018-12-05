@@ -47,7 +47,6 @@ The following keyword arguments can be passed to `DjangoIntegration()`:
 * `transaction_style`:
 
   ```python
-  @app.route("/myurl/<foo>")
   def my_function(request):
       return "ok"
 
