@@ -31,7 +31,7 @@ Roles include:
 | Can change Organization Settings |   |   |   | X | X |
 | Can remove an Organization |   |   |   |   | X |
 
-\* Admins can only remove teams and projects they're a member of.
+\* Admins can only remove teams and projects they're a member of (or all teams, if open membership is on).
 
 ## Restricting Access
 
