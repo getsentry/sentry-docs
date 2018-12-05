@@ -15,6 +15,23 @@ The table below shows supported browsers:
 
 ![Sauce Test Status](https://saucelabs.com/browser-matrix/sentryio.svg)
 
+{% capture __alert %}
+Our SDK needs a polyfill for `Promise` in older browsers like IE 11 and below. 
+Please add this script tag  
+`<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Promise"></script>`  
+before loading our SDK. 
+If you are using the npm package please use a polyfill for `Promise` respectively.
+
+Additionally, keep in mind to also define `<!doctype html>` on top of your html page, 
+to make sure IE does not go into compatibility mode.
+{% endcapture %}
+
+{% include components/alert.html
+  title="Support for <= IE 11"
+  content=__alert
+  level="warning"
+%}
+
 ## Integrations
 
 All of our SDKs provide _Integrations_ which can be seen of some kind of plugins. All JavaScript SDKs provide default _Integrations_ please check details of a specific SDK to see which _Integrations_ they provides.
