@@ -23,7 +23,7 @@ Roles include:
 | Can view and act on issues, such as assigning/resolving/etc. |   | X | X | X | X |
 | Can join and leave teams. |   | X | X | X | X |
 | Can change Project Settings |   |   | X | X | X |
-| Can add/remove projects |   |   | X | X | X |
+| Can add/remove projects* |   |   | X | X | X |
 | Can edit Global Integrations |   |   |   | X | X |
 | Can add/remove/change members |   |   |   | X | X |
 | Can add/remove teams* |   |   | X | X | X |
@@ -31,7 +31,7 @@ Roles include:
 | Can change Organization Settings |   |   |   | X | X |
 | Can remove an Organization |   |   |   |   | X |
 
-* Admins can only delete teams they're a member of
+* Admins can create new teams and projects, as well as remove teams and projects which they already hold membership on.
 
 ## Restricting Access
 
