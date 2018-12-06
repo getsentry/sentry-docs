@@ -5,9 +5,9 @@ sidebar_order: 3
 
 Source maps can sometimes be tricky to get going. If you’re having trouble, try the following tips.
 
-### Verify release is configured in your SDK
+### Verify a release is configured in your SDK
 
-In order for uploaded source maps to be located and applied, the release needs to be created by the CLI or API (and the correct files uploaded with it), and the name of that newly-created release needs to be included in your SDK configuration.
+In order for uploaded source maps to be located and applied, the release needs to be created by the CLI or API (and the correct artifacts uploaded with it), and the name of that newly-created release needs to be specified in your SDK configuration.
 
 To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors]({%- link _documentation/workflow/releases.md -%}#tag-errors). If this is properly set up you'll see "Release: my_example_release". 
 
@@ -27,7 +27,7 @@ Alternately, instead of `sourceMappingURL`, you can set a `SourceMap` HTTP heade
 
 ### Verify artifact names match `sourceMappingURL` value
 
-The `sourceMappingURL` comment on the last line of your bundled or minified JavaScript file tells Sentry (or the browser) where to locate the corresponding source map. This can either be a fully qualified URL, a relative path, or the filename itself. When uploading artifacts to Sentry, you must name your source map files with the same name found in the  `sourceMappingURL` comment.
+The `sourceMappingURL` comment on the last line of your bundled or minified JavaScript file tells Sentry (or the browser) where to locate the corresponding source map. This can either be a fully qualified URL, a relative path, or the filename itself. When uploading artifacts to Sentry, you must name your source map files with the value the file resolves to.
 
 i. e. if your file is similar to:
 
@@ -36,21 +36,30 @@ i. e. if your file is similar to:
     //# sourceMappingURL=script.min.js.map
 ```
 
-then your uploaded artifact should also be named `script.min.js.map`. 
+and is hosted at http://example.com/js/script.min.js, then Sentry will look for that source map file at http://example.com/js/script.min.js.map. Your uploaded artifact must therefore be named `http://example.com/js/script.min.js.map` (or `~/js/script.min.js.map`). 
 
-or if your file is similar to: 
+Or, if your file is similar to: 
 
 ```javascript
     //-- end script.min.js
     //# sourceMappingURL=https://example.com/dist/js/script.min.js.map
 ```
 
-then your uploaded artifact should also be named `https://example.com/dist/js/script.min.js.map`
+then your uploaded artifact should also be named `https://example.com/dist/js/script.min.js.map` (or `~dist/js/script.min.js.map`).
+
+Finally, if your file is similar to:
+
+```javascript
+    //-- end script.min.js
+    //# sourceMappingURL=../maps/script.min.js.map
+```
+
+then your uploaded artifact should be named `https://example.com/dist/maps/script.min.js.map` (or `~dist/maps/script.min.js.map`).
 
 
 ### Verify artifact names match stack trace frames
 
-If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the filename in the stack trace frames, for example, `/scripts/script.min.js`. You can also open up the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js`. The uploaded artifact names must match one of these values.
+If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js`. A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
 
 #### Using sentry-cli
 
@@ -61,7 +70,7 @@ If your `sourceMappingURL` comment is similar to:
 //# sourceMappingURL=script.min.js.map
 ```
 
-an example `sentry-cli` command to upload these files correctly would look like this (assuming you’re in the `/scripts` directory, running your web server from one directory higher, which is why we’re using the `--url-prefix` option):
+An example `sentry-cli` command to upload these files correctly would look like this (assuming you’re in the `/scripts` directory, running your web server from one directory higher, which is why we’re using the `--url-prefix` option):
 
 ```curl
 sentry-cli releases files VERSION upload-sourcemaps . --url-prefix '~/scripts'
@@ -74,7 +83,7 @@ This command uploads all JavaScript files in the current directory. The Artifact
 ~/scripts/script.min.js.map
 ```
 
-alternately you can specify which files to upload, i.e. 
+Alternately you can specify which files to upload, i.e. 
 
 ```
 sentry-cli releases files VERSION upload-sourcemaps script.min.js script.min.js.map --url-prefix '~/scripts'
