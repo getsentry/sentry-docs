@@ -15,7 +15,7 @@ Passing in `Vue` is optional, if you do not pass it `window.Vue` has to be prese
 {% capture __alert %}
 Please note that if you enable this integration Vue internally will not call `logError` 
 due to a currently know limitation see: [Github Issue](https://github.com/vuejs/vue/issues/8433).  
-That means that your error will not show up in the developer console.
+This means that errors occurring in the Vue renderer will not show up in the developer console.
 {% endcapture %}
 
 {% include components/alert.html
