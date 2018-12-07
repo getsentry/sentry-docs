@@ -45,7 +45,7 @@ Or, if your file is similar to:
     //# sourceMappingURL=https://example.com/dist/js/script.min.js.map
 ```
 
-then your uploaded artifact should also be named `https://example.com/dist/js/script.min.js.map` (or `~dist/js/script.min.js.map`).
+then your uploaded artifact should also be named `https://example.com/dist/js/script.min.js.map` (or `~/dist/js/script.min.js.map`).
 
 Finally, if your file is similar to:
 
@@ -54,7 +54,7 @@ Finally, if your file is similar to:
     //# sourceMappingURL=../maps/script.min.js.map
 ```
 
-then your uploaded artifact should be named `https://example.com/dist/maps/script.min.js.map` (or `~dist/maps/script.min.js.map`).
+then your uploaded artifact should be named `https://example.com/dist/maps/script.min.js.map` (or `~/dist/maps/script.min.js.map`).
 
 
 ### Verify artifact names match stack trace frames
