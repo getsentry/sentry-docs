@@ -74,15 +74,6 @@ This option configures the list of paths to exclude from the `app_path` detectio
 This option sets the list of prefixes which should be stripped from the filenames
 to create relative paths.
 
-## Framework Integrations
-
-Framework integrations are opt-in integrations for large frameworks or libraries.  Currently
-the following are supported:
-
-* [Laravel]({% link _documentation/platforms/php/laravel.md %})
-* [Symfony 2]({% link _documentation/platforms/php/symfony2.md %})
-* [Monolog]({% link _documentation/platforms/php/monolog.md %})
-
 ## Transport
 
 Transports are the classes in Sentry PHP that are responsible for communicating
@@ -161,3 +152,12 @@ Hub::getCurrent()->bindClient($builder->getClient());
   
 $spool->flushQueue($transport);
 ```
+
+## Framework Integrations
+
+Framework integrations are opt-in integrations for large frameworks or libraries.  Currently
+the following are supported:
+
+* [Laravel]({% link _documentation/platforms/php/laravel.md %})
+* [Symfony 2]({% link _documentation/platforms/php/symfony2.md %})
+* [Monolog]({% link _documentation/platforms/php/monolog.md %})
