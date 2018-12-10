@@ -105,8 +105,11 @@ $builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
 $builder->setTransport($transport);
 Hub::getCurrent()->bindClient($builder->getClient());
 ```
-
+{% capture __note %}
 > Note: `Hub::getCurrent()->bindClient($builder->getClient());` is required to tell the global function calls to use your new `Client` instead.
+{% endcapture %}
+
+{{ __note }}
 
 ### HttpTransport
 
@@ -125,7 +128,7 @@ $builder->setTransport($transport);
 Hub::getCurrent()->bindClient($builder->getClient());
 ```
 
-> Note: `Hub::getCurrent()->bindClient($builder->getClient());` is required to tell the global function calls to use your new `Client` instead.
+{{ __note }}
 
 ### SpoolTransport
 
@@ -152,6 +155,8 @@ Hub::getCurrent()->bindClient($builder->getClient());
   
 $spool->flushQueue($transport);
 ```
+
+{{ __note }} 
 
 ## Framework Integrations
 
