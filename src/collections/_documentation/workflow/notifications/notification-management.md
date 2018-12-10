@@ -27,10 +27,10 @@ These can be set for all projects, or you can click "Fine tune workflow notifica
 
 > [{% asset workflow-configuration.png %}]({% asset workflow-configuration.png @path %})
 
-Again, "Default" in this case means that it will follow the overall project alerts switch.
+Again, "Default" in this case means that it will follow the overall workflow notifications switch.
 
 ### Issue Notifications
 
-To opt-out of a specific issue's notifications, click "unsubscribe" at the bottom right of the issue's page. 
+To opt out of a specific issue's notifications, click "unsubscribe" at the bottom right of the issue's page. 
 
 > [{% asset notifications-unsubscribe.png %}]({% asset notifications-unsubscribe.png @path %})

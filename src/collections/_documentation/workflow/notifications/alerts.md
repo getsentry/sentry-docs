@@ -3,11 +3,11 @@ title: 'Alerts'
 sidebar_order: 1
 ---
 
-Alerts are configured per-project and are based on the rules defined for that project. To modify the rules visit your **Project Settings** > **Alerts** > **Rules** tab. On this page you’ll see a list of all active rules and can add alert rules or modify existing rules.
+Alerts are configured per project and are based on the rules defined for that project. To modify the rules visit your **Project Settings** > **Alerts** > **Rules** tab. On this page you’ll see a list of all active rules and can add alert rules or modify existing rules.
 
 ### Conditions
 
-Rules provide several conditions that you’re able to configure. These are fairly self explanatory and range from simple state changes (such as the defaults) to more complex filters on attributes.
+Rules provide several conditions that you’re able to configure. These are fairly self-	explanatory and range from simple state changes to more complex filters on attributes.
 
 For example, at Sentry we send a notification every single time an error happens and the affected user’s email address ends with `@sentry.io`. 
 
