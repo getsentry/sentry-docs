@@ -80,6 +80,7 @@ Before you can start capturing crashes you will need to tell Sentry about the de
 -   [With Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#dsym-with-bitcode)
 -   [Without Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#dsym-without-bitcode)
 <!-- ENDWIZARD -->
+
 ## Testing a Crash
 
 If you would like to test the crash reporting you will need to cause a crash. While the seemingly obvious method would be to make it crash on launch, this will not give the Sentry client a chance to actually submit the crash report. Instead, we recommend triggering a crash from a button tap.
@@ -99,7 +100,7 @@ You can use the following methods to cause a crash:
 
 _Note that if you crash with a debugger attached nothing will happen._
 
-Crashes are only submitted upon re-launching the application. To test the crashing, close the app and launch it again from the springboard.
+Crashes are only submitted upon re-launching the application. To see the crash in Sentry, close the app and launch it again from the springboard.
 
 ## Deep Dive
 
