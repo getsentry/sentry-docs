@@ -14,7 +14,7 @@ Sending a basic event can be done with _send_.
 let event = Event(level: .debug)
 event.message = "Test Message"
 Client.shared?.send(event: event) { (error) in
-    // Optional callback after event has been send
+    // Optional callback after event has been sent
 }
 ```
 
