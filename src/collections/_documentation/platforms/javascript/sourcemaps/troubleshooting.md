@@ -59,7 +59,7 @@ then your uploaded artifact should be named `https://example.com/dist/maps/scrip
 
 ### Verify artifact names match stack trace frames
 
-If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js`. A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
+If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
 
 #### Using sentry-cli
 
