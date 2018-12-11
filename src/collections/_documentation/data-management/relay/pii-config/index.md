@@ -12,34 +12,16 @@ Say you have an exception message which, unfortunately, contains IP addresses wh
 ```json
 {
   "applications": {
-    "freeform": ["@ip:replace"]
+    "text": ["@ip:replace"]
   }
 }
 ```
 
-It reads as "apply rule `@ip:replace` to all fields of kind `freeform`".
-
-## PII kinds
-
-Almost every field in an event has an assigned *PII kind*. The following PII kinds exist:
-
-- `freeform`: Arbitrary text. That might for example be the `message` field of a log entry, or an exception value/message.
-- `ip`: Fields containing IP addresses.
-- `id`: A user ID, device ID, device ID or similar.
-- `username`: A username.
-- `hostname`: A hostname.
-- `sensitive`: Passwords, secret tokens.
-- `email`: An email address.
-- `databag`: Local variables in stacktraces, custom data in `extra`.
-
-Note that PII kinds always match on _location_, not on _content_. For example,
-the `email` PII kind really only matches on JSON keys where emails are
-suspected to be.
+It reads as "apply rule `@ip:replace` to all `text` fields.
 
 ## Rules
 
-PII kinds don't employ any kind of pattern matching. That's where PII _rules_
-come in. The following rules exist by default:
+The following rules exist by default:
 
 - `@ip:replace` and `@ip:hash` for pattern-matching IP addresses
 - `@imei:replace` and `@imei:hash` for pattern-matching IMEIs

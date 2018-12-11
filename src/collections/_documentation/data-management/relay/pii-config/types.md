@@ -20,7 +20,7 @@ Custom Perl-style regex (PCRE).
     }
   },
   "applications": {
-    "freeform": ["hash_device_id"]
+    "text": ["hash_device_id"]
   }
 }
 ```
@@ -41,7 +41,7 @@ Matches an IMEI or IMEISV.
     }
   },
   "applications": {
-    "freeform": ["hash_imei"]
+    "text": ["hash_imei"]
   }
 }
 ```
@@ -62,7 +62,7 @@ Matches a MAC address.
     }
   },
   "applications": {
-    "freeform": ["hash_mac"]
+    "text": ["hash_mac"]
   }
 }
 ```
@@ -83,7 +83,7 @@ Matches any IP address.
     }
   },
   "applications": {
-    "freeform": ["hash_ip"]
+    "text": ["hash_ip"]
   }
 }
 ```
@@ -104,7 +104,7 @@ Matches a creditcard number.
     }
   },
   "applications": {
-    "freeform": ["hash_cc"]
+    "text": ["hash_cc"]
   }
 }
 ```
@@ -125,7 +125,7 @@ Matches a local path (e.g. `C:/Users/foo/`).
     }
   },
   "applications": {
-    "freeform": ["hash_userpath"]
+    "text": ["hash_userpath"]
   }
 }
 ```
@@ -135,7 +135,7 @@ Matches a local path (e.g. `C:/Users/foo/`).
 
 Matches any value. This is basically equivalent to a wildcard regex.
 
-For example, to remove all data with the PII kind `freeform`:
+For example, to remove all data with the PII kind `text`:
 
 ```json
 {
@@ -148,7 +148,7 @@ For example, to remove all data with the PII kind `freeform`:
     }
   },
   "applications": {
-    "freeform": ["remove_everything"]
+    "text": ["remove_everything"]
   }
 }
 ```
@@ -174,7 +174,7 @@ Combine multiple rules into one. This is a disjunction (OR): The field in questi
     }
   },
   "applications": {
-    "freeform": ["remove_ips_and_macs"]
+    "text": ["remove_ips_and_macs"]
   }
 }
 ```
@@ -197,27 +197,27 @@ Alias one rule to the other. This is the same as `multiple` except that you can 
     }
   },
   "applications": {
-    "freeform": ["remove_ips"]
+    "text": ["remove_ips"]
   }
 }
 ```
 
 {:.config-key}
-#### redactPair
+#### redact_pair
 
 Apply a regex to the key name. The value matches if the key matches the given regex. This is useful for removing tokens and keys, since those are usually completely random.
 
 ```json
 {
   "applications": {
-    "freeform": [
+    "container": [
       "remove_all_passwords"
     ]
   },
   "rules": {
     "remove_all_passwords": {
       "keyPattern": "(password|token|credentials)",
-      "type": "redactPair"
+      "type": "redact_pair"
     }
   }
 }
