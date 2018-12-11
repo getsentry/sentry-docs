@@ -11,7 +11,7 @@ A release is a version of your code that is deployed to an environment. When you
 -   Resolve issues by including the issue number in your commit message
 -   Receive email notifications when your code gets deployed
 
-Additionally, releases are used for applying [sourcemaps]({%- link _documentation/clients/javascript/sourcemaps.md -%}) to minified JavaScript to view original untransformed source code.
+Additionally, releases are used for applying [source maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}) to minified JavaScript to view original, untransformed source code.
 
 ## Configuring Releases
 
