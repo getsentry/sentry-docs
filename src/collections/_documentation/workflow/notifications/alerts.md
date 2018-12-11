@@ -7,7 +7,7 @@ Alerts are configured per project and are based on the rules defined for that pr
 
 ### Conditions
 
-Rules provide several conditions that you’re able to configure. These are fairly self-	explanatory and range from simple state changes to more complex filters on attributes.
+Rules provide several conditions that you’re able to configure. These are fairly self-explanatory and range from simple state changes to more complex filters on attributes.
 
 For example, at Sentry we send a notification every single time an error happens and the affected user’s email address ends with `@sentry.io`. 
 
