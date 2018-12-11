@@ -6,7 +6,7 @@ A dSYM upload is required for Sentry to symoblicate your crash logs for viewing.
 
 ## With Bitcode {#dsym-with-bitcode}
 
-If [Bitcode](https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/AppThinning/AppThinning.html#//apple_ref/doc/uid/TP40012582-CH35-SW2) **is enabled** in your project, you will have to upload the dSYM to Sentry **after** it has finished processing in the iTunesConnect. We also recommend using the latest Xcode 8.1 version for submitting your build. The dSYM can be downloaded in three ways.
+If [Bitcode](https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/AppThinning/AppThinning.html#//apple_ref/doc/uid/TP40012582-CH35-SW2) **is enabled** in your project, you will have to upload the dSYM to Sentry **after** it has finished processing in the iTunesConnect. We also recommend using the latest Xcode version for submitting your build. The dSYM can be downloaded in three ways.
 
 ### Use Fastlane
 
@@ -37,7 +37,7 @@ api_host: 'https://mysentry.invalid/'
   content=__alert_content
 %}
 
-### Use ‘sentry-cli`
+### Use `sentry-cli`
 
 There are two ways to download the dSYM from iTunesConnect. After you do one of the two following ways, you can upload the dSYM using [sentry-cli](https://github.com/getsentry/sentry-cli/releases).
 
@@ -104,8 +104,6 @@ You need to have an Auth Token for this to work. You can [create an Auth Token h
 
 1.  You will need to copy the below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_
 2.  Download and install [sentry-cli](https://github.com/getsentry/sentry-cli/releases) — The best place to put this is in the _/usr/local/bin/_ directory
-
-Shell: _/bin/bash_
 
 ```bash
 if which sentry-cli >/dev/null; then
