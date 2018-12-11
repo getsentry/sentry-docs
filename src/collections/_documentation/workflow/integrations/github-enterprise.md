@@ -23,7 +23,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 
 #### Register new GitHub App
 
-1. First, you'll need to generate a webhook secret. In terminal:
+1. First, you'll need to generate a webhook secret. For example, in terminal:
 
     ```
     openssl rand -base64 500 | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1
@@ -71,7 +71,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 
     [{% asset github-e-generate-private-key.png %}]({% asset github-e-generate-private-key.png @path %})
 
-    In terminal:
+    For example, in terminal:
 
     ```
     cat <YOUR_PRIVATE_KEY_FILE> | pbcopy
@@ -85,7 +85,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 
     [{% asset github-e-configure.png %}]({% asset github-e-configure.png @path %})
   
-7. Add any repositories from which you want to collect commit data. Note: Make sure you have given Sentry access to these repositories in GitHub in the previous steps.
+7. Add any repositories that you want to collect commit data from. Note: Make sure you have given Sentry access to these repositories in GitHub in the previous steps.
 
     [{% asset github-e-add-repo.png %}]({% asset github-e-add-repo.png @path %})
     
