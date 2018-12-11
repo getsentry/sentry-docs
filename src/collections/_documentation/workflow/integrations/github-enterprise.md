@@ -17,20 +17,19 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 #### Add new GitHub App
 
 1. Make sure you've whitelisted Sentry’s outbound request [IPs addresses](https://docs.sentry.io/ip-ranges/) for your GitHub Enterprise instance.
-2. In your Github Enterprise organization, navigate to Settings > Developer Settings > **GitHub Apps**.
-3. Click to add a **New GitHub App**.
+2. In your Github Enterprise organization, navigate to Settings > Developer Settings > **GitHub Apps** and click to add a new **New GitHub App**.
 
     [{% asset github-e-new-app.png %}]({% asset github-e-new-app.png @path %})
 
 #### Register new GitHub App
 
-1. Generate a webhook secret:
+1. First, you'll need to generate a webhook secret. In terminal:
 
     ```
     openssl rand -base64 500 | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1
     ```
 
-2. Fill out the form as follows:
+2. Then in GitHub, fill out the form as follows and click **Create GitHub App**.
 
     | Github App Name                 | sentry-app        |
     | Homepage URL                    | https://sentry.io |
@@ -52,8 +51,6 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
     | **Subscribe to Events** |
     | Pull Request        | Yes |
     | Push                | Yes |
-    
-3. Click **Create GitHub App**.
 
 #### Install your Github App
 
@@ -65,23 +62,30 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 3. Click **Add Installation**.
 
     [{% asset github-e-add-installation.png %}]({% asset github-e-add-installation.png @path %})
+    
+4. Fill out the following form with information from your GitHub apps configuration page.
+    
+    [{% asset github-e-form.png %}]({% asset github-e-form.png @path %})
+    
+    You'll need to generate a private key on your GitHub apps configuration page, and paste the entire contents into the **GitHub App Private Key** field.
 
-4. Fill out the corresponding form. All of the information can be found on your Github App page and a private key can be generated there as well. Paste the entire contents into the **GitHub App Private Key** field.
+    [{% asset github-e-generate-private-key.png %}]({% asset github-e-generate-private-key.png @path %})
+
+    In terminal:
 
     ```
-    cat your-private-key-file.pem | pbcopy
+    cat <YOUR_PRIVATE_KEY_FILE> | pbcopy
     ```
 
-5. A GitHub install window should pop up. Select which repositories Sentry should have access to (or select all repositories) and click **Install**.
+5. Click **Configure** and then a GitHub install window will pop up. Select which repositories Sentry should have access to (or select all repositories) and click **Install**.
 
     [{% asset github-e-repo-access.png %}]({% asset github-e-repo-access.png @path %})
 
-6. You should then be redirected back to Sentry.
-7. On your new GitHub Enterprise instance, click **Configure**.
+6. You will then be redirected back to Sentry. On your new GitHub Enterprise instance, click **Configure**.
 
     [{% asset github-e-configure.png %}]({% asset github-e-configure.png @path %})
   
-8. Add any repositories from which you want to collect commit data. Note: Make sure you have given Sentry access to these repositories in GitHub in the previous steps.
+7. Add any repositories from which you want to collect commit data. Note: Make sure you have given Sentry access to these repositories in GitHub in the previous steps.
 
     [{% asset github-e-add-repo.png %}]({% asset github-e-add-repo.png @path %})
     
