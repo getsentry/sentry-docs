@@ -39,9 +39,13 @@ After this, you should see information about the release, such as new issues and
 
 In this step you tell Sentry which commits are associated with a release, allowing Sentry to pinpoint which commits likely caused an issue, and allowing you to resolve an issue by including the issue number in your commit message.
 
+This can be done either with an integration or without one. 
+
+####  Link a Repository with Integrations
+
 This is a 2-step process:
 
-#### a. Link a Repository
+##### a. Link a Repository via Integrations
 
 First, make sure you've installed the global integration for your source code management tool in Organization Settings > Integrations. You’ll need to be an Owner or Manager of your Sentry organization to do this. Read more about roles in Sentry [here]({%- link _documentation/accounts/membership.md -%}).
 
@@ -53,14 +57,14 @@ If you’re linking a GitHub repository, ensure you have Admin or Owner permissi
 
 If you’re still having trouble adding it, you can try to [disconnect](https://sentry.io/account/settings/identities/) and then [reconnect](https://sentry.io/account/settings/social/associate/github/) your GitHub identity.
 
-#### b. Associate commits with a release
+##### b. Associate commits with a release
 
 In your release process, add a step to create a release object in Sentry and associate it with commits in your repository. There are 2 ways of doing this:
 
 1.  Using Sentry’s [Command Line Interface]({%- link _documentation/cli/index.md -%}#sentry-cli) (**recommended**).
 2.  Using the API
 
-##### Using the CLI
+###### Using the CLI
 
 ```bash
 # Assumes you're in a git repository
@@ -87,7 +91,7 @@ Here we are associating commits (or refs) between `from` and `to` with the curre
 
 For more information, see the [CLI docs]({%- link _documentation/cli/releases.md -%}).
 
-##### Using the API
+###### Using the API
 
 ```bash
 # Create a new release
@@ -145,6 +149,99 @@ res = requests.post(
 ```
 
 For more information, see the [API reference]({%- link _documentation/api/releases/post-organization-releases.md -%}).
+
+#### Link a Repository without an Integration
+
+You can use the [create release endpoint]({%- link _documentation/api/releases/post-organization-releases.md -%}) in order to link a repository without an integration. When you create a release, you will send the commit metadata along with it.
+
+##### Step 1: Format Commit Metadata
+
+In order for Sentry to use your commits, you must format your commits to match the form:
+
+```json
+{
+    "commits": [
+        {
+        "patch_set": [
+            {"path": "path/to/added-file.html", "type": "A"}, 
+            {"path": "path/to/modified-file.html", "type": "M"},
+            {"path": "path/to/deleted-file.html", "type": "D"}
+        ], 
+        "repository": "owner-name/repo-name", 
+        "author_name": "Author Name", 
+        "author_email": "author_email@example.com", 
+        "timestamp": "2018-09-20T11:50:22+03:00", 
+        "message": "This is the commit message.", 
+        "id": "8371445ab8a9facd271df17038ff295a48accae7"
+        } 
+    ]
+}
+```
+
+`patch_set`
+
+: A list of the files that have been changed in the commit. Specifying the `patch_set` is necessary to power suspect commits and suggested assignees. It consists of two parts:
+
+    `path`
+    : The path to the file. Note both forward and backward slashes (`'/' '\\'`) are supported.
+    
+    `type`
+    : The types of changes that happend in that commit. The options are: 
+        - `Add (A)`
+        - `Modify (M)`
+        - `Delete (D)`
+
+`repository` 
+: The full name of the repository the commit belongs to. If this field is not given Sentry will generate a name in the form: `u'organization-<organization_id>'` (i.e. if the organization id is `123`, then the generated repository name will be `u'organization-123`).
+
+`author_email` 
+: The commit author's email is required to enable the suggested assignee feature. 
+
+`author_name`
+: The commit author's name may also be included.
+
+`timestamp` 
+: The commit timestamp is used to sort the commits given. If a timestamp is not included, the commits will remain sorted in the order given.
+
+`message`
+: The commit message. 
+
+`id`
+: The commit id. 
+
+##### Step 2: Send the releases the request.
+
+```bash
+curl https://sentry.io/api/0/organizations/your-organization-name/releases/ \
+  -X POST \
+  -H 'Authorization: Bearer <Token>' \
+  -H 'Content-Type: application/json' \
+  -d '
+ {
+ "version": "2.0rc2",
+ "projects":["project-1","project-2"],
+ "commits":[
+     {
+        "patch_set": [
+            {"path": "path/to/added-file.html", "type": "A"}, 
+            {"path": "path/to/modified-file.html", "type": "M"},
+            {"path": "path/to/deleted-file.html", "type": "D"}
+        ], 
+        "repository": "owner-name/repo-name", 
+        "author_name": "Author Name", 
+        "author_email": "author_email@example.com", 
+        "timestamp": "2018-09-20T11:50:22+03:00", 
+        "message": "This is the commit message.", 
+        "id": "8371445ab8a9facd271df17038ff295a48accae7"
+    }
+ ]
+ }
+ '
+```
+
+For more information, see the [API reference]({%- link _documentation/api/releases/post-organization-releases.md -%}).
+
+#### After linking a Repository
 
 After this step, **suspect commits** and **suggested assignees** will start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and [ownership rules]({%- link _documentation/workflow/issue-owners.md -%}).
 
