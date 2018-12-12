@@ -12,6 +12,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 #### Add new GitHub App
