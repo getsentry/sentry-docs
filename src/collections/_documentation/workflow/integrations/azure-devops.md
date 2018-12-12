@@ -94,10 +94,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 > [{% asset azure-add-account-no-accounts.png %}]({% asset azure-add-account-no-accounts.png @path %})  
 
-If you reach the account's page during Azure DevOps' installation process and there are no accounts to select please check the following possibilities:
+If you reach the account selection page during the Azure Devops installation process (step 4 in the instructions above) and see that there are no accounts available to select, please check the following possibilities:
 
 - Ensure you are logged into the account connected to your Azure DevOps organization.
 - Double check that your account is a Microsoft Account (MSA). At this time, we do not support Azure Active Directory (AAD) accounts. 
-
-#### Resolve via PR not working
-Resolving a Sentry issue with a pull request is not currently supported for the Azure DevOps integration.
