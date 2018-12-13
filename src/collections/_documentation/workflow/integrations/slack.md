@@ -38,11 +38,11 @@ Sentry owner or manager permissions are required to install this integration. Sl
 
 1. After you've connected to the correct workspace, click **Continue**.
 
-1. On the next page, you can choose the scope of channels you’d like Sentry to access. You can specify all public channels or choose specific channels.
+1. On the next page, you can choose the scope of channels you’d like Sentry to access. You can specify all public channels or choose specific channels. Then click **Install**.
 
     [{% asset slack-auth-channel-pref.png %}]({% asset slack-auth-channel-pref.png @path %})
 
-1. Click **Install**. Your Organization Integrations page will refresh and show the Slack workspace you just added.
+1. Your Organization Integrations page will refresh and show the Slack workspace you just added.
 
     [{% asset slack-add-workspace-success.png %}]({% asset slack-add-workspace-success.png @path %})
 
@@ -77,7 +77,7 @@ Now your Slack integration is available to all projects in your Sentry organizat
 
     [{% asset slack-alert-rules.png %}]({% asset slack-alert-rules.png @path %})
 
-    For any existing Alert Rules you previously configured, you can edit the rule to update the Slack channel routing. When you click **Edit Rule**, under **Take these actions** you can specify your Slack channel(s):
+    For any existing Alert Rules, you can edit the rule to update the Slack channel routing. When you click **Edit Rule**, under **Take these actions** you can specify your Slack channel(s):
 
     [{% asset slack-alert-rule-edit.png %}]({% asset slack-alert-rule-edit.png @path %})
 
