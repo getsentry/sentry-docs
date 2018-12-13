@@ -21,6 +21,7 @@ If you’re not using the add-on, you can still bind the `SENTRY_DSN` environmen
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 ## Install the SDK
@@ -45,15 +46,18 @@ Next you’ll want to add your repository and setup a deploy hook.
 
 1.  Start by connecting your repository to your Sentry organization so that we can automatically retrieve your commit data.
 
-    > {% asset add-repo.png %}
+    [{% asset add-repo.png %}]({% asset add-repo.png @path %})
+    
 2.  Enable the Heroku integration in your Sentry Project Settings.
 
-    > {% asset enable-heroku.png %}
+    [{% asset enable-heroku.png %}]({% asset enable-heroku.png @path %})
+    
 3.  In the Heroku Plugin Configuration, specify which repository and deploy environment to be associated with your Sentry project.
 
-    > {% asset heroku-project-config.png %}
+    [{% asset heroku-project-config.png %}]({% asset heroku-project-config.png @path %})
+    
 4.  Navigate to your Project’s Release Tracking settings and copy the deploy hook command to your Heroku config.
 
-    > {% asset heroku-config.png %}
+    [{% asset heroku-config.png %}]({% asset heroku-config.png @path %})
 
-And voilà! You’ll immediately start getting rich commit information and deploy emails with each new release, as well as tracking of which release issues were seen within.
+You’ll start getting rich commit information and deploy emails with each new release, as well as tracking of which release issues were seen within.

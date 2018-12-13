@@ -12,25 +12,26 @@ Sentry owner or manager permissions, and Bitbucket admin permissions are require
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 1. In Sentry, navigate to Organization Settings > **Integrations**.
 2. If you have the legacy Bitbucket integration installed, you’ll see a button next to Bitbucket that says **Upgrade**. If you do not have the legacy Bitbucket integration installed, you’ll see a button that says **Install**.
 
-    > [{% asset bitbucket-install.png %}]({% asset bitbucket-install.png @path %})
+    [{% asset bitbucket-install.png %}]({% asset bitbucket-install.png @path %})
 
 3. In the resulting modal, click **Add Installation**.
 
-    > [{% asset bitbucket-add-installation.png %}]({% asset bitbucket-add-installation.png @path %})
+    [{% asset bitbucket-add-installation.png %}]({% asset bitbucket-add-installation.png @path %})
 
 4. A Bitbucket install window should pop up. Select the Bitbucket account you'd like to grant Sentry access to, and click **Grant Access**.
 5. On your new Bitbucket instance in Sentry, click **Configure**.
 
-    > [{% asset bitbucket-installed.png %}]({% asset bitbucket-installed.png @path %})
+    [{% asset bitbucket-installed.png %}]({% asset bitbucket-installed.png @path %})
 
 6. Add any repositories from which you want to collect commit data.
 
-    > [{% asset bitbucket-add-repo.png %}]({% asset bitbucket-add-repo.png @path %})
+    [{% asset bitbucket-add-repo.png %}]({% asset bitbucket-add-repo.png @path %})
 
 Bitbucket should now be enabled for all projects under your Sentry organization.
 
@@ -52,7 +53,7 @@ Issue tracking allows you to create Bitbucket issues from within Sentry, and lin
 
 Once you’ve navigated to a specific issue, you’ll find the **Linked Issues** section on the right hand panel. Here, you’ll be able to create or link Bitbucket issues.
 
-> [{% asset bitbucket-link-issue.png %}]({% asset bitbucket-link-issue.png @path %})
+[{% asset bitbucket-link-issue.png %}]({% asset bitbucket-link-issue.png @path %})
 
 ## Resolving in Commit
 
