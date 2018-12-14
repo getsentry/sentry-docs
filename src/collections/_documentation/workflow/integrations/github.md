@@ -12,24 +12,25 @@ Sentry owner or manager permissions, and Github owner permissions are required t
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 1. In Sentry, navigate to Organization Settings > **Integrations**.
 2. If you have the legacy GitHub integration installed, you’ll see a button next to Github that says **Upgrade**. If you do not have the legacy GitHub integration installed, you'll see a button that says **Install**.
 
-    > [{% asset github-global-install.png %}]({% asset github-global-install.png @path %})
+    [{% asset github-global-install.png %}]({% asset github-global-install.png @path %})
 
 3. In the resulting modal, click **Add Installation**.
 
-    > [{% asset github-global-add-installation.png %}]({% asset github-global-add-installation.png @path %})
+    [{% asset github-global-add-installation.png %}]({% asset github-global-add-installation.png @path %})
     
 4. A GitHub install window should pop up. Click **Install**.
 5. Select which repositories Sentry should have access to (or select all repositories).
 6. You should then be redirected back to the Sentry **Integrations** page.
 7. On your new GitHub instance in Sentry, click **Configure**.
-8. Add any repositories from which you want to collect commit data. Note: Make sure you have given Sentry access to these repositories in GitHub in the previous steps.
+8. Add any repositories from which you want to collect commit data. _Note: Make sure you have given Sentry access to these repositories in GitHub in the previous steps._
 
-    > [{% asset github-global-add-repo.png %}]({% asset github-global-add-repo.png @path %})
+    [{% asset github-global-add-repo.png %}]({% asset github-global-add-repo.png @path %})
 
 Github should now be enabled for all projects under your Sentry organization.
 
@@ -43,7 +44,7 @@ Once you set up commit tracking, you’ll be able to see the most recent changes
 
 For issues where the files in the stacktrace match files included in commits sent to Sentry, you’ll see the suspect commit, with a link to the commit itself.
 
-> [{% asset github-global-suspect-commits.png %}]({% asset github-global-suspect-commits.png @path %})
+[{% asset github-global-suspect-commits.png %}]({% asset github-global-suspect-commits.png @path %})
 
 You’ll also see that the author of the suspect commit will be listed as a suggested assignee for this issue. To assign the issue to the suggested assignee, click on their icon.
 
@@ -53,7 +54,7 @@ Issue tracking allows you to create GitHub issues from within Sentry, and link S
 
 Once you’ve navigated to a specific issue, you’ll find the **Linked Issues** section on the right hand panel. Here, you’ll be able to create or link GitHub issues.
 
-> [{% asset github-global-link-issue.png %}]({% asset github-global-link-issue.png @path %})
+[{% asset github-global-link-issue.png %}]({% asset github-global-link-issue.png @path %})
 
 ## Resolving in Commit/Pull Request
 
