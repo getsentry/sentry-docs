@@ -68,7 +68,7 @@ Additionally, you’ll need to configure the client to send the `release`:
 
 ```javascript
 Sentry.init({
-  dsn: 'your-dsn',
+  dsn: '___PUBLIC_DSN___',
   release: process.env.RELEASE
 });
 ```
@@ -83,7 +83,7 @@ In order for Sentry to understand how to resolve errors sources, we need to modi
 
 ```javascript
 Sentry.init({
-  dsn: 'your-dsn',
+  dsn: '___PUBLIC_DSN___',
   integrations: [new Sentry.Integrations.RewriteFrames()]
 });
 ```
