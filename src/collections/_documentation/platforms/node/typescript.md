@@ -75,7 +75,7 @@ global.__rootdir__ = __dirname || process.cwd();
 
 ```javascript
 Sentry.init({
-  dsn: 'your-dsn',
+  dsn: '___PUBLIC_DSN___',
   integrations: [new Sentry.Integrations.RewriteFrames({
     root: global.__rootdir__
   })]
