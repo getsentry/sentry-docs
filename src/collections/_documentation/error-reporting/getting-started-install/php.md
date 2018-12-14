@@ -16,7 +16,7 @@ cURL as transport method (provided by `Httplug`) and a PSR-7 implementation
 (provided by Guzzle). You do not have to use those packages if you do not want to.
 The SDK does not care about which transport method you want to use because it's
 an implementation detail of your application. You may use any package that provides
-`php-http/async-client-implementation` and `http-message-implementation`.
+[php-http/async-client-implementation](https://packagist.org/providers/php-http/async-client-implementation) and [http-message-implementation](https://packagist.org/providers/psr/http-message-implementation).
 
 If you want to use Guzzle as underlying HTTP client, you just need to run the
 following command to install the adapter and Guzzle itself:
