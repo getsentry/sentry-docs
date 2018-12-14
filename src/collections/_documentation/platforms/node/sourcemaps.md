@@ -1,6 +1,6 @@
 ---
-title: 'Source Maps'
-sidebar_order: 2
+title: Source Maps
+sidebar_order: 12
 ---
 
 Sentry supports un-minifying JavaScript via [Source Maps](http://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps.html). This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (e.g. UglifyJS), or transpiled code from a higher-level language (e.g. TypeScript, ES6).
@@ -19,16 +19,16 @@ Webpack can be configured to output source maps by editing `webpack.config.js`.
 const path = require('path');
 
 module.exports = {
-    // ... other config above ...
-    target: 'node',
-    devtool: 'source-map',
-    entry: {
-      "app": './src/app.js'
-    },
-    output: {
-      path: path.join(__dirname, 'dist'),
-      filename: '[name].js'
-    }
+  // ... other config above ...
+  target: 'node',
+  devtool: 'source-map',
+  entry: {
+    "app": './src/app.js'
+  },
+  output: {
+    path: path.join(__dirname, 'dist'),
+    filename: '[name].js'
+  }
 };
 ```
 
@@ -52,13 +52,13 @@ It can be easily done with a help of the `sentry-webpack-plugin`, which internal
 const SentryPlugin = require('@sentry/webpack-plugin');
 
 module.exports = {
-    // ... other config above ...
-    plugins: [
-      new SentryPlugin({
-        release: process.env.RELEASE,
-        include: './dist'
-      })
-    ]
+  // ... other config above ...
+  plugins: [
+    new SentryPlugin({
+      release: process.env.RELEASE,
+      include: './dist'
+    })
+  ]
 };
 ```
 
@@ -67,41 +67,27 @@ You can take a look at [Sentry Webpack Plugin documentation](https://github.com/
 Additionally, you’ll need to configure the client to send the `release`:
 
 ```javascript
-Raven.config('your-dsn', {
-    release: process.env.RELEASE
+Sentry.init({
+  dsn: 'your-dsn',
+  release: process.env.RELEASE
 });
 ```
 
-Note: You dont _have_ to use _RELEASE_ environment variables. You can provide them in any way you want.
+Note: You dont _have_ to use _RELEASE_ environment variables. You can provide them in any way you want, just make sure that `release` from your upload **matches** `release` from your `init` call.
 
 Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
 
-## Updating Raven configuration to support Source Maps
+## Updating Sentry SDK configuration to support Source Maps
 
-In order for Sentry to understand how to resolve errors sources, we need to modify the data we send. Because Source Maps support is still in experimental phase, this task is not integrated into the core library itself. To do that however, we can normalize all urls using `dataCallback` method:
+In order for Sentry to understand how to resolve errors sources, we need to modify the data we send. Thankfully, we have an integration called `RewriteFrames` which can be used to do just that.
 
 ```javascript
-var path = require('path');
-
-Raven.config('your-dsn', {
-    // the rest of configuration
-
-  dataCallback: function (data) {
-    var stacktrace = data.exception && data.exception[0].stacktrace;
-
-    if (stacktrace && stacktrace.frames) {
-      stacktrace.frames.forEach(function(frame) {
-        if (frame.filename.startsWith('/')) {
-          frame.filename = 'app:///' + path.basename(frame.filename);
-        }
-      });
-    }
-
-    return data;
-  }
-).install();
+Sentry.init({
+  dsn: 'your-dsn',
+  integrations: [new Sentry.Integrations.RewriteFrames()]
+});
 ```
 
-There’s one very important thing to note here. This config assumes, that you’ll bundle your application into a single file. That’s why we are using _path.basename_ to get the filename.
+There’s one very important thing to note here. This config assumes, that you’ll bundle your application into a single file, which will be served and then uploaded to Sentry from the root of the project's directory.
 
-If you are not doing this, eg. you are using TypeScript and upload all your compiled files separately to the server, then we need to be a little smarter about this. Please refer to [TypeScript usage docs]({%- link _documentation/clients/node/typescript.md -%}) to see a more complex and detailed example.
+If you are not doing this, eg. you are using TypeScript and upload all your compiled files separately to the server, then we need to be a little smarter about this. Please refer to [TypeScript usage docs]({%- link _documentation/platforms/node/typescript.md -%}) to see a more complex and detailed example.
