@@ -13,7 +13,7 @@ When you [install]({%- link _documentation/error-reporting/quickstart.md -%}?pla
 You have to whitelist `sentry.io` in your `config.xml` like:
 
 ```xml
-<access origin=”sentry.io” />
+<access origin="sentry.io" />
 ```
 
 Keep in mind that if you use an on-premise installation, adjust this domain accordingly.

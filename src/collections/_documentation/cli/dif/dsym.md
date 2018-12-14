@@ -84,11 +84,19 @@ $ sentry-cli upload-dif --symbol-maps path/to/symbolmaps path/to/debug/symbols
 
 There are a few options you can supply for the upload process
 
-`--no-bin`
+`--no-unwind`
 
-: Exclude executables and libraries from the upload and search for dSYM files
-  only. For iOS apps, this setting can safely be activated since Sentry does not
-  requrie them for symbolication.
+: Do not scan for stack unwinding information. Specify this flag for builds with
+  disabled FPO, or when stackwalking occurs on the device. This usually excludes
+  executables and libraries. They might still be uploaded, if they contain debug
+  information. When using the Cocoa SDK, this flag can safely be activated since
+  Sentry does not require unwind information.
+
+`--no-debug`
+
+: Do not scan for debug information. This will usually exclude debug companion
+  files. They might still be uploaded, if they contain stack unwinding
+  information.
 
 `--derived-data`
 

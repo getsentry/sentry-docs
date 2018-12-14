@@ -87,3 +87,14 @@ Fixes MYAPP-317
 ```
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit, and, later, when that commit is part of a release, we’ll mark the issue as resolved.
+
+## Troubleshooting
+
+#### No accounts during installation
+
+> [{% asset azure-add-account-no-accounts.png %}]({% asset azure-add-account-no-accounts.png @path %})  
+
+If you reach the account selection page during the Azure Devops installation process (step 4 in the instructions above) and see that there are no accounts available to select, please check the following possibilities:
+
+- Ensure you are logged into the account connected to your Azure DevOps organization.
+- Double check that your account is a Microsoft Account (MSA). At this time, we do not support Azure Active Directory (AAD) accounts. 
