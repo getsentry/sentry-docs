@@ -54,10 +54,10 @@ Debug Info File Check
 
 ## Debug Info Compression
 
-ELF supports the compression of debug information which can significantly
-reduce the time required to upload debug information files to Sentry and thus
-improve build times. `gcc` and recent versions of `clang` support this by
-passing the `-gz` flag to both the compiler and linker.
+ELF supports the compression of debug information which can significantly reduce
+the time required to upload debug information files to Sentry and thus improve
+build times. `gcc` (version 5 or newer) and `clang` (version 5 or newer) support
+this by passing the `-gz` flag to both the compiler and linker.
 
 This can be verified by checking for the `C` flag in `readelf`, corresponding to
 `SHF_COMPRESSED`:
