@@ -9,9 +9,11 @@ $(function() {
       var $hits = $('#hits');
       if (helper.state.query === '') {
         $hits.addClass('d-none');
+        $('#search-clickplate').addClass('d-none');
       } else {
         helper.search();
         $hits.removeClass('d-none');
+        $('#search-clickplate').removeClass('d-none');
       }
     }
   });
@@ -44,4 +46,8 @@ $(function() {
   );
 
   search.start();
+});
+
+$(document).on('click', '#search-clickplate', function(event) {
+  $('#search-clickplate, #hits').addClass('d-none');
 });
