@@ -69,11 +69,11 @@ The SDK only needs to be initialized once. If a `DSN` is made available to this 
 
 #### MinimumBreadcrumbLevel
 
-A `LogLevel` which indicates the minimum level a log message has to be to be included as a breadcrumb. By default this value is `Information`.
+A `LogLevel` which indicates the minimum level a log message has to be included as a breadcrumb. By default this value is `Information`.
 
 #### MinimumEventLevel
 
-A `LogLevel` which indicates the minimum level a log message has to be to be sent to Sentry as an event. By default this value is `Error`.
+A `LogLevel` which indicates the minimum level a log message has to be sent to Sentry as an event. By default this value is `Error`.
 
 #### InitializeSdk
 
