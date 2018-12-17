@@ -2,8 +2,7 @@
 
 set -e
 
-#expected_branch=master
-expected_branch=algolia
+expected_branch=master
 
 if [ "$BRANCH_NAME" != "$expected_branch" ] ; then
   echo "!! Skipping Algolia, because not $expected_branch branch: $BRANCH_NAME"
@@ -16,3 +15,5 @@ if [ "$api_key" = '' ]; then
   echo "Missing \"algolia_api_key\" in BUILD_CONF"
   exit 1
 fi
+
+ALGOLIA_API_KEY=$api_key bundle exec jekyll algolia
