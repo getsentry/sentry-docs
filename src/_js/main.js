@@ -2,11 +2,11 @@ import 'bootstrap';
 import UserContentUI from './lib/UserContentUI';
 import Tracking from './lib/Tracking';
 import User from './lib/User';
-import Search from './lib/Search';
 import DynamicLoad from './lib/DynamicLoad';
 import './lib/PlatformContent';
 import './lib/HeaderLinker';
 import './lib/Feedback';
+import './lib/Search';
 import './lib/Sidebar';
 
 $(document).on('page.willUpdate', function(event) {
@@ -20,7 +20,6 @@ $(document).on('page.didUpdate', function(event) {
 $(function() {
   UserContentUI.init();
   Tracking.init();
-  Search.init();
   new DynamicLoad().registerHandlers();
 
   window.User = new User();
