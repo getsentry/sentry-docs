@@ -6,7 +6,7 @@ const env = getClientEnvironment();
 module.exports = {
   mode: 'production',
   devtool: 'source-map',
-  entry: ['./src/_js/raven.js', './src/_js/main.js'],
+  entry: ['./src/_js/main.js'],
   output: {
     filename: 'bundle.js',
     path: path.resolve(process.cwd(), 'src/_assets/js/')
