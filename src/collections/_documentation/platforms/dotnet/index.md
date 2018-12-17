@@ -49,20 +49,20 @@ The SDK attempts to locate the release to add that to the events sent to Sentry.
 The SDK will firstly look at the [entry assembly's](https://msdn.microsoft.com/en-us/library/system.reflection.assembly.getentryassembly(v=vs.110).aspx) `AssemblyInformationalVersionAttribute`, which accepts a string as
 value and is often used to set a GIT commit hash. 
 
-If that returns null, it'll look at the default `AssemblyVersionAttribute` which accepts the numeric version number. When creating a project with Visual Studio, that values is set to *1.0.0.0*.
+If that returns null, it'll look at the default `AssemblyVersionAttribute` which accepts the numeric version number. When creating a project with Visual Studio, the value is set to *1.0.0.0*.
 Since that usually means that the version is either not being set, or is set via a different method. The **automatic version detection will disregard** this value and no *Release* will be reported automatically.
 
 ## Unit testing
 
-We often don't want to couple our code with static class like `SentrySdk`. Especially to allow our code to be testable.
+We often don't want to couple our code with a static class like `SentrySdk`. Especially to allow our code to be testable.
 If that's your case, you can use 2 abstractions:
 
 * `ISentryClient`
 * `IHub`
 
-The `ISentryClient` exposes the `CaptureEvent` method and its implementation `SentryClient` is responsible to queueing the event to be sent to Sentry. It also abstracts away the internal transport.
+The `ISentryClient` exposes the `CaptureEvent` method and its implementation `SentryClient` is responsible for queueing the event to be sent to Sentry. It also abstracts away the internal transport.
 
-The `IHub` on the other hand, holds a client and the current scope. In fact, it extends `ISentryClient` and is able to dispatch calls to the right client depending on the current scope.
+The `IHub` on the other hand, holds a client and the current [scope]({% link _documentation/enriching-error-data/scopes.md %}). In fact, it extends `ISentryClient` and is able to dispatch calls to the right client depending on the current scope.
 
 In order to allow different events to hold different contextual data, you need to know in which scope you are in.
 That's the job of the [`Hub`](https://github.com/getsentry/sentry-dotnet/blob/master/src/Sentry/Internal/Hub.cs). It holds the scope management as well as a client.
