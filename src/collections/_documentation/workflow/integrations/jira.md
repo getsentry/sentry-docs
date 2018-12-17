@@ -13,6 +13,7 @@ Sentry owner or manager permissions, and Jira admin permissions are required to 
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 1. In Sentry, navigate to Organization Settings > **Integrations**.
@@ -21,9 +22,9 @@ Sentry owner or manager permissions, and Jira admin permissions are required to 
 4. Select which Sentry organizations you’d like to use Jira with, and **Save Settings**.
 5. In Sentry, you’ll see a new Jira instance appear on the Integrations page.
 
-Jira should now be authorized for all projects under your Sentry organization.
+    [{% asset jira-install.png %}]({% asset jira-install.png @path %})
 
-> [{% asset jira-install.png %}]({% asset jira-install.png @path %})
+Jira should now be authorized for all projects under your Sentry organization.
 
 ## Issue Management
 
@@ -35,15 +36,16 @@ Issue management is available for organizations on the Team, Business, and Enter
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 To configure Issue management, once you’ve navigated to a specific Sentry issue, you’ll find the **Linked Issues** section on the right hand panel.
 
-> [{% asset jira-link-issue.png %}]({% asset jira-link-issue.png @path %})
+[{% asset jira-link-issue.png %}]({% asset jira-link-issue.png @path %})
 
 Here, you’ll be able to create or link Jira issues.
 
-> [{% asset jira-create-issue.png %}]({% asset jira-create-issue.png @path %})
+[{% asset jira-create-issue.png %}]({% asset jira-create-issue.png @path %})
 
 ## Issue Sync
 
@@ -55,8 +57,9 @@ Issue sync is available for organizations on the Team, Business, and Enterprise 
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 To configure Issue sync, navigate to Organization Settings > **Integrations**, and click **Configure** next to your Jira instance. On the following page, you’ll see options of what information you’d like synced between Sentry and Jira.
 
-> [{% asset jira-sync.png %}]({% asset jira-sync.png @path %})
+[{% asset jira-sync.png %}]({% asset jira-sync.png @path %})

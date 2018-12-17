@@ -14,7 +14,7 @@ Sending a basic event can be done with _send_.
 let event = Event(level: .debug)
 event.message = "Test Message"
 Client.shared?.send(event: event) { (error) in
-    // Optional callback after event has been send
+    // Optional callback after event has been sent
 }
 ```
 
@@ -36,10 +36,9 @@ A user, tags, and extra information can be stored on a _Client_. This informatio
 let user = User(userId: "1234")
 user.email = "hello@sentry.io"
 user.extra = ["is_admin": true]
+
 Client.shared?.user = user
-
 Client.shared?.tags = ["iphone": "true"]
-
 Client.shared?.extra = [
     "my_key": 1,
     "some_other_value": "foo bar"

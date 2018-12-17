@@ -2,57 +2,99 @@
 title: GitHub Enterprise
 sidebar_order: 5
 ---
-Sentry’s new Github Enterprise integration has the following features: commit tracking and issue management. You can now use the data from your commits to Github to help you find and fix bugs faster.
+You can now use the data from your GitHub Enterprise commits to help you find and fix bugs faster.
 
-## Configure Github Enterprise
+## Configure GitHub Enterprise
 
-### Part One: Setup a Github App
+{% capture __alert_content -%}
+Sentry owner or manager permissions, and GitHub owner permissions are required to install this integration.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
 
-1. Make sure you’ve whitelisted Sentry’s [outbound request IPs addresses](https://docs.sentry.io/ip-ranges/) for your Github Enterprise instance.
-2. In your Github Enterprise organization, navigate to Settings > Developer Settings > Github Apps.
-3. Fill out the resulting form as follows; then, click Create Github app.
+#### Add new GitHub App
 
-  | Github App Name                 | Sentry        |
-  | Homepage URL                    | https://sentry.io |
-  | User authorization callback URL | https://sentry.io/extensions/github-enterprise/setup/ |
-  | Setup URL                       | https://sentry.io/extensions/github-enterprise/setup/ |
-  | Webhook URL                     | https://sentry.io/extensions/github-enterprise/webhook/ |
-  | Webhook secret                  | *You’ll need to have this filled in. Make sure to have this information ready for the next steps. You can use the following command to generate a secret:* `openssl rand -base64 500 | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1` |
-  | **Permissions** |
-  | Repository metadata       | Read-only    |
-  | Repository Administration | Read-only    |
-  | Commit Statuses           | No Access    |
-  | Deployments               | No Access    |
-  | Issues                    | Read & Write |
-  | Pages                     | No Access    |
-  | Pull Requests             | Read-only    |
-  | Repository Contents       | Read-only    |
-  | Single File               | No Access    |
-  | Repository Projects       | No Access    |
-  | Organization members      | Read-only    |
-  | Organization projects     | No Access    |
-  | **Subscribe to Events** |
-  | Pull Request        | Yes |
-  | Push                | Yes |
+1. Make sure you've whitelisted Sentry’s outbound request [IPs addresses](https://docs.sentry.io/ip-ranges/) for your GitHub Enterprise instance.
+2. In your Github Enterprise organization, navigate to Settings > Developer Settings > **GitHub Apps** and click to add a new **New GitHub App**.
 
-### Part Two: Installing Your Github App to Sentry
+    [{% asset github-e-new-app.png %}]({% asset github-e-new-app.png @path %})
 
-1. In Sentry, navigate to Organization Settings > Integrations. *Note: only users with Owner and Manager permissions will have access to this page.*
-2. Next to Github Enterprise, click ‘Install.’
-3. Fill out the corresponding form.
-  You can find your domain and app ID on your Sentry Github App page. Your private key can also be generated on the app page.
-4. A Github install window should pop up. Click ‘Install.’
-5. Select which repositories Sentry should have access to (or, select all repositories).
-6. You should then be redirected back to Sentry.
-7. On your new Github Enterprise instance, click ‘Configure.’
-8. Add any repositories from which you want to collect commit data. Note: Make sure you have given Sentry access to these repositories in Github.
+#### Register new GitHub App
 
-Github Enterprise should now be enabled for all projects under your Sentry organization.
+1. First, you'll need to generate a webhook secret. For example, in terminal:
 
+    ```
+    openssl rand -base64 500 | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1
+    ```
+
+2. Then in GitHub, fill out the form as follows and click **Create GitHub App**.
+
+    | Github App Name                 | sentry-app        |
+    | Homepage URL                    | https://sentry.io |
+    | User authorization callback URL | https://sentry.io/extensions/github-enterprise/setup/ |
+    | Setup URL                       | https://sentry.io/extensions/github-enterprise/setup/ |
+    | Webhook URL                     | https://sentry.io/extensions/github-enterprise/webhook/ |
+    | Webhook secret                  | `Input your secret from the previous step` |
+    | Repository Administration | Read-only    |
+    | Commit Statuses           | No Access    |
+    | Deployments               | No Access    |
+    | Issues                    | Read & Write |
+    | Pages                     | No Access    |
+    | Pull Requests             | Read-only    |
+    | Repository Contents       | Read-only    |
+    | Single File               | No Access    |
+    | Repository Projects       | No Access    |
+    | Organization members      | Read-only    |
+    | Organization projects     | No Access    |
+    | **Subscribe to Events** |
+    | Pull Request        | Yes |
+    | Push                | Yes |
+
+#### Install your Github App
+
+1. In Sentry, navigate to Organization Settings > **Integrations**.
+2. Next to GitHub Enterprise, click **Install**.
+
+    [{% asset github-e-install.png %}]({% asset github-e-install.png @path %})
+    
+3. Click **Add Installation**.
+
+    [{% asset github-e-add-installation.png %}]({% asset github-e-add-installation.png @path %})
+    
+4. Fill out the following form with information from your GitHub apps configuration page.
+    
+    [{% asset github-e-form.png %}]({% asset github-e-form.png @path %})
+    
+    You'll need to generate a private key on your GitHub apps configuration page, and paste the entire contents into the **GitHub App Private Key** field.
+
+    [{% asset github-e-generate-private-key.png %}]({% asset github-e-generate-private-key.png @path %})
+
+    For example, in terminal:
+
+    ```
+    cat <YOUR_PRIVATE_KEY_FILE> | pbcopy
+    ```
+
+5. Click **Configure** and then a GitHub install window will pop up. Select which repositories Sentry should have access to (or select all repositories) and click **Install**.
+
+    [{% asset github-e-repo-access.png %}]({% asset github-e-repo-access.png @path %})
+
+6. You will then be redirected back to Sentry. On your new GitHub Enterprise instance, click **Configure**.
+
+    [{% asset github-e-configure.png %}]({% asset github-e-configure.png @path %})
+  
+7. Add any repositories that you want to collect commit data from. Note: Make sure you have given Sentry access to these repositories in GitHub in the previous steps.
+
+    [{% asset github-e-add-repo.png %}]({% asset github-e-add-repo.png @path %})
+    
+GitHub Enterprise should now be enabled for all projects under your Sentry organization.
 
 ## Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about commit tracking [here]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
 
 ## Suspect Commits and Suggested Assignees
 
@@ -64,9 +106,11 @@ You’ll also see that the author of the suspect commit will be listed as a sugg
 
 ## Issue Management
 
-Issue tracking allows you to create GitHub issues from within Sentry, and link Sentry issues to existing Github Issues.
+Issue tracking allows you to create GitHub issues from within Sentry, and link Sentry issues to existing GitHub Issues.
 
-Once you’ve navigated to a specific issue, you’ll find the ‘Linked Issues’ section on the right hand panel. Here, you’ll be able to create or link GitHub issues.
+Once you’ve navigated to a specific issue, you’ll find the **Linked Issues** section on the right hand panel. Here, you’ll be able to create or link GitHub issues.
+
+[{% asset github-e-link-issue.png %}]({% asset github-e-link-issue.png @path %})
 
 ## Resolving in Commit/Pull Request
 

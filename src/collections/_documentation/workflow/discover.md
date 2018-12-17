@@ -73,12 +73,6 @@ standard_fields:
     - name: geo.city
       type: string
 
-  "Tags":
-    - name: tags_key
-      type: string
-    - name: tags_value
-      type: string
-
   "HTTP":
     - name: http.method
       type: string
@@ -90,9 +84,9 @@ standard_fields:
       type: string
     - name: error.value
       type: string
-    - name: error.mechanism_type
+    - name: error.mechanism
       type: string
-    - name: error.mechanism_handled
+    - name: error.handled
       type: string
     - name: stack.abs_path
       type: string
@@ -110,7 +104,7 @@ standard_fields:
       type: number
     - name: stack.lineno
       type: number
-    - name: stack.stack_levvel
+    - name: stack.stack_level
       type: number
 
 common_tags:
@@ -120,7 +114,7 @@ common_tags:
       type: string
     - name: logger
       type: string
-    - name: server_name
+    - name: server.name
       type: string
     - name: transaction
       type: string
@@ -130,23 +124,23 @@ common_tags:
       type: string
     - name: url
       type: string
-    - name: app_device
+    - name: app.device
       type: string
-    - name: device_family
+    - name: device.family
       type: string
     - name: runtime
       type: string
-    - name: runtime_name
+    - name: runtime.name
       type: string
     - name: browser
       type: string
-    - name: browser_name
+    - name: browser.name
       type: string
     - name: os
       type: string
-    - name: os_name
+    - name: os.name
       type: string
-    - name: os_rooted
+    - name: os.rooted
       type: boolean
     - name: sentry:release
       type: string
@@ -203,7 +197,7 @@ Conditions
 - `IS NULL`, `IS NOT NULL` (for all column types)
 - `=`, `!=`, `LIKE` (for strings)
   - Note that values used with `LIKE` are case sensitive and can be used with wildcard characters
-  - e.g. `exception_stacks.type LIKE Validation`
+  - e.g. `exception_stacks.type LIKE Validation%`
 
 
 Order by

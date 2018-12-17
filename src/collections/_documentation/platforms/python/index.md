@@ -5,8 +5,8 @@ sidebar_order: 3
 
 {% include learn-sdk.md platform="python" %}
 
-The [Sentry Python SDK](https://pypi.org/project/sentry-sdk) provides Sentry
-support for Python 2.7 and 3.4 or later.
+The [Sentry Python SDK](https://pypi.org/project/sentry-sdk) provides support
+for Python 2.7 and 3.4 or later.
 
 This documentation goes over some Python specific things such as integrations to
 frameworks.
@@ -19,24 +19,24 @@ SDK.  Integrations are configured by a call to `sentry_sdk.init`.  Any default
 integration not in the list is automatically added unless `default_integrations` is
 set to `False`.
 
-### Framework Integrations
+### Web Frameworks
 
-Framework integrations are opt-in integrations for large frameworks or libraries.  Currently
-the following are supported:
-
-* [Celery]({% link _documentation/platforms/python/celery.md %})
 * [Django]({% link _documentation/platforms/python/django.md %})
 * [Flask]({% link _documentation/platforms/python/flask.md %})
 * [Sanic]({% link _documentation/platforms/python/sanic.md %})
 * [Pyramid]({% link _documentation/platforms/python/pyramid.md %})
-* [Logging]({% link _documentation/platforms/python/logging.md %})
+* [AIOHTTP]({% link _documentation/platforms/python/aiohttp.md %})
+
+### Task Queues
+
+* [Celery]({% link _documentation/platforms/python/celery.md %})
 * [RQ (Redis Queue)]({% link _documentation/platforms/python/rq.md %})
 
 ### Other Integrations
 
-In addition to framework integrations there are also a few other integrations:
-
+* [Logging]({% link _documentation/platforms/python/logging.md %})
 * [AWS Lambda]({% link _documentation/platforms/python/aws_lambda.md %})
+* [WSGI]({% link _documentation/platforms/python/wsgi.md %})
 * [Default integrations]({% link _documentation/platforms/python/default-integrations.md %})
 
 {% capture __alert_content -%}

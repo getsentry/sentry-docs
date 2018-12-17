@@ -5,11 +5,11 @@ sidebar_order: 2
 
 {% include learn-sdk.md platform="node" %}
 
-All our JavaScript related SDKs provide the same API still there are some differences between them which this section of the docs explains.
+All our JavaScript-related SDKs provide the same API still there are some differences between them which this section of the docs explains.
 
 ## Integrations
 
-All of our SDKs provide _Integrations_ which can be seen of some kind of plugins. All JavaScript SDKs provide default _Integrations_ please check details of a specific SDK to see which _Integrations_ they provides.
+All of our SDKs provide _Integrations_, which can be seen as some kind of plugins. All JavaScript SDKs provide default _Integrations_; please check details of a specific SDK to see which _Integrations_ it provides.
 
 One thing is the same across all our JavaScript SDKs and that's how you add or remove _Integrations_, e.g.: for `@sentry/node`.
 

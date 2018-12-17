@@ -15,13 +15,15 @@ Webpack is a powerful build tool that resolves and bundles your JavaScript modul
 
 Webpack can be configured to output source maps by editing `webpack.config.js`.
 
-```bash
+```javascript
+const path = require('path');
+
 module.exports = {
     // ... other config above ...
     target: 'node',
     devtool: 'source-map',
     entry: {
-      "app": 'src/app.js'
+      "app": './src/app.js'
     },
     output: {
       path: path.join(__dirname, 'dist'),
@@ -46,7 +48,7 @@ It can be easily done with a help of the `sentry-webpack-plugin`, which internal
 -   Create `.sentryclirc` file with necessary config (see Sentry Webpack Plugin docs below)
 -   Update your `webpack.config.json`
 
-```bash
+```javascript
 const SentryPlugin = require('@sentry/webpack-plugin');
 
 module.exports = {
@@ -54,8 +56,7 @@ module.exports = {
     plugins: [
       new SentryPlugin({
         release: process.env.RELEASE,
-        include: './dist',
-        ignore: ['node_modules', 'webpack.config.js'],
+        include: './dist'
       })
     ]
 };
@@ -65,7 +66,7 @@ You can take a look at [Sentry Webpack Plugin documentation](https://github.com/
 
 Additionally, you’ll need to configure the client to send the `release`:
 
-```bash
+```javascript
 Raven.config('your-dsn', {
     release: process.env.RELEASE
 });

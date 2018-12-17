@@ -28,7 +28,7 @@ This package extends `Sentry` main SDK. That means that besides the logging rela
 * Store log messages as breadcrumbs
 * Send events to sentry
 
-Two separate settings define the minimum log level to keep the log entry as a `Breadcrumb` and to send an `Event` to Sentry. The events include any stored breadcrumb on that `Scope`.
+Two separate settings define the minimum log level to keep the log entry as a `Breadcrumb` and to send an `Event` to Sentry. The events include any stored breadcrumb on that [scope]({% link _documentation/enriching-error-data/scopes.md %}).
 
 By default, any message with log level `Information` or higher will be kept as a `Breadcrumb`.
 
@@ -130,15 +130,15 @@ using (var loggerFactory = new LoggerFactory()
 
 #### MinimumBreadcrumbLevel
 
-A `LogLevel` which indicates the minimum level a log message has to be to be included as a breadcrumb. By default this value is `Information`.
+A `LogLevel` which indicates the minimum level a log message has to be included as a breadcrumb. By default this value is `Information`.
 
 #### MinimumEventLevel
 
-A `LogLevel` which indicates the minimum level a log message has to be to be sent to Sentry as an event. By default this value is `Error`.
+A `LogLevel` which indicates the minimum level a log message has to be sent to Sentry as an event. By default this value is `Error`.
 
 #### InitializeSdk
 
-Whether or not this integration should initialize the SDK. If you intend to call `SentrySdk.Init` yourself you should set this flag to `true`.
+Whether or not this integration should initialize the SDK. If you intend to call `SentrySdk.Init` yourself, you should set this flag to `false`.
 
 #### Filters
 

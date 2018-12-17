@@ -19,7 +19,7 @@ Remove the entire field. Relay may choose to either set it to `null` or to remov
     }
   },
   "applications": {
-    "freeform": ["remove_ip"]
+    "text": ["remove_ip"]
   }
 }
 ```
@@ -41,7 +41,7 @@ Replace the key with a static string.
     }
   },
   "applications": {
-    "freeform": ["replace_ip"]
+    "text": ["replace_ip"]
   }
 }
 ```
@@ -65,7 +65,7 @@ Replace every character of the matched string with a "masking" char. Compared to
     }
   },
   "applications": {
-    "freeform": ["mask_ip"]
+    "text": ["mask_ip"]
   }
 }
 ```
@@ -91,7 +91,7 @@ Replace the string with a hashed version of itself. Equal strings will produce t
     "hashKey": "myDefaultKey"    // The default key to use
   }
   "applications": {
-    "freeform": ["mask_ip"]
+    "text": ["mask_ip"]
   }
 }
 ```

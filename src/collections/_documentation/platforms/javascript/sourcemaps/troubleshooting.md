@@ -5,11 +5,17 @@ sidebar_order: 3
 
 Source maps can sometimes be tricky to get going. If you’re having trouble, try the following tips.
 
-### Verify your source maps are built correctly
+### Verify a release is configured in your SDK
 
-We maintain an online validation tool that can be used to test your source (and source maps) against: [sourcemaps.io](http://sourcemaps.io).
+In order for uploaded source maps to be located and applied, the release needs to be created by the CLI or API (and the correct artifacts uploaded with it), and the name of that newly-created release needs to be specified in your SDK configuration.
 
-Alternatively, if you are using Sentry CLI to upload source maps to Sentry, you can use the _–validate_ command line option to verify your source maps are correct.
+To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors]({%- link _documentation/workflow/releases.md -%}#tag-errors). If this is properly set up you'll see "Release: my_example_release". 
+
+### Verify artifacts are uploaded
+
+Once your release is properly configured and issues are tagged, from within an issue you can then click on the release >> Artifacts (or **Releases >> your specific release >> Artifacts**) to check that your source maps and the associated files are in fact uploaded to the correct release.
+
+Additionally, make sure all of the necessary files are available. For Sentry to de-minify your stacktraces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
 ### Verify sourceMappingURL is present
 
@@ -19,35 +25,110 @@ Double-check that your deployed, final JavaScript files have `sourceMappingURL` 
 
 Alternately, instead of `sourceMappingURL`, you can set a `SourceMap` HTTP header on your minified file. If this header is present, Sentry will use it to discover the location of your source map.
 
-### Verify artifact names match sourceMappingURL
+### Verify artifact names match `sourceMappingURL` value
 
-When [uploading source maps to Sentry](#uploading-source-maps-to-sentry), you must name your source map files with the same name found in `sourceMappingURL`.
+The `sourceMappingURL` comment on the last line of your bundled or minified JavaScript file tells Sentry (or the browser) where to locate the corresponding source map. This can either be a fully qualified URL, a relative path, or the filename itself. When uploading artifacts to Sentry, you must name your source map files with the value the file resolves to.
 
-For example, if you have the following in a minified application file, `app.min.js`:
+i. e. if your file is similar to:
 
 ```javascript
-//-- end app.min.js
-//# sourceMappingURL=https://example.com/dist/js/app.min.js.map
+    // -- end script.min.js
+    //# sourceMappingURL=script.min.js.map
 ```
 
-Sentry will look for a matching artifact named exactly `https://example.com/dist/js/app.min.js.map`.
+and is hosted at http://example.com/js/script.min.js, then Sentry will look for that source map file at http://example.com/js/script.min.js.map. Your uploaded artifact must therefore be named `http://example.com/js/script.min.js.map` (or `~/js/script.min.js.map`). 
 
-Note also that Sentry will resolve relative paths. For example, if you have the following:
+Or, if your file is similar to: 
 
-```JavaScript
-// -- end app.min.js (located at https://example.com/dist/js/app.min.js)
-//# sourceMappingURL=app.min.js.map
+```javascript
+    //-- end script.min.js
+    //# sourceMappingURL=https://example.com/dist/js/script.min.js.map
 ```
 
-Sentry will resolve `sourceMappingURL` relative to `https://example.com/dist/js/` (the root path from which `app.min.js` was served). You will again need to name your source map with the full URL: `https://example.com/dist/js/app.min.js.map`.
+then your uploaded artifact should also be named `https://example.com/dist/js/script.min.js.map` (or `~/dist/js/script.min.js.map`).
 
-If you serve the same assets from multiple origins, you can also alternatively use our tilde (~) path prefix to ignore matching against protocol + hostname. In which case, `~/dist/js/app.min.js.map`, will also work. See: [Assets Accessible at Multiple Origins](#assets-multiple-origins).
+Finally, if your file is similar to:
+
+```javascript
+    //-- end script.min.js
+    //# sourceMappingURL=../maps/script.min.js.map
+```
+
+then your uploaded artifact should be named `https://example.com/dist/maps/script.min.js.map` (or `~/dist/maps/script.min.js.map`).
+
+
+### Verify artifact names match stack trace frames
+
+If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
+
+#### Using sentry-cli
+
+If your `sourceMappingURL` comment is similar to:
+
+```javascript
+// -- end script.min.js (located at http://localhost:8000/scripts/script.min.js)
+//# sourceMappingURL=script.min.js.map
+```
+
+An example `sentry-cli` command to upload these files correctly would look like this (assuming you’re in the `/scripts` directory, running your web server from one directory higher, which is why we’re using the `--url-prefix` option):
+
+```curl
+sentry-cli releases files VERSION upload-sourcemaps . --url-prefix '~/scripts'
+```
+
+This command uploads all JavaScript files in the current directory. The Artifacts page in Sentry should now look like:
+```
+~/scripts/script.js
+~/scripts/script.min.js
+~/scripts/script.min.js.map
+```
+
+Alternately you can specify which files to upload, i.e. 
+
+```
+sentry-cli releases files VERSION upload-sourcemaps script.min.js script.min.js.map --url-prefix '~/scripts'
+```
+
+You can also upload it with the fully qualified URL i.e.
+```
+sentry-cli releases files VERSION upload-sourcemaps . --url-prefix 'http://localhost:8000/scripts'
+```
+
+#### Using the API
+
+You can alternately [use our API]({%- link _documentation/api/releases/post-organization-release-files.md -%}) to upload artifacts, following the same naming convention explained here.
+
+
+
+```curl
+curl -X POST \
+  https://sentry.io/api/0/organizations/ORG_NAME/releases/VERSION/files/ \
+  -H 'Authorization: Bearer AUTH_TOKEN' \
+  -H 'content-type: multipart/form-data' \
+  -F file=@script.min.js.map \
+  -F 'name=~/scripts/script.min.js.map'
+```
+
+#### Using the `~`
+
+The `~` is used in Sentry to replace the scheme and domain. It is not a glob!
+
+`http://example.com/dist/js/script.js` will match `~/dist/js/script.js` or `http://example.com/dist/js/script.js`
+
+but will NOT match `~/script.js`.
+
 
 ### Verify artifacts are uploaded before errors occur
 
 Sentry expects that source code and source maps in a given release are uploaded to Sentry **before** errors occur in that release.
 
 If you upload artifacts **after** an error is captured by Sentry, Sentry will not go back and retroactively apply any source annotations to those errors. Only new errors triggered after the artifact was uploaded will be affected.
+
+### Verify your source maps are built correctly
+
+We maintain an online validation tool that can be used to test your source maps against your **hosted** source: [sourcemaps.io](http://sourcemaps.io).
+
+Alternatively, if you are using Sentry CLI to upload source maps to Sentry, you can use the `–validate` command line option to verify your source maps are correct.
 
 ### Verify your source maps work locally
 

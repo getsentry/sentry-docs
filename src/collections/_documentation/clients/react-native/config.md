@@ -26,7 +26,7 @@ Sentry.config("___DSN___", {
   // ---------------------------------
 }).install();
 
-// set a callback after an event was successfully sentry
+// set a callback after an event was successfully sent
 // its only guaranteed that this event contains `event_id` & `level`
 Sentry.setEventSentSuccessfully((event) => {
   // can also be called outside this block but maybe null

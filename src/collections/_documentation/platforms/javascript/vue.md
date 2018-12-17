@@ -12,6 +12,18 @@ Additionally, the Vue _integration_ will capture the name and props state of the
 
 Passing in `Vue` is optional, if you do not pass it `window.Vue` has to be present.
 
+{% capture __alert %}
+Please note that if you enable this integration Vue internally will not call `logError` 
+due to a currently know limitation see: [Github Issue](https://github.com/vuejs/vue/issues/8433).  
+This means that errors occurring in the Vue renderer will not show up in the developer console.
+{% endcapture %}
+
+{% include components/alert.html
+  title="Vue Error Handling"
+  content=__alert
+  level="warning"
+%}
+
 ```javascript
 import * as Sentry from '@sentry/browser'
 

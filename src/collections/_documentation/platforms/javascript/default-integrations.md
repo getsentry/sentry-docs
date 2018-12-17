@@ -21,13 +21,6 @@ This integration deduplicates certain events. This is enabled by default and sho
 be disabled except in rare circumstances. Disabling this integration for instance will
 cause duplicate error logging.
 
-### FunctionToString
-
-_Import name: `Sentry.Integrations.FunctionToString`_
-
-This integration allows SDK to provide original functions and method names,
-even when they are wrapped by our error or breadcrumbs handlers.
-
 ### InboundFilters
 
 _Import name: `Sentry.Integrations.InboundFilter`_
@@ -37,7 +30,28 @@ as well as blacklist/whitelist urls which exception originates from.
 
 To configure it, use `ignoreErrors`, `blacklistUrls` and `whitelistUrls` SDK options directly.
 
+### FunctionToString
+
+_Import name: `Sentry.Integrations.FunctionToString`_
+
+This integration allows SDK to provide original functions and method names,
+even when they are wrapped by our error or breadcrumbs handlers.
+
+### ExtraErrorData
+
+_Import name: `Sentry.Integrations.ExtraErrorData`_
+
+This integration extracts all non-native attributes from the Error object and attaches
+them to the event as the `extra` data.
+
 ## Browser specific
+
+### TryCatch
+
+_Import name: `Sentry.Integrations.TryCatch`_
+
+This integration wraps native time and events APIs (`setTimeout`, `setInterval`, `requestAnimationFrame`,
+`addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions.
 
 ### Breadcrumbs
 
@@ -89,28 +103,6 @@ Available options:
   limit: number;
 }
 ```
-
-### ReportingObserver
-
-_Import name: `Sentry.Integrations.ReportingObserver`_
-
-This integration hooks into ReportingObserver API and sends captured events through to Sentry.
-Can be configured to handle only specific issue types.
-
-Available options:
-
-```js
-{
-  types: <'crash'|'deprecation'|'intervention'>[];
-}
-```
-
-### TryCatch
-
-_Import name: `Sentry.Integrations.TryCatch`_
-
-This integration wraps native time and events APIs (`setTimeout`, `setInterval`, `requestAnimationFrame`,
-`addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions.
 
 ### UserAgent
 
