@@ -45,3 +45,7 @@ $(function() {
 
   search.start();
 });
+
+$(document).on('blur', '#search-box input', function(event) {
+  $('#hits').addClass('d-none');
+});
