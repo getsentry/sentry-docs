@@ -41,29 +41,6 @@ Enabling the Google integration will ask you to authenticate against a Google Ap
 
 The GitHub integration will authenticate against all organizations, and once complete prompt you for the organization which you wish to restrict access by.
 
-### SAML2 Identity Provider
-
-Sentry provides [SAML2 based authentication](https://en.wikipedia.org/wiki/SAML_2.0) which may be configured manually using the generic SAML2 provider, or a specific provider which provides defaults specific to that identity provider.
-
-Sentry supports the following SAML services:
-
-- Identity and Service Provider initiated SSO
-- Identity Provider initiated SLO (Single Logout)
-
-Sentry’s Assertion Consumer Service uses the HTTP-POST bindings.
-
-Sentry’s SAML endpints are as follows, where the `{organization_slug}` is substituted for your organization slug:
-
-<table class="table"><tbody valign="top"><tr><th>ACS:</th><td><code class="docutils literal">https://sentry.io/saml/acs/{organization_slug}/</code></td></tr><tr><th>SLS:</th><td><code class="docutils literal">https://sentry.io/saml/SLS/{organization_slug}/</code></td></tr><tr><th>Metadata:</th><td><code class="docutils literal">https://sentry.io/saml/metadata/{organization_slug}/</code></td></tr></tbody></table>
-
-{% capture __alert_content -%}
-SAML2 SSO requires an Enterprise Plan.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
-
 #### OneLogin
 
 In your OneLogin dashboard locate the Sentry app in the app catalog and add it to your organization.
@@ -91,3 +68,7 @@ As part of the Auth0 SSO configuration, you must provide the Auth0 Identity Prov
 In your Rippling admin dashboard locate the Sentry app in the list of suggested apps and select it.
 
 When prompted with the Rippling Metadata URL, copy this into the Sentry Rippling provider configuration. You will have to complete the Rippling application configuration before completing the sentry provider configuration.
+
+#### Custom SAML2 Integration
+
+For other SAML2 SSO providers not listed above,Sentry provides a generic connectors for [SAML2 based authentication]({%- link _documentation/accounts/saml2.md -%}), which may be configured manually.

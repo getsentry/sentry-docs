@@ -1,12 +1,17 @@
 ---
-title: 'Custom SAML2 SSO'
-sidebar_order: 5
+title: 'SAML2 Integration'
+sidebar_order: 4
 ---
 
-Sentry provides a generic auth provider for SAML2 based authentication, which allows Owners of a Sentry organization to manually configure any SAML2-enabled IdP system. Documented below are the general steps for integration.
+Sentry provides a generic auth provider for [SAML2 based authentication](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), which allows Owners of a Sentry organization to manually configure any SAML2-enabled IdP system. Documented below are the general steps for integration.
+
+Sentry supports the following SAML services:
+
+* Identity and Service Provider initiated SSO
+* Identity Provider initiated SLO (Single Logout)
 
 {% capture __alert_content -%}
-SAML2 SSO is not available on free, trial or certain grandfathered plans.
+SAML2 SSO requires an Enterprise Plan.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -17,6 +22,8 @@ SAML2 SSO is not available on free, trial or certain grandfathered plans.
 
 ## 1. Register Sentry with IdP
 Before connecting Sentry to the Identity Provider (IdP), it’s important to first register Sentry as an application on the IdP’s side. Sentry’s SAML endpoints are as follows, where the `{organization_slug}` is substituted for your organization slug:
+
+<table class="table"><tbody valign="top"><tr><th>ACS:</th><td><code class="docutils literal">https://sentry.io/saml/acs/{organization_slug}/</code></td></tr><tr><th>SLS:</th><td><code class="docutils literal">https://sentry.io/saml/SLS/{organization_slug}/</code></td></tr><tr><th>Metadata:</th><td><code class="docutils literal">https://sentry.io/saml/metadata/{organization_slug}/</code></td></tr></tbody></table>
 
 **What are these three things?**
 * `ACS` means *Assertion Consumer Service*, and is used for establishing a session based on rules made between your IdP and the service provider it is integrating with. Please note: Sentry’s ACS endpoint uses HTTP-POST bindings
