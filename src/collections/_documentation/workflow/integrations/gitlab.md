@@ -65,8 +65,18 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
 
     [{% asset gitlab/sentry-unresolved-issues.png alt="List of unresolved issues" %}]({% asset gitlab/sentry-unresolved-issues.png @path %})
 
-1. Navigate to Linked Issues on the right panel of the issue's page and click **Link GitLab Issue**
+1. Navigate to Linked Issues on the right panel of the issue's page and click **Link GitLab Issue**.
     
     [{% asset gitlab/linking-gitlab-issue.png alt="GitLab logo with Link GitLab Issue text" %}]({% asset gitlab/linking-gitlab-issue.png @path %}) 
 
+1. You have two options to complete the issue link:
+
+    1. In the pop-up, you can fill out the appropriate details in the _Create_ tab, and then click **Create Issue**.
     
+        [{% asset gitlab/gitlab-create-issue.png alt="pop-up modal to create issue" %}]({% asset gitlab/gitlab-create-issue.png @path %})
+    
+    1. Or, in the pop-up, you can click the _Link_ tab, search the issue by name, and then click **Link Issue**. _Note: Issues aren't currently searchable by number._
+    
+        [{% asset gitlab/link-issue-by-name.png alt="pop-up modal to search issue name" %}]({% asset gitlab/link-issue-by-name.png @path %})
+    
+        
