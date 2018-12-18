@@ -16,7 +16,7 @@ Install-Package Sentry.AspNetCore -Version {% sdk_version sentry.dotnet.aspnetco
 Or using the .NET Core CLI:
 
 ```sh
-dotnet add Sentry.AspNetCore -v {% sdk_version sentry.dotnet.aspnetcore %}
+dotnet add package Sentry.AspNetCore -v {% sdk_version sentry.dotnet.aspnetcore %}
 ```
 
 This package extends [Sentry.Extensions.Logging]({%- link _documentation/platforms/dotnet/microsoft-extensions-logging.md -%}). This means that besides the ASP.NET Core related features, through this package you'll also get access to all the framework's logging integration and also the features available in the main [Sentry]({%- link _documentation/platforms/dotnet/index.md -%}) SDK.
