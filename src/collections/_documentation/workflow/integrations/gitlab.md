@@ -84,4 +84,8 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
     [{% asset gitlab/unlink-issue.png alt="GitLab logo and project next to an X icon" %}]({% asset gitlab/unlink-issue.png @path %})
     
 ## Commit Tracking
+
+Commit tracking allows you to hone in on problematic commits. With commit tracking, you can better isolate what went out and what might be problematic, in regards to your commits, by leveraging information from releases like tags and metadata.
+
+[{% asset gitlab/last-commit-in-releases.png alt="Dashboard with last commit highlighted" %}]({% asset gitlab/last-commit-in-releases.png @path %}) 
         
