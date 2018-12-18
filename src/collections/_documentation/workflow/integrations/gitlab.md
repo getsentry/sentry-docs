@@ -89,5 +89,9 @@ Commit tracking allows you to hone in on problematic commits. With commit tracki
 
 The image below displays how a release can shed light on who exactly made commits, which projects were affected, and which deploys were impacted.
 
-[{% asset gitlab/last-commit-in-releases.png alt="Dashboard with last commit highlighted" %}]({% asset gitlab/last-commit-in-releases.png @path %}) 
+[{% asset gitlab/last-commit-in-releases.png alt="Dashboard with last commit highlighted" %}]({% asset gitlab/last-commit-in-releases.png @path %})
+
+When you investigate deeper into that commit, you can leverage information from metadata like tags.
+
+[{% asset gitlab/highlighting-tags.png alt="Issue detail highlighting tags" %}]({% asset gitlab/highlighting-tags.png @path %}) 
         
