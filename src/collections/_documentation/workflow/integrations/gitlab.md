@@ -78,5 +78,10 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
     1. Or, in the pop-up, you can click the _Link_ tab, search the issue by name, and then click **Link Issue**. _Note: Issues aren't currently searchable by number._
     
         [{% asset gitlab/link-issue-by-name.png alt="pop-up modal to search issue name" %}]({% asset gitlab/link-issue-by-name.png @path %})
+
+1. To unlink an issue, click on the _X_ next to its name under Linked Issues
+
+    [{% asset gitlab/unlink-issue.png alt="GitLab logo and project next to an X icon" %}]({% asset gitlab/unlink-issue.png @path %})
     
+## Commit Tracking
         
