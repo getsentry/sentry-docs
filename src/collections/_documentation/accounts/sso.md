@@ -57,7 +57,7 @@ Sentry’s SAML endpints are as follows, where the `{organization_slug}` is subs
 <table class="table"><tbody valign="top"><tr><th>ACS:</th><td><code class="docutils literal">https://sentry.io/saml/acs/{organization_slug}/</code></td></tr><tr><th>SLS:</th><td><code class="docutils literal">https://sentry.io/saml/SLS/{organization_slug}/</code></td></tr><tr><th>Metadata:</th><td><code class="docutils literal">https://sentry.io/saml/metadata/{organization_slug}/</code></td></tr></tbody></table>
 
 {% capture __alert_content -%}
-SAML2 SSO requires an Enterprise Plan.
+SAML2 SSO requires a Business or Enterprise Plan.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
