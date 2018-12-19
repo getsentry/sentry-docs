@@ -5,11 +5,6 @@ sidebar_order: 4
 
 Sentry provides a generic auth provider for [SAML2 based authentication](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), which allows Owners of a Sentry organization to manually configure any SAML2-enabled IdP system. Documented below are the general steps for integration.
 
-Sentry supports the following SAML services:
-
-* Identity and Service Provider initiated SSO
-* Identity Provider initiated SLO (Single Logout)
-
 {% capture __alert_content -%}
 SAML2 SSO requires an Enterprise Plan.
 {%- endcapture -%}
@@ -19,6 +14,11 @@ SAML2 SSO requires an Enterprise Plan.
 %}
 
 # Setup
+
+Sentry supports the following SAML services:
+
+* Identity and Service Provider initiated SSO
+* Identity Provider initiated SLO (Single Logout)
 
 ## 1. Register Sentry with IdP
 Before connecting Sentry to the Identity Provider (IdP), it’s important to first register Sentry as an application on the IdP’s side. Sentry’s SAML endpoints are as follows, where the `{organization_slug}` is substituted for your organization slug:
@@ -38,12 +38,12 @@ There are three distinct methods for registering your IdP with Sentry.io: Metada
 ### Using Metadata URL
 This method only requires a Metadata URL provided by the IdP platform. After it has been supplied, Sentry will automatically fetch the metadata it needs.
 
-[screenshot]
+{% asset saml2-metadata-url.png %}
 
 ### Using Provider XML
 For this method to work, an administrator needs to provide the contents of the IdP’s generated metadata file. Once the contents are pasted directly into the text field, Sentry will do the rest. Note that Sentry.io does not require a signing certificate.
 
-[screenshot]
+{% asset saml2-provider-xml.png %}
 
 Here’s an example of what the Metadata XML contents look like.
 
@@ -75,7 +75,7 @@ urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress
 ### Using Provider Data
 This registration method is the most involved, and requires matching up the data fields from an IdP. The easiest way to accomplish this is to look for the values in a metadata file such as the one provided above.
 
-[screenshot]
+{% asset saml2-provider-data.png %}
 
 Based on the XML file example above, the field values to plug in are as follows:
 
@@ -87,23 +87,37 @@ In this example, the `SingleLogoutService` isn’t provided by the IdP, and is t
 
 
 ## 3. Map IdP Attributes
-All you need to do here is match up the specific membership fields with the corresponding values found in your IdP platform documentation.
 
-[screenshot]
+{% include components/alert.html
+  title="Note on field names"
+  content="Metadata field names can vary from one provider to another. For example, Microsoft Azure AD refers to these very metadata fields as `Claims`, while Okta refers to them as `Attributes`. Similarly, one platform might use `user.email`, while another vendor uses `emailaddress`."
+  level="danger"
+%}
 
-One word of caution: metadata field names can vary from one provider to another. For example, Microsoft Azure AD refers to these very metadata fields as Claims, while Okta refers to them as Attributes. Similarly, one platform might use user.email, while another vendor uses emailaddress
+Here, the field values of Sentry members need to be matched up with the corresponding values for members in the IdP. The basic required fields are the IdP's User ID and email address, but Sentry can also optionally pull first and last name values from there as well.
+
+{% asset saml2-map-attributes.png %}
+
+
 
 ## 4. Confirm successful registration
 Once the SAML integration flow is complete, the related Auth page will reflect the status of a successful integration. From here, you can send reminders to any existing members who existed prior to the integration, and they will receive an email prompt to link their accounts.
 
-[screenshot]
+{% asset saml2-success.png %}
 
 Because Sentry uses Just-In-Time (JIT) provisioning, new members are registered with Sentry automatically during their first login attempt with SAML SSO. These accounts will have their membership types delegated based on what the default membership role is in your Organization Settings in Sentry.
 
-# Troubleshooting
+# Frequently Asked Questions
+
+**What is the process for adding new members to a SAML2-enabled Sentry organization?**  
+Sentry makes use of Just-In-Time provisioning for member accounts; any new member created within an Identity Provider will have an account automatically created in Sentry when that member attempts to sign into Sentry for the first time.  
 
 **What happens to Sentry.io accounts that exist prior to SAML being enabled/enforced?**  
-Existing members will receive an email notifying them of the new SAML authentication option once it is turn it on (regardless of enforcement) and they'll be able to link the accounts in the IdP system with their Sentry memberships.
+Existing members will receive an email notifying them of the new SAML authentication option once it is turned on (regardless of enforcement) and they'll be able to link the accounts in the IdP system with their Sentry memberships.  
 
-**Attempting to set up SAML2 SSO with an IdP results in a failure with the message “The provider did not return a valid user identity”?**  
-The crux of the problem here is that different IdP platforms (Okta, Azure AD, etc) use different terms for the fields necessary for the integration to work. As a result, it’s possible to map up incorrect values into Sentry, causing SSO to fail with this error message.
+**Does Sentry deprovision members if they are no longer present in the Identity Provider?**  
+At this time, Sentry's SAML2 integration does not automatically deprovision inactive user accounts.
+Instead, the member remains inside of Sentry.io without any means to log in, as they can no longer access the IdP platform for sign-on. For now, inactive member accounts will need to be removed manually by a Manager or an Owner in Sentry.
+
+**Attempting to set up SAML2 SSO with an IdP results in a failure with the message “The provider did not return a valid user identity” What is happening here?**  
+The crux of the problem here is that different IdP platforms (Okta, Azure AD, etc) use different terms and conventions for the fields necessary for the integration to work. As a result, it’s possible to map up incorrect values into Sentry, causing SSO to fail with this error message.  
