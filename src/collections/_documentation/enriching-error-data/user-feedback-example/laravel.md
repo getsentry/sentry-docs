@@ -1,6 +1,6 @@
 For Laravel 5 up to 5.4 you need to open up ``App/Exceptions/Handler.php`` and extend the
 `render` method to make sure the 500 error is rendered as a view correctly, in 5.5+ this
-step is not required anymore an you can skip ahead to the next one:
+step is not required anymore and you can skip ahead to the next one:
 
 ```php
 <?php

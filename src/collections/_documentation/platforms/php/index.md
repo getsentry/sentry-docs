@@ -23,7 +23,7 @@ PHP provides some additional options, all options can be passed into `init()`.
 
 #### send_attempts
 
-The number of attempts that should should be made to send an event before erroring
+The number of attempts that should be made to send an event before erroring
 and dropping it from the queue.
 By default this option is set to `6`.
 
@@ -61,7 +61,7 @@ By default this option is set to `3`.
 #### excluded_exceptions
 
 Sometimes you may want to skip capturing certain exceptions. This option sets
-the FCQN of the classes of the exceptions that you don't want to capture. The
+the FQCN of the classes of the exceptions that you don't want to capture. The
 check is done using the `instanceof` operator against each item of the array
 and if at least one of them passes the event will be discarded.
 

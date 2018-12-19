@@ -13,7 +13,7 @@ system integrations set `default_integrations => false` when calling `init()`.
 ### RequestIntegration
 
 This integration add request data like `User Agent`, `Cookies`, `Headers` to the event.
-Please not that `send_default_pii` has to be enabled to also receive PII information.
+Please note that `send_default_pii` has to be enabled to also receive PII information.
 
 ### ErrorHandlerIntegration
 
