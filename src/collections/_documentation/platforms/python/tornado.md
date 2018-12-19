@@ -43,6 +43,9 @@ The Tornado integration adds support for the [Tornado Web Framework](https://www
 
 * {% include platforms/python/request-data.md %}
 
+  *Note: The tornado integration currently does not capture formdata.* See [the
+  relevant GitHub issue](https://github.com/getsentry/sentry-python/issues/221)
+
 * Logging with any logger will create breadcrumbs when
   the [Logging]({% link _documentation/platforms/python/logging.md %})
   integration is enabled (done by default).
