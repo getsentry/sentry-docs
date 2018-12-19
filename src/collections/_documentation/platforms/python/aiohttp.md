@@ -8,7 +8,9 @@ sidebar_order: 4
 <!-- WIZARD -->
 *Import name: `sentry_sdk.integrations.aiohttp.AioHttpIntegration`*
 
-The AIOHTTP integration adds support for the [AIOHTTP-Server Web Framework](https://docs.aiohttp.org/en/stable/web.html).
+The AIOHTTP integration adds support for the [AIOHTTP-Server Web
+Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
+3.7 or greater is required.
 
 1. Install `sentry-sdk` from PyPI:
 

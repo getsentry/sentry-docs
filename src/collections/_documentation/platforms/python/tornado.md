@@ -8,7 +8,9 @@ sidebar_order: 4
 <!-- WIZARD -->
 *Import name: `sentry_sdk.integrations.tornado.TornadoIntegration`*
 
-The Tornado integration adds support for the [Tornado Web Framework](https://www.tornadoweb.org/).
+The Tornado integration adds support for the [Tornado Web
+Framework](https://www.tornadoweb.org/). A Tornado version of 5 or greater and
+Python 3.7 or greater is required.
 
 1. Install `sentry-sdk` from PyPI:
 
