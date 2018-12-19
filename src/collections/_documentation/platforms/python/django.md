@@ -86,8 +86,8 @@ from sentry_sdk import capture_message
 def my_custom_page_not_found_view(*args, **kwargs):
     capture_message("Page not found!", level="error")
 
-    # return any response here
-    # return HttpResponseNotFound("Not found")
+    # return any response here, e.g.:
+    return HttpResponseNotFound("Not found")
 ```
 
 The error message you send to sentry will have the usual request data attached.
