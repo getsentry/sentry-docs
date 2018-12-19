@@ -157,12 +157,3 @@ $spool->flushQueue($transport);
 ```
 
 {{ __note }} 
-
-## Framework Integrations
-
-Framework integrations are opt-in integrations for large frameworks or libraries.  Currently
-the following are supported:
-
-* [Laravel]({% link _documentation/platforms/php/laravel.md %})
-* [Symfony 2]({% link _documentation/platforms/php/symfony2.md %})
-* [Monolog]({% link _documentation/platforms/php/monolog.md %})
