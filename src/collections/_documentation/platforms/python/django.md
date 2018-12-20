@@ -69,7 +69,7 @@ see [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md
 
 ## Reporting other status codes
 
-In some situations it might make sense to report 404s and other errors besides 500 to Sentry. This can be achieved by writing your own Django view for those status codes. For example:
+In some situations it might make sense to report `404 Not Found` and other errors besides uncaught exceptions (`500 Internal Server Error`) to Sentry. This can be achieved by writing your own Django view for those status codes. For example:
 
 ```python
 
