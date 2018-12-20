@@ -52,7 +52,7 @@ Sentry owner or manager permissions are required to install this integration.
 
 1. Next to your GitLab Instance, click **Configure**. _Note: It’s important to configure to receive the full benefits of commit tracking._
 
-    [{% asset gitlab/configure-gitlab-instance.png alt="GitLab instance with connected group and highlighted configure button" %}]({% asset gitlab/configure-gitlab-instance.png @path %})
+    [{% asset gitlab/configure-button.png alt="GitLab instance with connected group and highlighted configure button" %}]({% asset gitlab/configure-button.png @path %})
 
 1. On the resulting page, click **Add Repository** to select which repositories you’d like to begin tracking commits.
 
