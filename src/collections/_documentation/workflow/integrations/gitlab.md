@@ -98,4 +98,33 @@ When you investigate deeper into that commit, you can leverage information from 
 Broadly, this lets you isolate problems in order to quickly see what was 'committed' and what might be problematic.
 
 Learn more about how to configure [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+
+## Suspect Commit
+
+Once you are tracking the commits, the 'suspect commit' is the commit that likely introduced the error.
+
+One special benefit of using Sentry's Commit Tracking is the ability to know the suspect commit that likely caused the error, with a suggested plan of action for how to rectify the error. For example, after pinpointing the suspect commit, you can also identify the developer who made the commit and assign them the task of fixing the error. 
+
+[{% asset gitlab/highlighting-suspect-commits.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/highlighting-suspect-commits.png @path %})
+
+Here is where you can find info for [suspect commit setup]({%- link _documentation/workflow/releases.md -%}#link-repository).
+
+## Resolve via Commit or PR
+
+Once you are sending commit data, you can start resolving issues by including `fixes <SHORT-ID>` in your commit messages. You might want to type something in the commit like: "this fixes Sentry-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes <SHORT-ID>` in the title or description. This will automatically resolve the issue in the next release. 
+
+## Troubleshooting
+
+FAQ:
+- Do I need to whitelist the IP address?
+    - If you are using Sentry on-premise, then yes, you do.
+    - For more details, checkout our [IP Ranges docs]({%- link ip-ranges.md -%}).
+- Do you support subgroups?
+    - Organizations can sit within organizations, but we don't support subgroups for this unless you use GitLab version 11.6 or higher.
+- Why is my integration not working under groups?
+    - This is because you have to use a group not a user. This feature won't work if repositories are hosted under user and not group.
+- Are there pricing restrictions?
+    - Yes, free plans don't have access to this at the time. We support this for the people on the Teams, Business, or Enterprise plan. But don't forget, Sentry is open source!
+- Who has permission to install this?
+    - You must have Sentry owner or manager permissions to install on the Sentry side and GitLab owner permissions are required to install on the GitLab side. 
         
