@@ -3,7 +3,7 @@ title: GitLab
 sidebar_order: 6
 ---
 
-Sentry’s new GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry.
+Sentry’s updated GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry.
 
 ## Configure GitLab
 
@@ -79,7 +79,7 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
     
         [{% asset gitlab/link-issue-by-name.png alt="pop-up modal to search issue name" %}]({% asset gitlab/link-issue-by-name.png @path %})
 
-1. To unlink an issue, click on the **X** next to its name under Linked Issues
+1. To unlink an issue, click on the **X** next to its name under Linked Issues.
 
     [{% asset gitlab/unlink-issue.png alt="GitLab logo and project next to an X icon" %}]({% asset gitlab/unlink-issue.png @path %})
     
