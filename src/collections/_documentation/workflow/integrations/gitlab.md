@@ -67,7 +67,7 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
 
 1. Navigate to Linked Issues on the right panel of the issue's page and click **Link GitLab Issue**.
     
-    [{% asset gitlab/linking-gitlab-issue.png alt="GitLab logo with Link GitLab Issue text" %}]({% asset gitlab/linking-gitlab-issue.png @path %}) 
+    [{% asset gitlab/link-gitlab-issue.png alt="GitLab logo with Link GitLab Issue text" %}]({% asset gitlab/link-gitlab-issue.png @path %}) 
 
 1. You have two options to complete the issue link:
 
@@ -86,6 +86,15 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
 ## Commit Tracking
 
 Commit tracking allows you to hone in on problematic commits. With commit tracking, you can better isolate what went out and what might be problematic, by leveraging information from releases like tags and metadata.
+
+{% capture __alert_content -%}
+For commit tracking to work, you must click **configure** in Configure GitLab step 8.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
 
 The image below displays how a release can shed light on who exactly made commits, which projects were affected, and which deploys were impacted.
 
