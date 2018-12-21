@@ -3,7 +3,7 @@ title: GitLab
 sidebar_order: 6
 ---
 
-Sentry’s updated GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry.
+Sentry’s GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry.
 
 ## Configure GitLab
 
@@ -85,18 +85,9 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
     
 ## Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. With commit tracking, you can better isolate what went out and what might be problematic, by leveraging information from releases like tags and metadata.
+Commit tracking allows you to hone in on problematic commits. With commit tracking, you can better isolate what might be problematic by leveraging information from releases like tags and metadata.
 
-{% capture __alert_content -%}
-For commit tracking to work, you must click **configure** in Configure GitLab step 8.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="warning"
-%}
-
-The image below displays how a release can shed light on who exactly made commits, which projects were affected, and which deploys were impacted.
+Once you've configured both [release and commit tracking]({%- link _documentation/workflow/releases.md -%}), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
 
 [{% asset gitlab/last-commit-in-releases.png alt="Dashboard with last commit highlighted" %}]({% asset gitlab/last-commit-in-releases.png @path %})
 
@@ -104,9 +95,9 @@ When you investigate deeper into that commit, you can leverage information from 
 
 [{% asset gitlab/highlighting-tags.png alt="Issue detail highlighting tags" %}]({% asset gitlab/highlighting-tags.png @path %})
 
-Broadly, this lets you isolate problems in order to quickly see what was 'committed' and what might be problematic.
+Broadly, this lets you isolate problems in order to see which commits might be problematic.
 
-Learn more about how to configure [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Learn more about [release and commit tracking]({%- link _documentation/workflow/releases.md -%}).
 
 ## Suspect Commit
 
@@ -120,20 +111,23 @@ Here is where you can find info for [suspect commit setup]({%- link _documentati
 
 ## Resolve via Commit or PR
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SHORT-ID>` in your commit messages. You might want to type something in the commit like: "this fixes Sentry-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes <SHORT-ID>` in the title or description. This will automatically resolve the issue in the next release. 
+Once you've added a repository (see configuration step 8), you can start resolving issues by including `fixes <SHORT-ID>` in your commit messages. You might want to type something in the commit like: "this fixes MyApp-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes <SHORT-ID>` in the title or description. This will automatically resolve the issue in the next release. 
+
+A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
+
+[{% asset gitlab/short-id.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/short-id.png @path %})
 
 ## Troubleshooting
 
 FAQ:
-- Do I need to whitelist the IP address?
-    - If you are using Sentry on-premise, then yes, you do.
-    - For more details, checkout our [IP Ranges docs]({%- link ip-ranges.md -%}).
+- I'm using GitLab on-premise. Do I need to whitelist Sentry's IP addresses?
+    - Yes. You can find our IP ranges [ here ]({%- link ip-ranges.md -%}).
 - Do you support subgroups?
-    - Organizations can sit within organizations, but we don't support subgroups for this unless you use GitLab version 11.6 or higher.
-- Why is my integration not working under groups?
-    - This is because you have to use a group not a user. This feature won't work if repositories are hosted under user and not group.
+    - Currently, we only support subgroups for users using GitLab 11.6 or higher.
+- My repositories are hosted under my user account, not a group account. Can I still use this integration?
+    - Unfortunately, not. The GitLab integration only works for repositories that are hosted under group accounts.
 - Are there pricing restrictions?
-    - Yes, free plans don't have access to this at the time. We support this for the people on the Teams, Business, or Enterprise plan. But don't forget, Sentry is open source!
+    - This integration is available for organizations on the [Team, Business, or Enterprise plan](https://sentry.io/pricing/).
 - Who has permission to install this?
-    - You must have Sentry owner or manager permissions to install on the Sentry side and GitLab owner permissions are required to install on the GitLab side. 
+    - You must have both owner/manager permissions in Sentry and owner permissions in GitLab to successfully install this integration. 
         
