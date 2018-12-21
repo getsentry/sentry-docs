@@ -105,7 +105,7 @@ The following settings are available (first is the environment variable, the val
 
 `SENTRY_HTTP_MAX_RETRIES` (_http.max_retries_):
 
-: Sets the maximum number of retry attempts for upload operations (e.g., uploads of release files and debug symbols).
+: Sets the maximum number of retry attempts for upload operations (e.g., uploads of release files and debug symbols). The default is `5`.
 
 (_ui.show_notifications_):
 
