@@ -163,6 +163,7 @@ Discover is currently available as an beta release to business plans and select 
 
 Discover lets you query raw event data in Sentry, across any number of projects within your organization.
 
+{% asset discover-query.png %}
 
 ## Using the query builder
 
