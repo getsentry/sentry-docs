@@ -5,7 +5,7 @@ sidebar_order: 2
 
 The Issue Owners feature allows you to reduce noise by directing notifications to specific teams or users based on a path or URL. This allows you to get issues into the hands of the developer who can fix them, faster.
 
-# How It Works
+## How It Works
 
 Issue owners builds upon your alert rules to specify who to notify about a given issue (to learn more about alert rules, click [here](https://blog.sentry.io/2017/10/12/proactive-alert-rules)).
 
@@ -17,7 +17,7 @@ If there is a match, only Owners will receive the alert for the exception. By de
 
 Note that at this time the Issue Owners feature is only available for email notifications. This means that your alert rules must trigger email notifications in order to be affected by your Issue Owners rules.
 
-# Configuration
+## Configuration
 
 **Adding a New Rule**
 
@@ -53,7 +53,7 @@ Issue Owner rules use the following structure:
 
 Note that teams and users must have access to the project to become owners. To grant a team access to a project, navigate to project settings > Project Teams, and click ‘Add Team to [project]’. To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a project’s team, navigate to Project Settings > Project Teams, select a team, then click ‘Add Member.’
 
-# Troubleshooting
+## Troubleshooting
 
 -   Make sure that all teams and users have access to the project; if they do not have the correct access, the Issue Owners rules will fail to save. To grant a team access to a project, navigate to project settings > Project Teams, and click ‘Add Team to [project]’. To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a project’s team, navigate to Project Settings > Project Teams, select a team, then click ‘Add Member.’
 -   Make sure that alert rules are configured to send email. First, check to see that the Mail plugin is enabled by navigating to project settings > Integrations. Then, navigate to project settings > Alerts > Rules, and confirm that notifications are being sent to Mail or to ‘all enabled legacy services.’
