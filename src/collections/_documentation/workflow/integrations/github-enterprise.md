@@ -7,7 +7,7 @@ You can now use the data from your GitHub Enterprise commits to help you find an
 ## Configure GitHub Enterprise
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and GitHub owner permissions are required to install this integration.
+To install or configure this integration you must be an owner or manager of your Sentry organization, as well as have owner permissions on your GitHub organization.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

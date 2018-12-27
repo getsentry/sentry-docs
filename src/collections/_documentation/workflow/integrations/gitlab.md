@@ -8,7 +8,7 @@ Sentry’s GitLab integration helps you find and fix bugs faster by using data f
 ## Configure GitLab
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions are required to install this integration.
+To install or configure this integration you must be an owner or manager of your Sentry organization.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

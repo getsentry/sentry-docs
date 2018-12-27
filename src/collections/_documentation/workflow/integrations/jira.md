@@ -8,7 +8,7 @@ Connect errors from Sentry with your Jira issues.
 ## Installing Jira with Sentry
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and Jira admin permissions are required to install this integration.
+To install or configure this integration you must be an owner or manager of your Sentry organization, as well as have admin permissions on Jira.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

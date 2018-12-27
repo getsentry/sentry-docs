@@ -8,7 +8,7 @@ The global Slack integration creates workflows for your team. Now you can triage
 ## Configure Slack
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions are required to install this integration. Slack defaults to let any workspace member authorize apps, but they may have to request access. See this [Slack help article](https://get.slack.help/hc/en-us/articles/202035138-Add-an-app-to-your-workspace) for more details.
+To install this integration you must have owner or manager permissions on your Sentry organization. Slack defaults to let any workspace member authorize apps, but they may have to request access. See this [Slack help article](https://get.slack.help/hc/en-us/articles/202035138-Add-an-app-to-your-workspace) for more details.
 
 {%- endcapture -%}
 {%- include components/alert.html

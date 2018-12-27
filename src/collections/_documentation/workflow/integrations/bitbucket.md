@@ -7,7 +7,7 @@ You can now use the data from your Bitbucket commits to help you find and fix bu
 ## Configure Bitbucket
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and Bitbucket admin permissions are required to install this integration.
+To install or configure this integration you must be an owner or manager of your Sentry organization, as well as have admin permissions on your Bitbucket organization.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

@@ -7,7 +7,7 @@ You can now use the data from your commits to Azure DevOps, formerly known as Vi
 ## Configure Azure DevOps
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and Azure project admin permissions are required to install this integration.
+To install or configure this integration you must be an owner or manager of your Sentry organization, as well as have admin permissions on your Azure project.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
