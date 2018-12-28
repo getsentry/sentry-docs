@@ -45,7 +45,14 @@ There are two ways to create a release and associate commits: using a repository
 
 Using one of Sentry's repository integrations (e.g. GitHub, GitLab, Bitbucket, etc.) is the easiest way to connect your commit metadata to Sentry. For a list of available integrations, go to Organization Settings > Integrations.
 
-Note that you'll need to be an Owner or Manager of your Sentry organization to set up or configure an integration. Read more about roles in Sentry [here]({%- link _documentation/accounts/membership.md -%}).
+{% capture __alert_content -%}
+You need to be an Owner or Manager of your Sentry organization to set up or configure an integration. Read more about [roles in Sentry]({%- link _documentation/accounts/membership.md -%}).
+{%- endcapture -%}
+{%- include components/alert.html
+  content=__alert_content
+  title="Note"
+  level="warning"
+%}
 
 {% asset releases-repo-integrations.png %}
 
@@ -83,7 +90,14 @@ sentry-cli releases new -p project1 -p project2 $VERSION
 sentry-cli releases set-commits --auto $VERSION
 ```
 
-**Note:** You need to make sure you’re using [Auth Tokens]({%- link _documentation/api/auth.md -%}#auth-tokens), **not** [API Keys]({%- link _documentation/api/auth.md -%}#api-keys), which are deprecated.
+{% capture __alert_content %}
+You need to make sure you’re using [Auth Tokens]({%- link _documentation/api/auth.md -%}#auth-tokens), **not** [API Keys]({%- link _documentation/api/auth.md -%}#api-keys), which are deprecated.
+{% endcapture %}
+{%- include components/alert.html
+  content=__alert_content
+  title="Note"
+  level="warning"
+%}
 
 In the above example, we’re using the `propose-version` sub-command to automatically determine a release ID. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally we’re using the `--auto` flag to automatically determine the repository name, and associate commits between the previous release’s commit and the current head commit with the release. If you have never associated commits before, we’ll use the latest 10 commits.
 
@@ -168,7 +182,11 @@ Fixes SENTRY-317
 
 When Sentry sees this commit, we’ll reference the commit in the issue, and when you create a release in Sentry we’ll mark the issue as resolved in that release.
 
-**Note:** If you’re using GitHub, you may have a privacy setting enabled which prevents Sentry from identifying the user’s real email address. If you wish to use the suggested owners feature, you’ll need to ensure “Keep my email address private” is unchecked in GitHub’s [account settings](https://github.com/settings/emails).
+{% include components/alert.html
+  title="GitHub and Identifying Commit Authors"
+  content="If you’re using GitHub, you may have a privacy setting enabled which prevents Sentry from identifying the user’s real email address. If you wish to use the suggested owners feature, you’ll need to ensure “Keep my email address private” is unchecked in GitHub’s [account settings](https://github.com/settings/emails)."
+  level="warning"
+%}
 
 #### Alternatively: Without a Repository Integration
 
