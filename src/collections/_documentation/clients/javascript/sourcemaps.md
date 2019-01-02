@@ -19,3 +19,5 @@ Raven.config('your-dsn', {
 ## Next Steps
 
 Now that you've specified the release in your SDK config, head on over to [our main source maps docs]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}) to learn how to [create your source maps]([there]({%- link _documentation/platforms/javascript/sourcemaps/generation.md -%})) and [make them available to Sentry]([there]({%- link _documentation/platforms/javascript/sourcemaps/availability.md -%})). There you'll also find a [troubleshooting guide]([there]({%- link _documentation/platforms/javascript/sourcemaps/troubleshooting.md -%})).
+
+These last 3 links don't work, it shows e.g. https://docs.sentry.io/clients/javascript/sourcemaps/[there](/platforms/javascript/sourcemaps/generation/)
