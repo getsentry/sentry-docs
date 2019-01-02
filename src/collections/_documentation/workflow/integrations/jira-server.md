@@ -47,8 +47,6 @@ You'll need your public and private keys for later in the process.
 4. In the resulting window, enter the base URL for your Jira Server instance, your consumer key, and your private key. Click **Submit**.
 5. In Sentry, you’ll see a new Jira Server instance appear on the Integrations page.
 
-    [{% asset jira-install.png %}]({% asset jira-install.png @path %})
-
 Jira should now be authorized for all projects under your Sentry organization.
 
 ## Issue Management
