@@ -1,5 +1,5 @@
 ```php
 use function Sentry\captureMessage;
 
-captureMessage("Something went wrong");
+captureMessage('Something went wrong');
 ```

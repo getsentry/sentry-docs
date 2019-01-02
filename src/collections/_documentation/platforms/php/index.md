@@ -15,7 +15,7 @@ frameworks.
 
 *Integrations* extend the functionality of the SDK for some common frameworks and
 libraries.  They can be seen as plugins that extend the functionality of the Sentry SDK.  
-Integrations are configured by a call to `init()`.
+Integrations are configured by a call to `init()` method.
 
 ## PHP Specific Options
 
@@ -34,7 +34,7 @@ files from third-parties ones (e.g. vendors), this option can be configured to
 mark the directory containing all the source code of the application.
 
 For example, assuming that the directory structure shown below exists, marking
-the project root as ``project-folder/src/`` means that every file inside that
+the project root as `project-folder/src/` means that every file inside that
 directory that is part of a stacktrace frame will be marked as "application
 code".
 
@@ -87,7 +87,9 @@ interface;
 - The `SpoolTransport` which can be used to defer the sending of events (e.g.
   by putting them into a queue).
   
-The examples below pretty much replace the `init()` call.
+The examples below pretty much replace the `init()` call.  
+Please also keep in mind that once a Client is initalized with a Transport it cannot be
+changed.
 
 ### NullTransport
 
@@ -103,6 +105,7 @@ use Sentry\State\Hub;
 $transport = new NullTransport();
 $builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
 $builder->setTransport($transport);
+
 Hub::getCurrent()->bindClient($builder->getClient());
 ```
 {% capture __note %}
@@ -113,8 +116,8 @@ Hub::getCurrent()->bindClient($builder->getClient());
 
 ### HttpTransport
 
-The `HttpTransport` sends events over the HTTP protocol using [Httplug](http://httplug.io/) the
-best adapter available is automatically selected when creating a client instance
+The `HttpTransport` sends events over the HTTP protocol using [Httplug](http://httplug.io/).
+The best adapter available is automatically selected when creating a client instance
 through the client builder, but you can override it using the appropriate methods.
 
 ```php
@@ -122,9 +125,13 @@ use Sentry\ClientBuilder;
 use Sentry\Transport\HttpTransport;
 use Sentry\State\Hub;
 
-$transport = new HttpTransport($configuration, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
-$builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
+$options = ['dsn' => '___PUBLIC_DSN___'];
+
+$transport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
+
+$builder = ClientBuilder::create($options);
 $builder->setTransport($transport);
+
 Hub::getCurrent()->bindClient($builder->getClient());
 ```
 
@@ -135,25 +142,31 @@ Hub::getCurrent()->bindClient($builder->getClient());
 The default behavior is to send events immediately. You may, however, want to
 avoid waiting for the communication to the Sentry server that could be slow
 or unreliable. This can be avoided by choosing the `SpoolTransport` which
-stores the events in a queue so that another process can read it and and take
+stores the events in a queue so that another process can read it and take
 care of sending them. Currently only spooling to memory is supported.
 
 
 ```php
 use Sentry\ClientBuilder;
 use Sentry\Transport\SpoolTransport;
+use Sentry\Transport\HttpTransport;
 use Sentry\State\Hub;
+
+$options = ['dsn' => '___PUBLIC_DSN___'];
 
 $spool = new MemorySpool();
 $transport = new SpoolTransport($spool);
-$builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
+$httpTransport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
+
+$builder = ClientBuilder::create($options);
 $builder->setTransport($transport);
+
 Hub::getCurrent()->bindClient($builder->getClient());
 
 // When the spool queue is flushed the events are sent using the transport
 // passed as parameter of the flushQueue method.
   
-$spool->flushQueue($transport);
+$spool->flushQueue($httpTransport);
 ```
 
 {{ __note }} 

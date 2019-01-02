@@ -1,4 +1,4 @@
-Options are passed to the `init()` as an array:
+Options are passed to the `init()` method as an array:
 
 ```php
 use function Sentry\init;

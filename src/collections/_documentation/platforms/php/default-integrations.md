@@ -13,11 +13,11 @@ system integrations set `default_integrations => false` when calling `init()`.
 ### RequestIntegration
 
 This integration add request data like `User Agent`, `Cookies`, `Headers` to the event.
-Please note that `send_default_pii` has to be enabled to also receive PII information.
+Please note that [send_default_pii]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php#send-default-pii) has to be enabled to also receive PII information.
 
 ### ErrorHandlerIntegration
 
-This integration hooks into the global PHP `error_handler` and emits Events when an error occurs.
+This integration hooks into the global PHP `error_handler` and emits events when an error occurs.
 By default the error handler reserves 10 megabytes of memory to handle fatal
 errors.
 
