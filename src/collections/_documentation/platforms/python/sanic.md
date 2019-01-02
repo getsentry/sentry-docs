@@ -14,7 +14,7 @@ Framework](https://github.com/huge-success/sanic).
 1. Install `sentry-sdk` from PyPI:
 
     ```bash
-    $ pip install --upgrade sentry-sdk=={% sdk_version sentry.python %}
+    $ pip install --upgrade 'sentry-sdk=={% sdk_version sentry.python %}'
     ```
 
 2.  To configure the SDK, initialize it with the integration before or after your app has been initialized:
