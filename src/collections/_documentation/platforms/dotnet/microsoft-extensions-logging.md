@@ -16,7 +16,7 @@ Install-Package Sentry.Extensions.Logging -Version {% sdk_version sentry.dotnet.
 Or using the .NET Core CLI:
 
 ```sh
-dotnet add Sentry.Extensions.Logging -v {% sdk_version sentry.dotnet.extensions.logging %}
+dotnet add package Sentry.Extensions.Logging -v {% sdk_version sentry.dotnet.extensions.logging %}
 ```
 
 This package extends `Sentry` main SDK. That means that besides the logging related features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.

@@ -19,7 +19,7 @@ Install-Package Sentry.EntityFramework -Version {% sdk_version sentry.dotnet.ef 
 Or using the .NET Core CLI:
 
 ```sh
-dotnet add Sentry.EntityFramework -v {% sdk_version sentry.dotnet.ef %}
+dotnet add package Sentry.EntityFramework -v {% sdk_version sentry.dotnet.ef %}
 ```
 
 This package extends `Sentry` main SDK. That means that besides the EF features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
