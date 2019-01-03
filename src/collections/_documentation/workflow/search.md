@@ -135,7 +135,7 @@ Additionally you can use any tag you’ve specified as a token.
 
 ## Saving Searches
 
-You have the ability to save a search by performing the search, clicking the dropdown arraow next to the Current Search, and then "Save Currrent Search".
+You have the ability to save a search by performing the search, clicking the dropdown arrow next to the Current Search, and then "Save Current Search".
 
 [{% asset save-current-search.png %}]({% asset save-current-search.png @path %})
 
