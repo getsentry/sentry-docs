@@ -83,6 +83,6 @@ Issue sync is available for organizations on the Team, Business, and Enterprise 
   level="warning"
 %}
 
-To configure Issue sync, navigate to Organization Settings > **Integrations**, and click **Configure** next to your Jira Server instance. On the following page, you’ll see options of what information you’d like synced between Sentry and Jira.
+To configure Issue sync, navigate to **Organization Settings** > **Integrations**, and click **Configure** next to your Jira Server instance. On the following page, you’ll see options of what information you’d like synced between Sentry and Jira.
 
 [{% asset jira-sync.png %}]({% asset jira-sync.png @path %})
