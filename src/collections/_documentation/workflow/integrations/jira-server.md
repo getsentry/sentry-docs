@@ -42,7 +42,7 @@ You'll need your public and private keys for later in the process.
 
 ### III. Connect your Jira Server application with Sentry
 1. In Sentry, navigate to **Organization Settings** > **Integrations**.
-2. Next to Jira, click **Install**.
+2. Next to Jira Server, click **Install**.
 3. In the resulting modal, click **Add Installation**.
 4. In the resulting window, enter the base URL for your Jira Server instance, your consumer key, and your private key. Click **Submit**.
 5. In Sentry, you’ll see a new Jira Server instance appear on the Integrations page.
