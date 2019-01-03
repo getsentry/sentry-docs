@@ -14,6 +14,7 @@ These integrations are set up once per organization, and are then usable in all 
 -   [_GitHub_]({%- link _documentation/workflow/integrations/github.md -%})
 -   [_GitHub Enterprise_]({%- link _documentation/workflow/integrations/github-enterprise.md -%})
 -   [_JIRA_]({%- link _documentation/workflow/integrations/jira.md -%})
+-   [_JIRA Server_]({%- link _documentation/workflow/integrations/jira-server.md -%})
 -   [_Slack_]({%- link _documentation/workflow/integrations/slack.md -%})
 
 
