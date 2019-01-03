@@ -101,7 +101,7 @@ SDKs are encouraged to allow arbitrary options via the constructor, but must all
 The final endpoint you’ll be sending requests to is constructed per the following:
 
 ```
-{BASE_URI} = '{PROTOCOL}://{HOST}/{PATH}'
+ {BASE_URI} = '{PROTOCOL}://{HOST}{PATH}'
 
 '{BASE_URI}/api/{PROJECT_ID}/store/'
 ```
