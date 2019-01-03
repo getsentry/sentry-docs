@@ -16,7 +16,7 @@ Install-Package Sentry.Serilog -Version {% sdk_version sentry.dotnet.serilog %}
 Or using the .NET Core CLI:
 
 ```sh
-dotnet add Sentry.Serilog -v {% sdk_version sentry.dotnet.serilog %}
+dotnet add package Sentry.Serilog -v {% sdk_version sentry.dotnet.serilog %}
 ```
 
 This package extends `Sentry` main SDK. That means that besides the logging related features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
