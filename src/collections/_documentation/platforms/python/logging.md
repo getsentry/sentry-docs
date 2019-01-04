@@ -8,6 +8,7 @@ Calling ``sentry_sdk.init()`` already integrates with the logging module. It is
 equivalent to this explicit configuration:
 
 ```python
+import logging
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 
