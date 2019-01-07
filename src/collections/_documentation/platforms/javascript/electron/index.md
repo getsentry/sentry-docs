@@ -44,7 +44,7 @@ This will guide you through the installation and configuration process and sugge
 
 ## Configuring the Client
 
-After [configuring the SDK]({%- link _documentation/error-reporting/quickstart.md -%}?platform=electron#configure-the-sdk) the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and captures any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the main process and all renderer processes to also catch errors during startup.
+Start by configuring the SDK as described in the [quickstart guide]({%- link _documentation/error-reporting/quickstart.md -%}?platform=electron#configure-the-sdk). This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the main process and all renderer processes to also catch errors during startup.
 
 ## Browser integration
 
