@@ -32,7 +32,7 @@ The following tokens are reserved and known to Sentry:
 
 : Filter on the user which the issue is assigned to.
 
-  Values can be your user ID (your email address) or `me` for yourself.
+  Values can be your user ID (your email address), `me` for yourself, or `#team-name`.
 
 `bookmarks`
 
