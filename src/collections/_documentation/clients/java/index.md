@@ -39,7 +39,7 @@ Use the configuration below in combination with any of the integrations from abo
 
 ### Setting the DSN (Data Source Name) {#setting-the-dsn}
 
-The DSN is the first and most important thing to configure because it tells the SDK where to send events. You can find your project’s DSN in the “Client Keys” section of your “Project Settings” in Sentry. You can configure it in multiple ways.
+The DSN is the first and most important thing to configure because it tells the SDK where to send events. You can find your project’s DSN in the “Client Keys” section of your “Project Settings” in Sentry.
 
 In a properties file on your filesystem or classpath (defaults to `sentry.properties`):
 
@@ -67,6 +67,9 @@ import io.sentry.Sentry;
 Sentry.init("https://public:private@host:port/1");
 ```
 
+### Configuration Methods
+
+There are multiple ways to configure the Java SDK, but all of them take the same options. See the [configuration methods documentation]({%- link _documentation/clients/java/config.md -%}) for how to use each configuration method and how the option names might differ between them.
 
 
  
