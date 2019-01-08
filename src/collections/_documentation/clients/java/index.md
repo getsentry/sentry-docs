@@ -71,25 +71,15 @@ Sentry.init("https://public:private@host:port/1");
 
 There are multiple ways to configure the Java SDK, but all of them take the same options. See the [configuration methods documentation]({%- link _documentation/clients/java/config.md -%}) for how to use each configuration method and how the option names might differ between them.
 
-
+## Next Steps
  
--   [Configuration]({%- link _documentation/clients/java/config.md -%})
 -   [Context & Breadcrumbs]({%- link _documentation/clients/java/context.md -%})
 -   [Manual Usage]({%- link _documentation/clients/java/usage.md -%})
 -   [Agent (Beta)]({%- link _documentation/clients/java/agent.md -%})
 -   [Migration from Raven Java]({%- link _documentation/clients/java/migration.md -%})
--   [Integrations]({%- link _documentation/clients/java/modules/index.md -%})
-    -   [Android]({%- link _documentation/clients/java/modules/android.md -%})
-    -   [Google App Engine]({%- link _documentation/clients/java/modules/appengine.md -%})
-    -   [java.util.logging]({%- link _documentation/clients/java/modules/jul.md -%})
-    -   [Log4j 1.x]({%- link _documentation/clients/java/modules/log4j.md -%})
-    -   [Log4j 2.x]({%- link _documentation/clients/java/modules/log4j2.md -%})
-    -   [Logback]({%- link _documentation/clients/java/modules/logback.md -%})
-    -   [Spring]({%- link _documentation/clients/java/modules/spring.md -%})
 
-Resources:
+## Resources
 
--   [Documentation]({%- link _documentation/clients/java/index.md -%})
 -   [Examples](https://github.com/getsentry/examples)
 -   [Bug Tracker](http://github.com/getsentry/sentry-java/issues)
 -   [Code](http://github.com/getsentry/sentry-java)
