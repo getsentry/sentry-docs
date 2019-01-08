@@ -16,6 +16,7 @@ The old `raven` library is no longer maintained. We recommended you [migrate]({%
 %}
 
 ## Getting Started
+
 Getting started with Sentry is a three step process:
 
 1.  [Sign up for an account](https://sentry.io/signup/)
@@ -31,6 +32,42 @@ Once you've configured one of the integrations below, you can _also_ use Sentry'
 -   [Log4j 2.x]({%- link _documentation/clients/java/modules/log4j2.md -%})
 -   [Logback]({%- link _documentation/clients/java/modules/logback.md -%})
 -   [Spring]({%- link _documentation/clients/java/modules/spring.md -%})
+
+## Configuration {#config}
+
+Use the configuration below in combination with any of the integrations from above. The configuration will only work after an integration is installed. After that, [set you DSN]{#setting-the-dsn}.
+
+### Setting the DSN (Data Source Name) {#setting-the-dsn}
+
+The DSN is the first and most important thing to configure because it tells the SDK where to send events. You can find your project’s DSN in the “Client Keys” section of your “Project Settings” in Sentry. You can configure it in multiple ways.
+
+In a properties file on your filesystem or classpath (defaults to `sentry.properties`):
+
+```
+dsn=https://public:private@host:port/1
+```
+
+Via the Java System Properties _(not available on Android)_:
+
+```bash
+java -Dsentry.dsn=https://public:private@host:port/1 -jar app.jar
+```
+
+Via a System Environment Variable _(not available on Android)_:
+
+```bash
+SENTRY_DSN=https://public:private@host:port/1 java -jar app.jar
+```
+
+In code:
+
+```java
+import io.sentry.Sentry;
+
+Sentry.init("https://public:private@host:port/1");
+```
+
+
 
  
 -   [Configuration]({%- link _documentation/clients/java/config.md -%})
