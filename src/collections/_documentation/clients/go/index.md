@@ -15,8 +15,15 @@ The Go SDK is maintained and supported by Sentry but currently under development
 
 Raven-Go provides a Sentry client implementation for the Go programming language.
 
+## Getting Started
+Getting started with Sentry is a three step process:
+
+1.  [Sign up for an account](https://sentry.io/signup/)
+2.  [Install your SDK](#install)
+2.  [Configure it](#configure)
+
 <!-- WIZARD -->
-## Installation
+## Installation {#install}
 
 Raven-Go can be installed like any other Go library through `go get`:
 
@@ -24,7 +31,7 @@ Raven-Go can be installed like any other Go library through `go get`:
 $ go get github.com/getsentry/raven-go
 ```
 
-## Configuring the Client
+## Configuring the Client {#configure}
 
 To use `raven-go`, you’ll need to import the `raven` package, then initilize your DSN globally. If you specify the `SENTRY_DSN` environment variable, this will be done automatically for you. The release and environment can also be specified in the environment variables `SENTRY_RELEASE` and `SENTRY_ENVIRONMENT` respectively.
 
