@@ -23,6 +23,8 @@ Getting started with Sentry is a three step process:
 2.  [Install your SDK](#install)
 2.  [Configure it](#configure)
 
+## Installation {#install}
+
 Once you've configured one of the integrations below, you can _also_ use Sentry's [static API]({%- link _documentation/clients/java/usage.md -%}) in order to do things like record breadcrumbs, set the current user, or manually send events.
 
 -   [Android]({%- link _documentation/clients/java/modules/android.md -%})
