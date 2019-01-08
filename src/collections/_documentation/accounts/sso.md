@@ -91,3 +91,7 @@ As part of the Auth0 SSO configuration, you must provide the Auth0 Identity Prov
 In your Rippling admin dashboard locate the Sentry app in the list of suggested apps and select it.
 
 When prompted with the Rippling Metadata URL, copy this into the Sentry Rippling provider configuration. You will have to complete the Rippling application configuration before completing the sentry provider configuration.
+
+#### Custom SAML2 Integration
+
+For other SAML2 SSO providers not listed above, Sentry provides  generic connectors for [SAML2 based authentication]({%- link _documentation/accounts/saml2.md -%}), which may be configured manually.

@@ -1,6 +1,6 @@
 ---
 title: Pricing
-sidebar_order: 4
+sidebar_order: 5
 ---
 
 {% capture __alert_content -%}
