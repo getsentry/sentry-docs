@@ -61,11 +61,11 @@ The following settings are available (first is the environment variable, the val
 
 `SENTRY_AUTH_TOKEN` (_auth.token_):
 
-: the authentication token to use for all communication with Sentry.
+: The authentication token to use for all communication with Sentry.
 
 `SENTRY_API_KEY` (_auth.api_key_):
 
-: the legacy API key for authentication if you have one.
+: The legacy API key for authentication if you have one.
 
 `SENTRY_URL` (_defaults.url_):
 
@@ -73,11 +73,11 @@ The following settings are available (first is the environment variable, the val
 
 `SENTRY_ORG` (_defaults.org_):
 
-: the slug of the organization to use for a command.
+: The slug of the organization to use for a command.
 
 `SENTRY_PROJECT` (_defaults.project_):
 
-: the slug of the project to use for a command.
+: The slug of the project to use for a command.
 
 (_http.keepalive_):
 
@@ -102,6 +102,10 @@ The following settings are available (first is the environment variable, the val
 (_http.check_ssl_revoke_):
 
 : If this is set to false then SSL revocation checks are disabled on Windows. This can be useful when working with a corporate SSL MITM proxy that does not properly implement revocation checks. Do not use this unless absolutely necessary.
+
+`SENTRY_HTTP_MAX_RETRIES` (_http.max_retries_):
+
+: Sets the maximum number of retry attempts for upload operations (e.g., uploads of release files and debug symbols). The default is `5`.
 
 (_ui.show_notifications_):
 

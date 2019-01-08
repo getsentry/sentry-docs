@@ -19,7 +19,7 @@ Install-Package Sentry.Log4Net -Version {% sdk_version sentry.dotnet.log4net %}
 Or using the .NET Core CLI:
 
 ```sh
-dotnet add Sentry.Log4Net -v {% sdk_version sentry.dotnet.log4net %}
+dotnet add package Sentry.Log4Net -v {% sdk_version sentry.dotnet.log4net %}
 ```
 
 This package extends `Sentry` main SDK. That means besides the log4net `Appender`, through this package you'll also get access to all API and features available in the main `Sentry` SDK.

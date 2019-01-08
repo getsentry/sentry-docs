@@ -8,7 +8,9 @@ sidebar_order: 4
 <!-- WIZARD -->
 *Import name: `sentry_sdk.integrations.aiohttp.AioHttpIntegration`*
 
-The AIOHTTP integration adds support for the [AIOHTTP-Server Web Framework](https://docs.aiohttp.org/en/stable/web.html).
+The AIOHTTP integration adds support for the [AIOHTTP-Server Web
+Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
+3.7 or greater is required.
 
 1. Install `sentry-sdk` from PyPI:
 
@@ -46,7 +48,9 @@ The AIOHTTP integration adds support for the [AIOHTTP-Server Web Framework](http
 
 * All exceptions leading to a Internal Server Error are reported.
 
-* {% include platforms/python/request-data.md %}
+* *The AIOHTTP integration currently does not attach the request body.* See
+  [the relevant GitHub
+  issue](https://github.com/getsentry/sentry-python/issues/220)
 
 * Logging with any logger will create breadcrumbs when
   the [Logging]({% link _documentation/platforms/python/logging.md %})

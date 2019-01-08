@@ -7,7 +7,7 @@ Out of the box SDKs will attempt to hook themselves into your runtime environmen
 or framework to automatically report fatal errors.  However in many situations
 it's useful to manually report errors or messages to Sentry.  This is called
 "capturing".  When an event is captured it's sent to Sentry and will create a new
-issue group or be added to an already existing once based on Sentry's grouping
+issue group or be added to an already existing one based on Sentry's grouping
 algorithm.  Separately to capturing you can also record "breadcrumbs" that lead
 up to an event.  Breadcrumbs are different in that they will not create an event
 in Sentry but will be buffered until the next event is sent.  For more information

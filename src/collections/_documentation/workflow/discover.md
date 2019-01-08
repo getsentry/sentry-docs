@@ -150,7 +150,7 @@ common_tags:
 ---
 
 {% capture __alert_content -%}
-Discover is currently available as an beta release to business plans and select customers only.
+Discover is currently available as a beta release to business plans and select customers only.
 {%- endcapture -%}
 {%- include components/alert.html
   level="warning"
@@ -163,6 +163,7 @@ Discover is currently available as an beta release to business plans and select 
 
 Discover lets you query raw event data in Sentry, across any number of projects within your organization.
 
+{% asset discover-query.png %}
 
 ## Using the query builder
 
