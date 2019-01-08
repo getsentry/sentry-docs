@@ -6,8 +6,15 @@ sidebar_relocation: platforms
 
 The PHP SDK for Sentry supports PHP 5.3 and higher. It’s available as a BSD licensed Open Source library.
 
+## Getting Started
+Getting started with Sentry is a three step process:
+
+1.  [Sign up for an account](https://sentry.io/signup/)
+2.  [Install your SDK](#install)
+2.  [Configure it](#configure)
+
 <!-- WIZARD installation -->
-## Installation
+## Installation {#install}
 
 There are various ways to install the PHP integration for Sentry. The recommended way is to use [Composer](http://getcomposer.org/):
 
@@ -27,7 +34,7 @@ Alternatively you can manually install it:
 <!-- ENDWIZARD -->
 
 <!-- WIZARD configuration -->
-## Configuration
+## Configuration {#configure}
 
 The most important part is the creation of the raven client. Create it once and reference it from anywhere you want to interface with Sentry:
 
