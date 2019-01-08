@@ -11,6 +11,7 @@ SAML2 SSO requires an Enterprise Plan.
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 # Setup
@@ -26,7 +27,7 @@ Before connecting Sentry to the Identity Provider (IdP), it’s important to fir
 <table class="table"><tbody valign="top"><tr><th>ACS:</th><td><code class="docutils literal">https://sentry.io/saml/acs/{organization_slug}/</code></td></tr><tr><th>SLS:</th><td><code class="docutils literal">https://sentry.io/saml/SLS/{organization_slug}/</code></td></tr><tr><th>Metadata:</th><td><code class="docutils literal">https://sentry.io/saml/metadata/{organization_slug}/</code></td></tr></tbody></table>
 
 **What are these three things?**
-* `ACS` means *Assertion Consumer Service*, and is used for establishing a session based on rules made between your IdP and the service provider it is integrating with. Please note: Sentry’s ACS endpoint uses HTTP-POST bindings
+* `ACS` means *Assertion Consumer Service*, and is used for establishing a session based on rules made between your IdP and the service provider it is integrating with. _Please note: Sentry’s ACS endpoint uses HTTP-POST bindings_
 * `SLS` stands for *Single Logout Service*, and is used to address logout requests from the IdP.
 * `Metadata`, alternatively referred to as the `entityID`  in some systems, refers to the configuration data for an IdP or an SP. In this case, the Metadata endpoint in Sentry refers to your Sentry organization’s metadata on the Service Provider end.
 
@@ -41,14 +42,13 @@ This method only requires a Metadata URL provided by the IdP platform. After it 
 {% asset saml2-metadata-url.png %}
 
 ### Using Provider XML
-For this method to work, an administrator needs to provide the contents of the IdP’s generated metadata file. Once the contents are pasted directly into the text field, Sentry will do the rest. Note that Sentry.io does not require a signing certificate.
+For this method to work, an administrator needs to provide the contents of the IdP’s generated metadata file. Once the contents are pasted directly into the text field, Sentry will do the rest. _Note: Sentry.io does not require a signing certificate._
 
 {% asset saml2-provider-xml.png %}
 
 Here’s an example of what the Metadata XML contents look like.
 
 ```
-
 <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="http://www.okta.com/exkf25e40eapgLtXx0h7">
 <md:IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
 <md:KeyDescriptor use="signing">
@@ -90,8 +90,8 @@ In this example, the `SingleLogoutService` isn’t provided by the IdP, and is t
 
 {% include components/alert.html
   title="Note on field names"
-  content="Metadata field names can vary from one provider to another. For example, Microsoft Azure AD refers to these very metadata fields as `Claims`, while Okta refers to them as `Attributes`. Similarly, one platform might use `user.email`, while another vendor uses `emailaddress`."
-  level="danger"
+  content="Metadata field names can vary from one provider to another. For example, Microsoft Azure AD refers to these very metadata fields as **Claims**, while Okta refers to them as **Attributes**. Similarly, one platform might use **user.email**, while another vendor uses **emailaddress**."
+  level="warning"
 %}
 
 Here, the field values of Sentry members need to be matched up with the corresponding values for members in the IdP. The basic required fields are the IdP's User ID and email address, but Sentry can also optionally pull first and last name values from there as well.
@@ -119,5 +119,5 @@ Existing members will receive an email notifying them of the new SAML authentica
 At this time, Sentry's SAML2 integration does not automatically deprovision inactive user accounts.
 Instead, the member remains inside of Sentry.io without any means to log in, as they can no longer access the IdP platform for sign-on. For now, inactive member accounts will need to be removed manually by a Manager or an Owner in Sentry.
 
-**Attempting to set up SAML2 SSO with an IdP results in a failure with the message “The provider did not return a valid user identity” What is happening here?**  
+**Attempting to set up SAML2 SSO with an IdP results in a failure with the message “The provider did not return a valid user identity.” What is happening here?**  
 The crux of the problem here is that different IdP platforms (Okta, Azure AD, etc) use different terms and conventions for the fields necessary for the integration to work. As a result, it’s possible to map up incorrect values into Sentry, causing SSO to fail with this error message.  
