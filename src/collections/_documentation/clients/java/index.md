@@ -4,7 +4,7 @@ sidebar_order: 6
 sidebar_relocation: platforms
 ---
 
-Sentry for Java is the official Java SDK for Sentry. At its core it provides a raw client for sending events to Sentry, but it is highly recommended that you use one of the included library or framework integrations listed below if at all possible.
+Sentry for Java is a collection of modules provided by Sentry. To begin, we **highly recommend** you use one of the library or framework integrations listed under Installation. Otherwise, [manual usage]({%- link _documentation/clients/java/usage.md -%}) is another option. 
 
 **Note:** The old `raven` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
 
