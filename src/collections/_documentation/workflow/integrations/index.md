@@ -13,6 +13,7 @@ These integrations are set up once per organization, and are then usable in all 
 -   [_Bitbucket_]({%- link _documentation/workflow/integrations/bitbucket.md -%})
 -   [_GitHub_]({%- link _documentation/workflow/integrations/github.md -%})
 -   [_GitHub Enterprise_]({%- link _documentation/workflow/integrations/github-enterprise.md -%})
+-   [_GitLab_]({%- link _documentation/workflow/integrations/gitlab.md -%})
 -   [_JIRA_]({%- link _documentation/workflow/integrations/jira.md -%})
 -   [_JIRA Server_]({%- link _documentation/workflow/integrations/jira-server.md -%})
 -   [_Slack_]({%- link _documentation/workflow/integrations/slack.md -%})
@@ -25,7 +26,7 @@ These integrations are set up once per project, and are only usable in projects 
 -   [_Asana_]({%- link _documentation/workflow/integrations/asana.md -%})
 -   Campfire
 -   Flowdock
--   [_GitLab_]({%- link _documentation/workflow/integrations/gitlab.md -%})
+-   Gitlab
 -   [_Heroku_]({%- link _documentation/workflow/integrations/heroku.md -%})
 -   [_HipChat_]({%- link _documentation/workflow/integrations/hipchat.md -%})
 -   Lighthouse
