@@ -1,6 +1,6 @@
 ---
 title: GitHub
-sidebar_order: 4
+sidebar_order: 2
 ---
 You can now use the data from your GitHub commits to help you find and fix bugs faster.
 

@@ -1,6 +1,6 @@
 ---
 title: Heroku
-sidebar_order: 6
+sidebar_order: 2
 ---
 
 Sentry provides a native add-on for Heroku. While this add-on is not required, it will allow you to maintain consolidated billing inside of Heroku, as well as enable easy configuration of your Sentry credentials.
