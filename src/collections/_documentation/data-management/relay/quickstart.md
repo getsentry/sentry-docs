@@ -49,11 +49,12 @@ With the following content:
 
 ```json
 {
-    "publicKeys": {"___PUBLIC_KEY___": true},
+    "publicKeys": {
+        "___PUBLIC_KEY___": true
+    },
     "config": {
-        "piiConfig": {},
         "allowedDomains": ["*"],
-        "trustedRelays": []
+        "piiConfig": {}
     }
 }
 ```
@@ -101,7 +102,6 @@ For example:
     },
     "config": {
         "allowedDomains": ["*"],
-        "trustedRelays": [],
         "piiConfig": {
             "rules": {
                 "device_id": {
