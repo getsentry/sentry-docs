@@ -6,8 +6,15 @@ sidebar_relocation: platforms
 
 This is the documentation for our official clients for Cocoa (Swift and Objective-C). Starting with version `3.0.0` we’ve switched our internal code from Swift to Objective-C to maximize compatibility. Also we trimmed the public API of our sdk to a minimum. Some of the lesser used features that were present before are gone now, check out [Migration Guide]({%- link _documentation/clients/cocoa/migration.md -%}#migration) or [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%}#advanced) for details.
 
+## Getting Started
+Getting started with Sentry is a three step process:
+
+1.  [Sign up for an account](https://sentry.io/signup/)
+2.  [Install your SDK](#install)
+2.  [Configure it](#configure)
+
 <!-- WIZARD -->
-## Installation
+## Installation {#install}
 
 The SDK can be installed using [CocoaPods](http://cocoapods.org) or [Carthage](https://github.com/Carthage/Carthage). This is the recommended client for both Swift and Objective-C.
 
@@ -37,7 +44,7 @@ Run `carthage update` to download the framework and drag the built _Sentry.frame
 
 We also provide a pre-built version for every release which can be downloaded at [releases on github](https://github.com/getsentry/sentry-cocoa/releases).
 
-## Configuration
+## Configuration {#configure}
 
 To use the client, change your AppDelegate’s _application_ method to instantiate the Sentry client:
 
