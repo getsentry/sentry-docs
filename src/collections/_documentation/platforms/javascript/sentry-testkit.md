@@ -34,7 +34,7 @@ const report = testKit.reports()[0]
 expect(report).toHaveProperty(...)
 ```
 
-You may see more usage examples in the testing section of this repository as well.
+You may see more usage examples in the [testing section](https://github.com/wix/sentry-testkit/tree/master/test) of sentry-testkit repository as well.
 
 #### Test Kit API
 Sentry testkit consists of a very simple and strait-forward API.
