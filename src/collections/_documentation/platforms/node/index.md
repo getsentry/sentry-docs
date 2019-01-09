@@ -86,10 +86,8 @@ And these exist for breadcrumbs:
 
 ## EventProcessors
 
-With `eventProcessors` you are able to hook into the process of enriching the event with additional data.
-You can add you own `eventProcessor` on the current scope. The difference to `beforeSend` is that
-`eventProcessors` run on the scope level where `beforeSend` runs globally not matter in which scope you are.
-`eventProcessors` also optionally receive the hint see: [Hints](#hints).
+With `eventProcessors` you are able to hook into the process of enriching the event with additional data. You can add your own `eventProcessor` on the current scope. The difference between `beforeSend` and `eventProcessors` is that `eventProcessors` run on the scope level whereas `beforeSend` runs globally, not matter which scope you're in.
+Also, `eventProcessors` optionally receive the hint (see: [Hints](#hints)).
 
 ```javascript
 // This will be set globally for every succeeding event send
