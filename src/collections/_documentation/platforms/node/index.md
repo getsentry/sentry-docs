@@ -63,17 +63,17 @@ Event and Breadcrumb `hints` are objects containing various information used to 
 
 They're available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProcessors`. Those are the two ways we'll allow users to modify what we put together.
 
-These common hints currently exist for events:
+### Hints for Events
 
 `originalException`
 
-: The original exception that caused the event to be created. This is useful for changing how events are grouped, or to extract additional information.
+: The original exception that created the event. This is useful for changing how events are grouped, or to extract additional information.
 
 `syntheticException`
 
 : When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stacktrace. This exception is stored here for further data extraction.
 
-And these exist for breadcrumbs:
+### Hints for Breadcrumbs
 
 `level` / `input`
 
@@ -86,7 +86,7 @@ And these exist for breadcrumbs:
 
 ## EventProcessors
 
-With `eventProcessors` you are able to hook into the process of enriching the event with additional data. You can add your own `eventProcessor` on the current scope. The difference between `beforeSend` and `eventProcessors` is that `eventProcessors` run on the scope level whereas `beforeSend` runs globally, not matter which scope you're in.
+With `eventProcessors` you can hook into the process of enriching the event with additional data. You can add your own `eventProcessor` on the current scope. The difference between `beforeSend` and `eventProcessors` is that `eventProcessors` run on the scope level whereas `beforeSend` runs globally, no matter which scope you're in.
 Also, `eventProcessors` optionally receive the hint (see: [Hints](#hints)).
 
 ```javascript
