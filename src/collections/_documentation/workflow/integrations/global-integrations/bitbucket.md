@@ -1,6 +1,6 @@
 ---
 title: Bitbucket
-sidebar_order: 3
+sidebar_order: 1
 ---
 You can now use the data from your Bitbucket commits to help you find and fix bugs faster.
 

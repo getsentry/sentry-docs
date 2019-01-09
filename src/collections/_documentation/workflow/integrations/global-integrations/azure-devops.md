@@ -1,6 +1,6 @@
 ---
 title: Azure DevOps
-sidebar_order: 1
+sidebar_order: 0
 ---
 You can now use the data from your commits to Azure DevOps, formerly known as Visual Studio Team Services (VSTS), to help you find and fix bugs faster.
 

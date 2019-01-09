@@ -1,6 +1,6 @@
 ---
 title: SessionStack
-sidebar_order: 9
+sidebar_order: 4
 ---
 
 SessionStack error session replay plugin for Sentry.

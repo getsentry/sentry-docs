@@ -1,6 +1,6 @@
 ---
 title: HipChat
-sidebar_order: 7
+sidebar_order: 3
 ---
 
 Get HipChat notifications for Sentry issues.
