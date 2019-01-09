@@ -298,4 +298,4 @@ You can also use our [API]({%- link _documentation/api/releases/post-release-dep
 
 ## Release Artifacts
 
-Javascript and iOS projects can utilize release artifacts to unminify or symbolicate error stack traces. To learn more, please check out our [iOS]({%- link _documentation/clients/cocoa/index.md -%}#sentry-cocoa-debug-symbols) and [JavaScript]({%- link _documentation/clients/javascript/sourcemaps.md -%}#raven-js-sourcemaps) docs.
+Javascript and iOS projects can utilize release artifacts to unminify or symbolicate error stack traces. To learn more, please check out our [iOS]({%- link _documentation/clients/cocoa/index.md -%}#sentry-cocoa-debug-symbols) and [JavaScript]({%- link _documentation/clients/javascript/sourcemaps.md -%}) docs.
