@@ -3,7 +3,7 @@ title: Sentry Testkit
 sidebar_order: 30002
 ---
 
-When building tests for your application, you want to assert that the right flow-tracking or error is being sent to *Sentry*, **but** without really sending it to *Sentry* servers. This way you won't swamp Sentry with false reports during test running and other CI operations.
+When building tests for your application, you want to assert, that the right flow-tracking or error is being sent to *Sentry*, **but** without really sending it to the *Sentry* servers. This way you won't swamp Sentry with false reports during test runs or other CI operations.
 
 ### This is where Sentry Testkit comes in!
 [Sentry Testkit](https://wix.github.io/sentry-testkit/) is a Sentry plugin to allow intercepting Sentry's report and further inspection of the data being sent. It enables Sentry to work natively in your application, and by overriding the default Sentry transport mechanism, the report is not really sent but rather logged locally into memory. In this way, the logged reports can be fetched later for your own usage, verification, or any other use you may have in your local developing/testing environment.
