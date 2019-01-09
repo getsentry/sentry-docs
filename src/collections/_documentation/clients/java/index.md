@@ -7,7 +7,7 @@ sidebar_relocation: platforms
 Sentry for Java is a collection of modules provided by Sentry. At its core, Sentry for Java provides a raw client for sending events to Sentry. To begin, we **highly recommend** you use one of the library or framework integrations listed under Installation. Otherwise, [manual usage]({%- link _documentation/clients/java/usage.md -%}) is another option. 
 
 {% capture __alert_content -%}
-The old `raven` library is no longer maintained. We recommended you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry`. [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `Raven` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
+As of June 2017, the old `Raven` library is no longer maintained. We recommended you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry`. [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `Raven` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
 {%-endcapture-%}
 {%- include components/alert.html
     title="Note"
@@ -37,7 +37,7 @@ Once you've configured one of the integrations below, you can _also_ use Sentry'
 
 ## Configuration {#config}
 
-Use the configuration below in combination with any of the integrations from above. The configuration will only work after an integration is installed. After that, [set you DSN]{#setting-the-dsn}.
+Use the configuration below in combination with any of the integrations from above. The configuration will only work after an integration is installed. After that, [set your DSN]{#setting-the-dsn}.
 
 ### Setting the DSN (Data Source Name) {#setting-the-dsn}
 
