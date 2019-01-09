@@ -38,4 +38,4 @@ You may see more usage examples in the [testing section](https://github.com/wix/
 
 #### Testkit API
 Sentry Testkit consists of a very simple and straightforward API.
-See full API description and documentation in [Sentry Testkit Docs](https://wix.github.io/sentry-testkit/)
+See the full API description and documentation in [Sentry Testkit Docs](https://wix.github.io/sentry-testkit/).
