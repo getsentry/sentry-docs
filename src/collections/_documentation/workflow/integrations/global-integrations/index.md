@@ -17,10 +17,11 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 -   [_GitHub Enterprise_]({%- link _documentation/workflow/integrations/global-integrations/github-enterprise.md -%})
 -   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations/gitlab.md -%})
 -   [_JIRA_]({%- link _documentation/workflow/integrations/global-integrations/jira.md -%})
+-   [_JIRA Server_]({%- link _documentation/workflow/integrations/global-integrations/jira-server.md -%})
 
 #### Issue Notifications
 
-Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**](%- link -%) to properly route notifications to a specific integration.
+Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/notifications/alerts.md -%}) to properly route notifications to a specific integration.
 
 -   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations/slack.md -%})
 

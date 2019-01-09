@@ -1,6 +1,6 @@
 ---
 title: JIRA Server
-sidebar_order: 9
+sidebar_order: 6
 ---
 
 Connect errors from Sentry with your Jira Server issues.
