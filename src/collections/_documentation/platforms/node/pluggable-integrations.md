@@ -27,7 +27,7 @@ Available options:
 
 _Import name: `Sentry.Integrations.RewriteFrames`_
 
-This integration allows you to apply a transformation to each frame of the stacktrace. In the simple scenario, it can be used to change the name of the file frame it originates from, or it can be fed with an iterated function to apply any arbitrary transformation.
+This integration allows you to apply a transformation to each frame of the stack trace. In the simple scenario, it can be used to change the name of the file frame it originates from, or it can be fed with an iterated function to apply any arbitrary transformation.
 
 Available options:
 
@@ -50,4 +50,4 @@ This integration fetches names of all currently installed Node modules and attac
 
 _Import name: `Sentry.Integrations.Transaction`_
 
-This integration tries to extract useful transaction names that will be used to distinguish the event from the rest. It walks through all stacktrace frames and reads the first in-app frame's module and function name.
+This integration tries to extract useful transaction names that will be used to distinguish the event from the rest. It walks through all stack trace frames and reads the first in-app frame's module and function name.
