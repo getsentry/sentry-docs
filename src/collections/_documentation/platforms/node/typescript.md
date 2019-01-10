@@ -54,7 +54,7 @@ From now on, when you want to run the production build, which will then upload, 
 
 ### 2. Changing Events Frames
 
-The second step is changing events frames so that Sentry can link stacktraces with correct source files.
+The second step is changing events frames so that Sentry can link stack traces with correct source files.
 
 This can be done using _dataCallback_, in a very similar manner as we do with a single entry point described in Source Maps docs, with one, significant difference. Instead of using _basename_, we have to somehow detect and pass the root directory of our project.
 
