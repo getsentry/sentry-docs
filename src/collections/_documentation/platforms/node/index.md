@@ -59,7 +59,7 @@ Sentry.init({
 
 ## Hints
 
-Event and Breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. For events, those are things like `event_id`, `originalException`, `syntheticException` (used internally to generate a cleaner stacktrace), and any other arbitrary `data` that a user attaches. For breadcrumbs, it's all implementation dependent. For XHR requests, hint contains the xhr object itself. For user interactions, it contains the DOM element and event name, etc.
+Event and Breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. For events, those are things like `event_id`, `originalException`, `syntheticException` (used internally to generate a cleaner stack trace), and any other arbitrary `data` that a user attaches. For breadcrumbs, it's all implementation dependent. For XHR requests, hint contains the xhr object itself. For user interactions, it contains the DOM element and event name, etc.
 
 They're available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProcessors`. Those are the two ways we'll allow users to modify what we put together.
 
@@ -71,7 +71,7 @@ They're available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProce
 
 `syntheticException`
 
-: When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stacktrace. This exception is stored here for further data extraction.
+: When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction.
 
 ### Hints for Breadcrumbs
 
