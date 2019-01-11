@@ -9,6 +9,29 @@ The base configuration for Relay lives in the file `.semaphore/config.yml`.  All
 
 General relay settings.
 
+`relay.mode`
+
+: *string, default: `managed`*
+
+  Controls the basic communication and configuration mode for this relay.
+  Allowed values are:
+
+  - `managed` *(default)*: Project configurations are managed by Sentry, unless
+    they are statically overridden via the file system. This requires
+    credentials to be set up and white listed in Sentry.
+  - `static`: Projects must be statically configured on the file system. If
+    configured, PII stripping is also performed on those events. Events for
+    unknown projects are automatically rejected.
+  - `proxy`: Relay acts as a proxy for all requests and events. It will not load
+    project configurations from the upstream or perform PII stripping. All
+    events are accepted unless overridden on the file system.
+
+  For more information on providing or overriding project configurations on the
+  file system, please refer to [Project Configuration]({%- link
+  _documentation/data-management/relay/project-config.md -%}) and [PII
+  Configuration]({%- link
+  _documentation/data-management/relay/pii-config/index.md -%}).
+
 `relay.upstream`
 
 : *string, default: `https://ingest.sentry.io`*
@@ -111,6 +134,13 @@ Fine-tune caching of project state.
 
   Interval for watching local cache override files in seconds.
 
+`cache.event_buffer_size`
+
+: *integer, default: `1000`*
+
+  The maximum number of events that are buffered in case of network issues or
+  high rates of incoming events.
+
 ## Size Limits
 
 Controls various HTTP-related limits.  All values are human-readable strings of a number and a human-readable unit, such as:
@@ -120,6 +150,12 @@ Controls various HTTP-related limits.  All values are human-readable strings of 
 - `1MiB`
 - `1MiB`
 - `1025B`
+
+`limits.max_concurrent_requests`
+
+: *integer, default: `100`*
+
+  The maximum number of concurrent connections to the upstream.
 
 `limits.max_event_payload_size`
 
