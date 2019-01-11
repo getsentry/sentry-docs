@@ -11,7 +11,7 @@ All our JavaScript-related SDKs provide the same API. Still, there are some diff
 
 All of our SDKs provide _Integrations_, similar to a plugin. All JavaScript SDKs provide default _Integrations_; please check details of a specific SDK to see which _Integrations_ it offers.
 
-One thing is the same across all our JavaScript SDKs --- how you add or remove _Integrations_. (Example: for `@sentry/node`)
+One thing that is the same across all our JavaScript SDKs --- how you add or remove _Integrations_. (Example: for `@sentry/node`)
 
 ### Adding an Integration
 
