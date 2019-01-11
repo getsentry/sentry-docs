@@ -18,7 +18,7 @@ For example, you may have a project in production that generates a lot of noise.
 To setup rate limits, navigate to the Project you wish to limit, go to **[Project] » Client Keys » Details**. Select an individual key or create a new one, and you’ll be able to define a rate limit as well as see a breakdown of events received by that key.
 
 {% capture __alert_content -%}
-Per-key rate limiting is available only on Large and Enterprise Plans
+Per-key rate limiting is available only on Business and Enterprise Plans
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -42,7 +42,7 @@ If you have a rogue client, you may find yourself simply wanting to block that I
 In the case you have a problematic release that is causing an excessive amount of noise, you can ignore all events from that release. Sentry supports this by going to **[Project] » Project Settings » Inbound Filters** and adding the releases under the **Filter errors from these releases** section.
 
 {% capture __alert_content -%}
-Filter by releases is available only on Large and Enterprise Plans
+Filter by releases is available only on Business and Enterprise Plans
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -54,7 +54,7 @@ Filter by releases is available only on Large and Enterprise Plans
 You can ignore a specific or certain kind of error by going to **[Project] » Project Settings » Inbound Filters** and adding the error message under the **Filter errors by error message** section.
 
 {% capture __alert_content -%}
-Filter by error message is available only on Large and Enterprise Plans
+Filter by error message is available only on Business and Enterprise Plans
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -66,7 +66,7 @@ Filter by error message is available only on Large and Enterprise Plans
 If there is an issue that you are unable to take action on but that continues to occur, you can delete and discard it from the issue details page by clicking “delete and discard future events.” This will delete most data associated with an issue and filter out matching events before they ever reach your stream. Matching events will not count towards your quota.
 
 {% capture __alert_content -%}
-Discarding issues is available only on Medium, Large and Enterprise Plans
+Discarding issues is available only on Business and Enterprise Plans
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
