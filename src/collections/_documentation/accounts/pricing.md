@@ -29,7 +29,7 @@ On-demand capacity is billed at the end of each billing cycle. You are charged p
 
 Reserved capacity allows you to prepay for significant discounts. Your prepaid, reserved capacity is always applied before on-demand capacity. Unused reserved capacity expires at the end of each billing month.
 
-Every Sentry account includes a varying amount of reserved capacity. For example, our free plan includes 10,000 events per month.
+Every Sentry account includes a varying amount of reserved capacity. For example, our developer plan includes 5,000 events per month.
 
 ### Billing Cycles
 
@@ -49,7 +49,7 @@ You can set a maximum monthly on-demand bill amount by setting an on-demand spen
 
 #### Rate limits
 
-Large and Enterprise plans have the option to configure rate limits for each project that let you specify the number of events and time interval for rate limiting.
+Business and Enterprise plans have the option to configure rate limits for each project that let you specify the number of events and time interval for rate limiting.
 
 ## Managing your event volume
 
@@ -58,13 +58,13 @@ If your projects have a high volume of events, you can control how many errors S
 -   Within the SDK you can reduce the data volume you’re sending by sampling.
 -   Turn on [Inbound Filters]({%- link _documentation/accounts/quotas.md -%}#inbound-data-filters) for legacy browsers, browser extensions, localhost, and web crawlers. Any filtered events will not count towards your quota.
 -   For JavaScript projects, use _whitelistUrls_ and _ignoreErrors_
--   With the Large and Enterprise plans, you’ll be able to set a per-key rate limit for each DSN key in a project at **[Organization] » [Project] » Project Settings » Client Keys (DSN) » Details**. This rate limit is set as number of events to accept during a specific time window (1 minute, 24 hours, etc).
+-   With the Business and Enterprise plans, you’ll be able to set a per-key rate limit for each DSN key in a project at **[Organization] » [Project] » Project Settings » Client Keys (DSN) » Details**. This rate limit is set as number of events to accept during a specific time window (1 minute, 24 hours, etc).
 
 ## FAQ
 
 `What happens when my trial expires?`
 
-You are downgraded to the free plan, which has limited members and events.
+You are downgraded to the developer plan, which has limited members and events.
 
 `Who sees my events?`
 
@@ -90,4 +90,4 @@ After the new spending cap is in effect, all additional events will be rejected 
 
 `If I want to cancel monthly billing, what happens?`
 
-Your plan will continue until the end of the current billing cycle. After this, you’ll revert to the base free plan, with includes a limited number of events and team members.
+Your plan will continue until the end of the current billing cycle. After this, you’ll revert to the base developer plan, with includes a limited number of events and team members.
