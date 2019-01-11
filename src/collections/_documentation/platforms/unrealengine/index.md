@@ -3,6 +3,15 @@ title: Unreal Engine 4
 sidebar_order: 20
 ---
 
+{% capture __alert_content -%}
+Only Windows is supported at the moment. Support for macOS will be coming soon.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 Installation of a Sentry SDK is not required in order to capture the crashes of your
 UE4 application or game. Sentry supports the *UE4 Crash Reporter*.
 
@@ -12,6 +21,7 @@ To integrate your UE4 game or application with Sentry, the following steps are r
 2. Include Debug information in the crash reports.
 3. Add the Sentry DSN to the relevant configuration file.
 4. Upload your games symbols so Sentry can display function names and line numbers.
+5. Optionally enable Event Attachments for your Sentry project.
 
 Below we'll break down each step in detail.
 
@@ -41,8 +51,8 @@ checking the box for: `Include Crash Reporter`.
 To get the most out of Sentry, crash reports are required to include debug information.
 For Sentry to be able to process the crash report and translate
 memory addresses to meaningful information like function names, module names
-and line numbers, the crash itself must include debug information and also, symbols need
-to be uploaded to Sentry.
+and line numbers, the crash itself must include debug information and also, [symbols need
+to be uploaded to Sentry](#upload-debug-symbols).
 
 ### Include Debug Information
 
@@ -78,3 +88,18 @@ If a `[CrashReportClient]` section already exists, simply changing the value of 
     content=__alert_content
     level="info"
 %}
+
+## Upload Debug Symbols {#upload-debug-symbols}
+
+{% include platforms/upload-debug-info.md %}
+
+## Event Attachments
+
+The files within the crash uploaded to Sentry can be persisted using *Event Attachments*.
+Unless *Event Attachments* is enabled, Sentry will only use the files to create the event and
+subsequently will drop the files.
+
+In order to keep the original log and context files, make sure to enable the *Event Attachments*
+feature in your Sentry project.
+
+{% include platforms/event-attachments.md %}
