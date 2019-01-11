@@ -27,7 +27,7 @@ Available options:
 
 _Import name: `Sentry.Integrations.RewriteFrames`_
 
-This integration allows you to apply a transformation to each frame of the stack trace. In the simple scenario, it can be used to change the name of the file frame it originates from, or it can be fed with an iterated function to apply any arbitrary transformation.
+This integration allows you to apply a transformation to each frame of the stack trace. In the streamlined scenario, it can be used to change the name of the file frame it originates from, or it can be fed with an iterated function to apply any arbitrary transformation.
 
 Available options:
 
