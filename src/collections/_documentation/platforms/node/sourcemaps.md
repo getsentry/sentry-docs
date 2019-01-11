@@ -97,4 +97,4 @@ Sentry.init({
 
 There’s one critical thing to note here. This config assumes, that you’ll bundle your application into a single file, which will be served and then uploaded to Sentry from the root of the project's directory.
 
-If you're not doing this, e.g. you're using TypeScript and upload all your compiled files separately to the server, then we need to be a little smarter about this. Please refer to [TypeScript usage docs]({%- link _documentation/platforms/node/typescript.md -%}) to see a more complex and detailed example.
+If you're not doing this, e.g. you're using TypeScript and upload all your compiled files separately to the server, then this may take a little more effort. Please refer to [TypeScript usage docs]({%- link _documentation/platforms/node/typescript.md -%}) to see a more complex and detailed example.
