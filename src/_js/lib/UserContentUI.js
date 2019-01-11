@@ -8,7 +8,8 @@ export const tokens = [
   'PROJECT_ID',
   'ORG_NAME',
   'PROJECT_NAME',
-  'MINIDUMP_URL'
+  'MINIDUMP_URL',
+  'UNREAL_URL'
 ];
 
 // Helper to generate a regex from the approved tokens
