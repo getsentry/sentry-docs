@@ -48,7 +48,7 @@ const sampleProject2 = {
   SECRET_KEY: 'test2',
   API_URL: 'https://sentry.io/api',
   MINIDUMP_URL: 'https://sentry.io/api/test2/minidump/?sentry_key=test2',
-  MINIDUMP_URL: 'https://sentry.io/api/test1/unreal/test2/'
+  MINIDUMP_URL: 'https://sentry.io/api/test2/unreal/test2/'
 };
 
 const sampleUser = {
