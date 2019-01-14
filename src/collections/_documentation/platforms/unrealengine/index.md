@@ -30,7 +30,7 @@ Below we'll break down each step in detail.
 The UE4 Crash Reporter is provided out of the box by Epic Games. It is able to collect relevant
 information about the crash and send it to a service like Sentry to process.
 
-Adding it to your game mean that in case a crash happens, the following dialog is displayed
+Adding it to your game means that in case a crash happens, the following dialog is displayed
 to the user:
 
 ![The UE4 Crash Reporter]({% asset ue4-crash-reporter.png @path %})
