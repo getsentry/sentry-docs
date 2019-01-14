@@ -112,6 +112,11 @@ const formatMinidumpURL = function(dsn) {
   return `${scheme}${host}/api${pathSection}/minidump/?sentry_key=${publicKey}`;
 };
 
+const formatUnrealEngineURL = function(dsn) {
+  const { scheme, host, pathSection, publicKey } = dsn;
+  return `${scheme}${host}/api${pathSection}/unreal/${publicKey}/`;
+};
+
 const formatAPIURL = function(dsn) {
   return `${dsn.scheme}${dsn.host}/api`;
 };
@@ -155,6 +160,7 @@ export const constructDSNObject = function(project = {}) {
     PUBLIC_KEY: dsn.publicKey,
     SECRET_KEY: dsn.secretKey,
     API_URL: formatAPIURL(dsn),
-    MINIDUMP_URL: formatMinidumpURL(dsn)
+    MINIDUMP_URL: formatMinidumpURL(dsn),
+    UNREAL_URL: formatUnrealEngineURL(dsn)
   };
 };
