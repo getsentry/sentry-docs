@@ -19,7 +19,7 @@ Install-Package Sentry.EntityFramework -Version {% sdk_version sentry.dotnet.ef 
 Or using the .NET Core CLI:
 
 ```sh
-dotnet add Sentry.EntityFramework -v {% sdk_version sentry.dotnet.ef %}
+dotnet add package Sentry.EntityFramework -v {% sdk_version sentry.dotnet.ef %}
 ```
 
 This package extends `Sentry` main SDK. That means that besides the EF features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
@@ -29,7 +29,7 @@ This package extends `Sentry` main SDK. That means that besides the EF features,
 * Queries as breadcrumbs
 * Validation errors
 
-All queries executed are added as breadcrumbs and are sent with any event which happens on the same `Scope`. Besides that, validation errors are also included as `Extra`.
+All queries executed are added as breadcrumbs and are sent with any event which happens on the same [scope]({% link _documentation/enriching-error-data/scopes.md %}). Besides that, validation errors are also included as `Extra`.
 
 
 ## Configuration

@@ -28,7 +28,7 @@ var ravenOptions = {
     ignoreErrors: [
       // Random plugins/extensions
       'top.GLOBALS',
-      // See: http://blog.errorception.com/2012/03/tale-of-unfindable-js-error. html
+      // See: http://blog.errorception.com/2012/03/tale-of-unfindable-js-error.html
       'originalCreateNotification',
       'canvas.contentDocument',
       'MyApp_RemoveAllHighlights',

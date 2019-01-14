@@ -90,6 +90,7 @@ export default class User {
         this.update();
       })
       .catch(error => {
+        $('[data-hide-when-logged-in]').toggleClass('d-none', false);
         this.update();
       })
       .then(() => {
@@ -109,6 +110,11 @@ const formatDsn = function(
 const formatMinidumpURL = function(dsn) {
   const { scheme, host, pathSection, publicKey } = dsn;
   return `${scheme}${host}/api${pathSection}/minidump/?sentry_key=${publicKey}`;
+};
+
+const formatUnrealEngineURL = function(dsn) {
+  const { scheme, host, pathSection, publicKey } = dsn;
+  return `${scheme}${host}/api${pathSection}/unreal/${publicKey}/`;
 };
 
 const formatAPIURL = function(dsn) {
@@ -154,6 +160,7 @@ export const constructDSNObject = function(project = {}) {
     PUBLIC_KEY: dsn.publicKey,
     SECRET_KEY: dsn.secretKey,
     API_URL: formatAPIURL(dsn),
-    MINIDUMP_URL: formatMinidumpURL(dsn)
+    MINIDUMP_URL: formatMinidumpURL(dsn),
+    UNREAL_URL: formatUnrealEngineURL(dsn)
   };
 };

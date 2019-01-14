@@ -43,4 +43,4 @@ The Segment integration will generate _Error Captured_ events within your data p
 
 ## Splunk
 
-For details on the Splunk integration, visit the dedicated [_Splunk integration documentation_]({%- link _documentation/workflow/integrations/splunk.md -%}).
+For details on the Splunk integration, visit the dedicated [_Splunk integration documentation_]({%- link _documentation/workflow/integrations/legacy-integrations/splunk.md -%}).

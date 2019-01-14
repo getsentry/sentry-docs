@@ -26,6 +26,7 @@ set to `False`.
 * [Sanic]({% link _documentation/platforms/python/sanic.md %})
 * [Pyramid]({% link _documentation/platforms/python/pyramid.md %})
 * [AIOHTTP]({% link _documentation/platforms/python/aiohttp.md %})
+* [Tornado]({% link _documentation/platforms/python/tornado.md %})
 
 ### Task Queues
 

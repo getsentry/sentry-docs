@@ -57,7 +57,7 @@ Sentry’s SAML endpints are as follows, where the `{organization_slug}` is subs
 <table class="table"><tbody valign="top"><tr><th>ACS:</th><td><code class="docutils literal">https://sentry.io/saml/acs/{organization_slug}/</code></td></tr><tr><th>SLS:</th><td><code class="docutils literal">https://sentry.io/saml/SLS/{organization_slug}/</code></td></tr><tr><th>Metadata:</th><td><code class="docutils literal">https://sentry.io/saml/metadata/{organization_slug}/</code></td></tr></tbody></table>
 
 {% capture __alert_content -%}
-SAML2 SSO requires an Enterprise Plan.
+SAML2 SSO requires a Business or Enterprise Plan.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -91,3 +91,7 @@ As part of the Auth0 SSO configuration, you must provide the Auth0 Identity Prov
 In your Rippling admin dashboard locate the Sentry app in the list of suggested apps and select it.
 
 When prompted with the Rippling Metadata URL, copy this into the Sentry Rippling provider configuration. You will have to complete the Rippling application configuration before completing the sentry provider configuration.
+
+#### Custom SAML2 Integration
+
+For other SAML2 SSO providers not listed above, Sentry provides  generic connectors for [SAML2 based authentication]({%- link _documentation/accounts/saml2.md -%}), which may be configured manually.

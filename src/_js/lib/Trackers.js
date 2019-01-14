@@ -26,7 +26,7 @@ export const google = function() {
     dataLayer.push(arguments);
   }
   gtag('js', new Date());
-  gtag('config', 'UA-47053361-1', { anonymize_ip: true });
+  gtag('config', 'UA-30327640-1', { anonymize_ip: true });
 
   const script = document.createElement('script');
   script.setAttribute(

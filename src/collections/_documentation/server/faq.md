@@ -9,7 +9,7 @@ This document covers some frequently asked questions that come up.
 
 > Your **system.url-prefix** setting is wrong. See [_Configuring Sentry_]({%- link _documentation/server/config.md -%}) for more information.
 
-**My sentry is running at **example.com:9000** but whenever I visit it I get redirected to **example.com**.**
+**My sentry is running at _example.com:9000_ but whenever I visit it I get redirected to _example.com_.**
 
 > You likely have not correctly configured **system.url-prefix**. See [_Configuring Sentry_]({%- link _documentation/server/config.md -%}) for more information.
 

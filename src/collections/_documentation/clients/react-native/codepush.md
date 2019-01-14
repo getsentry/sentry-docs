@@ -19,7 +19,7 @@ Put this somewhere in your code where you already use CodePush. This makes sure 
 After updating your CodePush release you have to upload the new assets to Sentry:
 
 ```bash
-$ appcenter codepush release-react YourApp --output-dir ./build
+$ appcenter codepush release-react --app YourApp --output-dir ./build
 $ export SENTRY_PROPERTIES=./ios/sentry.properties
 $ sentry-cli react-native appcenter YourApp ios ./build/codePush
 ```

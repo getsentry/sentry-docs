@@ -68,7 +68,7 @@ All SDKs should have the concept of concurrency safe context storage. What this 
 
 This is implemented as a thread local stack in most languages, but in some (such as JavaScript) it might be global under the assumption that this is something that makes sense in the environment.
 
-Here are some common concurrench patterns:
+Here are some common concurrency patterns:
 
 * **Thread bound hub**: in that pattern each thread gets its own "hub" which internally manages a stack of scopes.  If that pattern is followed one thread (the one that calls `init()`) becomes the "main" hub which is used as the based for newly spawned threads which will get a hub that is based on the main hub (but otherwise independent).
 

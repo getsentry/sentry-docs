@@ -95,13 +95,15 @@ a basic message or exception:
 SDKs are encouraged to allow arbitrary options via the constructor, but must allow the first argument as a DSN string. This string contains the following bits:
 
 ```
-'{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PROJECT_ID}'
+'{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}{PATH}/{PROJECT_ID}'
 ```
 
 The final endpoint you’ll be sending requests to is constructed per the following:
 
 ```
-'{URI}/api/{PROJECT_ID}/store/'
+ {BASE_URI} = '{PROTOCOL}://{HOST}{PATH}'
+
+'{BASE_URI}/api/{PROJECT_ID}/store/'
 ```
 
 For example, given the following constructor:

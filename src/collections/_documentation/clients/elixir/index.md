@@ -6,8 +6,15 @@ sidebar_relocation: platforms
 
 The Elixir SDK for Sentry.
 
+## Getting Started
+Getting started with Sentry is a three step process:
+
+1.  [Sign up for an account](https://sentry.io/signup/)
+2.  [Install your SDK](#install)
+3.  [Configure it](#configure)
+
 <!-- WIZARD -->
-## Installation
+## Installation {#install}
 
 Edit your mix.exs file to add it as a dependency and add the `:sentry` package to your applications:
 
@@ -21,7 +28,7 @@ defp deps do
 end
 ```
 
-## Configuration
+## Configuration {#configure}
 
 Setup the application production environment in your `config/prod.exs`
 
