@@ -49,7 +49,7 @@ checking the box for: `Include Crash Reporter`.
 ## Debug information
 
 To get the most out of Sentry, crash reports are required to include debug information.
-For Sentry to be able to process the crash report and translate
+In order for Sentry to be able to process the crash report and translate
 memory addresses to meaningful information like function names, module names
 and line numbers, the crash itself must include debug information and also, [symbols need
 to be uploaded to Sentry](#upload-debug-symbols).
