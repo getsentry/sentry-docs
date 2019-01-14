@@ -37,7 +37,7 @@ to the user:
 
 ### Include the UE4 Crash Reporter
 
-You can add the _Crash Report Client_ to your game via *Project Settings*.
+You can add the _Crash Report Client_ to your game in your *Project Settings*.
 
 The simplest way is to search the option: `Crash Reporter`:
 
