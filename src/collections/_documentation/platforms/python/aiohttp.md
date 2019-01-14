@@ -15,7 +15,7 @@ Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
 1. Install `sentry-sdk` from PyPI:
 
     ```bash
-    $ pip install --upgrade sentry-sdk=={% sdk_version sentry.python %}
+    $ pip install --upgrade 'sentry-sdk=={% sdk_version sentry.python %}'
     ```
 
 2.  Initialize the SDK before starting the server:
