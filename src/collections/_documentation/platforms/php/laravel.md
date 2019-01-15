@@ -29,11 +29,10 @@ If you're on Laravel 5.4 or earlier, you'll need to add the following to your `c
 
 Add Sentry reporting to `App/Exceptions/Handler.php`:
 
-
 ```php
 public function report(Exception $exception)
 {
-    if (app()->bound('sentry') && $this->shouldReport($exception)) {
+    if (app()->bound('sentry') && $this->shouldReport($exception)){
         app('sentry')->captureException($exception);
     }
 
@@ -41,8 +40,7 @@ public function report(Exception $exception)
 }
 ```
 
-Create the Sentry configuration file (`config/sentry.php`):
-
+Create the Sentry configuration file (`config/sentry.php`) with this command:
 
 ```sh
 $ php artisan vendor:publish --provider="Sentry\Laravel\ServiceProvider"
