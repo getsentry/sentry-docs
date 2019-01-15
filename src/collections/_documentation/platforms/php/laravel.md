@@ -5,6 +5,7 @@ sidebar_order: 50
 
 Laravel is supported via a native package, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
+<!-- WIZARD -->
 ## Laravel 5.x
 
 Install the `sentry/sentry-laravel` package:
@@ -51,6 +52,7 @@ Add your DSN to ``.env``:
 ```sh
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
+<!-- ENDWIZARD -->
 
 ### User Feeback
 
