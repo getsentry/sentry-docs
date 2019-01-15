@@ -23,10 +23,12 @@ variable (`SENTRY_DSN`) or in the case if you are using the CDN version or the B
 {:.config-key}
 ### debug
 
+{% unsupported php %}
 Turns debug mode on or off.  If debug is enabled SDK will attempt to print out useful debugging
 information if something goes wrong with sending the event.  The default is always `false` and
 it's generally not recommended to turn it on in production but doing so will not cause any
 safety concerns.
+{% endunsupported %}
 
 {:.config-key}
 ### release
@@ -177,22 +179,26 @@ support highly specific deployments.
 {:.config-key}
 ### transport
 
+{% unsupported php %}
 This switches out the transport that is used to send events.  How this works depends on the SDK.  It
 can, for instance, be used to capture events for unit-testing or to send it through some more complex
 setup that requires proxy authentication.
+{% endunsupported %}
 
 {:.config-key}
 ### http-proxy
 
+{% unsupported php %}
 When set a proxy can be configured that should be used for outbound requests.  This is also used for
 HTTPS requests unless a separate `https-proxy` is configured.  Note however that not all SDKs
 support a separate HTTPS proxy.  SDKs will attempt to default to the system-wide configured proxy
 if possible.  For instance, on unix systems, the `http_proxy` environment variable will be picked up.
+{% endunsupported %}
 
 {:.config-key}
 ### https-proxy
 
-{% unsupported csharp aspnetcore %}
+{% unsupported csharp aspnetcore php %}
 Configures a separate proxy for outgoing HTTPS requests.  This value might not be supported by all
 SDKs.  When not supported the `http-proxy` value is also used for HTTPS requests at all times.
 {% endunsupported %}
@@ -200,7 +206,7 @@ SDKs.  When not supported the `http-proxy` value is also used for HTTPS requests
 {:.config-key}
 ### shutdown-timeout
 
-{% unsupported browser %}
+{% unsupported browser php %}
 Controls how many seconds to wait before shutting down.  Sentry SDKs send events from a background
 queue and this queue is given a certain amount to drain pending events.  The default is SDK specific
 but typically around 2 seconds.  Setting this value too low will most likely cause problems for

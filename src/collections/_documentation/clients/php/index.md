@@ -1,7 +1,6 @@
 ---
 title: PHP
 sidebar_order: 11
-sidebar_relocation: platforms
 ---
 
 The PHP SDK for Sentry supports PHP 5.3 and higher. It’s available as a BSD licensed Open Source library.
@@ -19,7 +18,7 @@ Getting started with Sentry is a three step process:
 There are various ways to install the PHP integration for Sentry. The recommended way is to use [Composer](http://getcomposer.org/):
 
 ```bash
-$ composer require "sentry/sentry"
+$ composer require sentry/sentry "^1.0"
 ```
 
 Alternatively you can manually install it:
@@ -42,7 +41,7 @@ The most important part is the creation of the raven client. Create it once and 
 $client = new Raven_Client('___PUBLIC_DSN___');
 ```
 
-Once you have the client you can either use it manually or enable the automatic error and exception capturing which is recomended:
+Once you have the client you can either use it manually or enable the automatic error and exception capturing which is recommended:
 
 ```php
 $error_handler = new Raven_ErrorHandler($client);
