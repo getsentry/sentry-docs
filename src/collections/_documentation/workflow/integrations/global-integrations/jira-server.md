@@ -41,6 +41,14 @@ You'll need your public and private keys for later in the process.
 1. Click **Continue**. You should now see an application link called Sentry.
 
 ### III. Connect your Jira Server application with Sentry
+{% capture __alert_content -%}
+Make sure you have whitelisted [Sentry's IP ranges.](https://docs.sentry.io/ip-ranges/)
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
 1. In Sentry, navigate to **Organization Settings** > **Integrations**.
 2. Next to Jira Server, click **Install**.
 3. In the resulting modal, click **Add Installation**.
