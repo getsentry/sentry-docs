@@ -185,7 +185,7 @@ If you're using log channels to log your exceptions and are also logging excepti
     level="info"
 %}
 
-To configure Sentry as a log channel add the following config to the `channels` section in `config/logging.php`: 
+To configure Sentry as a log channel, add the following config to the `channels` section in `config/logging.php`: 
 
 ```php
 'channels' => [
@@ -196,7 +196,7 @@ To configure Sentry as a log channel add the following config to the `channels` 
 ],
 ```
 
-After you configured the Sentry log channel you can configure your app to both log to a log file and to Sentry by modifying the log stack:
+After you configured the Sentry log channel, you can configure your app to both log to a log file and to Sentry by modifying the log stack:
 
 ```php
 'channels' => [
@@ -209,7 +209,7 @@ After you configured the Sentry log channel you can configure your app to both l
 ],
 ```
 
-Optionally you can set the logging level and if events should bubble on the driver:
+Optionally, you can set the logging level and if events should bubble on the driver:
 
 ```php
 'channels' => [
@@ -225,8 +225,8 @@ Optionally you can set the logging level and if events should bubble on the driv
 
 ### Naming you log channels
 
-If you have multiple log channels you would like to filter on inside the Sentry interface you can add the `name` attribute to the log channel, 
-it will show up in Sentry as the `logger` tag which is filterable.
+If you have multiple log channels you would like to filter on inside the Sentry interface, you can add the `name` attribute to the log channel. 
+It will show up in Sentry as the `logger` tag, which is filterable.
 
 For example:
 
@@ -251,7 +251,7 @@ And Sentry's `logger` tag now has the channel's `name`. You can filter on the "m
 
 ## Resolve name conflicts with packages also called Sentry
 
-To resolve this you will need to create your own service provider extending ours so we can prevent naming conflicts.
+To resolve this, you'll need to create your own service provider extending ours so we can prevent naming conflicts.
 
 ```php
 <?php
@@ -273,7 +273,7 @@ You can then add this service provider to the `config/app.php`.
 )
 ```
 
-Optionally if you want to use the facade you also need to extend / create a new facade.
+Optionally, if you want to use the facade, you also need to extend/create a new facade.
 
 ```php
 <?php
@@ -298,7 +298,7 @@ And add that facade to your `config/app.php`.
 )
 ```
 
-After you added your own service provider, running `php artisan vendor:publish --provider="App\Support\SentryLaravelServiceProvider"` publishes the Sentry config file to your chosen name (in the example above `config/sentry-laravel.php`) preventing conflicts with a `config/sentry.php` config file that might be used by the other package.
+After you've added your own service provider, running `php artisan vendor:publish --provider="App\Support\SentryLaravelServiceProvider"` publishes the Sentry config file to your chosen name (in the example above `config/sentry-laravel.php`) preventing conflicts with a `config/sentry.php` config file that might be used by the other package.
 
 If you followed the regular installation instructions above (you should), make sure you replace `app('sentry')` with `app('sentry-laravel')`.
 
