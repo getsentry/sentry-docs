@@ -22,5 +22,5 @@ By default the error handler reserves 10 megabytes of memory to handle fatal
 errors.
 
 For some frameworks or projects there are specific integrations provided both
-officially and by third party users that automatically register the error
+officially and by third-party users that automatically register the error
 handlers. In that case please refer to their documentation.
