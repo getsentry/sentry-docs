@@ -104,7 +104,7 @@ command=sentry run worker -c 4
 
 ## Monitoring Memory
 
-There are cases where Sentry currently buffers large amounts of memory. This may depend on the client (javascript vs python) as well as the size of your events. If you repeatedly run into issues where workers or web nodes are using a lot of memory, you’ll want to ensure you have some mechanisms for monitoring and resolving this.
+There are cases where Sentry currently buffers large amounts of memory. This may depend on the client (JavaScript vs Python) as well as the size of your events. If you repeatedly run into issues where workers or web nodes are using a lot of memory, you’ll want to ensure you have some mechanisms for monitoring and resolving this.
 
 If you’re using supervisord, we recommend taking a look at [superlance](https://superlance.readthedocs.io) which aids in this situation:
 

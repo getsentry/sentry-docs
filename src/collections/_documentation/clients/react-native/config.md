@@ -2,7 +2,7 @@
 title: 'Additional Configuration'
 ---
 
-These are functions you can call in your javascript code:
+These are functions you can call in your JavaScript code:
 
 ```javascript
 import {

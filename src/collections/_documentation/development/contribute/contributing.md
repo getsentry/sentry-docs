@@ -17,19 +17,19 @@ When creating a pull request, reference any tickets or Sentry issues which are b
 
 The following teams are defined in GitHub and should be used when creating Pull Requests:
 
--   [@getsentry/api](https://github.com/orgs/getsentry/teams/api)
--   [@getsentry/ui](https://github.com/orgs/getsentry/teams/ui)
--   [@getsentry/infrastructure](https://github.com/orgs/getsentry/teams/infrastructure)
--   [@getsentry/ops](https://github.com/orgs/getsentry/teams/ops)
--   [@getsentry/team](https://github.com/orgs/getsentry/teams/team) – the entire product team, use sparingly
+-   [`@getsentry/api`](https://github.com/orgs/getsentry/teams/api)
+-   [`@getsentry/ui`](https://github.com/orgs/getsentry/teams/ui)
+-   [`@getsentry/infrastructure`](https://github.com/orgs/getsentry/teams/infrastructure)
+-   [`@getsentry/ops`](https://github.com/orgs/getsentry/teams/ops)
+-   [`@getsentry/team`](https://github.com/orgs/getsentry/teams/team) – the entire product team, use sparingly
 
 Additionally, language specific teams exist, primarily for SDKs:
 
--   [@getsentry/cocoa](https://github.com/orgs/getsentry/teams/cocoa)
--   [@getsentry/java](https://github.com/orgs/getsentry/teams/java)
--   [@getsentry/javascript](https://github.com/orgs/getsentry/teams/javascript)
--   [@getsentry/php](https://github.com/orgs/getsentry/teams/php)
--   [@getsentry/python](https://github.com/orgs/getsentry/teams/python)
+-   [`@getsentry/cocoa`](https://github.com/orgs/getsentry/teams/cocoa)
+-   [`@getsentry/java`](https://github.com/orgs/getsentry/teams/java)
+-   [`@getsentry/javascript`](https://github.com/orgs/getsentry/teams/javascript)
+-   [`@getsentry/php`](https://github.com/orgs/getsentry/teams/php)
+-   [`@getsentry/python`](https://github.com/orgs/getsentry/teams/python)
 
 ### Why Pull Requests
 

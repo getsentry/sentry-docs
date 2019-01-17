@@ -74,7 +74,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   User Feedback will now send an email notification.
 -   Almost all major UI components are now driven by the client-side application.
 -   Avatars have been added for organizations.
--   Various improvements to issue hashing, specifically for native (iOS) and javascript applications.
+-   Various improvements to issue hashing, specifically for native (iOS) and JavaScript applications.
 -   Various improvements to Single Sign-On flows. You should update any external auth extensions you’re using as part of this (sentry-auth-github, sentry-auth-google).
 -   Support for SAML via sentry-auth-saml2.
 -   Support for Google Cloud Storage as a storage backend.
@@ -337,7 +337,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 ## Version 8.13 {#version-8-13}
 
 -   Added individual filters for legacy browsers to improve customization of error filtering based on browser versions
--   Support for setting a custom security header for javascript fetching.
+-   Support for setting a custom security header for JavaScript fetching.
 -   start using ReleaseProject and Release.organization instead of Release.project
 -   Project quotas are no longer available, and must now be configured via the organizational rate limits.
 -   Quotas implementation now requires a tuple of maximum rate and interval window.
@@ -950,7 +950,7 @@ Redis must be at least version 2.6.12.
 -   SENTRY_ALLOW_REGISTRATION is deprecated in favor of SENTRY_FEATURES[‘auth:register’].
 -   SOCIAL_AUTH_CREATE_USERS is deprecated in favor of SENTRY_FEATURES[‘social-auth:register’].
 -   SENTRY_SERVER_EMAIL is no longer used.
--   Added first pass API at storing javascript artifacts via release APIs.
+-   Added first pass API at storing JavaScript artifacts via release APIs.
 -   Improved error reporting for JavaScript source/sourcemap errors.
 -   Improved configuration handling on sentry.cache.
 -   Added various release API endpoints.
@@ -1483,7 +1483,7 @@ In addition:
 
 -   Trusted domains were removed. These were not fully implemented.
 -   A new datepicker for selecting ranges of events.
--   raven-javascript and raven-ruby are now officially supported clients.
+-   raven-JavaScript and raven-ruby are now officially supported clients.
 -   Added `sentry repair`.
 
 ## Version 4.0.0 {#version-4-0-0}
