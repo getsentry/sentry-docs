@@ -136,7 +136,11 @@ $builder->setTransport($transport);
 Hub::getCurrent()->bindClient($builder->getClient());
 ```
 
-{{ __note }}
+{% include components/alert.html
+    title="Note"
+    content="`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead."
+    level="warning"
+%}
 
 ### SpoolTransport
 
@@ -170,4 +174,8 @@ Hub::getCurrent()->bindClient($builder->getClient());
 $spool->flushQueue($httpTransport);
 ```
 
-{{ __note }} 
+{% include components/alert.html
+    title="Note"
+    content="`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead."
+    level="warning"
+%}
