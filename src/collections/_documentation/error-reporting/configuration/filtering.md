@@ -21,7 +21,7 @@ instance.  For better customization SDKs send these objects to certain callbacks
 
 The `before-send` callback is passed the event and a second argument `hint` which holds one or more
 hints.  Typically this hint holds the original exception so that additional data can be extracted
-or grouping be affected.
+or grouping is affected.
 `before-send` will be called right before the event is sent to the server, so it's the last place where you can edit its data.
 
 In this example the fingerprint is forced to a common value if an exception of a certain type has
