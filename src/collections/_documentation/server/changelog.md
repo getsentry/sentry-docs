@@ -295,11 +295,11 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 
 ## Version 8.14 {#version-8-14}
 
--   Added new internal processing interface that supports multiple processing steps per stacktrace (for instance JavaScript + native)
+-   Added new internal processing interface that supports multiple processing steps per stack trace (for instance JavaScript + native)
 -   Add IE10 legacy browser filter
 -   Added data migration to merge legacy releases
--   Added support for symbolizing inlined frames and added heuristics for fixing up native stacktraces.
--   Removed instruction_offset as a frame attribute from stacktraces
+-   Added support for symbolizing inlined frames and added heuristics for fixing up native stack traces.
+-   Removed instruction_offset as a frame attribute from stack traces
 -   [BREAKING] Quotas must now instantiate RateLimited and NotRateLimited return values.
 -   [BREAKING] Redis quota implementations now return BasicRedisQuota instead of tuples.
 -   Commits using the `Fixes SHORTID` annotation will now be tracked appropriately.
@@ -346,7 +346,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   Add memory and storage information for apple devices
 -   The legacy API keys feature is now disabled by default.
 -   Show Images Loaded section for cocoa events with version number.
--   Added registers to stacktrace for cocoa exceptions.
+-   Added registers to stack trace for cocoa exceptions.
 -   Fixed bug where workflow notification subject may not include a custom email prefix.
 -   Added configurable subject templates for individual alert emails (_mail:subject_template_ option).
 -   Added data migration to populate ReleaseProject.new_groups
@@ -368,7 +368,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   Added avatar and avatarType to `/organizations/{org}/` endpoint.
 -   Provide commit and author information associated with a given release
 -   Provide repository information for commits
--   Added new internal processing interface that supports multiple processing steps per stacktrace (for instance JavaScript + native)
+-   Added new internal processing interface that supports multiple processing steps per stack trace (for instance JavaScript + native)
 
 ## Version 8.12 {#version-8-12}
 
@@ -476,7 +476,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   Added `--no-repair` flag for `sentry upgrade` for large installs.
 -   Fixed bug with merging counters yielding the wrong values.
 -   Require password confirmation when enabling/disabling 2fa.
--   Collapse repeated frames in the stacktrace UI.
+-   Collapse repeated frames in the stack trace UI.
 -   Added weekly report emails behind feature flag.
 -   Rebrand Rules as Alerts / Alert Rules.
 -   Add frequency to Alerts.
@@ -528,7 +528,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   Added unsubscribe links to mails.
 -   Added email verification.
 -   Added ability to link/unlink Issues, support is dependent on plugins.
--   Can now toggle between minified/original code in stacktraces where sourcemaps were applied.
+-   Can now toggle between minified/original code in stack traces where sourcemaps were applied.
 -   Can now upload release artifacts with tilde prefix (~) to omit protocol + host in URL lookups.
 
 ### Schema Changes {#id24}
@@ -1138,7 +1138,7 @@ A new application called `nodestore` now manages the event blob data. By default
 ### Protocol Version 5
 
 -   sentry_version should be sent as ‘5’.
--   The stacktrace interface now accepts a ‘frames_omitted’ tuple.
+-   The stack trace interface now accepts a ‘frames_omitted’ tuple.
 
 ## Version 6.3.0 {#version-6-3-0}
 
@@ -1200,7 +1200,7 @@ It also includes quite a number of incompatible changes, so it’s recommended t
 
 -   sentry_version should be sent as ‘4’.
 -   Aliases are now recommended instead of full interface names.
--   The exception interface now supports a bound stacktrace, and all events (in all protocols) which contain both an exception and a stacktrace will be rolled up. This should be sent as the `stacktrace` attribute.
+-   The exception interface now supports a bound stack trace, and all events (in all protocols) which contain both an exception and a stack trace will be rolled up. This should be sent as the `stacktrace` attribute.
 -   The exception interface now supports chained exceptions, and should be sent as a list of exception values. Check the updated documentation for ordering details.
 
 ### Alerts
@@ -1368,9 +1368,9 @@ Additionally, the following changes apply to the new protocol:
 -   Frontend has been updated to Bootstrap 2.1.
 -   The event stream now includes sparklines representing the last 24 hours of data for each event.
 -   Trends have greatly improved.
--   Grouping events that have identical stacktraces other than the function name (e.g. dynamically generated functions) is not possible.
+-   Grouping events that have identical stack traces other than the function name (e.g. dynamically generated functions) is not possible.
 -   SiteFilter has been removed, as has the sites plugin.
--   If frames are included in a stacktrace that have the attribute `in_app: false`, they will be hidden by default in the details view.
+-   If frames are included in a stack trace that have the attribute `in_app: false`, they will be hidden by default in the details view.
 -   crossdomain.xml support is now available (see documentation).
 -   The search feature now uses buffers to better handle write concurrency.
 -   Early support for WSGI (should be functional) exists as `sentry.wsgi`.
@@ -1806,7 +1806,7 @@ If you were previously extending Sentry, it would be wise to test your extension
 -   Added the `level` argument to the cleanup command.
 -   The thrashed key is now set correctly in request.sentry.
 -   Added user information to all messages that have `request`.
--   Changed the hashing function for messages that include stacktraces to ignore the `message` and line numbers.
+-   Changed the hashing function for messages that include stack traces to ignore the `message` and line numbers.
 -   Much improved test coverage.
 
 ## Version 1.9.0 {#version-1-9-0}

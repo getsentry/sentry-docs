@@ -78,7 +78,7 @@ You can pass additional configuration options to the _config()_ method if you wa
 
 ## Mixed Stacktraces
 
-Currently we only support mixed stacktraces on iOS. By default this feature is disabled. We recommend testing your app thoroughly when activating this, to turn it on `deactivateStacktraceMerging: false` see: [_Additional Configuration_]({%- link _documentation/clients/react-native/config.md -%}).
+Currently we only support mixed stack traces on iOS. By default this feature is disabled. We recommend testing your app thoroughly when activating this, to turn it on `deactivateStacktraceMerging: false` see: [_Additional Configuration_]({%- link _documentation/clients/react-native/config.md -%}).
 
 ## Deep Dive
 

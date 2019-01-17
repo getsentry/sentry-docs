@@ -35,7 +35,7 @@ mark the directory containing all the source code of the application.
 
 For example, assuming that the directory structure shown below exists, marking
 the project root as `project-folder/src/` means that every file inside that
-directory that is part of a stacktrace frame will be marked as "application
+directory that is part of a stack trace frame will be marked as "application
 code".
 
 ```
@@ -55,7 +55,7 @@ If this option is enabled, `gzip` compression will be enabled. Default is `true`
 #### context_lines
 
 This option sets the number of lines of code context to capture. If `null` is
-set as the value, no source code lines will be added to each stacktrace frame.
+set as the value, no source code lines will be added to each stack trace frame.
 By default this option is set to `3`.
 
 #### excluded_exceptions

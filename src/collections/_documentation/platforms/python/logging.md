@@ -36,12 +36,12 @@ logging.error("An exception happened", exc_info=True)
 * `"I am a breadcrumb"` will be attached as breadcrumb to that event.
 * `bar` will end up in the event's `extra` attributes.
 * `"An exception happened"` will send the current exception from
-  `sys.exc_info()` with stacktrace and everything to Sentry. If there's no
+  `sys.exc_info()` with stack trace and everything to Sentry. If there's no
   exception, the current stack will be attached.
 
 {% version_added 0.5.0: Ability to add data to `extra` %}
 
-{% version_added 0.6.0: `exc_info=True` now always attaches a stacktrace %}
+{% version_added 0.6.0: `exc_info=True` now always attaches a stack trace %}
 
 ## Ignoring a logger
 

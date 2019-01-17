@@ -124,5 +124,5 @@ Crashes are only submitted upon re-launching the application. To see the crash i
     -   [Breadcrumbs]({%- link _documentation/clients/cocoa/advanced.md -%}#breadcrumbs)
     -   [Change event before sending it]({%- link _documentation/clients/cocoa/advanced.md -%}#change-event-before-sending-it)
     -   [Change request before sending it]({%- link _documentation/clients/cocoa/advanced.md -%}#change-request-before-sending-it)
-    -   [Adding stacktrace to message]({%- link _documentation/clients/cocoa/advanced.md -%}#adding-stacktrace-to-message)
+    -   [Adding stack trace to message]({%- link _documentation/clients/cocoa/advanced.md -%}#adding-stacktrace-to-message)
     -   [Event Sampling]({%- link _documentation/clients/cocoa/advanced.md -%}#event-sampling)
