@@ -22,7 +22,6 @@ expect.extend({
         ? () => {
             const line = match[0];
             const matchedString = new RegExp(`${argument}`, 'i').exec(line)[0];
-            console.log('cap', matchedString);
             const highlightedMatch = this.utils
               .printReceived(matchedString)
               .replace(/"/g, '');
@@ -98,7 +97,6 @@ describe('Style guide', function() {
   test('incorrect capitalization of "GitHub"', () => {
     const { documentation } = this.site;
     documentation.forEach(doc => {
-      if (/github/.test(doc.path)) console.log(doc.path);
       printOnFail(doc.path, () => {
         expect(doc.title).toCorrectlyCapitalize('GitHub');
         expect(doc.plaintext).toCorrectlyCapitalize('GitHub');
@@ -109,7 +107,6 @@ describe('Style guide', function() {
   test('incorrect capitalization of "JavaScript"', () => {
     const { documentation } = this.site;
     documentation.forEach(doc => {
-      if (/github/.test(doc.path)) console.log(doc.path);
       printOnFail(doc.path, () => {
         expect(doc.title).toCorrectlyCapitalize('JavaScript');
         expect(doc.plaintext).toCorrectlyCapitalize('JavaScript');
