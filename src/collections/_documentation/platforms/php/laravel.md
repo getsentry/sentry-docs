@@ -176,8 +176,14 @@ Defaults to `true`.
 
 ## Using Laravel 5.6 log channels
 
-**Note:** If you are using log channels to log your exceptions and also are logging exceptions to Sentry in your
-exception handler (as you would have configured above) exceptions might end up twice in Sentry.
+{% capture __alert_content -%}
+If you're using log channels to log your exceptions and are also logging exceptions to Sentry in your exception handler (as you would have configured above) exceptions might end up twice in Sentry.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="info"
+%}
 
 To configure Sentry as a log channel add the following config to the `channels` section in `config/logging.php`: 
 
@@ -190,7 +196,7 @@ To configure Sentry as a log channel add the following config to the `channels` 
 ],
 ```
 
-After you configured the Sentry log channel you can configure your app to both log to a log file and to Sentry by modifiying the log stack:
+After you configured the Sentry log channel you can configure your app to both log to a log file and to Sentry by modifying the log stack:
 
 ```php
 'channels' => [
@@ -241,7 +247,7 @@ You're now able to log errors to your channel:
 \Log::channel('my_stacked_channel')->error('My error');
 ```
 
-And Sentry's `logger` tag has now the channel's `name` "my-channel" value where you can filter on.
+And Sentry's `logger` tag now has the channel's `name`. You can filter on the "my-channel" value.
 
 ## Resolve name conflicts with packages also called Sentry
 
@@ -298,7 +304,14 @@ If you followed the regular installation instructions above (you should), make s
 
 The namespace `\App\Support` can be anything you want in the examples above.
 
-**Note:** If you are on Laravel 5.5+ the Sentry package is probably auto discovered by Laravel, to solve this add or append to the `extra` section in your `composer.json` file and run composer update/install afterwards:
+{% capture __alert_content -%}
+If you're on Laravel 5.5+ the Sentry package is probably auto-discovered by Laravel. To solve this, add or append to the `extra` section in your `composer.json` file and run composer update/install afterward.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 ```json
 "extra": {
