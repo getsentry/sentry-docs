@@ -3,7 +3,7 @@ title: 'Single Sign-On (SSO)'
 sidebar_order: 3
 ---
 
-Single Sign-On (or SSO) allows you to manage your organization’s entire membership via a third party provider.
+Single Sign-On (or SSO) allows you to manage your organization’s entire membership via a third-party provider.
 
 ## Preface
 
