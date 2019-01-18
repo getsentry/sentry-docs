@@ -44,13 +44,13 @@ Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
 
 ## Behavior
 
-* The AIOHTTP integration will be installed for all of your apps.
+* Sentry will install the AIOHTTP integration for all of your apps.
 
-* All exceptions leading to a Internal Server Error are reported.
+* All exceptions leading to an Internal Server Error are reported.
 
 * *The AIOHTTP integration currently does not attach the request body.* See
   [the relevant GitHub
-  issue](https://github.com/getsentry/sentry-python/issues/220)
+  issue](https://github.com/getsentry/sentry-python/issues/220).
 
 * Logging with any logger will create breadcrumbs when
   the [Logging]({% link _documentation/platforms/python/logging.md %})
