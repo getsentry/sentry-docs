@@ -5,7 +5,7 @@ sidebar_order: 1011
 
 <!-- WIZARD -->
 
-Our Koa integration only requires _@sentry/node_ to be installed then you can use it like this:
+Our Koa integration only requires the installation of _@sentry/node_, and then you can use it like this:
 
 ```javascript
 const koa = require('koa');
