@@ -5,7 +5,7 @@ sidebar_order: 1010
 
 <!-- WIZARD -->
 
-Our Express integration only requires _@sentry/node_ to be installed then you can use it like this:
+Our Express integration only requires the installation of _@sentry/node_, and then you can use it like this:
 
 ```javascript
 const express = require('express');

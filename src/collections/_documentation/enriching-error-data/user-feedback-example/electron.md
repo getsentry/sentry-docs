@@ -7,7 +7,7 @@ init({
     // Check if it is an exception, if so, show the report dialog
     // Note that this only will work in the renderer process, it's a noop on the main process
     if (event.exception) {
-      Sentry.showReportDialog();
+      showReportDialog();
     }
     return event;
   }

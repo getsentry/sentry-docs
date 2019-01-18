@@ -13,7 +13,7 @@ Most modern JavaScript transpilers support source maps. Below are instructions f
 
 Webpack is a powerful build tool that resolves and bundles your JavaScript modules into files fit for running in the browser. It also supports many different “loaders” which can convert higher-level languages like TypeScript and ES6/ES2015 into browser-compatible JavaScript.
 
-Webpack can be configured to output source maps by editing `webpack.config.js`.
+You can configure Webpack to output source maps by editing `webpack.config.js`.
 
 ```javascript
 const path = require('path');
@@ -40,10 +40,10 @@ Source maps for Node.js projects should be uploaded directly to Sentry.
 
 Sentry provides an abstraction called **Releases** which you can attach source artifacts to. The release API is intended to allow you to store source files (and source maps) within Sentry.
 
-It can be easily done with a help of the `sentry-webpack-plugin`, which internally uses our Sentry CLI.
+You can do this with the help of the `sentry-webpack-plugin`, which internally uses our Sentry CLI.
 
 -   Start by creating a new authentication token under **[Account] > API**.
--   Ensure you you have `project:write` selected under scopes.
+-   Ensure you have `project:write` selected under scopes.
 -   Install `@sentry/webpack-plugin` using `npm`
 -   Create `.sentryclirc` file with necessary config (see Sentry Webpack Plugin docs below)
 -   Update your `webpack.config.json`
@@ -73,13 +73,20 @@ Sentry.init({
 });
 ```
 
-Note: You dont _have_ to use _RELEASE_ environment variables. You can provide them in any way you want, just make sure that `release` from your upload **matches** `release` from your `init` call.
+{% capture __alert_content -%}
+You don't _have_ to use _RELEASE_ environment variables. You can provide them in any way you want, just make sure that `release` from your upload **matches** `release` from your `init` call.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="info"
+%}
 
 Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
 
 ## Updating Sentry SDK configuration to support Source Maps
 
-In order for Sentry to understand how to resolve errors sources, we need to modify the data we send. Thankfully, we have an integration called `RewriteFrames` which can be used to do just that.
+For Sentry to understand how to resolve errors sources, we need to modify the data we send. Thankfully, we have an integration called `RewriteFrames` which can be used to do just that.
 
 ```javascript
 Sentry.init({
@@ -88,6 +95,6 @@ Sentry.init({
 });
 ```
 
-There’s one very important thing to note here. This config assumes, that you’ll bundle your application into a single file, which will be served and then uploaded to Sentry from the root of the project's directory.
+There’s one critical thing to note here. This config assumes, that you’ll bundle your application into a single file, which will be served and then uploaded to Sentry from the root of the project's directory.
 
-If you are not doing this, eg. you are using TypeScript and upload all your compiled files separately to the server, then we need to be a little smarter about this. Please refer to [TypeScript usage docs]({%- link _documentation/platforms/node/typescript.md -%}) to see a more complex and detailed example.
+If you're not doing this, e.g. you're using TypeScript and upload all your compiled files separately to the server, then this may take a little more effort. Please refer to [TypeScript usage docs]({%- link _documentation/platforms/node/typescript.md -%}) to see a more complex and detailed example.
