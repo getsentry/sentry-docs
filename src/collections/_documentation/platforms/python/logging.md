@@ -80,7 +80,8 @@ Sentry will honor the configured level of each logger. That means that you will 
 
 Instead of using `LoggingIntegration`, you can use two regular logging `logging.Handler` subclasses that the integration exports.
 
-**Usually, you do not need to use this yourself.** You *can* use this together with `default_integrations=False` if you want to opt into what Sentry captures. The disadvantage is that setting up logging correctly is hard and that an opt-in approach to capturing data will miss errors you would never have thought of looking for in the first place.
+**Usually, you don't need this.** You *can* use this together with `default_integrations=False` if you want to opt into what Sentry captures. 
+However, correctly setting up logging is difficult. Also, an opt-in approach to capturing data will miss errors you may not think of on your own. 
 
 See the [API
 documentation](https://getsentry.github.io/sentry-python/integrations/logging.m.html#header-classes)
