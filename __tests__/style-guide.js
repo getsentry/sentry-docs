@@ -1,5 +1,27 @@
 import { getJekyllData, printOnFail } from '../lib/helpers';
 
+// If any of these terms are present in a match, the whole check will be ignored.
+// Useful for skipping style guide checks when printing urls or usersnames.
+const IGNORED_TERM_LIST = [
+  'sourcemaps.io',
+  'https:',
+  'sentry-auth-github',
+  '@getsentry'
+];
+
+const containsIgnoredTerm = function(input) {
+  if (!input) return false;
+
+  let matchesATerm = false;
+  const testRemaining = IGNORED_TERM_LIST.slice();
+
+  while (!matchesATerm && testRemaining.length) {
+    matchesATerm = input.indexOf(testRemaining.pop()) >= 0;
+  }
+
+  return matchesATerm;
+};
+
 expect.extend({
   // Test for incorrect usage and spelling of terms
   //
@@ -8,7 +30,10 @@ expect.extend({
   //
   // Returns a Jest Matcher
   toCorrectlyCapitalize: function(received, argument) {
-    const lineMatch = new RegExp(`(^|\\n).*?(${argument}).*?(\\n|$)`, 'gi');
+    const lineMatch = new RegExp(
+      `(^|\\n).*?(\\S*)(${argument})(\\S*).*?(\\n|$)`,
+      'gi'
+    );
     let pass = true;
     let match;
     let message = '';
@@ -16,7 +41,8 @@ expect.extend({
     while (pass && (match = lineMatch.exec(received))) {
       // If there is no instance of the word or this instance is correctly
       // capitalized, continue.
-      if (!match || match[2] === argument) continue;
+      const fullMatch = `${match[2] || ''}${match[3] || ''}${match[4] || ''}`;
+      if (match[3] === argument || containsIgnoredTerm(fullMatch)) continue;
 
       message = pass
         ? () => {
@@ -37,9 +63,13 @@ expect.extend({
   },
 
   toMatch: function(received, argument) {
-    const lineMatch = new RegExp(`(^|\\n).*?(${argument.source}).*?(\\n|$)`);
+    const lineMatch = new RegExp(
+      `(^|\\n).*?(\\S*)(${argument.source})(\\S*).*?(\\n|$)`
+    );
     const match = lineMatch.exec(received);
-    const pass = !!match;
+    const fullMatch = match ? `${match[2]}${match[3]}${match[4]}` : '';
+
+    const pass = !!match && !containsIgnoredTerm(fullMatch);
 
     const message = pass
       ? () => {
