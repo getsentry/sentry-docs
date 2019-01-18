@@ -44,7 +44,7 @@ Available options:
 
 _Import name: `Sentry.Integrations.Modules`_
 
-This integration fetches names of all currently installed Node modules and attaches the list to the event. Once fetched, the list will cache for later reuse.
+This integration fetches names of all currently installed Node modules and attaches the list to the event. Once fetched, Sentry will cache the list for later reuse.
 
 ### Transaction
 
