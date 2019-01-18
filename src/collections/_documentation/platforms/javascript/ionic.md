@@ -18,7 +18,7 @@ Do not run `ionic cordova plugin add sentry-cordova`. The ionic cli wrapper suck
   content=__alert_content
 %}
 
-When building your app with ionic for production make sure you have sourcemaps enabled. You have to add this to your `package.json`:
+When building your app with ionic for production make sure you have source maps enabled. You have to add this to your `package.json`:
 
 ```javascript
 "config": {
@@ -26,7 +26,7 @@ When building your app with ionic for production make sure you have sourcemaps e
 }
 ```
 
-Otherwise we are not able to upload sourcemaps to Sentry.
+Otherwise we are not able to upload source maps to Sentry.
 
 {% capture __alert_content -%}
 If you want to skip the automatic release version and set the release completely for yourself. You have to add this env var to disable it e.g.: `SENTRY_SKIP_AUTO_RELEASE=true ionic cordova emulate ios --prod`

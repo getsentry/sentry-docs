@@ -5,7 +5,7 @@ sidebar_order: 9
 
 The `sentry-log4j` library provides [Log4j 1.x](https://logging.apache.org/log4j/1.2/) support for Sentry via an [Appender](https://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/Appender.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page]({%- link _documentation/clients/java/usage.md -%}#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
 
-The source can be found [on Github](https://github.com/getsentry/sentry-java/tree/master/sentry-log4j).
+The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-log4j).
 
 **Note:** The old `raven-log4j` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j.rst).
 

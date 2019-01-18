@@ -42,7 +42,7 @@ github "getsentry/sentry-cocoa" "4.1.0"
 
 Run `carthage update` to download the framework and drag the built _Sentry.framework_ into your Xcode project.
 
-We also provide a pre-built version for every release which can be downloaded at [releases on github](https://github.com/getsentry/sentry-cocoa/releases).
+We also provide a pre-built version for every release which can be downloaded at [releases on GitHub](https://github.com/getsentry/sentry-cocoa/releases).
 
 ## Configuration {#configure}
 
@@ -124,5 +124,5 @@ Crashes are only submitted upon re-launching the application. To see the crash i
     -   [Breadcrumbs]({%- link _documentation/clients/cocoa/advanced.md -%}#breadcrumbs)
     -   [Change event before sending it]({%- link _documentation/clients/cocoa/advanced.md -%}#change-event-before-sending-it)
     -   [Change request before sending it]({%- link _documentation/clients/cocoa/advanced.md -%}#change-request-before-sending-it)
-    -   [Adding stacktrace to message]({%- link _documentation/clients/cocoa/advanced.md -%}#adding-stacktrace-to-message)
+    -   [Adding stack trace to message]({%- link _documentation/clients/cocoa/advanced.md -%}#adding-stacktrace-to-message)
     -   [Event Sampling]({%- link _documentation/clients/cocoa/advanced.md -%}#event-sampling)

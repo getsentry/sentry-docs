@@ -57,7 +57,7 @@ Stack parsing can tell which frames should be identified as part of the user’s
 
 ## Surrounding Source in Stacktrace
 
-Lines of source code to provide context in stacktraces. This is easier in interpreted languages, may be hard or impossible in compiled ones.
+Lines of source code to provide context in stack traces. This is easier in interpreted languages, may be hard or impossible in compiled ones.
 
 ## Local Variables
 
@@ -65,7 +65,7 @@ Local variable names and values for each stack frame, where possible. Restrictio
 
 ## Desymbolication
 
-Turn compiled or obfuscated code/method names in stacktraces back into the original. Desymbolication always requires Sentry backend support. Not necessary for many languages.
+Turn compiled or obfuscated code/method names in stack traces back into the original. Desymbolication always requires Sentry backend support. Not necessary for many languages.
 
 ## Retrieve Last Event ID
 

@@ -30,7 +30,7 @@ Additionally, the following features are highly encouraged:
 -   Event sampling
 -   Honor Sentry’s HTTP 429 Retry-After header
 -   Pre and Post event send hooks
--   Local variable values in stacktrace (on platforms where this is possible)
+-   Local variable values in stack trace (on platforms where this is possible)
 
 [Please see the features page]({%- link _documentation/development/sdk-dev/features.md -%}#features) for descriptions of commonly expected Sentry SDK features.
 

@@ -10,7 +10,7 @@ gem "sentry-raven"
 
 ## Development Version
 
-If you want to install the development version from github:
+If you want to install the development version from GitHub:
 
 ```ruby
 gem "sentry-raven", :github => "getsentry/raven-ruby"

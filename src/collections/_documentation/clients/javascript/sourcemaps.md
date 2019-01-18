@@ -5,7 +5,7 @@ sidebar_order: 3
 
 Sentry supports un-minifying JavaScript via [Source Maps](http://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps.html). This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (e.g. UglifyJS), or transpiled code from a higher-level language (e.g. TypeScript, ES6).
 
-Most of the process is the same whether you're using this SDK or the [new unified Javascript Browser SDK]({%- link _documentation/platforms/javascript/index.md -%}), so the main docs for dealing with source maps can be found [there]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}). The one difference is how you specify the release in your SDK configuration.
+Most of the process is the same whether you're using this SDK or the [new unified JavaScript Browser SDK]({%- link _documentation/platforms/javascript/index.md -%}), so the main docs for dealing with source maps can be found [there]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}). The one difference is how you specify the release in your SDK configuration.
 
 ## Specify the release in Raven.js {#specify-the-release-in-raven-js}
 
