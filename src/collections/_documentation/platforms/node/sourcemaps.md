@@ -13,7 +13,7 @@ Most modern JavaScript transpilers support source maps. Below are instructions f
 
 Webpack is a powerful build tool that resolves and bundles your JavaScript modules into files fit for running in the browser. It also supports many different “loaders” which can convert higher-level languages like TypeScript and ES6/ES2015 into browser-compatible JavaScript.
 
-You can configure webpack to output source maps by editing `webpack.config.js`.
+You can configure Webpack to output source maps by editing `webpack.config.js`.
 
 ```javascript
 const path = require('path');

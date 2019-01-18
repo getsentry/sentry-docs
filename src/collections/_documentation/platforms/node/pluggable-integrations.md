@@ -34,7 +34,7 @@ Available options:
 ```js
 {
   root: string; // root path that will be appended to the basename of the current frame's url
-  iteratee: (frame) => frame); // function that takes the frame, applys any transformation on it and returns it back
+  iteratee: (frame) => frame); // function that takes the frame, applies any transformation on it and returns it back
 }
 ```
 
