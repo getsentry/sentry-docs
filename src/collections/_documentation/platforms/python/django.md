@@ -29,20 +29,20 @@ from Version 1.6 upwards.
 <!-- ENDWIZARD -->
 ## Behavior
 
-* All exceptions leading to a Internal Server Error are reported.
+* All exceptions leading to an Internal Server Error are reported.
 
 * {% include platforms/python/request-data.md %}
 
 * If you use ``django.contrib.auth`` and have set ``send_default_pii=True`` in your call to ``init``, user data (current user id, email address, username) is attached to the event.
 
-* SQL queries will be attached as breadcrumbs.
+* Sentry will attach SQL queries as breadcrumbs.
 
 * Logging with any logger will create breadcrumbs when the [Logging]({% link _documentation/platforms/python/logging.md %})
   integration is enabled (done by default).
 
 ## Options
 
-The following keyword arguments can be passed to `DjangoIntegration()`:
+You can pass the following keyword arguments to `DjangoIntegration()`:
 
 * `transaction_style`:
 
@@ -55,7 +55,7 @@ The following keyword arguments can be passed to `DjangoIntegration()`:
   ]
   ```
 
-  In the above code, the transaction would be set to:
+  In the above code, you would set the transaction to:
 
   * `/myurl/{myid}` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
   * `my_function` if you set `transaction_style="function_name"`
@@ -64,12 +64,11 @@ The following keyword arguments can be passed to `DjangoIntegration()`:
 
 ## User Feedback
 
-The user feedback feature can be used with this integration.  For more information
-see [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md %}?platform=django).
+You can use the user feedback feature with this integration.  For more information see [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md %}?platform=django).
 
 ## Reporting other status codes
 
-In some situations it might make sense to report `404 Not Found` and other errors besides uncaught exceptions (`500 Internal Server Error`) to Sentry. This can be achieved by writing your own Django view for those status codes. For example:
+In some situations, it might make sense to report `404 Not Found` and other errors besides uncaught exceptions (`500 Internal Server Error`) to Sentry. You can achieve this by writing your own Django view for those status codes. For example:
 
 ```python
 
@@ -90,8 +89,6 @@ def my_custom_page_not_found_view(*args, **kwargs):
     return HttpResponseNotFound("Not found")
 ```
 
-The error message you send to sentry will have the usual request data attached.
+The error message you send to Sentry will have the usual request data attached.
 
-Refer to [Customizing Error
-Views](https://docs.djangoproject.com/en/2.0/topics/http/views/#customizing-error-views)
-from the Django documentation for more information.
+Refer to [Customizing Error Views](https://docs.djangoproject.com/en/2.0/topics/http/views/#customizing-error-views) from the Django documentation for more information.
