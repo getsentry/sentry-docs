@@ -7,7 +7,7 @@ You can now use the data from your GitHub commits to help you find and fix bugs 
 ## Configure GitHub
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and Github owner permissions are required to install this integration.
+Sentry owner or manager permissions, and GitHub owner permissions are required to install this integration.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -16,7 +16,7 @@ Sentry owner or manager permissions, and Github owner permissions are required t
 %}
 
 1. In Sentry, navigate to Organization Settings > **Integrations**.
-2. If you have the legacy GitHub integration installed, you’ll see a button next to Github that says **Upgrade**. If you do not have the legacy GitHub integration installed, you'll see a button that says **Install**.
+2. If you have the legacy GitHub integration installed, you’ll see a button next to GitHub that says **Upgrade**. If you do not have the legacy GitHub integration installed, you'll see a button that says **Install**.
 
     [{% asset github-global-install.png %}]({% asset github-global-install.png @path %})
 
@@ -32,7 +32,7 @@ Sentry owner or manager permissions, and Github owner permissions are required t
 
     [{% asset github-global-add-repo.png %}]({% asset github-global-add-repo.png @path %})
 
-Github should now be enabled for all projects under your Sentry organization.
+GitHub should now be enabled for all projects under your Sentry organization.
 
 ## Commit Tracking
 
@@ -50,7 +50,7 @@ You’ll also see that the author of the suspect commit will be listed as a sugg
 
 ## Issue Management
 
-Issue tracking allows you to create GitHub issues from within Sentry, and link Sentry issues to existing Github Issues.
+Issue tracking allows you to create GitHub issues from within Sentry, and link Sentry issues to existing GitHub Issues.
 
 Once you’ve navigated to a specific issue, you’ll find the **Linked Issues** section on the right hand panel. Here, you’ll be able to create or link GitHub issues.
 

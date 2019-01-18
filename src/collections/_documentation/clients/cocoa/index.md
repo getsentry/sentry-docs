@@ -42,7 +42,7 @@ github "getsentry/sentry-cocoa" "4.1.0"
 
 Run `carthage update` to download the framework and drag the built _Sentry.framework_ into your Xcode project.
 
-We also provide a pre-built version for every release which can be downloaded at [releases on github](https://github.com/getsentry/sentry-cocoa/releases).
+We also provide a pre-built version for every release which can be downloaded at [releases on GitHub](https://github.com/getsentry/sentry-cocoa/releases).
 
 ## Configuration {#configure}
 

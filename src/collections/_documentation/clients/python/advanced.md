@@ -7,7 +7,7 @@ This covers some advanced usage scenarios for raven Python.
 
 ## Alternative Installations
 
-If you want to use the latest git version you can get it from [the github repository](https://github.com/getsentry/raven-python):
+If you want to use the latest git version you can get it from [the GitHub repository](https://github.com/getsentry/raven-python):
 
 ```bash
 git clone https://github.com/getsentry/raven-python

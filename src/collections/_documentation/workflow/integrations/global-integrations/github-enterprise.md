@@ -18,7 +18,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 #### Add new GitHub App
 
 1. Make sure you've whitelisted Sentry’s outbound request [IPs addresses](https://docs.sentry.io/ip-ranges/) for your GitHub Enterprise instance.
-2. In your Github Enterprise organization, navigate to Settings > Developer Settings > **GitHub Apps** and click to add a new **New GitHub App**.
+2. In your GitHub Enterprise organization, navigate to Settings > Developer Settings > **GitHub Apps** and click to add a new **New GitHub App**.
 
     [{% asset github-e-new-app.png %}]({% asset github-e-new-app.png @path %})
 
@@ -32,7 +32,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 
 2. Then in GitHub, fill out the form as follows and click **Create GitHub App**.
 
-    | Github App Name                 | sentry-app        |
+    | GitHub App Name                 | sentry-app        |
     | Homepage URL                    | https://sentry.io |
     | User authorization callback URL | https://sentry.io/extensions/github-enterprise/setup/ |
     | Setup URL                       | https://sentry.io/extensions/github-enterprise/setup/ |
@@ -53,7 +53,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
     | Pull Request        | Yes |
     | Push                | Yes |
 
-#### Install your Github App
+#### Install your GitHub App
 
 1. In Sentry, navigate to Organization Settings > **Integrations**.
 2. Next to GitHub Enterprise, click **Install**.

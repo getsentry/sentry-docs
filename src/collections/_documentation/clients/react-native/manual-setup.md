@@ -6,7 +6,7 @@ If you can’t (or don’t want) to run the linking step you can see here what i
 
 ## General
 
-You will want to make sure you have already created a `sentry.properties` file at the root of your react native project.  An example of this properties file can be found in the [examples github](https://github.com/getsentry/examples/blob/master/react-native/sentry.properties).
+You will want to make sure you have already created a `sentry.properties` file at the root of your react native project.  An example of this properties file can be found in the [examples GitHub](https://github.com/getsentry/examples/blob/master/react-native/sentry.properties).
 
 ## iOS
 
