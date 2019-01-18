@@ -21,7 +21,7 @@ Releases are created with the `sentry-cli releases new` command. It takes at the
 - if you use a DVCS we recommed using the identifying hash (eg: the commit SHA, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). You can let sentry-cli automatically determine this hash for supported version control systems with `sentry-cli releases propose-version`.
 - if you tag releases we recommend using the release tag (eg: `v1.0.0`).
 
-Releases can also be auto created by different systems. For instance upon uploading a sourcemap a release is automatically created. Likewise releases are created by some clients when an event for a release comes in.
+Releases can also be auto created by different systems. For instance upon uploading a source map a release is automatically created. Likewise releases are created by some clients when an event for a release comes in.
 
 ## Finalizing Releases
 
@@ -78,7 +78,7 @@ To manage release artfacts the `sentry-cli releases files` command can be used w
 
 ### Upload Files
 
-The most common use case is to upload files. For the generic upload the `sentry-cli releases files VERSION upload` command can be used. However since most release artifacts are JavaScript sourcemap related we have a [Upload Source Maps](#sentry-cli-sourcemaps) convenience method for that.
+The most common use case is to upload files. For the generic upload the `sentry-cli releases files VERSION upload` command can be used. However since most release artifacts are JavaScript source map related we have a [Upload Source Maps](#sentry-cli-sourcemaps) convenience method for that.
 
 Files uploaded are typically named with a full (eg: `http://example.com/foo.js`) or truncated URL (eg: `~/foo.js`).
 
@@ -92,25 +92,25 @@ $ sentry-cli releases files VERSION upload /path/to/file '~/file.js'
 
 ### Upload Source Maps {#sentry-cli-sourcemaps}
 
-For sourcemap upload, a separate command is provided which assists you in uploading and verifying source maps:
+For source map upload, a separate command is provided which assists you in uploading and verifying source maps:
 
 ```bash
 $ sentry-cli releases files VERSION upload-sourcemaps /path/to/sourcemaps
 ```
 
-This command provides a bunch of options and attempts as much auto detection as possible. By default, it will scan the provided path for files and upload them named by their path with a `~/` prefix. It will also attempt to figure out references between minified files and source maps based on the filename. So if you have a file named `foo.min.js` which is a minified JavaScript file and a sourcemap named `foo.min.map` for example, it will send a long a `Sourcemap` header to associate them. This works for files the system can detect a relationship of.
+This command provides a bunch of options and attempts as much auto detection as possible. By default, it will scan the provided path for files and upload them named by their path with a `~/` prefix. It will also attempt to figure out references between minified files and source maps based on the filename. So if you have a file named `foo.min.js` which is a minified JavaScript file and a source map named `foo.min.map` for example, it will send a long a `Sourcemap` header to associate them. This works for files the system can detect a relationship of.
 
 The following options exist to change the behavior of the upload command:
 
 `--no-sourcemap-reference`
 
-: This prevents the automatic detection of sourcemap references. It’s not recommended to use this option since the system falls back to not emitting a reference anyways. It is however useful if you are manually adding `sourceMapURL` comments to the minified files and you know that they are more correct than the autodetection.
+: This prevents the automatic detection of source map references. It’s not recommended to use this option since the system falls back to not emitting a reference anyways. It is however useful if you are manually adding `sourceMapURL` comments to the minified files and you know that they are more correct than the autodetection.
 
 `--rewrite`
 
 : When this option is provided, `sentry-cli` will rewrite the source maps before upload. This does two things:
 
-1.  It flattens out indexed source maps. This has the advantage that it can compress source maps sometimes which might improve your processing times and can work with tools that embed local paths for sourcemap references which would not work on the server. This is useful when working with source maps for development purposes in particular.
+1.  It flattens out indexed source maps. This has the advantage that it can compress source maps sometimes which might improve your processing times and can work with tools that embed local paths for source map references which would not work on the server. This is useful when working with source maps for development purposes in particular.
 2.  Local file references in source maps for source contents are inlined. This works particularly well with react-native projects which might reference thousands of files you probably do not want to upload separately.
 3.  It automatically validates source maps before upload very accurately which can spot errors you would not find otherwise until an event comes in. This is an improved version of what `--validate` does otherwise.
 
@@ -120,7 +120,7 @@ The following options exist to change the behavior of the upload command:
 
 `--validate`
 
-: This attempts sourcemap validation before upload when rewriting is not enabled. It will spot a variety of issues with source maps and cancel the upload if any are found. This is not the default as this can cause false positives.
+: This attempts source map validation before upload when rewriting is not enabled. It will spot a variety of issues with source maps and cancel the upload if any are found. This is not the default as this can cause false positives.
 
 `--url-prefix`
 

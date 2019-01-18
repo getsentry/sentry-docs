@@ -38,7 +38,7 @@ Source maps for Node.js projects should be uploaded directly to Sentry.
 
 ### Uploading Source Maps to Sentry
 
-Sentry provides an abstraction called **Releases** which you can attach source artifacts to. The release API is intended to allow you to store source files (and sourcemaps) within Sentry.
+Sentry provides an abstraction called **Releases** which you can attach source artifacts to. The release API is intended to allow you to store source files (and source maps) within Sentry.
 
 It can be easily done with a help of the `sentry-webpack-plugin`, which internally uses our Sentry CLI.
 

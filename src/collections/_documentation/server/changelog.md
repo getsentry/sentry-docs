@@ -119,7 +119,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 
 -   Make BitBucket repositories enabled by default
 -   Add raw data toggle for Additional Data
--   Improved function name resolving for JavaScript sourcemaps
+-   Improved function name resolving for JavaScript source maps
 -   Add initial support for Redis Cluster.
 -   Support a list of hosts in the `redis.clusters` configuration along side the traditional dictionary style configuration.
 -   Better support for rendering rich JSON and URL encoded HTTP bodies by guessing the content type based on format heuristics.
@@ -528,7 +528,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   Added unsubscribe links to mails.
 -   Added email verification.
 -   Added ability to link/unlink Issues, support is dependent on plugins.
--   Can now toggle between minified/original code in stack traces where sourcemaps were applied.
+-   Can now toggle between minified/original code in stack traces where source maps were applied.
 -   Can now upload release artifacts with tilde prefix (~) to omit protocol + host in URL lookups.
 
 ### Schema Changes {#id24}
@@ -956,7 +956,7 @@ Redis must be at least version 2.6.12.
 -   Added various release API endpoints.
 -   Added various organization API endpoints.
 -   Added various tag API endpoints.
--   Sourcemaps will now always treat sourceRoot as a path.
+-   Source maps will now always treat sourceRoot as a path.
 -   Changed many permissions to use new sentry.access abstractions which are now scoped based, shared with the API scopes.
 -   Initial first pass at the SSO subsystem.
 -   The Sentry internal client will now aggressively prevent recursive errors, but allow more internal errors to be recorded to itself.
@@ -979,7 +979,7 @@ Redis must be at least version 2.6.12.
 -   Release objects are now created automatically.
 -   Changed team-based API endpoints to use slugs.
 -   New API endpoints: - Help page list - Help page details - Group tag values - Project tag values
--   Moved JavaScript sourcemap processing into language extension. - Sourcemap processing errors are now annotated into the frame.
+-   Moved JavaScript source map processing into language extension. - Source map processing errors are now annotated into the frame.
 -   Refactored API to be scope-based permissions.
 -   Added backend support for organization API keys.
 -   Moved sentry_webhooks into builtins.
@@ -1131,7 +1131,7 @@ A new application called `nodestore` now manages the event blob data. By default
 -   A new subsystem for handling email is available in `sentry.utils.email`.
 -   You can now receive email notifications for notes.
 -   Charts now show tooltips describing the datapoint.
--   JavaScript sourcemaps now support embedded sources.
+-   JavaScript source maps now support embedded sources.
 -   Stream annotations can now be customized to show any tags (not just number of users).
 -   Stacktrace frames now get truncated down to a maximum length of 50.
 
@@ -1238,7 +1238,7 @@ Additionally, this includes the following other items:
 -   Improved rendering of data values in all interfaces.
 -   django-compressor was replaced with django-static-compiler.
 -   A better defined public view of events (which removes several items from being visible).
--   Improved SourceMap discovery.
+-   Improved Source Map discovery.
 -   Most events will no longer cause a hard error when validation fails. Instead we attempt to drop any non-required data so that at least a partial event is stored.
 -   MessageCountByMinute was renamed to GroupCountByMinute.
 -   MessageFilterValue was renamed to GroupTag.
@@ -1277,7 +1277,7 @@ Additionally:
 
 -   [New] A new activity stream exists on event pages.
 -   [New] Syntax highlighting now exists on all context frames.
--   [New] Support for JavaScript Sourcemaps now exists.
+-   [New] Support for JavaScript Source maps now exists.
 -   [New] The server will now fetch remote source files for JavaScript events.
 -   [New] Sentry will now ask for your project’s platform.
 -   [Fix] Resolved -> Regressed state change is now atomic.

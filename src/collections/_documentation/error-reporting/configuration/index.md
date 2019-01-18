@@ -35,7 +35,7 @@ safety concerns.
 
 Sets the release.  Some SDKs will try to automatically configure a release out of the box but
 if you have the chance it's a better idea to manually set it.  That way it's guaranteed to be
-in sync with your deploy integrations or sourcemap uploads.
+in sync with your deploy integrations or source map uploads.
 
 Release names are just strings but some formats are detected by Sentry and might be rendered
 differently.  For more information have a look at [the releases documentation]({% link _documentation/workflow/releases.md %}).

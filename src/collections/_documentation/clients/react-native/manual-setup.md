@@ -63,7 +63,7 @@ Additionally we add a build script called “Upload Debug Symbols to Sentry” w
 
 #### Upload Debug Symbols to Sentry
 
-If you wish to upload the sourcemaps and symbols to Sentry, create a new Run Script build phase with the following script:
+If you wish to upload the source maps and symbols to Sentry, create a new Run Script build phase with the following script:
 
 ```bash
 export SENTRY_PROPERTIES=../sentry.properties
@@ -110,7 +110,7 @@ $NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
 
 ## Android
 
-For Android we hook into gradle for the sourcemap build process. When you run `react-native link` the gradle files are automatically updated.
+For Android we hook into gradle for the source map build process. When you run `react-native link` the gradle files are automatically updated.
 
 We enable the gradle integration in your `android/app/build.gradle` file by adding the following line after the `react.gradle` one:
 
