@@ -135,4 +135,4 @@ For more detailed information about how to get most out of Raven there is additi
 Resources:
 
 -   [Bug Tracker](http://github.com/getsentry/sentry-javascript/issues)
--   [Github Project](http://github.com/getsentry/sentry-javascript)
+-   [GitHub Project](http://github.com/getsentry/sentry-javascript)

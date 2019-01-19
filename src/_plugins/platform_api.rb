@@ -70,7 +70,7 @@ Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
       is_self = group_slug === platform["slug"]
       grouped_file = group_slug === platform["slug"] ? file_name : "#{group_slug}/#{file_name}"
 
-      # This is a workaround to match javascript to browser docs now
+      # This is a workaround to match JavaScript to browser docs now
       if platform["wizard"] === true and platform["slug"] == "javascript"
         platform["slug"] = "browser"
         is_self = true

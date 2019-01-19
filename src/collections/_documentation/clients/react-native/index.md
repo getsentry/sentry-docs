@@ -57,11 +57,11 @@ $ react-native link react-native-sentry
 
 ## iOS Specifics
 
-When you use Xcode you can hook directly into the build process to upload debug symbols and sourcemaps. If you however are using bitcode you will need to disable the “Upload Debug Symbols to Sentry” build phase and then separately upload debug symbols from iTunes Connect to Sentry.
+When you use Xcode you can hook directly into the build process to upload debug symbols and source maps. If you however are using bitcode you will need to disable the “Upload Debug Symbols to Sentry” build phase and then separately upload debug symbols from iTunes Connect to Sentry.
 
 ## Android Specifics
 
-For Android we hook into gradle for the sourcemap build process. When you run `react-native link` the gradle files are automatically updated. When you run `./gradlew assembleRelease` sourcemaps are automatically built and uploaded to Sentry.
+For Android we hook into gradle for the source map build process. When you run `react-native link` the gradle files are automatically updated. When you run `./gradlew assembleRelease` source maps are automatically built and uploaded to Sentry.
 
 <!-- WIZARD -->
 ## Client Configuration {#configure}
@@ -78,14 +78,14 @@ You can pass additional configuration options to the _config()_ method if you wa
 
 ## Mixed Stacktraces
 
-Currently we only support mixed stacktraces on iOS. By default this feature is disabled. We recommend testing your app thoroughly when activating this, to turn it on `deactivateStacktraceMerging: false` see: [_Additional Configuration_]({%- link _documentation/clients/react-native/config.md -%}).
+Currently we only support mixed stack traces on iOS. By default this feature is disabled. We recommend testing your app thoroughly when activating this, to turn it on `deactivateStacktraceMerging: false` see: [_Additional Configuration_]({%- link _documentation/clients/react-native/config.md -%}).
 
 ## Deep Dive
 
 -   [Additional Configuration]({%- link _documentation/clients/react-native/config.md -%})
 -   [Using Sentry with Expo]({%- link _documentation/clients/react-native/expo.md -%})
 -   [Using Sentry with CodePush]({%- link _documentation/clients/react-native/codepush.md -%})
--   [Sourcemaps for Other Platforms]({%- link _documentation/clients/react-native/sourcemaps.md -%})
+-   [Source maps for Other Platforms]({%- link _documentation/clients/react-native/sourcemaps.md -%})
 -   [Setup With CocoaPods]({%- link _documentation/clients/react-native/cocoapods.md -%})
 -   [Manual Setup]({%- link _documentation/clients/react-native/manual-setup.md -%})
     -   [iOS]({%- link _documentation/clients/react-native/manual-setup.md -%}#ios)

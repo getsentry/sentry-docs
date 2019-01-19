@@ -172,7 +172,7 @@ The following settings are available for the client:
 
 `trace`
 
-: Set this to `false` to disable reflection tracing (function calling arguments) in stacktraces.
+: Set this to `false` to disable reflection tracing (function calling arguments) in stack traces.
 
 `logger`
 

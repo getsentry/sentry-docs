@@ -44,4 +44,4 @@ For more information, see the [CPAN documentation](https://metacpan.org/pod/Sent
 ## Resources
 
 -   [Bug Tracker](https://github.com/rentrak/perl-raven/issues)
--   [Github Project](https://github.com/rentrak/perl-raven)
+-   [GitHub Project](https://github.com/rentrak/perl-raven)

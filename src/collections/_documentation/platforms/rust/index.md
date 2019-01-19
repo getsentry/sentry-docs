@@ -47,4 +47,4 @@ Logs can be automatically converted into breadcrumbs.
 -   [API Docs](http://docs.rs/sentry)
 -   [Crates.io page](http://crates.io/crates/sentry)
 -   [Bug Tracker](http://github.com/getsentry/sentry-rust/issues)
--   [Github Project](http://github.com/getsentry/sentry-rust)
+-   [GitHub Project](http://github.com/getsentry/sentry-rust)

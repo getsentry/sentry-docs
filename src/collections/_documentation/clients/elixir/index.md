@@ -179,4 +179,4 @@ Want more? Have a look at the full documentation for more information.
 Resources:
 
 -   [Bug Tracker](http://github.com/getsentry/sentry-elixir/issues)
--   [Github Project](http://github.com/getsentry/sentry-elixir)
+-   [GitHub Project](http://github.com/getsentry/sentry-elixir)

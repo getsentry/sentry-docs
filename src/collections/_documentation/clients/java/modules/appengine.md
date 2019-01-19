@@ -5,7 +5,7 @@ sidebar_order: 7
 
 The `sentry-appengine` library provides [Google App Engine](https://cloud.google.com/appengine/) support for Sentry via the [Task Queue API](https://cloud.google.com/appengine/docs/java/taskqueue/).
 
-The source can be found [on Github](https://github.com/getsentry/sentry-java/tree/master/sentry-appengine).
+The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-appengine).
 
 <!-- WIZARD -->
 ## Installation

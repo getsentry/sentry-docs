@@ -6,7 +6,7 @@ If you can’t (or don’t want) to run the linking step you can see here what i
 
 ## General
 
-You will want to make sure you have already created a `sentry.properties` file at the root of your react native project.  An example of this properties file can be found in the [examples github](https://github.com/getsentry/examples/blob/master/react-native/sentry.properties).
+You will want to make sure you have already created a `sentry.properties` file at the root of your react native project.  An example of this properties file can be found in the [examples GitHub](https://github.com/getsentry/examples/blob/master/react-native/sentry.properties).
 
 ## iOS
 
@@ -63,7 +63,7 @@ Additionally we add a build script called “Upload Debug Symbols to Sentry” w
 
 #### Upload Debug Symbols to Sentry
 
-If you wish to upload the sourcemaps and symbols to Sentry, create a new Run Script build phase with the following script:
+If you wish to upload the source maps and symbols to Sentry, create a new Run Script build phase with the following script:
 
 ```bash
 export SENTRY_PROPERTIES=../sentry.properties
@@ -110,7 +110,7 @@ $NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
 
 ## Android
 
-For Android we hook into gradle for the sourcemap build process. When you run `react-native link` the gradle files are automatically updated.
+For Android we hook into gradle for the source map build process. When you run `react-native link` the gradle files are automatically updated.
 
 We enable the gradle integration in your `android/app/build.gradle` file by adding the following line after the `react.gradle` one:
 

@@ -162,6 +162,6 @@ ravenClient.BeforeSend = requester =>
 ## Resources
 
 -   [Bug Tracker](http://github.com/getsentry/raven-csharp/issues)
--   [Github Project](http://github.com/getsentry/raven-csharp)
+-   [GitHub Project](http://github.com/getsentry/raven-csharp)
 -   [Join the chat on Gitter](https://gitter.im/getsentry/raven-csharp)
 -   [Join the chat on IRC](irc://irc.freenode.net/sentry) (irc.freenode.net, #sentry)

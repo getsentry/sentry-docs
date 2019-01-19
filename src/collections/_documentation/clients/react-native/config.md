@@ -2,7 +2,7 @@
 title: 'Additional Configuration'
 ---
 
-These are functions you can call in your javascript code:
+These are functions you can call in your JavaScript code:
 
 ```javascript
 import {
@@ -11,16 +11,16 @@ import {
   SentryLog
 } from 'react-native-sentry';
 
-// disable stacktrace merging
+// disable stack trace merging
 Sentry.config("___DSN___", {
-  deactivateStacktraceMerging: false, // default: true | Deactivates the stacktrace merging feature
+  deactivateStacktraceMerging: false, // default: true | Deactivates the stack trace merging feature
   logLevel: SentryLog.Debug, // default SentryLog.None | Possible values:  .None, .Error, .Debug, .Verbose
   disableNativeIntegration: false, // default: false | Deactivates the native integration and only uses raven-js
   handlePromiseRejection: true // default: true | Handle unhandled promise rejections
   // sampleRate: 0.5 // default: 1.0 | Only set this if you don't want to send every event so e.g.: 0.5 will send 50% of all events
-  // These two options will only be considered if stacktrace merging is active
+  // These two options will only be considered if stack trace merging is active
   // Here you can add modules that should be ignored or exclude modules
-  // that should no longer be ignored from stacktrace merging
+  // that should no longer be ignored from stack trace merging
   // ignoreModulesExclude: ["I18nManager"], // default: [] | Exclude is always stronger than include
   // ignoreModulesInclude: ["RNSentry"], // default: [] | Include modules that should be ignored too
   // ---------------------------------

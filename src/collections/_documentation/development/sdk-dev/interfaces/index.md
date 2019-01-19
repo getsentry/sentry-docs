@@ -7,7 +7,7 @@ Any additional value in the payload of an event which is not an attribute (see
 [_Attributes_]({%- link _documentation/development/sdk-dev/attributes.md -%})) is assumed
 to be a data interface, where the key is the canonical interface short name, and
 the value is the data expected by the interface (usually a dictionary).
-Interfaces are used in a variety of ways including storing stacktraces, HTTP
+Interfaces are used in a variety of ways including storing stack traces, HTTP
 request information, and other metadata.
 
 For the most part, interfaces are an evolving part of Sentry. Like with
