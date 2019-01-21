@@ -138,7 +138,7 @@ You can add you own `eventProcessor` on the current scope. The difference to `be
 ```javascript
 // This will be set globally for every succeeding event send
 Sentry.configureScope(scope => {
-  scope.addEventProcessor(async (event, hint) => {
+  scope.addEventProcessor((event, hint) => {
     // Add anything to the event here
     // returning null will drop the event
     return event;
@@ -148,7 +148,7 @@ Sentry.configureScope(scope => {
 // Using withScope, will only call the event processor for all "sends"
 // that happen within withScope
 Sentry.withScope(scope => {
-  scope.addEventProcessor(async (event, hint) => {
+  scope.addEventProcessor((event, hint) => {
     // Add anything to the event here
     // returning null will drop the event
     return event;

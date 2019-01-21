@@ -92,7 +92,7 @@ Also, `eventProcessors` optionally receive the hint (see: [Hints](#hints)).
 ```javascript
 // This will be set globally for every succeeding event send
 Sentry.configureScope(scope => {
-  scope.addEventProcessor(async (event, hint) => {
+  scope.addEventProcessor((event, hint) => {
     // Add anything to the event here
     // returning null will drop the event
     return event;
@@ -102,7 +102,7 @@ Sentry.configureScope(scope => {
 // Using withScope, will only call the event processor for all "sends"
 // that happen within withScope
 Sentry.withScope(scope => {
-  scope.addEventProcessor(async (event, hint) => {
+  scope.addEventProcessor((event, hint) => {
     // Add anything to the event here
     // returning null will drop the event
     return event;
