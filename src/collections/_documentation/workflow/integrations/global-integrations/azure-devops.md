@@ -36,9 +36,9 @@ Commit tracking allows you to hone in on problematic commits. Learn more about [
 
 ## Suspect Commits and Suggested Assignees
 
-Once you set up commit tracking, you’ll be able to see the most recent changes to files found in the issue’s stacktrace with suspect commits.
+Once you set up commit tracking, you’ll be able to see the most recent changes to files found in the issue’s stack trace with suspect commits.
 
-For issues where the files in the stacktrace match files included in commits sent to Sentry, you’ll see the suspect commit, with a link to the commit itself.
+For issues where the files in the stack trace match files included in commits sent to Sentry, you’ll see the suspect commit, with a link to the commit itself.
 
 [{% asset azure-global-suspect-commit.png %}]({% asset azure-global-suspect-commit.png @path %})  
 

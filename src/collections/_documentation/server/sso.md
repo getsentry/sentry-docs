@@ -6,7 +6,7 @@ sidebar_order: 8
 SSO in Sentry is handled in one of two ways:
 
 -   Via a middleware which handles an upstream proxy dictating the authenticated user
--   Via a third party service which implements an authentication pipeline
+-   Via a third-party service which implements an authentication pipeline
 
 This documentation describes the latter, which would cover things like Google Apps, GitHub, LDAP, and other similar services.
 

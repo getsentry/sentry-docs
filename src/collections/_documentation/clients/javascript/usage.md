@@ -242,7 +242,7 @@ Raven.isSetup()
 
 Raven and Sentry support [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/).
 
-We have provided some instructions to creating Source Maps over at [{%- link _documentation/clients/javascript/sourcemaps.md -%}](https://docs.sentry.io/hosted/clients/javascript/sourcemaps/). Also, checkout our [Gruntfile](https://github.com/getsentry/raven-js/blob/master/packages/raven-js/Gruntfile.js) for a good example of what we’re doing.
+For more information, please read the [Source Map docs](https://docs.sentry.io/hosted/clients/javascript/sourcemaps/). Also, checkout our [Gruntfile](https://github.com/getsentry/raven-js/blob/master/packages/raven-js/Gruntfile.js) for a good example of what we’re doing.
 
 You can use [Source Map Validator](https://sourcemaps.io/) to help verify that things are correct.
 

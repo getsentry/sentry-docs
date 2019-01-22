@@ -66,7 +66,7 @@ See [uWSGI’s official documentation](https://uwsgi-docs.readthedocs.io/en/late
 
 ## Workers
 
-The workers can be difficult to tune. Your goal is to maximize the CPU usage without running out of memory. If you have JavaScript clients this becomes more difficult, as currently the sourcemap and context scraping can buffer large amounts of memory depending on your configurations and the size of your source files.
+The workers can be difficult to tune. Your goal is to maximize the CPU usage without running out of memory. If you have JavaScript clients this becomes more difficult, as currently the source map and context scraping can buffer large amounts of memory depending on your configurations and the size of your source files.
 
 We can leverage supervisord to do this for us:
 
@@ -104,7 +104,7 @@ command=sentry run worker -c 4
 
 ## Monitoring Memory
 
-There are cases where Sentry currently buffers large amounts of memory. This may depend on the client (javascript vs python) as well as the size of your events. If you repeatedly run into issues where workers or web nodes are using a lot of memory, you’ll want to ensure you have some mechanisms for monitoring and resolving this.
+There are cases where Sentry currently buffers large amounts of memory. This may depend on the client (JavaScript vs Python) as well as the size of your events. If you repeatedly run into issues where workers or web nodes are using a lot of memory, you’ll want to ensure you have some mechanisms for monitoring and resolving this.
 
 If you’re using supervisord, we recommend taking a look at [superlance](https://superlance.readthedocs.io) which aids in this situation:
 

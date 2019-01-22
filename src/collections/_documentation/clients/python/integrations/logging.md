@@ -101,11 +101,11 @@ You can also use the `exc_info` and `extra={'stack': True}` arguments on your `l
 
 ```python
 # If you're actually catching an exception, use `exc_info=True`
-logger.error('There was an error, with a stacktrace!', exc_info=True)
+logger.error('There was an error, with a stack trace!', exc_info=True)
 
 # If you don't have an exception, but still want to capture a
-# stacktrace, use the `stack` arg
-logger.error('There was an error, with a stacktrace!', extra={
+# stack trace, use the `stack` arg
+logger.error('There was an error, with a stack trace!', extra={
     'stack': True,
 })
 ```
@@ -124,7 +124,7 @@ While we don’t recommend this, you can also enable implicit stack capturing fo
 client = Client(..., auto_log_stacks=True)
 handler = SentryHandler(client)
 
-logger.error('There was an error, with a stacktrace!')
+logger.error('There was an error, with a stack trace!')
 ```
 
 Passing tags and user context is also available through extra:

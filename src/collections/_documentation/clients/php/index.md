@@ -77,4 +77,4 @@ Want more? Have a look at the full documentation for more information.
 Resources:
 
 -   [Bug Tracker](http://github.com/getsentry/sentry-php/issues)
--   [Github Project](http://github.com/getsentry/sentry-php)
+-   [GitHub Project](http://github.com/getsentry/sentry-php)

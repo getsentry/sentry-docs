@@ -134,4 +134,4 @@ Resources:
 
 -   [Downloads and CDN](http://ravenjs.com/)
 -   [Bug Tracker](http://github.com/getsentry/raven-js/issues)
--   [Github Project](http://github.com/getsentry/raven-js)
+-   [GitHub Project](http://github.com/getsentry/raven-js)

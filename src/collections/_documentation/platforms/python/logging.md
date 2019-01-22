@@ -37,6 +37,7 @@ logging.error("An exception happened", exc_info=True)
 * `bar` will end up in the event's `extra` attributes.
 * `"An exception happened"` will send the current exception from `sys.exc_info()` with the stack trace and everything to the Sentry Python SDK. If there's no exception, the current stack will be attached.
 
+
 {% version_added 0.5.0: Ability to add data to `extra` %}
 
 {% version_added 0.6.0: `exc_info=True` now always attaches a stack trace %}

@@ -9,7 +9,7 @@ human readable message etc.
 
 Attributes are separate from [_Interfaces_]({%- link
 _documentation/development/sdk-dev/interfaces/index.md -%}) which provide very specific
-and tailored data such as exception data, stacktraces, etc.
+and tailored data such as exception data, stack traces, etc.
 
 ## Required Attributes
 

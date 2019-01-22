@@ -48,7 +48,7 @@ create a new one called _tsconfig.production.json_ and paste the snippet below:
 
 From now on, when you want to run the production build, that’ll be uploaded you specify this very config, eg. _tsc -p tsconfig.production.json_. This will create necessary source maps and attach original sources to them instead of making us to upload them and modify source paths in our maps by hand.
 
-The second step is changing events frames, so that Sentry can link stacktraces with correct source files.
+The second step is changing events frames, so that Sentry can link stack traces with correct source files.
 
 This can be done using _dataCallback_, in a very similar manner as we do with a single entrypoint described in Source Maps docs, with one, very important difference. Instead of using _basename_, we have to somehow detect and pass the root directory of our project.
 

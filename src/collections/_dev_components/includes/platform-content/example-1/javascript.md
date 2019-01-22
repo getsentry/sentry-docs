@@ -2,6 +2,6 @@
 
 You can do this to say hello:
 
-``` javascript
+```javascript
 console.log("{{ page.example_string }}")
 ```

@@ -40,7 +40,7 @@ end
 
 `encoding`
 
-: While unlikely that you’ll need to change it, by default Raven compresses outgoing messages with gzip. This has a slight impact on performance, but due to the size of many Ruby stacktrace it’s required for the serve to accept the content.
+: While unlikely that you’ll need to change it, by default Raven compresses outgoing messages with gzip. This has a slight impact on performance, but due to the size of many Ruby stack trace it’s required for the serve to accept the content.
 
   To disable gzip, set the encoding to ‘json’:
 
@@ -122,7 +122,7 @@ end
 
   For more information about HTTP headers which may contain sensitive information in your application, see [RFC 2616](https://www.w3.org/Protocols/rfc2616/rfc2616-sec15.html).
 
-  By default, Sentry sends up a stacktrace with an exception. This stacktrace may contain data which you may consider to be sensitive, including lines of source code, line numbers, module names, and source paths. To wipe the stacktrace from all error reports, require and add the RemoveStacktrace processor:
+  By default, Sentry sends up a stack trace with an exception. This stack trace may contain data which you may consider to be sensitive, including lines of source code, line numbers, module names, and source paths. To wipe the stack trace from all error reports, require and add the RemoveStacktrace processor:
 
   ```ruby
   require 'raven/processor/removestacktrace'
