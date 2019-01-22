@@ -65,8 +65,9 @@ const syncRelatedElements = function() {
         val.charAt(0).toUpperCase() + val.substr(1)
       ).join(''); break;
     }
-    let elements = $(this).children();
-    $(this).text(intended).prepend(elements);
+    let textContainer = $(this).find("> code") || $(this);
+    let elements = textContainer.children();
+    textContainer.text(intended).prepend(elements);
   });
 
   $('.unsupported').each(function() {
