@@ -106,14 +106,14 @@ will be sent.
 {:.config-key}
 ### `in-app-include`
 
-{% supported python %}
+{% supported python rust csharp %}
 A list of string prefixes of module names that belong to the app. This option takes precedence over `in_app_exclude`.
 {% endsupported %}
 
 {:.config-key}
 ### `in-app-exclude`
 
-{% supported python %}
+{% supported python rust csharp %}
 A list of string prefixes of module names that do not belong to the app, but rather third-party packages. Modules considered not to be part of the app will be hidden from stacktraces by default.
 
 This option can be overridden using `in-app-include`.
