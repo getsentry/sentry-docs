@@ -114,7 +114,7 @@ A list of string prefixes of module names that belong to the app. This option ta
 ### `in-app-exclude`
 
 {% supported python rust csharp %}
-A list of string prefixes of module names that do not belong to the app, but rather third-party packages. Modules considered not to be part of the app will be hidden from stacktraces by default.
+A list of string prefixes of module names that do not belong to the app, but rather third-party packages. Modules considered not to be part of the app will be hidden from stack traces by default.
 
 This option can be overridden using `in-app-include`.
 {% endsupported %}
