@@ -8,7 +8,7 @@ sidebar_order: 4
 <!-- WIZARD -->
 *Import name: `sentry_sdk.integrations.aws_lambda.AwsLambdaIntegration`*
 
-The AWS Lambda integration for the Python SDK can be used like this:
+You can use the AWS Lambda integration for the Python SDK like this:
 
 ```python
 import sentry_sdk
@@ -36,6 +36,7 @@ With the AWS Lambda integration enabled, the Python SDK will:
     {%- include components/alert.html
       title="Note"
       content=__alert_content
+      level="info"
     %}
 
 * {% include platforms/python/request-data.md %}
