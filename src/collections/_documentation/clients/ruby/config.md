@@ -76,6 +76,14 @@ end
 
   You can find the list of exceptions that are excluded by default in `Raven::Configuration::IGNORE_DEFAULT`. It is suggested that you append to these defaults rather than overwrite them with `=`.
 
+`inspect_exception_causes_for_exclusion`
+
+: Inspect an incoming exception's causes when determining whether or not that exception should be excluded. This option works together with `excluded_exceptions`. Default value is `false`.
+
+  ```ruby
+  config.inspect_exception_causes_for_exclusion = false
+  ```
+
 `logger`
 
 : The logger used by Sentry. Default is an instance of Raven::Logger.
