@@ -5,6 +5,7 @@ sidebar_order: 50
 
 Laravel is supported via a native package, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
+<!-- WIZARD -->
 ## Laravel 5.x
 
 Install the `sentry/sentry-laravel` package:
@@ -51,6 +52,7 @@ Add your DSN to ``.env``:
 ```sh
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
+<!-- ENDWIZARD -->
 
 ### User Feeback
 
@@ -174,10 +176,16 @@ Defaults to `true`.
 
 ## Using Laravel 5.6 log channels
 
-**Note:** If you are using log channels to log your exceptions and also are logging exceptions to Sentry in your
-exception handler (as you would have configured above) exceptions might end up twice in Sentry.
+{% capture __alert_content -%}
+If you're using log channels to log your exceptions and are also logging exceptions to Sentry in your exception handler (as you would have configured above) exceptions might end up twice in Sentry.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="info"
+%}
 
-To configure Sentry as a log channel add the following config to the `channels` section in `config/logging.php`: 
+To configure Sentry as a log channel, add the following config to the `channels` section in `config/logging.php`: 
 
 ```php
 'channels' => [
@@ -188,7 +196,7 @@ To configure Sentry as a log channel add the following config to the `channels` 
 ],
 ```
 
-After you configured the Sentry log channel you can configure your app to both log to a log file and to Sentry by modifiying the log stack:
+After you configured the Sentry log channel, you can configure your app to both log to a log file and to Sentry by modifying the log stack:
 
 ```php
 'channels' => [
@@ -201,7 +209,7 @@ After you configured the Sentry log channel you can configure your app to both l
 ],
 ```
 
-Optionally you can set the logging level and if events should bubble on the driver:
+Optionally, you can set the logging level and if events should bubble on the driver:
 
 ```php
 'channels' => [
@@ -217,8 +225,8 @@ Optionally you can set the logging level and if events should bubble on the driv
 
 ### Naming you log channels
 
-If you have multiple log channels you would like to filter on inside the Sentry interface you can add the `name` attribute to the log channel, 
-it will show up in Sentry as the `logger` tag which is filterable.
+If you have multiple log channels you would like to filter on inside the Sentry interface, you can add the `name` attribute to the log channel. 
+It will show up in Sentry as the `logger` tag, which is filterable.
 
 For example:
 
@@ -239,11 +247,11 @@ You're now able to log errors to your channel:
 \Log::channel('my_stacked_channel')->error('My error');
 ```
 
-And Sentry's `logger` tag has now the channel's `name` "my-channel" value where you can filter on.
+And Sentry's `logger` tag now has the channel's `name`. You can filter on the "my-channel" value.
 
 ## Resolve name conflicts with packages also called Sentry
 
-To resolve this you will need to create your own service provider extending ours so we can prevent naming conflicts.
+To resolve this, you'll need to create your own service provider extending ours so we can prevent naming conflicts.
 
 ```php
 <?php
@@ -265,7 +273,7 @@ You can then add this service provider to the `config/app.php`.
 )
 ```
 
-Optionally if you want to use the facade you also need to extend / create a new facade.
+Optionally, if you want to use the facade, you also need to extend/create a new facade.
 
 ```php
 <?php
@@ -290,13 +298,20 @@ And add that facade to your `config/app.php`.
 )
 ```
 
-After you added your own service provider, running `php artisan vendor:publish --provider="App\Support\SentryLaravelServiceProvider"` publishes the Sentry config file to your chosen name (in the example above `config/sentry-laravel.php`) preventing conflicts with a `config/sentry.php` config file that might be used by the other package.
+After you've added your own service provider, running `php artisan vendor:publish --provider="App\Support\SentryLaravelServiceProvider"` publishes the Sentry config file to your chosen name (in the example above `config/sentry-laravel.php`) preventing conflicts with a `config/sentry.php` config file that might be used by the other package.
 
 If you followed the regular installation instructions above (you should), make sure you replace `app('sentry')` with `app('sentry-laravel')`.
 
 The namespace `\App\Support` can be anything you want in the examples above.
 
-**Note:** If you are on Laravel 5.5+ the Sentry package is probably auto discovered by Laravel, to solve this add or append to the `extra` section in your `composer.json` file and run composer update/install afterwards:
+{% capture __alert_content -%}
+If you're on Laravel 5.5+ the Sentry package is probably auto-discovered by Laravel. To solve this, add or append to the `extra` section in your `composer.json` file and run composer update/install afterward.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 ```json
 "extra": {

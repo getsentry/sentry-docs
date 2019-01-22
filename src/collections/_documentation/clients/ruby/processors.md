@@ -30,7 +30,7 @@ HTTPHeaders
 
 Finally, another processor is included in the source but is not turned on by default, RemoveStackTrace.
 
-To remove stacktraces from events:
+To remove stack traces from events:
 
 ```ruby
 Raven.configure do |config|

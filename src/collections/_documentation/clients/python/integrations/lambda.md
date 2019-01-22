@@ -14,7 +14,7 @@ pip install raven -t /path/to/project-dir
 
 ## Setup
 
-Create a _LambdaClient_ instance and wrap your lambda handler with the _capture_exeptions_ decorator:
+Create a _LambdaClient_ instance and wrap your lambda handler with the _capture_exceptions_ decorator:
 
 ```python
 from raven.contrib.awslambda import LambdaClient

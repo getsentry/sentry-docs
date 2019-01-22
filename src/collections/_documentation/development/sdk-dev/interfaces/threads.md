@@ -3,13 +3,13 @@ title: 'Threads Interface'
 sidebar_order: 8
 ---
 
-The threads interface allows you to specify the threads there were running at the time an event happened. These threads can also contain stacktraces. As per policy the thread that actually crashed with an exception should not have a stacktrace but instead the `thread_id` attribute should be set on the exception and Sentry will connect the two.
+The threads interface allows you to specify the threads there were running at the time an event happened. These threads can also contain stack traces. As per policy the thread that actually crashed with an exception should not have a stack trace but instead the `thread_id` attribute should be set on the exception and Sentry will connect the two.
 
 This interface supports multiple thread values in the `values` key. The following attributes are known for each value:
 
 `stacktrace`:
 
-: You can also optionally bind a [_stacktrace_]({%- link _documentation/development/sdk-dev/interfaces/stacktrace.md -%}) to the thread.
+: You can also optionally bind a [_stack trace_]({%- link _documentation/development/sdk-dev/interfaces/stacktrace.md -%}) to the thread.
 
 `id`:
 

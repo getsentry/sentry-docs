@@ -5,7 +5,7 @@ sidebar_order: 12
 
 The `sentry-spring` library provides [Spring](https://spring.io/) support for Sentry via a [HandlerExceptionResolver](https://docs.spring.io/spring/docs/4.3.9.RELEASE/javadoc-api/org/springframework/web/servlet/HandlerExceptionResolver.html) that sends exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page]({%- link _documentation/clients/java/usage.md -%}#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
 
-The source can be found [on Github](https://github.com/getsentry/sentry-java/tree/master/sentry-spring).
+The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring).
 
 ## Important Note About Logging Integrations
 

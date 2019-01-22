@@ -112,7 +112,7 @@ $(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
 
 ## Cross Origin
 
-Due to security reasons most web browsers are not giving permissions to access error messages for cross domain scripts. This is not jQuery issue but an overall javascript limitation.
+Due to security reasons most web browsers are not giving permissions to access error messages for cross domain scripts. This is not jQuery issue but an overall JavaScript limitation.
 
 Depending on your situation you have different options now:
 

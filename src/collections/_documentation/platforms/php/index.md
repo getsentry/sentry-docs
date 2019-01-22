@@ -14,7 +14,7 @@ frameworks.
 ## Integrations
 
 *Integrations* extend the functionality of the SDK for some common frameworks and
-libraries.  They can be seen as plugins that extend the functionality of the Sentry SDK.  
+libraries.  Similar to plugins, they extend the functionality of the Sentry SDK.  
 Integrations are configured by a call to `init()` method.
 
 ## PHP Specific Options
@@ -30,12 +30,12 @@ By default this option is set to `6`.
 #### project_root
 
 The root of the project source code. As Sentry is able to distinguish project
-files from third-parties ones (e.g. vendors), this option can be configured to
+files from third-party ones (e.g. vendors), this option can be configured to
 mark the directory containing all the source code of the application.
 
 For example, assuming that the directory structure shown below exists, marking
 the project root as `project-folder/src/` means that every file inside that
-directory that is part of a stacktrace frame will be marked as "application
+directory that is part of a stack trace frame will be marked as "application
 code".
 
 ```
@@ -55,7 +55,7 @@ If this option is enabled, `gzip` compression will be enabled. Default is `true`
 #### context_lines
 
 This option sets the number of lines of code context to capture. If `null` is
-set as the value, no source code lines will be added to each stacktrace frame.
+set as the value, no source code lines will be added to each stack trace frame.
 By default this option is set to `3`.
 
 #### excluded_exceptions
@@ -88,7 +88,7 @@ interface;
   by putting them into a queue).
   
 The examples below pretty much replace the `init()` call.  
-Please also keep in mind that once a Client is initalized with a Transport it cannot be
+Please also keep in mind that once a Client is initialized with a Transport it cannot be
 changed.
 
 ### NullTransport
@@ -108,11 +108,12 @@ $builder->setTransport($transport);
 
 Hub::getCurrent()->bindClient($builder->getClient());
 ```
-{% capture __note %}
-> Note: `Hub::getCurrent()->bindClient($builder->getClient());` is required to tell the global function calls to use your new `Client` instead.
-{% endcapture %}
 
-{{ __note }}
+{% include components/alert.html
+    title="Note"
+    content="`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead."
+    level="warning"
+%}
 
 ### HttpTransport
 
@@ -135,13 +136,17 @@ $builder->setTransport($transport);
 Hub::getCurrent()->bindClient($builder->getClient());
 ```
 
-{{ __note }}
+{% include components/alert.html
+    title="Note"
+    content="`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead."
+    level="warning"
+%}
 
 ### SpoolTransport
 
 The default behavior is to send events immediately. You may, however, want to
 avoid waiting for the communication to the Sentry server that could be slow
-or unreliable. This can be avoided by choosing the `SpoolTransport` which
+or unreliable. Avoid this by choosing the `SpoolTransport` which
 stores the events in a queue so that another process can read it and take
 care of sending them. Currently only spooling to memory is supported.
 
@@ -169,4 +174,8 @@ Hub::getCurrent()->bindClient($builder->getClient());
 $spool->flushQueue($httpTransport);
 ```
 
-{{ __note }} 
+{% include components/alert.html
+    title="Note"
+    content="`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead."
+    level="warning"
+%}

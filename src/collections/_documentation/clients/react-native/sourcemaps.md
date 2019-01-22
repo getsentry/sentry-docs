@@ -1,10 +1,10 @@
 ---
-title: 'Sourcemaps for Other Platforms'
+title: 'Source Maps for Other Platforms'
 ---
 
-Currently automatic sourcemap handling is only implemented for iOS with Xcode and Android with gradle. If you manually invoke the [react-native packager](https://github.com/facebook/metro) you can however get sourcemaps anyways by passing _–sourcemap-output_ to it.
+Currently automatic source map handling is only implemented for iOS with Xcode and Android with gradle. If you manually invoke the [react-native packager](https://github.com/facebook/metro) you can however get source maps anyways by passing _–sourcemap-output_ to it.
 
-If you do get sourcemaps you can upload them with `sentry-cli`. However make sure to pass `--rewrite` to the `upload-sourcemaps` command which will fix up the sourcemaps before upload (inlines sources etc.).
+If you do get source maps you can upload them with `sentry-cli`. However make sure to pass `--rewrite` to the `upload-sourcemaps` command which will fix up the source maps before upload (inlines sources etc.).
 
 Example:
 

@@ -95,11 +95,11 @@ Client.shared?.beforeSendRequest = { request in
 }
 ```
 
-## Adding stacktrace to message
+## Adding stack trace to message
 
 You can also add a Stacktrace to your event by using the _snapshotStacktrace_ callback and calling _appendStacktrace_ and pass the event.
 
-_snapshotStacktrace_ captures the stacktrace at the location where it’s called. After that you have to append the stacktrace to the event you want to send with _appendStacktrace_. So for example if you want to send a simple message to the server and add the stacktrace to it you have to do this.
+_snapshotStacktrace_ captures the stack trace at the location where it’s called. After that you have to append the stack trace to the event you want to send with _appendStacktrace_. So for example if you want to send a simple message to the server and add the stack trace to it you have to do this.
 
 ```swift
 Client.shared?.snapshotStacktrace {

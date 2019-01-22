@@ -5,7 +5,7 @@ sidebar_order: 1012
 
 <!-- WIZARD -->
 
-Our Connect integration only requires _@sentry/node_ to be installed then you can use it like this:
+Our Connect integration only requires the installation of _@sentry/node_, and then you can use it like this:
 
 ```javascript
 const connect = require('connect');

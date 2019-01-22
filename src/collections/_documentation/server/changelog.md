@@ -74,7 +74,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   User Feedback will now send an email notification.
 -   Almost all major UI components are now driven by the client-side application.
 -   Avatars have been added for organizations.
--   Various improvements to issue hashing, specifically for native (iOS) and javascript applications.
+-   Various improvements to issue hashing, specifically for native (iOS) and JavaScript applications.
 -   Various improvements to Single Sign-On flows. You should update any external auth extensions you’re using as part of this (sentry-auth-github, sentry-auth-google).
 -   Support for SAML via sentry-auth-saml2.
 -   Support for Google Cloud Storage as a storage backend.
@@ -119,7 +119,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 
 -   Make BitBucket repositories enabled by default
 -   Add raw data toggle for Additional Data
--   Improved function name resolving for JavaScript sourcemaps
+-   Improved function name resolving for JavaScript source maps
 -   Add initial support for Redis Cluster.
 -   Support a list of hosts in the `redis.clusters` configuration along side the traditional dictionary style configuration.
 -   Better support for rendering rich JSON and URL encoded HTTP bodies by guessing the content type based on format heuristics.
@@ -295,11 +295,11 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 
 ## Version 8.14 {#version-8-14}
 
--   Added new internal processing interface that supports multiple processing steps per stacktrace (for instance JavaScript + native)
+-   Added new internal processing interface that supports multiple processing steps per stack trace (for instance JavaScript + native)
 -   Add IE10 legacy browser filter
 -   Added data migration to merge legacy releases
--   Added support for symbolizing inlined frames and added heuristics for fixing up native stacktraces.
--   Removed instruction_offset as a frame attribute from stacktraces
+-   Added support for symbolizing inlined frames and added heuristics for fixing up native stack traces.
+-   Removed instruction_offset as a frame attribute from stack traces
 -   [BREAKING] Quotas must now instantiate RateLimited and NotRateLimited return values.
 -   [BREAKING] Redis quota implementations now return BasicRedisQuota instead of tuples.
 -   Commits using the `Fixes SHORTID` annotation will now be tracked appropriately.
@@ -337,7 +337,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 ## Version 8.13 {#version-8-13}
 
 -   Added individual filters for legacy browsers to improve customization of error filtering based on browser versions
--   Support for setting a custom security header for javascript fetching.
+-   Support for setting a custom security header for JavaScript fetching.
 -   start using ReleaseProject and Release.organization instead of Release.project
 -   Project quotas are no longer available, and must now be configured via the organizational rate limits.
 -   Quotas implementation now requires a tuple of maximum rate and interval window.
@@ -346,7 +346,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   Add memory and storage information for apple devices
 -   The legacy API keys feature is now disabled by default.
 -   Show Images Loaded section for cocoa events with version number.
--   Added registers to stacktrace for cocoa exceptions.
+-   Added registers to stack trace for cocoa exceptions.
 -   Fixed bug where workflow notification subject may not include a custom email prefix.
 -   Added configurable subject templates for individual alert emails (_mail:subject_template_ option).
 -   Added data migration to populate ReleaseProject.new_groups
@@ -368,7 +368,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   Added avatar and avatarType to `/organizations/{org}/` endpoint.
 -   Provide commit and author information associated with a given release
 -   Provide repository information for commits
--   Added new internal processing interface that supports multiple processing steps per stacktrace (for instance JavaScript + native)
+-   Added new internal processing interface that supports multiple processing steps per stack trace (for instance JavaScript + native)
 
 ## Version 8.12 {#version-8-12}
 
@@ -476,7 +476,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   Added `--no-repair` flag for `sentry upgrade` for large installs.
 -   Fixed bug with merging counters yielding the wrong values.
 -   Require password confirmation when enabling/disabling 2fa.
--   Collapse repeated frames in the stacktrace UI.
+-   Collapse repeated frames in the stack trace UI.
 -   Added weekly report emails behind feature flag.
 -   Rebrand Rules as Alerts / Alert Rules.
 -   Add frequency to Alerts.
@@ -528,7 +528,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   Added unsubscribe links to mails.
 -   Added email verification.
 -   Added ability to link/unlink Issues, support is dependent on plugins.
--   Can now toggle between minified/original code in stacktraces where sourcemaps were applied.
+-   Can now toggle between minified/original code in stack traces where source maps were applied.
 -   Can now upload release artifacts with tilde prefix (~) to omit protocol + host in URL lookups.
 
 ### Schema Changes {#id24}
@@ -950,13 +950,13 @@ Redis must be at least version 2.6.12.
 -   SENTRY_ALLOW_REGISTRATION is deprecated in favor of SENTRY_FEATURES[‘auth:register’].
 -   SOCIAL_AUTH_CREATE_USERS is deprecated in favor of SENTRY_FEATURES[‘social-auth:register’].
 -   SENTRY_SERVER_EMAIL is no longer used.
--   Added first pass API at storing javascript artifacts via release APIs.
+-   Added first pass API at storing JavaScript artifacts via release APIs.
 -   Improved error reporting for JavaScript source/sourcemap errors.
 -   Improved configuration handling on sentry.cache.
 -   Added various release API endpoints.
 -   Added various organization API endpoints.
 -   Added various tag API endpoints.
--   Sourcemaps will now always treat sourceRoot as a path.
+-   Source maps will now always treat sourceRoot as a path.
 -   Changed many permissions to use new sentry.access abstractions which are now scoped based, shared with the API scopes.
 -   Initial first pass at the SSO subsystem.
 -   The Sentry internal client will now aggressively prevent recursive errors, but allow more internal errors to be recorded to itself.
@@ -979,7 +979,7 @@ Redis must be at least version 2.6.12.
 -   Release objects are now created automatically.
 -   Changed team-based API endpoints to use slugs.
 -   New API endpoints: - Help page list - Help page details - Group tag values - Project tag values
--   Moved JavaScript sourcemap processing into language extension. - Sourcemap processing errors are now annotated into the frame.
+-   Moved JavaScript source map processing into language extension. - Source map processing errors are now annotated into the frame.
 -   Refactored API to be scope-based permissions.
 -   Added backend support for organization API keys.
 -   Moved sentry_webhooks into builtins.
@@ -1131,14 +1131,14 @@ A new application called `nodestore` now manages the event blob data. By default
 -   A new subsystem for handling email is available in `sentry.utils.email`.
 -   You can now receive email notifications for notes.
 -   Charts now show tooltips describing the datapoint.
--   JavaScript sourcemaps now support embedded sources.
+-   JavaScript source maps now support embedded sources.
 -   Stream annotations can now be customized to show any tags (not just number of users).
 -   Stacktrace frames now get truncated down to a maximum length of 50.
 
 ### Protocol Version 5
 
 -   sentry_version should be sent as ‘5’.
--   The stacktrace interface now accepts a ‘frames_omitted’ tuple.
+-   The stack trace interface now accepts a ‘frames_omitted’ tuple.
 
 ## Version 6.3.0 {#version-6-3-0}
 
@@ -1200,7 +1200,7 @@ It also includes quite a number of incompatible changes, so it’s recommended t
 
 -   sentry_version should be sent as ‘4’.
 -   Aliases are now recommended instead of full interface names.
--   The exception interface now supports a bound stacktrace, and all events (in all protocols) which contain both an exception and a stacktrace will be rolled up. This should be sent as the `stacktrace` attribute.
+-   The exception interface now supports a bound stack trace, and all events (in all protocols) which contain both an exception and a stack trace will be rolled up. This should be sent as the `stacktrace` attribute.
 -   The exception interface now supports chained exceptions, and should be sent as a list of exception values. Check the updated documentation for ordering details.
 
 ### Alerts
@@ -1238,7 +1238,7 @@ Additionally, this includes the following other items:
 -   Improved rendering of data values in all interfaces.
 -   django-compressor was replaced with django-static-compiler.
 -   A better defined public view of events (which removes several items from being visible).
--   Improved SourceMap discovery.
+-   Improved Source Map discovery.
 -   Most events will no longer cause a hard error when validation fails. Instead we attempt to drop any non-required data so that at least a partial event is stored.
 -   MessageCountByMinute was renamed to GroupCountByMinute.
 -   MessageFilterValue was renamed to GroupTag.
@@ -1277,7 +1277,7 @@ Additionally:
 
 -   [New] A new activity stream exists on event pages.
 -   [New] Syntax highlighting now exists on all context frames.
--   [New] Support for JavaScript Sourcemaps now exists.
+-   [New] Support for JavaScript Source maps now exists.
 -   [New] The server will now fetch remote source files for JavaScript events.
 -   [New] Sentry will now ask for your project’s platform.
 -   [Fix] Resolved -> Regressed state change is now atomic.
@@ -1368,9 +1368,9 @@ Additionally, the following changes apply to the new protocol:
 -   Frontend has been updated to Bootstrap 2.1.
 -   The event stream now includes sparklines representing the last 24 hours of data for each event.
 -   Trends have greatly improved.
--   Grouping events that have identical stacktraces other than the function name (e.g. dynamically generated functions) is not possible.
+-   Grouping events that have identical stack traces other than the function name (e.g. dynamically generated functions) is not possible.
 -   SiteFilter has been removed, as has the sites plugin.
--   If frames are included in a stacktrace that have the attribute `in_app: false`, they will be hidden by default in the details view.
+-   If frames are included in a stack trace that have the attribute `in_app: false`, they will be hidden by default in the details view.
 -   crossdomain.xml support is now available (see documentation).
 -   The search feature now uses buffers to better handle write concurrency.
 -   Early support for WSGI (should be functional) exists as `sentry.wsgi`.
@@ -1483,7 +1483,7 @@ In addition:
 
 -   Trusted domains were removed. These were not fully implemented.
 -   A new datepicker for selecting ranges of events.
--   raven-javascript and raven-ruby are now officially supported clients.
+-   raven-JavaScript and raven-ruby are now officially supported clients.
 -   Added `sentry repair`.
 
 ## Version 4.0.0 {#version-4-0-0}
@@ -1806,7 +1806,7 @@ If you were previously extending Sentry, it would be wise to test your extension
 -   Added the `level` argument to the cleanup command.
 -   The thrashed key is now set correctly in request.sentry.
 -   Added user information to all messages that have `request`.
--   Changed the hashing function for messages that include stacktraces to ignore the `message` and line numbers.
+-   Changed the hashing function for messages that include stack traces to ignore the `message` and line numbers.
 -   Much improved test coverage.
 
 ## Version 1.9.0 {#version-1-9-0}

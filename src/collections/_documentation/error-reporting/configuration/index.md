@@ -15,13 +15,13 @@ The list of common options across SDKs.  These work more or less the same in all
 subtle differences will exist to better support the platform.
 
 {:.config-key}
-### dsn
+### `dsn`
 
-The _DSN_ tells the SDK where to send the events to. This option is always required and different SDKs might pick this up from an environment 
+The _DSN_ tells the SDK where to send the events to. This option is always required and different SDKs might pick this up from an environment
 variable (`SENTRY_DSN`) or in the case if you are using the CDN version or the Browser SDK, it's already configured for you.
 
 {:.config-key}
-### debug
+### `debug`
 
 {% unsupported php %}
 Turns debug mode on or off.  If debug is enabled SDK will attempt to print out useful debugging
@@ -31,47 +31,47 @@ safety concerns.
 {% endunsupported %}
 
 {:.config-key}
-### release
+### `release`
 
 Sets the release.  Some SDKs will try to automatically configure a release out of the box but
 if you have the chance it's a better idea to manually set it.  That way it's guaranteed to be
-in sync with your deploy integrations or sourcemap uploads.
+in sync with your deploy integrations or source map uploads.
 
 Release names are just strings but some formats are detected by Sentry and might be rendered
 differently.  For more information have a look at [the releases documentation]({% link _documentation/workflow/releases.md %}).
 
 {:.config-key}
-### environment
+### `environment`
 
 Sets the environment.  This string is freeform and not set by default.  A release can be associated
 with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
 
 {:.config-key}
-### sample-rate
+### `sample-rate`
 
 Configures the sample rate as a percentage of events to be sent in the range of `0.0` to `1.0`.  The
 default is `1.0` which means that 100% of events are sent.  If set to `0.1` only 10% of events will
 be sent.  Events are picked randomly.
 
 {:.config-key}
-### max-breadcrumbs
+### `max-breadcrumbs`
 
 This variable controls the total amount of breadcrumbs that should be captured.  This defaults
 to `100`.
 
 {:.config-key}
-### attach-stacktrace
+### `attach-stacktrace`
 
-When enabled, stacktraces are automatically attached to all messages logged.  Note that stacktraces
-are always attached to exceptions but when this is set stacktraces are also sent with messages.  This, for instance, means that stacktraces appear next to all log messages.
+When enabled, stack traces are automatically attached to all messages logged.  Note that stack traces
+are always attached to exceptions but when this is set stack traces are also sent with messages.  This, for instance, means that stack traces appear next to all log messages.
 
-It's important to note that grouping in Sentry is different for events with stacktraces and without.
+It's important to note that grouping in Sentry is different for events with stack traces and without.
 This means that you will get new groups as you enable or disable this flag for certain events.
 
 This feature is `off` by default.
 
 {:.config-key}
-### send-default-pii
+### `send-default-pii`
 
 If this flag is enabled, certain personally identifiable information is added by active
 integrations.  Without this flag they are never added to the event, to begin with.  If possible,
@@ -79,7 +79,7 @@ it's recommended to turn on this feature and use the server side PII stripping t
 values instead.
 
 {:.config-key}
-### server-name
+### `server-name`
 
 {% unsupported browser %}
 Can be used to supply a "server name".  When provided, the name of the server is sent along and
@@ -89,14 +89,14 @@ will attempt to auto-discover this value.
 {% endunsupported %}
 
 {:.config-key}
-### blacklist-urls
+### `blacklist-urls`
 
 {% supported browser browsernpm %}
 A list of strings or regex patterns that match error URLs which should not be sent to Sentry.  By default, all errors will be sent.
 {% endsupported %}
 
 {:.config-key}
-### whitelist-urls
+### `whitelist-urls`
 
 {% supported browser browsernpm %}
 A list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry.  By default, all errors
@@ -104,7 +104,7 @@ will be sent.
 {% endsupported %}
 
 {:.config-key}
-### request-bodies
+### `request-bodies`
 
 {% supported python %}
 This parameter controls if integrations should capture HTTP request bodies.  It can be set to one
@@ -117,7 +117,7 @@ of the following values:
 {% endsupported %}
 
 {:.config-key}
-### with-locals
+### `with-locals`
 
 {% supported python %}
 When enabled local variables are sent along with stackframes.  This can have a performance
@@ -125,7 +125,7 @@ and PII impact.  Enabled by default on platforms where this is available.
 {% endsupported %}
 
 {:.config-key}
-### ca-certs
+### `ca-certs`
 
 {% supported python %}
 A path to an alternative CA bundle file in PEM-format.
@@ -137,7 +137,7 @@ For many platform SDKs integrations can be configured alongside it.  On some pla
 happen as part of the `init()` call, in some others, different patterns apply.
 
 {:.config-key}
-### integrations
+### `integrations`
 
 {% unsupported csharp aspnetcore rust %}
 In some SDKs, the integrations are configured through this parameter on library initialization.
@@ -145,7 +145,7 @@ For more information, have a look at the specific integration documentation.
 {% endunsupported %}
 
 {:.config-key}
-### default-integrations
+### `default-integrations`
 
 {% unsupported csharp aspnetcore rust %}
 This can be used to disable integrations that are added by default.  When set to `false` no
@@ -157,14 +157,14 @@ default integrations are added.
 These options can be used to hook the SDK in various ways to customize the reporting of events.
 
 {:.config-key}
-### before-send
+### `before-send`
 
 This function is called with an SDK specific event object and can return a modified event object or
 nothing to skip reporting the event.  This can be used for instance for manual PII stripping before
 sending.
 
 {:.config-key}
-### before-breadcrumb
+### `before-breadcrumb`
 
 This function is called with an SDK specific breadcrumb object before the breadcrumb is added to the
 scope.  When nothing is returned from the function the breadcrumb is dropped.  The callback typically
@@ -177,7 +177,7 @@ Transports are used to send events to Sentry.  This can be customized to some de
 support highly specific deployments.
 
 {:.config-key}
-### transport
+### `transport`
 
 {% unsupported php %}
 This switches out the transport that is used to send events.  How this works depends on the SDK.  It
@@ -186,7 +186,7 @@ setup that requires proxy authentication.
 {% endunsupported %}
 
 {:.config-key}
-### http-proxy
+### `http-proxy`
 
 {% unsupported php %}
 When set a proxy can be configured that should be used for outbound requests.  This is also used for
@@ -196,7 +196,7 @@ if possible.  For instance, on unix systems, the `http_proxy` environment variab
 {% endunsupported %}
 
 {:.config-key}
-### https-proxy
+### `https-proxy`
 
 {% unsupported csharp aspnetcore php %}
 Configures a separate proxy for outgoing HTTPS requests.  This value might not be supported by all
@@ -204,7 +204,7 @@ SDKs.  When not supported the `http-proxy` value is also used for HTTPS requests
 {% endunsupported %}
 
 {:.config-key}
-### shutdown-timeout
+### `shutdown-timeout`
 
 {% unsupported browser php %}
 Controls how many seconds to wait before shutting down.  Sentry SDKs send events from a background

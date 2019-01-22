@@ -94,4 +94,4 @@ Want to know more? We have a detailed documentation about all parts of the libra
 Resources:
 
 -   [Bug Tracker](http://github.com/getsentry/raven-ruby/issues)
--   [Github Project](http://github.com/getsentry/raven-ruby)
+-   [GitHub Project](http://github.com/getsentry/raven-ruby)

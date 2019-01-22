@@ -13,7 +13,7 @@ Debug information files are additional files that help us provide better informa
 -   [_Breakpad symbols_]({%- link _documentation/cli/dif/breakpad.md -%}) for Breakpad or Crashpad
 -   [_Proguard mappings_]({%- link _documentation/cli/dif/proguard.md -%}) for Android
 
-Note that sourcemaps, while also being debug information files, are handled differently in Sentry. For more information see [Sourcemaps in sentry-cli]({%- link _documentation/cli/releases.md -%}#sentry-cli-sourcemaps).
+Note that source maps, while also being debug information files, are handled differently in Sentry. For more information see [Source Maps in sentry-cli]({%- link _documentation/cli/releases.md -%}#sentry-cli-sourcemaps).
 
 ## File Assocations
 
