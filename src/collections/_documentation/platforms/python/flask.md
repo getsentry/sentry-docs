@@ -33,7 +33,7 @@ Framework](http://flask.pocoo.org/).
 
 ## Behavior
 
-* Sentry will install the Flask integration for all of your apps. It hooks into Flask’s signals, not anything on the app object.
+* The Sentry Python SDK will install the Flask integration for all of your apps. It hooks into Flask’s signals, not anything on the app object.
 
 * All exceptions leading to an Internal Server Error are reported.
 

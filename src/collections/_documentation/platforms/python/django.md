@@ -35,7 +35,7 @@ from Version 1.6 upwards.
 
 * If you use ``django.contrib.auth`` and have set ``send_default_pii=True`` in your call to ``init``, user data (current user id, email address, username) is attached to the event.
 
-* Sentry will attach SQL queries as breadcrumbs.
+* The Sentry Python SDK will attach SQL queries as breadcrumbs.
 
 * Logging with any logger will create breadcrumbs when the [Logging]({% link _documentation/platforms/python/logging.md %})
   integration is enabled (done by default).

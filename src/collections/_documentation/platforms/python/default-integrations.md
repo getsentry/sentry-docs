@@ -26,12 +26,12 @@ raised interactive interpreter sessions will not be reported.
 ## Deduplication
 *Import name: `sentry_sdk.integrations.dedupe.DedupeIntegration`*
 
-This integration deduplicates certain events. Sentry enables it by default, and it should not be disabled except in rare circumstances. Disabling this integration, for instance, will cause duplicate error logging in the Flask framework.
+This integration deduplicates certain events. The Sentry Python SDK enables it by default, and it should not be disabled except in rare circumstances. Disabling this integration, for instance, will cause duplicate error logging in the Flask framework.
 
 ## Stdlib
 *Import name: `sentry_sdk.integrations.stdlib.StdlibIntegration`*
 
-The stdlib integration instruments certain modules in the standard library to emit breadcrumbs.  Sentry enables this by default, and it rarely makes sense to disable.
+The stdlib integration instruments certain modules in the standard library to emit breadcrumbs.  The Sentry Python SDK enables this by default, and it rarely makes sense to disable.
 
 In detail it provides:
 

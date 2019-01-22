@@ -17,5 +17,5 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 sentry_sdk.init(integrations=[CeleryIntegration()])
 ```
 
-Additionally, Sentry will set the transaction on the event to the task name, and it will improve the grouping for global Celery errors such as timeouts.
+Additionally, the Sentry Python SDK will set the transaction on the event to the task name, and it will improve the grouping for global Celery errors such as timeouts.
 <!-- ENDWIZARD -->

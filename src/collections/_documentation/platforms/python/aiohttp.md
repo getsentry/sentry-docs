@@ -44,7 +44,7 @@ Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
 
 ## Behavior
 
-* Sentry will install the AIOHTTP integration for all of your apps.
+* The Sentry Python SDK will install the AIOHTTP integration for all of your apps.
 
 * All exceptions leading to an Internal Server Error are reported.
 

@@ -39,7 +39,7 @@ Framework](https://trypyramid.com/).
 
 ## Behavior
 
-* Sentry will install the Pyramid integration for all of your apps. The integration hooks into Pyramid itself, not any of your apps specifically.
+* The Sentry Python SDK will install the Pyramid integration for all of your apps. The integration hooks into Pyramid itself, not any of your apps specifically.
 
 * All exceptions leading to an Internal Server Error are reported.
 
