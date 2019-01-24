@@ -61,7 +61,7 @@ There are two common real-world usecases for the `fingerprint` attribute:
 
 ### Example: Split up a group into more groups (groups are too big)
 
-An RPC or external API service is queried, so the stacktrace is generally the same (even if the outgoing request is very different). 
+An RPC or external API service is queried, so the stack trace is generally the same (even if the outgoing request is very different). 
 
 The following example will split up the default group Sentry would create (represented by `{% raw %}{{ default }}{% endraw %}`) further, taking some attributes on the error object into account:
 
@@ -69,7 +69,7 @@ The following example will split up the default group Sentry would create (repre
 
 ### Example: Merge a lot of groups into one group (groups are too small)
 
-A generic error, such as a database connection error, has many different stacktraces and never groups together.
+A generic error, such as a database connection error, has many different stack traces and never groups together.
 
 The following example will just completely overwrite Sentry's grouping by omitting `{% raw %}{{ default }}{% endraw %}` from the array:
 
