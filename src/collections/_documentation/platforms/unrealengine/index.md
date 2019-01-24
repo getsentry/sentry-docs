@@ -3,15 +3,6 @@ title: Unreal Engine 4
 sidebar_order: 20
 ---
 
-{% capture __alert_content -%}
-Only Windows is supported at the moment. Support for macOS will be coming soon.
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Note"
-    content=__alert_content
-    level="warning"
-%}
-
 Installation of a Sentry SDK is not required in order to capture the crashes of your
 UE4 application or game. Sentry supports the *UE4 Crash Reporter*.
 
