@@ -8,7 +8,7 @@ Sentry’s GitLab integration helps you find and fix bugs faster by using data f
 ## Configure GitLab
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions are required to install this integration.
+Sentry owner or manager permissions and GitLab owner or maintainer permissions are required to install this integration.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -54,7 +54,7 @@ Sentry owner or manager permissions are required to install this integration.
 
     [{% asset gitlab/configure-button.png alt="GitLab instance with connected group and highlighted configure button" %}]({% asset gitlab/configure-button.png @path %})
 
-1. On the resulting page, click **Add Repository** to select which repositories you’d like to begin tracking commits.
+1. On the resulting page, click **Add Repository** to select which repositories in which you’d like to begin tracking commits.
 
     [{% asset gitlab/add-repo.png alt="Add repository" %}]({% asset gitlab/add-repo.png @path %})
 
@@ -130,4 +130,3 @@ FAQ:
     - This integration is available for organizations on the [Team, Business, or Enterprise plan](https://sentry.io/pricing/).
 - Who has permission to install this?
     - You must have both owner/manager permissions in Sentry and owner permissions in GitLab to successfully install this integration. 
-        

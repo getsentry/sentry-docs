@@ -33,22 +33,21 @@ Framework](http://flask.pocoo.org/).
 
 ## Behavior
 
-* The Flask integration will be installed for all of your apps. It hooks into
-  Flask's signals, not anything on the app object.
+* The Sentry Python SDK will install the Flask integration for all of your apps. It hooks into Flask’s signals, not anything on the app object.
 
-* All exceptions leading to a Internal Server Error are reported.
+* All exceptions leading to an Internal Server Error are reported.
 
 * {% include platforms/python/request-data.md %}
 
 * If you use ``flask-login`` and have set ``send_default_pii=True`` in your call to ``init``, user data (current user id, email address, username) is attached to the event.
 
-* Logging with `app.logger` or really *any* logger will create breadcrumbs when
+* Logging with `app.logger` or *any* logger will create breadcrumbs when
   the [Logging]({% link _documentation/platforms/python/logging.md %})
   integration is enabled (done by default).
 
 ## Options
 
-The following keyword arguments can be passed to `FlaskIntegration()`:
+You can pass the following keyword arguments to `FlaskIntegration()`:
 
 * `transaction_style`:
 
@@ -58,7 +57,7 @@ The following keyword arguments can be passed to `FlaskIntegration()`:
       return "ok"
   ```
 
-  In the above code, the transaction would be set to:
+  In the above code, you would set the transaction to:
 
   * `/myurl/<foo>` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
   * `myendpoint` if you set `transaction_style="endpoint"`
@@ -67,5 +66,4 @@ The following keyword arguments can be passed to `FlaskIntegration()`:
 
 ## User Feedback
 
-The user feedback feature can be used with this integration.  For more information
-see [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md %}?platform=flask).
+You can use the user feedback feature with this integration.  For more information see [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md %}?platform=flask).

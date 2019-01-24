@@ -36,9 +36,9 @@ Framework](https://github.com/huge-success/sanic).
 
 ## Behavior
 
-* The Sanic integration will be installed for all of your apps.
+* The Sentry Python SDK will install the Sanic integration for all of your apps.
 
-* All exceptions leading to a Internal Server Error are reported.
+* All exceptions leading to an Internal Server Error are reported.
 
 * {% include platforms/python/request-data.md %}
 

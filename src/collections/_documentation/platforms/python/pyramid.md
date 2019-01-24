@@ -39,9 +39,9 @@ Framework](https://trypyramid.com/).
 
 ## Behavior
 
-* The Pyramid integration will be installed for all of your apps. It hooks into Pyramid itself, not any of your apps specifically.
+* The Sentry Python SDK will install the Pyramid integration for all of your apps. The integration hooks into Pyramid itself, not any of your apps specifically.
 
-* All exceptions leading to a Internal Server Error are reported.
+* All exceptions leading to an Internal Server Error are reported.
 
 * {% include platforms/python/request-data.md %}
 
@@ -51,7 +51,7 @@ Framework](https://trypyramid.com/).
 
 ## Options
 
-The following keyword arguments can be passed to `PyramidIntegration()`:
+You can pass the following keyword arguments to `PyramidIntegration()`:
 
 * `transaction_style`:
 
@@ -60,7 +60,7 @@ The following keyword arguments can be passed to `PyramidIntegration()`:
   config.add_view(myfunction, route_name="myroute")
   ```
 
-  In the above code, the transaction would be set to:
+  In the above code, you can set the transaction to:
 
   * `/myurl/{id}` if you set `transaction_style="route_pattern"`
   * `myroute` if you set `transaction_style="route_name"`
