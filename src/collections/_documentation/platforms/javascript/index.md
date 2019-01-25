@@ -211,6 +211,93 @@ Sentry.configureScope((scope) => {
 });
 ```
 
+&nbsp;
+## Setting the Fingerprint
+
+Sentry uses one or more "fingerprints" to decide how to group errors into issues. 
+
+For some very advanced use cases, you can override the Sentry defaut grouping using the `fingerprint`attribute. In supported SDKs, this attribute can be passed with the event information, and should be an array of strings.
+
+If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{{ default }}` as one of the items.
+
+&nbsp;
+### Minimal Example
+
+This minimal example will put all exceptions of the current scope into the same issue/group:
+
+```
+Sentry.configureScope((scope) => {
+  scope.setFingerprint(['my-view-function']);
+});
+```
+
+There are two common real-world use cases for the `fingerprint` attribute:
+
+&nbsp;
+### Example: Split up a group into more groups (groups are too big)
+
+Your application queries an RPC interface or external API service, so the stack trace is generally the same (even if the outgoing request is very different).
+
+The following example will split up the default group Sentry would create (represented by `{{ default }}`) further, taking some attribute on the error object into account:
+
+[Example written in C#]
+
+```
+using (SentrySdk.Init(o =>
+  {
+    o.BeforeSend = @event =>
+      {
+        if (@event.Exception is SqlConnection ex)
+        {
+          @event.SetFingerprint(new [] {"database-connection-error"});
+        }
+        return @event;
+      };
+  }
+))
+```
+
+&nbsp;
+### Example: Merge a lot of groups into one group (groups are too small)
+
+A generic error, such as a database connection error, has many different stack traces and never groups together.
+
+The following example will just completely overwrite Sentry's grouping by omitting `{{ default }}` from the array:
+
+[Example written in C#]
+
+```
+public class MyRpcException : Exception
+{
+  // The name of the RPC function that was called (e.g. "getAllBlogArticles")
+  public string Function { get; set; }
+  
+  // For example a HTTP status code returned by the server.
+  public HttpStatusCode Code { get; set; }
+}
+
+using (SentrySdk.Init(o =>
+{
+  o.BeforeSend = @event =>
+  {
+    if (@event.Exception is MyRpcException ex)
+    {
+      @event.SetFingerprint(
+        new []
+        {
+          "{ { default } }"
+          ex.Function,
+          ex.Code.ToString(),
+        }
+      );
+    }
+    return @event;
+  };
+}
+))
+```
+
+
 ****BIG TEST****
 
 ****BIG TEST****
