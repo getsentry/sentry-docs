@@ -97,6 +97,7 @@ RSVP.on('error', function(reason) {
 
 Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
 
+&nbsp;
 ### Releases
 A release is a version of your code that is deployed to an environment. When you give Sentry information about your releases, you unlock a number of new features:
  - Determine the issue and regressions introduced in a new release
@@ -109,7 +110,7 @@ Additionally, releases are used for applying [source maps]({%- link _documentati
 Setting up releases is a 3-step process:
 1. [Configure Your SDK]({%- link _documentation/workflow/releases.md -%}#configure-sdk)
 2. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
-
+3. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
 
 
 
