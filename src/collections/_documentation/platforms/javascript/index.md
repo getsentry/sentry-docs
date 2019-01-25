@@ -169,6 +169,29 @@ Users consist of a few key pieces of information which are used to construct a u
 
 Additionally you can provide arbitrary key/value pairs beyond the reserved names and those will be stored with the user.
 
+&nbsp;
+## Tagging Events
+
+Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and can later be used as a breakdown or quick access to finding related events.
+
+Most SDKs generally support configuring tags by configuring the scope:
+
+{% include components/platform_content.html content_dir='set-tag' %}
+
+Several common uses for tags include:
+
+-   The hostname of the server
+-   The version of your platform (e.g. iOS 5.0)
+-   The user’s language
+
+Once you’ve starting sending tagged data, you’ll see it show up in a few places:
+
+-   The filters within the sidebar on the project stream page.
+-   Summarized within an event on the sidebar.
+-   The tags page on an aggregated event.
+
+We’ll automatically index all tags for an event, as well as the frequency and the last time a value has been seen. Even more so, we keep track of the number of distinct tags, and can assist in you determining hotspots for various issues.
+
 ****BIG TEST****
 
 ****BIG TEST****
