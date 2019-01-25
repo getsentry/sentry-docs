@@ -180,7 +180,11 @@ Sentry implements a system it calls tags. Tags are various key/value pairs that 
 
 Most SDKs generally support configuring tags by configuring the scope:
 
-{% include components/platform_content.html content_dir='set-tag' %}
+```
+Sentry.configureScope((scope) => {
+  scope.setTag("page_locale", "de-at");
+});
+```
 
 Several common uses for tags include:
 
@@ -195,6 +199,17 @@ Once you’ve starting sending tagged data, you’ll see it show up in a few pla
 -   The tags page on an aggregated event.
 
 We’ll automatically index all tags for an event, as well as the frequency and the last time a value has been seen. Even more so, we keep track of the number of distinct tags, and can assist in you determining hotspots for various issues.
+
+&nbsp;
+## Setting the Level
+
+You can set the severity of an event to one of five values: 'fatal', 'error', 'warning', 'info', and 'debug'. ('error' is the default.) 'fatal' is the most severe and 'debug' is the least.
+
+```
+Sentry.configureScope((scope) => {
+  scope.setExtra("character_name", "Mighty Fighter");
+});
+```
 
 ****BIG TEST****
 
