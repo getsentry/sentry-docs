@@ -20,9 +20,9 @@ Afterwards, you can export the `SENTRY_AUTH_TOKEN` environment variable:
 export SENTRY_AUTH_TOKEN=your-auth-token
 ```
 
-Alternatively, you can provide the `--auth-token` command line parameter whenever you invoke _sentry-cli_ or add it to your _.sentryclirc_ config file.
+Alternatively, you can provide the `--auth-token` command line parameter whenever you invoke `sentry-cli` or add it to your _.sentryclirc_ config file.
 
-By default `sentry-cli` will connect to sentry.io but for on-premise you can also sign in elsewhere:
+By default, `sentry-cli` will connect to sentry.io but for on-premise you can also sign in elsewhere:
 
 ```bash
 $ sentry-cli --url https://myserver.invalid/ login
@@ -30,7 +30,7 @@ $ sentry-cli --url https://myserver.invalid/ login
 
 ## Configuration File
 
-The _sentry-cli_ tool can be configured with a config file named `.sentryclirc` as well as environment variables and _.env_ files. The config file is looked for upwards from the current path and defaults from _~/.sentryclirc_ are always loaded. You can also override these settings from command line parameters.
+The `sentry-cli` tool can be configured with a config file named `.sentryclirc` as well as environment variables and _.env_ files. The config file is looked for upwards from the current path and defaults from _~/.sentryclirc_ are always loaded. You can also override these settings from command line parameters.
 
 The config file uses standard INI syntax.
 
@@ -118,6 +118,10 @@ The following settings are available (first is the environment variable, the val
 (_dsym.max_upload_size_):
 
 : Sets the maximum upload size in bytes (before compression) of debug symbols into one batch. The default is 35MB or 100MB (depending on the version of sentry-cli) which is suitable for sentry.io but if you are using a different sentry server you might want to change this limit if necessary.
+
+`SENTRY_NO_PROGRESS_BAR`:
+
+: If set to `1`, then `sentry-cli` will not display progress bars for any operations.
 
 `SENTRY_DISABLE_UPDATE_CHECK` (_update.disable_check_):
 
