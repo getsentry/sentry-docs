@@ -47,17 +47,30 @@ If everything else fails, grouping falls back to messages. Hereby ideally the gr
 
 ## Customize Grouping with Fingerprints {#custom-grouping}
 
-For some very advanced use cases SDKs can override the Sentry default grouping.
+For some very advanced use cases you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information, and should be an array of strings. 
 
-Two common cases generally come up here:
+If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{% raw %}{{ default }}{% endraw %}` as one of the items.
 
--   An RPC or external API service is queried, so the stack trace is generally the same (even if the outgoing request is very different)
--   A generic error, such as a database connection error, has many different stack traces and never groups together.
+### Minimal example
 
-To work around these the Sentry protocol supports a `fingerprint` attribute.
-
-In supported SDKs, this attribute can be passed with the event information, and should be an array of strings:
+This minimal example will put all exceptions of the current scope into the same issue/group:
 
 {% include components/platform_content.html content_dir='set-fingerprint' %}
 
-Additionally if you simply wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{% raw %}{{ default }}{% endraw %}` as one of the items.
+There are two common real-world use cases for the `fingerprint` attribute:
+
+### Example: Split up a group into more groups (groups are too big)
+
+Your application queries an RPC interface or external API service, so the stack trace is generally the same (even if the outgoing request is very different).
+
+The following example will split up the default group Sentry would create (represented by `{% raw %}{{ default }}{% endraw %}`) further, taking some attributes on the error object into account:
+
+{% include components/platform_content.html content_dir='fingerprint-rpc-example' %}
+
+### Example: Merge a lot of groups into one group (groups are too small)
+
+A generic error, such as a database connection error, has many different stack traces and never groups together.
+
+The following example will just completely overwrite Sentry's grouping by omitting `{% raw %}{{ default }}{% endraw %}` from the array:
+
+{% include components/platform_content.html content_dir='fingerprint-database-connection-example' %}
