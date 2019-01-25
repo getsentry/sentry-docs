@@ -112,7 +112,33 @@ Setting up releases is a 3-step process:
 2. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
 3. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
 
+&nbsp;
+### Setting Context
+Sentry supports additional context with events. Often this context is shared amongst any issue captured in its lifecycle, and includes the following components:
 
+**Structured Contexts**
+
+: Specific structured contexts (OS info, runtime information etc.).  This is normally set automatically.
+
+[**User**](#capturing-the-user)
+
+: Information about the current actor
+
+[**Tags**](#tagging-events)
+
+: Key/value pairs which generate breakdowns charts and search filters
+
+[**Level**](#setting-the-level)
+
+: An event's severity 
+
+[**Fingerprint**](#setting-the-fingerprint)
+
+: A value used for grouping events into issues
+
+[**Unstructured Extra Data**](#extra-context)
+
+: Arbitrary unstructured data which is stored with an event sample
 
 
 
