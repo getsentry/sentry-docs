@@ -147,7 +147,11 @@ Sending users to Sentry will unlock a number of features, primarily the ability 
 
 Capturing the user is fairly straight forward:
 
-{% include components/platform_content.html content_dir='set-user' %}
+```
+Sentry.configureScope((scope) => {
+  scope.setUser({"email": "john,doe@example.com"});
+});
+```
 
 Users consist of a few key pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present in order for the user to be captured:
 
