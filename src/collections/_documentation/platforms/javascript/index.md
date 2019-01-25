@@ -140,7 +140,34 @@ Sentry supports additional context with events. Often this context is shared amo
 
 : Arbitrary unstructured data which is stored with an event sample
 
+&nbsp;
+## Capturing the User
 
+Sending users to Sentry will unlock a number of features, primarily the ability to drill down into the number of users affecting an issue, as well to get a broader sense about the quality of the application.
+
+Capturing the user is fairly straight forward:
+
+{% include components/platform_content.html content_dir='set-user' %}
+
+Users consist of a few key pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present in order for the user to be captured:
+
+`id`
+
+: Your internal identifier for the user.
+
+`username`
+
+: The username. Generally used as a better label than the internal ID.
+
+`email`
+
+: An alternative to a username (or addition). Sentry is aware of email addresses and can show things like Gravatars, unlock messaging capabilities, and more.
+
+`ip_address`
+
+: The IP address of the user. If the user is unauthenticated providing the IP address will suggest that this is unique to that IP. We will attempt to pull this from HTTP request data if available.
+
+Additionally you can provide arbitrary key/value pairs beyond the reserved names and those will be stored with the user.
 
 ****BIG TEST****
 
