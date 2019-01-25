@@ -5,6 +5,127 @@ sidebar_order: 3
 
 {% include learn-sdk.md platform="javascript" %}
 
+&nbsp;
+## Getting Started
+
+### Integrating the SDK
+
+All our JavaScript-related SDKs provide the same API. Still, there are some differences between them, such as installation, which this section of the docs explains.
+
+**[Drop down here]**
+
+[Dropdown which affects install instructions are shown (if nothing is provided in the URL, defaults to browser)]
+
+- In the browser
+- Angular
+- Electron
+    - Includes some minidump explanation, maybe redirects to the native page
+- Ember
+- Node.js
+- React
+    - Includes a note pointing to React Native
+- Vue
+
+The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
+
+```
+<script src="https://browser.sentry-cdn.com/4.5.3/bundle.min.js" crossorigin="anonymous"></script>
+
+```
+
+&nbsp;
+### Configuring the SDK with your Data Source Name
+After you completed setting up a project in Sentry, you’ll be given a value which we call a _DSN_, or _Data Source Name_. It looks a lot like a standard URL, but it’s actually just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
+
+**[Drop down here]**
+
+You should `init` the Sentry Browser SDK as soon as possible during your page load:
+
+```
+Sentry.init({ dsn: 'https://<key>@sentry.io/<project>' });
+```
+
+Most SDKs will now automatically collect data if available, some require some extra configuration as automatic error collecting is not available due to platform limitations.
+
+&nbsp;
+### Capturing Errors/ Exceptions
+In JavaScript you can pass an error object to `captureException()` to get it captured as an event.
+
+```
+try {
+  aFunctionThatMightFail();
+} catch (err) {
+  Sentry.captureException(err);
+}
+```
+**[Screenshot of what that ^^ looks like]**
+
+{% capture __alert_content -%}
+It's possible to throw strings as errors. In this case, the Sentry SDK will not record tracebacks
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+&nbsp;
+### Automatically Capturing Errors
+Sentry attaches global handlers to capture uncaught exceptions and unhandled rejections.
+
+**[Example]**
+
+&nbsp;
+### Automatically Capturing Errors with Promises
+By default, Sentry for JavaScript captures unhandled promise rejections as described in the official ECMAScript 6 standard.
+
+**[Example Code]**
+
+Configuration may be required if you are using a third-party library to implement promises:
+
+Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by setting `captureUnhandledRejections` option to `false` and manually hook into such event handler and call `Raven.captureException` or `Raven.captureMessage` directly.
+
+For example, the [RSVP.js library](https://github.com/tildeio/rsvp.js/) (used by Ember.js) allows you to bind an event handler to a [global error event](https://github.com/tildeio/rsvp.js#error-handling).
+
+```
+RSVP.on('error', function(reason) {
+  Raven.captureException(reason);
+});
+```
+
+[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections toa global DOM event, `unhandledrejection`. In this case, you don't need to do anything, we've already got you covered with default the `captureUnhandledRejections: true` setting.
+
+Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
+
+### Releases
+A release is a version of your code that is deployed to an environment. When you give Sentry information about your releases, you unlock a number of new features:
+ - Determine the issue and regressions introduced in a new release
+ - Predict which commit caused an issue and who is likely responsible
+ - Resolve issues by including the issue number in your commit message
+ - Receive email notifications when your code gets deployed
+
+Additionally, releases are used for applying [source maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%})
+
+Setting up releases is a 3-step process:
+1. [Configure Your SDK]({%- link _documentation/workflow/releases.md -%}#configure-sdk)
+2. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
+
+
+
+
+
+
+****BIG TEST****
+
+****BIG TEST****
+
+****BIG TEST****
+
+****BIG TEST****
+
+****BIG TEST****
+
+
 All our JavaScript-related SDKs provide the same API still there are some differences between them which this section of the docs explains.
 
 ## Browser Compatibility
