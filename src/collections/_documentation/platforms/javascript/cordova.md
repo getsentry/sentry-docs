@@ -47,7 +47,7 @@ if [ ! -f $SENTRY_PROPERTIES ]; then
 fi
 echo "# Reading property from $SENTRY_PROPERTIES"
 SENTRY_CLI=$(getProperty "cli.executable")
-SENTRY_COMMAND="../../$SENTRY_CLI upload-dsym"
+SENTRY_COMMAND="../../$SENTRY_CLI upload-dif \"$DWARF_DSYM_FOLDER_PATH\""
 $SENTRY_COMMAND
 ```
 

@@ -47,7 +47,7 @@ There are two ways to download the dSYM from iTunesConnect. After you do one of 
 Afterwards manually upload the symbols with _sentry-cli_:
 
 ```bash
-sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dsym --org YOUR_ORG_SLUG --project YOUR_PROJECT_SLUG PATH_TO_DSYMS
+sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dif --org YOUR_ORG_SLUG --project YOUR_PROJECT_SLUG PATH_TO_DSYMS
 ```
 
 {% capture __alert_content -%}
@@ -110,7 +110,7 @@ if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_NAME___
 export SENTRY_PROJECT=___PROJECT_NAME___
 export SENTRY_AUTH_TOKEN=YOUR_AUTH_TOKEN
-ERROR=$(sentry-cli upload-dsym 2>&1 >/dev/null)
+ERROR=$(sentry-cli upload-dif "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
 echo "warning: sentry-cli - $ERROR"
 fi
@@ -118,8 +118,6 @@ else
 echo "warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
 fi
 ```
-
-The `upload-dsym` command automatically picks up the `DWARF_DSYM_FOLDER_PATH` environment variable that Xcode exports and look for dSYM files there.
 
 {% capture __alert_content -%}
 By default sentry-cli will connect to sentry.io. For on-prem you need to export the _SENTRY_URL_ environment variable to instruct the tool to connect to your server:
@@ -145,14 +143,14 @@ Your dSYM file can be upload manually by you (or some automated process) with th
 
 Download and install [sentry-cli](https://github.com/getsentry/sentry-cli/releases) — The best place to put this is in the _/usr/local/bin/_ directory.
 
-Then run this:
+Then run this -- note that `--auth-token` needs to go before `upload-dif`:
 
 ```bash
-sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dsym --org YOUR_ORG_SLUG --project YOUR_PROJECT_SLUG PATH_TO_DSYMS
+sentry-cli --auth-token YOUR_AUTH_TOKEN upload-dif --org YOUR_ORG_SLUG --project YOUR_PROJECT_SLUG PATH_TO_DSYMS
 ```
 
 {% capture __alert_content -%}
-By default sentry-cli will connect to sentry.io. For on-prem you need to export the _SENTRY_URL_ environment variable to instruct the tool to connect to your server:
+By default, sentry-cli will connect to sentry.io. For on-prem you need to export the `SENTRY_URL` environment variable to instruct the tool to connect to your server:
 
 ```bash
 export SENTRY_URL=https://mysentry.invalid/

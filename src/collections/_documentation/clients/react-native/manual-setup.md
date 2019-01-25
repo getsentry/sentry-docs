@@ -68,10 +68,13 @@ If you wish to upload the source maps and symbols to Sentry, create a new Run Sc
 ```bash
 export SENTRY_PROPERTIES=../sentry.properties
 
-../node_modules/@sentry/cli/bin/sentry-cli upload-dsym
+../node_modules/@sentry/cli/bin/sentry-cli upload-dif "$DWARF_DSYM_FOLDER_PATH"
 ``` 
 
-However this will not work for bitcode enabled builds. If you are using bitcode you need to remove that line (`sentry-cli upload-dsym`) and consult the documentation on dsym handling instead (see [With Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#dsym-with-bitcode)).
+For bitcode enabled builds via iTunes Connect, additional steps are required.
+Follow the instructions at [With Bitcode]({%- link
+_documentation/clients/cocoa/dsym.md -%}#dsym-with-bitcode) to set up uploads of
+symbols for all build variants.
 
 Note that uploading of debug simulator builds by default is disabled for speed reasons. If you do want to also generate debug symbols for debug builds you can pass `--allow-fetch` as a parameter to `react-native-xcode` in the above mentioned build phase.
 
@@ -100,7 +103,7 @@ fi
 [ -z "$NODE_BINARY" ] && export NODE_BINARY="node"
 
 # Run sentry cli script to upload debug symbols
-$NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli upload-dsym
+$NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli upload-dif "$DWARF_DSYM_FOLDER_PATH"
 
 # OR
 
