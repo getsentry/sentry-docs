@@ -49,7 +49,7 @@ If everything else fails, grouping falls back to messages. Hereby ideally the gr
 
 For some very advanced use cases you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information, and should be an array of strings. 
 
-If you simply wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{% raw %}{{ default }}{% endraw %}` as one of the items.
+If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{% raw %}{{ default }}{% endraw %}` as one of the items.
 
 ### Minimal example
 
@@ -57,11 +57,11 @@ This minimal example will put all exceptions of the current scope into the same 
 
 {% include components/platform_content.html content_dir='set-fingerprint' %}
 
-There are two common real-world usecases for the `fingerprint` attribute:
+There are two common real-world use cases for the `fingerprint` attribute:
 
 ### Example: Split up a group into more groups (groups are too big)
 
-An RPC or external API service is queried, so the stack trace is generally the same (even if the outgoing request is very different). 
+Your application queries an RPC interface or external API service, so the stack trace is generally the same (even if the outgoing request is very different).
 
 The following example will split up the default group Sentry would create (represented by `{% raw %}{{ default }}{% endraw %}`) further, taking some attributes on the error object into account:
 
