@@ -319,6 +319,13 @@ When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as t
   level="warning"
 %}
 
+&nbsp;
+## Unsetting Context
+
+Context is held in the current scope and thus is cleared out at the end of each operation (request etc.). You can also push and pop your own scopes to apply context data to a specific codeblock or function.
+
+For more information [have a look at the scopes and hub documentation]({%- link
+_documentation/enriching-error-data/scopes.md -%}).
 
 
 
