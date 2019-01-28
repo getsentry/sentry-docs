@@ -12,7 +12,9 @@ For convenience, the following preample is attached to scripts:
 
 Examples:
 
-> $ sentry exec -c ‘print(Project.objects.count())’ $ echo ‘print(Project.objects.count())’ \| sentry exec $ sentry exec something.py
+> $ sentry exec -c ‘print(Project.objects.count())’ 
+> $ echo ‘print(Project.objects.count())’ | sentry exec 
+> $ sentry exec something.py
 
 Note: All scripts are assumed utf-8.
 
