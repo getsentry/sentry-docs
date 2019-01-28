@@ -489,6 +489,28 @@ We will not miss any errors, only breadcrumbs and only up until the SDK is fully
 You can reduce this time by manually calling `forceLoad` or set `data-lazy="no"`.
 So keep this in mind.
 
+&nbsp;
+### Collecting User Feedback
+
+Sentry provides the ability to collect additional feedback from the user upon hitting an error. This is primarily useful in situations where you might generally render a plain error page (the classic 500.html). To collect the feedback, an embeddable JavaScript widget is available, which can then be shown on demand to your users.
+
+[screenshot of widget]
+
+For more information, [checkout the docs on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
+
+&nbsp;
+### Security Policy Reporting
+
+Sentry provides the ability to collect information on Content-Security-Policy (CSP) violations, as well as Expect-CT and HTTP Public Key Pinning (HPKP) failures by setting the proper HTTP header which results in violation/failure to be sent to Sentry endpoint specified in report-uri.
+
+For more information, see Sentry's [docs on Security Policy Reporting]({%- link _documentation/error-reporting/security-policy-reporting.md -%}).
+
+[Capture Content Security Policy Violations with Sentry](https://blog.sentry.io/2018/09/04/how-sentry-captures-csp-violations)
+
+[How a Content Security Policy Could Have Protected Newegg](https://blog.sentry.io/2018/09/20/content-security-policy-newegg-breach)
+
+
+
 
 
 
