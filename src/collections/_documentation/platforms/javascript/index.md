@@ -327,7 +327,25 @@ Context is held in the current scope and thus is cleared out at the end of each 
 For more information [have a look at the scopes and hub documentation]({%- link
 _documentation/enriching-error-data/scopes.md -%}).
 
+&nbsp;
+## Advanced Usage
 
+### Advanced Configuration
+
+Options are set when the SDK is first initialized.
+
+```
+Sentry.init({
+  dsn: 'https://bd421d97f0d64387ac5768fe16f88f78@sentry.io/1268071',
+  release: "28d497fb8af6cc3efbe160e28c1c08f08bd688fc",
+  environment: 'staging',
+  beforeSend: customPiiScrub(event),
+  maxBreadcrumbs: 50,
+  debug: true,
+});
+```
+
+Checkout Sentry's complete list of [options]({%- link _documentation/error-reporting/configuration/index.md -%})
 
 
 
