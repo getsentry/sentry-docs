@@ -362,6 +362,26 @@ For more information, see:
 - [4 Reasons Why Your Source Maps are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
 - [Source Maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%})
 
+&nbsp;
+### Breadcrumbs
+
+Sentry will automatically record certain events, such as changes to the URL and XHR requests to provide context to an error.
+
+You can manually add breadcrumbs on other events or disable breadcrumbs.
+
+```
+// Example for an application that sometimes errors after the screen resizes
+
+window.addEventListener('resize', function(event){
+  Sentry.addBreadcrumb({
+    category: 'ui',
+    message: 'New window size:' + window.innerWidth + 'x' + window.innerHeight,
+    level: 'info'
+  });
+})
+```
+
+For more information, see Sentry's [Breadcrumbs docs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}).
 
 
 
