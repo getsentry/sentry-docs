@@ -356,7 +356,11 @@ Sentry supports un-minifying JavaScript via source maps. This lets you view sour
 
 When you're using the Sentry JavaScript SDK, the source code and source maps are automatically fetched by scraping the URLs within the stack trace. However, you may have legitimate reasons for [disabling the JavaScript source fetching in Sentry](https://blog.sentry.io/2018/07/17/source-code-fetching).
 
+For more information, see:
 
+- [Debuggable JavaScript in Production with Source Maps](https://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps)
+- [4 Reasons Why Your Source Maps are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
+- [Source Maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%})
 
 
 
