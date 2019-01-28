@@ -383,7 +383,25 @@ window.addEventListener('resize', function(event){
 
 For more information, see Sentry's [Breadcrumbs docs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}).
 
+&nbsp;
+### Filter Events & Custom Logic
 
+Sentry exposes a beforeSend callback which can be used to filter out information or add additional context to the event object.
+
+```
+Sentry.init({
+  beforeSend(event) {
+    // Modify the event here
+    if(event.user){
+      // Don't send user's email address
+      delete event.user.email;
+    }
+    return event;
+  }
+});
+```
+
+For more information, see Sentry's [docs on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%}).
 
 
 
