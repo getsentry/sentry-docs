@@ -349,7 +349,12 @@ Sentry.init({
 
 Checkout Sentry's complete list of [options]({%- link _documentation/error-reporting/configuration/index.md -%}) and more information on [environments]({%- link _documentation/enriching-error-data/environments.md -%}).
 
+&nbsp;
+### Source Maps
 
+Sentry supports un-minifying JavaScript via source maps. This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (e.g. UglifyJS), or transpiled code from a higher-level language (e.g. TypeScript, ES6).
+
+When you're using the Sentry JavaScript SDK, the source code and source maps are automatically fetched by scraping the URLs within the stack trace. However, you may have legitimate reasons for [disabling the JavaScript source fetching in Sentry](https://blog.sentry.io/2018/07/17/source-code-fetching).
 
 
 
