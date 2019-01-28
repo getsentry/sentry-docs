@@ -433,7 +433,8 @@ This line is everything you need, this script is <1kB gzipped and includes the `
 <script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
 ```
 
-### What does the Loader provide?
+&nbsp;
+#### What does the Loader provide?
 
 It's small wrapper around our SDK.  
 The _Loader_ does a few things:
@@ -478,7 +479,8 @@ The _Loader_ also provides a function called `forceLoad()` which does the same, 
 </script>
 ```
 
-### Current limitations
+&nbsp;
+#### Current limitations
 
 As we inject our SDK asynchronously we will only monitor _global errors_ and _unhandled promise_ for you until the SDK is fully loaded.
 That means that it could be that we miss breadcrumbs on the way that happened during the download.  
