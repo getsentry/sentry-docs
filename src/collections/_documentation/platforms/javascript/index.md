@@ -13,7 +13,7 @@ Our JavaScript SDK supports all major browsers. In older browsers, error reports
 
 The table below shows supported browsers:
 
-![Sauce Test Status](https://saucelabs.com/browser-matrix/sentryio.svg)
+![Sauce Test Status]({%- asset browser-support.svg @path -%})
 
 {% capture __alert %}
 Our SDK needs a polyfill for `Promise` in older browsers like IE 11 and below. 
