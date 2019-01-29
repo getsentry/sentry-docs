@@ -871,7 +871,7 @@ This releases entirely removes Access Groups. If you’re upgrading from an inst
 -   The `cleanup` task has been removed (the command is still available).
 -   Various optimizations to `cleanup` for Postgres users.
 -   Within single organization mode users will automatically be added to the default organization.
--   Added `Organization.merge_to()` helper to assist with merging organizations. (i.e. in an on-premise install which wants to convert to a single organization)
+-   Added `Organization.merge_to()` helper to assist with merging organizations. (i.e. in an on-premises install which wants to convert to a single organization)
 -   New `import` and `export` commands now exist for creating backups of critical metadata (i.e. api keys, projects, user settings)
 
 ## Version 7.5.6 {#version-7-5-6}

@@ -8,7 +8,7 @@ permalink: /
   {% asset on-fire.png %}
 </div>
 
-Welcome to the Sentry documentation.  Sentry is an open-source error tracking tool that helps you monitor and fix crashes in real time.  Here we cover everything about the product, the platform integrations, and our on-premise offering.
+Welcome to the Sentry documentation.  Sentry is an open-source error tracking tool that helps you monitor and fix crashes in real time.  Here we cover everything about the product, the platform integrations, and our on-premises offering.
 
 ## Getting Started
 

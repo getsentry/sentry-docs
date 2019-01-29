@@ -16,7 +16,7 @@ You have to whitelist `sentry.io` in your `config.xml` like:
 <access origin="sentry.io" />
 ```
 
-Keep in mind that if you use an on-premise installation, adjust this domain accordingly.
+Keep in mind that if you use an on-premises installation, adjust this domain accordingly.
 
 ## iOS Specifics
 

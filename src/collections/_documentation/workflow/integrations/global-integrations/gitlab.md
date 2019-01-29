@@ -120,7 +120,7 @@ A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
 ## Troubleshooting
 
 FAQ:
-- I'm using GitLab on-premise. Do I need to whitelist Sentry's IP addresses?
+- I'm using GitLab on-premises. Do I need to whitelist Sentry's IP addresses?
     - Yes. You can find our IP ranges [ here ]({%- link ip-ranges.md -%}).
 - Do you support subgroups?
     - Currently, we only support subgroups for users using GitLab 11.6 or higher.

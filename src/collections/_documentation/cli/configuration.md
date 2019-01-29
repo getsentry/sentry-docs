@@ -22,7 +22,7 @@ export SENTRY_AUTH_TOKEN=your-auth-token
 
 Alternatively, you can provide the `--auth-token` command line parameter whenever you invoke `sentry-cli` or add it to your _.sentryclirc_ config file.
 
-By default, `sentry-cli` will connect to sentry.io but for on-premise you can also sign in elsewhere:
+By default, `sentry-cli` will connect to sentry.io but for on-premises you can also sign in elsewhere:
 
 ```bash
 $ sentry-cli --url https://myserver.invalid/ login
