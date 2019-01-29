@@ -49,6 +49,7 @@ A full list of the currently supported API endpoints:
     -   [Create a New Release]({%- link _documentation/api/releases/post-organization-releases.md -%})
     -   [Update a Release]({%- link _documentation/api/releases/put-organization-release-details.md -%})
     -   [Delete a Release]({%- link _documentation/api/releases/delete-organization-release-details.md -%})
+    -   [List issues to be resolved in a particular release]({%- link _documentation/api/releases/get-issues-resolved-in-release.md -%})
     -   Deploys
         -   [List a Release’s Deploys]({%- link _documentation/api/releases/get-release-deploys.md -%})
         -   [Create a Deploy]({%- link _documentation/api/releases/post-release-deploys.md -%})
