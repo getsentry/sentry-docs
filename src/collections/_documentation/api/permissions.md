@@ -9,7 +9,7 @@ different API endpoints.
 If you're looking for information on membership roles please visit the
 [membership]({%- link _documentation/accounts/membership.md -%}) documentation.
 
-**Organizations***
+### Organizations
 
 ```bash
 GET      'org:read'    
@@ -17,41 +17,55 @@ PUT/POST 'org:write'
 DELETE   'org:admin'
 ```
 
-**Projects***
+### Projects
 ```bash
 GET      'project:read'    
 PUT/POST 'project:write'
 DELETE   'project:admin'
 ```
-\* The `project:releases` scope will give you access to both **project**
-and **organization** release endpoints. The available endpoints are listed in
-the [Releases]({%- link _documentation/api/releases/index.md -%}) section of the API Documentation.
 
-**Teams**
+{% capture markdown_content %}
+The `project:releases` scope will give you access to both **project**
+and **organization** release endpoints. The available endpoints are listed in the
+[Releases]({%- link _documentation/api/releases/index.md -%}) section of the API Documentation.
+{% endcapture %}
+{% include components/alert.html
+  title="Note"
+  content=markdown_content
+%}
+
+### Teams
 ```bash
 GET      'team:read'    
 PUT/POST 'team:write'
 DELETE   'team:admin'
 ```
 
-**Members**
+### Members
 ```bash
 GET      'member:read'    
 PUT/POST 'member:write'
 DELETE   'member:admin'
 ```
 
-**Issues & Events**
+### Issues & Events
 
-Please note that PUT/DELETE methods only apply to updating/deleting issues.
+{% capture markdown_content %}
+**PUT/DELETE** methods only apply to updating/deleting issues.
 Events in sentry are immutable and can only be deleted by deleting the whole issue.
+{% endcapture %}
+{% include components/alert.html
+  title="Note"
+  content=markdown_content
+%}
+
 ```bash
 GET      'event:read'    
 PUT      'event:write'
 DELETE   'event:admin'
 ```
 
-**Releases**
+### Releases
 ```bash
 GET/PUT/POST/DELETE   'project:releases'
 ```
