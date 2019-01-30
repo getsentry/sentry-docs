@@ -127,7 +127,7 @@ A release is a version of your code that you deploy to an environment. When you 
  - Resolve issues by including the issue number in your commit message
  - Receive email notifications when your code gets deployed
 
-Additionally, releases are used for applying [source maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%})
+Additionally, the Sentry SDK uses releases for applying [source maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}).
 
 Setting up releases is a 3-step process:
 1. [Configure Your SDK]({%- link _documentation/workflow/releases.md -%}#configure-sdk)
@@ -136,7 +136,7 @@ Setting up releases is a 3-step process:
 
 &nbsp;
 ### Setting Context
-Sentry supports additional context with events. Often this context is shared amongst any issue captured in its lifecycle, and includes the following components:
+Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
 
 **Structured Contexts**
 
@@ -148,7 +148,7 @@ Sentry supports additional context with events. Often this context is shared amo
 
 [**Tags**](#tagging-events)
 
-: Key/value pairs which generate breakdowns charts and search filters
+: Key/value pairs which generate breakdown charts and search filters
 
 [**Level**](#setting-the-level)
 
@@ -160,11 +160,11 @@ Sentry supports additional context with events. Often this context is shared amo
 
 [**Unstructured Extra Data**](#extra-context)
 
-: Arbitrary unstructured data which is stored with an event sample
+: Arbitrary unstructured data which the Sentry SDK stores with an event sample
 
 &nbsp;
 ## Capturing the User
-Sending users to Sentry will unlock a number of features, primarily the ability to drill down into the number of users affecting an issue, as well to get a broader sense about the quality of the application.
+Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well to get a broader sense about the quality of the application.
 
 Capturing the user is fairly straight forward:
 
@@ -174,7 +174,7 @@ Sentry.configureScope((scope) => {
 });
 ```
 
-Users consist of a few key pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present in order for the user to be captured:
+Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
 
 `id`
 
@@ -182,21 +182,21 @@ Users consist of a few key pieces of information which are used to construct a u
 
 `username`
 
-: The username. Generally used as a better label than the internal ID.
+: The user's username. Generally used as a better label than the internal ID.
 
 `email`
 
-: An alternative to a username (or addition). Sentry is aware of email addresses and can show things like Gravatars, unlock messaging capabilities, and more.
+: An alternative, or addition, to a username. Sentry is aware of email addresses and can show things like Gravatars, unlock messaging capabilities, and more.
 
 `ip_address`
 
-: The IP address of the user. If the user is unauthenticated providing the IP address will suggest that this is unique to that IP. We will attempt to pull this from HTTP request data if available.
+: The IP address of the user. If the user is unauthenticated providing the IP address will suggest that this is unique to that IP. If available, we will attempt to pull this from the HTTP request data.
 
-Additionally you can provide arbitrary key/value pairs beyond the reserved names and those will be stored with the user.
+Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
 
 &nbsp;
 ## Tagging Events
-Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and can later be used as a breakdown or quick access to finding related events.
+Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and the user can later use them as a breakdown or quick access to finding related events.
 
 Most SDKs generally support configuring tags by configuring the scope:
 
@@ -218,11 +218,11 @@ Once you’ve starting sending tagged data, you’ll see it show up in a few pla
 -   Summarized within an event on the sidebar.
 -   The tags page on an aggregated event.
 
-We’ll automatically index all tags for an event, as well as the frequency and the last time a value has been seen. Even more so, we keep track of the number of distinct tags, and can assist in you determining hotspots for various issues.
+We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist in you determining hotspots for various issues.
 
 &nbsp;
 ## Setting the Level
-You can set the severity of an event to one of five values: 'fatal', 'error', 'warning', 'info', and 'debug'. ('error' is the default.) 'fatal' is the most severe and 'debug' is the least.
+You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe and `debug` is the least severe.
 
 ```
 Sentry.configureScope((scope) => {
@@ -234,7 +234,7 @@ Sentry.configureScope((scope) => {
 ## Setting the Fingerprint
 Sentry uses one or more "fingerprints" to decide how to group errors into issues. 
 
-For some very advanced use cases, you can override the Sentry defaut grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information, and should be an array of strings.
+For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings.
 
 If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{ { default } }` as one of the items.
 
@@ -316,7 +316,7 @@ using (SentrySdk.Init(o =>
 
 &nbsp;
 ## Extra Context
-In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which will be stored alongside the event. These are not indexed and are simply used to add additional information about what might be happening:
+In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
 
 ```
 Sentry.configureScope((scope) => {
@@ -325,9 +325,7 @@ Sentry.configureScope((scope) => {
 ```
 
 {% capture __alert_content -%}
-**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data.
-This is not recommended as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads.
-When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when `keepalive: true` is set as `fetch` parameter), the request will stay in the `pending` state forever (eg. in Chrome).
+**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data. Sentry does not recommend this, as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay `pending` forever (e.g. in Chrome).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
