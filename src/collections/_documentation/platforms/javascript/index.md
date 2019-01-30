@@ -140,7 +140,7 @@ Sentry supports additional context with events. Often this context is shared amo
 
 **Structured Contexts**
 
-: Specific structured contexts (OS info, runtime information etc.).  This is normally set automatically.
+: Specific structured contexts --- OS info, runtime information, etc.  This is normally set automatically.
 
 [**User**](#capturing-the-user)
 
@@ -161,6 +161,34 @@ Sentry supports additional context with events. Often this context is shared amo
 [**Unstructured Extra Data**](#extra-context)
 
 : Arbitrary unstructured data which the Sentry SDK stores with an event sample
+
+&nbsp;
+### Extra Context
+In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
+
+```
+Sentry.configureScope((scope) => {
+  scope.setExtra("character_name", "Mighty Fighter");
+});
+```
+
+{% capture __alert_content -%}
+**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data. Sentry does not recommend this, as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay `pending` forever (e.g. in Chrome).
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+&nbsp;
+### Unsetting Context
+Context is held in the current scope and thus is cleared out at the end of each operation --- request, etc. You can also push and pop your own scopes to apply context data to a specific code block or function.
+
+**[code snippet or example here]**
+
+For more information [have a look at the scopes and hub documentation]({%- link
+_documentation/enriching-error-data/scopes.md -%}).
 
 &nbsp;
 ## Capturing the User
@@ -313,32 +341,6 @@ using (SentrySdk.Init(o =>
 }
 ))
 ```
-
-&nbsp;
-## Extra Context
-In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
-
-```
-Sentry.configureScope((scope) => {
-  scope.setExtra("character_name", "Mighty Fighter");
-});
-```
-
-{% capture __alert_content -%}
-**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data. Sentry does not recommend this, as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay `pending` forever (e.g. in Chrome).
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="warning"
-%}
-
-&nbsp;
-## Unsetting Context
-Context is held in the current scope and thus is cleared out at the end of each operation (request etc.). You can also push and pop your own scopes to apply context data to a specific codeblock or function.
-
-For more information [have a look at the scopes and hub documentation]({%- link
-_documentation/enriching-error-data/scopes.md -%}).
 
 &nbsp;
 ## Advanced Usage
