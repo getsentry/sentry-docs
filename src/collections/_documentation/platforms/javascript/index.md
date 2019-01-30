@@ -346,7 +346,7 @@ using (SentrySdk.Init(o =>
 ## Advanced Usage
 
 ### Advanced Configuration
-Options are set when the SDK is first initialized.
+The Sentry SDK sets the options when you first initialize the SDK.
 
 ```
 Sentry.init({
@@ -365,7 +365,7 @@ Checkout Sentry's complete list of [options]({%- link _documentation/error-repor
 ### Source Maps
 Sentry supports un-minifying JavaScript via source maps. This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (e.g. UglifyJS), or transpiled code from a higher-level language (e.g. TypeScript, ES6).
 
-When you're using the Sentry JavaScript SDK, the source code and source maps are automatically fetched by scraping the URLs within the stack trace. However, you may have legitimate reasons for [disabling the JavaScript source fetching in Sentry](https://blog.sentry.io/2018/07/17/source-code-fetching).
+When you're using the Sentry JavaScript SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. However, you may have legitimate reasons for [disabling the JavaScript source fetching in Sentry](https://blog.sentry.io/2018/07/17/source-code-fetching).
 
 For more information, see:
 
@@ -414,7 +414,7 @@ For more information, see Sentry's [docs on Filtering Events]({%- link _document
 
 &nbsp;
 ### Capturing Messages
-Typically, messages are not emitted. This is most useful when you've overridden fingerprinting but need to give a useful message.
+Typically, the Sentry SDK does not emit messages. This is most useful when you've overridden fingerprinting but need to give a useful message.
 
 ```
 Sentry.captureMessage('Something went wrong');
@@ -422,18 +422,15 @@ Sentry.captureMessage('Something went wrong');
 
 &nbsp;
 ### Capturing Raw Events
-[What's the value of capturing raw events]
+**[What's the value of capturing raw events?]**
 
-[How to capture raw events]
+**[How to capture raw events]**
 
 &nbsp;
 ### Lazy Loading Sentry
-We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration).
+We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration). 
 
-But we also offer an alternative which is still in *beta*, we call it the _Loader_.
-
-You install by just adding this script to you website instead of the SDK bundle.
-This line is everything you need, this script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
+But we also offer an alternative which is still in *beta*; we call it the _Loader_. You install by just adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
 
 ```html
 <script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
@@ -441,13 +438,12 @@ This line is everything you need, this script is <1kB gzipped and includes the `
 
 &nbsp;
 #### What does the Loader provide?
-It's small wrapper around our SDK.  
-The _Loader_ does a few things:
+It's a small wrapper around our SDK. The _Loader_ does a few things:
 
 - You will always have the newest recommend stable version of our SDK.
 - It captures all _global errors_ and _unhandled promise_ rejections.
 - It lazy injects our SDK into your website.
-- After the SDK is loaded everything will be sent to Sentry.
+- After the SDK is loaded, the Loader will send everything to Sentry.
 
 By default, the _Loader_ contains all information needed for our SDK to function, like the `DSN`.  In case you want to set additional [options]({% link _documentation/error-reporting/configuration/index.md %}) you have to set them like this:
 
@@ -461,7 +457,7 @@ Sentry.onLoad(() => {
 });
 ```
 
-`onLoad` is a function the only the _Loader_ provides, it will be called once the SDK has been injected into the website.  With the _Loader_ `init()` works a bit different, instead of just setting the options, we merge the options internally, only for convenience so you don't have to set the `DSN` again since the _Loader_ already contains it.
+`onLoad` is a function the only the _Loader_ provides; Loader will call it once Loader injects the SDK into the website.  With the _Loader_ `init()` works a bit different, instead of just setting the options, we merge the options internally, only for convenience, so you don't have to set the `DSN` again since the _Loader_ already contains it.
 
 As explained before, the _Loader_ lazy loads and injects our SDK into your website but you can also tell the loader to fetch it immediately instead of only fetching it when you need it. Setting `data-lazy` to `no` will tell the _Loader_ to inject the SDK as soon as possible:
 
