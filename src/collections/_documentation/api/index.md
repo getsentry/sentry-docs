@@ -13,6 +13,7 @@ The current version of the web API is known as **v0** and is considered to be in
 
 -   [Requests]({%- link _documentation/api/requests.md -%})
 -   [Authentication]({%- link _documentation/api/auth.md -%})
+-   [Permissions]({%- link _documentation/api/permissions.md -%})
 -   [Pagination]({%- link _documentation/api/pagination.md -%})
 
 ## Endpoints
