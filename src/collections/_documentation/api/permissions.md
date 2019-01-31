@@ -11,18 +11,15 @@ If you're looking for information on membership roles please visit the
 
 ### Organizations
 
-```bash
-GET      'org:read'    
-PUT/POST 'org:write'
-DELETE   'org:admin'
-```
+| **GET**       | `org:read`  |
+| **PUT/POST**  | `org:write` |
+| **DELETE**    | `org:admin` |
 
 ### Projects
-```bash
-GET      'project:read'    
-PUT/POST 'project:write'
-DELETE   'project:admin'
-```
+
+| GET      | `project:read`  |
+| PUT/POST | `project:write` |
+| DELETE   | `project:admin` |
 
 {% capture markdown_content %}
 The `project:releases` scope will give you access to both **project**
@@ -35,25 +32,22 @@ and **organization** release endpoints. The available endpoints are listed in th
 %}
 
 ### Teams
-```bash
-GET      'team:read'    
-PUT/POST 'team:write'
-DELETE   'team:admin'
-```
+
+| **GET**      | `team:read`  |
+| **PUT/POST** | `team:write` |
+| **DELETE**   | `team:admin` |
 
 ### Members
-```bash
-GET      'member:read'    
-PUT/POST 'member:write'
-DELETE   'member:admin'
-```
+
+| **GET**      | `member:read`  |
+| **PUT/POST** | `member:write` |
+| **DELETE**   | `member:admin` |
 
 ### Issues & Events
-```bash
-GET      'event:read'
-PUT      'event:write'
-DELETE   'event:admin'
-```
+
+| **GET**     | `event:read`  |
+| **PUT**     | `event:write` |
+| **DELETE**  | `event:admin` |
 
 {% capture markdown_content %}
 **PUT/DELETE** methods only apply to updating/deleting issues.
@@ -65,6 +59,11 @@ Events in sentry are immutable and can only be deleted by deleting the whole iss
 %}
 
 ### Releases
-```bash
-GET/PUT/POST/DELETE   'project:releases'
-```
+
+| **GET/PUT/POST/DELETE**  | `project:releases` |
+
+<style>
+.prose table td {
+  width: 50%;
+}
+</style>
