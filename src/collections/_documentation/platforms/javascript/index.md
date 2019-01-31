@@ -69,8 +69,6 @@ Most SDKs will now automatically collect data if available; some require some ex
 
 &nbsp;
 ## Capturing Errors
-
-&nbsp;
 ### Capturing Errors/ Exceptions
 In JavaScript you can pass an error object to `captureException()` to get it captured as an event.
 
@@ -116,14 +114,13 @@ RSVP.on('error', function(reason) {
 });
 ```
 
-[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections toa global DOM event, `unhandledrejection`. In this case, you don't need to do anything; we've already got you covered with default the `captureUnhandledRejections: true` setting.
+[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections to a global DOM event, `unhandledrejection`. In this case, you don't need to do anything; we've already got you covered with default the `captureUnhandledRejections: true` setting.
 
 Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
 
 &nbsp;
 ## Context
 
-&nbsp;
 ### Setting Context
 Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
 
@@ -348,6 +345,13 @@ Setting up releases is a 3-step process:
 
 &nbsp;
 ## Source Maps
+
+{% include components/alert.html
+  title="Note"
+  content="We **highly recommend** you incorporate source maps with the Sentry JavaScript SDK in order to receive the full benefit of error tracking and monitoring. Source maps will provide stack traces, which will provide more information regarding errors."
+  level="warning"
+%}
+
 Sentry supports un-minifying JavaScript via source maps. This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (e.g. UglifyJS), or transpiled code from a higher-level language (e.g. TypeScript, ES6).
 
 When you're using the Sentry JavaScript SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. However, you may have legitimate reasons for [disabling the JavaScript source fetching in Sentry](https://blog.sentry.io/2018/07/17/source-code-fetching).
