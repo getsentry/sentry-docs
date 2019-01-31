@@ -49,6 +49,11 @@ DELETE   'member:admin'
 ```
 
 ### Issues & Events
+```bash
+GET      'event:read'
+PUT      'event:write'
+DELETE   'event:admin'
+```
 
 {% capture markdown_content %}
 **PUT/DELETE** methods only apply to updating/deleting issues.
@@ -58,12 +63,6 @@ Events in sentry are immutable and can only be deleted by deleting the whole iss
   title="Note"
   content=markdown_content
 %}
-
-```bash
-GET      'event:read'    
-PUT      'event:write'
-DELETE   'event:admin'
-```
 
 ### Releases
 ```bash
