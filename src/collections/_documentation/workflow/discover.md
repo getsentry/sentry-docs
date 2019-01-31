@@ -7,7 +7,7 @@ standard_fields:
     - name: id
       type: string
     - name: issue.id
-      type: string
+      type: number
     - name: project.id
       type: number
     - name: project.name
@@ -17,6 +17,8 @@ standard_fields:
     - name: platform
       type: string
     - name: message
+      type: string
+    - name: release
       type: string
 
   "User attributes":
@@ -142,10 +144,6 @@ common_tags:
       type: string
     - name: os.rooted
       type: boolean
-    - name: sentry:release
-      type: string
-    - name: sentry:user
-      type: string
 
 ---
 
@@ -196,10 +194,10 @@ Conditions
 
 : The condition operators available are:
 - `IS NULL`, `IS NOT NULL` (for all column types)
-- `=`, `!=`, `LIKE` (for strings)
+- `=`, `!=`, `LIKE`, `NOT LIKE` (for strings)
   - Note that values used with `LIKE` are case sensitive and can be used with wildcard characters
   - e.g. `exception_stacks.type LIKE Validation%`
-
+- `>`, `>=`, `<`, `<=` (for numbers)
 
 Order by
 
@@ -218,7 +216,7 @@ Project selector
 
 Date range
 
-: You need to provide either a relative date (e.g. last 14 days) or an explicit start and end date (in UTC).
+: You need to provide either a relative date (e.g. last 14 days) or an explicit start and end date.
 
 : This defaults to the last 14 days.
 
