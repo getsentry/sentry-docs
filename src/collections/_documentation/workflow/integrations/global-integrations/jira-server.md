@@ -17,8 +17,14 @@ Sentry owner or manager permissions, and Jira administrator permissions are requ
 %}
 
 ### I. Generate an RSA public/private key pair
-Complete the instructions in the section titled **Generate an RSA public/private key pair** in [these Jira docs](https://developer.atlassian.com/server/jira/platform/oauth/). 
-You'll need your public and private keys for later in the process.
+To generate an RSA public/private key pair, run the following commands in your terminal window one by one.
+```
+openssl genrsa -out jira_privatekey.pem 1024
+openssl req -newkey rsa:1024 -x509 -key jira_privatekey.pem -out jira_publickey.cer -days 365
+openssl pkcs8 -topk8 -nocrypt -in jira_privatekey.pem -out jira_privatekey.pcks8
+openssl x509 -pubkey -noout -in jira_publickey.cer  > jira_publickey.pem
+```
+
 
 ### II. Create a new application link in Jira
 1. In Jira, click the **gear icon** > **Applications** > **Application Links**.
@@ -35,10 +41,15 @@ You'll need your public and private keys for later in the process.
     | Request Token URL                  | https://sentry.io |
     | Access Token URL | https://sentry.io    |
     | Authorize URL           | https://sentry.io    |
-    | Create Incoming Link               | Yes    |
-1. Click **Continue**.
-1. On the next screen of the dialog, enter into the form the consumer key from the previous step, `Sentry` as the consumer name, and the public key created in Section I.
-1. Click **Continue**. You should now see an application link called Sentry.
+    | Create Incoming Link               | No    |
+1. Click **Continue**. You should be returned to the **Configure Application Links** page, where you should see an application called **Sentry**.
+1. Click the pencil icon next to the **Sentry** application.
+1. On the lefthand side of the resulting modal, click **Incoming Authentication**. Fill our the form as follows, and press **Save**:
+    | Consumer Key                 | (the consumer key from Step II.4)        |
+    | Consumer Name                   | Sentry |
+    | Public Key | (the public key you created in Section I) |
+    | Consumer Callback URL                       | https://sentry.io/extensions/jira_server/setup/ |
+    | Allow 2-Legged OAuth                     | no |
 
 ### III. Connect your Jira Server application with Sentry
 {% capture __alert_content -%}
