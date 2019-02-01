@@ -11,6 +11,8 @@ as well as help you track errors more easily.
 
 The _DSN_ tells the SDK where to send the events to.  This option is always required
 and Go SDKs can pick this up from an environment variable (`SENTRY_DSN`).
+When set to empty string, SDK won't send any events to Sentry and all `Capture*` methods
+will effectively act as no-ops.
 
 ```go
 raven.SetDSN("___DSN___")
