@@ -17,7 +17,7 @@ Sentry owner or manager permissions, and Jira administrator permissions are requ
 %}
 
 ### I. Generate an RSA public/private key pair
-The generate an RSA public/private key pair, run the following commands in your terminal window one by one.
+To generate an RSA public/private key pair, run the following commands in your terminal window one by one.
 ```
 openssl genrsa -out jira_privatekey.pem 1024
 openssl req -newkey rsa:1024 -x509 -key jira_privatekey.pem -out jira_publickey.cer -days 365
