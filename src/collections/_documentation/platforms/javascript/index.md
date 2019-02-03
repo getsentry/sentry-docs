@@ -117,8 +117,18 @@ RSVP.on('error', function(reason) {
 
 Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
 
+## Manually Triggering Errors
+
+**[Best for when an app is in a broken state, but there are no explicit erros being thrown. So, you want to trigger an error, possibly with extra context passed in for debugging purposes.]**
+
+**[find docs to fill this out]**
+
+**[duplicate all the contexts]**
+
+
 &nbsp;
 ## Context
+**[indicate all these can also be done when manually triggering events]**
 
 ### Setting Context
 Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
@@ -237,6 +247,9 @@ We’ll automatically index all tags for an event, as well as the frequency and 
 ### Setting the Level
 You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe and `debug` is the least severe.
 
+**[Is there a way to set the level in a manually triggered event? This way, the level isn't sent in scope -- which could be over complicated/messy.]**
+
+**[vv this example doesn't actually set a level??]**
 ```
 Sentry.configureScope((scope) => {
   scope.setExtra("character_name", "Mighty Fighter");
@@ -355,11 +368,17 @@ Sentry supports un-minifying JavaScript via source maps. This lets you view sour
 
 When you're using the Sentry JavaScript SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. However, you may have legitimate reasons for [disabling the JavaScript source fetching in Sentry](https://blog.sentry.io/2018/07/17/source-code-fetching).
 
+**[How do you "turn on" Source Maps]**
+
+**[Add Hosting/Uploading pg]**
+
+**[How do you enable Source Maps only for Sentry? -- Don't want users to see the data. Remain obfuscated.]**
+
 For more information, see:
 
+- [Full Documentation on Source Maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%})
 - [Debuggable JavaScript in Production with Source Maps](https://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps)
 - [4 Reasons Why Your Source Maps are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
-- [Source Maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%})
 
 &nbsp;
 ## Advanced Usage
