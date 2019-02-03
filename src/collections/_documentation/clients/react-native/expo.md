@@ -40,4 +40,4 @@ For uploading source maps you have to add this to your `exp.json` or `app.json`
 }
 ```
 
-If you still need more help you can out the docs directly on [Expo’s docs page](https://docs.expo.io/versions/latest/guides/using-sentry.html#content)
+If you still need more help you can out the docs directly on [Expo’s docs page](https://docs.expo.io/versions/latest/guides/using-sentry/)
