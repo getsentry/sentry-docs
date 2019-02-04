@@ -45,6 +45,7 @@ openssl x509 -pubkey -noout -in jira_publickey.cer  > jira_publickey.pem
 1. Click **Continue**. You should be returned to the **Configure Application Links** page, where you should see an application called **Sentry**.
 1. Click the pencil icon next to the **Sentry** application.
 1. On the lefthand side of the resulting modal, click **Incoming Authentication**. Fill our the form as follows, and press **Save**:
+
     | Consumer Key                 | (the consumer key from Step II.4)        |
     | Consumer Name                   | Sentry |
     | Public Key | (the public key you created in Section I) |
