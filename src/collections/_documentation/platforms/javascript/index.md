@@ -178,9 +178,7 @@ Sentry.captureMessage('Something went wrong');
 &nbsp;
 ### Capturing Events
 
-SDKs generally also provide ways to capture entire custom event objects.  This is what
-integrations internally use to capture bespoke events with a lot of extra data fed
-into.  For more information about that consult the API documentation of the SDK.
+SDKs also provide ways to capture entire custom event objects. This is what integrations internally use to capture bespoke events that the SDK supplies with a lot of extra data.
 
 &nbsp;
 ## Context
@@ -426,11 +424,12 @@ When you're using the Sentry JavaScript SDK, the SDK automatically fetches the s
 
 **[Mimi note: How do you "turn on" Source Maps? This feels like an important question to answer right away. Added Generating Source Maps below.]**
 
+&nbsp;
 ### Generating Source Maps
 Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
 
+&nbsp;
 #### UglifyJS
-
 UglifyJS is a popular tool for minifying your source code for production. It can dramatically reduce the size of your files by eliminating whitespace, rewriting variable names, removing dead code branches, and more.
 
 If you are using UglifyJS to minify your source code, the following command will additionally generate a source map that maps the minified code back to the original source:
@@ -441,11 +440,11 @@ uglifyjs app.js \
   --source-map url=app.min.js.map,includeSources
 ```
 
+&nbsp;
 #### Webpack
-
 Webpack is a powerful build tool that resolves and bundles your JavaScript modules into files fit for running in the browser. It also supports various _loaders_ to transpile higher-level languages, reference stylesheets, or include static assets.
 
-We have created a convenient [webpack plugin](https://github.com/getsentry/sentry-webpack-plugin) that configures source maps and uploads them to Sentry during the build. This is the recommended way for uploading sources to Sentry. First, install the plugin via:
+We have created a convenient [Webpack plugin](https://github.com/getsentry/sentry-webpack-plugin) that configures source maps and uploads them to Sentry during the build. This is the recommended way for uploading sources to Sentry. First, install the plugin via:
 
 ```sh
 $ npm install --save-dev @sentry/webpack-plugin
@@ -470,7 +469,7 @@ module.exports = {
 };
 ```
 
-Alternatively, if you prefer to upload source maps manually, Webpack just needs to be configured to output source maps:
+Alternatively, if you prefer to upload source maps manually, Webpack needs to be configured to output source maps:
 
 ```javascript
 module.exports = {
@@ -484,16 +483,17 @@ module.exports = {
 ```
 
 {% capture __alert_content -%}
-In case you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine grained control of source map generation, leave `noSources` turned off, so Sentry can display proper source code context in event stack traces.
+In case you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, leave `noSources` turned off, so Sentry can display proper source code context in event stack traces.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
+&nbsp;
 #### SystemJS
-
-SystemJS is the default module loader for Angular 2 projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and can be configured to output source maps.
+SystemJS is the default module loader for Angular 2 projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and you can configured it to output source maps.
 
 ```javascript
 builder.bundle('src/app.js', 'dist/app.min.js', {
@@ -504,15 +504,15 @@ builder.bundle('src/app.js', 'dist/app.min.js', {
 ```
 
 {% capture __alert_content -%}
-All of the example configurations above inline your original, un-transformed source files into the generated source map file. Sentry requires both source map(s) **and** your original source files in order to perform reverse transformations. If you choose NOT to inline your source files, you must make those source files available to Sentry in _addition_ to your source maps (see below).
+All of the example configurations above inline your original, un-transformed source files into the generated source map file. Sentry requires both source map(s) **and** your original source files to perform reverse transformations. If you choose NOT to inline your source files, you must make those source files available to Sentry in _addition_ to your source maps (see below).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Inline Sources"
   content=__alert_content
 %}
 
+&nbsp;
 #### TypeScript
-
 The TypeScript compiler can output source maps. Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
 
 ```json
@@ -525,9 +525,7 @@ The TypeScript compiler can output source maps. Configure the `sourceRoot` prope
 }
 ```
 
-**[Mimi note: Add Hosting/Uploading pg]**
-
-**[Mimi note: How do you enable Source Maps only for Sentry? -- Don't want users to see the data. Remain obfuscated.]**
+**[Mimi note: How do you enable Source Maps only for Sentry? -- Don't want users to see the data. Remain obfuscated. Added Hosting/Uploading]**
 
 Source maps can be either:
 
@@ -544,7 +542,7 @@ By default, Sentry will look for source map directives in your compiled JavaScri
 
 When Sentry encounters such a directive, it will resolve the source map URL relative the source file in which it is found, and attempt an HTTP request to fetch it.
 
-So for example if you have a minified JavaScript file located at `http://example.org/js/app.min.js`. And in that file, on the last line, the following directive is found:
+So for example, if you have a minified JavaScript file located at `http://example.org/js/app.min.js`. And in that file, on the last line, the following directive is found:
 
 ```javascript
 //# sourceMappingURL=app.js.map
@@ -558,7 +556,7 @@ Alternatively, during source map generation you can specify a fully qualified UR
 //# sourceMappingURL=http://example.org/js/app.js.map
 ```
 
-While making source maps available to Sentry from your servers is the easiest integration, it is not always advisable:
+While making source maps available to Sentry from your servers is the most natural integration, it is not always advisable:
 
 -   Sentry may not always be able to reach your servers.
 -   If you do not specify versions in your asset URLs, there may be a version mismatch
@@ -567,24 +565,25 @@ While making source maps available to Sentry from your servers is the easiest in
 For these reasons, it is recommended to upload source maps to Sentry beforehand (see below).
 
 {% capture __alert_content -%}
-While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs, [IP Ranges]({%- link ip-ranges.md -%}#ip-ranges).
+While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs see: [IP Ranges]({%- link ip-ranges.md -%}#ip-ranges).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Working Behind a Firewall"
   content=__alert_content
 %}{% capture __alert_content -%}
-If you want to keep your source maps secret and choose not to upload your source maps directly to Sentry, you can enable the “Security Token” option in your project settings. This will cause outbound requests from Sentry’s servers to URLs originating from your “Allowed Domains” to have the HTTP header “X-Sentry-Token: {token}” appended, where {token} is a secure value you define. You can then configure your web server to allow access to your source maps when this header/token pair is present. You can alternatively override the default header name (X-Sentry-Token) and use HTTP Basic Authentication, e.g. by passing “Authorization: Basic {encoded_password}”.
+If you want to keep your source maps secret and choose not to upload your source maps directly to Sentry, you can enable the “Security Token” option in your project settings. This will cause outbound requests from Sentry’s servers to URLs originating from your “Allowed Domains” to have the HTTP header “X-Sentry-Token: {token}” appended, where {token} is a secure value you define. You can then configure your web server to allow access to your source maps when this header/token pair is present. You can alternatively override the default header name (X-Sentry-Token) and use HTTP Basic Authentication, e.g. by passing “Authorization: Basic {encoded_password}.”
 {%- endcapture -%}
 {%- include components/alert.html
   title="Secure Access to Source Maps"
   content=__alert_content
 %}
 
+&nbsp;
 ### Uploading Source Maps to Sentry
 
-Except for [webpack]({%- link _documentation/platforms/javascript/sourcemaps/generation.md -%}#webpack), the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
+Except for [Webpack]({%- link _documentation/platforms/javascript/sourcemaps/generation.md -%}#webpack), the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
 
-Now you need to set up your build system to create a release, and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
+Now you need to set up your build system to create a release and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
 Sentry uses [**Releases**]({%- link _documentation/workflow/releases.md -%}) to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
 
@@ -592,7 +591,14 @@ Sentry uses [**Releases**]({%- link _documentation/workflow/releases.md -%}) to 
 $ sentry-cli releases new <release_name>
 ```
 
-Note the release name must be **unique within your organization** and match the `release` option in your SDK initialization code. Then, use the `upload-sourcemaps` command to scan a folder for source maps, process them and upload them to Sentry:
+{% capture __alert_content -%}
+The release name must be **unique within your organization** and match the `release` option in your SDK initialization code. Then, use the `upload-sourcemaps` command to scan a folder for source maps, process them and upload them to Sentry.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
 
 ```sh
 $ sentry-cli releases files <release_name> upload-sourcemaps /path/to/files
@@ -612,7 +618,7 @@ Unfortunately, it can be quite challenging to ensure that source maps are actual
   content=__alert_content
 %}
 
-Until now, the release is in a draft state (“_unreleased_”). Once all source maps have been uploaded and your app has been published successfully, finalize the release with the following command:
+Until now, the release is in a draft state (“_unreleased_”). Once all source maps have been uploaded, and your app has been published successfully, finalize the release with the following command:
 
 ```sh
 $ sentry-cli releases finalize <release_name>
@@ -620,7 +626,14 @@ $ sentry-cli releases finalize <release_name>
 
 For convenience, you can alternatively pass the `--finalize` flag to the `new` command which will immediately finalize the release.
 
-Note: You dont _have_ to upload the source files (ref’d by source maps), but without them the grouping algorithm will not be as strong, and the UI will not show any contextual source.
+{% capture __alert_content -%}
+You don't _have_ to upload the source files (ref’d by source maps), but without them, the grouping algorithm will not be as strong, and the UI will not show any contextual source.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="info"
+%}
 
 Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
 
