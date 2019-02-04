@@ -71,7 +71,18 @@ With version _1.1.0_ we added another iOS only feature which tracks breadcrumbs 
 Client.shared?.enableAutomaticBreadcrumbTracking()
 ```
 
-If called this will track every action sent from a Storyboard and every _viewDidAppear_ from an _UIViewController_. We use method swizzling for this feature, so in case your app also overwrites one of these methods be sure to checkout our implementation in our repo.
+If called this will track every action sent from a Storyboard and every _viewDidAppear_ from an _UIViewController_. We use method swizzling for this feature, so in case your app also overwrites one of these methods be sure to checkout our implementation in our repo. Additionally we also add a breadcrumb in case we receive a Memory Pressure Event from the Application.
+
+## Memory Pressure
+
+By calling this function: 
+
+```swift
+Client.shared?.trackMemoryPressureAsEvent()
+```
+
+in case your application receives a memory pressure notification, we will store an event to disk.
+In case you application crashes or on the next successful sent, we will send this event to the server.
 
 ## Change event before sending it {#before-serialize-event}
 
