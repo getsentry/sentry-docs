@@ -147,7 +147,7 @@ You can generate a custom error with `new Error('message')`.
 
 &nbsp;
 ### Setting Extra Context
-In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which will be stored alongside the event. These are not indexed and are simply used to add additional information about what might be happening:
+In addition to the [structured context](#context) that Sentry understands, you can send arbitrary key/value pairs of data which will be stored alongside the event. These are not indexed and are simply used to add additional information about what might be happening:
 
 ```
 Sentry.configureScope((scope) => {
@@ -181,7 +181,7 @@ into.  For more information about that consult the API documentation of the SDK.
 ## Context
 You can also set context when manually triggering events.
 
-### Setting Context
+### Setting Context {#context}
 Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
 
 **Structured Contexts**
