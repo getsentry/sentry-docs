@@ -117,18 +117,69 @@ RSVP.on('error', function(reason) {
 
 Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
 
-## Manually Triggering Errors
+&nbsp;
+## Manually Trigger Errors
 
-**[Best for when an app is in a broken state, but there are no explicit erros being thrown. So, you want to trigger an error, possibly with extra context passed in for debugging purposes.]**
+**[Mimi note: Best for when an app is in a broken state, but there are no explicit erros being thrown. So, you want to trigger an error, possibly with extra context passed in for debugging purposes.]**
 
-**[find docs to fill this out]**
+**[Yes, there's duplicate info. Still thinking on this. Trying to cater to the kind of dev who has a set flow. Usually, 1. Initialize, 2. optionally configure, 3. Manually trigger an error (because you wanna take it out for a test drive)]**
 
-**[duplicate all the contexts]**
+&nbsp;
+### Capturing Errors / Exceptions
 
+The most common form of capturing is to capture errors.  What can be captured as an
+error will depend on the platform.  In general if you have something that looks like
+an exception it can be captured.  For some SDKs you can also omit the argument to
+`capture_exception` and it will attempt to capture the current exception.
+
+```
+try {
+  aFunctionThatMightFail();
+} catch (err) {
+  Sentry.captureException(err);
+}
+```
+&nbsp;
+### Generate a Custom Error
+**[Mimi note: I'd like to flesh this out more, but need help.]**
+
+You can generate a custom error with `new Error('message')`.
+
+&nbsp;
+### Setting Extra Context
+In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which will be stored alongside the event. These are not indexed and are simply used to add additional information about what might be happening:
+
+```
+Sentry.configureScope((scope) => {
+  scope.setExtra("character_name", "Mighty Fighter");
+});
+```
+
+**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data.
+This is not recommended as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads.
+When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when `keepalive: true` is set as `fetch` parameter), the request will stay in the `pending` state forever (eg. in Chrome).
+
+&nbsp;
+### Capturing Messages
+
+Another common operation is to capture a bare message.  A message is just some textual
+information that should be sent to Sentry.  Typically messages are not emitted but
+there are situations when this is useful.
+
+```
+Sentry.captureMessage('Something went wrong');
+```
+
+&nbsp;
+### Capturing Events
+
+SDKs generally also provide ways to capture entire custom event objects.  This is what
+integrations internally use to capture bespoke events with a lot of extra data fed
+into.  For more information about that consult the API documentation of the SDK.
 
 &nbsp;
 ## Context
-**[indicate all these can also be done when manually triggering events]**
+You can also set context when manually triggering events.
 
 ### Setting Context
 Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
