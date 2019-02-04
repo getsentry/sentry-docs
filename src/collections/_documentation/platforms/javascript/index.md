@@ -30,7 +30,7 @@ Additionally, keep in mind to also define `<!doctype html>` on top of your HTML 
 ## Integrating the SDK
 All our JavaScript-related SDKs provide the same API. Still, there are some differences between them, such as installation, which this section of the docs explains.
 
-**[Drop down here]**
+**[Mimi note: Drop down here]**
 
 [Dropdown which affects install instructions are shown (if nothing is provided in the URL, defaults to browser)]
 
@@ -57,7 +57,7 @@ The quickest way to get started is to use the CDN hosted version of the JavaScri
 ### Configuring the SDK with your Data Source Name
 After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
-**[Drop down here]**
+Mimi note:Drop down here]**
 
 You should `init` the Sentry Browser SDK as soon as possible during your page load:
 
@@ -93,13 +93,13 @@ It's possible to throw strings as errors. In this case, the Sentry SDK will not 
 ### Automatically Capturing Errors
 Sentry attaches global handlers to capture uncaught exceptions and unhandled rejections.
 
-**[Code Snippet]**
+**[Mimi note: Code Snippet]**
 
 &nbsp;
 ### Automatically Capturing Errors with Promises
 By default, Sentry for JavaScript captures unhandled promise rejections as described in the official ECMAScript 6 standard.
 
-**[Example Code]**
+**[Mimi note: Example Code]**
 
 Configuration may be required if you are using a third-party library to implement promises:
 
@@ -122,7 +122,7 @@ Please consult your promise library documentation on how to hook into its global
 
 **[Mimi note: Best for when an app is in a broken state, but there are no explicit erros being thrown. So, you want to trigger an error, possibly with extra context passed in for debugging purposes.]**
 
-**[Yes, there's duplicate info. Still thinking on this. Trying to cater to the kind of dev who has a set flow. Usually, 1. Initialize, 2. optionally configure, 3. Manually trigger an error (because you wanna take it out for a test drive)]**
+**[Mimi note: Yes, there's duplicate info. Still thinking on this. Trying to cater to the kind of dev who has a set flow. Usually, 1. Initialize, 2. optionally configure, 3. Manually trigger an error (because you wanna take it out for a test drive)]**
 
 &nbsp;
 ### Capturing Errors / Exceptions
@@ -231,7 +231,7 @@ Sentry.configureScope((scope) => {
 ### Unsetting Context
 Context is held in the current scope and thus is cleared out at the end of each operation --- request, etc. You can also push and pop your own scopes to apply context data to a specific code block or function.
 
-**[code snippet or example here]**
+**[Mimi note: code snippet or example here]**
 
 For more information [have a look at the scopes and hub documentation]({%- link
 _documentation/enriching-error-data/scopes.md -%}).
@@ -298,9 +298,9 @@ We’ll automatically index all tags for an event, as well as the frequency and 
 ### Setting the Level
 You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe and `debug` is the least severe.
 
-**[Is there a way to set the level in a manually triggered event? This way, the level isn't sent in scope -- which could be over complicated/messy.]**
+**[Mimi note: Is there a way to set the level in a manually triggered event? This way, the level isn't sent in scope -- which could be over complicated/messy.]**
 
-**[vv this example doesn't actually set a level??]**
+**[Mimi note: vv this example doesn't actually set a level?? It's what I found under Context > Setting the Level]**
 ```
 Sentry.configureScope((scope) => {
   scope.setExtra("character_name", "Mighty Fighter");
@@ -419,11 +419,11 @@ Sentry supports un-minifying JavaScript via source maps. This lets you view sour
 
 When you're using the Sentry JavaScript SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. However, you may have legitimate reasons for [disabling the JavaScript source fetching in Sentry](https://blog.sentry.io/2018/07/17/source-code-fetching).
 
-**[How do you "turn on" Source Maps]**
+**[Mimi note: How do you "turn on" Source Maps]**
 
-**[Add Hosting/Uploading pg]**
+**[Mimi note: Add Hosting/Uploading pg]**
 
-**[How do you enable Source Maps only for Sentry? -- Don't want users to see the data. Remain obfuscated.]**
+**[Mimi note: How do you enable Source Maps only for Sentry? -- Don't want users to see the data. Remain obfuscated.]**
 
 For more information, see:
 
@@ -561,7 +561,7 @@ For example, a user clicking on a button on your website is making an XHR reques
 ### Collecting User Feedback
 Sentry provides the ability to collect additional feedback from the user upon hitting an error. This is primarily useful in situations where you might generally render a plain error page (the classic 500.html). To collect the feedback, an embeddable JavaScript widget is available, which the Sentry SDK can show to your users on demand.
 
-**[screenshot of widget]**
+**[Mimi note: screenshot of widget]**
 
 For more information, [check out the docs on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
 
