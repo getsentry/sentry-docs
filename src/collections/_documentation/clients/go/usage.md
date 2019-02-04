@@ -33,7 +33,7 @@ Other than regular Errors and Panics, there are also two additional methods that
 
 ## Capturing Messages
 
-`CaptureMessage` and it's sibling `CaptureMessageAndWait` let you send arbitrary messages that will be logged in your Sentry's project.
+`CaptureMessage` and it's sibling `CaptureMessageAndWait` let you send arbitrary messages that the SDK will log in your Sentry project.
 
 ```go
 raven.CaptureMessageAndWait("Something bad happened and I would like to know about that", map[string]string{"category": "logging"})
@@ -41,7 +41,7 @@ raven.CaptureMessageAndWait("Something bad happened and I would like to know abo
 
 ## Capturing Events
 
-`Capture` is a low-level method that can be used to deliver hand-crafter events (named type Packet in our Go SDK). It has no `CaptureAndWait` counterpart, but returns a channel in case you want to verify delivery status.
+`Capture` is a low-level method that can be used to deliver hand-crafter events (named type Packet in The Sentry Go SDK). It has no `CaptureAndWait` counterpart, but returns a channel in case you want to verify delivery status.
 To form a `Packet`, you can use `Packet` type directly, or `NewPacket` and `NewPacketWithExtra` helper methods which creates an empty event with a message and optional extra data.
 
 ```go
@@ -62,7 +62,7 @@ To read more about it, see [Context]({%- link _documentation/clients/go/context.
 
 ## Event Sampling
 
-To setup client side sampling you can use `SetSampleRate` Client function. Error sampling is disabled by default (sampleRate=1).
+To set up client-side sampling you can use `SetSampleRate` Client function. The Sentry SDK disables error sampling by default (sampleRate=1).
 
 ```go
 raven.SetSampleRate(0.25)

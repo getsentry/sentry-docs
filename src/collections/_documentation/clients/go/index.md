@@ -5,7 +5,7 @@ sidebar_relocation: platforms
 ---
 
 {% capture __alert_content -%}
-The Go SDK is maintained and supported by Sentry but currently under development. Learn more about the project on [GitHub](https://github.com/getsentry/raven-go).
+The Sentry Go SDK is maintained and supported by Sentry but currently under development. Learn more about the project on [GitHub](https://github.com/getsentry/raven-go).
 {%- endcapture -%}
 {%- include components/alert.html
   level="warning"
@@ -33,7 +33,7 @@ $ go get github.com/getsentry/raven-go
 
 ## Configuration {#configure}
 
-To use `raven-go`, you’ll need to import the `raven` package, then initilize your DSN globally. If you specify the `SENTRY_DSN` environment variable, this will be done automatically for you. The release and environment can also be specified in the environment variables `SENTRY_RELEASE` and `SENTRY_ENVIRONMENT` respectively.
+To use `raven-go`, you’ll need to import the `raven` package, then initialize your DSN globally. If you specify the `SENTRY_DSN` environment variable, this will be done automatically for you. The release and environment can also be specified in the environment variables `SENTRY_RELEASE` and `SENTRY_ENVIRONMENT` respectively.
 More on this in [Configuration]({%- link _documentation/clients/go/config.md -%}) section.
 
 ```go

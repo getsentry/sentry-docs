@@ -4,7 +4,7 @@ sidebar_order: 3
 ---
 
 All of the `Capture*` functions accept an additional argument for passing a `map` of tags as the second argument and context data as remaining ones.
-Tags in Sentry help to categories and give you more information about the errors that happened, where other context data is more "environment" specific.
+Tags in Sentry help categorize data and give you more information about the errors that happened, where other context data is more "environment" specific.
 (NOTE: direct low-level `Capture` call accepts second argument only - tags, without additional interfaces)
 
 For example:
@@ -16,12 +16,12 @@ raven.CaptureError(err, map[string]string{"browser": "Firefox"}, &raven.Http{
 })
 ```
 
-This data can be either passed directly to `Capture*` calls or configured globally using functions listed below, if it should be applied to all future events.
+This data can be either passed directly to `Capture*` calls or configured globally using functions listed below, if you decide to apply it to all future events.
 
 {:.config-key}
 ### `SetHttpContext`
 
-Provides information about an HTTP call that was processed when error happened.
+Provides information about an HTTP call that the Sentry SDK processes when the error happens.
 
 ```go
 h := &raven.Http{
@@ -70,7 +70,7 @@ raven.ClearContext()
 {:.config-key}
 ### `WrapWithExtra`
 
-Wraps error object with an arbitrary key/value pair that will be send to Sentry alongside original error.
+Wraps error object with an arbitrary key/value pair that the SDK will send to Sentry alongside the original error.
 
 ```go
 path := "filename.ext"
