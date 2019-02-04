@@ -81,8 +81,7 @@ By calling this function:
 Client.shared?.trackMemoryPressureAsEvent()
 ```
 
-in case your application receives a memory pressure notification, we will store an event to disk.
-In case you application crashes or on the next successful sent, we will send this event to the server.
+In case your application receives a memory pressure notification, we will store an event to disk, on the next app start or successful sent, we will send this event to the server.
 
 ## Change event before sending it {#before-serialize-event}
 
