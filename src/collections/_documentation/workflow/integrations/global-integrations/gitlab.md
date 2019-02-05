@@ -130,3 +130,5 @@ FAQ:
     - This integration is available for organizations on the [Team, Business, or Enterprise plan](https://sentry.io/pricing/).
 - Who has permission to install this?
     - You must have both owner/manager permissions in Sentry and owner permissions in GitLab to successfully install this integration. 
+- I'm using both GitLab on-premise and Sentry on-premise, and I get an error `Error Communicating with GitLab (HTTP 422): unknown error` when I try to use the integration. How can I fix this?
+    - By default, GitLab does not allow Hooks to communicate with the local private network, which prevents the integration with Sentry from working. To allow local network communication in GitLab, enable "Allow requests to the local network from hooks and services" on the `Admin -> Settings -> Network` page.
