@@ -122,12 +122,6 @@ public class MyClass {
 
 In order to use ProGuard with Sentry you will need to upload the proguard mapping files to Sentry by using our Gradle integration (recommended) or manually by using [_sentry-cli_]({%- link _documentation/cli/dif/proguard.md -%})
 
-Note that Sentry currently only supports ProGuard minification, and not the experimental R8 Shrinker. Ensure R8 is disabled by adding the following to your `gradle.properties` file:
-
-```gradle
-android.enableR8=false
-```
-
 ### Gradle Integration
 
 Using Gradle (Android Studio) in your `app/build.gradle` add:
