@@ -53,7 +53,7 @@ Raven.user_context(
   username: current_user.username, # "foo"
 
   # the actor's IP address, if available
-  ip_address: request.ip # '127.0.0.1'
+  ip_address: request.remote_ip # '127.0.0.1'
 )
 ```
 
@@ -62,7 +62,7 @@ When dealing with anonymous users you will still want to send basic user context
 ```ruby
 Raven.user_context(
   # the actor's IP address, if available
-  ip_address: request.ip # '127.0.0.1'
+  ip_address: request.remote_ip # '127.0.0.1'
 )
 ```
 
