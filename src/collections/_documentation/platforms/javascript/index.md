@@ -262,8 +262,8 @@ The TypeScript compiler can output source maps. Configure the `sourceRoot` prope
 
 Source maps can be either:
 
-1.  Served publicly over HTTP alongside your source files.
-2.  Uploaded directly to Sentry (**recommended**).
+1.  Uploaded directly to Sentry (**recommended**).
+2.  Served publicly over HTTP alongside your source files.
 
 ### Hosting Source Map Files
 
