@@ -91,13 +91,11 @@ It's possible to throw strings as errors. In this case, the Sentry SDK will not 
 ### Automatically Capturing Errors
 By including and configuring the Sentry Browser SDK, Sentry will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.  
 
-**[Mimi note: Code Snippet]**
+[{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
 
 &nbsp;
 ### Automatically Capturing Errors with Promises
 By default, Sentry for JavaScript captures unhandled promise rejections as described in the official ECMAScript 6 standard.
-
-**[Mimi note: Example Code]**
 
 Configuration may be required if you are using a third-party library to implement promises:
 
