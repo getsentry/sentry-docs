@@ -258,62 +258,15 @@ The TypeScript compiler can output source maps. Configure the `sourceRoot` prope
 }
 ```
 
-**[Mimi note: How do you enable Source Maps only for Sentry? -- Don't want users to see the data. Remain obfuscated. Added Hosting/Uploading]**
-
+&nbsp;
+### Uploading / Hosting Source Maps
 Source maps can be either:
 
 1.  Uploaded directly to Sentry (**recommended**).
 2.  Served publicly over HTTP alongside your source files.
 
-### Hosting Source Map Files
-
-By default, Sentry will look for source map directives in your compiled JavaScript files, which are located on the last line and have the following format:
-
-```javascript
-//# sourceMappingURL=<url>
-```
-
-When Sentry encounters such a directive, it will resolve the source map URL relative the source file in which it is found, and attempt an HTTP request to fetch it.
-
-So for example, if you have a minified JavaScript file located at `http://example.org/js/app.min.js`. And in that file, on the last line, the following directive is found:
-
-```javascript
-//# sourceMappingURL=app.js.map
-```
-
-Sentry will attempt to fetch `app.js.map` from [http://example.org/js/app.js.map](http://example.org/js/app.js.map).
-
-Alternatively, during source map generation you can specify a fully qualified URL where your source maps are located:
-
-```javascript
-//# sourceMappingURL=http://example.org/js/app.js.map
-```
-
-While making source maps available to Sentry from your servers is the most natural integration, it is not always advisable:
-
--   Sentry may not always be able to reach your servers.
--   If you do not specify versions in your asset URLs, there may be a version mismatch
--   The additional latency may mean that source mappings are not available for all errors.
-
-For these reasons, it is recommended to upload source maps to Sentry beforehand (see below).
-
-{% capture __alert_content -%}
-While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs see: [IP Ranges]({%- link ip-ranges.md -%}#ip-ranges).
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Working Behind a Firewall"
-  content=__alert_content
-%}{% capture __alert_content -%}
-If you want to keep your source maps secret and choose not to upload your source maps directly to Sentry, you can enable the “Security Token” option in your project settings. This will cause outbound requests from Sentry’s servers to URLs originating from your “Allowed Domains” to have the HTTP header “X-Sentry-Token: {token}” appended, where {token} is a secure value you define. You can then configure your web server to allow access to your source maps when this header/token pair is present. You can alternatively override the default header name (X-Sentry-Token) and use HTTP Basic Authentication, e.g. by passing “Authorization: Basic {encoded_password}.”
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Secure Access to Source Maps"
-  content=__alert_content
-%}
-
 &nbsp;
-### Uploading Source Maps to Sentry
-
+#### Uploading Source Maps to Sentry
 Except for [Webpack]({%- link _documentation/platforms/javascript/sourcemaps/generation.md -%}#webpack), the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
 
 Now you need to set up your build system to create a release and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
@@ -414,6 +367,52 @@ For more information, see:
 - [Full Documentation on Source Maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%})
 - [Debuggable JavaScript in Production with Source Maps](https://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps)
 - [4 Reasons Why Your Source Maps are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
+
+&nbsp;
+#### Hosting Source Map Files
+By default, Sentry will look for source map directives in your compiled JavaScript files, which are located on the last line and have the following format:
+
+```javascript
+//# sourceMappingURL=<url>
+```
+
+When Sentry encounters such a directive, it will resolve the source map URL relative the source file in which it is found, and attempt an HTTP request to fetch it.
+
+So for example, if you have a minified JavaScript file located at `http://example.org/js/app.min.js`. And in that file, on the last line, the following directive is found:
+
+```javascript
+//# sourceMappingURL=app.js.map
+```
+
+Sentry will attempt to fetch `app.js.map` from [http://example.org/js/app.js.map](http://example.org/js/app.js.map).
+
+Alternatively, during source map generation you can specify a fully qualified URL where your source maps are located:
+
+```javascript
+//# sourceMappingURL=http://example.org/js/app.js.map
+```
+
+While making source maps available to Sentry from your servers is the most natural integration, it is not always advisable:
+
+-   Sentry may not always be able to reach your servers.
+-   If you do not specify versions in your asset URLs, there may be a version mismatch
+-   The additional latency may mean that source mappings are not available for all errors.
+
+For these reasons, it is recommended to upload source maps to Sentry beforehand (see below).
+
+{% capture __alert_content -%}
+While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs see: [IP Ranges]({%- link ip-ranges.md -%}#ip-ranges).
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Working Behind a Firewall"
+  content=__alert_content
+%}{% capture __alert_content -%}
+If you want to keep your source maps secret and choose not to upload your source maps directly to Sentry, you can enable the “Security Token” option in your project settings. This will cause outbound requests from Sentry’s servers to URLs originating from your “Allowed Domains” to have the HTTP header “X-Sentry-Token: {token}” appended, where {token} is a secure value you define. You can then configure your web server to allow access to your source maps when this header/token pair is present. You can alternatively override the default header name (X-Sentry-Token) and use HTTP Basic Authentication, e.g. by passing “Authorization: Basic {encoded_password}.”
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Secure Access to Source Maps"
+  content=__alert_content
+%}
 
 &nbsp;
 ## Context
