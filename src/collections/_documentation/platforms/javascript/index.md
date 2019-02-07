@@ -127,7 +127,7 @@ The most common form of capturing is to capture errors. In general, if you have 
 For more information, see [Capturing Errors / Exceptions](#capturing-errors).
 
 &nbsp;
-### Generate a Custom Error
+### Using Custom Error Types
 
 You can generate a custom error with `new MyAppError('message')` and by creating a class that extends the built in `Error()` function. For more information, see the [sentry-javascript code example](https://github.com/getsentry/sentry-javascript/blob/master/packages/core/src/error.ts) in GitHub.
 
@@ -466,7 +466,26 @@ Sentry.configureScope((scope) => {
 ### Unsetting Context
 Context is held in the current scope and thus is cleared out at the end of each operation --- request, etc. You can also push and pop your own scopes to apply context data to a specific code block or function.
 
-**[Mimi note: code snippet or example here]**
+There are two different scopes for unsetting context --- a global scope which Sentry does not discard at the end of an operation, and a scope that can be created by the user.
+
+```
+// This will be changed for all future events
+Sentry.configureScope(scope => {
+  scope.setUser(someUser);
+});
+
+// This will be changed only for the error caught inside and automatically discarded afterward
+Sentry.withScope(scope => {
+  scope.setUser(someUser);
+  Sentry.captureException(error);
+});
+```
+
+If you want to remove globally configured data from the scope, you can call:
+
+```
+Sentry.configureScope(scope => scope.clear())
+```
 
 For more information [have a look at the scopes and hub documentation]({%- link
 _documentation/enriching-error-data/scopes.md -%}).
