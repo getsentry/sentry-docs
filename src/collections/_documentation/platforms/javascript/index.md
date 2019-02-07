@@ -118,7 +118,7 @@ Please consult your promise library documentation on how to hook into its global
 &nbsp;
 ## Manually Trigger Errors
 
-**[Mimi note: Best for when an app is in a broken state, but there are no explicit erros being thrown. So, you want to trigger an error, possibly with extra context passed in for debugging purposes.]**
+**[Mimi note: Best for when an app is in a broken state, but there are no explicit errors being thrown. So, you want to trigger an error, possibly with extra context passed in for debugging purposes.]**
 
 **[Mimi note: Yes, there's duplicate info. Still thinking on this. Trying to cater to the kind of dev who has a set flow. Usually, 1. Initialize, 2. optionally configure, 3. Manually trigger an error (because you wanna take it out for a test drive)]**
 
@@ -144,23 +144,8 @@ try {
 You can generate a custom error with `new Error('message')`.
 
 &nbsp;
-### Setting Extra Context
-In addition to the [structured context](#context) that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
-
-```
-Sentry.configureScope((scope) => {
-  scope.setExtra("character_name", "Mighty Fighter");
-});
-```
-
-{% capture __alert_content -%}
-**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data. Sentry does not recommend this, as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay `pending` forever (e.g. in Chrome).
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="warning"
-%}
+### Setting Context
+In addition to the [structured context](#context) that Sentry understands, you can send [arbitrary key/value pairs of data](#extra-context) which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening.
 
 &nbsp;
 ### Capturing Messages
@@ -483,7 +468,7 @@ Sentry supports additional context with events. Often this context is shared amo
 : Arbitrary unstructured data which the Sentry SDK stores with an event sample
 
 &nbsp;
-### Extra Context
+### Extra Context {#extra-context}
 In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
 
 ```
