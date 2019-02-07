@@ -5,14 +5,15 @@ sidebar_order: 8
 
 <!-- WIZARD -->
 ```javascript
-var koa = require('koa');
-var Raven = require('raven');
+var Koa = require('koa');
+var Sentry = require('@sentry/node');
 
-var app = koa();
-Raven.config('___PUBLIC_DSN___').install();
+// var app = koa(); // koa@1.x
+var app = new Koa(); // koa@2.x+ (current)
+Sentry.init({ dns: process.env.SENTRY_DSN });
 
 app.on('error', function (err) {
-    Raven.captureException(err, function (err, eventId) {
+    Sentry.captureException(err, function (err, eventId) {
         console.log('Reported error ' + eventId);
     });
 });
