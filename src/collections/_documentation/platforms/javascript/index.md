@@ -67,7 +67,7 @@ Most SDKs will now automatically collect data if available; some require extra c
 
 &nbsp;
 ## Capturing Errors
-### Capturing Errors/ Exceptions
+### Capturing Errors / Exceptions {#capturing-errors}
 In JavaScript, you can pass an error object to `captureException()` to get it captured as an event.
 
 ```
@@ -123,20 +123,12 @@ Please consult your promise library documentation on how to hook into its global
 **[Mimi note: Yes, there's duplicate info. Still thinking on this. Trying to cater to the kind of dev who has a set flow. Usually, 1. Initialize, 2. optionally configure, 3. Manually trigger an error (because you wanna take it out for a test drive)]**
 
 &nbsp;
-### Capturing Errors / Exceptions
+### Capturing Errors
 
-The most common form of capturing is to capture errors.  What can be captured as an
-error will depend on the platform.  In general if you have something that looks like
-an exception it can be captured.  For some SDKs you can also omit the argument to
-`capture_exception` and it will attempt to capture the current exception.
+The most common form of capturing is to capture errors. In general, if you have something that looks like an exception it can be captured.
 
-```
-try {
-  aFunctionThatMightFail();
-} catch (err) {
-  Sentry.captureException(err);
-}
-```
+For more information, see [Capturing Errors / Exceptions](#capturing-errors).
+
 &nbsp;
 ### Generate a Custom Error
 **[Mimi note: I'd like to flesh this out more, but need help.]**
