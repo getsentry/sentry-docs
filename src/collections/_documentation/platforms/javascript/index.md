@@ -89,7 +89,7 @@ It's possible to throw strings as errors. In this case, the Sentry SDK will not 
 
 &nbsp;
 ### Automatically Capturing Errors
-Sentry attaches global handlers to capture uncaught exceptions and unhandled rejections.
+By including and configuring the Sentry Browser SDK, Sentry will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.  
 
 **[Mimi note: Code Snippet]**
 
@@ -537,10 +537,9 @@ You can set the severity of an event to one of five values: `fatal`, `error`, `w
 
 **[Mimi note: Is there a way to set the level in a manually triggered error? This way, the level isn't set in scope -- which could be overly complicated/messy.]**
 
-**[Mimi note: vv this example doesn't actually set a level?? It's what I found under Context > Setting the Level]**
 ```
 Sentry.configureScope((scope) => {
-  scope.setExtra("character_name", "Mighty Fighter");
+  scope.setLevel('warning');
 });
 ```
 
