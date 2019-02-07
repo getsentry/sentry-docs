@@ -117,10 +117,9 @@ Please consult your promise library documentation on how to hook into its global
 
 &nbsp;
 ## Manually Trigger Errors
+If your app is in a broken state, but error handling isn't throwing explicit errors, you can manually trigger errors.
 
-**[Mimi note: Best for when an app is in a broken state, but there are no explicit errors being thrown. So, you want to trigger an error, possibly with extra context passed in for debugging purposes.]**
-
-**[Mimi note: Yes, there's duplicate info. Still thinking on this. Trying to cater to the kind of dev who has a set flow. Usually, 1. Initialize, 2. optionally configure, 3. Manually trigger an error (because you wanna take it out for a test drive)]**
+**[Mimi note: Trying to cater to the kind of dev who has a set flow. Usually, 1. Initialize, 2. optionally configure, 3. Manually trigger an error (because you wanna take it out for a test drive)]**
 
 &nbsp;
 ### Capturing Errors
@@ -131,9 +130,8 @@ For more information, see [Capturing Errors / Exceptions](#capturing-errors).
 
 &nbsp;
 ### Generate a Custom Error
-**[Mimi note: I'd like to flesh this out more, but need help.]**
 
-You can generate a custom error with `new Error('message')`.
+You can generate a custom error with `new MyAppError('message')` and by creating a class that extends the built in `Error()` function. For more information, see the [sentry-javascript code example](https://github.com/getsentry/sentry-javascript/blob/master/packages/core/src/error.ts) in GitHub.
 
 &nbsp;
 ### Setting Context
@@ -142,18 +140,7 @@ In addition to the [structured context](#context) that Sentry understands, you c
 &nbsp;
 ### Capturing Messages
 
-Another common operation is to capture a bare message.  A message is just some textual
-information that should be sent to Sentry.  Typically messages are not emitted but
-there are situations when this is useful.
-
-```
-Sentry.captureMessage('Something went wrong');
-```
-
-&nbsp;
-### Capturing Events
-
-SDKs also provide ways to capture entire custom event objects. This is what integrations internally use to capture bespoke events that the SDK supplies with a lot of extra data.
+Another common operation is to capture a bare message.  A message is just some textual information that should be sent to Sentry.  Typically messages are not emitted but there are situations when this is useful. For more information, see [Capturing Messages](#messages)
 
 &nbsp;
 ## Source Maps
@@ -721,7 +708,7 @@ Sentry.init({
 For more information, see Sentry's [docs on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%}).
 
 &nbsp;
-### Capturing Messages
+### Capturing Messages {#messages}
 Typically, the Sentry SDK does not emit messages. This is most useful when you've overridden fingerprinting but need to give a useful message.
 
 ```
