@@ -76,6 +76,16 @@ With calls to `capture_exception` or `capture_message` additional data can be su
 > Raven.capture_message("...", :attr => 'value')
 > ```
 
+`backtrace`
+
+: Show backtrace
+
+  ```ruby
+  {
+      :backtrace => 'value'
+  }
+  ```
+
 `extra`
 
 : Additional context for this event. Must be a mapping. Children can be any native JSON type.
