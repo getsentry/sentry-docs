@@ -3,8 +3,6 @@ title: JavaScript
 sidebar_order: 3
 ---
 
-{% include learn-sdk.md platform="javascript" %}
-
 The table below shows supported browsers:
 
 ![Sauce Test Status](https://saucelabs.com/browser-matrix/sentryio.svg)
@@ -54,7 +52,7 @@ The quickest way to get started is to use the CDN hosted version of the JavaScri
 ```
 
 &nbsp;
-### Configuring the SDK with your Data Source Name
+### Connecting the SDK to Sentry
 After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
 **[Mimi note: Drop down here]**
@@ -103,13 +101,13 @@ By default, Sentry for JavaScript captures unhandled promise rejections as descr
 
 Configuration may be required if you are using a third-party library to implement promises:
 
-Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by setting `captureUnhandledRejections` option to `false` and manually hook into such event handler and call `Raven.captureException` or `Raven.captureMessage` directly.
+Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by setting `captureUnhandledRejections` option to `false` and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 For example, the [RSVP.js library](https://github.com/tildeio/rsvp.js/) (used by Ember.js) allows you to bind an event handler to a [global error event](https://github.com/tildeio/rsvp.js#error-handling).
 
 ```
 RSVP.on('error', function(reason) {
-  Raven.captureException(reason);
+  Sentry.captureException(reason);
 });
 ```
 
@@ -179,235 +177,6 @@ Sentry.captureMessage('Something went wrong');
 ### Capturing Events
 
 SDKs also provide ways to capture entire custom event objects. This is what integrations internally use to capture bespoke events that the SDK supplies with a lot of extra data.
-
-&nbsp;
-## Context
-You can also set context when manually triggering events.
-
-### Setting Context {#context}
-Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
-
-**Structured Contexts**
-
-: Specific structured contexts --- OS info, runtime information, etc.  This is typically set automatically.
-
-[**User**](#capturing-the-user)
-
-: Information about the current actor
-
-[**Tags**](#tagging-events)
-
-: Key/value pairs which generate breakdown charts and search filters
-
-[**Level**](#setting-the-level)
-
-: An event's severity 
-
-[**Fingerprint**](#setting-the-fingerprint)
-
-: A value used for grouping events into issues
-
-[**Unstructured Extra Data**](#extra-context)
-
-: Arbitrary unstructured data which the Sentry SDK stores with an event sample
-
-&nbsp;
-### Extra Context
-In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
-
-```
-Sentry.configureScope((scope) => {
-  scope.setExtra("character_name", "Mighty Fighter");
-});
-```
-
-{% capture __alert_content -%}
-**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data. Sentry does not recommend this, as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay `pending` forever (e.g. in Chrome).
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="warning"
-%}
-
-&nbsp;
-### Unsetting Context
-Context is held in the current scope and thus is cleared out at the end of each operation --- request, etc. You can also push and pop your own scopes to apply context data to a specific code block or function.
-
-**[Mimi note: code snippet or example here]**
-
-For more information [have a look at the scopes and hub documentation]({%- link
-_documentation/enriching-error-data/scopes.md -%}).
-
-&nbsp;
-### Capturing the User
-Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
-
-Capturing the user is fairly straight forward:
-
-```
-Sentry.configureScope((scope) => {
-  scope.setUser({"email": "john,doe@example.com"});
-});
-```
-
-Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
-
-`id`
-
-: Your internal identifier for the user.
-
-`username`
-
-: The user's username. Generally used as a better label than the internal ID.
-
-`email`
-
-: An alternative, or addition, to a username. Sentry is aware of email addresses and can show things like Gravatars, unlock messaging capabilities, and more.
-
-`ip_address`
-
-: The IP address of the user. If the user is unauthenticated providing the IP address will suggest that this is unique to that IP. If available, we will attempt to pull this from the HTTP request data.
-
-Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
-
-&nbsp;
-### Tagging Events
-Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and the user can later use them as a breakdown or quick access to finding related events.
-
-Most SDKs generally support configuring tags by configuring the scope:
-
-```
-Sentry.configureScope((scope) => {
-  scope.setTag("page_locale", "de-at");
-});
-```
-
-Several common uses for tags include:
-
--   The hostname of the server
--   The version of your platform (e.g. iOS 5.0)
--   The user’s language
-
-Once you’ve started sending tagged data, you’ll see it show up in a few places:
-
--   The filters within the sidebar on the project stream page.
--   Summarized within an event on the sidebar.
--   The tags page on an aggregated event.
-
-We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
-
-&nbsp;
-### Setting the Level
-You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe and `debug` is the least severe.
-
-**[Mimi note: Is there a way to set the level in a manually triggered error? This way, the level isn't set in scope -- which could be overly complicated/messy.]**
-
-**[Mimi note: vv this example doesn't actually set a level?? It's what I found under Context > Setting the Level]**
-```
-Sentry.configureScope((scope) => {
-  scope.setExtra("character_name", "Mighty Fighter");
-});
-```
-
-&nbsp;
-### Setting the Fingerprint
-Sentry uses one or more "fingerprints" to decide how to group errors into issues. 
-
-For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings.
-
-If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{ { default } }` as one of the items.
-
-For more information, check out [aggregate errors with custom fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
-
-&nbsp;
-#### Minimal Example
-This minimal example will put all exceptions of the current scope into the same issue/group:
-
-```
-Sentry.configureScope((scope) => {
-  scope.setFingerprint(['my-view-function']);
-});
-```
-
-The two common real-world use cases for the `fingerprint` attribute are demonstrated below:
-
-&nbsp;
-#### Example: Split up a group into more groups (groups are too big)
-Your application queries an RPC interface or external API service, so the stack trace is generally the same (even if the outgoing request is very different).
-
-The following example will split up the default group Sentry would create (represented by `{ { default } }`) further, taking some attribute on the error object into account:
-
-[Example written in C#]
-
-```
-using (SentrySdk.Init(o =>
-  {
-    o.BeforeSend = @event =>
-      {
-        if (@event.Exception is SqlConnection ex)
-        {
-          @event.SetFingerprint(new [] {"database-connection-error"});
-        }
-        return @event;
-      };
-  }
-))
-```
-
-&nbsp;
-#### Example: Merge a lot of groups into one group (groups are too small)
-A generic error, such as a database connection error, has many different stack traces and never groups together.
-
-The following example will just completely overwrite Sentry's grouping by omitting `{ { default } }` from the array:
-
-[Example written in C#]
-
-```
-public class MyRpcException : Exception
-{
-  // The name of the RPC function that was called (e.g. "getAllBlogArticles")
-  public string Function { get; set; }
-  
-  // For example a HTTP status code returned by the server.
-  public HttpStatusCode Code { get; set; }
-}
-
-using (SentrySdk.Init(o =>
-{
-  o.BeforeSend = @event =>
-  {
-    if (@event.Exception is MyRpcException ex)
-    {
-      @event.SetFingerprint(
-        new []
-        {
-          "{ { default } }"
-          ex.Function,
-          ex.Code.ToString(),
-        }
-      );
-    }
-    return @event;
-  };
-}
-))
-```
-
-&nbsp;
-## Releases
-A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
- - Determine the issue and regressions introduced in a new release
- - Predict which commit caused an issue and who is likely responsible
- - Resolve issues by including the issue number in your commit message
- - Receive email notifications when your code gets deployed
-
-Additionally, the Sentry SDK uses releases for applying [source maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}).
-
-Setting up releases is a 3-step process:
-1. [Configure Your SDK]({%- link _documentation/workflow/releases.md -%}#configure-sdk)
-2. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
-3. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
 
 &nbsp;
 ## Source Maps
@@ -681,6 +450,235 @@ For more information, see:
 - [Full Documentation on Source Maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%})
 - [Debuggable JavaScript in Production with Source Maps](https://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps)
 - [4 Reasons Why Your Source Maps are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
+
+&nbsp;
+## Context
+You can also set context when manually triggering events.
+
+### Setting Context {#context}
+Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
+
+**Structured Contexts**
+
+: Specific structured contexts --- OS info, runtime information, etc.  This is typically set automatically.
+
+[**User**](#capturing-the-user)
+
+: Information about the current actor
+
+[**Tags**](#tagging-events)
+
+: Key/value pairs which generate breakdown charts and search filters
+
+[**Level**](#setting-the-level)
+
+: An event's severity 
+
+[**Fingerprint**](#setting-the-fingerprint)
+
+: A value used for grouping events into issues
+
+[**Unstructured Extra Data**](#extra-context)
+
+: Arbitrary unstructured data which the Sentry SDK stores with an event sample
+
+&nbsp;
+### Extra Context
+In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
+
+```
+Sentry.configureScope((scope) => {
+  scope.setExtra("character_name", "Mighty Fighter");
+});
+```
+
+{% capture __alert_content -%}
+**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data. Sentry does not recommend this, as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay `pending` forever (e.g. in Chrome).
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+&nbsp;
+### Unsetting Context
+Context is held in the current scope and thus is cleared out at the end of each operation --- request, etc. You can also push and pop your own scopes to apply context data to a specific code block or function.
+
+**[Mimi note: code snippet or example here]**
+
+For more information [have a look at the scopes and hub documentation]({%- link
+_documentation/enriching-error-data/scopes.md -%}).
+
+&nbsp;
+### Capturing the User
+Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
+
+Capturing the user is fairly straight forward:
+
+```
+Sentry.configureScope((scope) => {
+  scope.setUser({"email": "john,doe@example.com"});
+});
+```
+
+Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
+
+`id`
+
+: Your internal identifier for the user.
+
+`username`
+
+: The user's username. Generally used as a better label than the internal ID.
+
+`email`
+
+: An alternative, or addition, to a username. Sentry is aware of email addresses and can show things like Gravatars, unlock messaging capabilities, and more.
+
+`ip_address`
+
+: The IP address of the user. If the user is unauthenticated providing the IP address will suggest that this is unique to that IP. If available, we will attempt to pull this from the HTTP request data.
+
+Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
+
+&nbsp;
+### Tagging Events
+Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and the user can later use them as a breakdown or quick access to finding related events.
+
+Most SDKs generally support configuring tags by configuring the scope:
+
+```
+Sentry.configureScope((scope) => {
+  scope.setTag("page_locale", "de-at");
+});
+```
+
+Several common uses for tags include:
+
+-   The hostname of the server
+-   The version of your platform (e.g. iOS 5.0)
+-   The user’s language
+
+Once you’ve started sending tagged data, you’ll see it show up in a few places:
+
+-   The filters within the sidebar on the project stream page.
+-   Summarized within an event on the sidebar.
+-   The tags page on an aggregated event.
+
+We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
+
+&nbsp;
+### Setting the Level
+You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe and `debug` is the least severe.
+
+**[Mimi note: Is there a way to set the level in a manually triggered error? This way, the level isn't set in scope -- which could be overly complicated/messy.]**
+
+**[Mimi note: vv this example doesn't actually set a level?? It's what I found under Context > Setting the Level]**
+```
+Sentry.configureScope((scope) => {
+  scope.setExtra("character_name", "Mighty Fighter");
+});
+```
+
+&nbsp;
+### Setting the Fingerprint
+Sentry uses one or more "fingerprints" to decide how to group errors into issues. 
+
+For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings.
+
+If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{ { default } }` as one of the items.
+
+For more information, check out [aggregate errors with custom fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
+
+&nbsp;
+#### Minimal Example
+This minimal example will put all exceptions of the current scope into the same issue/group:
+
+```
+Sentry.configureScope((scope) => {
+  scope.setFingerprint(['my-view-function']);
+});
+```
+
+The two common real-world use cases for the `fingerprint` attribute are demonstrated below:
+
+&nbsp;
+#### Example: Split up a group into more groups (groups are too big)
+Your application queries an RPC interface or external API service, so the stack trace is generally the same (even if the outgoing request is very different).
+
+The following example will split up the default group Sentry would create (represented by `{ { default } }`) further, taking some attribute on the error object into account:
+
+[Example written in C#]
+
+```
+using (SentrySdk.Init(o =>
+  {
+    o.BeforeSend = @event =>
+      {
+        if (@event.Exception is SqlConnection ex)
+        {
+          @event.SetFingerprint(new [] {"database-connection-error"});
+        }
+        return @event;
+      };
+  }
+))
+```
+
+&nbsp;
+#### Example: Merge a lot of groups into one group (groups are too small)
+A generic error, such as a database connection error, has many different stack traces and never groups together.
+
+The following example will just completely overwrite Sentry's grouping by omitting `{ { default } }` from the array:
+
+[Example written in C#]
+
+```
+public class MyRpcException : Exception
+{
+  // The name of the RPC function that was called (e.g. "getAllBlogArticles")
+  public string Function { get; set; }
+  
+  // For example a HTTP status code returned by the server.
+  public HttpStatusCode Code { get; set; }
+}
+
+using (SentrySdk.Init(o =>
+{
+  o.BeforeSend = @event =>
+  {
+    if (@event.Exception is MyRpcException ex)
+    {
+      @event.SetFingerprint(
+        new []
+        {
+          "{ { default } }"
+          ex.Function,
+          ex.Code.ToString(),
+        }
+      );
+    }
+    return @event;
+  };
+}
+))
+```
+
+&nbsp;
+## Releases
+A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
+ - Determine the issue and regressions introduced in a new release
+ - Predict which commit caused an issue and who is likely responsible
+ - Resolve issues by including the issue number in your commit message
+ - Receive email notifications when your code gets deployed
+
+Additionally, the Sentry SDK uses releases for applying [source maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}).
+
+Setting up releases is a 3-step process:
+1. [Configure Your SDK]({%- link _documentation/workflow/releases.md -%}#configure-sdk)
+2. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
+3. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
 
 &nbsp;
 ## Advanced Usage
