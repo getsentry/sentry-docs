@@ -552,11 +552,26 @@ We’ll automatically index all tags for an event, as well as the frequency and 
 ### Setting the Level
 You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe and `debug` is the least severe.
 
-**[Mimi note: Is there a way to set the level in a manually triggered error? This way, the level isn't set in scope -- which could be overly complicated/messy.]**
+To set the level out of scope, you can call `captureMessage()` per event:
+
+```
+Sentry.captureMessage('this is a debug message', 'debug');
+```
+
+To set the level within scope, you can call `setLevel()`:
 
 ```
 Sentry.configureScope((scope) => {
   scope.setLevel('warning');
+});
+```
+
+or per event:
+
+```
+Sentry.withScope((scope) => {
+  scope.setLevel("info");
+  Sentry.captureException(error);
 });
 ```
 
