@@ -3,19 +3,17 @@ title: JavaScript
 sidebar_order: 3
 ---
 
-The table below shows supported browsers:
 
-![Sauce Test Status](https://saucelabs.com/browser-matrix/sentryio.svg)
 
 {% capture __alert %}
-Our SDK needs a polyfill for `Promise` in older browsers like IE 11 and below. 
-Please add this script tag below before loading our SDK. 
-If you are using the npm package, please use a polyfill for `Promise` respectively.
+Our SDK needs a polyfill for `Promise` in older browsers like IE 11 and lower. 
+Please add the script tag below before loading our SDK. The polyfill script for `Promise` is also recommended if you're using an npm package.
+
 ```
 <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Promise"></script>
 ```
 
-Additionally, keep in mind to also define `<!doctype html>` on top of your HTML page, to make sure IE does not go into compatibility mode.
+Additionally, keep in mind to define `<!doctype html>` on top of your HTML page, to make sure IE does not go into compatibility mode.
 {% endcapture %}
 
 {% include components/alert.html
@@ -23,6 +21,8 @@ Additionally, keep in mind to also define `<!doctype html>` on top of your HTML 
   content=__alert
   level="warning"
 %}
+
+Check out this [browser table](#browser-table) for a complete list of supported browsers.
 
 &nbsp;
 ## Integrating the SDK
@@ -664,6 +664,11 @@ Setting up releases is a 3-step process:
 1. [Configure Your SDK]({%- link _documentation/workflow/releases.md -%}#configure-sdk)
 2. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
 3. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
+
+&nbsp;
+## Supported Browsers {#browser-table}
+
+![Sauce Test Status](https://saucelabs.com/browser-matrix/sentryio.svg)
 
 &nbsp;
 ## Advanced Usage
