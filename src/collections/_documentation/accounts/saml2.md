@@ -1,6 +1,6 @@
 ---
 title: 'SAML2 Integration'
-sidebar_order: 4
+sidebar_order: 5
 ---
 
 Sentry provides a generic auth provider for [SAML2 based authentication](https://en.wikipedia.org/wiki/Security_Assertion_Markup_Language), which allows Owners of a Sentry organization to manually configure any SAML2-enabled IdP system. Documented below are the general steps for integration.
