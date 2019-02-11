@@ -809,7 +809,7 @@ For example, a user clicking on a button on your website is making an XHR reques
 ### Collecting User Feedback
 Sentry provides the ability to collect additional feedback from the user upon hitting an error. This is primarily useful in situations where you might generally render a plain error page (the classic 500.html). To collect the feedback, an embeddable JavaScript widget is available, which the Sentry SDK can show to your users on demand.
 
-**[Mimi note: screenshot of widget]**
+[{% asset js-index/sentry-dialog.png alt="Modal popup asking user for more context on what occured before the break." %}]({% asset js-index/sentry-dialog.png @path %})
 
 For more information, [check out the docs on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
 
