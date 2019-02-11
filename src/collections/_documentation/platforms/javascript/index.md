@@ -128,8 +128,7 @@ For more information, see [Capturing Errors / Exceptions](#capturing-errors).
 
 &nbsp;
 ### Using Custom Error Types
-
-You can generate a custom error with `new MyAppError('message')` and by creating a class that extends the built in `Error()` function. For more information, see the [sentry-javascript code example](https://github.com/getsentry/sentry-javascript/blob/master/packages/core/src/error.ts) in GitHub.
+If you want to define your own error types, you can generate a custom error with `new MyAppError('message')` and by creating a class that extends the built in `Error()`. You can also attach additional data to your error instance and Sentry will parse it along with your error.
 
 &nbsp;
 ### Setting Context
