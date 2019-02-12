@@ -28,9 +28,9 @@ Check out this [browser table](#browser-table) for a complete list of supported 
 ## Integrating the SDK
 All our JavaScript-related SDKs provide the same API. Still, there are some differences between them, such as installation, which this section of the docs explains.
 
-**[Mimi note: Drop down here]**
+**[Mimi note: Drop-down here]**
 
-**[Mimi note: Dropdown which affects install instructions are shown (if nothing is provided in the URL, defaults to browser)]**
+**[Mimi note: Drop-down which affects install instructions are shown (if nothing is provided in the URL, defaults to browser)]**
 
 - In the browser
 - Angular
@@ -128,7 +128,7 @@ For more information, see [Capturing Errors / Exceptions](#capturing-errors).
 
 &nbsp;
 ### Using Custom Error Types
-If you want to define your own error types, you can generate a custom error with `new MyAppError('message')` and by creating a class that extends the built in `Error()`. You can also attach additional data to your error instance and Sentry will parse it along with your error.
+If you want to define your own error types, you can generate a custom error with `new MyAppError('message')` and by creating a class that extends the built in `Error()`. You can also attach additional data to your error instance and Sentry will parse it along with your error, just like it does with regular errors.
 
 &nbsp;
 ### Setting Context
