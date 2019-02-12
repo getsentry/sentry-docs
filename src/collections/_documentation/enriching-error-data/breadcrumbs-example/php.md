@@ -1,7 +1,5 @@
 ```php
-use Sentry\Breadcrumb;
-
-\Sentry\addBreadcrumb(new Breadcrumb(
+\Sentry\addBreadcrumb(new \Sentry\Breadcrumb(
   Breadcrumb::LEVEL_ERROR, 
   Breadcrumb::TYPE_ERROR, 
   'error_reporting', 

@@ -1,12 +1,10 @@
 
 ```php
-use Sentry\State\Scope;
-
-\Sentry\withScope(function (Scope $scope): void {
+\Sentry\withScope(function (\Sentry\State\Scope $scope): void {
   $scope->setTag('my-tag', 'my value');
-  $scope->setLevel(Severity::warning());
+  $scope->setLevel(\Sentry\Severity::warning());
   // will be tagged with my-tag="my value"
-  captureException(new \Throwable('my error'))
+  \Sentry\captureException(new \Throwable('my error'))
 });
 
 // will not be tagged with my-tag
