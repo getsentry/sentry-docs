@@ -12,7 +12,7 @@ Additionally, the Vue _integration_ will capture the name and props state of the
 
 Passing in `Vue` is optional, if you do not pass it `window.Vue` has to be present.
 
-Passing in `attachProps` is optional. If you set it to false, Sentry will suppress sending all Vue components' props for logging.
+Passing in `attachProps` is optional and is `true` if it is not provided. If you set it to `false`, Sentry will suppress sending all Vue components' props for logging.
 
 {% capture __alert %}
 Please note that if you enable this integration Vue internally will not call `logError` 
