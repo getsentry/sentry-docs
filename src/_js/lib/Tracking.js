@@ -21,6 +21,9 @@ const init = function() {
     while (loadIfTrackersOk.length > 0) {
       loadIfTrackersOk.shift()();
     }
+    window.ra.event('docs.cookie_consent', {
+      consent: 'yes',
+    });
   };
 
   const rejectTrackers = function() {
@@ -28,6 +31,9 @@ const init = function() {
       localStorage.setItem(namespace, false);
       $('[data-tracking-widget]').addClass('d-none');
     }
+    window.ra.event('docs.cookie_consent', {
+      consent: 'no',
+    });
   };
 
   // If we have not been given permission to track yet, show the banner.
