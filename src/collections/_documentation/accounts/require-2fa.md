@@ -84,4 +84,4 @@ If you were removed from an organization due to 2FA non-compliance, follow these
     [{% asset require-2fa-add-auth.png %}]({% asset require-2fa-add-auth.png @path %})
     
 1. Once you've enrolled in 2FA, remember to save your recovery codes in a safe place and consider adding a backup phone number.
-1. Then use the left sidebar to navagiate to your organization.
+1. Then use the left sidebar to navigate to your organization.
