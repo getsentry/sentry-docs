@@ -80,5 +80,8 @@ If you were removed from an organization due to 2FA non-compliance, follow these
     [{% asset require-2fa-rejoin.png %}]({% asset require-2fa-rejoin.png @path %})
     
 1. This will take you to your **Account Settings** >> [Security](https://sentry.io/settings/account/security/) page where you need to setup at least one form of two-factor authentication.
+
+    [{% asset require-2fa-add-auth.png %}]({% asset require-2fa-add-auth.png @path %})
+    
 1. Once you've enrolled in 2FA, remember to save your recovery codes in a safe place and consider adding a backup phone number.
-1. At the top left corner of the page, click **Back to Organization** to return to your organization.
+1. Then use the left sidebar to navigate to your organization.
