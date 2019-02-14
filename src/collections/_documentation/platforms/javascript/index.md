@@ -28,40 +28,13 @@ Check out this [browser table](#browser-table) for a complete list of supported 
 ## Integrating the SDK
 All our JavaScript-related SDKs provide the same API. Still, there are some differences between them, such as installation, which this section of the docs explains.
 
-**[Mimi note: Drop-down here]**
-
-**[Mimi note: Drop-down which affects install instructions are shown (if nothing is provided in the URL, defaults to browser)]**
-
-- In the browser
-- Angular
-- Electron
-    - Includes some minidump explanation, maybe redirects to the native page
-- Ember
-- Node.js
-- React
-    - Includes a note pointing to React Native
-- Vue
-- Cordova
-- Ionic
-
-The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
-
-```
-<script src="https://browser.sentry-cdn.com/4.5.3/bundle.min.js" crossorigin="anonymous"></script>
-
-```
+{% include components/platform_content.html content_dir='getting-started-install' %}
 
 &nbsp;
 ### Connecting the SDK to Sentry
 After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
-**[Mimi note: Drop down here]**
-
-You should `init` the Sentry Browser SDK as soon as possible during your page load:
-
-```
-Sentry.init({ dsn: 'https://<key>@sentry.io/<project>' });
-```
+{% include components/platform_content.html content_dir='getting-started-dsn' %}
 
 Most SDKs will now automatically collect data if available; some require extra configuration as automatic error collecting is not possible due to platform limitations.
 
