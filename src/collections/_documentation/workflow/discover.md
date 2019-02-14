@@ -148,7 +148,7 @@ common_tags:
 ---
 
 {% capture __alert_content -%}
-Discover is currently available as a beta release to business plans and select customers only.
+Discover is currently available as a beta release to Business plans.
 {%- endcapture -%}
 {%- include components/alert.html
   level="warning"
