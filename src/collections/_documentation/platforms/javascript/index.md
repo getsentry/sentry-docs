@@ -47,7 +47,7 @@ Sentry.captureException(new Error(‘This is my fake error message’));
 ```
 Then, you can see the error in your dashboard:
 
-[{% asset js-index/fake-error.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/fake-error.png @path %})
+[{% asset js-index/error-message.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/error-message.png @path %})
 
 &nbsp;
 ## Capturing Errors
@@ -997,7 +997,8 @@ Event and Breadcrumb `hints` are objects containing various information used to 
 
 They are available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProcessors`. Those are two ways we'll allow users to modify what we put together.
 
-### Hints for Events
+&nbsp;
+#### Hints for Events
 
 `originalException`
 
@@ -1008,7 +1009,8 @@ They are available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProc
 : When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a
 basic stack trace. This exception is stored here for further data extraction.
 
-### Hints for Breadcrumbs
+&nbsp;
+#### Hints for Breadcrumbs
 
 `event`
 
