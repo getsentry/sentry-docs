@@ -386,7 +386,7 @@ Sentry supports additional context with events. Often this context is shared amo
 
 : Key/value pairs which generate breakdown charts and search filters
 
-[**Level**](#setting-the-level)
+[**Level**](#level)
 
 : An event's severity 
 
