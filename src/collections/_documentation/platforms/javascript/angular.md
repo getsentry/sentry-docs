@@ -6,6 +6,13 @@ sidebar_order: 35
 <!-- WIZARD -->
 This document uses Angular to refer to Angular 2+. If you use AngularJS, you'll need to use our [legacy integration]({%- link _documentation/clients/javascript/integrations/angularjs.md -%}).
 
+To install a SDK, simply add the high-level package, for example:
+
+```
+npm install --save @sentry/browser
+yarn add @sentry/browser
+```
+
 On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
 
 Additionally, `@sentry/browser` can be configured to catch any Angular-specific (2.x) exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component.
