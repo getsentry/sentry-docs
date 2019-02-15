@@ -119,7 +119,7 @@ $ composer require sentry/sentry-laravel:{% sdk_version sentry.php.laravel %} ph
 Register Sentry in `bootstrap/app.php`:
 
 ```php
-$app->register('Sentry\Laravel\LumenServiceProvider');
+$app->register('Sentry\Laravel\ServiceProvider');
 
 # Sentry must be registered before routes are included
 require __DIR__ . '/../app/Http/routes.php';
