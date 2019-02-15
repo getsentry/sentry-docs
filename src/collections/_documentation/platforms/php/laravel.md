@@ -54,10 +54,6 @@ SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
 <!-- ENDWIZARD -->
 
-### User Feeback
-
-To see how to show user feedback dialog see: [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md %}?platform=laravel)
-
 ## Laravel 4.x
 
 Install the `sentry/sentry-laravel` package:
@@ -173,6 +169,14 @@ Defaults to `true`.
 ```php
 'breadcrumbs.sql_bindings' => false,
 ```
+
+## User Feedback
+
+To see how to show user feedback dialog see: [User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}?platform=laravel)
+
+## User Context
+
+To see how to setup the user context see: [User Context]({%- link _documentation/enriching-error-data/context.md -%}?platform=laravel#capturing-the-user)
 
 ## Using Laravel 5.6 log channels
 
