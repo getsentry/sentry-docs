@@ -39,6 +39,17 @@ After you've completed setting up a project in Sentry, Sentry will give you a va
 Most SDKs will now automatically collect data if available; some require extra configuration as automatic error collecting is not possible due to platform limitations.
 
 &nbsp;
+### Verifying Your Setup
+Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
+
+```
+Sentry.captureException(new Error(‘This is my fake error message’));
+```
+Then, you can see the error in your dashboard:
+
+[{% asset js-index/fake-error.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/fake-error.png @path %})
+
+&nbsp;
 ## Capturing Errors
 ### Capturing Errors / Exceptions {#capturing-errors}
 In JavaScript, you can pass an error object to `captureException()` to get it captured as an event.
@@ -87,32 +98,6 @@ RSVP.on('error', function(reason) {
 Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
 
 &nbsp;
-## Manually Trigger Errors
-If your app is in a broken state, but error handling isn't throwing explicit errors, you can manually trigger errors.
-
-**[Mimi note: Trying to cater to the kind of dev who has a set flow. Usually, 1. Initialize, 2. optionally configure, 3. Manually trigger an error (because you wanna take it out for a test drive)]**
-
-&nbsp;
-### Capturing Errors
-
-The most common form of capturing is to capture errors. In general, if you have something that looks like an exception it can be captured.
-
-For more information, see [Capturing Errors / Exceptions](#capturing-errors).
-
-&nbsp;
-### Using Custom Error Types
-If you want to define your own error types, you can generate a custom error with `new MyAppError('message')` and by creating a class that extends the built in `Error()`. You can also attach additional data to your error instance and Sentry will parse it along with your error, just like it does with regular errors.
-
-&nbsp;
-### Setting Context
-In addition to the [structured context](#context) that Sentry understands, you can send [arbitrary key/value pairs of data](#extra-context) which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening.
-
-&nbsp;
-### Capturing Messages
-
-Another common operation is to capture a bare message.  A message is just some textual information that should be sent to Sentry.  Typically messages are not emitted but there are situations when this is useful. For more information, see [Capturing Messages](#messages)
-
-&nbsp;
 ## Source Maps
 
 {% include components/alert.html
@@ -124,8 +109,6 @@ Another common operation is to capture a bare message.  A message is just some t
 Sentry supports un-minifying JavaScript via source maps. This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (e.g. UglifyJS), or transpiled code from a higher-level language (e.g. TypeScript, ES6).
 
 When you're using the Sentry JavaScript SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. However, you may have legitimate reasons for [disabling the JavaScript source fetching in Sentry](https://blog.sentry.io/2018/07/17/source-code-fetching).
-
-**[Mimi note: How do you "turn on" Source Maps? This feels like an important question to answer right away. Added Generating Source Maps below.]**
 
 &nbsp;
 ### Generating Source Maps
@@ -521,7 +504,7 @@ Once you’ve started sending tagged data, you’ll see it show up in a few plac
 We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
 
 &nbsp;
-### Setting the Level
+### Setting the Level {#level}
 You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe and `debug` is the least severe.
 
 To set the level out of scope, you can call `captureMessage()` per event:
@@ -714,8 +697,21 @@ For more information, see Sentry's [docs on Filtering Events]({%- link _document
 Typically, the Sentry SDK does not emit messages. This is most useful when you've overridden fingerprinting but need to give a useful message.
 
 ```
-Sentry.captureMessage('Something went wrong');
+Sentry.captureMessage('Some message', level);
+
+// Where `level` can be one of:
+// 'fatal', 'error', 'warning', 'log', 'info, 'debug', 'critical'
+
+Sentry.captureMessage('This shouldnt happen', 'info');
+
+// or more explicit
+
+Sentry.withScope((scope) => {
+  scope.setLevel('info');
+  Sentry.captureMessage('This shouldnt happen');
+});
 ```
+For more information, see [Setting the Level](#level).
 
 &nbsp;
 ### Lazy Loading Sentry
