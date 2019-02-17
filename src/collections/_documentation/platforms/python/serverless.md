@@ -34,6 +34,6 @@ def my_function(...):
 
   When there are no events to be sent, this will not add a delay. However, if there are errors, this will delay the return of your serverless function until the events are sent. This is necessary as serverless environments typically reserve the right to kill the runtime/VM when they consider it unused.
 
-  The maximum amount of time to block overall is set by the [`shutdown_timeout` client option]({% link _documentation/error-reporting/configuration.md %}?platform=python#shutdown-timeout).
+  The maximum amount of time to block overall is set by the [`shutdown_timeout` client option]({% link _documentation/error-reporting/configuration/index.md %}?platform=python#shutdown-timeout).
 
   You can disable this aspect by decorating with `@serverless_function(flush=False)` instead.
