@@ -25,17 +25,21 @@ SDK. A call to `sentry_sdk.init` configures integrations. Unless you set `defaul
 * [Pyramid]({% link _documentation/platforms/python/pyramid.md %})
 * [AIOHTTP]({% link _documentation/platforms/python/aiohttp.md %})
 * [Tornado]({% link _documentation/platforms/python/tornado.md %})
+* [Generic WSGI]({% link _documentation/platforms/python/wsgi.md %})
 
 ### Task Queues
 
 * [Celery]({% link _documentation/platforms/python/celery.md %})
 * [RQ (Redis Queue)]({% link _documentation/platforms/python/rq.md %})
 
+### Serverless
+
+* [AWS Lambda]({% link _documentation/platforms/python/aws_lambda.md %})
+* [Generic Serverless]({% link _documentation/platforms/python/serverless.md %})
+
 ### Other Integrations
 
 * [Logging]({% link _documentation/platforms/python/logging.md %})
-* [AWS Lambda]({% link _documentation/platforms/python/aws_lambda.md %})
-* [WSGI]({% link _documentation/platforms/python/wsgi.md %})
 * [Default integrations]({% link _documentation/platforms/python/default-integrations.md %})
 
 {% capture __alert_content -%}

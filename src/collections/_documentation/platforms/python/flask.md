@@ -39,7 +39,10 @@ Framework](http://flask.pocoo.org/).
 
 * {% include platforms/python/request-data.md %}
 
-* If you use ``flask-login`` and have set ``send_default_pii=True`` in your call to ``init``, user data (current user id, email address, username) is attached to the event.
+* If you use ``flask-login`` and have set ``send_default_pii=True`` in your
+  call to ``init``, user data is attached to the event. Apart from the user ID
+  we will try to access the attributes `email` and `username` on your user
+  object to capture some more data.
 
 * Logging with `app.logger` or *any* logger will create breadcrumbs when
   the [Logging]({% link _documentation/platforms/python/logging.md %})
