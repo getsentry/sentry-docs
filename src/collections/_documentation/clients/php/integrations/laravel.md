@@ -55,7 +55,7 @@ SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 
 Finally, if you wish to wire up User Feedback, you can do so by creating a custom error view in _resources/views/errors/500.blade.php_.
 
-For Laravel 5 up to 5.4 you need to open up `App/Exceptions/Handler.php` and extend the `render` method to make sure the 500 error is rendered as a view correctly, in 5.5+ this step is not required anymore an you can skip ahead to the next one:
+For Laravel 5 up to 5.4 you need to open up `App/Exceptions/Handler.php` and extend the `render` method to make sure the 500 error is rendered as a view correctly, in 5.5+ this step is not required anymore and you can skip ahead to the next one:
 
 ```php
 <?php
