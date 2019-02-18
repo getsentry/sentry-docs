@@ -54,10 +54,6 @@ SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
 <!-- ENDWIZARD -->
 
-### User Feeback
-
-To see how to show user feedback dialog see: [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md %}?platform=laravel)
-
 ## Laravel 4.x
 
 Install the `sentry/sentry-laravel` package:
@@ -119,7 +115,7 @@ $ composer require sentry/sentry-laravel:{% sdk_version sentry.php.laravel %} ph
 Register Sentry in `bootstrap/app.php`:
 
 ```php
-$app->register('Sentry\Laravel\LumenServiceProvider');
+$app->register('Sentry\Laravel\ServiceProvider');
 
 # Sentry must be registered before routes are included
 require __DIR__ . '/../app/Http/routes.php';
@@ -172,6 +168,50 @@ Defaults to `true`.
 
 ```php
 'breadcrumbs.sql_bindings' => false,
+```
+
+## User Feedback
+
+To see how to show user feedback dialog see: [User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}?platform=laravel)
+
+## User Context
+
+Starting with Laravel 5.3 we can automatically add the authenticated user id to the scope if [`send_default_pii`]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php#send-default-pii) option is set to `true` in your `config/sentry.php`.
+
+The mechanism to add more user context to the scope will vary depending on which version of Laravel you're using, but the general approach is the same. Find a good entry point to your application in which the context you want to add is available, ideally early in the process.
+
+In the following example, we'll use a middleware to add the user information if a user is logged in:
+
+```php
+namespace App\Http\Middleware;
+
+use Closure;
+use Sentry\State\Scope;
+
+class SentryContext
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \Closure                 $next
+     *
+     * @return mixed
+     */
+    public function handle($request, Closure $next)
+    {
+        if (auth()->check() && app()->bound('sentry')) {
+            \Sentry\configureScope(function (Scope $scope): void {
+                $scope->setUser([
+                    'id' => auth()->user()->id,
+                    'email' => auth()->user()->email,
+                ]);
+            });
+        }
+
+        return $next($request);
+    }
+}
 ```
 
 ## Using Laravel 5.6 log channels
