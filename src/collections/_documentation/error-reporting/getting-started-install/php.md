@@ -22,5 +22,5 @@ If you want to use Guzzle as an underlying HTTP client, you just need to run the
 following command to install the adapter and Guzzle itself:
 
 ```bash
-php composer.phar require php-http/guzzle6-adapter
+php composer.phar require php-http/guzzle6-adapter ^1.1
 ```
