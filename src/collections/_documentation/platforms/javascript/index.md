@@ -421,8 +421,8 @@ If you want to remove globally configured data from the scope, you can call:
 Sentry.configureScope(scope => scope.clear())
 ```
 
-For more information [have a look at the scopes and hub documentation]({%- link
-_documentation/enriching-error-data/scopes.md -%}).
+For more information, have a look at [the scopes and hub documentation]({%- link
+_documentation/enriching-error-data/scopes.md -%}) and [Debug Tough Front End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues).
 
 &nbsp;
 ### Capturing the User
@@ -517,7 +517,7 @@ For some very advanced use cases, you can override the Sentry default grouping u
 
 If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{ { default } }` as one of the items.
 
-For more information, check out [aggregate errors with custom fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
+For more information, check out [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
 &nbsp;
 #### Minimal Example
@@ -603,10 +603,14 @@ A release is a version of your code that you deploy to an environment. When you 
 
 Additionally, the Sentry SDK uses releases for applying [source maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}).
 
+&nbsp;
 Setting up releases is a 3-step process:
 1. [Configure Your SDK]({%- link _documentation/workflow/releases.md -%}#configure-sdk)
 2. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
 3. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
+
+&nbsp;
+For more information, take a look at [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
 
 &nbsp;
 ## Supported Browsers {#browser-table}
@@ -668,7 +672,7 @@ window.addEventListener('resize', function(event){
 })
 ```
 
-For more information, see Sentry's [Breadcrumbs docs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}).
+For more information, see Sentry's [Breadcrumbs docs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}) and [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
 &nbsp;
 ### Filter Events & Custom Logic
@@ -687,7 +691,7 @@ Sentry.init({
 });
 ```
 
-For more information, see Sentry's [docs on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%}).
+For more information, see Sentry's [docs on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%}), [Tips for Reducing JavaScript Error Noise](https://blog.sentry.io/2017/03/27/tips-for-reducing-javascript-error-noise.html), and [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 
 &nbsp;
 ### Capturing Messages {#messages}
@@ -776,7 +780,7 @@ Sentry provides the ability to collect additional feedback from the user upon hi
 
 [{% asset js-index/sentry-dialog.png alt="Modal popup asking user for more context on what occured before the break." %}]({% asset js-index/sentry-dialog.png @path %})
 
-For more information, [check out the docs on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
+For more information, check out the [docs on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}) and [Introducing User Feedback](https://blog.sentry.io/2016/04/21/introducing-user-feedback).
 
 &nbsp;
 ### Security Policy Reporting
