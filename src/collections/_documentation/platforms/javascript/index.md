@@ -3,27 +3,6 @@ title: JavaScript
 sidebar_order: 3
 ---
 
-
-
-{% capture __alert %}
-Our SDK needs a polyfill for `Promise` in older browsers like IE 11 and lower. 
-Please add the script tag below before loading our SDK. The polyfill script for `Promise` is also recommended if you're using an npm package.
-
-```
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Promise"></script>
-```
-
-Additionally, keep in mind to define `<!doctype html>` on top of your HTML page, to make sure IE does not go into compatibility mode.
-{% endcapture %}
-
-{% include components/alert.html
-  title="Support for <= IE 11"
-  content=__alert
-  level="warning"
-%}
-
-Check out this [browser table](#browser-table) for a complete list of supported browsers.
-
 &nbsp;
 ## Integrating the SDK
 All our JavaScript-related SDKs provide the same API. Still, there are some differences between them, such as installation, which this section of the docs explains.
@@ -633,6 +612,24 @@ Setting up releases is a 3-step process:
 ## Supported Browsers {#browser-table}
 
 ![Sauce Test Status](https://saucelabs.com/browser-matrix/sentryio.svg)
+
+&nbsp;
+{% capture __alert %}
+Our SDK needs a polyfill for `Promise` in older browsers like IE 11 and lower. 
+Please add the script tag below before loading our SDK. The polyfill script for `Promise` is also recommended if you're using an npm package.
+
+```
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Promise"></script>
+```
+
+Additionally, keep in mind to define `<!doctype html>` on top of your HTML page, to make sure IE does not go into compatibility mode.
+{% endcapture %}
+
+{% include components/alert.html
+  title="Support for <= IE 11"
+  content=__alert
+  level="warning"
+%}
 
 &nbsp;
 ## Advanced Usage
