@@ -40,3 +40,5 @@ With the AWS Lambda integration enabled, the Python SDK will:
     %}
 
 * {% include platforms/python/request-data.md %}
+
+* Generally the behavior is quite similar to the [generic serverless integration]({% link _documentation/platforms/python/serverless.md %}).

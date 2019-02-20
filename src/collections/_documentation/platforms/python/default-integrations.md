@@ -53,3 +53,12 @@ Adds `sys.argv` as `extra` attribute to each event.
 *Import name: `sentry_sdk.integrations.logging.LoggingIntegration`*
 
 See [_Logging_]({% link _documentation/platforms/python/logging.md %})
+
+## Threading
+*Import name: `sentry_sdk.integrations.logging.LoggingIntegration`*
+
+{% version_added 0.7.3 %}
+
+Reports crashing threads.
+
+It also accepts an option `propagate_hub` that changes the way clients are transferred between threads, and transfers scope data (such as tags) from the parent thread to the child thread. This option is currently disabled (`False`) by default, but this will likely change in the future.
