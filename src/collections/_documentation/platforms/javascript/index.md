@@ -60,7 +60,7 @@ By including and configuring the Sentry Browser SDK, Sentry will automatically a
 ### Automatically Capturing Errors with Promises
 By default, Sentry for JavaScript captures unhandled promise rejections as described in the official ECMAScript 6 standard.
 
-Configuration may be required if you are using a third-party library to implement promises:
+Configuration may be required if you are using a third-party library to implement promises.
 
 Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by setting `captureUnhandledRejections` option to `false` and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 

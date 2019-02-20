@@ -1,5 +1,5 @@
 <!-- WIZARD -->
-If you’re using React 16 or above, Error Boundaries are an important tool for defining the behavior of your application in the face of errors. Be sure to send errors they catch to Sentry using `Sentry.captureException`, and optionally this is also a great opportunity to surface User Feedback
+If you’re using React 16 or above, Error Boundaries are an important tool for defining the behavior of your application in the face of errors. Be sure to send errors they catch to Sentry using `Sentry.captureException`, and optionally this is also a great opportunity to surface User Feedback.
 
 ```jsx
 import * as Sentry from '@sentry/browser';
