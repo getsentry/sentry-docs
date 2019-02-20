@@ -72,7 +72,7 @@ RSVP.on('error', function(reason) {
 });
 ```
 
-[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections to a global DOM event, `unhandledrejection`. In this case, you don't need to do anything; we've already got you covered with the default `captureUnhandledRejections: true` setting.
+[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections to a global DOM event, `unhandledRejection`. In this case, you don't need to do anything; we've already got you covered with the default `captureUnhandledRejections: true` setting.
 
 Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
 
