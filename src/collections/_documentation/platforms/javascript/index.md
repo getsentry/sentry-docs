@@ -253,7 +253,7 @@ You don't _have_ to upload the source files (ref’d by source maps), but withou
   level="info"
 %}
 
-Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
+For more information, see [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
 
 {% capture __alert_content -%}
 It’s not uncommon for a web application to be accessible at multiple origins. For example:
@@ -299,6 +299,7 @@ For more information, see:
 - [Full Documentation on Source Maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%})
 - [Debuggable JavaScript in Production with Source Maps](https://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps)
 - [4 Reasons Why Your Source Maps are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
+- [Debug Your Node.js Projects with Source Maps](https://blog.sentry.io/2019/02/20/debug-node-source-maps)
 
 &nbsp;
 #### Hosting Source Map Files
@@ -421,8 +422,10 @@ If you want to remove globally configured data from the scope, you can call:
 Sentry.configureScope(scope => scope.clear())
 ```
 
-For more information, have a look at [the scopes and hub documentation]({%- link
-_documentation/enriching-error-data/scopes.md -%}) and [Debug Tough Front End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues).
+For more information, see: 
+- [Full documentation on Scopes and Hubs]({%- link
+_documentation/enriching-error-data/scopes.md -%})
+- [Debug Tough Front End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues).
 
 &nbsp;
 ### Capturing the User
@@ -517,7 +520,7 @@ For some very advanced use cases, you can override the Sentry default grouping u
 
 If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{ { default } }` as one of the items.
 
-For more information, check out [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
+For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
 &nbsp;
 #### Minimal Example
@@ -610,7 +613,7 @@ Setting up releases is a 3-step process:
 3. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
 
 &nbsp;
-For more information, take a look at [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
+For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
 
 &nbsp;
 ## Supported Browsers {#browser-table}
@@ -652,7 +655,9 @@ Sentry.init({
 });
 ```
 
-Check out Sentry's complete list of [options]({%- link _documentation/error-reporting/configuration/index.md -%}) and more information on [environments]({%- link _documentation/enriching-error-data/environments.md -%}).
+For more information, see:
+- [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
+- [Full documentation on Environments]({%- link _documentation/enriching-error-data/environments.md -%}).
 
 &nbsp;
 ### Breadcrumbs
@@ -672,7 +677,9 @@ window.addEventListener('resize', function(event){
 })
 ```
 
-For more information, see Sentry's [Breadcrumbs docs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}) and [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
+For more information, see:
+- [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
+- [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
 &nbsp;
 ### Filter Events & Custom Logic
@@ -691,7 +698,10 @@ Sentry.init({
 });
 ```
 
-For more information, see Sentry's [docs on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%}), [Tips for Reducing JavaScript Error Noise](https://blog.sentry.io/2017/03/27/tips-for-reducing-javascript-error-noise.html), and [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
+For more information, see:
+- [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%}) 
+- [Tips for Reducing JavaScript Error Noise](https://blog.sentry.io/2017/03/27/tips-for-reducing-javascript-error-noise.html)
+- [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 
 &nbsp;
 ### Capturing Messages {#messages}
@@ -780,7 +790,9 @@ Sentry provides the ability to collect additional feedback from the user upon hi
 
 [{% asset js-index/sentry-dialog.png alt="Modal popup asking user for more context on what occured before the break." %}]({% asset js-index/sentry-dialog.png @path %})
 
-For more information, check out the [docs on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}) and [Introducing User Feedback](https://blog.sentry.io/2016/04/21/introducing-user-feedback).
+For more information, see:
+- [Full documentation on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%})
+- [Introducing User Feedback](https://blog.sentry.io/2016/04/21/introducing-user-feedback)
 
 &nbsp;
 ### Security Policy Reporting
@@ -788,11 +800,9 @@ Sentry provides the ability to collect information on Content-Security-Policy (C
 
 For more information: 
 
-[Docs on Security Policy Reporting]({%- link _documentation/error-reporting/security-policy-reporting.md -%})
-
-[Capture Content Security Policy Violations with Sentry](https://blog.sentry.io/2018/09/04/how-sentry-captures-csp-violations)
-
-[How a Content Security Policy Could Have Protected Newegg](https://blog.sentry.io/2018/09/20/content-security-policy-newegg-breach)
+- [Full documentation on Security Policy Reporting]({%- link _documentation/error-reporting/security-policy-reporting.md -%})
+- [Capture Content Security Policy Violations with Sentry](https://blog.sentry.io/2018/09/04/how-sentry-captures-csp-violations)
+- [How a Content Security Policy Could Have Protected Newegg](https://blog.sentry.io/2018/09/20/content-security-policy-newegg-breach)
 
 &nbsp;
 ### SDK Integrations
@@ -805,16 +815,15 @@ system integrations set `defaultIntegrations: false` when calling `init()`.
 To override their settings, provide a new instance with your config
 to `integrations` option. For example, to turn off browser capturing console calls: `integrations: [new Sentry.Integrations.Breadcrumbs({ console: false })]`.
 
-All JavaScript SDKs provide the following default Integrations:
-
 &nbsp;
-#### Dedupe
+#### Default Integrations
+##### Dedupe
 _Import name: `Sentry.Integrations.Dedupe`_
 
 This integration deduplicates certain events. The Sentry SDK enables this by default, and it should not be disabled except in rare circumstances. Disabling this integration, for instance, will cause duplicate error logging.
 
 &nbsp;
-#### InboundFilters
+##### InboundFilters
 _Import name: `Sentry.Integrations.InboundFilter`_
 
 This integration allows developers to ignore specific errors based on the type or message, as well as blacklist/whitelist URLs that originate from the exception.
@@ -822,13 +831,13 @@ This integration allows developers to ignore specific errors based on the type o
 To configure it, use `ignoreErrors`, `blacklistUrls`, and `whitelistUrls` SDK options directly.
 
 &nbsp;
-#### FunctionToString
+##### FunctionToString
 _Import name: `Sentry.Integrations.FunctionToString`_
 
 This integration allows the SDK to provide original functions and method names, even when our error or breadcrumbs handlers wrap them.
 
 &nbsp;
-#### ExtraErrorData
+##### ExtraErrorData
 _Import name: `Sentry.Integrations.ExtraErrorData`_
 
 This integration extracts all non-native attributes from the Error object and attaches them to the event as the `extra` data.
@@ -1036,8 +1045,6 @@ basic stack trace. This exception is stored here for further data extraction.
 
 &nbsp;
 ## Additional Resources
-[Optimizing the Sentry Workflow](https://blog.sentry.io/2018/03/06/the-sentry-workflow)
-
-[Debug Tough Front-End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues)
-
-[How Sentry Translates & Groups Localized Errors](https://blog.sentry.io/2018/02/28/internet-explorer-translations)
+- [Optimizing the Sentry Workflow](https://blog.sentry.io/2018/03/06/the-sentry-workflow)
+- [Debug Tough Front-End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues)
+- [How Sentry Translates & Groups Localized Errors](https://blog.sentry.io/2018/02/28/internet-explorer-translations)
