@@ -4,4 +4,4 @@ Sentry can process Minidump crash reports, a memory dump used on Windows and by 
 -   [_Electron_]({%- link _documentation/platforms/javascript/electron/index.md -%})
 -   [_Unreal Engine 4_]({%- link _documentation/platforms/unrealengine/index.md -%})
 
-For more information, see Sentry's [Minidump documentation]({%- link _documentation/platforms/minidump/index.md -%})
+For more information, see Sentry's [Minidump documentation]({%- link _documentation/platforms/minidump/index.md -%}).
