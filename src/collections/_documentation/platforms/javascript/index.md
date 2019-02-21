@@ -22,7 +22,7 @@ Most SDKs will now automatically collect data if available; some require extra c
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
 ```
-Sentry.captureException(new Error(‘This is my fake error message’));
+Sentry.captureException(new Error("This is my fake error message"));
 ```
 Then, you can see the error in your dashboard:
 
