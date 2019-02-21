@@ -55,7 +55,7 @@ Adds `sys.argv` as `extra` attribute to each event.
 See [_Logging_]({% link _documentation/platforms/python/logging.md %})
 
 ## Threading
-*Import name: `sentry_sdk.integrations.logging.LoggingIntegration`*
+*Import name: `sentry_sdk.integrations.threading.ThreadingIntegration`*
 
 {% version_added 0.7.3 %}
 
