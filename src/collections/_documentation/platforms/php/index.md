@@ -80,7 +80,7 @@ Sentry PHP is not tied to any specific library that sends HTTP messages. Instead
 it uses [Httplug](https://github.com/php-http/httplug) to let users choose whichever PSR-7 implementation and HTTP client
 they want to use.
 
-Our metapackage that we you should use `sentry/sdk` provides our recommend HTTP client.
+We recommend that you use the `sentry/sdk` meta-package which provides our recommend HTTP client.
 
 If you want to use a different HTTP client just install `sentry/sentry` with the clients you prefer:
 
@@ -89,7 +89,7 @@ composer require sentry/sentry:{% sdk_version sentry.php %} php-http/curl-client
 ```
 
 This will install the library itself along with an HTTP client adapter that uses
-cURL as transport method (provided by [Httplug](https://github.com/php-http/httplug) and a PSR-7 implementation
+cURL as the transport method (provided by [Httplug](https://github.com/php-http/httplug) and a PSR-7 implementation
 (provided by Guzzle). You do not have to use those packages if you do not want to.
 The SDK does not care about which transport method you want to use because it's
 an implementation detail of your application. You may use any package that provides
