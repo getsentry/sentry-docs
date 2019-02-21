@@ -22,7 +22,7 @@ Most SDKs will now automatically collect data if available; some require extra c
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
 ```
-Sentry.captureException(new Error(‘This is my fake error message’));
+Sentry.captureException(new Error("This is my fake error message"));
 ```
 Then, you can see the error in your dashboard:
 
@@ -536,64 +536,30 @@ The two common real-world use cases for the `fingerprint` attribute are demonstr
 
 &nbsp;
 #### Example: Split up a group into more groups (groups are too big)
-Your application queries an RPC interface or external API service, so the stack trace is generally the same (even if the outgoing request is very different).
+Your application queries an external API service, so the stack trace is generally the same (even if the outgoing request is very different).
 
-The following example will split up the default group Sentry would create (represented by `{{ "{{default"}}}}`) further, taking some attribute on the error object into account:
-
-[Example written in C#]
+The following example will split up the default group Sentry would create (represented by `{{ "{{default"}}}}`) further, while also splitting up the group based on the API URL.
 
 ```
-using (SentrySdk.Init(o =>
-  {
-    o.BeforeSend = @event =>
-      {
-        if (@event.Exception is SqlConnection ex)
-        {
-          @event.SetFingerprint(new [] {"database-connection-error"});
-        }
-        return @event;
-      };
-  }
-))
+function makeRequest(path, options) {
+    return fetch(path, options).catch(err => {
+        Sentry.withScope(scope => {
+          scope.setFingerprint(['{{default}}', path]);
+          Sentry.captureException(err);
+        });
+    });
+}
 ```
 
 &nbsp;
 #### Example: Merge a lot of groups into one group (groups are too small)
-A generic error, such as a database connection error, has many different stack traces and never groups together.
-
-The following example will just completely overwrite Sentry's grouping by omitting `{{ "{{default"}}}}` from the array:
-
-[Example written in C#]
+If you have an error that has many different stack traces and never groups together, you can merge them together by omitting `{{ "{{default"}}}}` from the fingerprint array.
 
 ```
-public class MyRpcException : Exception
-{
-  // The name of the RPC function that was called (e.g. "getAllBlogArticles")
-  public string Function { get; set; }
-  
-  // For example a HTTP status code returned by the server.
-  public HttpStatusCode Code { get; set; }
-}
-
-using (SentrySdk.Init(o =>
-{
-  o.BeforeSend = @event =>
-  {
-    if (@event.Exception is MyRpcException ex)
-    {
-      @event.SetFingerprint(
-        new []
-        {
-          {{ "{{default"}}}}
-          ex.Function,
-          ex.Code.ToString(),
-        }
-      );
-    }
-    return @event;
-  };
-}
-))
+Sentry.withScope(scope => {
+  scope.setFingerprint(['Database Connection Error']);
+  Sentry.captureException(err);
+});
 ```
 
 &nbsp;
