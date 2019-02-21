@@ -518,7 +518,7 @@ Sentry uses one or more "fingerprints" to decide how to group errors into issues
 
 For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings.
 
-If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{ { default } }` as one of the items.
+If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{{ "{{default"}}}}` as one of the items.
 
 For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
@@ -538,7 +538,7 @@ The two common real-world use cases for the `fingerprint` attribute are demonstr
 #### Example: Split up a group into more groups (groups are too big)
 Your application queries an RPC interface or external API service, so the stack trace is generally the same (even if the outgoing request is very different).
 
-The following example will split up the default group Sentry would create (represented by `{ { default } }`) further, taking some attribute on the error object into account:
+The following example will split up the default group Sentry would create (represented by `{{ "{{default"}}}}`) further, taking some attribute on the error object into account:
 
 [Example written in C#]
 
@@ -561,7 +561,7 @@ using (SentrySdk.Init(o =>
 #### Example: Merge a lot of groups into one group (groups are too small)
 A generic error, such as a database connection error, has many different stack traces and never groups together.
 
-The following example will just completely overwrite Sentry's grouping by omitting `{ { default } }` from the array:
+The following example will just completely overwrite Sentry's grouping by omitting `{{ "{{default"}}}}` from the array:
 
 [Example written in C#]
 
@@ -584,7 +584,7 @@ using (SentrySdk.Init(o =>
       @event.SetFingerprint(
         new []
         {
-          "{ { default } }"
+          {{ "{{default"}}}}
           ex.Function,
           ex.Code.ToString(),
         }
