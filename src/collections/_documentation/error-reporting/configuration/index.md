@@ -204,12 +204,10 @@ setup that requires proxy authentication.
 {:.config-key}
 ### `http-proxy`
 
-{% unsupported php %}
 When set a proxy can be configured that should be used for outbound requests.  This is also used for
 HTTPS requests unless a separate `https-proxy` is configured.  Note however that not all SDKs
 support a separate HTTPS proxy.  SDKs will attempt to default to the system-wide configured proxy
 if possible.  For instance, on unix systems, the `http_proxy` environment variable will be picked up.
-{% endunsupported %}
 
 {:.config-key}
 ### `https-proxy`

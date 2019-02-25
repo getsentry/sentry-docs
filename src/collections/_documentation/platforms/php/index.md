@@ -76,6 +76,34 @@ to create relative paths.
 
 ## Transport
 
+Sentry PHP is not tied to any specific library that sends HTTP messages. Instead,
+it uses [Httplug](https://github.com/php-http/httplug) to let users choose whichever PSR-7 implementation and HTTP client
+they want to use.
+
+We recommend that you use the `sentry/sdk` meta-package which provides our recommend HTTP client.
+
+If you want to use a different HTTP client just install `sentry/sentry` with the clients you prefer:
+
+```bash
+composer require sentry/sentry:{% sdk_version sentry.php %} php-http/curl-client guzzlehttp/psr7
+```
+
+This will install the library itself along with an HTTP client adapter that uses
+cURL as the transport method (provided by [Httplug](https://github.com/php-http/httplug) and a PSR-7 implementation
+(provided by Guzzle). You do not have to use those packages if you do not want to.
+The SDK does not care about which transport method you want to use because it's
+an implementation detail of your application. You may use any package that provides
+[php-http/async-client-implementation](https://packagist.org/providers/php-http/async-client-implementation) and [http-message-implementation](https://packagist.org/providers/psr/http-message-implementation).
+
+If you want to use Guzzle as an underlying HTTP client, you just need to run the
+following command to install the adapter and Guzzle itself:
+
+```bash
+composer require php-http/guzzle6-adapter
+```
+
+### Transport Classes
+
 Transports are the classes in Sentry PHP that are responsible for communicating
 with a service in order to deliver an event. There are several types of transports
 available out-of-the-box, all of which implement the `TransportInterface`
@@ -91,7 +119,7 @@ The examples below pretty much replace the `init()` call.
 Please also keep in mind that once a Client is initialized with a Transport it cannot be
 changed.
 
-### NullTransport
+#### NullTransport
 
 Although not so common there could be cases in which you don't want to send
 events at all. The `NullTransport` transport does this: it simply ignores
@@ -115,7 +143,7 @@ Hub::getCurrent()->bindClient($builder->getClient());
     level="warning"
 %}
 
-### HttpTransport
+#### HttpTransport
 
 The `HttpTransport` sends events over the HTTP protocol using [Httplug](http://httplug.io/).
 The best adapter available is automatically selected when creating a client instance
@@ -142,7 +170,7 @@ Hub::getCurrent()->bindClient($builder->getClient());
     level="warning"
 %}
 
-### SpoolTransport
+#### SpoolTransport
 
 The default behavior is to send events immediately. You may, however, want to
 avoid waiting for the communication to the Sentry server that could be slow

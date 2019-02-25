@@ -11,7 +11,7 @@ Laravel is supported via a native package, [sentry-laravel](https://github.com/g
 Install the `sentry/sentry-laravel` package:
 
 ```bash
-$ composer require sentry/sentry-laravel:{% sdk_version sentry.php.laravel %} php-http/curl-client guzzlehttp/psr7
+$ composer require sentry/sentry-laravel:{% sdk_version sentry.php.laravel %}
 ```
 
 If you're on Laravel 5.4 or earlier, you'll need to add the following to your `config/app.php` (for Laravel 5.5+ these will be auto-discovered by Laravel):
@@ -109,7 +109,7 @@ $app['sentry']->setRelease(Git::sha());
 Install the `sentry/sentry-laravel` package:
 
 ```bash
-$ composer require sentry/sentry-laravel:{% sdk_version sentry.php.laravel %} php-http/curl-client guzzlehttp/psr7
+$ composer require sentry/sentry-laravel:{% sdk_version sentry.php.laravel %}
 ```
 
 Register Sentry in `bootstrap/app.php`:
