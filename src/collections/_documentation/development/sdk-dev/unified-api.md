@@ -90,6 +90,8 @@ Additionally it also setups all default integrations.
 
 - `configure_scope(callback)`: Calls a callback with a scope object that can be reconfigured. This is used to attach contextual data for future events in the same scope.
 
+- `last_event_id()`: Should return the last event ID emitted by the current scope. This is for instance used to implement user feedback dialogs.
+
 ## Concurrency
 
 All SDKs should have the concept of concurrency safe context storage. What this means depends on the language. The basic idea is that a user of the SDK can call a method to safely provide additional context information for all events that are about to be recorded.
@@ -197,8 +199,6 @@ A Client is the part of the SDK that is responsible for event creation. To give 
 - `Client::close(timeout)`: Flushes out the queue for up to timeout seconds. If the client can guarantee delivery of events only up to the current point in time this is preferred. This might block for timeout seconds. The client should be disabled or disposed after close is called
 
 - `Client::flush(timeout)`: Same as `close` difference is that the client is NOT disposed after calling flush
-
-- `Client::dtor`: Must never block. Might throw away pending events.
 
 ## Hints
 
