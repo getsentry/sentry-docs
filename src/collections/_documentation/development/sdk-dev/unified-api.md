@@ -26,7 +26,7 @@ meant that certain integrations (such as breadcrumbs) were often not possible.
 
 - The common tasks need to be easy and obvious.
 
-- For helping third party libraries the case of “non configured sentry” needs to be fast (and lazily executed).
+- For helping 3rd party libraries the case of “non configured sentry” needs to be fast (and lazily executed).
 
 - The common API needs make sense in most languages and must not depend on super special constructs. To make it feel more natural we should consider language specifics and explicitly support them as alternatives (disposables, stack guards etc.).
 
