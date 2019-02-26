@@ -236,6 +236,17 @@ end
   }
   ```
 
+`before_send`
+
+: Provide a lambda or proc. This will be `called`  before sending an event to Sentry. Receives an `event` and `hint` as parameter. `hint` is a dict `{:exception => ex | nil, :message => message | nil}`. It is possible to mutate the event, also if this function returns `nil` the event will be dropped and not sent.
+
+```ruby
+  config.before_send = lambda { |event, hint|
+    event.fingerprint = ['fingerprint']
+    event
+  }
+```
+
 ## Environment Variables
 
 `SENTRY_DSN`
