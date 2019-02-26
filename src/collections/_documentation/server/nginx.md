@@ -50,7 +50,7 @@ http {
     listen   443 ssl;
     server_name sentry.example.com;
 
-    proxy_set_header   Host                 $http_host;
+    proxy_set_header   Host                 $host;
     proxy_set_header   X-Forwarded-Proto    $scheme;
     proxy_set_header   X-Forwarded-For      $remote_addr;
     proxy_redirect     off;
