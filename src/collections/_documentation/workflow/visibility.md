@@ -61,8 +61,14 @@ Discover lets you query raw event data in Sentry, across any number of projects 
 ## Events
 {% include components/alert.html
     title="Note"
-    content="Available if you're on Business or a Trial, and you're an Early Adopter."
+    content="Available if you're on Business or a Trial, and you're an Early Adopter. The Team pricing level allows you one project on the feed, and the Business and Enterprise levels allow you to view all your projects at once."
     level="info"
 %}
+
+The Events View uncovers your raw error stream for any group of projects, including environment or time range.
+
+[{% asset visibility/events-graph.png alt="Line graph illustrating spikes in events for a project. Includes stack trace." %}]({% asset visibility/events-graph.png @path %})
+
+
 
 
