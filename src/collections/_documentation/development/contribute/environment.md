@@ -56,7 +56,7 @@ make develop
 
 ## Running the Development Server
 
-Before you are able to run the development server, you need to first create a development configuration file:
+Before you can run the development server, you need to first create a development configuration file:
 
 ```bash
 sentry init --dev
@@ -64,7 +64,7 @@ sentry init --dev
 
 This file ends up in `~/.sentry/sentry.conf.py`
 
-Next we need to start up our development services. This includes running services like Postgres, Redis, etc. `sentry devservices` depends on Docker, which should have gotten installed during `make develop`. If not, you can install with `brew cask install docker`. After installing Docker, make sure it is running by just launching `/Applications/Docker.app`.
+Next, we need to start up our development services. This includes running services like Postgres, Redis, etc. `sentry devservices` depends on Docker, which should have gotten installed during `make develop`. If not, you can install with `brew cask install docker`. After installing Docker, make sure it is running by just launching `/Applications/Docker.app`.
 
 ```bash
 sentry devservices up
