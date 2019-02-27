@@ -68,9 +68,10 @@ If you're using the Symfony Flex plugin, you'll find this file already created f
 ## Customization
 
 The Sentry 2.0 SDK uses the Unified API, hence it uses the concept of `Scope`s to hold information about the current 
-state of the app, and attach it to any event that is reported. This bundle has two listeners (`RequestListener` and 
-`ConsoleListener`) that add some easy default information. Those listeners normally are executed with a priority of `1`
-to allow easier customization with custom listener, that by default run afterwards, with a lower priority of `0`.
+state of the app, and attach it to any event that is reported. This bundle has three listeners (`RequestListener`, 
+`SubRequestListener` and `ConsoleListener`) that add some easy default information. Those listeners normally are 
+executed with a priority of `1` to allow easier customization with custom listeners, that by default run afterwards, 
+with a lower priority of `0`.
 
 Those listeners are `final` so not extendable, but you can look at those to know how to add more information to the 
 current `Scope` and enrich you Sentry events.
