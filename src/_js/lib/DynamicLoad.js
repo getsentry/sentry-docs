@@ -86,9 +86,8 @@ class DynamicLoad {
 
   didUpdateHandler(event) {
     // Handle vertical scroll position of new content
-    const hash = window.location.hash.replace('#', '');
-    if (hash) {
-      const $el = $(hash).get(0);
+    if (window.location.hash) {
+      const $el = $(window.location.hash).get(0);
       if ($el) $el.scrollIntoView();
     } else {
       $('.main-scroll').scrollTop(0);
