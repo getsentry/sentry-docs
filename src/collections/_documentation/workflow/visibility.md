@@ -23,7 +23,7 @@ Each graph and visualization helps uncover crucial patterns and trends about whe
 
 &nbsp;
 ### Dive into Specific Projects
-Filter your data with project specific paramaters.
+Filter your data with project-specific parameters.
 
 [{% asset visibility/projt-filter.png alt="Drop-down that allows filtering based on projects." %}]({% asset visibility/projt-filter.png @path %})
 
@@ -35,7 +35,7 @@ Distill needs by choosing explicit environments.
 
 &nbsp;
 ### Refine by Time Period
-Define clear time periods for a more clear-cut glimpse.
+Define distinct time periods for a more clear-cut glimpse.
 
 [{% asset visibility/date-filter.png alt="Drop-down that allows filtering based on calendar dates." %}]({% asset visibility/date-filter.png @path %})
  
@@ -53,7 +53,7 @@ Discover is Sentry's built-in query builder, enabling you to uncover patterns an
     level="info"
 %}
 
-Discover lets you query raw event data in Sentry, across any number of projects within your organization. For more information on how to use the query builder and event fields, see the [full documentation on Discover]({%- link _documentation/workflow/discover.md -%}).
+Discover helps you query raw event data in Sentry, across any number of projects within your organization. For more information on how to use the query builder and event fields, see the [full documentation on Discover]({%- link _documentation/workflow/discover.md -%}).
 
 [{% asset visibility/discover-results.png alt="Query results that summarize data for country codes by unique id." %}]({% asset visibility/discover-results.png @path %})
 
@@ -73,6 +73,6 @@ The Events View uncovers your raw error stream for any group of projects, includ
 ## Tracing ID
 Tracing allows you to link systems together while following the error's path to its root. By using a tracing id, you get visibility into errors on the front-end that have roots in the back-end.
 
-A common use-case: When you use a transaction id for cross-project issues, all the information you want to know about those events will be in the Events View and searchable in Discover, including all the users that hit those certain events. 
+A typcial use-case: When you use a transaction id for cross-project issues, all the information you want to know about those events will be in the Events View and searchable in Discover, including all the users that hit those certain events. 
 
-For more information, see how you can use [Sentry and nginx to trace errors to logs](https://blog.sentry.io/2019/01/31/using-nginx-sentry-trace-errors-logs).
+For more information, see how you can use [Sentry and NGINX to trace errors to logs](https://blog.sentry.io/2019/01/31/using-nginx-sentry-trace-errors-logs).
