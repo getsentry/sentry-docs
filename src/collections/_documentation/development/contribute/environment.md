@@ -54,27 +54,25 @@ Run the following to install the Python and JavaScript libraries and database se
 make develop
 ```
 
-{% capture __alert_content -%}
-The `Brewfile` will install and link a pinned `postgresql@9.6`, so if you were running any older versions, you will need to migrate your old database over to 9.6.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
-
-Finally, you’ll need to create the `postgres` role:
-
-```bash
-psql template1 $(whoami) -c 'CREATE USER postgres SUPERUSER;'
-```
-
 ## Running the Development Server
 
-Before you are able to run the development server, you first must create a proper database for it to use. Running the following will create the proper database and fill it with example data:
+Before you can run the development server, you need to first create a development configuration file:
 
 ```bash
-createdb -U postgres -E utf-8 sentry
 sentry init --dev
+```
+
+This file ends up in `~/.sentry/sentry.conf.py`
+
+Next, we need to start up our development services. This includes running services like Postgres, Redis, etc. `sentry devservices` depends on Docker, which should have gotten installed during `make develop`. If not, you can install with `brew cask install docker`. After installing Docker, make sure it is running by just launching `/Applications/Docker.app`.
+
+```bash
+sentry devservices up
+```
+
+Lastly, we need to run our database migrations:
+
+```bash
 sentry upgrade
 ```
 
