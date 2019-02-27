@@ -26,7 +26,9 @@ is enabled, it will also send PII information like:
 ### ErrorListenerIntegration
 
 This integration hooks into the global PHP `error_handler` and emits events when an error occurs.
-By default, the error handler reserves 10 megabytes of memory to handle fatal
+
+To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
+as an error listener. By default, the `ErrorHandler` reserves 10 megabytes of memory to handle fatal
 errors.
 
 For some frameworks or projects, there are specific integrations provided both
@@ -38,5 +40,6 @@ Also, by default `E_ALL` will be handled, you can change it by setting `error_ty
 ## ExceptionListenerIntegration
 
 This integration catches all global uncaught exceptions and emits events when an error occurs.
-By default, the error handler reserves 10 megabytes of memory to handle fatal
-errors.
+
+To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
+as an exception listener.
