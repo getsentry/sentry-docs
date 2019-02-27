@@ -69,6 +69,10 @@ The Events View uncovers your raw error stream for any group of projects, includ
 
 [{% asset visibility/events-graph.png alt="Line graph illustrating spikes in events for a project. Includes stack trace." %}]({% asset visibility/events-graph.png @path %})
 
+&nbsp;
+## Tracing ID
+Tracing allows you to link systems together while following the error's path to its root. By using a tracing id, you get visibility into errors on the front-end that have roots in the back-end.
 
+A common use-case: When you use a transaction id for cross-project issues, all the information you want to know about those events will be in the Events View and searchable in Discover, including all the users that hit those certain events. 
 
-
+For more information, see how you can use [Sentry and nginx to trace errors to logs](https://blog.sentry.io/2019/01/31/using-nginx-sentry-trace-errors-logs).
