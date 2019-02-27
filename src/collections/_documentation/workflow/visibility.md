@@ -75,4 +75,31 @@ Tracing allows you to link systems together while following the error's path to 
 
 A typcial use-case: When you use a transaction id for cross-project issues, all the information you want to know about those events will be in the Events View and searchable in Discover, including all the users that hit those certain events. 
 
+```javascript
+// generate unique transactionId and set as Sentry tag
+const transactionId = getUniqueId();
+Sentry.configureScope(scope => {
+    scope.setTag("transaction_id", transactionId);
+});
+
+// perform request (set transctionID as header and throw error appropriately)
+request.post({
+    url: "http://localhost:3001/checkout",
+    json: order,
+    headers: {
+        "X-Session-ID": this.sessionId,
+        "X-Transaction-ID": transactionId
+    }
+}, (error, response) => {
+    if (error) {
+        throw error;
+    }
+    if (response.statusCode === 200) {
+        this.setState({ success: true });
+    } else {
+        throw new Error(response.statusCode + " - " + response.statusMessage);
+    }
+}
+```
+
 For more information, see how you can use [Sentry and NGINX to trace errors to logs](https://blog.sentry.io/2019/01/31/using-nginx-sentry-trace-errors-logs).
