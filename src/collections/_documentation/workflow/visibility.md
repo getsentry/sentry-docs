@@ -3,7 +3,7 @@ title: Visibility
 sidebar_order: 4
 ---
 
-Sentry's new Visibility features help you gain detailed perspectives of your application's health by providing tools to zoom into the code or pull back for a wider angle.
+Sentry's new Visibility features help you gain detailed perspectives of your application's health by providing tools to zoom into the errors or pull back for a wider angle.
 
 &nbsp;
 ## Dashboard
