@@ -12,8 +12,16 @@ system integrations set `default_integrations => false` when calling `init()`.
 
 ### RequestIntegration
 
-This integration adds request data like `User Agent`, `Cookies`, `Headers` to the event.
-Please note that [send_default_pii]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php#send-default-pii) has to be enabled to also receive PII information.
+This integration adds to the event request data like:
+ * HTTP method 
+ * URL, 
+ * query string 
+
+If the [`send_default_pii` option]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php#send-default-pii) 
+is enabled, it will also send PII information like:
+ * user IP address
+ * cookies
+ * headers
 
 ### ErrorListenerIntegration
 
