@@ -6,14 +6,14 @@ sidebar_order: 4
 Sentry's new Visibility features help you gain detailed perspectives of your application's health by providing tools to navigate your issues across multiple projects in a single view.
 
 &nbsp;
-## Dashboard
+## Dashboards
 {% include components/alert.html
     title="Note"
     content="Available if you're on Business or a Trial, and you're an Early Adopter."
     level="info"
 %}
 
-The Dashboard is a compilation of various data visualizations of your aggregate errors across your organization --- including graphs of your errors, geographic mapping, and lists of browsers.
+Dashboards is a compilation of various data visualizations of your aggregate errors across your organization --- including graphs of your errors, geographic mapping, and lists of browsers. Dashboards allow you to drill into data by selecting points of interest. Filters are also persistent, so you'll see visual representations of applied filters.
 
 &nbsp;
 ### Overall View of Application
@@ -76,7 +76,7 @@ Slice and dice your Issues and Events views with the updated Search.
 - Negation: use the `!` operator to exclude terms. For example, `!user.email:user@example.com`
 - Advanced properties: search on advanced event properties like `stack` (including `stack.filename`, `stack.module`, etc.), as well as `geo` (including `geo.country_code`, `geo.city`, etc.).
 
-For more information, see the [full Search documentation]({%- link _documentation/workflow/search.md -%}).
+For more information on syntax and searchable properties, see the [full Search documentation]({%- link _documentation/workflow/search.md -%}).
 
 &nbsp;
 ## Tracing ID
