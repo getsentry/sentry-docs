@@ -3,7 +3,7 @@ title: Visibility
 sidebar_order: 4
 ---
 
-Sentry's new Visibility features help you gain detailed perspectives of your application's health by providing tools to zoom into the errors or pull back for a wider angle.
+Sentry's new Visibility features help you gain detailed perspectives of your application's health by providing tools to navigate your issues across multiple projects in a single view.
 
 &nbsp;
 ## Dashboard
@@ -65,9 +65,18 @@ Discover helps you query raw event data in Sentry, across any number of projects
     level="info"
 %}
 
-The Events View uncovers your raw error stream for any group of projects, including environment or time range.
+The Events View uncovers your raw error stream for any group of projects, including environment or time range. To investigate a spike, select the spike in your Events View graph to narrow your timeframe. Drill down into any individual event to see issues related to that event.
 
 [{% asset visibility/events-graph.png alt="Line graph illustrating spikes in events for a project. Includes stack trace." %}]({% asset visibility/events-graph.png @path %})
+
+&nbsp;
+### Specify with Search
+Slice and dice your Issues and Events views with the updated Search.
+- Wildcards: use the `*` operator. For example, `user.email:*@example.com`
+- Negation: use the `!` operator to exclude terms. For example, `!user.email:user@example.com`
+- Advanced properties: search on advanced event properties like `stack` (including `stack.filename`, `stack.module`, etc.), as well as `geo` (including `geo.country_code`, `geo.city`, etc.).
+
+For more information, see the [full Search documentation]({%- link _documentation/workflow/search.md -%}).
 
 &nbsp;
 ## Tracing ID
