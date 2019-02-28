@@ -82,7 +82,7 @@ For more information on syntax and searchable properties, see the [full Search d
 ## Tracing ID
 Tracing allows you to link systems together while following the error's path to its root. By using a tracing id, you get visibility into errors on the front-end that have roots in the back-end.
 
-A typcial use-case: When you use a transaction id for cross-project issues, all the information you want to know about those events will be in the Events View and searchable in Discover, including all the users that hit those certain events. 
+A typical use-case: When you use a transaction id for cross-project issues, all the information you want to know about those events will be in the Events View and searchable in Discover, including all the users that hit those certain events. 
 
 ```javascript
 // generate unique transactionId and set as Sentry tag
