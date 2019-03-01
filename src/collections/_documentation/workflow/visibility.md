@@ -3,17 +3,31 @@ title: Visibility
 sidebar_order: 4
 ---
 
-Sentry's new Visibility features help you gain detailed perspectives of your application's health by providing tools to navigate your issues across multiple projects in a single view.
+Sentry's new Visibility features --- Discover, Dashboards, and Events --- help you gain detailed perspectives of your application's health by providing filtering tools to navigate your issues across multiple projects in a single view.
+
+&nbsp;
+## Discover
+{% include components/alert.html
+    title="Note"
+    content="Available if you're on a Business plan or a Trial, and you're an Early Adopter."
+    level="info"
+%}
+
+Discover helps you query event data in Sentry, across any number of projects within your organization. It enables you to uncover patterns and trends in your events' data. For example, you can aggregate event count by `stack.filename` and `stack.function`, and then browse the data as a table, bar chart, or line graph.
+
+For more information on how to use the query builder and event fields, see the [full documentation on Discover]({%- link _documentation/workflow/discover.md -%}).
+
+[{% asset visibility/query-result.png alt="Query results, in the form of a line graph, that summarize data by unique user email." %}]({% asset visibility/query-result.png @path %})
 
 &nbsp;
 ## Dashboards
 {% include components/alert.html
     title="Note"
-    content="Available if you're on Business or a Trial, and you're an Early Adopter."
+    content="Available if you're on a Business plan or a Trial, and you're an Early Adopter."
     level="info"
 %}
 
-Dashboards is a compilation of various data visualizations of your aggregate errors across your organization --- including graphs of your errors, geographic mapping, and lists of browsers. Dashboards allow you to drill into data by selecting points of interest. Filters are also persistent, so you'll see visual representations of applied filters.
+Dashboards is various data visualizations of your errors across your organization --- including graphs of your errors, geographic mapping, and lists of browsers. Dashboards allow you to drill into data by selecting points of interest. 
 
 &nbsp;
 ### Overall View of Application
@@ -38,30 +52,12 @@ Distill needs by choosing explicit environments.
 Define distinct time periods for a more clear-cut glimpse.
 
 [{% asset visibility/date-filter.png alt="Drop-down that allows filtering based on calendar dates." %}]({% asset visibility/date-filter.png @path %})
- 
-&nbsp;
-### Query with Discover
-Discover is Sentry's built-in query builder, enabling you to uncover patterns and trends in your events data.
-
-[{% asset visibility/discover-query.png alt="Drop-down that allows filtering based on query key words." %}]({% asset visibility/discover-query.png @path %})
-
-&nbsp;
-## Discover
-{% include components/alert.html
-    title="Note"
-    content="Available if you're on Business or a Trial, and you're an Early Adopter."
-    level="info"
-%}
-
-Discover helps you query raw event data in Sentry, across any number of projects within your organization. For more information on how to use the query builder and event fields, see the [full documentation on Discover]({%- link _documentation/workflow/discover.md -%}).
-
-[{% asset visibility/discover-results.png alt="Query results that summarize data for country codes by unique id." %}]({% asset visibility/discover-results.png @path %})
 
 &nbsp;
 ## Events
 {% include components/alert.html
     title="Note"
-    content="Available if you're on Business or a Trial, and you're an Early Adopter. The Team pricing level allows you one project on the feed, and the Business and Enterprise levels allow you to view all your projects at once."
+    content="Available if you're on a Business plan or a Trial, and you're an Early Adopter. The Team pricing level allows you one project on the feed, and the Business and Enterprise levels allow you to view all your projects at once."
     level="info"
 %}
 
@@ -71,7 +67,7 @@ The Events View uncovers your raw error stream for any group of projects, includ
 
 &nbsp;
 ### Specify with Search
-Slice and dice your Issues and Events views with the updated Search.
+The updated Search helps you get specific with Issues and Events views.
 - Wildcards: use the `*` operator. For example, `user.email:*@example.com`
 - Negation: use the `!` operator to exclude terms. For example, `!user.email:user@example.com`
 - Advanced properties: search on advanced event properties like `stack` (including `stack.filename`, `stack.module`, etc.), as well as `geo` (including `geo.country_code`, `geo.city`, etc.).
@@ -79,10 +75,8 @@ Slice and dice your Issues and Events views with the updated Search.
 For more information on syntax and searchable properties, see the [full Search documentation]({%- link _documentation/workflow/search.md -%}).
 
 &nbsp;
-## Tracing ID
-Tracing allows you to link systems together while following the error's path to its root. By using a tracing id, you get visibility into errors on the front-end that have roots in the back-end.
-
-A typical use-case: When you use a transaction id for cross-project issues, all the information you want to know about those events will be in the Events View and searchable in Discover, including all the users that hit those certain events. 
+## Use-Case: Tracing
+Modern applications have many components that can produce errors, making it harder to identify the root cause. Tracing allows you to link systems together while following the error's path to its root. By tagging some form of a tracing ID (for example: span ID, request ID, UUID, or transaction ID), you can correlate errors coming from different parts of your application and see them in the Events View.
 
 ```javascript
 // generate unique transactionId and set as Sentry tag
