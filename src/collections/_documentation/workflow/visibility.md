@@ -27,7 +27,7 @@ For more information on how to use the query builder and event fields, see the [
     level="info"
 %}
 
-Dashboards is various data visualizations of your errors across your organization --- including graphs of your errors, geographic mapping, and lists of browsers. Dashboards allow you to drill into data by selecting points of interest. 
+Dashboards are various data visualizations of your errors across your organization --- including graphs of your errors, geographic mapping, and lists of browsers. Dashboards allow you to drill into data by selecting points of interest. 
 
 &nbsp;
 ### Overall View of Application
