@@ -9,7 +9,7 @@ Sentry's new Visibility features --- Discover, Dashboards, and Events --- help y
 ## Discover
 {% include components/alert.html
     title="Note"
-    content="Available if you're on a Business plan or a Trial, and you're an Early Adopter."
+    content="Available if you're on a Business plan or a Trial."
     level="info"
 %}
 
@@ -23,7 +23,7 @@ For more information on how to use the query builder and event fields, see the [
 ## Dashboards
 {% include components/alert.html
     title="Note"
-    content="Available if you're on a Business plan or a Trial, and you're an Early Adopter."
+    content="Available if you're on a Business plan or a Trial."
     level="info"
 %}
 
@@ -57,7 +57,7 @@ Define distinct time periods for a more clear-cut glimpse.
 ## Events
 {% include components/alert.html
     title="Note"
-    content="Available if you're on a Business plan or a Trial, and you're an Early Adopter. The Team pricing level allows you one project on the feed, and the Business and Enterprise levels allow you to view all your projects at once."
+    content="Available if you're on a Team plan, Business plan, or a Trial. The Team pricing level allows you one project on the feed, and the Business and Enterprise levels allow you to view all your projects at once or any subset."
     level="info"
 %}
 
