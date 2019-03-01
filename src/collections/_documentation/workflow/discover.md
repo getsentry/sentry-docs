@@ -147,16 +147,6 @@ common_tags:
 
 ---
 
-{% capture __alert_content -%}
-Discover is currently available as a beta release to Business plans.
-{%- endcapture -%}
-{%- include components/alert.html
-  level="warning"
-  title="Beta functionality"
-  content=__alert_content
-%}
-
-
 ## Introduction
 
 Discover lets you query raw event data in Sentry, across any number of projects within your organization.
