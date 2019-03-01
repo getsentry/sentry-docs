@@ -17,7 +17,7 @@ not need to disable this.  Even if the functionality is not wanted, you can also
 `init()`.
 
 ## Excepthook
-*Import name: `sentry_sdk.integrations.excepthook.ExceptHookIntegration`*
+*Import name: `sentry_sdk.integrations.excepthook.ExcepthookIntegration`*
 
 This integration registers with the interpreter's except hook system.  Through this,
 any exception that is unhandled will be reported to Sentry automatically.  Exceptions
