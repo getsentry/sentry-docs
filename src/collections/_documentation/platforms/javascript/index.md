@@ -790,7 +790,7 @@ This integration deduplicates certain events. The Sentry SDK enables this by def
 
 &nbsp;
 ##### InboundFilters
-_Import name: `Sentry.Integrations.InboundFilter`_
+_Import name: `Sentry.Integrations.InboundFilters`_
 
 This integration allows developers to ignore specific errors based on the type or message, as well as blacklist/whitelist URLs that originate from the exception.
 
