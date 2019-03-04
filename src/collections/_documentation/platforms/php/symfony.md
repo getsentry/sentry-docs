@@ -75,3 +75,78 @@ with a lower priority of `0`.
 
 Those listeners are `final` so not extendable, but you can look at those to know how to add more information to the 
 current `Scope` and enrich you Sentry events.
+
+## Configuration
+This is an example of the bundle configuration with all the possible options and example values:
+```yaml
+sentry:
+    dsn: '___PUBLIC_DSN___'
+    options:
+        attach_stacktrace: true 
+        before_breadcrumb: '@sentry.callback.before_breadcrumb'
+        before_send: '@sentry.callback.before_send'
+        capture_silenced_errors: false
+        context_lines: 5
+        default_integrations: true 
+        enable_compression: true
+        environment: '%kernel.environment%'
+        error_types: 'E_ALL & ~E_NOTICE'
+        http_proxy: '10.0.0.12:3456'
+        in_app_exclude:
+          - '%kernel.cache_dir%'
+          - '%kernel.project_dir%/vendor'
+        integrations: 
+          - '@sentry.integration.my_custom_integration'
+        excluded_exceptions: 
+          - 'My\Exceptions\IgnorableException'
+        logger: 'php'
+        max_breadcrumbs: 50 
+        max_value_length: 2048
+        prefixes:
+          - '/local_dir/' 
+        project_root: '%kernel.project_dir%'
+        release: 'abcde12345'
+        sample_rate: 1
+        send_attempts: 3 
+        send_default_pii: true 
+        server_name: 'www.example.com'
+        tags:
+          tag1: 'value1'
+          tag2: 'value2'
+    listener_priorities:
+        request: 1
+        subrequest: 1
+        console: 1
+```
+### DSN
+The DSN option is the only required one: it sets the Sentry DSN, and so reports all events to the related project. If it's
+left empty, it actually disables Sentry reporting. Since the bundle is enabled in all environments, it's recommended to 
+disable it in the `test` and `dev` environments.
+
+### Options
+All the possibile configurations under the `options` key map directly to the correspondent options from the base SDK;
+you can read more about those in the [Unified API configuration docs]({% link _documentation/error-reporting/configuration/index.md %}),
+and on the [PHP specific SDK docs]({% link _documentation/platforms/php/index.md %}#php-specific-options).
+
+Below you can find additional documentation that is specific to the bundle usage, or information about the sensible default
+values that are used in some cases.
+
+#### before_breadcrumb and before_send
+The `before_breadcrumb` and `before_send` options both accept a `callable`; thus, you cannot provide it directly through
+ a YAML file; the bundle accepts a service reference (starting with `@`), which you can build in your DIC container.
+
+#### environment
+The `environment` option defaults to the same environment of your Symfony application (i.e. `dev`, `test`, `prod`...).
+
+#### in_app_exclude
+The `in_app_exclude` option is used to mark files as non belonging to your app's source code in events' stack traces.
+In this bundle it has two default values: 
+ * `%kernel.cache_dir%`, to exclude Symfony's cache dir
+ * `%kernel.project_dir%/vendor`, to exclude Composer's dependencies
+
+#### project_root
+The `project_root` options defaults to `%kernel.project_dir%`.
+
+### Listener priorities
+The `listener_priorities` options are used to change the priority at which the bundle's listener are called. They all default
+to `1`, so they are called just before the default priority of `0`, at which you can easily add your custom listeners.
