@@ -12,13 +12,23 @@ system integrations set `default_integrations => false` when calling `init()`.
 
 ### RequestIntegration
 
-This integration adds request data like `User Agent`, `Cookies`, `Headers` to the event.
-Please note that [send_default_pii]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php#send-default-pii) has to be enabled to also receive PII information.
+This integration adds to the event request data like:
+ * HTTP method 
+ * URL, 
+ * query string 
+
+If the [`send_default_pii` option]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php#send-default-pii) 
+is enabled, it will also send PII information like:
+ * user IP address
+ * cookies
+ * headers
 
 ### ErrorListenerIntegration
 
 This integration hooks into the global PHP `error_handler` and emits events when an error occurs.
-By default, the error handler reserves 10 megabytes of memory to handle fatal
+
+To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
+as an error listener. By default, the `ErrorHandler` reserves 10 megabytes of memory to handle fatal
 errors.
 
 For some frameworks or projects, there are specific integrations provided both
@@ -30,5 +40,6 @@ Also, by default `E_ALL` will be handled, you can change it by setting `error_ty
 ## ExceptionListenerIntegration
 
 This integration catches all global uncaught exceptions and emits events when an error occurs.
-By default, the error handler reserves 10 megabytes of memory to handle fatal
-errors.
+
+To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
+as an exception listener.
