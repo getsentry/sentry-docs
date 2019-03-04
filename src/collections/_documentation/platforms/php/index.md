@@ -21,6 +21,14 @@ Integrations are configured by a call to `init()` method.
 
 PHP provides some additional options, all options can be passed into `init()`.
 
+#### capture_silenced_errors
+{% include components/alert.html
+    content="This option was introduced in version 2.0.1"
+    level="notice"
+%}
+This option enables capturing errors which were silenced using the `@` operator 
+in your source code. Defaults to `false`. 
+
 #### context_lines
 
 This option sets the number of lines of code context to capture. If `null` is
