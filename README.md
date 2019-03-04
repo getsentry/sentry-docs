@@ -25,6 +25,21 @@ This will run Bundler to install all the necessary dependencies and then run a w
 [nodejs]: https://nodejs.org/
 [yarn]: https://yarnpkg.com
 
+### Using a local Docker container
+
+If you'd like to avoid installing all those local dependencies, you can run everything in a local Docker container.
+
+Just build and run it like this:
+```
+#Build the container:
+$ docker build -t sentry:jekyll-local-builder -f Dockerfile.local .
+
+#Run the container:
+$ docker run -it -p 9000:4000 -p 35727:35727 -v $(pwd):/sentry/docs --rm sentry:jekyll-local-builder
+```
+
+This will start a local shell inside the container. Afterwards, a simple `bin/server` like before will be enough.
+
 ## Development mode
 
 There are a number of enhancements in place that are only available when developing locally.
