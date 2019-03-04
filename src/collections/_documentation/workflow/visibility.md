@@ -68,7 +68,7 @@ The Events View uncovers your raw error stream for any group of projects, includ
 &nbsp;
 ### Specify with Search
 The updated Search helps you get specific with Issues and Events views.
-- Wildcards: use the `*` operator. For example, `user.email:*@example.com`
+- Wildcards: use the `*` operator as a placeholder for specific characters or strings. For example, `user.email:*@example.com`
 - Negation: use the `!` operator to exclude terms. For example, `!user.email:user@example.com`
 - Advanced properties: search on advanced event properties like `stack` (including `stack.filename`, `stack.module`, etc.), as well as `geo` (including `geo.country_code`, `geo.city`, etc.).
 
