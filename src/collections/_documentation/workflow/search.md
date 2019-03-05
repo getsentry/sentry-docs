@@ -173,7 +173,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 : Restrict results to events that occurred at the given timestamp. This filter can be passed twice to provide a range.
 
-  Events occurred on January 2nd 2016:
+  Events occurred on January 2, 2016:
 
   `event.timestamp:2016-01-02`
 
