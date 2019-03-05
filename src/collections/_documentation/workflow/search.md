@@ -17,20 +17,21 @@ Discover is Sentry's powerful query builder for aggregating raw event data and h
 &nbsp;
 ## Syntax
 
-Queries are constructed using a `token:value` pattern:
+Queries are constructed using a `token:value` pattern, with an optional raw search at the end:
 
 ```
 is:resolved user.username:"Jane Doe" server:web-8 example error
 ```
 
-In the above there are four tokens/values:
+In the example above, there are three tokens:
 
--   `is:resolved`
--   `user.username:Jane Doe`
--   `server:web-8`
--   `example error`
+-   `is:`
+-   `user.username:`
+-   `server:`
 
-The tokens `is:` and `user.username:` are standard search tokens because both use reserved keywords. The token `server:` is pointing to a custom tag sent by the Sentry SDK. The token `example error` is passed as part of the issue search query (which uses a CONTAINS match similar to SQL, but operates as an and/or search).
+The tokens `is:` and `user.username:` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Events Properties](#events-properties) for appropriate keyword usage. The token `server:` is pointing to a custom tag sent by the Sentry SDK. 
+
+The value `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
 &nbsp;
 ### Advanced
@@ -59,11 +60,11 @@ browser:"Safari 11*"
 In the example above, the search query will match on `browser` values like `"Safari 11.0.2"`, `"Safari 11.0.3"`, etc.
 
 &nbsp;
-## Search Properties
+## Search Properties 
 
 In the examples above, we've highlighted a couple of example properties you can search on: `is`, `user`, `server`, `browser`, etc. Below is a canonical list of all available search terms.
 
-### Issue Properties
+### Issue Properties {#issue-properties}
 
 Issues are an aggregate of one or more events. Searchable properties include workflow status, assignment, aggregate counts, and age.
 
@@ -146,8 +147,8 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
 
   `lastSeen:-2d`
 
-&nbsp;
-### Events
+&nbsp; 
+### Events Properties {#events-properties}
 
 Events are the underlying event data captured using Sentry SDKs (read: errors and exceptions).
 
