@@ -21,7 +21,7 @@ Most SDKs will now automatically collect data if available; some require extra c
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
-```
+```javascript
 Sentry.captureException(new Error("This is my fake error message"));
 ```
 Then, you can see the error in your dashboard:
@@ -33,7 +33,7 @@ Then, you can see the error in your dashboard:
 ### Capturing Errors / Exceptions {#capturing-errors}
 In JavaScript, you can pass an error object to `captureException()` to get it captured as an event.
 
-```
+```javascript
 try {
   aFunctionThatMightFail();
 } catch (err) {
@@ -66,7 +66,7 @@ Most promise libraries have a global hook for capturing unhandled errors. You ma
 
 For example, the [RSVP.js library](https://github.com/tildeio/rsvp.js/) (used by Ember.js) allows you to bind an event handler to a [global error event](https://github.com/tildeio/rsvp.js#error-handling).
 
-```
+```javascript
 RSVP.on('error', function(reason) {
   Sentry.captureException(reason);
 });
@@ -382,7 +382,7 @@ Sentry supports additional context with events. Often this context is shared amo
 ### Extra Context {#extra-context}
 In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
 
-```
+```javascript
 Sentry.configureScope((scope) => {
   scope.setExtra("character_name", "Mighty Fighter");
 });
@@ -403,7 +403,7 @@ Context is held in the current scope and thus is cleared out at the end of each 
 
 There are two different scopes for unsetting context --- a global scope which Sentry does not discard at the end of an operation, and a scope that can be created by the user.
 
-```
+```javascript
 // This will be changed for all future events
 Sentry.configureScope(scope => {
   scope.setUser(someUser);
@@ -418,7 +418,7 @@ Sentry.withScope(scope => {
 
 If you want to remove globally configured data from the scope, you can call:
 
-```
+```javascript
 Sentry.configureScope(scope => scope.clear())
 ```
 
@@ -433,7 +433,7 @@ Sending users to Sentry will unlock many features, primarily the ability to dril
 
 Capturing the user is fairly straight forward:
 
-```
+```javascript
 Sentry.configureScope((scope) => {
   scope.setUser({"email": "john,doe@example.com"});
 });
@@ -465,7 +465,7 @@ Sentry implements a system it calls tags. Tags are various key/value pairs that 
 
 Most SDKs generally support configuring tags by configuring the scope:
 
-```
+```javascript
 Sentry.configureScope((scope) => {
   scope.setTag("page_locale", "de-at");
 });
@@ -491,13 +491,13 @@ You can set the severity of an event to one of five values: `fatal`, `error`, `w
 
 To set the level out of scope, you can call `captureMessage()` per event:
 
-```
+```javascript
 Sentry.captureMessage('this is a debug message', 'debug');
 ```
 
 To set the level within scope, you can call `setLevel()`:
 
-```
+```javascript
 Sentry.configureScope((scope) => {
   scope.setLevel('warning');
 });
@@ -505,7 +505,7 @@ Sentry.configureScope((scope) => {
 
 or per event:
 
-```
+```javascript
 Sentry.withScope((scope) => {
   scope.setLevel("info");
   Sentry.captureException(error);
@@ -526,7 +526,7 @@ For more information, see [Aggregate Errors with Custom Fingerprints](https://bl
 #### Minimal Example
 This minimal example will put all exceptions of the current scope into the same issue/group:
 
-```
+```javascript
 Sentry.configureScope((scope) => {
   scope.setFingerprint(['my-view-function']);
 });
@@ -540,7 +540,7 @@ Your application queries an external API service, so the stack trace is generall
 
 The following example will split up the default group Sentry would create (represented by `{{ "{{default"}}}}`) further, while also splitting up the group based on the API URL.
 
-```
+```javascript
 function makeRequest(path, options) {
     return fetch(path, options).catch(err => {
         Sentry.withScope(scope => {
@@ -555,7 +555,7 @@ function makeRequest(path, options) {
 #### Example: Merge a lot of groups into one group (groups are too small)
 If you have an error that has many different stack traces and never groups together, you can merge them together by omitting `{{ "{{default"}}}}` from the fingerprint array.
 
-```
+```javascript
 Sentry.withScope(scope => {
   scope.setFingerprint(['Database Connection Error']);
   Sentry.captureException(err);
@@ -610,7 +610,7 @@ Additionally, keep in mind to define `<!doctype html>` on top of your HTML page,
 ### Advanced Configuration
 The Sentry SDK sets the options when you first initialize the SDK.
 
-```
+```javascript
 Sentry.init({
   dsn: 'https://bd421d97f0d64387ac5768fe16f88f78@sentry.io/1268071',
   release: "28d497fb8af6cc3efbe160e28c1c08f08bd688fc",
@@ -631,7 +631,7 @@ Sentry will automatically record certain events, such as changes to the URL and 
 
 You can manually add breadcrumbs on other events or disable breadcrumbs.
 
-```
+```javascript
 // Example for an application that sometimes errors after the screen resizes
 
 window.addEventListener('resize', function(event){
@@ -651,7 +651,7 @@ For more information, see:
 ### Filter Events & Custom Logic
 Sentry exposes a beforeSend callback which can be used to filter out information or add additional context to the event object.
 
-```
+```javascript
 Sentry.init({
   beforeSend(event) {
     // Modify the event here
@@ -673,7 +673,7 @@ For more information, see:
 ### Capturing Messages {#messages}
 Typically, the Sentry SDK does not emit messages. This is most useful when you've overridden fingerprinting but need to give a useful message.
 
-```
+```javascript
 Sentry.captureMessage('Some message', level);
 
 // Where `level` can be one of:
@@ -825,7 +825,7 @@ This integration wraps native APIs to capture breadcrumbs. By default, the Sentr
 
 Available options:
 
-```js
+```javascript
 {
   beacon: boolean;  // Log HTTP requests done with the Beacon API
   console: boolean; // Log calls to `console.log`, `console.debug`, etc
@@ -845,7 +845,7 @@ This integration attaches global handlers to capture uncaught exceptions and unh
 
 Available options:
 
-```js
+```javascript
 {
   onerror: boolean;
   onunhandledrejection: boolean;
@@ -860,7 +860,7 @@ This integration allows you to configure linked errors. They'll be recursively r
 
 Available options:
 
-```js
+```javascript
 {
   key: string;
   limit: number;
@@ -885,7 +885,7 @@ This integration allows you to inspect the content of the processed event, that 
 
 Available options:
 
-```js
+```javascript
 {
   debugger: boolean; // trigger DevTools debugger instead of using console.log
   stringify: boolean; // stringify event before passing it to console.log
@@ -900,7 +900,7 @@ This integration allows you to apply a transformation to each frame of the stack
 
 Available options:
 
-```js
+```javascript
 {
   root: string; // root path that will be appended to the basename of the current frame's url
   iteratee: (frame) => frame); // function that take the frame, apply any transformation on it and returns it back
@@ -917,7 +917,7 @@ This integration hooks into the ReportingObserver API and sends captured events 
 
 Available options:
 
-```js
+```javascript
 {
   types: <'crash'|'deprecation'|'intervention'>[];
 }
