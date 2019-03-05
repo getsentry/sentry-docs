@@ -1,3 +1,3 @@
 ```php
-\Sentry\captureMessage('Something went wrong');
+Sentry\captureMessage('Something went wrong');
 ```

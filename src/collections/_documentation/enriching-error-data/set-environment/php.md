@@ -1,5 +1,5 @@
 ```php
-\Sentry\init([
+Sentry\init([
   'environment' => 'production',
 ]);
 ```

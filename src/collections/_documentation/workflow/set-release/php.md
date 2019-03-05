@@ -1,5 +1,5 @@
 ```php
-\Sentry\init([
+Sentry\init([
   'release' => '{{ page.release_identifier }}',
 ]);
 ```

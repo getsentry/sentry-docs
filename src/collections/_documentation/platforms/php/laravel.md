@@ -201,7 +201,7 @@ class SentryContext
     public function handle($request, Closure $next)
     {
         if (auth()->check() && app()->bound('sentry')) {
-            \Sentry\configureScope(function (Scope $scope): void {
+            Sentry\configureScope(function (Scope $scope): void {
                 $scope->setUser([
                     'id' => auth()->user()->id,
                     'email' => auth()->user()->email,
@@ -298,7 +298,7 @@ To resolve this, you'll need to create your own service provider extending ours 
 
 namespace App\Support;
 
-class SentryLaravelServiceProvider extends \Sentry\Laravel\ServiceProvider
+class SentryLaravelServiceProvider extends Sentry\Laravel\ServiceProvider
 {
     public static $abstract = 'sentry-laravel';
 }
@@ -320,7 +320,7 @@ Optionally, if you want to use the facade, you also need to extend/create a new 
 
 namespace App\Support;
 
-class SentryLaravelFacade extends \Sentry\Laravel\Facade
+class SentryLaravelFacade extends Sentry\Laravel\Facade
 {
     protected static function getFacadeAccessor()
     {
