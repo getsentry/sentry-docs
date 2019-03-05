@@ -17,21 +17,22 @@ Discover is Sentry's powerful query builder for aggregating raw event data and h
 &nbsp;
 ## Syntax
 
-Queries are constructed using a `token:value` pattern, with an optional raw search at the end:
+Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token`, except the optional raw search. The optional raw search is itself a `token`. For example:
 
 ```
 is:resolved user.username:"Jane Doe" server:web-8 example error
 ```
 
-In the example above, there are three tokens:
+In the example above, there are three keys (`is:`, `user.username:`, `server:`), but four tokens:
 
--   `is:`
--   `user.username:`
--   `server:`
+-   `is:resolved`
+-   `user.username:"Jane Doe"`
+-   `server:web-8`
+-   `example error`
 
-The tokens `is:` and `user.username:` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Events Properties](#events-properties) for appropriate keyword usage. The token `server:` is pointing to a custom tag sent by the Sentry SDK. 
+The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Events Properties](#events-properties) for appropriate keyword usage. The token `server:web-8` is pointing to a custom tag sent by the Sentry SDK. 
 
-The value `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
+The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
 &nbsp;
 ### Advanced
