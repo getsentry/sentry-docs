@@ -56,7 +56,7 @@ In the example above, the search query will match on `browser` values like `"Saf
 
 ## Search Properties
 
-In the examples above, we've highlighted a couple example properites you can search on: `is`, `user`, `server`, `browser`, etc. Below is a canonical list of all available search terms.
+In the examples above, we've highlighted a couple of example properties you can search on: `is`, `user`, `server`, `browser`, etc. Below is a canonical list of all available search terms.
 
 ### Issue Properties
 
