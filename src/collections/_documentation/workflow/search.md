@@ -28,7 +28,7 @@ In the above there are four tokens:
 -   `server:web-8`
 -   `example error`
 
-The first two are standard search tokens, both using reserved keywords. The third is pointing to a custom tag sent by the SDK. The fourth is passed as part of the issue search query (which uses a `CONTAINS` match).
+`is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. `server:web-8` is pointing to a custom tag sent by the Sentry SDK. `example error` is passed as part of the issue search query (which uses a CONTAINS match).
 
 ### Advanced
 
