@@ -212,7 +212,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 ### Custom Tags
 
-Additionally you can use any tag you’ve specified as a token.
+Additionally, you can use any tag you’ve specified as a token.
 
 ## Saving Searches
 
