@@ -1,7 +1,7 @@
 Options are passed to the `init()` method as an array:
 
 ```php
-\Sentry\init([
+Sentry\init([
   'dsn' => '___PUBLIC_DSN___',
   'max_breadcrumbs' => 50,
 ]);
