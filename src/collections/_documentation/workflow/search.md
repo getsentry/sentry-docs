@@ -153,7 +153,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 `geo.region`
 `geo.city`
 
-: Restrict results to events triggered from a geographic area.
+: Restrict results to events triggered by a geographic area.
 
 `release`
 
