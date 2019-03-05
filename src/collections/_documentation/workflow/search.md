@@ -6,7 +6,7 @@ sidebar_order: 3
 Search is available on several major Sentry views: Issues, Events, and Releases.
 
 {% capture __alert_content -%}
-Discover is Sentry's query builder for aggregating raw event data, and has its own unique syntax not covered here. For more information, see Discover.
+Discover is Sentry's query builder for aggregating raw event data and has its own unique syntax not covered here. For more information, see full Discover documentation.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
