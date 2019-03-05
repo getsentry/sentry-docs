@@ -102,7 +102,7 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
   
 `age`
 
-: Restrict results to issues created since `age`. The syntax is similar to the unix `find` command:
+: Restrict results to issues created since `age`. The syntax is similar to the Unix `find` command:
 
   Issues new in the last 24 hours:
 
