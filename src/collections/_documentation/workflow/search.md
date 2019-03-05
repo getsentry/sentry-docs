@@ -6,13 +6,15 @@ sidebar_order: 3
 Search is available on several major Sentry views: Issues, Events, and Releases.
 
 {% capture __alert_content -%}
-Discover is Sentry's query builder for aggregating raw event data and has its own unique syntax not covered here. For more information, see full Discover documentation.
+Discover is Sentry's powerful query builder for aggregating raw event data and has its own unique syntax not covered here. For more information, see [full Discover documentation]({%- link _documentation/workflow/discover.md -%}).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
+&nbsp;
 ## Syntax
 
 Queries are constructed using a `token:value` pattern:
@@ -21,18 +23,19 @@ Queries are constructed using a `token:value` pattern:
 is:resolved user.username:"Jane Doe" server:web-8 example error
 ```
 
-In the above there are four tokens:
+In the above there are four tokens/values:
 
 -   `is:resolved`
 -   `user.username:Jane Doe`
 -   `server:web-8`
 -   `example error`
 
-`is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. `server:web-8` is pointing to a custom tag sent by the Sentry SDK. `example error` is passed as part of the issue search query (which uses a CONTAINS match).
+The tokens `is:` and `user.username:` are standard search tokens because both use reserved keywords. The token `server:` is pointing to a custom tag sent by the Sentry SDK. The token `example error` is passed as part of the issue search query (which uses a CONTAINS match similar to SQL, but operates as an and/or search).
 
+&nbsp;
 ### Advanced
 
-**Exclusion**
+#### Exclusion
 
 By default, search terms are `AND`-ed together; they return the intersection of issues/events that match all search terms.
 
@@ -44,9 +47,10 @@ is:unresolved !user.email:example@customer.com
 
 In the example above, the search query returns all Issues that are unresolved _and_ have not affected the user with the email address `example@customer.com`.
 
-**Wildcards**
+&nbsp;
+#### Wildcards
 
-Search supports the wildcard operator `*` for values.
+Search supports the wildcard operator `*` as a placeholder for specific characters and strings.
 
 ```
 browser:"Safari 11*"
@@ -54,6 +58,7 @@ browser:"Safari 11*"
 
 In the example above, the search query will match on `browser` values like `"Safari 11.0.2"`, `"Safari 11.0.3"`, etc.
 
+&nbsp;
 ## Search Properties
 
 In the examples above, we've highlighted a couple of example properties you can search on: `is`, `user`, `server`, `browser`, etc. Below is a canonical list of all available search terms.
@@ -141,6 +146,7 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
 
   `lastSeen:-2d`
 
+&nbsp;
 ### Events
 
 Events are the underlying event data captured using Sentry SDKs (read: errors and exceptions).
@@ -210,10 +216,12 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 : Restrict results to events with a matching stack property.
 
+&nbsp;
 ### Custom Tags
 
 Additionally, you can use any tag you’ve specified as a token.
 
+&nbsp;
 ## Saving Searches
 
 You can save a search by performing the search, clicking the dropdown arrow next to the Current Search, and then "Save Current Search".
