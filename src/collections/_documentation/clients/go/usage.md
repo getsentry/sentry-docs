@@ -46,11 +46,11 @@ To form a `Packet`, you can use `Packet` type directly, or `NewPacket` and `NewP
 
 ```go
 packet := &raven.Packet{
-  Message: "Hand-crafted event"
-  Extra: &raven.Extra{
-    "runtime.Version": runtime.Version(),
-    "runtime.NumCPU": runtime.NumCPU()
-  }
+    Message: "Hand-crafted event",
+    Extra: &raven.Extra{
+        "runtime.Version": runtime.Version(),
+        "runtime.NumCPU": runtime.NumCPU(),
+    },
 }
 raven.Capture(packet)
 ```

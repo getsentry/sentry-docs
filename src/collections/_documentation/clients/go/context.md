@@ -11,8 +11,8 @@ For example:
 
 ```go
 raven.CaptureError(err, map[string]string{"browser": "Firefox"}, &raven.Http{
-  Method: "GET",
-  URL: "https://example.com/raven-go"
+    Method: "GET",
+    URL: "https://example.com/raven-go"
 })
 ```
 
@@ -25,8 +25,8 @@ Provides information about an HTTP call that the Sentry SDK processes when the e
 
 ```go
 h := &raven.Http{
-  Method: "GET",
-  URL: "https://example.com/raven-go"
+    Method: "GET",
+    URL: "https://example.com/raven-go",
 }
 // or
 h = raven.NewHttp(req) // where req is an implementation of `*http.Request` interface
@@ -50,10 +50,10 @@ Provides information about a User whos session was active when error happened.
 
 ```go
 u := &raven.User{
-  ID: "1337",
-  Username: "kamilogorek",
-  Email: "kamil@sentry.io",
-  IP: "127.0.0.1"
+    ID: "1337",
+    Username: "kamilogorek",
+    Email: "kamil@sentry.io",
+    IP: "127.0.0.1",
 }
 raven.SetUserContext(u)
 ```
