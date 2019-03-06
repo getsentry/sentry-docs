@@ -17,7 +17,9 @@ Discover is Sentry's powerful query builder for aggregating raw event data and h
 &nbsp;
 ## Syntax
 
-Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token`, except the optional raw search. The optional raw search is itself a `token`. For example:
+Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token` and the optional raw search is itself a `token`. The Sentry SDKs treat the `key:value` pair `token` as a search on an issue or event property. The SDKs treat the optional raw search `token` as a message separated by whitespace, which is used to search on event titles/messages.   
+
+For example:
 
 ```
 is:resolved user.username:"Jane Doe" server:web-8 example error
@@ -30,7 +32,7 @@ In the example above, there are three keys (`is:`, `user.username:`, `server:`),
 -   `server:web-8`
 -   `example error`
 
-The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Events Properties](#events-properties) for appropriate keyword usage. The token `server:web-8` is pointing to a custom tag sent by the Sentry SDK. 
+The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Event Properties](#event-properties) for appropriate keyword usage. The token `server:web-8` is pointing to a custom tag sent by the Sentry SDK. See [Custom Tags](#custom-tags) for more information on how to set tags. 
 
 The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
@@ -149,7 +151,7 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
   `lastSeen:-2d`
 
 &nbsp; 
-### Events Properties {#events-properties}
+### Event Properties {#event-properties}
 
 Events are the underlying event data captured using Sentry SDKs (read: errors and exceptions).
 
@@ -219,7 +221,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 : Restrict results to events with a matching stack property.
 
 &nbsp;
-### Custom Tags
+### Custom Tags {#custom-tags}
 
 Additionally, you can use any tag you’ve specified as a token.
 
