@@ -1,6 +1,8 @@
 ---
 title: Search
 sidebar_order: 3
+example_tag_name: page_locale
+example_tag_value: de-at
 ---
 
 Search is available on several major Sentry views: Issues, Events, and Releases.
