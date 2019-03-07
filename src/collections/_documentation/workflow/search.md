@@ -65,7 +65,7 @@ In the example above, the search query will match on `browser` values like `"Saf
 
 In the examples above, we've highlighted a couple of example properties you can search on: `is`, `user`, `server`, `browser`, etc. Below is a canonical list of all available search terms.
 
-### Issue Properties {#issue-properties}
+### Issue Properties
 
 Issues are an aggregate of one or more events. Searchable properties include workflow status, assignment, aggregate counts, and age.
 
@@ -148,7 +148,7 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
 
   `lastSeen:-2d`
 
-### Event Properties {#event-properties}
+### Event Properties
 
 Events are the underlying event data captured using Sentry SDKs (read: errors and exceptions).
 
@@ -217,7 +217,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 : Restrict results to events with a matching stack property.
 
-### Custom Tags {#custom-tags}
+### Custom Tags
 
 Additionally, you can use any tag you’ve specified as a token. Tags are various key/value pairs that get assigned to an event, and you can use them later as a breakdown or quick access to finding related events.
 
