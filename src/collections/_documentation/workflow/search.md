@@ -225,7 +225,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 Additionally, you can use any tag you’ve specified as a token.
 
-<!-- Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and can later be used as a breakdown or quick access to finding related events.
+Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and can later be used as a breakdown or quick access to finding related events.
 
 Most SDKs generally support configuring tags by configuring the scope:
 
@@ -243,7 +243,7 @@ Once you’ve starting sending tagged data, you’ll see it show up in a few pla
 -   Summarized within an event on the sidebar.
 -   The tags page on an aggregated event.
 
-We’ll automatically index all tags for an event, as well as the frequency and the last time a value has been seen. Even more so, we keep track of the number of distinct tags, and can assist in you determining hotspots for various issues. -->
+We’ll automatically index all tags for an event, as well as the frequency and the last time a value has been seen. Even more so, we keep track of the number of distinct tags, and can assist in you determining hotspots for various issues.
 
 &nbsp;
 ## Saving Searches
