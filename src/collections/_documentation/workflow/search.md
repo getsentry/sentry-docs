@@ -14,7 +14,6 @@ Discover is Sentry's powerful query builder for aggregating raw event data and h
   level="info"
 %}
 
-&nbsp;
 ## Syntax
 
 Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token` and the optional raw search is itself a `token`. The Sentry SDKs treat the `key:value` pair `token` as a search on an issue or event property. The SDKs treat the optional raw search `token` as a message separated by whitespace, which is used to search on event titles/messages.   
@@ -36,7 +35,6 @@ The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search toke
 
 The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
-&nbsp;
 ### Advanced
 
 #### Exclusion
@@ -51,7 +49,6 @@ is:unresolved !user.email:example@customer.com
 
 In the example above, the search query returns all Issues that are unresolved _and_ have not affected the user with the email address `example@customer.com`.
 
-&nbsp;
 #### Wildcards
 
 Search supports the wildcard operator `*` as a placeholder for specific characters and strings.
@@ -62,7 +59,6 @@ browser:"Safari 11*"
 
 In the example above, the search query will match on `browser` values like `"Safari 11.0.2"`, `"Safari 11.0.3"`, etc.
 
-&nbsp;
 ## Search Properties 
 
 In the examples above, we've highlighted a couple of example properties you can search on: `is`, `user`, `server`, `browser`, etc. Below is a canonical list of all available search terms.
@@ -150,7 +146,6 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
 
   `lastSeen:-2d`
 
-&nbsp; 
 ### Event Properties {#event-properties}
 
 Events are the underlying event data captured using Sentry SDKs (read: errors and exceptions).
@@ -220,10 +215,9 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 : Restrict results to events with a matching stack property.
 
-&nbsp;
 ### Custom Tags {#custom-tags}
 
-Additionally, you can use any tag you’ve specified as a token. Tags are various key/value pairs that get assigned to an event, and can later be used as a breakdown or quick access to finding related events.
+Additionally, you can use any tag you’ve specified as a token. Tags are various key/value pairs that get assigned to an event, and you can use them later as a breakdown or quick access to finding related events.
 
 Most SDKs generally support configuring tags by configuring the scope:
 
@@ -232,12 +226,11 @@ Most SDKs generally support configuring tags by configuring the scope:
 Several common uses for tags include:
 
 -   The hostname of the server
--   The version of your platform (e.g. iOS 5.0)
+-   The version of your platform (for example, iOS 5.0)
 -   The user’s language
 
-For more information, see [full documentation on Tagging Events]({%- link _documentation/enriching-error-data/context.md -%}).
+For more information, see [full documentation on Tagging Events]({%- link _documentation/enriching-error-data/context.md -%} #tagging-events).
 
-&nbsp;
 ## Saving Searches
 
 You can save a search by performing the search, clicking the dropdown arrow next to the Current Search, and then "Save Current Search".
