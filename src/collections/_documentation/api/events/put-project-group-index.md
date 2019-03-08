@@ -15,6 +15,11 @@
       "type": "string"
     }, 
     {
+      "description": "additional details about the resolution. Valid values are `\"inRelease\"`, `\"inNextRelease\"`, `\"inCommit\"`,  `\"ignoreDuration\"`, `\"ignoreCount\"`, `\"ignoreWindow\"`, `\"ignoreUserCount\"`, and `\"ignoreUserWindow\"`.", 
+      "name": "statusDetails", 
+      "type": "map"
+    }, 
+    {
       "description": "the number of minutes to ignore this issue.", 
       "name": "ignoreDuration", 
       "type": "int"
