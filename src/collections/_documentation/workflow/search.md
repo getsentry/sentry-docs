@@ -231,7 +231,7 @@ Several common uses for tags include:
 -   The version of your platform (for example, iOS 5.0)
 -   The user’s language
 
-For more information, see [full documentation on Tagging Events]({%- link _documentation/enriching-error-data/context.md -%} #tagging-events).
+For more information, see [full documentation on Tagging Events]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events).
 
 ## Saving Searches
 
