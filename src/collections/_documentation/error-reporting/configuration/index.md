@@ -17,8 +17,12 @@ subtle differences will exist to better support the platform.
 {:.config-key}
 ### `dsn`
 
-The _DSN_ tells the SDK where to send the events to. This option is always required and different SDKs might pick this up from an environment
-variable (`SENTRY_DSN`) or in the case if you are using the CDN version or the Browser SDK, it's already configured for you.
+The _DSN_ tells the SDK where to send the events to. If this value is not
+provided, the SDK will try to read it from the `SENTRY_DSN` environment
+variable. If that variable also does not exist, the SDK will just not send any
+events.
+
+Note: In runtimes without a process environment (such as the browser) that fallback does not apply.
 
 {:.config-key}
 ### `debug`
@@ -40,11 +44,17 @@ in sync with your deploy integrations or source map uploads.
 Release names are just strings but some formats are detected by Sentry and might be rendered
 differently.  For more information have a look at [the releases documentation]({% link _documentation/workflow/releases.md %}).
 
+By default the SDK will try to read this value from the `SENTRY_RELEASE` environment
+variable (except for the browser SDK where this is not applicable).
+
 {:.config-key}
 ### `environment`
 
 Sets the environment.  This string is freeform and not set by default.  A release can be associated
 with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT`
+environment variable (except for the browser SDK where this is not applicable).
 
 {:.config-key}
 ### `sample-rate`
