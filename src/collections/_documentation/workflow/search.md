@@ -1,6 +1,8 @@
 ---
 title: Search
 sidebar_order: 3
+example_tag_name: page_locale
+example_tag_value: de-at
 ---
 
 Search is available on several major Sentry views: Issues, Events, and Releases.
@@ -14,10 +16,11 @@ Discover is Sentry's powerful query builder for aggregating raw event data and h
   level="info"
 %}
 
-&nbsp;
 ## Syntax
 
-Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token`, except the optional raw search. The optional raw search is itself a `token`. For example:
+Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token` and the optional raw search is itself a `token`. The Sentry SDKs treat the `key:value` pair `token` as a search on an issue or event property. The SDKs treat the optional raw search `token` as a message separated by whitespace, which is used to search on event titles/messages.   
+
+For example:
 
 ```
 is:resolved user.username:"Jane Doe" server:web-8 example error
@@ -30,11 +33,10 @@ In the example above, there are three keys (`is:`, `user.username:`, `server:`),
 -   `server:web-8`
 -   `example error`
 
-The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Events Properties](#events-properties) for appropriate keyword usage. The token `server:web-8` is pointing to a custom tag sent by the Sentry SDK. 
+The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Event Properties](#event-properties) for appropriate keyword usage. The token `server:web-8` is pointing to a custom tag sent by the Sentry SDK. See [Custom Tags](#custom-tags) for more information on how to set tags. 
 
 The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
-&nbsp;
 ### Advanced
 
 #### Exclusion
@@ -49,7 +51,6 @@ is:unresolved !user.email:example@customer.com
 
 In the example above, the search query returns all Issues that are unresolved _and_ have not affected the user with the email address `example@customer.com`.
 
-&nbsp;
 #### Wildcards
 
 Search supports the wildcard operator `*` as a placeholder for specific characters and strings.
@@ -60,12 +61,11 @@ browser:"Safari 11*"
 
 In the example above, the search query will match on `browser` values like `"Safari 11.0.2"`, `"Safari 11.0.3"`, etc.
 
-&nbsp;
 ## Search Properties 
 
 In the examples above, we've highlighted a couple of example properties you can search on: `is`, `user`, `server`, `browser`, etc. Below is a canonical list of all available search terms.
 
-### Issue Properties {#issue-properties}
+### Issue Properties
 
 Issues are an aggregate of one or more events. Searchable properties include workflow status, assignment, aggregate counts, and age.
 
@@ -148,8 +148,7 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
 
   `lastSeen:-2d`
 
-&nbsp; 
-### Events Properties {#events-properties}
+### Event Properties
 
 Events are the underlying event data captured using Sentry SDKs (read: errors and exceptions).
 
@@ -218,12 +217,22 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 : Restrict results to events with a matching stack property.
 
-&nbsp;
 ### Custom Tags
 
-Additionally, you can use any tag you’ve specified as a token.
+Additionally, you can use any tag you’ve specified as a token. Tags are various key/value pairs that get assigned to an event, and you can use them later as a breakdown or quick access to finding related events.
 
-&nbsp;
+Most SDKs generally support configuring tags by configuring the scope:
+
+{% include components/platform_content.html content_dir='set-tag' %}
+
+Several common uses for tags include:
+
+-   The hostname of the server
+-   The version of your platform (for example, iOS 5.0)
+-   The user’s language
+
+For more information, see [full documentation on Tagging Events]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events).
+
 ## Saving Searches
 
 You can save a search by performing the search, clicking the dropdown arrow next to the Current Search, and then "Save Current Search".
