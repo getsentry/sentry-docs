@@ -38,7 +38,7 @@
       "type": "timestamp"
     }, 
     {
-      "description": "an explicit resolution to search for (eg: `10s`).  This should not be used unless you are familiar with Sentry's internals as it's restricted to pre-defined values.", 
+      "description": "an explicit resolution to search for (one of `10s`, `1h`, and `1d`)", 
       "name": "resolution", 
       "type": "string"
     }
