@@ -28,6 +28,7 @@ Roles include:
 | Can add/remove/change members |   |   |   | X | X |
 | Can add/remove teams* |   |   | X | X | X |
 | Can add Repositories |   |   | X | X | X |
+| Can delete Repositories |   |   |   |   | X |
 | Can change Organization Settings |   |   |   | X | X |
 | Can remove an Organization |   |   |   |   | X |
 
