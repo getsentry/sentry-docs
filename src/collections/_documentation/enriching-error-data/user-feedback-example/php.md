@@ -4,7 +4,7 @@ This function php returns the last `eventId`:
 Sentry\State\Hub::getCurrent()->getLastEventId();
 ```
 
-Depending on you render your templates, the example would be in a simple php file:
+Depending on how you render your templates, the example would be in a simple php file:
 
 
 ```html
