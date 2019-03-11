@@ -21,7 +21,7 @@
       "type": "string"
     }, 
     {
-      "description": "the hexadecimal ID of the event to retrieve (as reported by the raven client).", 
+      "description": "the id of the event to retrieve (either the numeric primary-key or the hexadecimal id as reported by the raven client)", 
       "name": "event_id", 
       "type": "string"
     }
