@@ -17,7 +17,7 @@ To run the local webserver:
 $ bin/server
 ```
 
-This will run Bundler to install all the necessary dependencies and then run a webserver at http://localhost:4000/.
+This will run Bundler to install all the necessary dependencies and then run a webserver at http://localhost:9001/.
 
 [jekyll]: https://jekyllrb.com/
 [ruby]: https://www.ruby-lang.org/
