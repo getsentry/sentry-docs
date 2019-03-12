@@ -15,7 +15,7 @@ For most functionality you need to authenticate with Sentry. Setting this up can
 $ sentry-cli login
 ```
 
-This will give you the option to visit your auth token user settings, where you can create a new auth token, or simply copy an existing one. When you return to the CLI, you'll paste in your token and it will get added to `~/.sentrycli` automatically.
+This will give you the option to visit your auth token user settings, where you can create a new auth token, or simply copy an existing one. When you return to the CLI, you'll paste in your token and it will get added to `~/.sentryclirc` automatically.
 
 By default, `sentry-cli` will connect to sentry.io but for on-premise you can also sign in elsewhere:
 
@@ -27,7 +27,7 @@ $ sentry-cli --url https://myserver.invalid/ login
 
 Visit your [auth token user settings page](https://sentry.io/settings/account/api/auth-tokens/) and create or copy an existing token. Then either:
 
-- add it to `~/.sentrycli`:
+- add it to `~/.sentryclirc`:
   ```ini
   [auth]
   token=your-auth-token
@@ -43,7 +43,7 @@ Visit your [auth token user settings page](https://sentry.io/settings/account/ap
 
 ## Configuration File
 
-The `sentry-cli` tool can be configured with a config file named `.sentryclirc` as well as environment variables and _.env_ files. The config file is looked for upwards from the current path and defaults from _~/.sentryclirc_ are always loaded. You can also override these settings from command line parameters.
+The `sentry-cli` tool can be configured with a config file named `.sentryclirc` as well as environment variables and `.env` files. The config file is looked for upwards from the current path and defaults from `~/.sentryclirc` are always loaded. You can also override these settings from command line parameters.
 
 The config file uses standard INI syntax.
 
@@ -53,7 +53,7 @@ By default `sentry-cli` will connect to sentry.io. For on-prem you can export th
 export SENTRY_URL=https://mysentry.invalid/
 ```
 
-Alternatively you can add it to your `~/.sentryclirc` config. This is also what the _login_ command does:
+Alternatively you can add it to your `~/.sentryclirc` config. This is also what the `login` command does:
 
 ```ini
 [defaults]
