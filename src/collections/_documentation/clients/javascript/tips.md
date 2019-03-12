@@ -136,7 +136,7 @@ If you have no access to the backend, you could try a workaround, which is basic
 
 ```javascript
 $.ajax({
-    url: 'http:/mysite/leaflet.js',
+    url: 'http://mysite/leaflet.js',
     success: function() { ... },
     error: function() { ... },
     timeout: 2000, // 2 seconds timeout before error function will be called
