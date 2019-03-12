@@ -3,24 +3,19 @@ title: 'Configuration and Authentication'
 sidebar_order: 1
 ---
 
-For most functionality you need to authenticate with Sentry. To sign in via the CLI tool, you can use the _login_ command which will guide you through it:
+For most functionality you need to authenticate with Sentry. Setting this up can be done either automatically, using `sentry-cli`, or manually. Either way, you'll need a token with at least the following scopes:
+
+- `project:read`
+- `project:releases`
+- `org:read`
+
+##### To use the automatic option:
 
 ```bash
 $ sentry-cli login
 ```
 
-If you want to manually authenticate `sentry-cli` you can go to your to your auth token settings in your user account (User Icon -> API) and generate a new token with at least the following scopes:
-
--   `project:read`
--   `project:releases`
-
-Afterwards, you can export the `SENTRY_AUTH_TOKEN` environment variable:
-
-```bash
-export SENTRY_AUTH_TOKEN=your-auth-token
-```
-
-Alternatively, you can provide the `--auth-token` command line parameter whenever you invoke `sentry-cli` or add it to your _.sentryclirc_ config file.
+This will give you the option to visit your auth token user settings, where you can create a new auth token, or simply copy an existing one. When you return to the CLI, you'll paste in your token and it will get added to `~/.sentryclirc` automatically.
 
 By default, `sentry-cli` will connect to sentry.io but for on-premise you can also sign in elsewhere:
 
@@ -28,9 +23,27 @@ By default, `sentry-cli` will connect to sentry.io but for on-premise you can al
 $ sentry-cli --url https://myserver.invalid/ login
 ```
 
+##### To authenticate manually:
+
+Visit your [auth token user settings page](https://sentry.io/settings/account/api/auth-tokens/) and create or copy an existing token. Then either:
+
+- add it to `~/.sentryclirc`:
+  ```ini
+  [auth]
+  token=your-auth-token
+  ```
+- export it as an environment variable:
+  ```bash
+  export SENTRY_AUTH_TOKEN=your-auth-token
+  ```
+- pass it as a parameter when you invoke `sentry-cli`:
+  ```bash
+  $ sentry-cli --auth-token your-auth-token
+  ```
+
 ## Configuration File
 
-The `sentry-cli` tool can be configured with a config file named `.sentryclirc` as well as environment variables and _.env_ files. The config file is looked for upwards from the current path and defaults from _~/.sentryclirc_ are always loaded. You can also override these settings from command line parameters.
+The `sentry-cli` tool can be configured with a config file named `.sentryclirc` as well as environment variables and `.env` files. The config file is looked for upwards from the current path and defaults from `~/.sentryclirc` are always loaded. You can also override these settings from command line parameters.
 
 The config file uses standard INI syntax.
 
@@ -40,7 +53,7 @@ By default `sentry-cli` will connect to sentry.io. For on-prem you can export th
 export SENTRY_URL=https://mysentry.invalid/
 ```
 
-Alternatively you can add it to your `~/.sentryclirc` config. This is also what the _login_ command does:
+Alternatively you can add it to your `~/.sentryclirc` config. This is also what the `login` command does:
 
 ```ini
 [defaults]
