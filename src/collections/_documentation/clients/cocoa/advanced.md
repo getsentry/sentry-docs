@@ -43,9 +43,36 @@ Client.shared?.extra = [
     "my_key": 1,
     "some_other_value": "foo bar"
 ]
+Client.shared?.releaseName = "release"
+Client.shared?.dist = "dist"
+Client.shared?.environment = "production"
 ```
 
-All of the above (_user_, _tags_, and _extra_) can be set at anytime. Call `Client.shared?.clearContext()` to clear all set variables.
+All of the above (_user_, _tags_, _extra_, _releaseName_, _dist_ and _environment_) can be set at anytime. Call `Client.shared?.clearContext()` to clear all set variables.
+
+## Disabling the Client
+
+You can disable the client to prevent events from being sent. Note that the events will still be stored to disk. This functionality is helpful in case you want to ask the user for consent if they want to send the crash reports for example.
+
+```swift
+Client.shared?.enabled = false
+```
+
+## Init client with options
+
+You can also `init` the client with options:
+
+```swift
+Client.shared = try Client(options: [
+    "dsn": "___PUBLIC_DSN___",
+    "enabled": false, // In Objective-C this is @YES/@NO
+    "release": "release",
+    "dist": "dist",
+    "environment": "production",
+])
+```
+
+This way of initialization is helpful if you want to prevent the client from sending stored events.
 
 ## User Feedback {#cocoa-user-feedback}
 
