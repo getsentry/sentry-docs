@@ -49,7 +49,7 @@ are rendered as a key/value table.
 `level`
 
 : _Optional_. This defines the severity level of the breadcrumb. Allowed values
-are, from highest to lowest: `critical`, `error`, `warning`, `info` and `debug`.
+are, from highest to lowest: `fatal`, `error`, `warning`, `info` and `debug`.
 Levels are used in the UI to emphasize and deemphasize the crumb. Defaults to
 `info`.
 
