@@ -27,6 +27,8 @@ _Import name: `Sentry.Integrations.InboundFilter`_
 
 This integration allows developers to ignore specific errors based on the type or message,
 as well as blacklist/whitelist urls which exception originates from.
+It ignores errors, which message starts with `Script error` or `Javascript error: Script error` by default.
+More on this in our ["What the heck is "Script error"?"](https://blog.sentry.io/2016/05/17/what-is-script-error) blog post.
 
 To configure it, use `ignoreErrors`, `blacklistUrls` and `whitelistUrls` SDK options directly.
 

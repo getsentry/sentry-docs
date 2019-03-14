@@ -8,6 +8,15 @@ On its own, `@sentry/browser` will report any uncaught exceptions triggered from
 
 If you’re using React 16 or above, Error Boundaries are an important tool for defining the behavior of your application in the face of errors. Be sure to send errors they catch to Sentry using `Sentry.captureException`, and optionally this is also a great opportunity to surface User Feedback
 
+{% capture __alert_content -%}
+One important thing to note about the behavior of error boundaries in development mode is that React will rethrow errors they catch. This will result in errors being reported twice to Sentry with the above setup, but this won’t occur in your production build.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="info"
+%}
+
 ```jsx
 import * as Sentry from '@sentry/browser';
 
