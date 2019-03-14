@@ -69,6 +69,38 @@ The following types are known:
   : _Optional_. This can be a string `portrait` or `landscape` to define the
     orientation of a device.
 
+  `manufacturer`:
+
+  : _Optional_. The manufacturer of the device.
+
+  `brand`:
+
+  : _Optional_. The brand of the device.
+
+  `screen_resolution`:
+
+  : _Optional_. The screen resolution. (e.g.: 800x600, 3040x1444).
+
+  `screen_density`:
+
+  : _Optional_. A floating point denoting the screen density.
+
+  `screen_dpi`:
+
+  : _Optional_. A decimal value reflecting the DPI (dots-per-inch) density.
+
+  `online`:
+
+  : _Optional_. Whether the device was online or not.
+
+  `charging`:
+
+  : _Optional_. Whether the device was charging or not.
+
+  `low_memory`:
+
+  : _Optional_. Whether the device was low on memory.
+
   `simulator`:
 
   : _Optional_. A flag indicating whether this device is a simulator or an
