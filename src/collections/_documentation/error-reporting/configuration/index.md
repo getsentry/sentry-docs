@@ -116,7 +116,7 @@ will be sent.
 {:.config-key}
 ### `in-app-include`
 
-{% supported python rust %}
+{% supported python rust csharp %}
 A list of string prefixes of module names that belong to the app. This option takes precedence over `in_app_exclude`.
 {% endsupported %}
 
