@@ -21,11 +21,39 @@ Integrations are configured by a call to `init()` method.
 
 PHP provides some additional options, all options can be passed into `init()`.
 
-#### send_attempts
+#### capture_silenced_errors
+{% include components/alert.html
+    content="This option was introduced in version 2.0.1"
+    level="notice"
+%}
+This option enables capturing errors which were silenced using the `@` operator 
+in your source code. Defaults to `false`. 
 
-The number of attempts that should be made to send an event before erroring
-and dropping it from the queue.
-By default this option is set to `6`.
+#### context_lines
+
+This option sets the number of lines of code context to capture. If `null` is
+set as the value, no source code lines will be added to each stack trace frame.
+By default this option is set to `3`.
+
+#### enable_compression
+
+If this option is enabled, `gzip` compression will be enabled. Default is `true`.
+
+#### excluded_app_paths
+
+This option configures the list of paths to exclude from the `app_path` detection.
+
+#### excluded_exceptions
+
+Sometimes you may want to skip capturing certain exceptions. This option sets
+the FQCN of the classes of the exceptions that you don't want to capture. The
+check is done using the `instanceof` operator against each item of the array
+and if at least one of them passes the event will be discarded.
+
+#### prefixes
+
+This option sets the list of prefixes which should be stripped from the filenames
+to create relative paths.
 
 #### project_root
 
@@ -48,31 +76,11 @@ code".
 
 ``` 
 
-#### enable_compression
+#### send_attempts
 
-If this option is enabled, `gzip` compression will be enabled. Default is `true`.
-
-#### context_lines
-
-This option sets the number of lines of code context to capture. If `null` is
-set as the value, no source code lines will be added to each stack trace frame.
-By default this option is set to `3`.
-
-#### excluded_exceptions
-
-Sometimes you may want to skip capturing certain exceptions. This option sets
-the FQCN of the classes of the exceptions that you don't want to capture. The
-check is done using the `instanceof` operator against each item of the array
-and if at least one of them passes the event will be discarded.
-
-#### excluded_app_paths
-
-This option configures the list of paths to exclude from the `app_path` detection.
-
-#### prefixes
-
-This option sets the list of prefixes which should be stripped from the filenames
-to create relative paths.
+The number of attempts that should be made to send an event before erroring
+and dropping it from the queue.
+By default this option is set to `6`.
 
 ## Transport
 
