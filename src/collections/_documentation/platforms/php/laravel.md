@@ -159,6 +159,14 @@ $ php artisan sentry:test
 [sentry] Event sent: e6442bd7806444fc8b2710abce3599ac
 ```
 
+## Local development
+
+When Sentry is installed in your application it will also be active when you are developing.
+
+If you don't want errors to be sent to Sentry when you are developing set the DSN value to `null`.
+
+You can do this by not defining `SENTRY_LARAVEL_DSN` in your `.env` or define it as `SENTRY_LARAVEL_DSN=null`.
+
 ## Laravel specific options
 
 #### breadcrumbs.sql_bindings
