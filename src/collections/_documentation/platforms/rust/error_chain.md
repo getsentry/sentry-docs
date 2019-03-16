@@ -1,7 +1,7 @@
---
+---
 title: error-chain
 sidebar_order: 2
---
+---
 
 *Feature: `with_error_chain` (disabled by default)*
 
