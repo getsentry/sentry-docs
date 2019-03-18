@@ -31,7 +31,7 @@ This can be done, for example, via the `app.config` for console and desktop apps
 
 ```xml
   <appender name="SentryAppender" type="Sentry.Log4Net.SentryAppender, Sentry.Log4Net">
-      <Dsn value="___PUBLIC_KEY___"/>
+      <Dsn value="___PUBLIC_DSN___"/>
       <!--Sends the log event Identity value as the user-->
       <SendIdentity value="true" />
       <threshold value="INFO" />
