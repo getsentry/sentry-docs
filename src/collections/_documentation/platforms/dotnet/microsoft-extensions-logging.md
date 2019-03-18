@@ -87,7 +87,7 @@ Example using `appsettings.json`:
     }
   },
   "Sentry": {
-    "Dsn": "___PUBLIC_KEY___",
+    "Dsn": "___PUBLIC_DSN___",
     "MinimumBreadcrumbLevel": "Warning",
     "MinimumEventLevel": "Critical",
     "MaxBreadcrumbs": 50
