@@ -57,7 +57,7 @@ It's also possible to initialize the SDK through the Serilog integration. This i
 
 ```csharp
 Log.Logger = new LoggerConfiguration()
-  .WriteTo.Sentry(o => o.Dsn = new Dsn("___PUBLIC_KEY___"))
+  .WriteTo.Sentry(o => o.Dsn = new Dsn("___PUBLIC_DSN___"))
   .CreateLogger();
 ```
 
