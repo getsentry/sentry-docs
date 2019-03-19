@@ -60,7 +60,7 @@ Once you are in Organization Settings > Integrations and have installed the inte
 
 {% asset releases-repo-add.png %}
 
-In the 'Repositories' panel, click 'Add Repository', and add any repositories you'd like to track commits from. This creates a webhook on the repository which sends Sentry metadata about each commit (such as authors and files changed).
+In the 'Repositories' panel, click 'Add Repository', and add any repositories you'd like to track commits from. The integration will then send Sentry metadata (such as authors and files changed) about each commit pushed to those repositories.
 
 If you’re linking a GitHub repository, ensure you have Admin or Owner permissions on the repository, and that Sentry is an authorized GitHub app in your [GitHub account settings](https://github.com/settings/applications).
 
