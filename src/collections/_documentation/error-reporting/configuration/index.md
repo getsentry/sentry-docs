@@ -83,10 +83,12 @@ This feature is `off` by default.
 {:.config-key}
 ### `send-default-pii`
 
+{% unsupported browser javascript %}
 If this flag is enabled, certain personally identifiable information is added by active
 integrations.  Without this flag they are never added to the event, to begin with.  If possible,
 it's recommended to turn on this feature and use the server side PII stripping to remove the
 values instead.
+{% endunsupported %}
 
 {:.config-key}
 ### `server-name`
