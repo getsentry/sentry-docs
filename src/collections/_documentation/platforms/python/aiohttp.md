@@ -10,7 +10,7 @@ sidebar_order: 4
 
 The AIOHTTP integration adds support for the [AIOHTTP-Server Web
 Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
-3.7 or greater is required.
+3.6 or greater is required.
 
 1. Install `sentry-sdk` from PyPI:
 
@@ -18,7 +18,13 @@ Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
     $ pip install --upgrade 'sentry-sdk=={% sdk_version sentry.python %}'
     ```
 
-2.  Initialize the SDK before starting the server:
+2.  If you're on Python 3.6, you also need the `aiocontextvars` package:
+
+    ```bash
+    $ pip install --upgrade aiocontextvars
+    ```
+
+3.  Initialize the SDK before starting the server:
 
     ```python
     import sentry_sdk

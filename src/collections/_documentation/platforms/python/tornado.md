@@ -10,7 +10,7 @@ sidebar_order: 4
 
 The Tornado integration adds support for the [Tornado Web
 Framework](https://www.tornadoweb.org/). A Tornado version of 5 or greater and
-Python 3.7 or greater is required.
+Python 3.6 or greater is required.
 
 1. Install `sentry-sdk` from PyPI:
 
@@ -18,7 +18,13 @@ Python 3.7 or greater is required.
     $ pip install --upgrade sentry-sdk=={% sdk_version sentry.python %}
     ```
 
-2.  Initialize the SDK before starting the server:
+2.  If you're on Python 3.6, you also need the `aiocontextvars` package:
+
+    ```bash
+    $ pip install --upgrade aiocontextvars
+    ```
+
+3.  Initialize the SDK before starting the server:
 
     ```python
     import sentry_sdk
@@ -44,9 +50,6 @@ Python 3.7 or greater is required.
 * All exceptions leading to a Internal Server Error are reported.
 
 * {% include platforms/python/request-data.md %}
-
-  *Note: The tornado integration currently does not capture formdata.* See [the
-  relevant GitHub issue](https://github.com/getsentry/sentry-python/issues/221)
 
 * Logging with any logger will create breadcrumbs when
   the [Logging]({% link _documentation/platforms/python/logging.md %})
