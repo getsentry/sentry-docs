@@ -45,7 +45,3 @@ If you’ve accidentally sent sensitive data to the server it’s likely you’r
 -   If you send it as a tagged value, removing the event is not enough. You can visit Project Settings and under Tags you’ll find a way to permanently remove any related data for a given tag.
 -   If you need to wipe just a single event, you’ll find the ability to bulk delete all sampled events under a rollup by visiting the rollup details page and selecting “Delete”.
 -   If you send sparse events to a project (potentially all of them), your only option is to remove the project and re-create it. Keep in mind this will revoke API credentials, so you likely want to do this in the reverse order.
-
-## Custom Event Processing using Relay
-
-In addition you have the option to put a proxy between your applications and Sentry that can strip sensitive data from your events. Head over to [_Relay_]({%- link _documentation/data-management/relay/index.md -%}).
