@@ -15,7 +15,7 @@ Add ``GnuBacktraceIntegration()`` to your ``integrations`` list:
 
 ```python
 import sentry_sdk
-from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.gnu_backtrace import GnuBacktraceIntegration
 
 sentry_sdk.init("___PUBLIC_DSN___", integrations=[GnuBacktraceIntegration()])
 ```
