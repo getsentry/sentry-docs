@@ -77,6 +77,25 @@ RSVP.on('error', function(reason) {
 Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
 
 &nbsp;
+## Releases
+A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
+ - Determine the issue and regressions introduced in a new release
+ - Predict which commit caused an issue and who is likely responsible
+ - Resolve issues by including the issue number in your commit message
+ - Receive email notifications when your code gets deployed
+
+Additionally, the Sentry SDK uses releases for applying [source maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}).
+
+&nbsp;
+Setting up releases is a 3-step process:
+1. [Configure Your SDK]({%- link _documentation/workflow/releases.md -%}#configure-sdk)
+2. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
+3. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
+
+&nbsp;
+For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
+
+&nbsp;
 ## Source Maps
 
 {% include components/alert.html
@@ -561,25 +580,6 @@ Sentry.withScope(scope => {
   Sentry.captureException(err);
 });
 ```
-
-&nbsp;
-## Releases
-A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
- - Determine the issue and regressions introduced in a new release
- - Predict which commit caused an issue and who is likely responsible
- - Resolve issues by including the issue number in your commit message
- - Receive email notifications when your code gets deployed
-
-Additionally, the Sentry SDK uses releases for applying [source maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}).
-
-&nbsp;
-Setting up releases is a 3-step process:
-1. [Configure Your SDK]({%- link _documentation/workflow/releases.md -%}#configure-sdk)
-2. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
-3. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
-
-&nbsp;
-For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
 
 &nbsp;
 ## Supported Browsers {#browser-table}
