@@ -166,6 +166,12 @@ res = requests.post(
 
 For more information, see the [API reference]({%- link _documentation/api/releases/post-organization-releases.md -%}).
 
+{% include components/alert.html
+  title='Troubleshooting'
+  content='If you receive an "Unable to Fetch Commits" email, take a look at our [Help Center Article](https://help.sentry.io/hc/en-us/articles/360019866834-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits-).'
+  level='warning'
+%}
+
 #### After Associating Commits
 
 After this step, **suspect commits** and **suggested assignees** will start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and [ownership rules]({%- link _documentation/workflow/issue-owners.md -%}).

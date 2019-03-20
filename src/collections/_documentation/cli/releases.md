@@ -70,6 +70,12 @@ If you also want to set a previous commit instead of letting the server use the 
 sentry-cli releases set-commits "$VERSION" --commit "my-repo@from..to"
 ```
 
+{% include components/alert.html
+  title='Troubleshooting'
+  content='If you receive an "Unable to Fetch Commits" email, take a look at our [Help Center Article](https://help.sentry.io/hc/en-us/articles/360019866834-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits-).'
+  level='warning'
+%}
+
 ## Managing Release Artifacts
 
 When you are working with JavaScript and other platforms, you can upload release artifacts to Sentry which are then considered during processing. The most common release artifact are [source maps]({%- link _documentation/clients/javascript/sourcemaps.md -%}#raven-js-sourcemaps) for which `sentry-cli` has specific support.
