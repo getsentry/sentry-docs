@@ -12,7 +12,11 @@ def before_send(event, hint):
 
     exception = hint['exc_info'][1]
     if isinstance(exception, MyRPCError):
-        event['fingerprint'] = ['{% raw %}{{ default }}{% endraw %}', str(exception.function), str(exception.error_code)]
+        event['fingerprint'] = [
+            '{% raw %}{{ default }}{% endraw %}',
+            str(exception.function),
+            str(exception.error_code)
+        ]
 
     return event
 
