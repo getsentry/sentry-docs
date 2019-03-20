@@ -1,0 +1,30 @@
+```javascript
+class MyRPCError extends Error {
+  constructor(message, functionName, errorCode) {
+    super(message);
+
+    // The name of the RPC function that was called (e.g. "getAllBlogArticles")
+    this.functionName = functionName;
+
+    // For example a HTTP status code returned by the server.
+    this.errorCode = errorCode;
+  }
+}
+
+Sentry.init({
+  ...,
+  beforeSend: (event, hint) => {
+    const exception = hint.originalException;
+
+    if (exception instanceof MyRPCError) {
+      event.fingerprint = [
+        '{% raw %}{{ default }}{% endraw %}',
+        String(exception.functionName),
+        String(exception.errorCode)
+      ];
+    }
+
+    return event;
+  }
+});
+```
