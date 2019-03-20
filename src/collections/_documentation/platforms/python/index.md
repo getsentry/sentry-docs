@@ -40,6 +40,7 @@ SDK. A call to `sentry_sdk.init` configures integrations. Unless you set `defaul
 ### Other Integrations
 
 * [Logging]({% link _documentation/platforms/python/logging.md %})
+* [GNU Backtrace]({% link _documentation/platforms/python/gnu_backtrace.md %})
 * [Default integrations]({% link _documentation/platforms/python/default-integrations.md %})
 
 {% capture __alert_content -%}

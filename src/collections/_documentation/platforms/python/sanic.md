@@ -9,7 +9,8 @@ sidebar_order: 3
 *Import name: `sentry_sdk.integrations.sanic.SanicIntegration`*
 
 The Sanic integration adds support for the [Sanic Web
-Framework](https://github.com/huge-success/sanic).
+Framework](https://github.com/huge-success/sanic). A Python version of 3.6 or
+greater is required.
 
 1. Install `sentry-sdk` from PyPI:
 
@@ -17,7 +18,13 @@ Framework](https://github.com/huge-success/sanic).
     $ pip install --upgrade 'sentry-sdk=={% sdk_version sentry.python %}'
     ```
 
-2.  To configure the SDK, initialize it with the integration before or after your app has been initialized:
+2.  If you're on Python 3.6, you also need the `aiocontextvars` package:
+
+    ```bash
+    $ pip install --upgrade aiocontextvars
+    ```
+
+3.  To configure the SDK, initialize it with the integration before or after your app has been initialized:
 
     ```python
     import sentry_sdk
