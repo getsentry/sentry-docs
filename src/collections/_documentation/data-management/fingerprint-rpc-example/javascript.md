@@ -16,10 +16,6 @@ Sentry.init({
   beforeSend: (event, hint) => {
     const exception = hint.originalException;
 
-    if (!(exception instanceof Error)) {
-      return event;
-    }
-
     if (exception instanceof MyRPCError) {
       event.fingerprint = [
         '{% raw %}{{ default }}{% endraw %}',
