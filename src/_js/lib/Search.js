@@ -37,8 +37,7 @@ $(function() {
         root: 'list-group search-results'
       },
       templates: {
-        empty:
-          '<div class="list-group-item">No results</div><a href="https://www.algolia.com" class="list-group-item list-group-item-action"><img src="https://www.algolia.com/static_assets/images/pricing/pricing_new/algolia-powered-by-8762ce8b.svg" alt="Search by Algolia" /></a>',
+        empty: '<div class="list-group-item">No results</div>',
         allItems:
           '{{#hits}}<a href="{{ url }}" class="list-group-item list-group-item-action"><h6 class="mb-1">{{{ _highlightResult.title.value }}}</h6>{{{ _snippetResult.content.value }}}</a>{{/hits}}'
       }
