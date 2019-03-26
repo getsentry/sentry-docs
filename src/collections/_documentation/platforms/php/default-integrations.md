@@ -28,7 +28,7 @@ is enabled, it will also send PII information like:
 This integration hooks into the global PHP `error_handler` and emits events when an error occurs.
 
 To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
-as an error listener. By default, the `ErrorHandler` reserves 10 megabytes of memory to handle fatal
+as an error listener. By default, the `ErrorHandler` reserves 10 kilobytes of memory to handle fatal
 errors.
 
 For some frameworks or projects, there are specific integrations provided both
