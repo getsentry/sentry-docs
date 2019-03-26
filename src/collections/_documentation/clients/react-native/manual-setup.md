@@ -121,13 +121,16 @@ fi
 
 [ -z "$NODE_BINARY" ] && export NODE_BINARY="node"
 
-# Run sentry cli script to upload debug symbols
-$NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli upload-dif "$DWARF_DSYM_FOLDER_PATH"
+$NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
+  ../node_modules/react-native/scripts/react-native-xcode.sh
 ```
 
 #### Upload Debug Symbols to Sentry
 
 ```bash
+# First set the path to sentry.properties
+export SENTRY_PROPERTIES=sentry.properties
+
 # Setup nvm and set node
 [ -z "$NVM_DIR" ] && export NVM_DIR="$HOME/.nvm"
 
@@ -151,8 +154,8 @@ fi
 
 [ -z "$NODE_BINARY" ] && export NODE_BINARY="node"
 
-$NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
-  ../node_modules/react-native/scripts/react-native-xcode.sh
+# Run sentry cli script to upload debug symbols
+$NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli upload-dif "$DWARF_DSYM_FOLDER_PATH"
 ```
 
 ## Android
