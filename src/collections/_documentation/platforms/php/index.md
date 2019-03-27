@@ -39,6 +39,16 @@ By default this option is set to `3`.
 
 If this option is enabled, `gzip` compression will be enabled. Default is `true`.
 
+#### error_types
+
+This option accepts an int bitmask like the native PHP function [`error_reporting`](https://www.php.net/manual/en/function.error-reporting.php).
+This value is used in the default `ErrorListenerIntegration` to filter out errors:
+the default value will send all errors (same as setting `E_ALL`); if you want to 
+exclude some types of errors, you just need to apply the right bitmask.
+
+For example, if you want to get all errors but exclude notices and deprecations,
+the right bitmask to apply is `E_ALL & ~E_NOTICE & ~E_DEPRECATED`.
+
 #### excluded_app_paths
 
 This option configures the list of paths to exclude from the `app_path` detection.
