@@ -10,7 +10,7 @@ Symfony is supported via the [sentry-symfony](https://github.com/getsentry/sentr
 This documentation refers to the v3.0 of the bundle which is currently under development. 
 This version supports the newest [Unified API client]({%- link _documentation/platforms/php/index.md -%}).
 
-A beta version will be tagged as soon as possible, in the meantime you can continue to use [the previous versions]({%- link _documentation/clients/php/integrations/symfony2.md %}). 
+A beta version is already available, but you can also continue to use [the previous versions]({%- link _documentation/clients/php/integrations/symfony2.md %}). 
 To know more about the progress of this version see [the relative milestone](https://github.com/getsentry/sentry-symfony/milestone/3) on the GitHub repo.
 {% endcapture %}
 
