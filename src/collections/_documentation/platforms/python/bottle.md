@@ -57,11 +57,7 @@ You can pass the following keyword arguments to `BottleIntegration()`:
 
   In the above code, you would set the transaction to:
 
-  * `/myurl/<foo>` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
+  * `/myurl/<foo>` if you set `transaction_style="url"`.
   * `myendpoint` if you set `transaction_style="endpoint"`
 
   The default is `"endpoint"`.
-
-## User Feedback
-
-You can use the user feedback feature with this integration.  For more information see [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md %}?platform=bottle).
