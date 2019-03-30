@@ -25,6 +25,7 @@ SDK. A call to `sentry_sdk.init` configures integrations. Unless you set `defaul
 * [Pyramid]({% link _documentation/platforms/python/pyramid.md %})
 * [AIOHTTP]({% link _documentation/platforms/python/aiohttp.md %})
 * [Tornado]({% link _documentation/platforms/python/tornado.md %})
+* [Bottle]({% link _documentation/platforms/python/bottle.md %})
 * [Generic WSGI]({% link _documentation/platforms/python/wsgi.md %})
 
 ### Task Queues
