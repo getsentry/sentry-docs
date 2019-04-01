@@ -170,7 +170,11 @@ Why not just have a `get_current_scope()` function instead of this indirection? 
 
 - `scope.set_extra(key, value)`: Sets the extra key to an arbitrary value, overwriting a potential previous value. Removing a key is SDK-defined, either with a `remove_extra` function or by passing nothing as data.
 
+- `scope.set_extras(extras)`: Sets an object with key/value pairs, convenience function instead of multiple `set_extra` calls.
+
 - `scope.set_tag(key, value)`: Sets the tag to a string value, overwriting a potential previous value.  Removing a key is SDK-defined, either with a `remove_tag` function or by passing nothing as data.
+
+- `scope.set_tags(tags)`: Sets an object with key/value pairs, convenience function instead of multiple `set_tag` calls.
 
 - `scope.set_context(key, value)`: Sets the context key to a value, overwriting a potential previous value.  Removing a key is SDK-defined, either with a `remove_context` function or by passing nothing as data. The types are sdk specified.
 
@@ -185,6 +189,10 @@ Why not just have a `get_current_scope()` function instead of this indirection? 
 - `scope.add_error_processor(processor)` (optional): Registers an error processor function.  It takes an event and exception object and returns a new event or `None` to drop it.  This can be used to extract additional information out of an exception object that the SDK cannot extract itself.
 
 - `scope.clear()`: Resets a scope to default values (prevents inheriting).  This never clears registered event processors.
+
+- `scope.add_breadcrumb(breadcrumb)`: Adds a breadcrumb to the current scope.
+
+- `scope.clear_breadcrumbs()`: Deletes current breadcrumbs from the scope.
 
 - `scope.apply_to_event(event[, max_breadcrumbs])`: Applies the scope data to the given event object. This also applies the event processors stored in the scope internally.  Some implementations might want to set a max breadcrumbs count here.
 
