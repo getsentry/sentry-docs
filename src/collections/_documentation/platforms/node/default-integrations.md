@@ -13,12 +13,6 @@ to `integrations` option. For example: to change fatal error handler
 
 ## Core
 
-### Dedupe
-
-_Import name: `Sentry.Integrations.Dedupe`_
-
-This integration deduplicates certain events. It's enabled by default and should not be disabled, except in rare circumstances. Disabling this integration, for instance, will cause duplicate error logging.
-
 ### InboundFilters
 
 _Import name: `Sentry.Integrations.InboundFilter`_
@@ -32,12 +26,6 @@ To configure it, use `ignoreErrors`, `blacklistUrls` and `whitelistUrls` SDK opt
 _Import name: `Sentry.Integrations.FunctionToString`_
 
 This integration allows the SDK to provide original functions and method names, even when they are wrapped by our error or breadcrumbs handlers.
-
-### ExtraErrorData
-
-_Import name: `Sentry.Integrations.ExtraErrorData`_
-
-This integration extracts all non-native attributes from the Error object and attaches them to the event as the `extra` data.
 
 ## Node specific
 

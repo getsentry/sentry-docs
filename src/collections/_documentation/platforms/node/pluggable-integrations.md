@@ -8,6 +8,13 @@ Pluggable integrations are integrations that can be additionally enabled, to pro
 
 ## Core
 
+### Dedupe
+
+_Import name: `Sentry.Integrations.Dedupe`_
+
+This integration deduplicates certain events. It's enabled by default and should not be disabled, except in rare circumstances. Disabling this integration, for instance, will cause duplicate error logging.
+
+
 ### Debug
 
 _Import name: `Sentry.Integrations.Debug`_
@@ -23,6 +30,13 @@ Available options:
 }
 ```
 
+### ExtraErrorData
+
+_Import name: `Sentry.Integrations.ExtraErrorData`_
+
+This integration extracts all non-native attributes from the Error object and attaches them to the event as the `extra` data.
+
+
 ### RewriteFrames
 
 _Import name: `Sentry.Integrations.RewriteFrames`_
@@ -37,6 +51,7 @@ Available options:
   iteratee: (frame) => frame); // function that takes the frame, applies any transformation on it and returns it back
 }
 ```
+
 
 ## Node specific
 
