@@ -8,6 +8,21 @@ Pluggable integrations are integrations that can be additionally enabled, to pro
 
 ## Core
 
+### CaptureConsole
+
+_Import name: `Sentry.Integrations.CaptureConsole`_
+
+This integration captures all `Console API` calls and redirects them to Sentry using `captureMessage` call.
+It then retriggers to preserve default native behaviour.
+
+Available options:
+
+```js
+{
+  levels: string[]; // an array of methods that should be captured, defaults to ['log', 'info', 'warn', 'error', 'debug', 'assert']
+}
+```
+
 ### Dedupe
 
 _Import name: `Sentry.Integrations.Dedupe`_
@@ -43,7 +58,6 @@ Available options:
   depth: number; // limit of how deep the object serializer should go. Anything deeper then limit will be replaced with standard Node.js REPL notation of [Object], [Array], [Function] or primitive value. Defaults to 3.
 }
 ```
-
 
 ### RewriteFrames
 
