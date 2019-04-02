@@ -13,14 +13,6 @@ to `integrations` option, for example to turn off browser capturing console call
 
 ## Core
 
-### Dedupe
-
-_Import name: `Sentry.Integrations.Dedupe`_
-
-This integration deduplicates certain events. This is enabled by default and should not
-be disabled except in rare circumstances. Disabling this integration for instance will
-cause duplicate error logging.
-
 ### InboundFilters
 
 _Import name: `Sentry.Integrations.InboundFilter`_
@@ -38,13 +30,6 @@ _Import name: `Sentry.Integrations.FunctionToString`_
 
 This integration allows SDK to provide original functions and method names,
 even when they are wrapped by our error or breadcrumbs handlers.
-
-### ExtraErrorData
-
-_Import name: `Sentry.Integrations.ExtraErrorData`_
-
-This integration extracts all non-native attributes from the Error object and attaches
-them to the event as the `extra` data.
 
 ## Browser specific
 

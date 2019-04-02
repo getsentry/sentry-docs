@@ -48,3 +48,66 @@ hub.withScope(scope => {
   hub.captureMessage("test2");
 });
 ```
+
+### Dealing with integrations
+
+Integrations are setup on the `Client`, if you need to deal with multiple clients and hubs you have to make sure to also do the integration handling correctly. 
+Here is a working example of how to use multiple clients with multiple hubs running global integrations.
+
+```js
+import * as Sentry from "@sentry/browser";
+
+// Very happy integration that'll prepend and append very happy stick figure to the message
+class HappyIntegration {
+  constructor() {
+    this.name = "HappyIntegration";
+  }
+
+  setupOnce() {
+    Sentry.addGlobalEventProcessor(event => {
+      const self = Sentry.getCurrentHub().getIntegration(HappyIntegration);
+      // Run the integration ONLY when it was installed on the current Hub
+      if (self) {
+        event.message = `\\o/ ${event.message} \\o/`;
+      }
+      return event;
+    });
+  }
+}
+
+HappyIntegration.id = "HappyIntegration";
+
+const client1 = new Sentry.BrowserClient({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [...Sentry.defaultIntegrations, new HappyIntegration()],
+  beforeSend(event) {
+    console.log("client 1", event);
+    return null; // Returning null does not send the event
+  }
+});
+const hub1 = new Sentry.Hub(client1);
+
+const client2 = new Sentry.BrowserClient({
+  dsn: "___PUBLIC_DSN___", // Can be a different DSN
+  integrations: [...Sentry.defaultIntegrations, new HappyIntegration()],
+  beforeSend(event) {
+    console.log("client 2", event);
+    return null; // Returning null does not send the event
+  }
+});
+const hub2 = new Sentry.Hub(client2);
+
+hub1.run(currentHub => { // The hub.run method makes sure that Sentry.getCurrentHub() returns this hub during the callback
+  currentHub.captureMessage("a");
+  currentHub.configureScope(scope => {
+    scope.setTag("a", "b");
+  });
+});
+
+hub2.run(currentHub => { // The hub.run method makes sure that Sentry.getCurrentHub() returns this hub during the callback
+  currentHub.captureMessage("x");
+  currentHub.configureScope(scope => {
+    scope.setTag("c", "d");
+  });
+});
+```
