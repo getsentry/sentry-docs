@@ -12,6 +12,14 @@ to `integrations` option, for example `integrations: [new Sentry.Integrations.Re
 
 ## Core
 
+### Dedupe
+
+_Import name: `Sentry.Integrations.Dedupe`_
+
+This integration deduplicates certain events. This is enabled by default and should not
+be disabled except in rare circumstances. Disabling this integration for instance will
+cause duplicate error logging.
+
 ### Debug
 
 _Import name: `Sentry.Integrations.Debug`_
@@ -27,6 +35,13 @@ Available options:
   stringify: boolean; // stringify event before passing it to console.log
 }
 ```
+
+### ExtraErrorData
+
+_Import name: `Sentry.Integrations.ExtraErrorData`_
+
+This integration extracts all non-native attributes from the Error object and attaches
+them to the event as the `extra` data.
 
 ### RewriteFrames
 
