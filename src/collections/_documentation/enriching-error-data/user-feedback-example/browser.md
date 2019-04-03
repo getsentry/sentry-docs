@@ -9,7 +9,7 @@ If you're using a framework like [React]({%- link _documentation/platforms/javas
     beforeSend(event, hint) {
       // Check if it is an exception, and if so, show the report dialog
       if (event.exception) {
-        Sentry.showReportDialog({ eventId: event.eventId });
+        Sentry.showReportDialog({ eventId: event.event_id });
       }
       return event;
     }
