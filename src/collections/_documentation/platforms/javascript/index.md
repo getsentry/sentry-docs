@@ -872,6 +872,14 @@ _Import name: `Sentry.Integrations.ExtraErrorData`_
 
 This integration extracts all non-native attributes from the Error object and attaches them to the event as the `extra` data.
 
+Available options:
+
+```javascript
+{
+  depth: number; // limit of how deep the object serializer should go. Anything deeper then limit will be replaced with standard Node.js REPL notation of [Object], [Array], [Function] or primitive value. Defaults to 3.
+}
+```
+
 &nbsp;
 ##### Dedupe
 _Import name: `Sentry.Integrations.Dedupe`_
