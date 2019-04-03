@@ -8,7 +8,7 @@ This document uses Angular to refer to Angular 2+. If you use AngularJS, you'll 
 
 On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
 
-Additionally, `@sentry/browser` can be configured to catch any Angular-specific (2.x) exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component.
+Additionally, `@sentry/browser` can be configured to catch any Angular-specific (2.x) exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component. This is also a great opportunity to collect user feedback by using `Sentry.showReportDialog`.
 
 ```typescript
 import { BrowserModule } from "@angular/platform-browser";
@@ -26,8 +26,8 @@ Sentry.init({
 export class SentryErrorHandler implements ErrorHandler {
   constructor() {}
   handleError(error) {
-    Sentry.captureException(error.originalError || error);
-    throw error;
+    const eventId = Sentry.captureException(error.originalError || error);
+    Sentry.showReportDialog({ eventId });
   }
 }
 
