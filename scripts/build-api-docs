@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+echo "--> Starting postgres"
+su postgres -c '/usr/lib/postgresql/9.6/bin/initdb'
+su postgres -c '/usr/lib/postgresql/9.6/bin/pg_ctl -D /var/lib/postgresql/data start' &
+su postgres -c 'createdb sentry_api_docs'
+
 echo "--> Fetching sentry source"
 curl -Ls https://github.com/getsentry/sentry/archive/master.zip --output sentry.zip
 unzip sentry.zip
@@ -7,6 +12,7 @@ echo "--> Installing sentry dependencies"
 cd sentry-master
 
 export SENTRY_LIGHT_BUILD=1
+pip install -U setuptools
 pip install -e '.[dev]'
 
 echo "--> Starting Redis"
