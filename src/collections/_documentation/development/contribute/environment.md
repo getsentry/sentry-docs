@@ -18,7 +18,11 @@ git clone https://github.com/<your github username>/sentry.git
 cd sentry
 ```
 
-Install [Homebrew](http://brew.sh), if you haven’t already, then run `brew install python@2`.
+Install [Homebrew](http://brew.sh), if you haven’t already, then run
+
+```bash
+brew bundle
+```
 
 It is highly recommended to develop inside a Python virtual environment, so install `virtualenv` and `virtualenvwrapper`:
 
