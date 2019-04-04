@@ -1,8 +1,4 @@
-The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
-
-```html
-<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous"></script>
-```
+The Angular integration requires our [Browser SDK](?platform=browsernpm) in addition see our in depth [Anuglar integration page]({% link _documentation/platforms/javascript/angular.md %})
 
 {% wizard hide %}
 {% include components/alert.html
