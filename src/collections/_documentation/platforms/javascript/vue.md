@@ -29,10 +29,11 @@ This means that errors occurring in the Vue renderer will not show up in the dev
 ```javascript
 import Vue from 'vue'
 import * as Sentry from '@sentry/browser'
+import * as Integrations from "@sentry/integrations";
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: [new Sentry.Integrations.Vue({ 
+  integrations: [new Integrations.Vue({ 
     Vue,
     attachProps: true
   })]
