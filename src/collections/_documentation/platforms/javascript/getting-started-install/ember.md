@@ -1,8 +1,4 @@
-The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
-
-```html
-<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous"></script>
-```
+The Ember integration requires our [Browser SDK](?platform=browsernpm) in addition see our in depth [Ember integration page]({% link _documentation/platforms/javascript/ember.md %})
 
 {% wizard hide %}
 {% include components/alert.html
