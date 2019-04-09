@@ -892,7 +892,7 @@ Available options:
 ##### Dedupe
 _Import name: `Sentry.Integrations.Dedupe`_
 
-This integration deduplicates certain events. The Sentry SDK enables this by default, and it should not be disabled except in rare circumstances. Disabling this integration, for instance, will cause duplicate error logging.
+This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only comapre stack traces and fingerprints.
 
 &nbsp;
 #### Debug
