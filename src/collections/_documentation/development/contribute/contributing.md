@@ -17,11 +17,11 @@ When creating a pull request, reference any tickets or Sentry issues which are b
 
 The following teams are defined in GitHub and should be used when creating Pull Requests:
 
--   [@getsentry/api](https://github.com/orgs/getsentry/teams/api)
--   [@getsentry/ui](https://github.com/orgs/getsentry/teams/ui)
+-   [@getsentry/app-backend](https://github.com/orgs/getsentry/teams/app-backend)
+-   [@getsentry/app-frontend](https://github.com/orgs/getsentry/teams/app-frontend)
 -   [@getsentry/infrastructure](https://github.com/orgs/getsentry/teams/infrastructure)
 -   [@getsentry/ops](https://github.com/orgs/getsentry/teams/ops)
--   [@getsentry/team](https://github.com/orgs/getsentry/teams/team) – the entire product team, use sparingly
+-   [@getsentry/app](https://github.com/orgs/getsentry/teams/app) – the entire product team, use sparingly
 
 Additionally, language specific teams exist, primarily for SDKs:
 
