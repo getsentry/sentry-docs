@@ -22,11 +22,12 @@ export const hubspot = function() {
 
 export const google = function() {
   window.dataLayer = window.dataLayer || [];
-  function gtag() {
+  window.gtag = function() {
     dataLayer.push(arguments);
   }
-  gtag('js', new Date());
-  gtag('config', 'UA-30327640-1', { anonymize_ip: true });
+  window.gtag('js', new Date());
+  window.gtag('config', 'UA-30327640-1', { anonymize_ip: true });
+  window.gtag('config', 'UA-30327640-3', { anonymize_ip: true });
 
   const script = document.createElement('script');
   script.setAttribute(

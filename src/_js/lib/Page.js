@@ -9,4 +9,8 @@ export const logPageview = function() {
     url: canonicalUrl(location.search)
   });
   window.ra.page();
+  if (window.gtag) {
+    window.gtag('config', 'UA-30327640-1', { anonymize_ip: true });
+    window.gtag('config', 'UA-30327640-3', { anonymize_ip: true });
+  }
 };
