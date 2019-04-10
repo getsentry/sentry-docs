@@ -452,7 +452,7 @@ Capturing the user is fairly straight forward:
 
 ```javascript
 Sentry.configureScope((scope) => {
-  scope.setUser({"email": "john,doe@example.com"});
+  scope.setUser({"email": "john.doe@example.com"});
 });
 ```
 
@@ -586,11 +586,11 @@ Sentry.withScope(scope => {
 
 &nbsp;
 {% capture __alert %}
-Our SDK needs a polyfill for `Promise` in older browsers like IE 11 and lower. 
-Please add the script tag below before loading our SDK. The polyfill script for `Promise` is also recommended if you're using an npm package.
+Our SDK needs some polyfills for older browsers like IE 11 and lower. 
+Please add the script tag below before loading our SDK.
 
 ```
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=Promise"></script>
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 ```
 
 Additionally, keep in mind to define `<!doctype html>` on top of your HTML page, to make sure IE does not go into compatibility mode.
@@ -610,7 +610,7 @@ The Sentry SDK sets the options when you first initialize the SDK.
 
 ```javascript
 Sentry.init({
-  dsn: 'https://bd421d97f0d64387ac5768fe16f88f78@sentry.io/1268071',
+  dsn: '___PUBLIC_DSN___',
   release: "28d497fb8af6cc3efbe160e28c1c08f08bd688fc",
   environment: 'staging',
   beforeSend: customPiiScrub(event),
@@ -692,11 +692,19 @@ For more information, see [Setting the Level](#level).
 ### Lazy Loading Sentry
 We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration). 
 
-But we also offer an alternative which is still in *beta*; we call it the _Loader_. You install by just adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
+But we also offer an alternative we call it the _Loader_. You install by just adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
 
 ```html
 <script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
 ```
+
+&nbsp;
+#### Select SDK version to load
+
+If you go into the detail page (Configure button) of your DSN, you are able to select which SDK version the Loader should load.
+Note that it can take a few minutes until the change is visible in the code since it's cached.
+
+[{% asset js-loader-settings.png %}]({% asset js-loader-settings.png @path %})
 
 &nbsp;
 #### What does the Loader provide?
@@ -884,7 +892,7 @@ Available options:
 ##### Dedupe
 _Import name: `Sentry.Integrations.Dedupe`_
 
-This integration deduplicates certain events. The Sentry SDK enables this by default, and it should not be disabled except in rare circumstances. Disabling this integration, for instance, will cause duplicate error logging.
+This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only compare stack traces and fingerprints.
 
 &nbsp;
 #### Debug
