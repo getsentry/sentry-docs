@@ -1,33 +1,15 @@
-export const facebook = function() {
-  const img = document.createElement('img');
-  img.src =
-    'https://www.facebook.com/tr?id=280953929088736&ev=PageView&noscript=1';
-  img.setAttribute('height', '1');
-  img.setAttribute('width', '1');
-  img.setAttribute('style', 'display:none;');
-  img.setAttribute('alt', '');
-  img.setAttribute('aria-hidden', 'true');
-  document.body.appendChild(img);
-};
+import { logGooglePageview } from './Page';
 
-export const hubspot = function() {
-  const script = document.createElement('script');
-  script.setAttribute('src', '//js.hs-scripts.com/3344477.js');
-  script.setAttribute('type', 'text/javascript');
-  script.setAttribute('id', 'hs-script-loader');
-  script.setAttribute('async', true);
-  script.setAttribute('defer', true);
-  document.body.appendChild(script);
-};
-
-export const google = function() {
+export const google = function(clicked_consent) {
   window.dataLayer = window.dataLayer || [];
   window.gtag = function() {
     dataLayer.push(arguments);
   }
   window.gtag('js', new Date());
-  window.gtag('config', 'UA-30327640-1', { anonymize_ip: true });
-  window.gtag('config', 'UA-30327640-3', { anonymize_ip: true });
+  if (clicked_consent) {
+    // Don't log pageview if user has already consented because we already do it in User.js.
+    logGooglePageview();
+  }
 
   const script = document.createElement('script');
   script.setAttribute(
