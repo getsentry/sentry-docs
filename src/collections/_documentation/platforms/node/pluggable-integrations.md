@@ -12,7 +12,7 @@ Pluggable integrations are integrations that can be additionally enabled, to pro
 
 _Import name: `Sentry.Integrations.Dedupe`_
 
-This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only comapre stack traces and fingerprints.
+This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only compare stack traces and fingerprints.
 
 
 ### Debug
