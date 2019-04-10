@@ -46,7 +46,7 @@ Then the UI will reflect the time it took for the release to be created. You can
 
 ## Commit Integration {#sentry-cli-commit-integration}
 
-If you have [repositories configured]({%- link _documentation/workflow/releases.md -%}#link-repository) within your Sentry organization you can associate commits with your release. This currently only works if you are using GitHub, but we are going to expand this later.
+If you have [repositories configured]({%- link _documentation/workflow/releases.md -%}#link-repository) within your Sentry organization you can associate commits with your release.
 
 There are two modes in which you can use this. One is the fully automatic mode. If you are deploying from a git repository and sentry-cli can discover the git repository from the current working directory you can set the commits with the `--auto` flag:
 
