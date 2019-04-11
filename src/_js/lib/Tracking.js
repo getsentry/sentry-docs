@@ -1,25 +1,23 @@
-import { google, twitter, facebook, linkedin, bing, hubspot, amplitude } from './Trackers';
+import { google, amplitude } from './Trackers';
 
 const init = function() {
   const namespace = 'trackersOk';
 
   loadIfTrackersOk.push(google);
-  loadIfTrackersOk.push(facebook);
-  loadIfTrackersOk.push(hubspot);
   loadIfTrackersOk.push(amplitude);
 
   // If we've been given permission to track, set a cookie that we can check
   // later to hide the banner, then load all of the trackers we have deferred.
   //
   // Returns nothing
-  const acceptTrackers = function() {
+  const acceptTrackers = function(clicked_consent) {
     if (!localStorage.getItem(namespace)) {
       localStorage.setItem(namespace, true);
       $('[data-tracking-widget]').addClass('d-none');
     }
 
     while (loadIfTrackersOk.length > 0) {
-      loadIfTrackersOk.shift()();
+      loadIfTrackersOk.shift()(clicked_consent);
     }
     window.ra.event('docs.cookie_consent', {
       consent: 'yes',
@@ -53,7 +51,7 @@ const init = function() {
       showWidget();
   }
 
-  $('[data-tracking-widget]').on('click', '[data-accept]', acceptTrackers);
+  $('[data-tracking-widget]').on('click', '[data-accept]', function() { acceptTrackers(true); });
   $('[data-tracking-widget]').on('click', '[data-reject]', rejectTrackers);
 };
 
