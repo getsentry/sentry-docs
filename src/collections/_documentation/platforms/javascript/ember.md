@@ -25,7 +25,7 @@ import * as Integrations from '@sentry/integrations';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: [new Sentry.Integrations.Ember()]
+  integrations: [new Integrations.Ember()]
 });
 ```
 
