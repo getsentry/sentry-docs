@@ -41,7 +41,7 @@ raven.CaptureMessageAndWait("Something bad happened and I would like to know abo
 
 ## Capturing Events
 
-`Capture` is a low-level method that can be used to deliver hand-crafter events (named type Packet in The Sentry Go SDK). It has no `CaptureAndWait` counterpart, but returns a channel in case you want to verify delivery status.
+`Capture` is a low-level method that can be used to deliver hand-crafted events (named type Packet in The Sentry Go SDK). It has no `CaptureAndWait` counterpart, but returns a channel in case you want to verify delivery status.
 To form a `Packet`, you can use `Packet` type directly, or `NewPacket` and `NewPacketWithExtra` helper methods which creates an empty event with a message and optional extra data.
 
 ```go
