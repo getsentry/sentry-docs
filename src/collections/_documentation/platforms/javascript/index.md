@@ -590,8 +590,10 @@ Our SDK needs some polyfills for older browsers like IE 11 and lower.
 Please add the script tag below before loading our SDK.
 
 ```
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=Promise%2CObject.assign%2CString.prototype.includes"></script>
 ```
+
+We need `Promise`, `Object.assign` and `String.prototype.includes` polyfill.
 
 Additionally, keep in mind to define `<!doctype html>` on top of your HTML page, to make sure IE does not go into compatibility mode.
 {% endcapture %}
