@@ -26,7 +26,7 @@ const { testkit, sentryTransport } = sentryTestkit()
 
 // initialize your Sentry instance with sentryTransport
 Sentry.init({
-  dsn: 'some_dummy_dsn',
+  dsn: '',
   transport: sentryTransport
   //... other configurations
 })
