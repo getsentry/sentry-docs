@@ -325,3 +325,46 @@ The following settings are available for the built-in SMTP mail server:
   ```python
   SENTRY_BEACON = True
   ```
+
+## Github App Integration
+
+`github-app.id`
+
+: Declared in `config.yml`.
+
+  Your Github App ID.
+  
+`github-app.name`
+
+: Declared in `config.yml`.
+
+  The name of your Github App.
+  
+`github-app.webhook-secret`
+
+: Declared in `config.yml`.
+
+  The secret used to verify Github App Webhook event.
+  
+`github-app.private-key`
+
+: Declared in `config.yml`.
+
+  Your app's private key.
+  
+  {% include components/alert.html
+    content="Make sure to replace newlines them with `\n` to preserve them."
+    level="warning"
+  %}
+  
+`github-app.client-id`
+
+: Declared in `config.yml`.
+
+  Your Github App's Client ID.
+  
+`github-app.client-secret`
+
+: Declared in `config.yml`.
+
+  Your Github App's Client Secret.
