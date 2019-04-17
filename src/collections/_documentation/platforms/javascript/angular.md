@@ -72,14 +72,14 @@ like this:
 <!-- <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.es6.min.js" crossorigin="anonymous"></script> -->
 <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous"></script>
 
-<!-- If you include the integration it will be available under Sentry.Integrations.Anuglar -->
-<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/anuglar.min.js" crossorigin="anonymous"></script>
+<!-- If you include the integration it will be available under Sentry.Integrations.Angular -->
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/angular.min.js" crossorigin="anonymous"></script>
 
 <script>
   Sentry.init({
     dsn: '___PUBLIC_DSN___',
     integrations: [
-      new Sentry.Integrations.Anuglar(),
+      new Sentry.Integrations.Angular(),
     ],
   });
 </script>
