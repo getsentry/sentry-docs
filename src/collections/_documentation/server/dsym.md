@@ -1,6 +1,6 @@
 ---
 title: 'System Debug Symbols'
-sidebar_order: 20
+sidebar_order: 21
 ---
 
 Sentry provides support for system wide debug symbols through a separate symbol server. Currently you need to self host a symbol server if you want to provide system symbols for your application.

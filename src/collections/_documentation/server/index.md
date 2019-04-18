@@ -25,6 +25,7 @@ The Sentry Server is the core Python application that powers all of our Sentry i
 -   [Queue Monitoring]({%- link _documentation/server/monitoring.md -%}#queue-monitoring)
 -   [Beacon]({%- link _documentation/server/beacon.md -%})
 -   [Plugins]({%- link _documentation/server/plugins.md -%})
+-   [Adding Intergations]({%- link _documentation/server/integrations/index.md -%})
 -   [System Warnings]({%- link _documentation/server/warnings.md -%})
 -   [System Debug Symbols]({%- link _documentation/server/dsym.md -%})
 -   [Frequently Asked Questions]({%- link _documentation/server/faq.md -%})
