@@ -78,7 +78,7 @@ While this example looks similar to `configure-scope` it's very different, in th
 will keep the changes.
 
 While on the other hand using `with-scope` creates a clone of the current scope
-and will stay isolated until the function call is completed.  
-So you can either set context information in there that you don't want to be somewhere 
-else or create do not attach any context information at all
-by calling `clear` on the scope, while the "global" scope remains unchanged.
+and will stay isolated until the function call is completed.  So you can either
+set context information in there that you don't want to be somewhere else or not
+attach any context information at all by calling `clear` on the scope, while the
+"global" scope remains unchanged.
