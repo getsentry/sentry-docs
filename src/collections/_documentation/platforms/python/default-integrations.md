@@ -33,9 +33,7 @@ This integration deduplicates certain events. The Sentry Python SDK enables it b
 
 The stdlib integration instruments certain modules in the standard library to emit breadcrumbs.  The Sentry Python SDK enables this by default, and it rarely makes sense to disable.
 
-In detail it provides:
-
-* Breadcrumbs for HTTP requests. The breadcrumbs are done using `httplib`, which also includes traffic going through `requests`.
+* Any outgoing HTTP request done with `httplib` will result in a [breadcrumb]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}) being logged. `urllib3` and `requests` use `httplib` under the hood, so HTTP requests from those packages should be covered as well.
 
 ## Modules
 *Import name: `sentry_sdk.integrations.modules.ModulesIntegration`*
