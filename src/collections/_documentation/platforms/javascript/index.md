@@ -3,13 +3,11 @@ title: JavaScript
 sidebar_order: 3
 ---
 
-&nbsp;
 ## Integrating the SDK
 All our JavaScript-related SDKs provide the same API. Still, there are some differences between them, such as installation, which this section of the docs explains.
 
 {% include components/platform_content.html content_dir='getting-started-install' %}
 
-&nbsp;
 ### Connecting the SDK to Sentry
 After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
@@ -17,7 +15,6 @@ After you've completed setting up a project in Sentry, Sentry will give you a va
 
 Most SDKs will now automatically collect data if available; some require extra configuration as automatic error collecting is not possible due to platform limitations.
 
-&nbsp;
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
@@ -28,7 +25,6 @@ Then, you can see the error in your dashboard:
 
 [{% asset js-index/error-message.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/error-message.png @path %})
 
-&nbsp;
 ## Capturing Errors
 ### Capturing Errors / Exceptions {#capturing-errors}
 In JavaScript, you can pass an error object to `captureException()` to get it captured as an event.
@@ -50,13 +46,11 @@ It's possible to throw strings as errors. In this case, the Sentry SDK will not 
   level="warning"
 %}
 
-&nbsp;
 ### Automatically Capturing Errors
-By including and configuring the Sentry Browser SDK, Sentry will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.  
+By including and configuring the Sentry Browser SDK, Sentry will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
 
 [{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
 
-&nbsp;
 ### Automatically Capturing Errors with Promises
 By default, Sentry for JavaScript captures unhandled promise rejections as described in the official ECMAScript 6 standard.
 
@@ -76,7 +70,6 @@ RSVP.on('error', function(reason) {
 
 Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
 
-&nbsp;
 ## Releases
 A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
 
@@ -85,7 +78,7 @@ A release is a version of your code that you deploy to an environment. When you 
  - Predict which commit caused an issue and who is likely responsible
  - Resolve issues by including the issue number in your commit message
  - Receive email notifications when your code gets deployed
- 
+
 
 After configuring your SDK, setting up releases is a 2-step process:
 1. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
@@ -93,7 +86,6 @@ After configuring your SDK, setting up releases is a 2-step process:
 
 For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
 
-&nbsp;
 ## Source Maps
 
 {% include components/alert.html
@@ -106,11 +98,9 @@ Sentry supports un-minifying JavaScript via source maps. This lets you view sour
 
 When you're using the Sentry JavaScript SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. However, you may have legitimate reasons for [disabling the JavaScript source fetching in Sentry](https://blog.sentry.io/2018/07/17/source-code-fetching).
 
-&nbsp;
 ### Generating Source Maps
 Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
 
-&nbsp;
 #### UglifyJS
 UglifyJS is a popular tool for minifying your source code for production. It can dramatically reduce the size of your files by eliminating whitespace, rewriting variable names, removing dead code branches, and more.
 
@@ -122,7 +112,6 @@ uglifyjs app.js \
   --source-map url=app.min.js.map,includeSources
 ```
 
-&nbsp;
 #### Webpack
 Webpack is a powerful build tool that resolves and bundles your JavaScript modules into files fit for running in the browser. It also supports various _loaders_ to transpile higher-level languages, reference stylesheets, or include static assets.
 
@@ -173,7 +162,6 @@ In case you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-m
   level="info"
 %}
 
-&nbsp;
 #### SystemJS
 SystemJS is the default module loader for Angular 2 projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and you can configured it to output source maps.
 
@@ -193,7 +181,6 @@ All of the example configurations above inline your original, un-transformed sou
   content=__alert_content
 %}
 
-&nbsp;
 #### TypeScript
 The TypeScript compiler can output source maps. Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
 
@@ -207,14 +194,12 @@ The TypeScript compiler can output source maps. Configure the `sourceRoot` prope
 }
 ```
 
-&nbsp;
 ### Uploading / Hosting Source Maps
 Source maps can be either:
 
 1.  Uploaded directly to Sentry (**recommended**).
 2.  Served publicly over HTTP alongside your source files.
 
-&nbsp;
 #### Uploading Source Maps to Sentry
 Except for [Webpack]({%- link _documentation/platforms/javascript/sourcemaps/generation.md -%}#webpack), the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
 
@@ -318,7 +303,6 @@ For more information, see:
 - [4 Reasons Why Your Source Maps are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
 - [Debug Your Node.js Projects with Source Maps](https://blog.sentry.io/2019/02/20/debug-node-source-maps)
 
-&nbsp;
 #### Hosting Source Map Files
 By default, Sentry will look for source map directives in your compiled JavaScript files, which are located on the last line and have the following format:
 
@@ -364,7 +348,6 @@ If you want to keep your source maps secret and choose not to upload your source
   content=__alert_content
 %}
 
-&nbsp;
 ## Context
 You can also set context when manually triggering events.
 
@@ -385,7 +368,7 @@ Sentry supports additional context with events. Often this context is shared amo
 
 [**Level**](#level)
 
-: An event's severity 
+: An event's severity
 
 [**Fingerprint**](#setting-the-fingerprint)
 
@@ -395,7 +378,6 @@ Sentry supports additional context with events. Often this context is shared amo
 
 : Arbitrary unstructured data which the Sentry SDK stores with an event sample
 
-&nbsp;
 ### Extra Context {#extra-context}
 In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
 
@@ -414,7 +396,6 @@ Sentry.configureScope((scope) => {
   level="warning"
 %}
 
-&nbsp;
 ### Unsetting Context
 Context is held in the current scope and thus is cleared out at the end of each operation --- request, etc. You can also push and pop your own scopes to apply context data to a specific code block or function.
 
@@ -439,12 +420,11 @@ If you want to remove globally configured data from the scope, you can call:
 Sentry.configureScope(scope => scope.clear())
 ```
 
-For more information, see: 
+For more information, see:
 - [Full documentation on Scopes and Hubs]({%- link
 _documentation/enriching-error-data/scopes.md -%})
 - [Debug Tough Front End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues).
 
-&nbsp;
 ### Capturing the User
 Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
 
@@ -476,7 +456,6 @@ Users consist of a few critical pieces of information which are used to construc
 
 Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
 
-&nbsp;
 ### Tagging Events
 Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and the user can later use them as a breakdown or quick access to finding related events.
 
@@ -502,7 +481,6 @@ Once you’ve started sending tagged data, you’ll see it show up in a few plac
 
 We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
 
-&nbsp;
 ### Setting the Level {#level}
 You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe and `debug` is the least severe.
 
@@ -529,9 +507,8 @@ Sentry.withScope((scope) => {
 });
 ```
 
-&nbsp;
 ### Setting the Fingerprint
-Sentry uses one or more "fingerprints" to decide how to group errors into issues. 
+Sentry uses one or more "fingerprints" to decide how to group errors into issues.
 
 For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings.
 
@@ -539,7 +516,6 @@ If you wish to append information, thus making the grouping slightly less aggres
 
 For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
-&nbsp;
 #### Minimal Example
 This minimal example will put all exceptions of the current scope into the same issue/group:
 
@@ -551,7 +527,6 @@ Sentry.configureScope((scope) => {
 
 The two common real-world use cases for the `fingerprint` attribute are demonstrated below:
 
-&nbsp;
 #### Example: Split up a group into more groups (groups are too big)
 Your application queries an external API service, so the stack trace is generally the same (even if the outgoing request is very different).
 
@@ -568,7 +543,6 @@ function makeRequest(path, options) {
 }
 ```
 
-&nbsp;
 #### Example: Merge a lot of groups into one group (groups are too small)
 If you have an error that has many different stack traces and never groups together, you can merge them together by omitting `{{ "{{default"}}}}` from the fingerprint array.
 
@@ -579,14 +553,12 @@ Sentry.withScope(scope => {
 });
 ```
 
-&nbsp;
 ## Supported Browsers {#browser-table}
 
 ![Sauce Test Status]({%- asset browser-support.svg @path -%})
 
-&nbsp;
 {% capture __alert %}
-Our SDK needs some polyfills for older browsers like IE 11 and lower. 
+Our SDK needs some polyfills for older browsers like IE 11 and lower.
 Please add the script tag below before loading our SDK.
 
 ```
@@ -604,7 +576,6 @@ Additionally, keep in mind to define `<!doctype html>` on top of your HTML page,
   level="warning"
 %}
 
-&nbsp;
 ## Advanced Usage
 
 ### Advanced Configuration
@@ -625,7 +596,6 @@ For more information, see:
 - [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
 - [Full documentation on Environments]({%- link _documentation/enriching-error-data/environments.md -%}).
 
-&nbsp;
 ### Breadcrumbs
 Sentry will automatically record certain events, such as changes to the URL and XHR requests to provide context to an error.
 
@@ -647,7 +617,6 @@ For more information, see:
 - [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
 - [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
-&nbsp;
 ### Filter Events & Custom Logic
 Sentry exposes a beforeSend callback which can be used to filter out information or add additional context to the event object.
 
@@ -665,11 +634,10 @@ Sentry.init({
 ```
 
 For more information, see:
-- [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%}) 
+- [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%})
 - [Tips for Reducing JavaScript Error Noise](https://blog.sentry.io/2017/03/27/tips-for-reducing-javascript-error-noise.html)
 - [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 
-&nbsp;
 ### Capturing Messages {#messages}
 Typically, the Sentry SDK does not emit messages. This is most useful when you've overridden fingerprinting but need to give a useful message.
 
@@ -690,9 +658,8 @@ Sentry.withScope((scope) => {
 ```
 For more information, see [Setting the Level](#level).
 
-&nbsp;
 ### Lazy Loading Sentry
-We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration). 
+We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration).
 
 But we also offer an alternative we call it the _Loader_. You install by just adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
 
@@ -700,7 +667,6 @@ But we also offer an alternative we call it the _Loader_. You install by just ad
 <script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
 ```
 
-&nbsp;
 #### Select SDK version to load
 
 If you go into the detail page (Configure button) of your DSN, you are able to select which SDK version the Loader should load.
@@ -708,7 +674,6 @@ Note that it can take a few minutes until the change is visible in the code sinc
 
 [{% asset js-loader-settings.png %}]({% asset js-loader-settings.png @path %})
 
-&nbsp;
 #### What does the Loader provide?
 It's a small wrapper around our SDK. The _Loader_ does a few things:
 
@@ -752,13 +717,11 @@ The _Loader_ also provides a function called `forceLoad()` which does the same, 
 </script>
 ```
 
-&nbsp;
 #### Current limitations
-As we inject our SDK asynchronously, we will only monitor _global errors_ and _unhandled promise_ for you until the SDK is fully loaded. That means that we might miss breadcrumbs during the download.  
+As we inject our SDK asynchronously, we will only monitor _global errors_ and _unhandled promise_ for you until the SDK is fully loaded. That means that we might miss breadcrumbs during the download.
 
 For example, a user clicking on a button on your website is making an XHR request. We will not miss any errors, only breadcrumbs and only up until the SDK is fully loaded. You can reduce this time by manually calling `forceLoad` or set `data-lazy="no"`.
 
-&nbsp;
 ### Collecting User Feedback
 Sentry provides the ability to collect additional feedback from the user upon hitting an error. This is primarily useful in situations where you might generally render a plain error page (the classic 500.html). To collect the feedback, an embeddable JavaScript widget is available, which the Sentry SDK can show to your users on demand.
 
@@ -768,17 +731,15 @@ For more information, see:
 - [Full documentation on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%})
 - [Introducing User Feedback](https://blog.sentry.io/2016/04/21/introducing-user-feedback)
 
-&nbsp;
 ### Security Policy Reporting
 Sentry provides the ability to collect information on Content-Security-Policy (CSP) violations, as well as Expect-CT and HTTP Public Key Pinning (HPKP) failures by setting the proper HTTP header which results in a violation/failure to be sent to the Sentry endpoint specified in the report-uri.
 
-For more information: 
+For more information:
 
 - [Full documentation on Security Policy Reporting]({%- link _documentation/error-reporting/security-policy-reporting.md -%})
 - [Capture Content Security Policy Violations with Sentry](https://blog.sentry.io/2018/09/04/how-sentry-captures-csp-violations)
 - [How a Content Security Policy Could Have Protected Newegg](https://blog.sentry.io/2018/09/20/content-security-policy-newegg-breach)
 
-&nbsp;
 ### SDK Integrations
 All of Sentry's SDKs provide Integrations, which provide additional functionality.
 
@@ -789,10 +750,8 @@ system integrations set `defaultIntegrations: false` when calling `init()`.
 To override their settings, provide a new instance with your config
 to `integrations` option. For example, to turn off browser capturing console calls: `integrations: [new Sentry.Integrations.Breadcrumbs({ console: false })]`.
 
-&nbsp;
 #### Default Integrations
 
-&nbsp;
 ##### InboundFilters
 _Import name: `Sentry.Integrations.InboundFilter`_
 
@@ -801,13 +760,11 @@ It ignores errors, which message starts with `Script error` or `Javascript error
 
 To configure it, use `ignoreErrors`, `blacklistUrls`, and `whitelistUrls` SDK options directly.
 
-&nbsp;
 ##### FunctionToString
 _Import name: `Sentry.Integrations.FunctionToString`_
 
 This integration allows the SDK to provide original functions and method names, even when our error or breadcrumbs handlers wrap them.
 
-&nbsp;
 #### Browser specific
 
 ##### TryCatch
@@ -816,7 +773,6 @@ _Import name: `Sentry.Integrations.TryCatch`_
 This integration wraps native time and events APIs (`setTimeout`, `setInterval`, `requestAnimationFrame`,
 `addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions.
 
-&nbsp;
 ##### Breadcrumbs
 _Import name: `Sentry.Integrations.Breadcrumbs`_
 
@@ -836,7 +792,6 @@ Available options:
 }
 ```
 
-&nbsp;
 ##### GlobalHandlers
 _Import name: `Sentry.Integrations.GlobalHandlers`_
 
@@ -851,7 +806,6 @@ Available options:
 }
 ```
 
-&nbsp;
 ##### LinkedErrors
 _Import name: `Sentry.Integrations.LinkedErrors`_
 
@@ -866,17 +820,14 @@ Available options:
 }
 ```
 
-&nbsp;
 ##### UserAgent
 _Import name: `Sentry.Integrations.UserAgent`_
 
 This integration attaches user-agent information to the event, which allows us to correctly catalog and tag them with specific OS, Browser and version information.
 
-&nbsp;
 ### Pluggable Integrations
 Pluggable integrations are integrations that can be additionally enabled, to provide some very specific features. Sentry documents them so you can see what they do and that they can be enabled. To enable pluggable integrations, provide a new instance with your config to `integrations` option. For example: `integrations: [new Sentry.Integrations.ReportingObserver()]`.
 
-&nbsp;
 ##### ExtraErrorData
 _Import name: `Sentry.Integrations.ExtraErrorData`_
 
@@ -890,13 +841,11 @@ Available options:
 }
 ```
 
-&nbsp;
 ##### Dedupe
 _Import name: `Sentry.Integrations.Dedupe`_
 
 This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only compare stack traces and fingerprints.
 
-&nbsp;
 #### Debug
 _Import name: `Sentry.Integrations.Debug`_
 
@@ -911,7 +860,6 @@ Available options:
 }
 ```
 
-&nbsp;
 #### RewriteFrames
 _Import name: `Sentry.Integrations.RewriteFrames`_
 
@@ -926,7 +874,6 @@ Available options:
 }
 ```
 
-&nbsp;
 #### Browser specific
 
 ##### ReportingObserver
@@ -942,7 +889,6 @@ Available options:
 }
 ```
 
-&nbsp;
 ### Adding a custom Integration
 ```javascript
 import * as Sentry from '@sentry/browser';
@@ -999,7 +945,6 @@ like this:
 </script>
 ```
 
-&nbsp;
 ### Removing an Integration
 In this example, we will remove the by default enabled integration for adding breadcrumbs to the event:
 
@@ -1015,7 +960,6 @@ Sentry.init({
 });
 ```
 
-&nbsp;
 ### Alternative way of setting an Integration
 ```javascript
 import * as Sentry from '@sentry/browser';
@@ -1029,13 +973,11 @@ Sentry.init({
 });
 ```
 
-&nbsp;
 ### Hints
 Event and Breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. For events, those are things like `event_id`, `originalException`, `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that user attaches. For breadcrumbs, it's all implementation dependent. For XHR requests, the hint contains the xhr object itself, for user interactions it contains the DOM element and event name, etc.
 
 They are available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProcessors`. Those are two ways we'll allow users to modify what we put together.
 
-&nbsp;
 #### Hints for Events
 
 `originalException`
@@ -1047,7 +989,6 @@ They are available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProc
 : When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a
 basic stack trace. This exception is stored here for further data extraction.
 
-&nbsp;
 #### Hints for Breadcrumbs
 
 `event`
@@ -1071,7 +1012,6 @@ basic stack trace. This exception is stored here for further data extraction.
 
 : For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API. This holds the original xhr object.
 
-&nbsp;
 ## Additional Resources
 - [Optimizing the Sentry Workflow](https://blog.sentry.io/2018/03/06/the-sentry-workflow)
 - [Debug Tough Front-End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues)
