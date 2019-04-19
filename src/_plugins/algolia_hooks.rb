@@ -3,7 +3,7 @@ module Jekyll
     module Hooks
 
       # Exclude certain frontmatter keys form indexing
-      def self.before_indexing_each(record, node, context)
+      def self.before_indexing_each(record, node)
         [
           :sidebar_order,
           :collection,
