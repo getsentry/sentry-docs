@@ -11,18 +11,16 @@ Create a more efficient workflow by linking your Sentry Issues with your Clubhou
   level="warning"
 %}
 
-**[ Alert Note:** This integration will *not* work on-premise. **]**
-
 # Installation
 
 1. In Sentry, navigate to Organization Settings > **Integrations**.
 
-    [](https://www.notion.so/3da72f9a66064aa89609db7b2b31951b#8528b6aa2abc4e47840bea2a9673fcb1)
+    [{% asset clubhouse/clubhouse_integration.png alt="Sentry's integrations page with Clubhouse at the top." %}]({% asset clubhouse/clubhouse_integration.png @path %})
 
 2. Find the Clubhouse Integration and click **Install**.
 3.  In the resulting modal, approve the permissions by clicking **Install**.
 
-[](https://www.notion.so/3da72f9a66064aa89609db7b2b31951b#3c095fd33d054508951e8afcae8cd737)
+    [{% asset clubhouse/clubhouse_modal.png alt="Sentry's modal to install Clubhouse and approve permissions." %}]({% asset clubhouse/clubhouse_modal.png @path %})
 
 4. Your Clubhouse Integration is ready to use!
 
@@ -32,30 +30,30 @@ Create a more efficient workflow by linking your Sentry Issues with your Clubhou
 
 When linking an issue, you'll need either an existing Clubhouse Story or you'll need to create a Clubhouse Story.
 
-### **Route 1: Clubhouse Story Exists**
+### Route 1: Clubhouse Story Exists
 
 You can link a Sentry Issue to an existing Clubhouse Story.
 
 1. In Sentry, navigate to the specific **Issue** you want to link.
-2. Click on **Link Clubhouse Issue** under **Linked Issues**. ****
+2. Click on **Link Clubhouse Issue** under **Linked Issues**.
 
-[](https://www.notion.so/3da72f9a66064aa89609db7b2b31951b#002032102e874cae87eb2245cb5b7469)
+    [{% asset clubhouse/clubhouse_link_issue.png alt="Sentry's sidebar button for linking issues." %}]({% asset clubhouse/clubhouse_link_issue.png @path %})
 
 3. Select the **Issue** you want to link.
 
-[](https://www.notion.so/3da72f9a66064aa89609db7b2b31951b#d90238d8dd10418d842e22aa7e585185)
-
+    [{% asset clubhouse/clubhouse_choose_issue.png alt="Sentry's modal to link an issue to an existing Story." %}]({% asset clubhouse/clubhouse_choose_issue.png @path %})
+    
 4. Click **Save Changes** to submit the form.
 
 5. Click on the **Clubhouse Story** under **Linked Issues**. This will automatically take you to Clubhouse.
 
-[](https://www.notion.so/3da72f9a66064aa89609db7b2b31951b#54db39d62e5746268ed82ffc3de6b7da)
+    [{% asset clubhouse/clubhouse_story_in_linked_issues_82.png alt="Sentry's sidebar button illustrating that an issue is linked." %}]({% asset clubhouse/clubhouse_story_in_linked_issues_82.png @path %})
 
 6. In Clubhouse, you can review your Clubhouse Story and the linked external ticket to Sentry.
 
-[](https://www.notion.so/3da72f9a66064aa89609db7b2b31951b#c7da8a12f6c44259ae869055411a53e3)
+    [{% asset clubhouse/clubhouse_story_with_issue_linked_82.png alt="Clubhouse web interface illustrating the linked Sentry issue." %}]({% asset clubhouse/clubhouse_story_with_issue_linked_82.png @path %})
 
-### **Route 2: Create a Clubhouse Story Based on a Sentry Issue**
+### Route 2: Create a Clubhouse Story Based on a Sentry Issue
 
 You can take a Sentry Issue, create a Clubhouse Story, and link the two.
 
