@@ -11,6 +11,7 @@ These integrations are set up once per organization, and are then usable in all 
 
 -   [_Azure DevOps_]({%- link _documentation/workflow/integrations/global-integrations/azure-devops.md -%})
 -   [_Bitbucket_]({%- link _documentation/workflow/integrations/global-integrations/bitbucket.md -%})
+-   [_Clubhouse_]({%- link _documentation/workflow/integrations/global-integrations/clubhouse.md -%})
 -   [_GitHub_]({%- link _documentation/workflow/integrations/global-integrations/github.md -%})
 -   [_GitHub Enterprise_]({%- link _documentation/workflow/integrations/global-integrations/github-enterprise.md -%})
 -   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations/gitlab.md -%})
