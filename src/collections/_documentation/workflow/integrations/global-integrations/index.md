@@ -13,6 +13,7 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 
 -   [_Azure DevOps_]({%- link _documentation/workflow/integrations/global-integrations/azure-devops.md -%})
 -   [_Bitbucket_]({%- link _documentation/workflow/integrations/global-integrations/bitbucket.md -%})
+-   [_Clubhouse_]({%- link _documentation/workflow/integrations/global-integrations/clubhouse.md -%})
 -   [_GitHub_]({%- link _documentation/workflow/integrations/global-integrations/github.md -%})
 -   [_GitHub Enterprise_]({%- link _documentation/workflow/integrations/global-integrations/github-enterprise.md -%})
 -   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations/gitlab.md -%})

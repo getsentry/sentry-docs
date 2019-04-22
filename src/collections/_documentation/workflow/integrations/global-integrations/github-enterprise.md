@@ -1,6 +1,6 @@
 ---
 title: GitHub Enterprise
-sidebar_order: 3
+sidebar_order: 4
 ---
 You can now use the data from your GitHub Enterprise commits to help you find and fix bugs faster.
 
