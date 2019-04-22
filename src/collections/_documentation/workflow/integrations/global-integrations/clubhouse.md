@@ -15,7 +15,7 @@ Create a more efficient workflow by linking your Sentry Issues with your Clubhou
 
 1. In Sentry, navigate to Organization Settings > **Integrations**.
 
-    [{% asset clubhouse/clubhouse_integration.png alt="Sentry's integrations page with Clubhouse at the top." %}]({% asset clubhouse/clubhouse_integration.png @path %})
+    [{% asset clubhouse/clubhouse_integration_2.png alt="Sentry's integrations page with Clubhouse at the top." %}]({% asset clubhouse/clubhouse_integration_2.png @path %})
 
 2. Find the Clubhouse Integration and click **Install**.
 3.  In the resulting modal, approve the permissions by clicking **Install**.
