@@ -1,6 +1,6 @@
 ---
 title: Slack
-sidebar_order: 7
+sidebar_order: 8
 ---
 
 The global Slack integration creates workflows for your team. Now you can triage, resolve, and ignore Sentry issues directly from Slack.
