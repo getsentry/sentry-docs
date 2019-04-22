@@ -7,7 +7,7 @@ Create a more efficient workflow by linking your Sentry Issues with your Clubhou
 
 {% include components/alert.html
   title="Note"
-  content="This integration will **not** work on-premise."
+  content="This integration **won't** work on-premise."
   level="warning"
 %}
 
