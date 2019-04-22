@@ -184,7 +184,7 @@ For more information about UI Augmentation, see full documentation **[LINK to UI
 
 ## FAQ
 
-### How are Sentry Integrations different from Plugins?
+#### How are Sentry Integrations different from Plugins?
 
 Plugins (aka Legacy Integrations) are extensions of Sentry packaged as Python libraries. Plugins have been contributed both internally (for example, sentry-plugins) and externally by outside developers (for example, sentry-trello). Plugins are configured separately for each project.
 
@@ -194,17 +194,17 @@ Plugins (aka Legacy Integrations) are extensions of Sentry packaged as Python li
   level="warning"
 %}
 
-### How is the Sentry Integration different from OAuth Apps?
+#### How is the Sentry Integration different from OAuth Apps?
 
 OAuth Applications allow an external developer to create an application which can authenticate as a Sentry user and take actions as the user within Sentry.
 
 Sentry Integration apps are similar to OAuth apps, except Sentry Integration apps act as an independent entity. There is currently no way for Sentry Integration apps to act on behalf of a user.
 
-### How is the Sentry Integration different from Auth Tokens?
+#### How is the Sentry Integration different from Auth Tokens?
 
 Auth tokens are personal access tokens a user can use to invoke APIs directly. Sentry Integration Apps do not represent a single user, but rather make requests as “itself."
 
-### We use the Sentry API internally at our company. Should we switch to the Sentry Integration Platform?
+#### We use the Sentry API internally at our company. Should we switch to the Sentry Integration Platform?
 
 If you're looking for any of the new features below, we recommend you switch to the Sentry Integration Platform.
 
@@ -232,6 +232,6 @@ Sentry Integration apps expose a richer set of events that are not available via
 
 Sentry Integration apps will be able to augment Sentry’s UI in meaningful and feature-rich ways. For example, on the issue page, you could have a button that creates a task in your task-management tool, or open a line in the stack trace in another tool.
 
-### How can I build an Integration with Sentry?
+#### How can I build an Integration with Sentry?
 
 Email [partners@sentry.io](mailto:partners@sentry.io) to get started.
