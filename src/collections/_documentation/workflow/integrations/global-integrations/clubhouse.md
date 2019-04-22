@@ -5,6 +5,12 @@ sidebar_order: 2
 
 Create a more efficient workflow by linking your Sentry Issues with your Clubhouse Stories. Errors, features, and anything else you track in Clubhouse can now live side by side. The new Clubhouse integration has feature parity with the Clubhouse plugin. If you're choosing between the two, we recommend installing the Clubhouse integration.
 
+{% include components/alert.html
+  title="Note"
+  content="This integration will **not** work on-premise."
+  level="warning"
+%}
+
 **[ Alert Note:** This integration will *not* work on-premise. **]**
 
 # Installation
