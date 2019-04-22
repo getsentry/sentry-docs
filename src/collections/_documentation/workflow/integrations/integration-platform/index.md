@@ -2,12 +2,11 @@
 title: Integration Platform
 sidebar_order: 2
 ---
-
 # Sentry Integration Platform
 
 Sentry's Integration Platform provides a way for external services to interact with the Sentry SaaS service using the REST API and webhooks. Integrations utilizing this platform are first class actors within Sentry and begin in an unpublished state where the app is available for use in your organization. 
 
-For differences between an Integration Platform Application and prior methods of integrating with Sentry, see the FAQ at the bottom of the page.
+For differences between an Integration Platform Application and prior methods of integrating with Sentry, see the FAQ at the bottomo of the page.
 
 {% include components/alert.html
   title="Note"
@@ -21,29 +20,27 @@ For differences between an Integration Platform Application and prior methods of
 
 The examples below demonstrate a potential use-case that involves a Flask app receiving new issue webhooks from Sentry, calling the Sentry API for more data about the issue, and pushing it to Pushover **[LINK to website]** as a generator of desktop/mobile notifications. 
 
-### Creating an App
+### Creating an Integration
 
-In Sentry, navigate to Organization Settings > Developer Settings > Create New Application.
+In Sentry, navigate to Organization Settings > Developer Settings > Create New Integration.
 
-[](https://www.notion.so/6c5d5042c2b043469cadc3f994c05f75#e73ed06454d1482eaa9e2bb79bb2a092)
+[](https://www.notion.so/6c5d5042c2b043469cadc3f994c05f75#20f586df6b2b42a4824d777090c03154)
 
 ### Permissions
 
-Permissions ****specify what level of access your service requires of Sentry resources. Your application will prompt your user to approve of these permissions. For more information on Permissions, see full documentation **[LINK to docs]**.
+Permissions ****specify what level of access your service requires of Sentry resources. Sentry will prompt your user to approve of these permissions upon installation. For more information on Permissions, see full documentation **[LINK to docs]**.
 
 [](https://www.notion.so/6c5d5042c2b043469cadc3f994c05f75#4154690bfd2141b1bfbff6ec6792cdc4)
 
-### Event Subscriptions
+### Resource Subscriptions
 
-Event subscriptions describe which webhooks are available for subscription. Currently, the only possible event subscription is new issue events. 
+Selecting a resource subscription determines the types of webhook requests sent to your service. Currently you can get requests for issues when they are created, assigned, ignored, or resolved. 
 
-After selecting an Event Subscription, your application is in an unpublished state, where only the organization that "owns" it can install the application. Any member of the organization can create and modify the app.
+[](https://www.notion.so/6c5d5042c2b043469cadc3f994c05f75#805da37bece04e6fbba96cc5c119a946)
 
-[](https://www.notion.so/6c5d5042c2b043469cadc3f994c05f75#5ceb38a0513d4fea9a8a5e1fc8612b92)
+## Building the Integration
 
-## Building the App
-
-After installation, if your user has approved of all permissions, Sentry will generate a grant code and an installation ID. If your application has a Redirect URL configured, the application redirects the user's browser to the configured URL with the grant code and Installation ID in the query params.
+After installation, if your user has approved of all permissions, Sentry will generate a grant code and an installation ID. If your integration has a Redirect URL configured, the integration redirects the user's browser to the configured URL with the grant code and installation ID in the query params.
 
 Start your build by implementing the Redirect URL endpoint, `/setup` — typically where you exchange the grant code for an access token that allows you to make API calls to Sentry. 
 
@@ -74,16 +71,16 @@ Start your build by implementing the Redirect URL endpoint, `/setup` — typical
         
         return redirect('http://sentry.io/settings/')
 
-Next, implement the Webhook URL endpoint, `/webhook`, which receives new Issue Events. In this method, you'll use the Sentry API to check if the issue belongs to a project called Backend, and if it does, you'll forward the issue to Pushover.
+Next, implement the Webhook URL endpoint, `/webhook`, which receives requests based on your resource subscriptions. In this case that includes when a issue is created. In this method, you'll use the Sentry API to check if the issue belongs to a project called Backend, and if it does, you'll forward the issue to Pushover.
 
     @app.route('/webhook', methods=['POST'])
     def webhook():
         data = json.loads(request.data)
         
-        if data['action'] != 'issue.created':
+        if data['action'] != 'created':
             return
       
-        issue_id = data['data']['id']
+        issue_id = data['data']['issue']['id']
         install_id = data['installation']['uuid']
         
         issue_details = get_sentry_issue(install_id, issue_id)
@@ -159,7 +156,7 @@ You can modify your `get_sentry_issue` function to do this:
             
         return resp.json()
 
-From here you can augment your `/webhook` endpoint to handle other events in the future, make requests to Sentry from elsewhere in your app, and implemented the integrated features your customers most desire.
+From here you can augment your `/webhook` endpoint to handle other events in the future, make requests to Sentry from elsewhere in your app, and implement the integrated features your customers most desire.
 
 ## UI Components
 
@@ -168,10 +165,10 @@ The Sentry Integration Platform provides the ability to add rich UI components t
 Through a JSON-Schema based system, you can have Sentry render a way for Users to link Sentry Issues to Issues in your service or open a specific line of a stack trace in your tool. We'll be expanding the scope of what you can augment over time, as well.
 
     {
-            "elements": [{
-                    "type": "stacktrace-link",
-                    "uri": "/debug",
-            }]
+    		"elements": [{
+    				"type": "stacktrace-link",
+    				"uri": "/debug",
+    		}]
     }
 
 For more information about UI Augmentation, see full documentation **[LINK to UI Components doc]**.
@@ -206,16 +203,16 @@ OAuth apps and Auth Tokens allow you to access Sentry as a specific user in your
 - Actions taken in Sentry will connect to this user rather than the integration/app. For example, if your alerting integration automatically assigns issues to a teammate, it will appear in the history as “Alice assigned Bob issue XYZ” rather than “<Your Sentry Integration apps> assigned Bob issue XYZ.”
 
 **Managing Subscriptions**
-With Sentry Integration apps you can manage event subscriptions in the UI, as opposed to the current state where you need to make API calls to create/update/delete/retrieve subscriptions. The latter is not only more cumbersome but also harder to keep track of and maintain visibility across your team.
+With Sentry Integration apps you can manage resource subscriptions in the UI, as opposed to the current state where you need to make API calls to create/update/delete/retrieve subscriptions. The latter is not only more cumbersome but also harder to keep track of and maintain visibility across your team.
 
 **Scope**
-Currently, event subscriptions must be configured per-project, which is unnecessary overhead especially when adding/removing projects. With Sentry Integration apps, you’ll receive notifications for all projects in your organization by default and can enable/disable them per-project.
+Currently, resource subscriptions must be configured per-project, which is unnecessary overhead especially when adding/removing projects. With Sentry Integration apps, you’ll receive notifications for all projects in your organization.
 
 **New Event Types**
-Sentry Integration apps expose a richer set of events that are not available via the legacy service hooks API. Currently, this includes Issue Created, Issue Resolved, Issue Ignored, and Issue Assigned. In the future, we’ll add more types of notifications to Sentry Integration apps.
+Sentry Integration apps expose a richer set of events that are not available via the legacy service hooks API. Currently, this includes Issue Created, Issue Resolved, Issue Ignored, and Issue Assigned. In the future, we’ll add more types of webhooks to Sentry Integration apps.
 
 **Custom UI Components**
-Sentry Integration apps will be able to augment Sentry’s UI in meaningful and feature-rich ways. For example, on the issue page, you could have a button that creates a task in your task-management tool, or a custom section that shows additional data related to the issue by calling an external API.
+Sentry Integration apps will be able to augment Sentry’s UI in meaningful and feature-rich ways. For example, on the issue page, you could have a button that creates a task in your task-management tool, or open a line in the stack trace in another tool.
 
 ### How can I build an Integration with Sentry?
 
