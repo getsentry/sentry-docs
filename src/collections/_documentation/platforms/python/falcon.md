@@ -37,7 +37,7 @@ The integration has been confirmed to work with Falcon 1.4 and 2.0.
 
 ## Behavior
 
-* The Sentry Python SDK will install the Falcon integration for all of your apps. The integration hooks into the base Falcon class via monkey patching.
+* The Sentry Python SDK will install the Falcon integration for all of your apps. The integration hooks into the base `falcon.API` class via monkey patching.
 
 * All exceptions leading to an Internal Server Error are reported.
 
