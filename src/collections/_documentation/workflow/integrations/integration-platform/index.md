@@ -180,7 +180,7 @@ Through a JSON-Schema based system, you can have Sentry render a way for Users t
 }
 ```
 
-For more information about UI Augmentation, see full documentation **[LINK to UI Components doc]**.
+For more information about UI Components, see [full documentation]({%- link _documentation/workflow/integrations/integration-platform/ui-components.md -%}).
 
 ## FAQ
 
