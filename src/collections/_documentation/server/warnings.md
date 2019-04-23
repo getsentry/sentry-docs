@@ -1,6 +1,6 @@
 ---
 title: 'System Warnings'
-sidebar_order: 19
+sidebar_order: 20
 ---
 
 ## Deprecated Settings
