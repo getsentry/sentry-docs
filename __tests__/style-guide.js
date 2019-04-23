@@ -6,6 +6,7 @@ const IGNORED_TERM_LIST = [
   'sourcemaps.io',
   'https:',
   'sentry-auth-github',
+  '/extensions/github/',
   '@getsentry'
 ];
 
