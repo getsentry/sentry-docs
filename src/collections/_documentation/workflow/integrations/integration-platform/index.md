@@ -73,7 +73,7 @@ def setup():
     return redirect('http://sentry.io/settings/')
 ```
 
-Next, implement the Webhook URL endpoint, `/webhook`, which receives requests based on your resource subscriptions. In this case that includes when a issue is created. In this method, you'll use the Sentry API to check if the issue belongs to a project called Backend, and if it does, you'll forward the issue to Pushover.
+Next, implement the Webhook URL endpoint, `/webhook`, which receives requests based on your resource subscriptions. In this case that includes when an issue is created. In this method, you'll use the Sentry API to check if the issue belongs to a project called Backend, and if it does, you'll forward the issue to Pushover.
 
 ```python
 @app.route('/webhook', methods=['POST'])
