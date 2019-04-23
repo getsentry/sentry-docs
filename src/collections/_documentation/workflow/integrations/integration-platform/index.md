@@ -2,7 +2,6 @@
 title: Integration Platform
 sidebar_order: 2
 ---
-# Sentry Integration Platform
 
 Sentry's Integration Platform provides a way for external services to interact with the Sentry SaaS service using the REST API and webhooks. Integrations utilizing this platform are first class actors within Sentry and begin in an unpublished state where the app is available for use in your organization. 
 
