@@ -17,6 +17,7 @@ These integrations are set up once per organization, and are then usable in all 
 -   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations/gitlab.md -%})
 -   [_JIRA_]({%- link _documentation/workflow/integrations/global-integrations/jira.md -%})
 -   [_JIRA Server_]({%- link _documentation/workflow/integrations/global-integrations/jira-server.md -%})
+-   [_Rookout_]({%- link _documentation/workflow/integrations/global-integrations/rookout.md -%})
 -   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations/slack.md -%})
 
 
