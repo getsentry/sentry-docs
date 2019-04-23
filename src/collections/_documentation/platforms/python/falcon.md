@@ -3,7 +3,7 @@ title: Falcon
 sidebar_order: 5
 ---
 
-{% version_added 0.7.9 %}
+{% version_added 0.7.11 %}
 
 
 <!-- WIZARD -->
