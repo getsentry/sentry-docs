@@ -15,13 +15,27 @@ sidebar_order: 1
     | Setup URL (optional) | ${urlPrefix}/extensions/github/setup/ |
     | Webhook URL | ${urlPrefix}/extensions/github/webhook/ |
 
-3. Take note of the following values after you have created your app:
+3. These are the permissions required by Sentry:
+
+    | Permission | Setting |
+    |---|---|
+    | Repository administration | Read-only |
+    | Repository contents | Read-only |
+    | Issues | Read & write |
+    | Pull requests | Read & write |
+    | Repository webhooks | Read & write |
+
+4. Sentry also supports these events:
+  - Push
+  - Pull Requests
+  
+5. Take note of the following values after you have created your app:
   - App ID (GITHUB_APP_ID)
   - App Name (GITHUB_APP_NAME)
   - Client ID (GITHUB_CLIENT_ID)
   - Client Secret (GITHUB_CLIENT_SECRET)
 
-4. Generate and download a private key for your app.
+6. Generate and download a private key for your app.
 
 
 ## Configure your `config.yml`
