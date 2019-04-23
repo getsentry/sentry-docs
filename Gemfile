@@ -11,7 +11,7 @@ group :jekyll_plugins do
     require: false
   }
   gem 'jekyll-assets', '3.0.11'
-  gem 'jekyll-algolia', '~> 1.0'
+  gem 'jekyll-algolia', '~> 1.2.3'
   gem 'jekyll-toc', '0.9.0'
   gem 'autoprefixer-rails'
   gem 'jekyll-extlinks'
