@@ -182,10 +182,10 @@ For more details, see this example of a Sentry engineer [committing this configu
 
 After you configure the variable in your SDK, the variable surfaces as a tag in Sentry’s UI. You've accomplished an end-to-end request ID that helps you stitch together errors that Sentry tracks. You can also stitch together traditional access logs, which, in the examples above, get ingested into ElasticSearch.
 
-[screenshot: tracing_tags]
+[{% asset visibility/tracing_tags.png alt="Image of the request_id grouped with other tags." %}]({% asset visibility/tracing_tags.png @path %})
 
 ### Searching Request IDs in Sentry
 
 If you also need several example cases to supplement a unique request ID, you can use Sentry's [Discover]({- link _documentation/workflow/discover.md -}) functionality to search for all request ids you've seen on a specific URL.
 
-[screenshot: discover with request IDs]
+[{% asset visibility/tracing_with_discover.png alt="Image of the request_id grouped with other tags." %}]({% asset visibility/tracing_with_discover.png @path %})
