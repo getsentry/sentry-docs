@@ -98,7 +98,7 @@ request.post({
 
 ## Use-Case: Tracing with NGINX
 
-A look at how to trace a file upload issue through NGINX and Sentry with the help of a `$request_id` -- a randomly generated string that Sentry automatically assigns to each request.
+A look at how to trace a file upload issue through NGINX and Sentry with the help of a `$request_id` --- a randomly generated string that Sentry automatically assigns to each request.
 
 ### Configuring `$request_id`
 
@@ -186,6 +186,6 @@ After you configure the variable in your SDK, the variable surfaces as a tag in 
 
 ### Searching Request IDs in Sentry
 
-If you also need several example cases to supplement a unique request ID, you can use Sentry's [Discover]({- link _documentation/workflow/discover.md -}) functionality to search for all request ids you've seen on a specific URL.
+If you also need several example cases to supplement a unique request ID, you can use Sentry's [Discover]({%- link _documentation/workflow/discover.md -%}) functionality to search for all request ids you've seen on a specific URL.
 
 [{% asset visibility/tracing_with_discover.png alt="Image of the request_id grouped with other tags." %}]({% asset visibility/tracing_with_discover.png @path %})
