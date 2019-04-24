@@ -104,7 +104,7 @@ A look at how to trace a file upload issue through NGINX and Sentry with the hel
 
 NGINX has the [request ID variable](http://nginx.org/en/docs/http/ngx_http_core_module.html#var_request_id) already built-in. After accessing the variable, you can configure your NGINX server to include `$request_id` in your access logs and pass this value downstream to your application servers. First, declare a new log format, because the default log format doesn't include `$request_id`. 
 
-For the example below, Sentry logs as a JSON and can ingest other systems such as ElasticSearch.
+For the example below, Sentry logs as a JSON and can ingest other systems such as [Elasticsearch](https://www.elastic.co/).
 
 ```
 
@@ -180,7 +180,7 @@ app.use((req, res, next) => {
 
 For more details, see this example of a Sentry engineer [committing this configuration](https://github.com/getsentry/sentry/pull/11084) to the Sentry repository. They also bound their value to the internal logging with [structlog](https://www.structlog.org/en/stable/).
 
-After you configure the variable in your SDK, the variable surfaces as a tag in Sentry’s UI. You've accomplished an end-to-end request ID that helps you stitch together errors that Sentry tracks. You can also stitch together traditional access logs, which, in the examples above, get ingested into ElasticSearch.
+After you configure the variable in your SDK, the variable surfaces as a tag in Sentry’s UI. You've accomplished an end-to-end request ID that helps you stitch together errors that Sentry tracks. You can also stitch together traditional access logs, which, in the examples above, get ingested into [Elasticsearch](https://www.elastic.co/).
 
 [{% asset visibility/tracing_tags.png alt="Image of the request_id grouped with other tags." %}]({% asset visibility/tracing_tags.png @path %})
 
