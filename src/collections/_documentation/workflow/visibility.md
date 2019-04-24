@@ -98,7 +98,7 @@ request.post({
 
 ## Use-Case: Tracing with NGINX
 
-A look at how to trace a file upload issue through NGINX and Sentry with the help of a `$request_id` -- a randomly generated string that is automatically assigned to each request.
+A look at how to trace a file upload issue through NGINX and Sentry with the help of a `$request_id` -- a randomly generated string that Sentry automatically assigns to each request.
 
 ### Configuring `$request_id`
 
@@ -180,12 +180,12 @@ app.use((req, res, next) => {
 
 For more details, see this example of a Sentry engineer [committing this configuration](https://github.com/getsentry/sentry/pull/11084) to the Sentry repository. They also bound their value to the internal logging with [structlog](https://www.structlog.org/en/stable/).
 
-After the variable is configured in your SDK, the variable surfaces as a tag in Sentry's UI. This steps illustrates how you've accomplished an end-to-end request ID that you can use to stitch together errors being tracked in Sentry as well as traditional access logs, which, in the examples above, get ingested into ElasticSearch.
+After you configure the variable in your SDK, the variable surfaces as a tag in Sentry’s UI. You've accomplished an end-to-end request ID that helps you stitch together errors that Sentry tracks. You can also stitch together traditional access logs, which, in the examples above, get ingested into ElasticSearch.
 
 [screenshot: tracing_tags]
 
 ### Searching Request IDs in Sentry
 
-If you also need a number of example cases to supplement a single request ID, you can use Sentry's [Discover]({- link _documentation/workflow/discover.md -}) functionality to search for all request ids you've seen on a specific URL.
+If you also need several example cases to supplement a unique request ID, you can use Sentry's [Discover]({- link _documentation/workflow/discover.md -}) functionality to search for all request ids you've seen on a specific URL.
 
 [screenshot: discover with request IDs]
