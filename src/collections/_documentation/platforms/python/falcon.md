@@ -7,8 +7,6 @@ sidebar_order: 5
 
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.falcon.FalconIntegration`*
-
 The Falcon integration adds support for the [Falcon Web Framework](https://falconframework.org/).
 The integration has been confirmed to work with Falcon 1.4 and 2.0.
 

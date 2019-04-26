@@ -6,8 +6,6 @@ sidebar_order: 4
 {% version_added 0.7.3 %}
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.serverless.serverless_function`*
-
 It is recommended to use an [integration for your particular serverless environment if available]({% link _documentation/platforms/python/index.md %}#serverless), as those are easier to use and capture more useful information.
 
 If you use a serverless provider not directly supported by the SDK, you can use this generic integration.

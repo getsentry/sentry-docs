@@ -2,8 +2,6 @@
 title: Logging
 sidebar_order: 2
 ---
-*Import name: `sentry_sdk.integrations.logging.LoggingIntegration`*
-
 Calling ``sentry_sdk.init()`` already integrates with the logging module. It is
 equivalent to this explicit configuration:
 

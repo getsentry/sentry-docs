@@ -6,8 +6,6 @@ sidebar_order: 5
 {% version_added 0.5.0 %}
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.pyramid.PyramidIntegration`*
-
 The Pyramid integration adds support for the [Pyramid Web
 Framework](https://trypyramid.com/).
 

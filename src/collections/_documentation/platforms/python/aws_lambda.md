@@ -6,8 +6,6 @@ sidebar_order: 4
 {% version_added 0.3.5 %}
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.aws_lambda.AwsLambdaIntegration`*
-
 You can use the AWS Lambda integration for the Python SDK like this:
 
 ```python

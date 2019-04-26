@@ -4,8 +4,6 @@ sidebar_order: 2
 ---
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.flask.FlaskIntegration`*
-
 The Flask integration adds support for the [Flask Web
 Framework](http://flask.pocoo.org/).
 
