@@ -4,8 +4,6 @@ title: Integrations
 
 The Sentry Java SDK comes with support for some frameworks and libraries so that you don’t have to capture and send errors manually.
 
--   [Google App Engine]({%- link _documentation/clients/java/modules/appengine.md -%})
--   [java.util.logging]({%- link _documentation/clients/java/modules/jul.md -%})
 -   [Log4j 1.x]({%- link _documentation/clients/java/modules/log4j.md -%})
 -   [Log4j 2.x]({%- link _documentation/clients/java/modules/log4j2.md -%})
 -   [Logback]({%- link _documentation/clients/java/modules/logback.md -%})
@@ -258,3 +256,162 @@ sentry-cli upload-proguard \
     --android-manifest app/build/intermediates/manifests/full/release/AndroidManifest.xml \
     app/build/outputs/mapping/release/mapping.txt
 ```
+
+## Google App Engine
+
+
+The `sentry-appengine` library provides [Google App Engine](https://cloud.google.com/appengine/) support for Sentry via the [Task Queue API](https://cloud.google.com/appengine/docs/java/taskqueue/).
+
+The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-appengine).
+
+<!-- WIZARD -->
+### Installation
+
+Using Maven:
+
+```xml
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-appengine</artifactId>
+    <version>1.7.16</version>
+</dependency>
+```
+
+Using Gradle:
+
+```groovy
+compile 'io.sentry:sentry-appengine:1.7.16'
+```
+
+Using SBT:
+
+```scala
+libraryDependencies += "io.sentry" % "sentry-appengine" % "1.7.16"
+```
+
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-appengine%7C1.7.16%7Cjar).
+
+### Usage
+
+This module provides a new `SentryClientFactory` implementation which replaces the default async system with a Google App Engine compatible one. You’ll need to configure Sentry to use the `io.sentry.appengine.AppEngineSentryClientFactory` as its factory.
+
+The queue size and thread options will not be used as they are specific to the default Java threading system.
+<!-- ENDWIZARD -->
+
+### Queue Name
+
+By default, the default task queue will be used, but it’s possible to specify which one will be used with the `sentry.async.gae.queuename` option:
+
+```
+http://public:private@host:port/1?async.gae.queuename=MyQueueName
+```
+
+### Connection Name
+
+As the queued tasks are sent across different instances of the application, it’s important to be able to identify which connection should be used when processing the event. To do so, the GAE module will identify each connection based on an identifier either automatically generated or user defined. To manually set the connection identifier (only used internally) use the option `sentry.async.gae.connectionid`:
+
+```
+http://public:private@host:port/1?async.gae.connectionid=MyConnection
+```
+
+## java.util.logging
+
+The `sentry` library provides a [java.util.logging Handler](http://docs.oracle.com/javase/7/docs/api/java/util/logging/Handler.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page]({%- link _documentation/clients/java/usage.md -%}#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
+
+The source for `sentry` can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry).
+
+**Note:** The old `raven` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
+
+<!-- WIZARD -->
+### Installation
+
+Using Maven:
+
+```xml
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry</artifactId>
+    <version>1.7.16</version>
+</dependency>
+```
+
+Using Gradle:
+
+```groovy
+compile 'io.sentry:sentry:1.7.16'
+```
+
+Using SBT:
+
+```scala
+libraryDependencies += "io.sentry" % "sentry" % "1.7.16"
+```
+
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.16%7Cjar).
+
+### Usage
+
+The following example configures a `ConsoleHandler` that logs to standard out at the `INFO` level and a `SentryHandler` that logs to the Sentry server at the `WARN` level. The `ConsoleHandler` is only provided as an example of a non-Sentry appender that is set to a different logging threshold, like one you may already have in your project.
+
+Example configuration using the `logging.properties` format:
+
+```ini
+# Enable the Console and Sentry handlers
+handlers=java.util.logging.ConsoleHandler,io.sentry.jul.SentryHandler
+
+# Set the default log level to INFO
+.level=INFO
+
+# Override the Sentry handler log level to WARNING
+io.sentry.jul.SentryHandler.level=WARNING
+```
+
+When starting your application, add the `java.util.logging.config.file` to the system properties, with the full path to the `logging.properties` as its value:
+
+```bash
+$ java -Djava.util.logging.config.file=/path/to/app.properties MyClass
+```
+
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
+<!-- ENDWIZARD -->
+
+### In Practice
+
+```java
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class MyClass {
+    private static final Logger logger = Logger.getLogger(MyClass.class.getName());
+
+    void logSimpleMessage() {
+        // This sends a simple event to Sentry
+        logger.error(Level.INFO, "This is a test");
+    }
+
+    void logWithBreadcrumbs() {
+        // Record a breadcrumb that will be sent with the next event(s),
+        // by default the last 100 breadcrumbs are kept.
+        Sentry.record(
+            new BreadcrumbBuilder().setMessage("User made an action").build()
+        );
+
+        // This sends a simple event to Sentry
+        logger.error("This is a test");
+    }
+
+    void logException() {
+        try {
+            unsafeMethod();
+        } catch (Exception e) {
+            // This sends an exception event to Sentry
+            logger.error(Level.SEVERE, "Exception caught", e);
+        }
+    }
+
+    void unsafeMethod() {
+        throw new UnsupportedOperationException("You shouldn't call this!");
+    }
+}
+```
+
