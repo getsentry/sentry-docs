@@ -73,7 +73,7 @@ Please consult your promise library documentation on how to hook into its global
 ## Releases
 A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
 
- - Apply [source maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%}) to receive the full benefit of error tracking and monitoring
+ - Apply [source maps]({%- link _documentation/platforms/javascript/sourcemaps.md -%}) to receive the full benefit of error tracking and monitoring
  - Determine the issue and regressions introduced in a new release
  - Predict which commit caused an issue and who is likely responsible
  - Resolve issues by including the issue number in your commit message
@@ -201,7 +201,7 @@ Source maps can be either:
 2.  Served publicly over HTTP alongside your source files.
 
 #### Uploading Source Maps to Sentry
-Except for [Webpack]({%- link _documentation/platforms/javascript/sourcemaps/generation.md -%}#webpack), the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
+Except for [Webpack]({%- link _documentation/platforms/javascript/sourcemaps.md -%}#webpack), the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
 
 Now you need to set up your build system to create a release and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
@@ -298,7 +298,7 @@ Here are some things you can check in addition to the validation step:
 
 For more information, see:
 
-- [Full Documentation on Source Maps]({%- link _documentation/platforms/javascript/sourcemaps/index.md -%})
+- [Full Documentation on Source Maps]({%- link _documentation/platforms/javascript/sourcemaps.md -%})
 - [Debuggable JavaScript in Production with Source Maps](https://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps)
 - [4 Reasons Why Your Source Maps are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
 - [Debug Your Node.js Projects with Source Maps](https://blog.sentry.io/2019/02/20/debug-node-source-maps)
