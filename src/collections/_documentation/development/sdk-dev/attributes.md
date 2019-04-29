@@ -69,6 +69,7 @@ The following attributes are required for all events:
   -   `go`
   -   `java`
   -   `javascript`
+  -   `native`
   -   `node`
   -   `objc`
   -   `other`
