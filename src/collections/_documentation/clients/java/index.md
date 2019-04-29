@@ -27,13 +27,13 @@ Getting started with Sentry is a three step process:
 
 Once you've configured one of the integrations below, you can _also_ use Sentry's [static API]({%- link _documentation/clients/java/usage.md -%}) in order to do things like record breadcrumbs, set the current user, or manually send events.
 
--   [Android]({%- link _documentation/clients/java/modules/android.md -%})
--   [Google App Engine]({%- link _documentation/clients/java/modules/appengine.md -%})
--   [java.util.logging]({%- link _documentation/clients/java/modules/jul.md -%})
--   [Log4j 1.x]({%- link _documentation/clients/java/modules/log4j.md -%})
--   [Log4j 2.x]({%- link _documentation/clients/java/modules/log4j2.md -%})
--   [Logback]({%- link _documentation/clients/java/modules/logback.md -%})
--   [Spring]({%- link _documentation/clients/java/modules/spring.md -%})
+-   [Android]({%- link _documentation/clients/java/integrations.md -%})
+-   [Google App Engine]({%- link _documentation/clients/java/integrations.md -%})
+-   [java.util.logging]({%- link _documentation/clients/java/integrations.md -%})
+-   [Log4j 1.x]({%- link _documentation/clients/java/integrations.md -%})
+-   [Log4j 2.x]({%- link _documentation/clients/java/integrations.md -%})
+-   [Logback]({%- link _documentation/clients/java/integrations.md -%})
+-   [Spring]({%- link _documentation/clients/java/integrations.md -%})
 
 ## Configuration {#config}
 

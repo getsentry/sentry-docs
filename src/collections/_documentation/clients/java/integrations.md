@@ -4,8 +4,6 @@ title: Integrations
 
 The Sentry Java SDK comes with support for some frameworks and libraries so that you don’t have to capture and send errors manually.
 
--   [Spring]({%- link _documentation/clients/java/modules/spring.md -%})
-
 ## Android
 
 ### Features

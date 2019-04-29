@@ -2,7 +2,7 @@
 title: Configuration
 ---
 
-**Note:** Sentry’s library and framework integration documentation explains how to to do the initial Sentry configuration for each of the supported integrations. The configuration below can be used in combination with any of the integrations _once you set Sentry up with the integration_. Please check [the integration documentation]({%- link _documentation/clients/java/modules/index.md -%}#integrations) before you attempt to do any advanced configuration.
+**Note:** Sentry’s library and framework integration documentation explains how to to do the initial Sentry configuration for each of the supported integrations. The configuration below can be used in combination with any of the integrations _once you set Sentry up with the integration_. Please check [the integration documentation]({%- link _documentation/clients/java/integrations.md -%}#integrations) before you attempt to do any advanced configuration.
 
 ## Setting the DSN (Data Source Name) {#setting-the-dsn}
 

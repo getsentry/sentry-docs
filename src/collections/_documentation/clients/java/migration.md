@@ -157,4 +157,4 @@ What follows is a small guide explaining the major changes.
 
 `Now (sentry-java)`
 
-: Android users now use the same `Sentry` and `SentryClient` classes as everyone, they just need to initialize it with their application context and the `AndroidSentryClientFactory`. For an example, [see the Android documentation]({%- link _documentation/clients/java/modules/android.md -%}).
+: Android users now use the same `Sentry` and `SentryClient` classes as everyone, they just need to initialize it with their application context and the `AndroidSentryClientFactory`. For an example, [see the Android documentation]({%- link _documentation/clients/java/integrations.md -%}).
