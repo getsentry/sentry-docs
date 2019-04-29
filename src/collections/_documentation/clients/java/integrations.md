@@ -4,7 +4,6 @@ title: Integrations
 
 The Sentry Java SDK comes with support for some frameworks and libraries so that you don’t have to capture and send errors manually.
 
--   [Logback]({%- link _documentation/clients/java/modules/logback.md -%})
 -   [Spring]({%- link _documentation/clients/java/modules/spring.md -%})
 
 ## Android
@@ -717,3 +716,230 @@ public class MyClass {
     }
 }
 ```
+
+## Logback
+
+The `sentry-logback` library provides [Logback](http://logback.qos.ch/) support for Sentry via an [Appender](http://logback.qos.ch/apidocs/ch/qos/logback/core/Appender.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page]({%- link _documentation/clients/java/usage.md -%}#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
+
+The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-logback).
+
+**Note:** The old `raven-logback` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-logback` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-logback` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/logback.rst).
+
+<!-- WIZARD -->
+### Installation
+
+Using Maven:
+
+```xml
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-logback</artifactId>
+    <version>1.7.16</version>
+</dependency>
+```
+
+Using Gradle:
+
+```groovy
+compile 'io.sentry:sentry-logback:1.7.16'
+```
+
+Using SBT:
+
+```scala
+libraryDependencies += "io.sentry" % "sentry-logback" % "1.7.16"
+```
+
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-logback%7C1.7.16%7Cjar).
+
+### Usage
+
+The following example configures a `ConsoleAppender` that logs to standard out at the `INFO` level and a `SentryAppender` that logs to the Sentry server at the `WARN` level. The `ConsoleAppender` is only provided as an example of a non-Sentry appender that is set to a different logging threshold, like one you may already have in your project.
+
+Example configuration using the `logback.xml` format:
+
+```xml
+<configuration>
+    <!-- Configure the Console appender -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
+    <appender name="Sentry" class="io.sentry.logback.SentryAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <!-- Enable the Console and Sentry appenders, Console is provided as an example
+ of a non-Sentry logger that is set to a different logging threshold -->
+    <root level="INFO">
+        <appender-ref ref="Console" />
+        <appender-ref ref="Sentry" />
+    </root>
+</configuration>
+```
+
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#setting-the-dsn) for ways you can do this.
+<!-- ENDWIZARD -->
+
+### Additional Data
+
+It’s possible to add extra data to events thanks to [the MDC system provided by Logback](http://logback.qos.ch/manual/mdc.html).
+
+#### Mapped Tags
+
+By default all MDC parameters are stored under the “Additional Data” tab in Sentry. By specifying the `mdctags` option in your configuration you can choose which MDC keys to send as tags instead, which allows them to be used as filters within the Sentry UI.
+
+```java
+void logWithExtras() {
+    // MDC extras
+    MDC.put("Environment", "Development");
+    MDC.put("OS", "Linux");
+
+    // This sends an event where the Environment and OS MDC values are set as additional data
+    logger.error("This is a test");
+}
+```
+
+### In Practice
+
+```java
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.slf4j.MarkerFactory;
+
+public class MyClass {
+    private static final Logger logger = LoggerFactory.getLogger(MyClass.class);
+    private static final Marker MARKER = MarkerFactory.getMarker("myMarker");
+
+    void logSimpleMessage() {
+        // This sends a simple event to Sentry
+        logger.error("This is a test");
+    }
+
+    void logWithBreadcrumbs() {
+        // Record a breadcrumb that will be sent with the next event(s),
+        // by default the last 100 breadcrumbs are kept.
+        Sentry.record(
+            new BreadcrumbBuilder().setMessage("User made an action").build()
+        );
+
+        // This sends a simple event to Sentry
+        logger.error("This is a test");
+    }
+
+    void logWithTag() {
+        // This sends an event with a tag named 'logback-Marker' to Sentry
+        logger.error(MARKER, "This is a test");
+    }
+
+    void logWithExtras() {
+        // MDC extras
+        MDC.put("extra_key", "extra_value");
+        // This sends an event with extra data to Sentry
+        logger.error("This is a test");
+    }
+
+    void logException() {
+        try {
+            unsafeMethod();
+        } catch (Exception e) {
+            // This sends an exception event to Sentry
+            logger.error("Exception caught", e);
+        }
+    }
+
+    void unsafeMethod() {
+        throw new UnsupportedOperationException("You shouldn't call this!");
+    }
+}
+```
+
+## Spring
+
+The `sentry-spring` library provides [Spring](https://spring.io/) support for Sentry via a [HandlerExceptionResolver](https://docs.spring.io/spring/docs/4.3.9.RELEASE/javadoc-api/org/springframework/web/servlet/HandlerExceptionResolver.html) that sends exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page]({%- link _documentation/clients/java/usage.md -%}#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
+
+The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring).
+
+### Important Note About Logging Integrations
+
+**Note** that you should **not** configure `sentry-spring` alongside a Sentry logging integration (such as `sentry-logback`), or you will most likely double-report exceptions.
+
+A Sentry logging integration is more general and will capture errors (and possibly warnings, depending on your configuration) that occur inside _or outside_ of a Spring controller. In most scenarios, using one of the logging integrations instead of `sentry-spring` is preferred.
+
+### Installation
+
+Using Maven:
+
+```xml
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-spring</artifactId>
+    <version>1.7.16</version>
+</dependency>
+```
+
+Using Gradle:
+
+```groovy
+compile 'io.sentry:sentry-spring:1.7.16'
+```
+
+Using SBT:
+
+```scala
+libraryDependencies += "io.sentry" % "sentry-spring" % "1.7.16"
+```
+
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-spring%7C1.7.16%7Cjar).
+
+### Usage
+
+The `sentry-spring` library provides two classes that can be enabled by registering them as Beans in your Spring application.
+
+#### Recording Exceptions
+
+In order to record all exceptions thrown by your controllers, you can register `io.sentry.spring.SentryExceptionResolver` as a Bean in your application. Once registered, all exceptions will be sent to Sentry and then passed on to the default exception handlers.
+
+Configuration via `web.xml`:
+
+```xml
+<bean class="io.sentry.spring.SentryExceptionResolver"/>
+```
+
+Or via a configuration class:
+
+```java
+@Bean
+public HandlerExceptionResolver sentryExceptionResolver() {
+    return new io.sentry.spring.SentryExceptionResolver();
+}
+```
+
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#setting-the-dsn) for ways you can do this.
+
+#### Spring Boot HTTP Data
+
+Spring Boot doesn’t automatically load any `javax.servlet.ServletContainerInitializer`, which means the Sentry SDK doesn’t have an opportunity to hook into the request cycle to collect information about the HTTP request. In order to add HTTP request data to your Sentry events in Spring Boot, you need to register the `io.sentry.spring.SentryServletContextInitializer` class as a Bean in your application.
+
+Configuration via `web.xml`:
+
+```xml
+<bean class="io.sentry.spring.SentryServletContextInitializer"/>
+```
+
+Or via a configuration class:
+
+```java
+@Bean
+public ServletContextInitializer sentryServletContextInitializer() {
+    return new io.sentry.spring.SentryServletContextInitializer();
+}
+```
+
+After that, your Sentry events should contain information such as HTTP request headers.
