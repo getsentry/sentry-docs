@@ -3,8 +3,6 @@ title: Celery
 sidebar_order: 2
 ---
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.celery.CeleryIntegration`*
-
 The celery integration adds support for the [Celery Task Queue System](http://www.celeryproject.org/).
 
 Just add ``CeleryIntegration()`` to your ``integrations`` list:

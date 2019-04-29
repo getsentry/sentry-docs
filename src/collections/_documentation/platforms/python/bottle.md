@@ -7,8 +7,6 @@ sidebar_order: 5
 
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.bottle.BottleIntegration`*
-
 The Bottle integration adds support for the [Bottle Web Framework](https://bottlepy.org/).
 Currently it works well with the stable version of Bottle (0.12).
 However the integration with the development version (0.13) doesn't work properly.

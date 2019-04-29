@@ -3,8 +3,6 @@ title: GNU Backtrace
 sidebar_order: 2
 ---
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.gnu_backtrace.GnuBacktraceIntegration`*
-
 The GNU backtrace integration parses native stack trace produced by [`backtrace_symbols`](https://linux.die.net/man/3/backtrace_symbols) from error messages and concatenates them with the Python traceback.
 
 It is currently tested to work with server exceptions raised by [`clickhouse-driver`](https://github.com/mymarilyn/clickhouse-driver).

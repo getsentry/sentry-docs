@@ -3,8 +3,6 @@ title: Django
 sidebar_order: 2
 ---
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.django.DjangoIntegration`*
-
 The Django integration adds support for the [Django Web Framework](https://www.djangoproject.com/)
 from Version 1.6 upwards.
 

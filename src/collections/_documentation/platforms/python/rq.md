@@ -6,8 +6,6 @@ sidebar_order: 2
 {% version_added 0.5.1 %}
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.rq.RqIntegration`*
-
 The RQ integration adds support for the [RQ Job Queue System](https://python-rq.org/).
 
 Create a file called `mysettings.py` with the following content:
