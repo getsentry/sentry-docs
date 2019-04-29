@@ -1,11 +1,15 @@
 ---
-title: net/http
+title: Integrations
 ---
+
+The Raven Go package currently comes with an integration for the native `net/http` module to make it easy to handle common scenarios. More frameworks will be coming soon.
+
+## net/http
 
 Raven Go provides middleware that can be used with the stdlib `net/http` library to automatically handle panics that occur during an http request.
 
 <!-- WIZARD -->
-## Installation
+### Installation
 
 Simply install `raven-go` through `go get`:
 
@@ -13,7 +17,7 @@ Simply install `raven-go` through `go get`:
 $ go get github.com/getsentry/raven-go
 ```
 
-## Setup
+### Setup
 
 Make sure that you’ve set configured `raven` with your DSN, typically inside the `init()` in your `main` package is a good place.
 
@@ -38,3 +42,4 @@ func root(w http.ResponseWriter, r *http.Request) {
 http.HandleFunc("/", raven.RecoveryHandler(root))
 ```
 <!-- ENDWIZARD -->
+
