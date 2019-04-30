@@ -8,7 +8,7 @@ require "uri"
 # the content for that platform.
 #
 # In the targeted files, the wizard section is indicated by a comment, like so:
-#   <!-- WIZARD optional-slug -->
+#   <!-- WIZARD optional-section-slug -->
 #   <!-- ENDWIZARD -->
 #
 # Slugs are optional and are only useful for documents where only one of many
@@ -19,10 +19,14 @@ require "uri"
 #
 # Example:
 #
+#   # Renders the quickstart template for that platform
 #   wizard: true
+#
+#   # Renders the content of the <!-- WIZARD --> of 'doc.md' and then the of
+#   # <!-- WIZARD section-slug --> of 'doc-with-secion.md'.
 #   wizard:
 #     - _documentation/path/to/doc.md
-#     - _documentation/path/to/doc-with-section.md#section-name
+#     - _documentation/path/to/doc-with-section.md#section-slug
 
 class PlatformAPIError < StandardError
 end
