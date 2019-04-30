@@ -60,7 +60,7 @@ end
 Jekyll::Hooks.register :site, :post_render, priority: :high do |site|
   if ENV["JEKYLL_ENABLE_PLATFORM_API"] == "false"
     puts "Platform API is disabled. Run with JEKYLL_ENABLE_PLATFORM_API=true to enable"
-    break
+    next
   end
 
   puts "Compiling platform API"
