@@ -73,7 +73,7 @@ import { Sentry } from 'react-native-sentry';
 Sentry.config('___PUBLIC_DSN___').install();
 ```
 
-You can pass additional configuration options to the _config()_ method if you want to do so.
+You can pass additional configuration options to the `config()` method if you want to do so.
 <!-- ENDWIZARD -->
 
 ## Mixed Stacktraces
