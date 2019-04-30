@@ -54,8 +54,8 @@ For more detailed information about how to get the most out of `raven-go` there 
 - [Configuration]({%- link _documentation/clients/go/config.md -%})
 - [Usage]({%- link _documentation/clients/go/usage.md -%})
 - [Context]({%- link _documentation/clients/go/context.md -%})
-- [Integrations]({%- link _documentation/clients/go/integrations/index.md -%})
-  - [net/http]({%- link _documentation/clients/go/integrations/http.md -%})
+- [Integrations]({%- link _documentation/clients/go/integrations.md -%})
+  - [net/http]({%- link _documentation/clients/go/integrations.md -%})
 
 Resources:
 
