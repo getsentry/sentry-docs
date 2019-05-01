@@ -85,11 +85,11 @@ Want to know more? We have a detailed documentation about all parts of the libra
 -   [Breadcrumbs]({%- link _documentation/clients/ruby/breadcrumbs.md -%})
 -   [Context]({%- link _documentation/clients/ruby/context.md -%})
 -   [Processors]({%- link _documentation/clients/ruby/processors.md -%})
--   [Integrations]({%- link _documentation/clients/ruby/integrations/index.md -%})
-    -   [Ruby on Rails]({%- link _documentation/clients/ruby/integrations/rails.md -%})
-    -   [Rack (Sinatra etc.)]({%- link _documentation/clients/ruby/integrations/rack.md -%})
-    -   [Puma]({%- link _documentation/clients/ruby/integrations/puma.md -%})
-    -   [Heroku]({%- link _documentation/clients/ruby/integrations/heroku.md -%})
+-   [Integrations]({%- link _documentation/clients/ruby/integrations.md -%})
+    -   [Ruby on Rails]({%- link _documentation/clients/ruby/integrations.md -%})
+    -   [Rack (Sinatra etc.)]({%- link _documentation/clients/ruby/integrations.md -%})
+    -   [Puma]({%- link _documentation/clients/ruby/integrations.md -%})
+    -   [Heroku]({%- link _documentation/clients/ruby/integrations.md -%})
 
 Resources:
 
