@@ -4,9 +4,6 @@ title: Integrations
 
 For common environments and frameworks like [Rails](#ruby-on-rails), [Rack](#rack-sinatra-etc), and others, Ruby Raven provides automatic integration for reporting. Most of the time you don’t need to change anything, although you can configure those features if you want.
 
--   [Puma]({%- link _documentation/clients/ruby/integrations/puma.md -%})
--   [Heroku]({%- link _documentation/clients/ruby/integrations/heroku.md -%})
-
 The following integrations are available:
 
 -   Sidekiq (`:sidekiq`)
