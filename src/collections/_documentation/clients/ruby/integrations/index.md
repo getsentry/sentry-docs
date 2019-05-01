@@ -2,10 +2,8 @@
 title: Integrations
 ---
 
-For common environments and frameworks like [Rails](#ruby-on-rails), Rake, Rack and others Ruby Raven provides automatic integration for reporting. Most of the time you don’t need to change anything, although you can configure those features if you want.
+For common environments and frameworks like [Rails](#ruby-on-rails), [Rack](#rack-sinatra-etc), and others, Ruby Raven provides automatic integration for reporting. Most of the time you don’t need to change anything, although you can configure those features if you want.
 
--   [Ruby on Rails]({%- link _documentation/clients/ruby/integrations/rails.md -%})
--   [Rack (Sinatra etc.)]({%- link _documentation/clients/ruby/integrations/rack.md -%})
 -   [Puma]({%- link _documentation/clients/ruby/integrations/puma.md -%})
 -   [Heroku]({%- link _documentation/clients/ruby/integrations/heroku.md -%})
 
@@ -102,4 +100,30 @@ end
 ### Caveats
 
 Currently, custom exception applications (_config.exceptions_app_) are not supported. If you are using a custom exception app, you must manually integrate Raven yourself.
+<!-- ENDWIZARD -->
+
+## Rack (Sinatra etc.)
+
+<!-- WIZARD -->
+### Installation
+
+Install the SDK via Rubygems by adding it to your `Gemfile`:
+
+```ruby
+gem "sentry-raven"
+```
+
+### Configuration
+
+Add `use Raven::Rack` to your `config.ru` or other rackup file (this is automatically inserted in Rails):
+
+```ruby
+require 'raven'
+
+Raven.configure do |config|
+  config.dsn = '___DSN___'
+end
+
+use Raven::Rack
+```
 <!-- ENDWIZARD -->
