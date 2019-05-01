@@ -233,8 +233,60 @@ Several common uses for tags include:
 
 For more information, see [full documentation on Tagging Events]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events).
 
-## Saving Searches
+## Premade Searches
 
-You can save a search by performing the search, clicking the dropdown arrow next to the Current Search, and then "Save Current Search".
+Premade searches are common search terms that we think you're likely to use. The premade searches will appear in the order of which you've most recently used them.
+
+[{% asset save-current-search.png %}]({% asset save-current-search.png @path %})
+
+## Pinned Searches
+
+You can pin a search, and it will become the default view you see on your Issues view. The pinned search is only visible to you and is relevant across your projects. 
+
+1: Type a search into the search bar.
+
+[{% asset save-current-search.png %}]({% asset save-current-search.png @path %})
+
+2: Click the pin icon next to that search.
+
+[{% asset save-current-search.png %}]({% asset save-current-search.png @path %})
+
+3: Once pinned, Sentry will add the search to the Saved Search Dropdown. The search label in the text will read: My Pinned Search.
+
+[{% asset save-current-search.png %}]({% asset save-current-search.png @path %})
+
+### Changing a Pinned Search
+
+To change your pinned search, do the following:
+
+1. Select your pinned search. Un-click the pin icon. Your default search will return to `is:unresolved`.
+
+2. Do another search. Click the pin icon. The query listed as 'My Pinned Search' will now be the new pinned query, instead of the original one.
+
+### Pinning a Premade Search
+
+You can pin a premade search the same way you pin any other search. When you've selected a premade search, and the premade search query populates the search bar, pin it.
+
+## Organization Wide Saved Searches
+
+### Creating an org-wide saved search
+
+Owners and managers can create a persistent view for their organization by creating a custom saved search. The saved search will not be associated with a specific project, but with all projects (and users) across the org.
+
+1: Type a search into the search bar, then navigate to the saved search dropdown and clicks 'Save Current Search.' Keeping in mind that you need to be an owner or manager within the org to use this feature. 
+
+[{% asset save-current-search.png %}]({% asset save-current-search.png @path %})
+
+2: Name the search in the resulting modal and click 'Save.'
+
+[{% asset save-current-search.png %}]({% asset save-current-search.png @path %})
+
+3: The view will then become part of the saved search dropdown.
+
+[{% asset save-current-search.png %}]({% asset save-current-search.png @path %})
+
+### Deleting an org-wide saved search
+
+When an owner or manager hovers over a custom saved search, they should see a trash can icon. The trash can icon functions exactly like you might expect, and removes the custom saved search from the dropdown.
 
 [{% asset save-current-search.png %}]({% asset save-current-search.png @path %})
