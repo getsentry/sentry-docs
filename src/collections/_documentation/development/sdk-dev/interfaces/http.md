@@ -19,7 +19,7 @@ The data variable should only contain the request body (not the query string). I
 
 `data`
 
-: Submitted data in whatever format makes most sense. This data should not be provided by default as it can get quite large
+: Submitted data in whatever format makes most sense. SDKs should discard large bodies by default.
 
 `query_string`
 
