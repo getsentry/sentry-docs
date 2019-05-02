@@ -245,7 +245,7 @@ You can pin a search, and it will become the default view you see on your Issues
 
 1: Type a search into the search bar.
 
-[{% asset search-pinning-step-one.png %}]({% asset earch-pinning-step-one.png @path %})
+[{% asset search-pinning-step-one.png %}]({% asset search-pinning-step-one.png @path %})
 
 2: Click the pin icon next to that search.
 
