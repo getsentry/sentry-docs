@@ -18,7 +18,7 @@ Discover is Sentry's powerful query builder for aggregating raw event data and h
 
 ## Syntax
 
-Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token` and the optional raw search is itself a `token`. The Sentry SDKs treat the `key:value` pair `token` as a search on an issue or event property. The SDKs treat the optional raw search `token` as a message separated by whitespace, which is used to search on event titles/messages.   
+Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token` and the optional raw search is itself a `token`. The Sentry SDKs treat the `key:value` pair `token` as a search on an issue or event property. The SDKs treat the optional raw search `token` as a message separated by whitespace, which is used to search on event titles/messages.
 
 For example:
 
@@ -33,7 +33,7 @@ In the example above, there are three keys (`is:`, `user.username:`, `server:`),
 -   `server:web-8`
 -   `example error`
 
-The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Event Properties](#event-properties) for appropriate keyword usage. The token `server:web-8` is pointing to a custom tag sent by the Sentry SDK. See [Custom Tags](#custom-tags) for more information on how to set tags. 
+The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Event Properties](#event-properties) for appropriate keyword usage. The token `server:web-8` is pointing to a custom tag sent by the Sentry SDK. See [Custom Tags](#custom-tags) for more information on how to set tags.
 
 The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
@@ -61,7 +61,7 @@ browser:"Safari 11*"
 
 In the example above, the search query will match on `browser` values like `"Safari 11.0.2"`, `"Safari 11.0.3"`, etc.
 
-## Search Properties 
+## Search Properties
 
 In the examples above, we've highlighted a couple of example properties you can search on: `is`, `user`, `server`, `browser`, etc. Below is a canonical list of all available search terms.
 
@@ -100,7 +100,7 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
 : Restrict results to issues first seen within the given release.
 
   Exact match on the version of a release.
-  
+
 `age`
 
 : Restrict results to issues created since `age`. The syntax is similar to the Unix `find` command:
@@ -194,7 +194,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
   -   greater than or equal (`>=`)
   -   less than (`<`)
   -   less than or equal (`<=`)
-  
+
 `device.arch`
 `device.brand`
 `device.locale`
@@ -241,7 +241,7 @@ Premade searches are common search terms that we think you're likely to use. The
 
 ## Pinned Searches
 
-You can pin a search, and it will become the default view you see on your Issues view. The pinned search is only visible to you and is relevant across your projects. 
+You can pin a search, and it will become the default view you see on your Issues view. The pinned search is only visible to you and is relevant across your projects.
 
 1. Type a search into the search bar.
 
