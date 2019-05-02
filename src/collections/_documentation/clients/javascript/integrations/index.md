@@ -18,7 +18,6 @@ JavaScript is pretty restrictive when it comes to exception handling, and there 
 
 To install a plugin just include the plugin **after** Raven has been loaded and the Raven global variable is registered. This happens automatically if you install from a CDN with the required plugins in the URL.
 
--   [Angular]({%- link _documentation/clients/javascript/integrations/angular.md -%})
 -   [Backbone]({%- link _documentation/clients/javascript/integrations/backbone.md -%})
 -   [Ember]({%- link _documentation/clients/javascript/integrations/ember.md -%})
 -   [React]({%- link _documentation/clients/javascript/integrations/react.md -%})
@@ -32,7 +31,7 @@ On its own, Raven.js will report any uncaught exceptions triggered from your app
 
 Additionally, the Raven.js AngularJS plugin will catch any AngularJS-specific exceptions reported through AngularJS’s `$exceptionHandler` interface.
 
-**Note**: This documentation is for Angular 1.x. See also: [_Angular 2.x_]({%- link _documentation/clients/javascript/integrations/angular.md -%})
+**Note**: This documentation is for Angular 1.x. See also: [_Angular 2.x_]({%- link _documentation/clients/javascript/integrations/index.md -%})
 
 <!-- WIZARD -->
 ### Installation
@@ -260,3 +259,28 @@ export class AppModule { }
 
 Once you’ve completed that step, you are done.
 <!-- ENDWIZARD -->
+
+## Backbone
+
+<!-- WIZARD -->
+### Installation
+
+Start by adding the `raven.js` script tag to your page. It should be loaded as early as possible.
+
+```html
+<script src="https://cdn.ravenjs.com/3.26.4/raven.min.js"
+    crossorigin="anonymous"></script>
+```
+
+### Configuring the Client
+
+Next configure Raven.js to use your Sentry DSN:
+
+```javascript
+Raven.config('___PUBLIC_DSN___').install()
+```
+
+At this point, Raven is ready to capture any uncaught exception.
+<!-- ENDWIZARD -->
+
+
