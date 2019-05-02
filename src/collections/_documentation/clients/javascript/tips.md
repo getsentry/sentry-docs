@@ -19,7 +19,7 @@ whitelistUrls: [
 
 Since this accepts a regular expression, that would catch anything *.example.com or example.com exactly. See also: [Config: whitelistUrls]({%- link _documentation/clients/javascript/config.md -%}#config-whitelist-urls).
 
-Next, checkout the list of [_integrations_]({%- link _documentation/clients/javascript/integrations/index.md -%}) we provide and see which are applicable to you.
+Next, checkout the list of [_integrations_]({%- link _documentation/clients/javascript/integrations.md -%}) we provide and see which are applicable to you.
 
 The community has compiled a list of common ignore rules for common things, like Facebook, Chrome extensions, etc. So it’s recommended to at least check these out and see if they apply to you. [Check out the original gist](https://gist.github.com/impressiver/5092952).
 
