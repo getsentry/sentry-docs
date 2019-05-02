@@ -237,7 +237,7 @@ For more information, see [full documentation on Tagging Events]({%- link _docum
 
 Premade searches are common search terms that we think you're likely to use. The premade searches will appear in the order of which you've most recently used them.
 
-[{% asset search-premade-dropdown.png %}]({% asset search-premade-dropdown.png @path %})
+![{% asset search-premade-dropdown.png @path %}]({% asset search-premade-dropdown.png @path %})
 
 ## Pinned Searches
 
@@ -245,15 +245,15 @@ You can pin a search, and it will become the default view you see on your Issues
 
 1: Type a search into the search bar.
 
-[{% asset search-pinning-step-one.png @path %}]({% asset search-pinning-step-one.png @path %})
+![{% asset search-pinning-step-one.png @path %}]({% asset search-pinning-step-one.png @path %})
 
 2: Click the pin icon next to that search.
 
-[{% asset search-pinning-step-two.png @path %}]({% asset search-pinning-step-two.png @path %})
+![{% asset search-pinning-step-two.png @path %}]({% asset search-pinning-step-two.png @path %})
 
 3: Once pinned, Sentry will add the search to the Saved Search Dropdown. The search label in the text will read: My Pinned Search.
 
-[{% asset search-pinning-step-three.png @path %}]({% asset search-pinning-step-three.png @path %})
+![{% asset search-pinning-step-three.png @path %}]({% asset search-pinning-step-three.png @path %})
 
 ### Changing a Pinned Search
 
@@ -275,18 +275,18 @@ Owners and managers can create a persistent view for their organization by creat
 
 1: Type a search into the search bar, then click the "add to Organization filter list" icon just to the right of it. Keeping in mind that you need to be an owner or manager within the org to use this feature. 
 
-[{% asset search-add-org-filter-step-one.png @path %}]({% asset search-add-org-filter-step-one.png @path %})
+![{% asset search-add-org-filter-step-one.png @path %}]({% asset search-add-org-filter-step-one.png @path %})
 
 2: Name the search in the resulting modal and click 'Save.'
 
-[{% asset search-add-org-filter-step-two.png @path %}]({% asset search-add-org-filter-step-two.png @path %})
+![{% asset search-add-org-filter-step-two.png @path %}]({% asset search-add-org-filter-step-two.png @path %})
 
 3: The view will then become part of the saved search dropdown.
 
-[{% asset search-add-org-filter-step-three.png @path %}]({% asset search-add-org-filter-step-three.png @path %})
+![{% asset search-add-org-filter-step-three.png @path %}]({% asset search-add-org-filter-step-three.png @path %})
 
 ### Deleting an org-wide saved search
 
 When an owner or manager hovers over a custom saved search, they should see a trash can icon. The trash can icon functions exactly like you might expect, and removes the custom saved search from the dropdown.
 
-[{% asset search-delete-org-wide-filter.png @path %}]({% asset search-delete-org-wide-filter.png @path %})
+![{% asset search-delete-org-wide-filter.png @path %}]({% asset search-delete-org-wide-filter.png @path %})
