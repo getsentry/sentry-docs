@@ -445,7 +445,7 @@ If you’re using [Redux Saga](https://github.com/redux-saga/redux-saga) be awar
 
 You may specify an error handler that captures saga exceptions by passing an `onError` function to the `createSagaMiddleware` options, and call `Raven.captureException` inside that callback. See the [Redux Saga documentation](https://redux-saga.js.org/docs/api/#createsagamiddlewareoptions) for more details.
 
-## Vue.js (2.0)
+## Vue.js (2.0) {#vue}
 
 {% capture __alert_content -%}
 This plugin only works with Vue 2.0 or greater.
