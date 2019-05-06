@@ -8,7 +8,7 @@ The Raven Go package currently comes with an integration for the native `net/htt
 
 Raven Go provides middleware that can be used with the stdlib `net/http` library to automatically handle panics that occur during an http request.
 
-<!-- WIZARD -->
+<!-- WIZARD http -->
 ### Installation
 
 Simply install `raven-go` through `go get`:
