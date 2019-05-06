@@ -16,7 +16,7 @@ An `UncaughtExceptionHandler` is configured so that crash events will be stored 
 
 The `AndroidEventBuilderHelper` is enabled by default, which will automatically enrich events with data about the current state of the device, such as memory usage, storage usage, display resolution, connectivity, battery level, model, Android version, whether the device is rooted or not, etc.
 
-<!-- WIZARD -->
+<!-- WIZARD android -->
 ### Installation
 
 Using Gradle (Android Studio) in your `app/build.gradle` add:
@@ -67,7 +67,7 @@ public class MainActivity extends Activity {
 
 You can optionally configure other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
 
-<!-- WIZARD -->
+<!-- WIZARD android -->
 ### Usage
 
 Now you can use `Sentry` to capture events anywhere in your application:
@@ -259,7 +259,7 @@ The `sentry-appengine` library provides [Google App Engine](https://cloud.google
 
 The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-appengine).
 
-<!-- WIZARD -->
+<!-- WIZARD appengine -->
 ### Installation
 
 Using Maven:
@@ -317,7 +317,7 @@ The source for `sentry` can be found [on GitHub](https://github.com/getsentry/se
 
 **Note:** The old `raven` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
 
-<!-- WIZARD -->
+<!-- WIZARD logging -->
 ### Installation
 
 Using Maven:
@@ -418,7 +418,7 @@ The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tre
 
 **Note:** The old `raven-log4j` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j.rst).
 
-<!-- WIZARD -->
+<!-- WIZARD log4j -->
 ### Installation
 
 Using Maven:
@@ -582,7 +582,7 @@ The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tre
 
 **Note:** The old `raven-log4j2` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j2` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j2` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j2.rst).
 
-<!-- WIZARD -->
+<!-- WIZARD log4j2 -->
 ### Installation
 
 Using Maven:
@@ -723,7 +723,7 @@ The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tre
 
 **Note:** The old `raven-logback` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-logback` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-logback` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/logback.rst).
 
-<!-- WIZARD -->
+<!-- WIZARD logback -->
 ### Installation
 
 Using Maven:
