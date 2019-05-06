@@ -44,7 +44,7 @@ Raven.inject_without(:sidekiq)
 
 ## Ruby on Rails
 
-<!-- WIZARD -->
+<!-- WIZARD rails -->
 In Rails, all uncaught exceptions will be automatically reported.
 
 We support Rails 4 and newer.
@@ -101,7 +101,7 @@ Currently, custom exception applications (_config.exceptions_app_) are not suppo
 
 ## Rack (Sinatra etc.)
 
-<!-- WIZARD -->
+<!-- WIZARD rack -->
 ### Installation
 
 Install the SDK via Rubygems by adding it to your `Gemfile`:
