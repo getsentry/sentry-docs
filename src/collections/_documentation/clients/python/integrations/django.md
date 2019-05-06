@@ -3,7 +3,7 @@ title: Django
 sidebar_order: 6
 ---
 
-[Django](http://djangoproject.com/) version 1.4 and newer are supported.
+[Django](http://djangoproject.com/) versions 1.4 to 2.0 are supported. Since this SDK is being phased out, newer versions of Django are only supported by [the new Python SDK]({%- link _documentation/platforms/python/index.md -%}).
 
 ## Installation
 
