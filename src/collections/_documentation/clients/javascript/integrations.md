@@ -28,7 +28,7 @@ Additionally, the Raven.js AngularJS plugin will catch any AngularJS-specific ex
 
 **Note**: This documentation is for Angular 1.x. See also: [_Angular 2.x_](#angular).
 
-<!-- WIZARD -->
+<!-- WIZARD angularjs -->
 ### Installation
 
 Raven.js and the Raven.js Angular plugin are distributed using a few different methods.
@@ -156,7 +156,7 @@ Additionally, Raven.js can be configured to catch any Angular-specific (2.x) exc
 
 Raven.js ships with a [TypeScript declaration file](https://github.com/getsentry/raven-js/blob/master/packages/raven-js/typescript/raven.d.ts), which helps static checking correctness of Raven.js API calls, and facilitates auto-complete in TypeScript-aware IDEs like Visual Studio Code.
 
-<!-- WIZARD -->
+<!-- WIZARD angular -->
 ### Installation
 
 Raven.js should be installed via npm.
@@ -257,7 +257,7 @@ Once you’ve completed that step, you are done.
 
 ## Backbone
 
-<!-- WIZARD -->
+<!-- WIZARD backbone -->
 ### Installation
 
 Start by adding the `raven.js` script tag to your page. It should be loaded as early as possible.
@@ -286,7 +286,7 @@ On its own, Raven.js will report any uncaught exceptions triggered from your app
 
 Additionally, the Raven.js Ember plugin will catch any Ember-specific exceptions reported through Ember’s [onerror](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_implement-an-ember-onerror-hook-to-log-all-errors-in-production). hook and any [RSVP promises](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_errors-within-an-code-rsvp-promise-code) that would otherwise be swallowed.
 
-<!-- WIZARD -->
+<!-- WIZARD ember -->
 ### Installation
 
 Raven.js and the Raven.js Ember plugin are distributed using a few different methods.
@@ -362,7 +362,7 @@ Raven.addPlugin(Raven.Plugins.Ember, Ember);
 
 ## React
 
-<!-- WIZARD -->
+<!-- WIZARD react -->
 ### Installation
 
 Start by adding the `raven.js` script tag to your page. It should be loaded as early as possible, before your main JavaScript bundle.
@@ -462,7 +462,7 @@ On its own, Raven.js will report any uncaught exceptions triggered from your app
 
 Additionally, the Raven.js Vue plugin will capture the name and props state of the active component where the error was thrown. This is reported via Vue’s _config.errorHandler_ hook.
 
-<!-- WIZARD -->
+<!-- WIZARD vue -->
 ### Installation
 
 Raven.js and the Raven.js Vue plugin are distributed using a few different methods.
