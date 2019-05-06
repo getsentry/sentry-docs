@@ -36,9 +36,9 @@ end
 
 ## Reporting Failures
 
-If you use Rails, Rake, Sidekiq, etc, you’re already done - no more configuration required! Check [_Integrations_]({%- link _documentation/clients/ruby/integrations/index.md -%}) for more details on other gems Sentry integrates with automatically.
+If you use Rails, Rake, Sidekiq, etc, you’re already done - no more configuration required! Check [_Integrations_]({%- link _documentation/clients/ruby/integrations.md -%}) for more details on other gems Sentry integrates with automatically.
 
-Rack requires a little more setup: [_Rack (Sinatra etc.)_]({%- link _documentation/clients/ruby/integrations/rack.md -%})
+Rack requires a little more setup: [_Rack (Sinatra etc.)_]({%- link _documentation/clients/ruby/integrations.md -%}#rack-sinatra-etc)
 
 Otherwise, Raven supports two methods of capturing exceptions:
 
@@ -85,11 +85,11 @@ Want to know more? We have a detailed documentation about all parts of the libra
 -   [Breadcrumbs]({%- link _documentation/clients/ruby/breadcrumbs.md -%})
 -   [Context]({%- link _documentation/clients/ruby/context.md -%})
 -   [Processors]({%- link _documentation/clients/ruby/processors.md -%})
--   [Integrations]({%- link _documentation/clients/ruby/integrations/index.md -%})
-    -   [Ruby on Rails]({%- link _documentation/clients/ruby/integrations/rails.md -%})
-    -   [Rack (Sinatra etc.)]({%- link _documentation/clients/ruby/integrations/rack.md -%})
-    -   [Puma]({%- link _documentation/clients/ruby/integrations/puma.md -%})
-    -   [Heroku]({%- link _documentation/clients/ruby/integrations/heroku.md -%})
+-   [Integrations]({%- link _documentation/clients/ruby/integrations.md -%})
+    -   [Ruby on Rails]({%- link _documentation/clients/ruby/integrations.md -%}#ruby-on-rails)
+    -   [Rack (Sinatra etc.)]({%- link _documentation/clients/ruby/integrations.md -%}#rack-sinatra-etc)
+    -   [Puma]({%- link _documentation/clients/ruby/integrations.md -%}#puma)
+    -   [Heroku]({%- link _documentation/clients/ruby/integrations.md -%}#heroku)
 
 Resources:
 
