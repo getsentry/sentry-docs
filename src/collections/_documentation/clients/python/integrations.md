@@ -956,7 +956,7 @@ If you haven’t already, start by downloading Raven. The easiest way is with _p
 pip install raven --upgrade
 ```
 
-<!-- WIZARD -->
+<!-- WIZARD pylons -->
 ### WSGI Middleware
 
 A Pylons-specific middleware exists to enable easy configuration from settings:
@@ -1036,7 +1036,7 @@ If you haven’t already, start by downloading Raven. The easiest way is with _p
 pip install raven --upgrade
 ```
 
-<!-- WIZARD -->
+<!-- WIZARD pyramid -->
 ### PasteDeploy Filter
 
 A filter factory for [PasteDeploy](https://pastedeploy.readthedocs.io/en/latest/) exists to allow easily inserting Raven into a WSGI pipeline:
@@ -1115,7 +1115,7 @@ Instead of defining the DSN in the _.ini_ file you can also use the environment 
 
 Starting with RQ version 0.3.1, support for Sentry has been built in.
 
-<!-- WIZARD -->
+<!-- WIZARD rq -->
 ### Usage
 
 RQ natively supports binding with Sentry by passing your `SENTRY_DSN` through `rqworker`:
