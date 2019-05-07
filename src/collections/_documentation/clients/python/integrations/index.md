@@ -6,10 +6,6 @@ The Raven Python module also comes with integration for some commonly used libra
 
 Some integrations allow specifying these in a standard configuration, otherwise they are generally passed upon instantiation of the Sentry client.
 
--   [Pylons]({%- link _documentation/clients/python/integrations/pylons.md -%})
--   [Pyramid]({%- link _documentation/clients/python/integrations/pyramid.md -%})
--   [RQ]({%- link _documentation/clients/python/integrations/rq.md -%})
--   [Tornado]({%- link _documentation/clients/python/integrations/tornado.md -%})
 -   [WSGI Middleware]({%- link _documentation/clients/python/integrations/wsgi.md -%})
 -   [ZConfig logging configuration]({%- link _documentation/clients/python/integrations/zconfig.md -%})
 -   [ZeroRPC]({%- link _documentation/clients/python/integrations/zerorpc.md -%})
@@ -1034,3 +1030,247 @@ You may want to setup other loggers as well.
   content=__alert_content
 %}
 <!-- ENDWIZARD -->
+
+## Pyramid
+
+### Installation
+
+If you haven’t already, start by downloading Raven. The easiest way is with _pip_:
+
+```bash
+pip install raven --upgrade
+```
+
+<!-- WIZARD -->
+### PasteDeploy Filter
+
+A filter factory for [PasteDeploy](https://pastedeploy.readthedocs.io/en/latest/) exists to allow easily inserting Raven into a WSGI pipeline:
+
+```ini
+[pipeline:main]
+pipeline =
+ raven
+ tm
+ MyApp
+
+[filter:raven]
+use = egg:raven#raven
+dsn = ___DSN___
+include_paths = my.package, my.other.package
+exclude_paths = my.package.crud
+```
+
+In the `[filter:raven]` section, you must specify the entry-point for raven with the `use =` key. All other raven client parameters can be included in this section as well.
+
+See the [Pyramid PasteDeploy Configuration Documentation](http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/paste.html) for more information.
+
+### Logger setup
+
+Add the following lines to your project’s _.ini_ file to setup _SentryHandler_:
+
+```ini
+[loggers]
+keys = root, sentry
+
+[handlers]
+keys = console, sentry
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = INFO
+handlers = console, sentry
+
+[logger_sentry]
+level = WARN
+handlers = console
+qualname = sentry.errors
+propagate = 0
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[handler_sentry]
+class = raven.handlers.logging.SentryHandler
+args = ('___DSN___',)
+level = WARNING
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(name)s] %(message)s
+datefmt = %H:%M:%S
+```
+
+{% capture __alert_content -%}
+You may want to setup other loggers as well. See the [Pyramid Logging Documentation](http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/logging.html) for more information.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
+Instead of defining the DSN in the _.ini_ file you can also use the environment variable `SENTRY_DSN` which overwrites the setting in this file. Because of a syntax check you cannot remove the `args` setting completely, as workaround you can define an empty list of arguments `args = ()`.
+<!-- ENDWIZARD -->
+
+## RQ
+
+Starting with RQ version 0.3.1, support for Sentry has been built in.
+
+<!-- WIZARD -->
+### Usage
+
+RQ natively supports binding with Sentry by passing your `SENTRY_DSN` through `rqworker`:
+
+```bash
+$ rqworker --sentry-dsn="___DSN___"
+```
+
+### Extended Setup
+
+If you want to pass additional information, such as `release`, you’ll need to bind your own instance of the Sentry `Client`:
+
+```python
+from raven import Client
+from raven.transport.http import HTTPTransport
+from rq.contrib.sentry import register_sentry
+
+client = Client('___DSN___', transport=HTTPTransport)
+register_sentry(client, worker)
+```
+
+Please see `rq`‘s documentation for more information: [http://python-rq.org/patterns/sentry/](http://python-rq.org/patterns/sentry/)
+<!-- ENDWIZARD -->
+
+## Tornado
+
+Tornado is an async web framework for Python.
+
+### Installation
+
+If you haven’t already, start by downloading Raven. The easiest way is with _pip_:
+
+```bash
+pip install raven --upgrade
+```
+<!-- WIZARD -->
+### Setup
+
+The first thing you’ll need to do is to initialize sentry client under your application
+
+```python
+import tornado.web
+from raven.contrib.tornado import AsyncSentryClient
+
+class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write("Hello, world")
+
+application = tornado.web.Application([
+    (r"/", MainHandler),
+])
+application.sentry_client = AsyncSentryClient(
+    '___DSN___'
+)
+```
+
+### Usage
+
+Once the sentry client is attached to the application, request handlers can automatically capture uncaught exceptions by inheriting the _SentryMixin_ class.
+
+```python
+import tornado.web
+from raven.contrib.tornado import SentryMixin
+
+class UncaughtExceptionExampleHandler(
+        SentryMixin, tornado.web.RequestHandler):
+    def get(self):
+        1/0
+```
+
+You can also send events manually using the shortcuts defined in _SentryMixin_. The shortcuts can be used for both asynchronous and synchronous usage.
+<!-- ENDWIZARD -->
+
+#### Asynchronous
+
+```python
+import tornado.web
+import tornado.gen
+from raven.contrib.tornado import SentryMixin
+
+class AsyncMessageHandler(SentryMixin, tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.engine
+    def get(self):
+        self.write("You requested the main page")
+        yield tornado.gen.Task(
+            self.captureMessage, "Request for main page served"
+        )
+        self.finish()
+
+class AsyncExceptionHandler(SentryMixin, tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.engine
+    def get(self):
+        try:
+            raise ValueError()
+        except Exception as e:
+            response = yield tornado.gen.Task(
+                self.captureException, exc_info=True
+            )
+        self.finish()
+```
+
+{% capture __alert_content -%}
+The value returned by the yield is a `HTTPResponse` object.
+
+To dynamically use Python if configuration DSN available, change your base handler on fly and make sure all concrete handlers are imported after this.
+
+> ```python
+> from raven.contrib.tornado import SentryMixin
+> app.sentry_client = AsyncSentryClient(dsn)
+> BaseHandler.__bases__ = (SentryMixin, ) + BaseHandler.__bases__
+> ```
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Tip"
+  content=__alert_content
+%}
+
+#### Synchronous
+
+```python
+import tornado.web
+from raven.contrib.tornado import SentryMixin
+
+class AsyncExampleHandler(SentryMixin, tornado.web.RequestHandler):
+    def get(self):
+        self.write("You requested the main page")
+        self.captureMessage("Request for main page served")
+```
+
+## WSGI Middleware
+
+Raven includes a simple to use WSGI middleware.
+
+```python
+from raven import Client
+from raven.middleware import Sentry
+
+application = Sentry(
+    application,
+    Client('___DSN___')
+)
+```
+
+{% capture __alert_content -%}
+Many frameworks will not propagate exceptions to the underlying WSGI middleware by default.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
