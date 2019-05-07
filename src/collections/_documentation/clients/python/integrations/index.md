@@ -6,9 +6,6 @@ The Raven Python module also comes with integration for some commonly used libra
 
 Some integrations allow specifying these in a standard configuration, otherwise they are generally passed upon instantiation of the Sentry client.
 
--   [Bottle]({%- link _documentation/clients/python/integrations/bottle.md -%})
--   [Celery]({%- link _documentation/clients/python/integrations/celery.md -%})
--   [Django]({%- link _documentation/clients/python/integrations/django.md -%})
 -   [Flask]({%- link _documentation/clients/python/integrations/flask.md -%})
 -   [Amazon Web Services Lambda]({%- link _documentation/clients/python/integrations/lambda.md -%})
 -   [Logbook]({%- link _documentation/clients/python/integrations/logbook.md -%})
@@ -21,3 +18,683 @@ Some integrations allow specifying these in a standard configuration, otherwise 
 -   [ZConfig logging configuration]({%- link _documentation/clients/python/integrations/zconfig.md -%})
 -   [ZeroRPC]({%- link _documentation/clients/python/integrations/zerorpc.md -%})
 -   [Zope/Plone]({%- link _documentation/clients/python/integrations/zope.md -%})
+
+## Bottle
+
+[Bottle](http://bottlepy.org/) is a microframework for Python. Raven supports this framework through the WSGI integration.
+
+### Installation
+
+If you haven’t already, start by downloading Raven. The easiest way is with _pip_:
+
+```bash
+pip install raven --upgrade
+```
+
+<!-- WIZARD -->
+### Setup
+
+The first thing you’ll need to do is to disable catchall in your Bottle app:
+
+```python
+import bottle
+
+app = bottle.app()
+app.catchall = False
+```
+
+{% capture __alert_content -%}
+Bottle will not propagate exceptions to the underlying WSGI middleware by default. Setting catchall to False disables that.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
+Sentry will then act as Middleware:
+
+```python
+from raven import Client
+from raven.contrib.bottle import Sentry
+client = Client('___DSN___')
+app = Sentry(app, client)
+```
+
+### Usage
+
+Once you’ve configured the Sentry application you need only call run with it:
+
+```python
+run(app=app)
+```
+
+If you want to send additional events, a couple of shortcuts are provided on the Bottle request app object.
+
+Capture an arbitrary exception by calling `captureException`:
+
+```python
+try:
+    1 / 0
+except ZeroDivisionError:
+    request.app.sentry.captureException()
+```
+
+Log a generic message with `captureMessage`:
+
+```python
+request.app.sentry.captureMessage('Hello, world!')
+```
+<!-- ENDWIZARD -->
+
+## Celery
+
+[Celery](http://www.celeryproject.org/) is a distributed task queue system for Python built on AMQP principles. For Celery built-in support by Raven is provided but it requires some manual configuration.
+
+### Installation
+
+If you haven’t already, start by downloading Raven. The easiest way is with _pip_:
+
+```bash
+pip install raven --upgrade
+```
+
+<!-- WIZARD -->
+### Setup
+
+To capture errors, you need to register a couple of signals to hijack Celery error handling:
+
+```python
+from raven import Client
+from raven.contrib.celery import register_signal, register_logger_signal
+
+client = Client('___DSN___')
+
+# register a custom filter to filter out duplicate logs
+register_logger_signal(client)
+
+# The register_logger_signal function can also take an optional argument
+# `loglevel` which is the level used for the handler created.
+# Defaults to `logging.ERROR`
+register_logger_signal(client, loglevel=logging.INFO)
+
+# hook into the Celery error handler
+register_signal(client)
+
+# The register_signal function can also take an optional argument
+# `ignore_expected` which causes exception classes specified in Task.throws
+# to be ignored
+register_signal(client, ignore_expected=True)
+```
+
+A more complex version to encapsulate behavior:
+
+```python
+import celery
+import raven
+from raven.contrib.celery import register_signal, register_logger_signal
+
+class Celery(celery.Celery):
+
+    def on_configure(self):
+        client = raven.Client('___DSN___')
+
+        # register a custom filter to filter out duplicate logs
+        register_logger_signal(client)
+
+        # hook into the Celery error handler
+        register_signal(client)
+
+app = Celery(__name__)
+app.config_from_object('django.conf:settings')
+```
+<!-- ENDWIZARD -->
+
+## Django
+
+[Django](http://djangoproject.com/) versions 1.4 to 2.0 are supported. Since this SDK is being phased out, newer versions of Django are only supported by [the new Python SDK]({%- link _documentation/platforms/python/index.md -%}).
+
+### Installation
+
+If you haven’t already, start by downloading Raven. The easiest way is with _pip_:
+
+```bash
+pip install raven --upgrade
+```
+
+<!-- WIZARD -->
+### Setup
+
+Using the Django integration is as simple as adding `raven.contrib.django.raven_compat` to your installed apps:
+
+```python
+INSTALLED_APPS = (
+    'raven.contrib.django.raven_compat',
+)
+```
+
+{% capture __alert_content -%}
+This causes Raven to install a hook in Django that will automatically report uncaught exceptions.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
+Additional settings for the client are configured using the `RAVEN_CONFIG` dictionary:
+
+```python
+import os
+import raven
+
+RAVEN_CONFIG = {
+    'dsn': '___DSN___',
+    # If you are using git, you can also automatically configure the
+    # release based on the git info.
+    'release': raven.fetch_git_sha(os.path.abspath(os.pardir)),
+}
+```
+
+Once you’ve configured the client, you can test it using the standard Django management interface:
+
+```bash
+python manage.py raven test
+```
+
+You’ll be referencing the client slightly differently in Django as well:
+
+```python
+from raven.contrib.django.raven_compat.models import client
+
+client.captureException()
+```
+<!-- ENDWIZARD -->
+
+### Using with Raven.js {#using-with-raven-js}
+
+A Django template tag is provided to render a proper public DSN inside your templates, you must first load `raven`:
+
+```django
+{% raw %}{% load raven %}{% endraw %}
+```
+
+Inside your template, you can now use:
+
+```html
+{% raw %}<script>Raven.config('{% sentry_public_dsn %}').install()</script>{% endraw %}
+```
+
+By default, the DSN is generated in a protocol relative fashion, e.g. `//public@example.com/1`. If you need a specific protocol, you can override:
+
+```html
+{% raw %}{% sentry_public_dsn 'https' %}{% endraw %}
+```
+
+See the [_Raven.js documentation_]({%- link _documentation/clients/javascript/index.md -%}) for more information.
+
+### Integration with `logging`
+
+To integrate with the standard library’s `logging` module, and send all ERROR and above messages to sentry, the following config can be used:
+
+```python
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'root': {
+        'level': 'WARNING',
+        'handlers': ['sentry'],
+    },
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s  %(asctime)s  %(module)s '
+                      '%(process)d  %(thread)d  %(message)s'
+        },
+    },
+    'handlers': {
+        'sentry': {
+            'level': 'ERROR', # To capture more than ERROR, change to WARNING, INFO, etc.
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+            'tags': {'custom-tag': 'x'},
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        }
+    },
+    'loggers': {
+        'django.db.backends': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'raven': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'sentry.errors': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+    },
+}
+```
+
+#### Usage
+
+Logging usage works the same way as it does outside of Django, with the addition of an optional `request` key in the extra data:
+
+```python
+logger.error('There was some crazy error', exc_info=True, extra={
+    # Optionally pass a request and we'll grab any information we can
+    'request': request,
+})
+```
+
+### 404 Logging {#logging}
+
+In certain conditions you may wish to log 404 events to the Sentry server. To do this, you simply need to enable a Django middleware:
+
+```python
+# Use ``MIDDLEWARE_CLASSES`` prior to Django 1.10
+MIDDLEWARE = (
+    'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
+    ...,
+) + MIDDLEWARE
+```
+
+It is recommended to put the middleware at the top, so that only 404s that bubbled all the way up get logged. Certain middlewares (e.g. flatpages) capture 404s and replace the response.
+
+It is also possible to configure this middleware to ignore 404s on particular pages by defining the `IGNORABLE_404_URLS` setting as an iterable of regular expression patterns. If any pattern produces a match against the full requested URL (as defined by the regular expression’s `search` method), then the 404 will not be reported to Sentry.
+
+```python
+import re
+
+IGNORABLE_404_URLS = (
+    re.compile('/foo'),
+)
+```
+
+### Message References
+
+Sentry supports sending a message ID to your clients so that they can be tracked easily by your development team. There are two ways to access this information, the first is via the `X-Sentry-ID` HTTP response header. Adding this is as simple as appending a middleware to your stack:
+
+```python
+# Use ``MIDDLEWARE_CLASSES`` prior to Django 1.10
+MIDDLEWARE = MIDDLEWARE + (
+  # We recommend putting this as high in the chain as possible
+  'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
+  ...,
+)
+```
+
+Another alternative method is rendering it within a template. By default, Sentry will attach `request.sentry` when it catches a Django exception. In our example, we will use this information to modify the default `500.html` which is rendered, and show the user a case reference ID. The first step in doing this is creating a custom `handler500()` in your `urls.py` file:
+
+```python
+from django.conf.urls.defaults import *
+
+from django.views.defaults import page_not_found, server_error
+from django.template.response import TemplateResponse
+
+def handler500(request):
+    """500 error handler which includes ``request`` in the context.
+
+ Templates: `500.html`
+ Context: None
+ """
+
+    context = {'request': request}
+    template_name = '500.html'  # You need to create a 500.html template.
+    return TemplateResponse(request, template_name, context, status=500)
+```
+
+Once we’ve successfully added the `request` context variable, adding the Sentry reference ID to our `500.html` is simple:
+
+```html
+{% raw %}<p>You've encountered an error, oh noes!</p>
+{% if request.sentry.id %}
+    <p>If you need assistance, you may reference this error as
+    <strong>{{ request.sentry.id }}</strong>.</p>
+{% endif %}{% endraw %}
+```
+
+### WSGI Middleware
+
+If you are using a WSGI interface to serve your app, you can also apply a middleware which will ensure that you catch errors even at the fundamental level of your Django application:
+
+```python
+from raven.contrib.django.raven_compat.middleware.wsgi import Sentry
+from django.core.wsgi import get_wsgi_application
+
+application = Sentry(get_wsgi_application())
+```
+
+### User Feedback {#python-django-user-feedback}
+
+To enable user feedback for crash reports, start with ensuring the `request` value is available in your context processors:
+
+```python
+TEMPLATE_CONTEXT_PROCESSORS = (
+    # ...
+    'django.core.context_processors.request',
+)
+```
+
+By default Django will render `500.html`, so simply drop the following snippet into your template:
+
+```html
+{% raw %}<!-- Sentry JS SDK 2.1.+ required -->
+<script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
+
+{% if request.sentry.id %}
+  <script>
+  Raven.showReportDialog({
+    eventId: '{{ request.sentry.id }}',
+
+    // use the public DSN (dont include your secret!)
+    dsn: '___PUBLIC_DSN___'
+  });
+  </script>
+{% endif %}{% endraw %}
+```
+
+That’s it!
+
+For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
+
+### Additional Settings
+
+`SENTRY_CLIENT`
+
+: In some situations you may wish for a slightly different behavior to how Sentry communicates with your server. For this, Raven allows you to specify a custom client:
+
+  ```python
+  SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
+  ```
+
+`SENTRY_CELERY_LOGLEVEL`
+
+: If you are also using Celery, there is a handler being automatically registered for you that captures the errors from workers. The default logging level for that handler is `logging.ERROR` and can be customized using this setting:
+
+  ```python
+  SENTRY_CELERY_LOGLEVEL = logging.INFO
+  ```
+
+  Alternatively you can use a similarly named key in `RAVEN_CONFIG`:
+
+  ```python
+  RAVEN_CONFIG = {
+      'CELERY_LOGLEVEL': logging.INFO
+  }
+  ```
+
+`SENTRY_CELERY_IGNORE_EXPECTED`
+
+: If you are also using Celery, then you can ignore expected exceptions by setting this to `True`. This will cause exception classes in `Task.throws` to be ignored.
+
+### Caveats
+
+The following things you should keep in mind when using Raven with Django.
+
+#### Error Handling Middleware
+
+If you already have middleware in place that handles `process_exception()` you will need to take extra care when using Sentry.
+
+For example, the following middleware would suppress Sentry logging due to it returning a response:
+
+```python
+class MyMiddleware(object):
+    def process_exception(self, request, exception):
+        return HttpResponse('foo')
+```
+
+To work around this, you can either disable your error handling middleware, or add something like the following:
+
+```python
+from django.core.signals import got_request_exception
+
+class MyMiddleware(object):
+    def process_exception(self, request, exception):
+        # Make sure the exception signal is fired for Sentry
+        got_request_exception.send(sender=self, request=request)
+        return HttpResponse('foo')
+```
+
+Note that this technique may break unit tests using the Django test client (`django.test.client.Client`) if a view under test generates a `Http404` or `PermissionDenied` exception, because the exceptions won’t be translated into the expected 404 or 403 response codes.
+
+Or, alternatively, you can just enable Sentry responses:
+
+```python
+from raven.contrib.django.raven_compat.models import sentry_exception_handler
+
+class MyMiddleware(object):
+    def process_exception(self, request, exception):
+        # Make sure the exception signal is fired for Sentry
+        sentry_exception_handler(request=request)
+        return HttpResponse('foo')
+```
+
+#### Circus
+
+If you are running Django with [circus](http://circus.rtfd.org/) and [chaussette](https://chaussette.readthedocs.io/) you will also need to add a hook to circus to activate Raven:
+
+```python
+from django.conf import settings
+from django.core.management import call_command
+
+def run_raven(*args, **kwargs):
+    """Set up raven for django by running a django command.
+ It is necessary because chaussette doesn't run a django command.
+ """
+    if not settings.configured:
+        settings.configure()
+
+    call_command('validate')
+    return True
+```
+
+And in your circus configuration:
+
+```ini
+[socket:dwebapp]
+host = 127.0.0.1
+port = 8080
+
+[watcher:dwebworker]
+cmd = chaussette --fd $(circus.sockets.dwebapp) dproject.wsgi.application
+use_sockets = True
+numprocesses = 2
+hooks.after_start = dproject.hooks.run_raven
+```
+
+## Flask
+
+<!-- WIZARD -->
+### Installation
+
+If you haven’t already, install raven with its explicit Flask dependencies:
+
+```bash
+pip install raven[flask]
+```
+
+### Setup
+
+The first thing you’ll need to do is to initialize Raven under your application:
+
+```python
+from raven.contrib.flask import Sentry
+sentry = Sentry(app, dsn='___DSN___')
+```
+
+If you don’t specify the `dsn` value, we will attempt to read it from your environment under the `SENTRY_DSN` key.
+<!-- ENDWIZARD -->
+
+### Extended Setup
+
+You can optionally configure logging too:
+
+```python
+import logging
+from raven.contrib.flask import Sentry
+sentry = Sentry(app, logging=True, level=logging.ERROR, \
+                logging_exclusions=("logger1", "logger2", ...))
+```
+
+Building applications on the fly? You can use Raven’s `init_app` hook:
+
+```python
+sentry = Sentry(dsn='http://public_key:secret_key@example.com/1')
+
+def create_app():
+    app = Flask(__name__)
+    sentry.init_app(app)
+    return app
+```
+
+You can pass parameters in the `init_app` hook:
+
+```python
+sentry = Sentry()
+
+def create_app():
+    app = Flask(__name__)
+    sentry.init_app(app, dsn='___DSN___', logging=True,
+                    level=logging.ERROR,
+                    logging_exclusions=("logger1", "logger2", ...))
+    return app
+```
+
+### Settings
+
+Additional settings for the client can be configured using `SENTRY_CONFIG` in your application’s configuration:
+
+```python
+class MyConfig(object):
+    SENTRY_CONFIG = {
+        'dsn': '___DSN___',
+        'include_paths': ['myproject'],
+        'release': raven.fetch_git_sha(os.path.dirname(__file__)),
+    }
+```
+
+If [Flask-Login](https://pypi.python.org/pypi/Flask-Login/) is used by your application (including [Flask-Security](https://pypi.python.org/pypi/Flask-Security/)), user information will be captured when an exception or message is captured. By default, only the `id` (current_user.get_id()), `is_authenticated`, and `is_anonymous` is captured for the user. If you would like additional attributes on the `current_user` to be captured, you can configure them using `SENTRY_USER_ATTRS`:
+
+```python
+class MyConfig(object):
+    SENTRY_USER_ATTRS = ['username', 'first_name', 'last_name', 'email']
+```
+
+`email` will be captured as `sentry.interfaces.User.email`, and any additional attributes will be available under `sentry.interfaces.User.data`
+
+You can specify the types of exceptions that should not be reported by Sentry client in your application by setting the `ignore_exceptions` configuration value:
+
+```python
+class MyExceptionType(Exception):
+    def __init__(self, message):
+        super(MyExceptionType, self).__init__(message)
+
+app = Flask(__name__)
+app.config['SENTRY_CONFIG'] = {
+    'ignore_exceptions': [MyExceptionType],
+}
+```
+
+### Usage
+
+Once you’ve configured the Sentry application it will automatically capture uncaught exceptions within Flask. If you want to send additional events, a couple of shortcuts are provided on the Sentry Flask middleware object.
+
+Capture an arbitrary exception by calling `captureException`:
+
+```python
+try:
+    1 / 0
+except ZeroDivisionError:
+    sentry.captureException()
+```
+
+Log a generic message with `captureMessage`:
+
+```python
+sentry.captureMessage('hello, world!')
+```
+
+### Getting The Last Event ID
+
+If possible, the last Sentry event ID is stored in the request context `g.sentry_event_id` variable. This allow to present the user an error ID if have done a custom error 500 page.
+
+```html
+{% raw %}<h2>Error 500</h2>
+{% if g.sentry_event_id %}
+<p>The error identifier is {{ g.sentry_event_id }}</p>
+{% endif %}{% endraw %}
+```
+
+### User Feedback {#python-flask-user-feedback}
+
+To enable user feedback for crash reports just make sure you have a custom _500_ error handler and render out a HTML snippet for bringing up the crash dialog:
+
+```python
+from flask import Flask, g, render_template
+from raven.contrib.flask import Sentry
+
+app = Flask(__name__)
+sentry = Sentry(app, dsn='___DSN___')
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return render_template('500.html',
+        event_id=g.sentry_event_id,
+        public_dsn=sentry.client.get_public_dsn('https')
+    )
+```
+
+And in the error template (`500.html`) you can then do this:
+
+```html
+{% raw %}<!-- Sentry JS SDK 2.1.+ required -->
+<script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
+
+{% if event_id %}
+  <script>
+  Raven.showReportDialog({
+    eventId: '{{ event_id }}',
+    dsn: '{{ public_dsn }}'
+  });
+  </script>
+{% endif %}{% endraw %}
+```
+
+That’s it!
+
+For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
+
+### Dealing With Proxies
+
+When your Flask application is behind a proxy such as nginx, Sentry will use the remote address from the proxy, rather than from the actual requesting computer. By using `ProxyFix` from [werkzeug.contrib.fixers](http://werkzeug.pocoo.org/docs/0.14/contrib/fixers/#werkzeug.contrib.fixers.ProxyFix) the Flask `.wsgi_app` can be modified to send the actual `REMOTE_ADDR` along to Sentry.
+
+```python
+from werkzeug.contrib.fixers import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app)
+```
+
+This may also require [changes](http://flask.pocoo.org/docs/0.12/deploying/wsgi-standalone/#proxy-setups) to the proxy configuration to pass the right headers if it isn’t doing so already.
+
+### Signals
+
+Raven uses [blinker](https://github.com/jek/blinker) to emit a signal (called `logging_configured`) after logging has been configured for the client. You may [bind to that signal](https://pythonhosted.org/blinker/#subscribing-to-signals) in your application to do any additional configuration to the logging handler `SentryHandler`.
+
+```python
+from raven.contrib.flask import Sentry, logging_configured
+from flask import Flask, g, render_template
+from raven.contrib.flask import Sentry
+
+app = Flask(__name__)
+sentry = Sentry(app, dsn='___DSN___', logging=True)
+
+@logging_configured.connect
+def internal_server_error(sender, sentry_handler=None, **kwargs):
+    # configure sentry_handler here
+    sentry_handler.addFilter(some_filter)
+```
