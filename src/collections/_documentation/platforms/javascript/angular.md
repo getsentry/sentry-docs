@@ -41,9 +41,9 @@ export class AppModule {}
 
 ## AngularJS 1.x
 
-If you are using `AngularJS` `1.x` you should be able to use our Angular integration.
+If you are using `AngularJS` `1.x` you should be able to use our AngularJS integration.
 
-You need to install `@sentry/integrations` it with `npm` / `yarn` like:
+You need to install `@sentry/integrations` with `npm` / `yarn` like:
 
 ```bash
 npm install @sentry/integrations
@@ -52,16 +52,22 @@ yarn add @sentry/integrations
 ```
 
 ```javascript
+import angular from 'angular';
 import * as Sentry from '@sentry/browser';
 import * as Integrations from '@sentry/integrations';
 
-// Make sure to call Sentry.init after Angular, or you can pass `{angular: AngularInstance}`
+// Make sure to call Sentry.init after importing AngularJS. 
+// You can also pass {angular: AngularInstance} to the Integrations.Angular() constructor.
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: [
     new Integrations.Angular(),
   ],
 });
+
+// Finally require ngSentry as a dependency in your application module.
+angular.module('yourApplicationModule', ['ngSentry']);
+
 ```
 
 In case you are using the CDN version or the Loader, we provide a standalone file for every integration, you can use it
