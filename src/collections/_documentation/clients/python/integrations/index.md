@@ -6,11 +6,6 @@ The Raven Python module also comes with integration for some commonly used libra
 
 Some integrations allow specifying these in a standard configuration, otherwise they are generally passed upon instantiation of the Sentry client.
 
--   [WSGI Middleware]({%- link _documentation/clients/python/integrations/wsgi.md -%})
--   [ZConfig logging configuration]({%- link _documentation/clients/python/integrations/zconfig.md -%})
--   [ZeroRPC]({%- link _documentation/clients/python/integrations/zerorpc.md -%})
--   [Zope/Plone]({%- link _documentation/clients/python/integrations/zope.md -%})
-
 ## Bottle
 
 [Bottle](http://bottlepy.org/) is a microframework for Python. Raven supports this framework through the WSGI integration.
@@ -1274,3 +1269,138 @@ Many frameworks will not propagate exceptions to the underlying WSGI middleware 
   content=__alert_content
 %}
 
+## ZConfig logging configuration
+
+[ZConfig](http://zconfig.readthedocs.io/en/latest/using-logging.html) provides a configuration mechanism for the Python logging module.
+
+To learn more, see:
+
+> [http://zconfig.readthedocs.io/en/latest/using-logging.html](http://zconfig.readthedocs.io/en/latest/using-logging.html)
+
+To use with sentry, use the sentry handler tag:
+
+```xml
+<logger>
+  level INFO
+  <logfile>
+   path ${buildout:directory}/var/{:_buildout_section_name_}.log
+   level INFO
+  </logfile>
+
+  %import raven.contrib.zconfig
+  <sentry>
+    dsn ___DSN___
+    level ERROR
+  </sentry>
+</logger>
+```
+
+This configuration retains normal logging to a logfile, but adds Sentry logging for ERRORs.
+
+All options of `raven.base.Client` are supported.
+
+## ZeroRPC
+
+ZeroRPC is a light-weight, reliable and language-agnostic library for distributed communication between server-side processes.
+
+### Installation
+
+If you haven’t already, start by downloading Raven. The easiest way is with _pip_:
+
+```bash
+pip install raven --upgrade
+```
+
+### Setup
+
+The ZeroRPC integration comes as middleware for ZeroRPC. The middleware can be configured like the original Raven client (using keyword arguments) and registered into ZeroRPC’s context manager:
+
+```python
+import zerorpc
+
+from raven.contrib.zerorpc import SentryMiddleware
+
+sentry = SentryMiddleware(dsn='___DSN___')
+zerorpc.Context.get_instance().register_middleware(sentry)
+```
+
+By default, the middleware will hide internal frames from ZeroRPC when it submits exceptions to Sentry. This behavior can be disabled by passing the `hide_zerorpc_frames` parameter to the middleware:
+
+```python
+sentry = SentryMiddleware(hide_zerorpc_frames=False, dsn='___DSN___')
+```
+
+### Compatibility
+
+-   ZeroRPC-Python < 0.4.0 is compatible with Raven <= 3.1.0;
+-   ZeroRPC-Python >= 0.4.0 requires Raven > 3.1.0.
+
+## Zope/Plone
+
+### Installation
+
+If you haven’t already, start by downloading Raven. The easiest way is with _pip_:
+
+```bash
+pip install raven --upgrade
+```
+
+### zope.conf {#zope-conf}
+
+Zope has extensible logging configuration options. A basic instance (not ZEO client) setup for logging looks like this:
+
+```xml
+<eventlog>
+  level INFO
+  <logfile>
+   path ${buildout:directory}/var/{:_buildout_section_name_}.log
+   level INFO
+  </logfile>
+
+  %import raven.contrib.zope
+  <sentry>
+    dsn ___DSN___
+    level ERROR
+  </sentry>
+</eventlog>
+```
+
+This configuration retains normal logging to a logfile, but adds Sentry logging for ERRORs.
+
+All options of `raven.base.Client` are supported.
+
+Use a buildout recipe instead of editing zope.conf directly. To add the equivalent instance configuration, you would do this:
+
+```
+[instance]
+recipe = plone.recipe.zope2instance
+...
+event-log-custom =
+ %import raven.contrib.zope
+ <logfile>
+ path ${buildout:directory}/var/instance.log
+ level INFO
+ </logfile>
+ <sentry>
+ dsn ___DSN___
+ level ERROR
+ </sentry>
+```
+
+To add the equivalent ZEO client configuration, you would do this:
+
+```
+[instance]
+recipe = plone.recipe.zope2instance
+...
+event-log-custom =
+ %import raven.contrib.zope
+ <logfile>
+ path ${buildout:var-dir}/${:_buildout_section_name_}/event.log
+ level INFO
+ </logfile>
+ <sentry>
+ dsn ___DSN___
+ level ERROR
+ </sentry>
+```
