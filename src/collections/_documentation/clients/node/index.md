@@ -122,7 +122,7 @@ For more detailed information about how to get most out of Raven there is additi
 
 -   [Configuration]({%- link _documentation/clients/node/config.md -%})
 -   [Usage]({%- link _documentation/clients/node/usage.md -%})
--   [Integrations]({%- link _documentation/clients/node/integrations/integrations.md -%})
+-   [Integrations]({%- link _documentation/clients/node/integrations.md -%})
     -   [Connect]({%- link _documentation/clients/node/integrations.md -%}#connect)
     -   [Express]({%- link _documentation/clients/node/integrations.md -%}#express)
     -   [Koa]({%- link _documentation/clients/node/integrations.md -%}#koa)
