@@ -6,10 +6,6 @@ The Raven Python module also comes with integration for some commonly used libra
 
 Some integrations allow specifying these in a standard configuration, otherwise they are generally passed upon instantiation of the Sentry client.
 
--   [Flask]({%- link _documentation/clients/python/integrations/flask.md -%})
--   [Amazon Web Services Lambda]({%- link _documentation/clients/python/integrations/lambda.md -%})
--   [Logbook]({%- link _documentation/clients/python/integrations/logbook.md -%})
--   [Logging]({%- link _documentation/clients/python/integrations/logging.md -%})
 -   [Pylons]({%- link _documentation/clients/python/integrations/pylons.md -%})
 -   [Pyramid]({%- link _documentation/clients/python/integrations/pyramid.md -%})
 -   [RQ]({%- link _documentation/clients/python/integrations/rq.md -%})
@@ -698,3 +694,343 @@ def internal_server_error(sender, sentry_handler=None, **kwargs):
     # configure sentry_handler here
     sentry_handler.addFilter(some_filter)
 ```
+
+## Amazon Web Services Lambda
+
+### Installation
+
+To use [Sentry](https://getsentry.com/) with [AWS Lambda](https://aws.amazon.com/lambda), you have to install _raven_ as an external dependency. This involves creating a [Deployment package](https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html) and uploading it to AWS.
+
+To install raven into your current project directory:
+
+```console
+pip install raven -t /path/to/project-dir
+```
+
+### Setup
+
+Create a _LambdaClient_ instance and wrap your lambda handler with the _capture_exceptions_ decorator:
+
+```python
+from raven.contrib.awslambda import LambdaClient
+
+client = LambdaClient()
+
+@client.capture_exceptions
+def handler(event, context):
+    ...
+    raise Exception('I will be sent to sentry!')
+```
+
+By default this will report unhandled exceptions and errors to Sentry.
+
+The `LambdaClient` accepts the same arguments as the regular `Client`, see [_Configuring the Client_]({%- link _documentation/clients/python/advanced.md -%}#python-client-config).
+
+The integration was inspired by [raven python lambda](https://github.com/Netflix-Skunkworks/raven-python-lambda), another implementation that also integrates with Serverless Framework and has SQS transport support.
+
+## Logbook
+
+### Installation
+
+If you haven’t already, start by downloading Raven. The easiest way is with _pip_:
+
+```bash
+pip install raven --upgrade
+```
+
+### Setup
+
+Raven provides a [logbook](http://logbook.pocoo.org) handler which will pipe messages to Sentry.
+
+First you’ll need to configure a handler:
+
+```python
+from raven.handlers.logbook import SentryHandler
+
+# Manually specify a client
+client = Client(...)
+handler = SentryHandler(client)
+```
+
+You can also automatically configure the default client with a DSN:
+
+```python
+# Configure the default client
+handler = SentryHandler('___DSN___')
+```
+
+Finally, bind your handler to your context:
+
+```python
+from raven.handlers.logbook import SentryHandler
+
+client = Client(...)
+sentry_handler = SentryHandler(client)
+with sentry_handler.applicationbound():
+    # everything logged here will go to sentry.
+    ...
+```
+
+## Logging
+
+### Installation
+
+If you haven’t already, start by downloading Raven. The easiest way is with _pip_:
+
+```bash
+pip install raven --upgrade
+```
+
+### Setup
+
+Sentry supports the ability to directly tie into the `logging` module. To use it simply add `SentryHandler` to your logger.
+
+First you’ll need to configure a handler:
+
+```python
+from raven.handlers.logging import SentryHandler
+
+# Manually specify a client
+client = Client(...)
+handler = SentryHandler(client)
+```
+
+You can also automatically configure the default client with a DSN:
+
+```python
+# Configure the default client
+handler = SentryHandler('___DSN___')
+```
+
+You may want to specify the logging level at this point so you don’t send INFO or DEBUG messages to Sentry:
+
+```python
+handler.setLevel(logging.ERROR)
+```
+
+Finally, call the `setup_logging()` helper function:
+
+```python
+from raven.conf import setup_logging
+
+setup_logging(handler)
+```
+
+Another option is to use `logging.config.dictConfig`:
+
+```python
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+
+    'formatters': {
+        'console': {
+            'format': '[%(asctime)s][%(levelname)s] %(name)s '
+                      '%(filename)s:%(funcName)s:%(lineno)d | %(message)s',
+            'datefmt': '%H:%M:%S',
+            },
+        },
+
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'console'
+            },
+        'sentry': {
+            'level': 'ERROR',
+            'class': 'raven.handlers.logging.SentryHandler',
+            'dsn': '___DSN___',
+            },
+        },
+
+    'loggers': {
+        '': {
+            'handlers': ['console', 'sentry'],
+            'level': 'DEBUG',
+            'propagate': False,
+            },
+        'your_app': {
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    }
+}
+```
+
+#### Usage
+
+A recommended pattern in logging is to simply reference the modules name for each logger, so for example, you might at the top of your module define the following:
+
+```python
+import logging
+logger = logging.getLogger(__name__)
+```
+
+You can also use the `exc_info` and `extra={'stack': True}` arguments on your `log` methods. This will store the appropriate information and allow Sentry to render it based on that information:
+
+```python
+# If you're actually catching an exception, use `exc_info=True`
+logger.error('There was an error, with a stack trace!', exc_info=True)
+
+# If you don't have an exception, but still want to capture a
+# stack trace, use the `stack` arg
+logger.error('There was an error, with a stack trace!', extra={
+    'stack': True,
+})
+```
+
+{% capture __alert_content -%}
+Depending on the version of Python you’re using, `extra` might not be an acceptable keyword argument for a logger’s `.exception()` method (`.debug()`, `.info()`, `.warning()`, `.error()` and `.critical()` should work fine regardless of Python version). This should be fixed as of Python 2.7.4 and 3.2. Official issue here: [http://bugs.python.org/issue15541](http://bugs.python.org/issue15541).
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
+While we don’t recommend this, you can also enable implicit stack capturing for all messages:
+
+```python
+client = Client(..., auto_log_stacks=True)
+handler = SentryHandler(client)
+
+logger.error('There was an error, with a stack trace!')
+```
+
+Passing tags and user context is also available through extra:
+
+```python
+logger.error('There was an error, with user context and tags'), extra={
+    'user': {'email': 'test@test.com'},
+    'tags': {'database': '1.0'},
+})
+```
+
+You may also pass additional information to be stored as meta information with the event. As long as the key name is not reserved and not private (_foo) it will be displayed on the Sentry dashboard. To do this, pass it as `data` within your `extra` clause:
+
+```python
+logger.error('There was some crazy error', exc_info=True, extra={
+    # Optionally you can pass additional arguments to specify request info
+    'culprit': 'my.view.name',
+    'fingerprint': [...],
+
+    'data': {
+        # You may specify any values here and Sentry will log and output them
+        'username': request.user.username,
+    }
+})
+```
+
+{% capture __alert_content -%}
+The `url` and `view` keys are used internally by Sentry within the extra data.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}{% capture __alert_content -%}
+Any key (in `data`) prefixed with `_` will not automatically output on the Sentry details view.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
+Sentry will intelligently group messages if you use proper string formatting. For example, the following messages would be seen as the same message within Sentry:
+
+```python
+logger.error('There was some %s error', 'crazy')
+logger.error('There was some %s error', 'fun')
+logger.error('There was some %s error', 1)
+```
+
+#### Exclusions
+
+You can also configure some logging exclusions during setup. These loggers will not propagate their logs to the Sentry handler:
+
+```python
+from raven.conf import setup_logging
+
+setup_logging(handler, exclude=("logger1", "logger2", ...))
+```
+
+## Pylons
+
+Pylons is a framework for Python.
+
+### Installation
+
+If you haven’t already, start by downloading Raven. The easiest way is with _pip_:
+
+```bash
+pip install raven --upgrade
+```
+
+<!-- WIZARD -->
+### WSGI Middleware
+
+A Pylons-specific middleware exists to enable easy configuration from settings:
+
+```python
+from raven.contrib.pylons import Sentry
+
+application = Sentry(application, config)
+```
+
+Configuration is handled via the sentry namespace:
+
+```ini
+[sentry]
+dsn=___DSN___
+include_paths=my.package,my.other.package,
+exclude_paths=my.package.crud
+```
+
+### Logger setup
+
+Add the following lines to your project’s _.ini_ file to setup _SentryHandler_:
+
+```ini
+[loggers]
+keys = root, sentry
+
+[handlers]
+keys = console, sentry
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = INFO
+handlers = console, sentry
+
+[logger_sentry]
+level = WARN
+handlers = console
+qualname = sentry.errors
+propagate = 0
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[handler_sentry]
+class = raven.handlers.logging.SentryHandler
+args = ('SENTRY_DSN',)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(name)s] %(message)s
+datefmt = %H:%M:%S
+```
+
+{% capture __alert_content -%}
+You may want to setup other loggers as well.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+<!-- ENDWIZARD -->
