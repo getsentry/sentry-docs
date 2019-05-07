@@ -308,7 +308,7 @@ The following settings are available for the client:
 
 ## Monolog
 
-<!-- WIZARD -->
+<!-- WIZARD monolog -->
 ### Capturing Errors
 
 Monolog supports Sentry out of the box, so you’ll just need to configure a handler:
@@ -362,7 +362,7 @@ $monolog->pushHandler($handler);
 
 Symfony is supported via the [sentry-symfony](https://github.com/getsentry/sentry-symfony) package as a native bundle.
 
-<!-- WIZARD -->
+<!-- WIZARD symfony2 -->
 ### Symfony 2+
 
 Install the `sentry/sentry-symfony` package:
