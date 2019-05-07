@@ -114,7 +114,7 @@ Raven and Sentry support [Source Maps](http://www.html5rocks.com/en/tutorials/de
 
 ## Middleware and Integrations
 
-If you’re using Node.js with a web server framework/library like Connect, Express, or Koa, it is recommended to configure one of Raven’s server middleware integrations. See [_Integrations_]({%- link _documentation/clients/node/integrations/index.md -%}).
+If you’re using Node.js with a web server framework/library like Connect, Express, or Koa, it is recommended to configure one of Raven’s server middleware integrations. See [_Integrations_]({%- link _documentation/clients/node/integrations.md -%}).
 
 ## Deep Dive
 
@@ -122,12 +122,12 @@ For more detailed information about how to get most out of Raven there is additi
 
 -   [Configuration]({%- link _documentation/clients/node/config.md -%})
 -   [Usage]({%- link _documentation/clients/node/usage.md -%})
--   [Integrations]({%- link _documentation/clients/node/integrations/index.md -%})
-    -   [Connect]({%- link _documentation/clients/node/integrations/connect.md -%})
-    -   [Express]({%- link _documentation/clients/node/integrations/express.md -%})
-    -   [Koa]({%- link _documentation/clients/node/integrations/koa.md -%})
-    -   [Loopback]({%- link _documentation/clients/node/integrations/loopback.md -%})
-    -   [Sails]({%- link _documentation/clients/node/integrations/sails.md -%})
+-   [Integrations]({%- link _documentation/clients/node/integrations.md -%})
+    -   [Connect]({%- link _documentation/clients/node/integrations.md -%}#connect)
+    -   [Express]({%- link _documentation/clients/node/integrations.md -%}#express)
+    -   [Koa]({%- link _documentation/clients/node/integrations.md -%}#koa)
+    -   [Loopback]({%- link _documentation/clients/node/integrations.md -%}#loopback)
+    -   [Sails]({%- link _documentation/clients/node/integrations.md -%}#sails)
 -   [Source Maps]({%- link _documentation/clients/node/sourcemaps.md -%})
 -   [Source Maps]({%- link _documentation/clients/node/typescript.md -%})
 -   [CoffeeScript]({%- link _documentation/clients/node/coffeescript.md -%})
