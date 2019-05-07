@@ -1,12 +1,13 @@
 ---
-title: Laravel
-sidebar_order: 3
+title: Integrations
 ---
+
+## Laravel
 
 Laravel is supported via a native package, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
 <!-- WIZARD -->
-## Laravel 5.x {#laravel-5-x}
+### Laravel 5.x {#laravel-5-x}
 
 Install the `sentry/sentry-laravel` package:
 
@@ -116,7 +117,7 @@ Next, create `resources/views/errors/500.blade.php`, and embed the feedback code
 
 That’s it!
 
-## Laravel 4.x {#laravel-4-x}
+### Laravel 4.x {#laravel-4-x}
 
 Install the `sentry/sentry-laravel` package:
 
@@ -164,7 +165,7 @@ If you wish to wire up Sentry anywhere outside of the standard error handlers, o
 $app['sentry']->setRelease(Git::sha());
 ```
 
-## Lumen 5.x {#lumen-5-x}
+### Lumen 5.x {#lumen-5-x}
 
 Install the `sentry/sentry-laravel` package:
 
@@ -207,7 +208,7 @@ return array(
 );
 ```
 <!-- ENDWIZARD -->
-## Testing with Artisan
+### Testing with Artisan
 
 You can test your configuration using the provided `artisan` command:
 
@@ -222,7 +223,7 @@ $ php artisan sentry:test
 [sentry] Sending test event with ID: 5256614438cf4e0798dc9688e9545d94
 ```
 
-## Adding Context
+### Adding Context
 
 The mechanism to add context will vary depending on which version of Laravel you’re using, but the general approach is the same. Find a good entry point to your application in which the context you want to add is available, ideally early in the process.
 
@@ -265,7 +266,7 @@ class SentryContext
 }
 ```
 
-## Configuration
+### Configuration
 
 The following settings are available for the client:
 
@@ -304,3 +305,97 @@ The following settings are available for the client:
   ```php
   'user_context' => false,
   ```
+
+## Monolog
+
+<!-- WIZARD monolog -->
+### Capturing Errors
+
+Monolog supports Sentry out of the box, so you’ll just need to configure a handler:
+
+```php
+$client = new Raven_Client('___PUBLIC_DSN___');
+
+$handler = new Monolog\Handler\RavenHandler($client);
+$handler->setFormatter(new Monolog\Formatter\LineFormatter("%message% %context% %extra%\n"));
+
+$monolog->pushHandler($handler);
+```
+
+### Adding Context
+
+Capturing context can be done via a monolog processor:
+
+```php
+$monolog->pushProcessor(function ($record) {
+    // record the current user
+    $user = Acme::getCurrentUser();
+    $record['context']['user'] = array(
+        'name' => $user->getName(),
+        'username' => $user->getUsername(),
+        'email' => $user->getEmail(),
+    );
+
+    // Add various tags
+    $record['context']['tags'] = array('key' => 'value');
+
+    // Add various generic context
+    $record['extra']['key'] = 'value';
+
+    return $record;
+});
+```
+
+### Breadcrumbs
+
+Sentry provides a breadcrumb handler to automatically send logs along as crumbs:
+
+```php
+$client = new Raven_Client('___PUBLIC_DSN___');
+
+$handler = new \Raven_Breadcrumbs_MonologHandler($client);
+$monolog->pushHandler($handler);
+```
+<!-- ENDWIZARD -->
+
+## Symfony
+
+Symfony is supported via the [sentry-symfony](https://github.com/getsentry/sentry-symfony) package as a native bundle.
+
+<!-- WIZARD symfony2 -->
+### Symfony 2+
+
+Install the `sentry/sentry-symfony` package:
+
+```bash
+$ composer require sentry/sentry-symfony
+```
+
+Enable the bundle in `app/AppKernel.php`:
+
+```php
+<?php
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        $bundles = array(
+            // ...
+
+            new Sentry\SentryBundle\SentryBundle(),
+        );
+
+        // ...
+    }
+
+    // ...
+}
+```
+
+Add your DSN to `app/config/config.yml`:
+
+```yaml
+sentry:
+    dsn: "___PUBLIC_DSN___"
+```
+<!-- ENDWIZARD -->
