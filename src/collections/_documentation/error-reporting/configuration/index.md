@@ -131,6 +131,14 @@ A list of string prefixes of module names that do not belong to the app, but rat
 This option can be overridden using `in-app-include`.
 {% endsupported %}
 
+
+{:.config-key}
+### `ignore_errors`
+
+{% supported python %}
+A list of exception class names (strings) to ignore. Cought exceptions will be not be reported if their class is in this list.
+
+
 {:.config-key}
 ### `request-bodies`
 
