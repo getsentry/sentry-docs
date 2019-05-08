@@ -16,6 +16,15 @@ Sentry owner or manager permissions and GitLab owner or maintainer permissions a
   level="warning"
 %}
 
+{% capture __alert_content -%}
+GitLab -> Admim area -> Settings -> Network -> Outbound requests -> Allow requests to the local network from hooks and services
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Local requests should be enabled in GitLab"
+  content=__alert_content
+  level="warning"
+%}
+
 1. In Sentry, navigate to Organization Settings > **Integrations**.
 
 1. Within Integrations, find the GitLab icon and click **Install**.
