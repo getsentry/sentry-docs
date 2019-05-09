@@ -11,15 +11,6 @@ Issue tracking allows you to create issues from within Sentry, and link Sentry i
 
 Once you’ve navigated to a specific issue, you’ll find the **Linked Issues** section on the right hand panel. Here, you’ll be able to create or link issues.
 
--   [_Azure DevOps_]({%- link _documentation/workflow/integrations/global-integrations/azure-devops.md -%})
--   [_Bitbucket_]({%- link _documentation/workflow/integrations/global-integrations/bitbucket.md -%})
--   [_Clubhouse_]({%- link _documentation/workflow/integrations/global-integrations/clubhouse.md -%})
--   [_GitHub_]({%- link _documentation/workflow/integrations/global-integrations/github.md -%})
--   [_GitHub Enterprise_]({%- link _documentation/workflow/integrations/global-integrations/github-enterprise.md -%})
--   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations/gitlab.md -%})
--   [_JIRA_]({%- link _documentation/workflow/integrations/global-integrations/jira.md -%})
--   [_JIRA Server_]({%- link _documentation/workflow/integrations/global-integrations/jira-server.md -%})
-
 ### Azure DevOps
 You can now use the data from your commits to Azure DevOps, formerly known as Visual Studio Team Services (VSTS), to help you find and fix bugs faster.
 
@@ -805,8 +796,6 @@ After installing Rookout in Sentry, you can go straight to the line of code in y
 ## Issue Notifications
 
 Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/notifications/alerts.md -%}) to properly route notifications to a specific integration.
-
--   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations/slack.md -%})
 
 ### Slack
 
