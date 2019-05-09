@@ -137,7 +137,7 @@ This option can be overridden using `in-app-include`.
 
 {% supported python %}
 A list of exception class names (strings) to ignore. Cought exceptions will be not be reported if their class is in this list.
-
+{% endsupported %}
 
 {:.config-key}
 ### `request-bodies`
