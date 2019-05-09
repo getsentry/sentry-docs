@@ -348,3 +348,258 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 #### GitHub SSO
 
 [Enable Single Sign-on]({%- link _documentation/accounts/sso.md -%})
+
+### GitHub Enterprise
+
+You can now use the data from your GitHub Enterprise commits to help you find and fix bugs faster.
+
+#### Configure GitHub Enterprise
+
+{% capture __alert_content -%}
+Sentry owner or manager permissions, and GitHub owner permissions are required to install this integration.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+###### Add new GitHub App
+
+1. Make sure you've whitelisted Sentry’s outbound request [IPs addresses](https://docs.sentry.io/ip-ranges/) for your GitHub Enterprise instance.
+2. In your GitHub Enterprise organization, navigate to Settings > Developer Settings > **GitHub Apps** and click to add a new **New GitHub App**.
+
+    [{% asset github-e-new-app.png %}]({% asset github-e-new-app.png @path %})
+
+###### Register new GitHub App
+
+1. First, you'll need to generate a webhook secret. For example, in terminal:
+
+    ```
+    openssl rand -base64 500 | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1
+    ```
+
+2. Then in GitHub, fill out the form as follows and click **Create GitHub App**.
+
+    | GitHub App Name                 | sentry-app        |
+    | Homepage URL                    | https://sentry.io |
+    | User authorization callback URL | https://sentry.io/extensions/github-enterprise/setup/ |
+    | Setup URL                       | https://sentry.io/extensions/github-enterprise/setup/ |
+    | Webhook URL                     | https://sentry.io/extensions/github-enterprise/webhook/ |
+    | Webhook secret                  | `Input your secret from the previous step` |
+    | Repository Administration | Read-only    |
+    | Commit Statuses           | No Access    |
+    | Deployments               | No Access    |
+    | Issues                    | Read & Write |
+    | Pages                     | No Access    |
+    | Pull Requests             | Read-only    |
+    | Repository Contents       | Read-only    |
+    | Single File               | No Access    |
+    | Repository Projects       | No Access    |
+    | Organization members      | Read-only    |
+    | Organization projects     | No Access    |
+    | **Subscribe to Events** |
+    | Pull Request        | Yes |
+    | Push                | Yes |
+
+###### Install your GitHub App
+
+1. In Sentry, navigate to Organization Settings > **Integrations**.
+2. Next to GitHub Enterprise, click **Install**.
+
+    [{% asset github-e-install.png %}]({% asset github-e-install.png @path %})
+    
+3. Click **Add Installation**.
+
+    [{% asset github-e-add-installation.png %}]({% asset github-e-add-installation.png @path %})
+    
+4. Fill out the following form with information from your GitHub apps configuration page.
+    
+    [{% asset github-e-form.png %}]({% asset github-e-form.png @path %})
+    
+    You'll need to generate a private key on your GitHub apps configuration page, and paste the entire contents into the **GitHub App Private Key** field.
+
+    [{% asset github-e-generate-private-key.png %}]({% asset github-e-generate-private-key.png @path %})
+
+    For example, in terminal:
+
+    ```
+    cat <YOUR_PRIVATE_KEY_FILE> | pbcopy
+    ```
+
+5. Click **Configure** and then a GitHub install window will pop up. Select which repositories Sentry should have access to (or select all repositories) and click **Install**.
+
+    [{% asset github-e-repo-access.png %}]({% asset github-e-repo-access.png @path %})
+
+6. You will then be redirected back to Sentry. On your new GitHub Enterprise instance, click **Configure**.
+
+    [{% asset github-e-configure.png %}]({% asset github-e-configure.png @path %})
+  
+7. Add any repositories that you want to collect commit data from. Note: Make sure you have given Sentry access to these repositories in GitHub in the previous steps.
+
+    [{% asset github-e-add-repo.png %}]({% asset github-e-add-repo.png @path %})
+    
+GitHub Enterprise should now be enabled for all projects under your Sentry organization.
+
+#### Commit Tracking
+
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+
+#### Suspect Commits and Suggested Assignees
+
+Once you set up commit tracking, you’ll be able to see the most recent changes to files found in the issue’s stack trace with suspect commits.
+
+For issues where the files in the stack trace match files included in commits sent to Sentry, you’ll see the suspect commit, with a link to the commit itself.
+
+You’ll also see that the author of the suspect commit will be listed as a suggested assignee for this issue. To assign the issue to the suggested assignee, click on their icon.
+
+#### Issue Management
+
+Issue tracking allows you to create GitHub issues from within Sentry, and link Sentry issues to existing GitHub Issues.
+
+Once you’ve navigated to a specific issue, you’ll find the **Linked Issues** section on the right hand panel. Here, you’ll be able to create or link GitHub issues.
+
+[{% asset github-e-link-issue.png %}]({% asset github-e-link-issue.png @path %})
+
+#### Resolving in Commit/Pull Request
+
+Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+
+```
+Prevent empty queries on users
+Fixes MYAPP-317
+```
+
+You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
+
+When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
+
+### GitLab
+
+Sentry’s GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry.
+
+#### Configure GitLab
+
+{% capture __alert_content -%}
+Sentry owner or manager permissions and GitLab owner or maintainer permissions are required to install this integration.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+1. In Sentry, navigate to Organization Settings > **Integrations**.
+
+1. Within Integrations, find the GitLab icon and click **Install**.
+
+    [{% asset gitlab/integration-pg.png alt="GitLab icon and install button" %}]({% asset gitlab/integration-pg.png @path %})
+
+1. In the resulting modal, click **Add Installation**.
+
+    [{% asset gitlab/add-installation.png alt="Connect Sentry to a GitLab instance" %}]({% asset gitlab/add-installation.png @path %})
+
+1. In the pop-up window, complete the instructions to create a Sentry app within GitLab. Once you’re finished, click **Next**.
+
+    [{% asset gitlab/configuration-modal.png alt="Configuration modal and Sentry app within GitLab" %}]({% asset gitlab/configuration-modal.png @path %})
+
+1. Fill out the resulting GitLab Configuration form with the following information:
+
+    1. The GitLab URL is the base URL for your GitLab instance. If using gitlab.com, enter https://gitlab.com/.
+
+    1. Find the GitLab Group Path in your group’s GitLab page.
+
+        [{% asset gitlab/gitlab-groups.png alt="GitLab page showing group path" %}]({% asset gitlab/gitlab-groups.png @path %})
+
+    1. Find the GitLab Application ID and Secret in the Sentry app within GitLab.
+
+        [{% asset gitlab/gitlab-app-id.png alt="GitLab application id and secret" %}]({% asset gitlab/gitlab-app-id.png @path %})
+
+    1. Use this information to fill out the GitLab Configuration and click **Submit**.
+    
+        [{% asset gitlab/gitlab-configuration.png alt="GitLab configuration form" %}]({% asset gitlab/gitlab-configuration.png @path %})
+
+1. In the resulting panel, click **Authorize**.
+
+1. In Sentry, return to Organization Settings > **Integrations**. You’ll see a new instance of GitLab underneath the list of integrations.
+
+1. Next to your GitLab Instance, click **Configure**. _Note: It’s important to configure to receive the full benefits of commit tracking._
+
+    [{% asset gitlab/configure-button.png alt="GitLab instance with connected group and highlighted configure button" %}]({% asset gitlab/configure-button.png @path %})
+
+1. On the resulting page, click **Add Repository** to select which repositories in which you’d like to begin tracking commits.
+
+    [{% asset gitlab/add-repo.png alt="Add repository" %}]({% asset gitlab/add-repo.png @path %})
+
+#### Issue Management
+Issue tracking allows you to create GitLab issues from within Sentry and link Sentry issues to existing GitLab issues.
+
+1. Select your issue
+
+    [{% asset gitlab/sentry-unresolved-issues.png alt="List of unresolved issues" %}]({% asset gitlab/sentry-unresolved-issues.png @path %})
+
+1. Navigate to Linked Issues on the right panel of the issue's page and click **Link GitLab Issue**.
+    
+    [{% asset gitlab/link-gitlab-issue.png alt="GitLab logo with Link GitLab Issue text" %}]({% asset gitlab/link-gitlab-issue.png @path %}) 
+
+1. You have two options to complete the issue link:
+
+    1. In the pop-up, you can fill out the appropriate details in the _Create_ tab, and then click **Create Issue**.
+    
+        [{% asset gitlab/gitlab-create-issue.png alt="pop-up modal to create issue" %}]({% asset gitlab/gitlab-create-issue.png @path %})
+    
+    1. Or, in the pop-up, you can click the _Link_ tab, search the issue by name, and then click **Link Issue**. _Note: Issues aren't currently searchable by number._
+    
+        [{% asset gitlab/link-issue-by-name.png alt="pop-up modal to search issue name" %}]({% asset gitlab/link-issue-by-name.png @path %})
+
+1. To unlink an issue, click on the **X** next to its name under Linked Issues.
+
+    [{% asset gitlab/unlink-issue.png alt="GitLab logo and project next to an X icon" %}]({% asset gitlab/unlink-issue.png @path %})
+    
+#### Commit Tracking
+
+Commit tracking allows you to hone in on problematic commits. With commit tracking, you can better isolate what might be problematic by leveraging information from releases like tags and metadata.
+
+Once you've configured both [release and commit tracking]({%- link _documentation/workflow/releases.md -%}), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
+
+[{% asset gitlab/last-commit-in-releases.png alt="Dashboard with last commit highlighted" %}]({% asset gitlab/last-commit-in-releases.png @path %})
+
+When you investigate deeper into that commit, you can leverage information from metadata like tags.
+
+[{% asset gitlab/highlighting-tags.png alt="Issue detail highlighting tags" %}]({% asset gitlab/highlighting-tags.png @path %})
+
+Broadly, this lets you isolate problems in order to see which commits might be problematic.
+
+Learn more about [release and commit tracking]({%- link _documentation/workflow/releases.md -%}).
+
+#### Suspect Commit
+
+Once you are tracking the commits, the 'suspect commit' is the commit that likely introduced the error.
+
+One special benefit of using Sentry's Commit Tracking is the ability to know the suspect commit that likely caused the error, with a suggested plan of action for how to rectify the error. For example, after pinpointing the suspect commit, you can also identify the developer who made the commit and assign them the task of fixing the error. 
+
+[{% asset gitlab/highlighting-suspect-commits.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/highlighting-suspect-commits.png @path %})
+
+Here is where you can find info for [suspect commit setup]({%- link _documentation/workflow/releases.md -%}#link-repository).
+
+#### Resolve via Commit or PR
+
+Once you've added a repository (see configuration step 8), you can start resolving issues by including `fixes <SHORT-ID>` in your commit messages. You might want to type something in the commit like: "this fixes MyApp-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes <SHORT-ID>` in the title or description. This will automatically resolve the issue in the next release. 
+
+A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
+
+[{% asset gitlab/short-id.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/short-id.png @path %})
+
+#### Troubleshooting
+
+FAQ:
+- I'm using GitLab on-premise. Do I need to whitelist Sentry's IP addresses?
+    - Yes. You can find our IP ranges [ here ]({%- link ip-ranges.md -%}).
+- Do you support subgroups?
+    - Currently, we only support subgroups for users using GitLab 11.6 or higher.
+- My repositories are hosted under my user account, not a group account. Can I still use this integration?
+    - Unfortunately, not. The GitLab integration only works for repositories that are hosted under group accounts.
+- Are there pricing restrictions?
+    - This integration is available for organizations on the [Team, Business, or Enterprise plan](https://sentry.io/pricing/).
+- Who has permission to install this?
+    - You must have both owner/manager permissions in Sentry and owner permissions in GitLab to successfully install this integration. 
