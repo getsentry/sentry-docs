@@ -802,6 +802,12 @@ After installing Rookout in Sentry, you can go straight to the line of code in y
 
     [{% asset rookout/rookout_screen_1.png alt="Sentry modal indicating that permissions need installation." %}]({% asset rookout/rookout_screen_1.png @path %})
 
+## Issue Notifications
+
+Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/notifications/alerts.md -%}) to properly route notifications to a specific integration.
+
+-   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations/slack.md -%})
+
 ### Slack
 
 The global Slack integration creates workflows for your team. Now you can triage, resolve, and ignore Sentry issues directly from Slack.
@@ -895,9 +901,3 @@ Now your Slack integration is available to all projects in your Sentry organizat
 #### Deleting the legacy Slack integration
 
 Once you configure the global Slack integration and Alert Rules, you can disable the old Slack integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy integration after setting up the global integration.
-
-## Issue Notifications
-
-Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/notifications/alerts.md -%}) to properly route notifications to a specific integration.
-
--   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations/slack.md -%})
