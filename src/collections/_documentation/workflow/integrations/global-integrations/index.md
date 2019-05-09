@@ -119,12 +119,6 @@ If you reach the account selection page during the Azure Devops installation pro
 - Ensure you are logged into the account connected to your Azure DevOps organization.
 - Double check that your account is a Microsoft Account (MSA). At this time, we do not support Azure Active Directory (AAD) accounts. 
 
-#### Issue Notifications
-
-Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/notifications/alerts.md -%}) to properly route notifications to a specific integration.
-
--   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations/slack.md -%})
-
 ### Bitbucket
 
 You can now use the data from your Bitbucket commits to help you find and fix bugs faster.
@@ -901,3 +895,9 @@ Now your Slack integration is available to all projects in your Sentry organizat
 #### Deleting the legacy Slack integration
 
 Once you configure the global Slack integration and Alert Rules, you can disable the old Slack integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy integration after setting up the global integration.
+
+## Issue Notifications
+
+Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/notifications/alerts.md -%}) to properly route notifications to a specific integration.
+
+-   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations/slack.md -%})
