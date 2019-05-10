@@ -23,6 +23,22 @@ This integration registers with the interpreter's except hook system.  Through t
 any exception that is unhandled will be reported to Sentry automatically.  Exceptions
 raised interactive interpreter sessions will not be reported.
 
+### Options
+
+You can pass the following keyword arguments to `ExcepthookIntegration()`:
+
+* `always_run`:
+    
+    ```python
+    #repl
+    raise Exception('I can catch an error through in Repl.')
+    ```
+    The Sentry does not catch error in repl when it is always_run's default value. If the default value is set to `True`, errors in repl can be captured. (`sentry_sdk.init(integrations=[ExcepthookIntegration(always_run=True)])`)
+
+
+  The default is `False`.
+
+
 ## Deduplication
 *Import name: `sentry_sdk.integrations.dedupe.DedupeIntegration`*
 
