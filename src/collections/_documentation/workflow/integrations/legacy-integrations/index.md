@@ -11,13 +11,26 @@ These integrations are set up once per project, and are only usable in projects 
   level="info"
 %}
 
-#### Issue Management
+## Issue Management
 
 Issue tracking allows you to create issues from within Sentry, and link Sentry issues to existing supported integration Issues.
 
 Once you’ve navigated to a specific issue, you’ll find the **Linked Issues** section on the right hand panel. Here, you’ll be able to create or link issues. 
 
--   [_Asana_]({%- link _documentation/workflow/integrations/legacy-integrations/asana.md -%})
+### Asana
+
+#### Asana Issue Creation from Sentry
+
+Create or link issues in Asana based on Sentry events.
+
+1. Go to the project settings page in Sentry that you’d like to link with Asana
+2. Click All Integrations, find the Asana integration in the list, and click configure
+3. Click Enable Plugin
+4. Link your Asana account and select an organization or workspace
+5. The option to create or link Asana issues will be displayed from your Sentry issue pagess
+
+### Additional Integrations
+
 -   Lighthouse*
 -   Phabricator
 -   Pivotal Tracker
