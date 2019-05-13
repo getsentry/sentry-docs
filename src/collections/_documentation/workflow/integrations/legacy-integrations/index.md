@@ -29,7 +29,7 @@ Create or link issues in Asana based on Sentry events.
 4. Link your Asana account and select an organization or workspace
 5. The option to create or link Asana issues will be displayed from your Sentry issue pagess
 
-### Additional Integrations
+### More Integrations
 
 -   Lighthouse*
 -   Phabricator
@@ -39,13 +39,26 @@ Create or link issues in Asana based on Sentry events.
 -   Teamwork
 -   Trello*
 
-#### Issue Notifications
+## Issue Notifications
 
 Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/notifications/alerts.md -%}) to properly route notifications to a specific integration.
 
+### Hipchat
+
+Get HipChat notifications for Sentry issues.
+
+1. Go to the project settings page in Sentry that you’d like to link with HipChat
+2. Click All Integrations, find the HipChat integration in the list, and click configure
+3. Click Enable Plugin
+4. Click the Enable Integration link OR add the integration through the HipChat Marketplace
+5. Log in to HipChat and specify which HipChat room you would like to send Sentry issues to
+6. Follow the Sentry configuration flow and select the organizations and projects you would like notifications for
+7. Sentry issues will appear in your HipChat room as they occur depending on the alert rules you have specified in your project settings
+
+### More Integrations
+
 -   Campfire*
 -   Flowdock
--   [_HipChat_]({%- link _documentation/workflow/integrations/legacy-integrations/hipchat.md -%})
 -   OpsGenie
 -   PagerDuty
 -   Pushover
