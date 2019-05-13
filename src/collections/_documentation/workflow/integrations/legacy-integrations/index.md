@@ -6,8 +6,8 @@ sidebar_order: 1
 These integrations are set up once per project, and are only usable in projects in which they've been set up.
 
 {% include components/alert.html
-  title="* Community Integrations"
-  content="These integrations are [maintained and supported](https://forum.sentry.io) by the Sentry community."
+  title="Community Integrations"
+  content="These integrations are [maintained and supported](https://forum.sentry.io) by the Sentry community. Documentation is available for a few community created integrations such as Asana, Heroku, Hipchat, and Splunk. Other community created integrations are available for installation in Sentry and will receive documentation in due time."
   level="info"
 %}
 
