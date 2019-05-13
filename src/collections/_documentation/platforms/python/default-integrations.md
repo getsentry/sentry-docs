@@ -29,12 +29,14 @@ You can pass the following keyword arguments to `ExcepthookIntegration()`:
 
 * `always_run`:
     
-    ```python
-    #repl
-    raise Exception('I can catch an error through in Repl.')
+    ```bash
+    $ python
+    >>> import sentry_sdk
+    >>> from sentry_sdk.integrations.excepthook import ExcepthookIntegration
+    >>> sentry_sdk.init(..., integrations=[ExcepthookIntegration(always_run=True)])
+    >>> raise Exception("I will become an error")
     ```
-    The Sentry does not catch error in repl when it is always_run's default value. If the default value is set to `True`, errors in repl can be captured. (`sentry_sdk.init(integrations=[ExcepthookIntegration(always_run=True)])`)
-
+    By default, the SDK does not capture errors occuring in the REPL (`always_run=False`).
 
   The default is `False`.
 
