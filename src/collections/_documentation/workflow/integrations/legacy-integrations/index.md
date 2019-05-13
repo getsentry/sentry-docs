@@ -64,8 +64,22 @@ Get HipChat notifications for Sentry issues.
 -   Pushover
 -   Twilio
 
-#### Additional Integrations
+## Additional Integrations
 
 -   [_Amazon SQS_]({%- link _documentation/data-management/data-forwarding.md -%})
 -   [_Heroku_]({%- link _documentation/workflow/integrations/legacy-integrations/heroku.md -%})
 -   [_Splunk_]({%- link _documentation/workflow/integrations/legacy-integrations/splunk.md -%})
+
+### Amazon SQS
+
+This is commonly useful in places where you may want to do deeper analysis on exceptions, or empower other teams, such as a Business Intelligence function.
+
+Configuring Data Forwarding is done by visiting **[Project] » Settings » Data Forwarding** and filling in the required information for the given integration.
+
+Integration with Amazon SQS makes it quick and easy to pipe exceptions back into your own systems.
+
+The payload for Amazon is identical is our standard API event payload, and will evolve over time. For more details on the format of this data, see our [API documentation]({%- link _documentation/api/events/get-project-event-details.md -%}).
+
+### Heroku
+
+### Splunk
