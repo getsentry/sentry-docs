@@ -32,12 +32,12 @@ These integrations are set up once per project, and are only usable in projects 
 %}
 
 -   [_Amazon SQS_]({%- link _documentation/data-management/data-forwarding.md -%})
--   [_Asana_]({%- link _documentation/workflow/integrations/legacy-integrations/asana.md -%})
+-   [_Asana_]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}#asana)
 -   Campfire*
 -   Flowdock
 -   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations/gitlab.md -%})
--   [_Heroku_]({%- link _documentation/workflow/integrations/legacy-integrations/heroku.md -%})
--   [_HipChat_]({%- link _documentation/workflow/integrations/legacy-integrations/hipchat.md -%})
+-   [_Heroku_]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}#heroku)
+-   [_HipChat_]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}#hipchat)
 -   Lighthouse*
 -   OpsGenie
 -   PagerDuty
@@ -45,7 +45,7 @@ These integrations are set up once per project, and are only usable in projects 
 -   Pivotal Tracker
 -   Pushover
 -   Redmine
--   [_Splunk_]({%- link _documentation/workflow/integrations/legacy-integrations/splunk.md -%})
+-   [_Splunk_]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}#splunk)
 -   Taiga
 -   Teamwork
 -   Trello*
