@@ -29,17 +29,15 @@ You can pass the following keyword arguments to `ExcepthookIntegration()`:
 
 * `always_run`:
     
-    ```bash
-    $ python
-    >>> import sentry_sdk
-    >>> from sentry_sdk.integrations.excepthook import ExcepthookIntegration
-    >>> sentry_sdk.init(..., integrations=[ExcepthookIntegration(always_run=True)])
-    >>> raise Exception("I will become an error")
-    ```
-    By default, the SDK does not capture errors occuring in the REPL (`always_run=False`).
+  ```bash
+  $ python
+  >>> import sentry_sdk
+  >>> from sentry_sdk.integrations.excepthook import ExcepthookIntegration
+  >>> sentry_sdk.init(..., integrations=[ExcepthookIntegration(always_run=True)])
+  >>> raise Exception("I will become an error")
+  ```
 
-  The default is `False`.
-
+  By default, the SDK does not capture errors occuring in the REPL (`always_run=False`).
 
 ## Deduplication
 *Import name: `sentry_sdk.integrations.dedupe.DedupeIntegration`*
