@@ -414,7 +414,678 @@ The attributes `filename`, `context_line`, and `lineno` are required.
 - [Threads Interface]({%- link _documentation/development/sdk-dev/interfaces/threads.md -%})
 - [User Interface]({%- link _documentation/development/sdk-dev/interfaces/user.md -%})
 
+### Breadcrumbs Interface
+
+The breadcrumbs interface specifies a series of application events, or
+“breadcrumbs”, that occurred before the main event. Its canonical name is
+`"breadcrumbs"`.
+
+This interface is an object with a sole `values` key containing an ordered list
+of breadcrumb objects. The entries are ordered from oldest to newest.
+Consequently, the last entry in the array should be the last entry before the
+event occurred.
+
+Each breadcrumb has a few properties of which at least `timestamp` and
+`category` must be provided. The rest is optional and depending on what is
+provided the rendering might be different:
+
+`timestamp`
+
+: **Required**. A timestamp representing when the breadcrumb occurred. This can
+be either an ISO datetime string, or a Unix timestamp.
+
+`type`
+
+: _Optional_. The type of breadcrumb. The default type is `default` which
+indicates no specific handling. Other types are currently `http` for HTTP
+requests and `navigation` for navigation events. More about types later.
+
+`category`
+
+: _Optional_. A dotted string indicating what the crumb is or where it comes
+from. Typically it is a module name or a descriptive string. For instance,
+_ui.click_ could be used to indicate that a click happend in the UI or _flask_
+could be used to indicate that the event originated in the Flask framework.
+
+`message`
+
+: _Optional_. If a message is provided it is rendered as text with all
+whitespace preserved. Very long text might be truncated in the UI.
+
+`data`
+
+: _Optional_. Arbitrary data associated with this breadcrumb. Contains a
+dictionary whose contents depend on the breadcrumb `type`. See descriptions of
+breadcrumb types below. Additional parameters that are unsupported by the type
+are rendered as a key/value table.
+
+`level`
+
+: _Optional_. This defines the severity level of the breadcrumb. Allowed values
+are, from highest to lowest: `fatal`, `error`, `warning`, `info` and `debug`.
+Levels are used in the UI to emphasize and deemphasize the crumb. Defaults to
+`info`.
+
+#### Examples
+
+```json
+"breadcrumbs": {
+  "values": [
+    {
+      "timestamp": 1461185753845,
+      "message": "Something happened",
+      "category": "log",
+      "data": {
+        "foo": "bar",
+        "blub": "blah"
+      }
+    },
+    {
+      "timestamp": "2016-04-20T20:55:53.847Z",
+      "type": "navigation",
+      "data": {
+        "from": "/login",
+        "to": "/dashboard"
+      }
+    }
+  ]
+}
+```
+
+#### Breadcrumb Types
+
+Below are descriptions of individual breadcrumb types, and what their `data`
+properties look like.
+
+##### `default`
+
+Describes an generic breadcrumb. This is typically a log message or user
+generated breadcrumb. The `data` part is entirely undefined and as such
+completely rendered as a key/value table.
+
+```json
+{
+  "timestamp": 1461185753845,
+  "message": "Something happened",
+  "category": "log",
+  "data": {
+    "key": "value"
+  }
+}
+```
+
+##### `navigation`
+
+Describes a navigation breadcrumb. A navigation event can be a URL change in a
+web application, or a UI transition in a mobile or desktop application, etc.
+
+Its `data` property has the following sub-properties:
+
+`from`
+
+: **Required**. A string representing the original application state / location.
+
+`to`
+
+: **Required**. A string representing the new application state / location.
+
+```json
+{
+  "timestamp": 1461185753845,
+  "type": "navigation",
+  "data": {
+    "from": "/login",
+    "to": "/dashboard"
+  }
+}
+```
+
+##### `http`
+
+Describes an HTTP request breadcrumb. This represents an HTTP request
+transmitted from your application. This could be an AJAX request from a web
+application, or a server-to-server HTTP request to an API service provider, etc.
+
+Its `data` property has the following sub-properties:
+
+`url`
+
+: _Optional_. The request URL.
+
+`method`
+
+: _Optional_. The HTTP request method.
+
+`status_code`
+
+: _Optional_. The HTTP status code of the response.
+
+`reason`
+
+: _Optional_. A text that describes the status code.
+
+```json
+{
+  "timestamp": 1461185753845,
+  "type": "http",
+  "data": {
+    "url": "http://example.com/api/1.0/users",
+    "method": "GET",
+    "status_code": 200,
+    "reason": "OK"
+  }
+}
+```
+
+### Contexts Interface
+
+The context interfaces provide additional context data. Typically this is data
+related to the current user, the current HTTP request. Its canonical name is `"contexts"`.
+
+The `contexts` type can be used to defined almost arbitrary contextual data on
+the event. It accepts an object of key, value pairs. The key is the “alias” of
+the context and can be freely chosen. However as per policy it should match the
+type of the context unless there are two values for a type.
+
+Example:
+
+```json
+"contexts": {
+  "os": {
+    "type": "os",
+    "name": "Windows"
+  }
+}
+```
+
+If `type` is omitted it uses the key name as type.
+
+Unknown data for the contexts is rendered as a key/value list.
+
+#### Context Types
+
+The following types are known:
+
+`device`
+
+: This describes the device that caused the event. This is most appropriate for
+  mobile applications.
+
+  Attributes:
+
+  `name`:
+
+  : _Optional_. The name of the device. This is typically a hostname.
+
+  `family`:
+
+  : _Optional_. The family of the device. This is normally the common part of
+    model names across generations. For instance `iPhone` would be a reasonable
+    family, so would be `Samsung Galaxy`.
+
+  `model`:
+
+  : _Optional_. The model name. This for instance can be `Samsung Galaxy S3`.
+
+  `model_id`:
+
+  : _Optional_. An internal hardware revision to identify the device exactly.
+
+  `arch`:
+
+  : _Optional_. The CPU architecture.
+
+  `battery_level`:
+
+  : _Optional_. If the device has a battery, this can be an floating point value
+    defining the battery level (in the range 0-100).
+
+  `orientation`:
+
+  : _Optional_. This can be a string `portrait` or `landscape` to define the
+    orientation of a device.
+
+  `manufacturer`:
+
+  : _Optional_. The manufacturer of the device.
+
+  `brand`:
+
+  : _Optional_. The brand of the device.
+
+  `screen_resolution`:
+
+  : _Optional_. The screen resolution. (e.g.: 800x600, 3040x1444).
+
+  `screen_density`:
+
+  : _Optional_. A floating point denoting the screen density.
+
+  `screen_dpi`:
+
+  : _Optional_. A decimal value reflecting the DPI (dots-per-inch) density.
+
+  `online`:
+
+  : _Optional_. Whether the device was online or not.
+
+  `charging`:
+
+  : _Optional_. Whether the device was charging or not.
+
+  `low_memory`:
+
+  : _Optional_. Whether the device was low on memory.
+
+  `simulator`:
+
+  : _Optional_. A flag indicating whether this device is a simulator or an
+  actual device.
+
+  `memory_size`:
+
+  : _Optional_. Total system memory available in bytes.
+
+  `free_memory`:
+
+  : _Optional_. Free system memory in bytes.
+
+  `usable_memory`:
+
+  : _Optional_. Memory usable for the app in bytes.
+
+  `storage_size`:
+
+  : _Optional_. Total device storage in bytes.
+
+  `free_storage`:
+
+  : _Optional_. Free device storage in bytes.
+
+  `external_storage_size`:
+
+  : _Optional_. Total size of an attached external storage in bytes (e.g.:
+    android SDK card).
+
+  `external_free_storage`:
+
+  : _Optional_. Free size of an attached external storage in bytes (e.g.:
+  android SDK card).
+
+  `boot_time`:
+
+  : _Optional_. A formatted UTC timestamp when the system was booted, e.g.:
+    `"2018-02-08T12:52:12Z"`.
+
+  `timezone`:
+
+  : _Optional_. The timezone of the device, e.g.: `Europe/Vienna`.
+
+`os`
+
+: Describes the operating system on which the event was created. In web
+  contexts, this is the operating system of the browser (normally pulled from
+  the User-Agent string).
+
+  Attributes:
+
+  `name`:
+
+  : _Optional_. The name of the operating system.
+
+  `version`:
+
+  : _Optional_. The version of the operating system.
+
+  `build`:
+
+  : _Optional_. The internal build revision of the operating system.
+
+  `kernel_version`:
+
+  : _Optional_. An independent kernel version string. This is typically the
+    entire output of the `uname` syscall.
+
+  `rooted`:
+
+  : _Optional_. A flag indicating whether the OS has been jailbroken or rooted.
+
+  `raw_description`:
+
+  : _Optional_. An unprocessed description string obtained by the operating
+    system. For some well-known runtimes, Sentry will attempt to parse `name`
+    and `version` from this string, if they are not explicitly given.
+
+`runtime`
+
+: Describes a runtime in more detail. Typically this context is used multiple
+  times if multiple runtimes are involved (for instance if you have a JavaScript
+  application running on top of JVM)
+
+  Attributes:
+
+  `name`:
+
+  : _Optional_. The name of the runtime.
+
+  `version`:
+
+  : _Optional_. The version identifier of the runtime.
+
+  `raw_description`:
+
+  : _Optional_. An unprocessed description string obtained by the runtime. For
+    some well-known runtimes, Sentry will attempt to parse `name` and `version`
+    from this string, if they are not explicitly given.
+
+`app`
+
+: Describes the application. As opposed to the runtime, this is the actual
+  application that was running and carries meta data about the current session.
+
+  Attributes:
+
+  `app_start_time`:
+
+  : _Optional_. Formatted UTC timestamp when the application was started by the
+    user.
+
+  `device_app_hash`:
+
+  : _Optional_. Application specific device identifier.
+
+  `build_type`:
+
+  : _Optional_. String identifying the kind of build, e.g. `testflight`.
+
+  `app_identifier`:
+
+  : _Optional_. Version-independent application identifier, often a dotted
+    bundle ID.
+
+  `app_name`:
+
+  : _Optional_. Human readable application name, as it appears on the platform.
+
+  `app_version`:
+
+  : _Optional_. Human readable application version, as it appears on the
+    platform.
+
+  `app_build`:
+
+  : _Optional_. Internal build identifier, as it appears on the platform.
+
+`browser`
+
+: Carries information about the browser or user agent for web-related errors.
+  This can either be the browser this event ocurred in, or the user agent of a
+  web request that triggered the event.
+
+  Attributes:
+
+  `name`:
+
+  : _Optional_. Display name of the browser application.
+
+  `version`:
+
+  : _Optional_. Version string of the browser.
+
+### GPU Interface
+
+An interface which describes the main GPU of the device.
+
+##### `name`
+
+**Required**. The name of the graphics device.
+
+##### `version`
+
+_Optional_. The Version of graphics device.
+
+##### `id`
+
+_Optional_. The PCI Id of the graphics device.
+
+##### `vendor_id`
+
+_Optional_. The PCI vendor Id of the graphics device.
+
+##### `vendor_name`
+
+_Optional_. The vendor name as reported by the graphics device.
+
+##### `memry_size`
+
+_Optional_. The total GPU memory available in Megabytes.
+
+##### `api_type`
+
+_Optional_. The device low level API type. 
+
+Examples: `Apple Metal` or `Direct3D11`
+
+##### `multi_threaded_rendering`
+
+_Optional_. Whether the GPU has multi-threaded rendering or not.
+
+##### `npot_support`
+
+_Optional_. The Non-Power-Of-Two-Support support
+
+#### Example
+
+```json
+"gpu": {
+  "name": "AMD Radeon Pro 560",
+  "vendor_name": "Apple",
+  "memory_size": 4096,
+  "api_type": "Metal",
+  "multi_threaded_rendering": true,
+  "version": "Metal",
+  "npot_support": "Full"
+}
+```
+
+### HTTP Interface
+
+The Request information is stored in the HTTP interface. Two arguments are required: url and `method`.
+
+The `env` variable is a compounded dictionary of HTTP headers as well as environment information passed from the webserver. Sentry will explicitly look for `REMOTE_ADDR` in `env` for things which require an IP address.
+
+The data variable should only contain the request body (not the query string). It can either be a dictionary (for standard HTTP requests) or a raw request body.
+
+`url`
+
+: The full URL of the request if available.
+
+`method`
+
+: The actual HTTP method of the request.
+
+`data`
+
+: Submitted data in whatever format makes most sense. SDKs should discard large bodies by default.
+
+`query_string`
+
+: The unparsed query string as it is provided.
+
+`cookies`
+
+: The cookie values. Typically unparsed as a string.
+
+`headers`
+
+: A dictionary of submitted headers. If a header appears multiple times it needs to be merged according to the HTTP standard for header merging.
+
+`env`
+
+: Optional environment data. This is where information such as CGI/WSGI/Rack keys go that are not HTTP headers.
+
+```json
+"request": {
+  "url": "http://absolute.uri/foo",
+  "method": "POST",
+  "data": {
+    "foo": "bar"
+  },
+  "query_string": "hello=world",
+  "cookies": "foo=bar",
+  "headers": {
+    "Content-Type": "text/html"
+  },
+  "env": {
+    "REMOTE_ADDR": "192.168.0.1"
+  }
+}
+```
+
+### Threads Interface
+
+The threads interface allows you to specify the threads there were running at the time an event happened. These threads can also contain stack traces. As per policy the thread that actually crashed with an exception should not have a stack trace but instead the `thread_id` attribute should be set on the exception and Sentry will connect the two.
+
+This interface supports multiple thread values in the `values` key. The following attributes are known for each value:
+
+`stacktrace`:
+
+: You can also optionally bind a [_stack trace_]({%- link _documentation/development/sdk-dev/interfaces/stacktrace.md -%}) to the thread.
+
+`id`:
+
+: The ID of the thread. Typically an integer or short string. Needs to be unique among the threads. An exception can set the `thread_id` attribute to cross reference this thread.
+
+`crashed`:
+
+: An optional bool to indicate that the thread crashed.
+
+`current`:
+
+: An optional bool to indicate that the thread was in the foreground.
+
+`name`:
+
+: an optional thread name.
+
+```json
+"threads": {
+  "values": [{
+    "id": "0",
+    "name": "main",
+    "crashed": true,
+    "stacktrace": {...}
+}
+```
+
+### User Interface
+
+An interface which describes the authenticated User for a request.
+
+You should provide at least either an `id` (a unique identifier for an authenticated user) or `ip_address` (their IP address).
+
+`id`
+
+: The unique ID of the user.
+
+`email`
+
+: The email address of the user.
+
+`ip_address`
+
+: The IP of the user.
+
+`username`
+
+: The username of the user
+
+All other keys are stored as extra information but not specifically processed by sentry.
+
+```json
+"user": {
+  "id": "unique_id",
+  "username": "my_user",
+  "email": "foo@example.com",
+  "ip_address": "127.0.0.1",
+  "subscription": "basic"
+}
+```
+
 ## Misc
 
 - [Debug Interface]({%- link _documentation/development/sdk-dev/interfaces/debug.md -%})
 - [SDK Interface]({%- link _documentation/development/sdk-dev/interfaces/sdk.md -%})
+
+### Debug Interface
+
+The debug support interface is only available during processing and is not stored afterwards.
+
+`debug_meta`
+
+: This interface can provide temporary debug information that Sentry can use to improve reporting. Currently it is used for symbolication only.
+
+  Supported properties:
+
+  `sdk_info`:
+
+  : An object with the following attributes: `dsym_type`, `sdk_name`, `version_major`, `version_minor` and `version_patchlevel`. If this object is provided then resolving system symbols is activated. The values provided need to match uploaded system symbols to Sentry.
+
+  `images`:
+
+  : A list of debug images. The `type` of the image must be provided and the other keys depend on the image type.
+
+  Supported image types:
+
+  `apple`:
+
+  : The format otherwise matches the apple crash reports. The following keys are supported: `cpu_type`, `cpu_subtype`, `image_addr`, `image_size`, `image_vmaddr`, `name` and `uuid`. Note that it’s recommended to use hexadecimal addresses (`"0x1234"`) instead of integers.
+
+### SDK Interface
+
+An interface which describes the SDK and its configuration used to capture and
+transmit the event.
+
+`name`
+
+: **Required**. The name of the SDK. Its format is `sentry.ecosystem[.flavor]`
+where the _flavor_ is optional and should only be set if it has its own SDK.
+
+`version`
+
+: **Required**. The semantic version of the SDK. The version should always be
+sent without a `v` prefix.
+
+`integrations`
+
+: _Optional_. A list of integrations with the platform or a framework that were
+explicitly actived by the user. This does not include default integrations.
+
+`packages`
+
+: _Optional_. A list of packages that were installed as part of this SDK or the
+activated integrations. Each package consists of a `name` in the format
+`source:identifier` and a semver `version`. If the source is a git repository,
+a checkout link and git reference (branch, tag or sha) should be used.
+
+#### Example
+
+```json
+"sdk": {
+  "name": "sentry.javscript.react-native",
+  "version": "1.0.0",
+  "integrations": [
+    "redux"
+  ],
+  "packages": [
+    {
+      "name": "npm:@sentry/react-native",
+      "version": "0.39.0"
+    },
+    {
+      "name": "git:https://github.com/getsentry/sentry-cocoa.git",
+      "version": "4.1.0"
+    }
+  ]
+}
+```
