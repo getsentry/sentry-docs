@@ -9,7 +9,7 @@ The structured data of an event dictates how a rollup is created. This varies de
 
 ## Grouping Priorities
 
-The grouping switches behavior based on the interfaces ([_Interfaces_]({%- link _documentation/development/sdk-dev/interfaces/index.md -%})) that are available within an event.
+The grouping switches behavior based on the interfaces ([_Interfaces_]({%- link _documentation/development/sdk-dev/interfaces.md -%})) that are available within an event.
 
 -   If the interfaces used in an event differ, then those events will not be grouped together.
 -   If a stack trace or exception is involved in a report, then grouping will only consider this information.

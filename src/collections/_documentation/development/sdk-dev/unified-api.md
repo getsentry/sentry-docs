@@ -44,7 +44,7 @@ meant that certain integrations (such as breadcrumbs) were often not possible.
 
 - **client options**: Are parameters that are language and runtime specific and used to configure the client. This can be release and environment but also things like which integrations to configure, how in-app works etc.
 
-- **context**: Contexts give extra data to sentry. There are the special contexts (user and similar) and the generic ones (runtime, os, device) etc.  Check out [_Contexts_]({%- link _documentation/development/sdk-dev/interfaces/contexts.md -%}) for valid keys. *Note: In older SDKs you might encounter an unrelated concept of context, which is now deprecated by scopes*
+- **context**: Contexts give extra data to sentry. There are the special contexts (user and similar) and the generic ones (runtime, os, device) etc.  Check out [_Contexts_]({%- link _documentation/development/sdk-dev/interfaces.md -%}#contexts-interface) for valid keys. *Note: In older SDKs you might encounter an unrelated concept of context, which is now deprecated by scopes*
 
 - **tags**: Tags can be arbitrary string→string pairs by which events can be searched. Contexts are converted into tags.
 
