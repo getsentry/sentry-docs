@@ -35,7 +35,11 @@ These integrations are set up once per project, and are only usable in projects 
 -   [_Asana_]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}#asana)
 -   Campfire*
 -   Flowdock
+<<<<<<< HEAD
 -   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#gitlab)
+=======
+-   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations/gitlab.md -%})
+>>>>>>> bd8e5b6e40e63766aac1a37891566aef91e5e18f
 -   [_Heroku_]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}#heroku)
 -   [_HipChat_]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}#hipchat)
 -   Lighthouse*
