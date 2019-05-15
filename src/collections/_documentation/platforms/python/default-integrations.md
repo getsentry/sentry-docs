@@ -37,7 +37,7 @@ You can pass the following keyword arguments to `ExcepthookIntegration()`:
   >>> raise Exception("I will become an error")
   ```
 
-  By default, the SDK does not capture errors occuring in the REPL (`always_run=False`).
+  By default, the SDK does not capture errors occurring in the REPL (`always_run=False`).
 
 ## Deduplication
 *Import name: `sentry_sdk.integrations.dedupe.DedupeIntegration`*
