@@ -66,10 +66,6 @@ Get HipChat notifications for Sentry issues.
 
 ## Additional Integrations
 
--   [_Amazon SQS_]({%- link _documentation/data-management/data-forwarding.md -%})
--   [_Heroku_]({%- link _documentation/workflow/integrations/legacy-integrations/heroku.md -%})
--   [_Splunk_]({%- link _documentation/workflow/integrations/legacy-integrations/splunk.md -%})
-
 ### Amazon SQS
 
 This is commonly useful in places where you may want to do deeper analysis on exceptions, or empower other teams, such as a Business Intelligence function.
@@ -82,4 +78,171 @@ The payload for Amazon is identical is our standard API event payload, and will 
 
 ### Heroku
 
+Sentry provides a native add-on for Heroku. While this add-on is not required, it will allow you to maintain consolidated billing inside of Heroku, as well as enable easy configuration of your Sentry credentials.
+
+#### Register the Add-on
+
+To add Sentry to an existing Heroku app, head over to the [Sentry Heroku add-on](https://elements.heroku.com/addons/sentry) page.
+
+Once done, you’ll be able to confirm that Sentry’s credentials are available via your config:
+
+```sh
+heroku config:get SENTRY_DSN
+```
+
+{% capture __alert_content -%}
+If you’re not using the add-on, you can still bind the `SENTRY_DSN` environment variable which the SDK will automatically pick up.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="info"
+%}
+
+#### Install the SDK
+
+Whether you’re using the add-on or not, you’ll still need to install the SDK per our standard platform-specific instructions.
+
+{% include LEGACY_platform_icon_links.html %}
+
+#### Configure Releases
+
+Whether use the add-on or configure Sentry yourself, you’ll also likely want to grant quick access to your dyno metadata, which will allow Sentry to automatically pick up the git version of your application.
+
+To do this, enable the `runtime-dyno-metadata` feature:
+
+```sh
+heroku labs:enable runtime-dyno-metadata -a <app name>
+```
+
+This exposes the `HEROKU_SLUG_COMMIT` environment variable, which most Sentry SDKs will automatically detect and use for configuration.
+
+Next you’ll want to add your repository and setup a deploy hook.
+
+1.  Start by connecting your repository to your Sentry organization so that we can automatically retrieve your commit data.
+
+    [{% asset add-repo.png %}]({% asset add-repo.png @path %})
+    
+2.  Enable the Heroku integration in your Sentry Project Settings.
+
+    [{% asset enable-heroku.png %}]({% asset enable-heroku.png @path %})
+    
+3.  In the Heroku Plugin Configuration, specify which repository and deploy environment to be associated with your Sentry project.
+
+    [{% asset heroku-project-config.png %}]({% asset heroku-project-config.png @path %})
+    
+4.  Navigate to your Project’s Release Tracking settings and copy the deploy hook command to your Heroku config.
+
+    [{% asset heroku-config.png %}]({% asset heroku-config.png @path %})
+
+You’ll start getting rich commit information and deploy emails with each new release, as well as tracking of which release issues were seen within.
+
 ### Splunk
+
+Connect Splunk to Sentry with the [Data Forwarding]({%- link _documentation/data-management/data-forwarding.md -%}) feature.
+
+{% capture __alert_content -%}
+See the [Splunk documentation](http://dev.splunk.com/view/event-collector/SP-CAAAE7F) for specific details on your Splunk installation.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="info"
+%}
+
+#### Enabling HEC
+
+To get started, you’ll need to first eanble the HTTP Event Collector:
+
+Under **Settings**, select **Data Inputs**:
+
+[{% asset splunk-settings.png %}]({% asset splunk-settings.png @path %})
+
+Select **HTTP Event Collector** under Local Inputs:
+
+[{% asset splunk-data-inputs.png %}]({% asset splunk-data-inputs.png @path %})
+
+Under your HEC settings, click **Global Settings**:
+
+[{% asset splunk-hec-inputs.png %}]({% asset splunk-hec-inputs.png @path %})
+
+Change **All Tokens** to **Enabled**, and note the HTTP Port Number (`8088` by default):
+
+[{% asset splunk-hec-global-settings.png %}]({% asset splunk-hec-global-settings.png @path %})
+
+{% capture __alert_content -%}
+If you’re running Splunk in a privileged environment, you may need to expose the HEC port.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+#### Creating a Sentry Input
+
+Under HTTP Event Collector,create a new Sentry input by clicking **New Token**:
+
+[{% asset splunk-new-http-input.png %}]({% asset splunk-new-http-input.png @path %})
+
+Enter a name (e.g. `Sentry`), and click **Next**:
+
+[{% asset splunk-new-input-name.png %}]({% asset splunk-new-input-name.png @path %})
+
+Select the index you wish to make accessible (e.g. `main`), and click **Review**:
+
+[{% asset splunk-new-input-index.png %}]({% asset splunk-new-input-index.png @path %})
+
+You’ll be prompted to review the input details. Click **Submit** to continue:
+
+[{% asset splunk-new-input-review.png %}]({% asset splunk-new-input-review.png @path %})
+
+The input has now been created, and you should be presented with the **Token Value**:
+
+[{% asset splunk-new-input-final.png %}]({% asset splunk-new-input-final.png @path %})
+
+#### Enabling Splunk Forwarding
+
+To enable Splunk forwarding, you’ll need the following:
+
+-   Your instance URL (see note below)
+-   The Sentry HEC token value
+
+In Sentry, navigate to the project you want to forward events from, and click **Project Settings**:
+
+[{% asset project-settings-link.png %}]({% asset project-settings-link.png @path %})
+
+Navigate to **Data Forwarding**, and enable the Splunk integration:
+
+{% asset splunk-data-forwarding-setting.png %}
+
+You’re instance URL is going to vary based on the type of Splunk service you’re using. If you’re using self-service Splunk Cloud, the instance URL will use the `input` prefix:
+
+```
+https://input-<host>:8088
+```
+
+For all other Splunk Cloud plans, you’ll use the `http-inputs` prefix:
+
+```
+https://http-inputs-<host>:8088
+```
+
+If you’re using Splunk behind your firewall, you’ll need to fill in the appropriate host.
+
+Once you’ve filled in the required fields, hit **Save Changes**:
+
+[{% asset splunk-data-forwarding-setting-complete.png %}]({% asset splunk-data-forwarding-setting-complete.png @path %})
+
+We’ll now begin forwarding all new events into your Splunk instance.
+
+{% capture __alert_content -%}
+Sentry will internally limit the maximum number of events sent to your Splunk instance to 50 per second.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+[{% asset splunk-search-sentry.png %}]({% asset splunk-search-sentry.png @path %})
