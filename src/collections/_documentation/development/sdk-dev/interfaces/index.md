@@ -16,12 +16,6 @@ any point in the future.
 
 ## Core Data
 
-- [Exception Interface]({%- link _documentation/development/sdk-dev/interfaces/exception.md -%})
-- [Log Entry Interface]({%- link _documentation/development/sdk-dev/interfaces/message.md -%})
-- [Stacktrace Interface]({%- link _documentation/development/sdk-dev/interfaces/stacktrace.md -%})
-- [Exception Mechanism Interface]({%- link _documentation/development/sdk-dev/interfaces/mechanism.md -%})
-- [Template Interface]({%- link _documentation/development/sdk-dev/interfaces/template.md -%})
-
 ### Exception Interface
 
 An exception consists of a list of values. In most cases, this list contains a single exception, with an optional stack trace interface. Multiple values represent a chained exception, and should be sent oldest to newest. That is, if your code does this:
@@ -51,13 +45,13 @@ Attributes:
 
 `thread_id`:
 
-: an optional value which refers to a thread in the [_threads_]({%- link _documentation/development/sdk-dev/interfaces/threads.md -%}) interface.
+: an optional value which refers to a thread in the [_threads_](#threads-interface) interface.
 
 `mechanism`:
 
-: an optional object describing the [_mechanism_]({%- link _documentation/development/sdk-dev/interfaces/mechanism.md -%}) that created this exception.
+: an optional object describing the [_mechanism_](#exception-mechanism-interface) that created this exception.
 
-You can also optionally bind a [_stack trace interface_]({%- link _documentation/development/sdk-dev/interfaces/stacktrace.md -%}) to an exception.
+You can also optionally bind a [_stack trace interface_](#stack-trace-interface) to an exception.
 
 ```json
 "exception": {
@@ -99,7 +93,7 @@ Attributes:
 }
 ```
 
-### Stacktrace Interface
+### Stack Trace Interface
 
 A stack trace contains a list of frames, each with various bits (most optional) describing the context of that frame. Frames should be sorted from oldest to newest.
 
@@ -210,7 +204,7 @@ The following attributes are primarily used for C-based languages:
 
 ### Exception Mechanism Interface
 
-The exception mechanism is an optional field residing in the [_Exception Interface_]({%- link _documentation/development/sdk-dev/interfaces/exception.md -%}). It carries additional information about the way the exception was created on the target system. This includes general exception values obtained from operating system or runtime APIs, as well as mechanism-specific values.
+The exception mechanism is an optional field residing in the [_Exception Interface_](#exception-interface). It carries additional information about the way the exception was created on the target system. This includes general exception values obtained from operating system or runtime APIs, as well as mechanism-specific values.
 
 #### Attributes
 
@@ -406,13 +400,6 @@ The attributes `filename`, `context_line`, and `lineno` are required.
 ```
 
 ## Scope
-
-- [Breadcrumbs Interface]({%- link _documentation/development/sdk-dev/interfaces/breadcrumbs.md -%})
-- [Contexts Interface]({%- link _documentation/development/sdk-dev/interfaces/contexts.md -%})
-- [GPU Interface]({%- link _documentation/development/sdk-dev/interfaces/gpu.md -%})
-- [HTTP Interface]({%- link _documentation/development/sdk-dev/interfaces/http.md -%})
-- [Threads Interface]({%- link _documentation/development/sdk-dev/interfaces/threads.md -%})
-- [User Interface]({%- link _documentation/development/sdk-dev/interfaces/user.md -%})
 
 ### Breadcrumbs Interface
 
@@ -950,7 +937,7 @@ This interface supports multiple thread values in the `values` key. The followin
 
 `stacktrace`:
 
-: You can also optionally bind a [_stack trace_]({%- link _documentation/development/sdk-dev/interfaces/stacktrace.md -%}) to the thread.
+: You can also optionally bind a [_stack trace_](#stack-trace-interface) to the thread.
 
 `id`:
 
@@ -1013,9 +1000,6 @@ All other keys are stored as extra information but not specifically processed by
 ```
 
 ## Misc
-
-- [Debug Interface]({%- link _documentation/development/sdk-dev/interfaces/debug.md -%})
-- [SDK Interface]({%- link _documentation/development/sdk-dev/interfaces/sdk.md -%})
 
 ### Debug Interface
 

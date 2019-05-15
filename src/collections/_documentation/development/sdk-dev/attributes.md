@@ -8,7 +8,7 @@ information about events. These are things like the unique ID of an event, the
 human readable message etc.
 
 Attributes are separate from [_Interfaces_]({%- link
-_documentation/development/sdk-dev/interfaces/index.md -%}) which provide very specific
+_documentation/development/sdk-dev/interfaces.md -%}) which provide very specific
 and tailored data such as exception data, stack traces, etc.
 
 ## Required Attributes
