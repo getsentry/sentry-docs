@@ -29,15 +29,15 @@ Environments have been moved up in the hierarchy and are now a first class citiz
 
 To use environments you simply need to ensure you’re configuring the `environment` parameter in the Sentry SDK, and it should automatically propagate into Sentry proper.
 
-### Owners
+### Issue Owners
 
-A new owners feature allows you to define per-project rules for declaring explicit ownership. Much like GitHub’s .gitowners, this helps Sentry understand who is responsible for a specific issue, and more importantly lets you limit email alerts to only the relevant parties.
+A new issue owners feature allows you to define per-project rules for declaring explicit issue ownership. Much like GitHub’s .gitowners, this helps Sentry understand who is responsible for a specific issue, and more importantly lets you limit email alerts to only the relevant parties.
 
-In addition to explicit owners, the release framework has expanded to support implicit owners and suspect commits. This currently only works with GitHub.com hosted repositories, but will be expanded to support other providers in future versions of Sentry.
+In addition to explicit issue owners, the release framework has expanded to support implicit issue owners and suspect commits. This currently only works with GitHub.com-hosted repositories, but will be expanded to support other providers in future versions of Sentry.
 
 ### Teams & Projects {#teams-projects}
 
-Projects can now be associated with many teams, and teams can be referenced in comments and assignment as well as the new ownership features.
+Projects can now be associated with many teams, and teams can be referenced in comments and assignment as well as the new issue ownership features.
 
 Both Team and Project names have been deprecated, and the short name as been promoted as the canonical reference. Teams can be mentioned using #team-name.
 
@@ -790,7 +790,7 @@ Static files are now served with a far-futures Cache-Control header, and are ver
 -   Documentation for configuration wizards is now pulled from docs.getsentry.com as part of the `upgrade` and `repair` processes.
 -   The SSO flow for existing users has been greatly improved to avoid duplicate accounts.
 -   Deletions are delayed for one hour and can be cancelled by changing the status back to `VISIBLE`.
--   Membership permissions have been overhauled and have been flattened into a single tiered role. Additionally owners will no longer be automatically added to new teams.
+-   Membership permissions have been overhauled and have been flattened into a single tiered role. Additionally organization owners will no longer be automatically added to new teams.
 -   `NotificationPlugin` now requires `is_configured` to be declared.
 -   `sentry.search` should no longer be extended (`index` and `upgrade` have been removed)
 

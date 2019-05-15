@@ -17,7 +17,7 @@ You can now use the data from your commits to Azure DevOps, formerly known as Vi
 #### Configure Azure DevOps
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and Azure project admin permissions are required to install this integration.
+Sentry organizatoin owner or manager permissions, and Azure project admin permissions are required to install this integration.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -117,7 +117,7 @@ You can now use the data from your Bitbucket commits to help you find and fix bu
 #### Configure Bitbucket
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and Bitbucket admin permissions are required to install this integration.
+Sentry organization owner or manager permissions, and Bitbucket admin permissions are required to install this integration.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -267,7 +267,7 @@ You can now use the data from your GitHub commits to help you find and fix bugs 
 #### Configure GitHub
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and GitHub owner permissions are required to install this integration.
+Sentry organization owner or manager permissions, and GitHub owner permissions are required to install this integration.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -341,7 +341,7 @@ You can now use the data from your GitHub Enterprise commits to help you find an
 #### Configure GitHub Enterprise
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and GitHub owner permissions are required to install this integration.
+Sentry organization owner or manager permissions, and GitHub owner permissions are required to install this integration.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -466,7 +466,7 @@ Sentry’s GitLab integration helps you find and fix bugs faster by using data f
 #### Configure GitLab
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions and GitLab owner or maintainer permissions are required to install this integration.
+Sentry organization owner or manager permissions and GitLab owner or maintainer permissions are required to install this integration.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -587,7 +587,7 @@ FAQ:
 - Are there pricing restrictions?
     - This integration is available for organizations on the [Team, Business, or Enterprise plan](https://sentry.io/pricing/).
 - Who has permission to install this?
-    - You must have both owner/manager permissions in Sentry and owner permissions in GitLab to successfully install this integration. 
+    - You must have both organization owner/manager permissions in Sentry and owner permissions in GitLab to successfully install this integration. 
 
 ### JIRA
 
@@ -596,7 +596,7 @@ Connect errors from Sentry with your Jira issues.
 #### Installing Jira with Sentry
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and Jira admin permissions are required to install this integration.
+Sentry organization owner or manager permissions, and Jira admin permissions are required to install this integration.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -659,7 +659,7 @@ Connect errors from Sentry with your Jira Server issues.
 #### Installing Jira Server with Sentry
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions, and Jira administrator permissions are required to install this integration.
+Sentry organization owner or manager permissions, and Jira administrator permissions are required to install this integration.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -804,7 +804,7 @@ The global Slack integration creates workflows for your team. Now you can triage
 #### Configure Slack
 
 {% capture __alert_content -%}
-Sentry owner or manager permissions are required to install this integration. Slack defaults to let any workspace member authorize apps, but they may have to request access. See this [Slack help article](https://get.slack.help/hc/en-us/articles/202035138-Add-an-app-to-your-workspace) for more details.
+Sentry organization owner or manager permissions are required to install this integration. Slack defaults to let any workspace member authorize apps, but they may have to request access. See this [Slack help article](https://get.slack.help/hc/en-us/articles/202035138-Add-an-app-to-your-workspace) for more details.
 
 {%- endcapture -%}
 {%- include components/alert.html

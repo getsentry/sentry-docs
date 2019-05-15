@@ -117,7 +117,7 @@ Existing members will receive an email notifying them of the new SAML authentica
 
 **Does Sentry deprovision members if they are no longer present in the Identity Provider?**  
 At this time, Sentry's SAML2 integration does not automatically deprovision inactive user accounts.
-Instead, the member remains inside of Sentry.io without any means to log in, as they can no longer access the IdP platform for sign-on. For now, inactive member accounts will need to be removed manually by a Manager or an Owner in Sentry.
+Instead, the member remains inside of Sentry.io without any means to log in, as they can no longer access the IdP platform for sign-on. For now, inactive member accounts will need to be removed manually by a manager or organzation owner in Sentry.
 
 **Attempting to set up SAML2 SSO with an IdP results in a failure with the message “The provider did not return a valid user identity.” What is happening here?**  
 The crux of the problem here is that different IdP platforms (Okta, Azure AD, etc) use different terms and conventions for the fields necessary for the integration to work. As a result, it’s possible to map up incorrect values into Sentry, causing SSO to fail with this error message.  

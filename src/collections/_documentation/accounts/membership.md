@@ -11,35 +11,33 @@ Access to organizations is dictated by roles. Your role is scoped to an entire o
 
 Roles include:
 
-: -   Owner
+: -   Organization Owner
   -   Manager
   -   Admin
   -   Member
   -   Billing
 
-| Action | Billing | Member | Admin | Manager | Owner |
+| Action | Billing | Member | Admin | Manager | Organization Owner |
 | --- | --- | --- | --- | --- | --- |
 | Can see/edit billing information and subscription details | X |   |   |   | X |
 | Can view and act on issues, such as assigning/resolving/etc. |   | X | X | X | X |
-| Can join and leave teams. |   | X | X | X | X |
-| Can change Project Settings |   |   | X | X | X |
+| Can join and leave teams |   | X | X | X | X |
+| Can change project settings |   |   | X | X | X |
 | Can add/remove projects* |   |   | X | X | X |
-| Can edit Global Integrations |   |   | X | X | X |
+| Can edit global integrations |   |   | X | X | X |
 | Can add/remove/change members |   |   |   | X | X |
 | Can add/remove teams* |   |   | X | X | X |
-| Can add Repositories |   |   | X | X | X |
-| Can delete Repositories |   |   |   |   | X |
-| Can change Organization Settings |   |   |   | X | X |
-| Can remove an Organization |   |   |   |   | X |
+| Can add repositories |   |   | X | X | X |
+| Can delete repositories |   |   |   |   | X |
+| Can change organization settings |   |   |   | X | X |
+| Can remove an organization |   |   |   |   | X |
 
-\* Admins can only remove teams and projects they're a member of (or all teams, if open membership is on).
+\* Admins can only remove teams and projects they're a member of (identical to manager if open membership is on).
 
 ## Restricting Access
 
--   Access to Organizations is dictated by Roles, which is scoped to an entire Organization.
--   Access to a Project is limited to the Team that owns the project. However, any Member, Admin, Manager or Owner can join a Team.
--   If you want to further restrict access to a Project, you can control access to Teams by making them accessible only through invitation by a Manager or Owner.
+Access to a project is limited to the team that owns the project. However, any member, admin, manager or organization owner can join a team. If you want to further restrict access to a project, you can control access to teams by making them accessible only through invitation by a manager or organization owner.
 
-To restrict Team access, go to Organization Settings and flip the “Open Membership” toggle.
+To restrict team access, go to Organization Settings and flip the “Open Membership” toggle.
 
 {% asset membership-toggle.png %}

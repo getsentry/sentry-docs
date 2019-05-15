@@ -87,7 +87,7 @@ What this means is that if you experience a spike, we will temporarily protect y
 
 ### How does spike protection help? {#how-does-spike-protection-help}
 
-Because Sentry bills on monthly event volume, spikes can consume your Sentry capacity for the rest of the month. If it really is a spike (**large** and **temporary** increase in event volume), spike protection drops events during the spike to try and conserve your capacity. We also send an email notification to the Owner when spike protection is activated.
+Because Sentry bills on monthly event volume, spikes can consume your Sentry capacity for the rest of the month. If it really is a spike (a **large** and **temporary** increase in event volume), spike protection drops events during the spike to try and conserve your capacity. We also send an email notification to organizatoin owners when spike protection is begins dropping events.
 
 
 

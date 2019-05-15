@@ -7,21 +7,21 @@ The Issue Owners feature allows you to reduce noise by directing notifications t
 
 ## How It Works
 
-Issue owners builds upon your alert rules to specify who to notify about a given issue (to learn more about alert rules, click [here](https://blog.sentry.io/2017/10/12/proactive-alert-rules)).
+Issue owners builds upon your alert rules to specify whom to notify about a given issue (to learn more about alert rules, click [here](https://blog.sentry.io/2017/10/12/proactive-alert-rules)).
 
 In your project settings, you will define which users or teams own which paths or URLs for your application. When an exception is caught that triggers an alert, Sentry evaluates whether the exception’s URL tag matches the URL you specified, or if the path you specified matches any of the paths in the exception’s stack trace.
 
-If there is a match, only Owners will receive the alert for the exception. By default, if there is no match, the alert will be sent to all members of teams associated with this project. You can also choose to specify that in the case of no match, no users be notified, by toggling off the switch in project settings > Issue Owners > ‘If ownership cannot be determined for an issue...’
+If there is a match, only issue owners will receive the alert for the exception. By default, if there is no match, the alert will be sent to all members of teams associated with this project. You can also choose to specify that in the case of no match, no users be notified, by toggling off the switch in Project Settings > Issue Owners > ‘If ownership cannot be determined for an issue...’
 
 [{% asset owners_default_everyone.png %}]({% asset owners_default_everyone.png @path %})
 
-Note that at this time the Issue Owners feature is only available for email notifications. This means that your alert rules must trigger email notifications in order to be affected by your Issue Owners rules.
+Note that at this time the issue owners feature is only available for email notifications. This means that your alert rules must trigger email notifications in order to be affected by your issue owner rules.
 
 ## Configuration
 
 **Adding a New Rule**
 
-To configure Issue Owners, navigate to your project settings > Issue Owners.
+To configure issue owners, navigate to Project Settings > Issue Owners.
 
 To add a new rule, you can use the dropdown to specify whether you’re using a path or URL. Then add the path or URL, and specify which users or teams own that path. You can add multiple users or teams to one path.
 
@@ -39,7 +39,7 @@ In the resulting modal, you’ll see the paths and URLs connected to the issue, 
 
 **Syntax**
 
-Issue Owner rules use the following structure:
+Issue owner rules use the following structure:
 
 `type:glob owner`
 
@@ -51,9 +51,9 @@ Issue Owner rules use the following structure:
 
 `type:glob owner1 owner2 owner3`
 
-Note that teams and users must have access to the project to become owners. To grant a team access to a project, navigate to project settings > Project Teams, and click ‘Add Team to [project]’. To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a project’s team, navigate to Project Settings > Project Teams, select a team, then click ‘Add Member.’
+Note that teams and users must have access to the project to become issue owners. To grant a team access to a project, navigate to Project Settings > Project Teams, and click ‘Add Team to [project]’. To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a project’s team, navigate to Project Settings > Project Teams, select a team, then click ‘Add Member.’
 
 ## Troubleshooting
 
--   Make sure that all teams and users have access to the project; if they do not have the correct access, the Issue Owners rules will fail to save. To grant a team access to a project, navigate to project settings > Project Teams, and click ‘Add Team to [project]’. To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a project’s team, navigate to Project Settings > Project Teams, select a team, then click ‘Add Member.’
--   Make sure that alert rules are configured to send email. First, check to see that the Mail plugin is enabled by navigating to project settings > Integrations. Then, navigate to project settings > Alerts > Rules, and confirm that notifications are being sent to Mail or to ‘all enabled legacy services.’
+-   Make sure that all teams and users have access to the project; if they do not have the correct access, the issue owners rules will fail to save.
+-   Make sure that alert rules are configured to send email. First, check to see that the Mail plugin is enabled by navigating to Project Settings > Integrations. Then, navigate to Project Settings > Alerts > Rules, and confirm that notifications are being sent to Mail or to ‘all enabled legacy services.’

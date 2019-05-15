@@ -8,7 +8,7 @@ For an added layer of security, you can require your organization members to sig
 ## Preface
 
 {% capture __alert_content -%}
-Sentry owner permissions are required to enforce two-factor authentication across your organization.
+Sentry organization owner permissions are required to enforce two-factor authentication across your organization.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -71,7 +71,7 @@ If you were removed from an organization due to 2FA non-compliance, follow these
     [{% asset require-2fa-email.png %}]({% asset require-2fa-email.png @path %})
 
 1. Click the **Enable Two-Factor Authentication** button. 
-1. If you can't find the email, ask an organization Owner or Manager to go to the **Organization Settings** >> Members page and resend your invite.
+1. If you can't find the email, ask an organization organization owner or manager to go to the **Organization Settings** >> Members page and resend your invite.
 
     [{% asset require-2fa-resend-invite.png %}]({% asset require-2fa-resend-invite.png @path %})
     

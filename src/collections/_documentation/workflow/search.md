@@ -271,9 +271,9 @@ You can pin a premade search the same way you pin any other search. When you've 
 
 ### Creating an org-wide saved search
 
-Owners and managers can create a persistent view for their organization by creating custom saved searched. These saved searches will not be associated with a specific project, but with all projects (and users) across the org.
+Organization owners and managers can create a persistent view for their organization by creating custom saved searched. These saved searches will not be associated with a specific project, but with all projects (and users) across the org.
 
-1. Type a search into the search bar, then click the "add to Organization filter list" icon just to the right of it. Keeping in mind that you need to be an owner or manager within the org to use this feature.
+1. Type a search into the search bar, then click the "add to Organization filter list" icon just to the right of it. Keeping in mind that you need to be an organization owner or manager within the org to use this feature.
 
     ![{% asset search-add-org-filter-step-one.png @path %}]({% asset search-add-org-filter-step-one.png @path %})
 
@@ -287,6 +287,6 @@ Owners and managers can create a persistent view for their organization by creat
 
 ### Deleting an org-wide saved search
 
-When an owner or manager hovers over a custom saved search, they should see a trash can icon. The trash can icon functions exactly like you might expect, and removes the custom saved search from the dropdown.
+When an organization owner or manager hovers over a custom saved search, they should see a trash can icon. The trash can icon functions exactly like you might expect, and removes the custom saved search from the dropdown.
 
 ![{% asset search-delete-org-wide-filter.png @path %}]({% asset search-delete-org-wide-filter.png @path %})

@@ -80,6 +80,6 @@ This document covers some frequently asked questions that come up.
 
 **Is MySQL (or any database besides PostgreSQL) supported?**
 
-> Sentry does not support any database besides PostgreSQL. While, for historical reasons, some things may function, choosing to operate Sentry with an unsupported database will result in the Sentry team being unable to provide support, and will result in support tickets and issues posted to the public tracker being closed as ‘wontfix’
+> Sentry does not support any database besides PostgreSQL. While - for historical reasons - some things may function, choosing to operate Sentry with an unsupported database will result in the Sentry team being unable to provide support, and will result in support tickets and issues posted to the public tracker being closed as ‘wontfix’.
 > 
-> At a future time Sentry will be removing support entirely for any non-standard databases.
+> In the future Sentry will be removing support entirely for any non-standard databases.

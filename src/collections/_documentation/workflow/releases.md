@@ -46,7 +46,7 @@ There are two ways to create a release and associate commits: using a repository
 Using one of Sentry's repository integrations (e.g. GitHub, GitLab, Bitbucket, etc.) is the easiest way to connect your commit metadata to Sentry. For a list of available integrations, go to Organization Settings > Integrations.
 
 {% capture __alert_content -%}
-You need to be an Owner or Manager of your Sentry organization to set up or configure an integration. Read more about [roles in Sentry]({%- link _documentation/accounts/membership.md -%}).
+You need to be an organization owner or manager of your Sentry organization to set up or configure an integration. Read more about [roles in Sentry]({%- link _documentation/accounts/membership.md -%}).
 {%- endcapture -%}
 {%- include components/alert.html
   content=__alert_content
@@ -62,7 +62,7 @@ Once you are in Organization Settings > Integrations and have installed the inte
 
 In the 'Repositories' panel, click 'Add Repository', and add any repositories you'd like to track commits from. The integration will then send Sentry metadata (such as authors and files changed) about each commit pushed to those repositories.
 
-If you’re linking a GitHub repository, ensure you have Admin or Owner permissions on the repository, and that Sentry is an authorized GitHub app in your [GitHub account settings](https://github.com/settings/applications).
+If you’re linking a GitHub repository, ensure you have admin or owner permissions on the repository, and that Sentry is an authorized GitHub app in your [GitHub account settings](https://github.com/settings/applications).
 
 If you’re still having trouble adding it, you can try to [disconnect](https://sentry.io/account/settings/identities/) and then [reconnect](https://sentry.io/account/settings/social/associate/github/) your GitHub identity.
 
@@ -174,7 +174,7 @@ For more information, see the [API reference]({%- link _documentation/api/releas
 
 #### After Associating Commits
 
-After this step, **suspect commits** and **suggested assignees** will start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and [ownership rules]({%- link _documentation/workflow/issue-owners.md -%}).
+After this step, **suspect commits** and **suggested assignees** will start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and [issue ownership rules]({%- link _documentation/workflow/issue-owners.md -%}).
 
 {% asset suspect-commits-highlighted.png %}
 
@@ -228,30 +228,30 @@ In order for Sentry to use your commits, you must format your commits to match t
 
     `path`
     : The path to the file. Note both forward and backward slashes (`'/' '\\'`) are supported.
-    
+
     `type`
     : The types of changes that happend in that commit. The options are: 
         - `Add (A)`
         - `Modify (M)`
         - `Delete (D)`
 
-`repository` 
+`repository`
 : The full name of the repository the commit belongs to. If this field is not given Sentry will generate a name in the form: `u'organization-<organization_id>'` (i.e. if the organization id is `123`, then the generated repository name will be `u'organization-123`).
 
-`author_email` 
-: The commit author's email is required to enable the suggested assignee feature. 
+`author_email`
+: The commit author's email is required to enable the suggested assignee feature.
 
 `author_name`
 : The commit author's name may also be included.
 
-`timestamp` 
+`timestamp`
 : The commit timestamp is used to sort the commits given. If a timestamp is not included, the commits will remain sorted in the order given.
 
 `message`
-: The commit message. 
+: The commit message.
 
 `id`
-: The commit id. 
+: The commit id.
 
 ##### Create the Release with Patch Data
 
