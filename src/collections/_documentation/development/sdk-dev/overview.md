@@ -162,7 +162,7 @@ attribute are `event_id` or `tags` whereas the `exception` key is an interface.
 
 For a list of all supported attributes see [_Attributes_]({%- link
 _documentation/development/sdk-dev/attributes.md -%}). For a list of built-in interfaces
-see [_Interfaces_]({%- link _documentation/development/sdk-dev/interfaces/index.md -%}).
+see [_Interfaces_]({%- link _documentation/development/sdk-dev/interfaces.md -%}).
 
 ## Authentication
 
