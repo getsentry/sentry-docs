@@ -31,10 +31,16 @@ $(document).on('page.didUpdate', function(event) {
     const containsActive = $branch.find('[data-sidebar-link]').is($active);
 
     const isSection = $sections.is(el);
+    const isDirectChildOfSection =
+      !isSection && $sections.is(el.parentNode.parentNode);
+    const isDirectChildOfHiddenSection =
+      isDirectChildOfSection &&
+      $(el.parentNode.parentNode).data('hide-when-inactive') !== undefined;
 
     switch (true) {
       case containsActive:
       case isSection:
+      case isDirectChildOfSection && !isDirectChildOfHiddenSection:
       case parentTreeContainsActive && !hideWhenNoActiveChild:
         $branch.removeClass('collapse');
         break;
