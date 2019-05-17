@@ -1,6 +1,5 @@
 ---
 title: Java
-sidebar_order: 6
 sidebar_relocation: platforms
 ---
 

@@ -1,6 +1,5 @@
 ---
 title: Ruby
-sidebar_order: 14
 sidebar_relocation: platforms
 ---
 

@@ -1,6 +1,5 @@
 ---
 title: Elixir
-sidebar_order: 4
 sidebar_relocation: platforms
 ---
 

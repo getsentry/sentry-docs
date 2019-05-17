@@ -1,6 +1,5 @@
 ---
 title: 'React Native'
-sidebar_order: 11
 sidebar_relocation: platforms
 ---
 

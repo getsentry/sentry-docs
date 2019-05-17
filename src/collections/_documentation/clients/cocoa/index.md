@@ -1,6 +1,5 @@
 ---
 title: Cocoa
-sidebar_order: 1
 sidebar_relocation: platforms
 ---
 

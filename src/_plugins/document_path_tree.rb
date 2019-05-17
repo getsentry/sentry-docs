@@ -1,4 +1,12 @@
 Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
+  def sort_key(item)
+    if !item["document"].nil?
+      [item["document"].data["sidebar_order"] || 100, item["document"].data["title"]]
+    else
+      [100, "zzzzz"]
+    end
+  end
+  
   def tree_for(docs, root)
     tree = []
 
@@ -26,13 +34,7 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
       items = new_root.nil? ? nil : tree_for(docs_without_index, new_root)
 
       if !items.nil?
-        items.sort_by! do |i|
-          n = if !i["document"].nil? && i["document"].data["sidebar_order"]
-            i["document"].data["sidebar_order"]
-          else
-            1000
-          end
-        end
+        items.sort_by! { |i| sort_key(i) }
       end
 
       hash = {
@@ -47,7 +49,14 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
     end
     tree
   end
-
+  
+  def sort_tree(node)
+    if !node["items"].nil?
+      node["items"].sort_by! { |i| sort_key(i) }
+      node["items"].each { |n| sort_tree(n) }
+    end
+  end
+  
   mapped = site.collections.map {|c| c[1].docs}
   documents = mapped.flatten()
   tree = tree_for(documents, "")
@@ -75,8 +84,9 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
   end
 
   tree = tree.map { |item| adjacent_move(item, []) }
-
   tree.each do |collection|
+    sort_tree(collection)
+
     config_slug = "#{collection["name"]}_categories"
     config_slug[0] = ""
 

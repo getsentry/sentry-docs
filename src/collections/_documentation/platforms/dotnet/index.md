@@ -1,6 +1,5 @@
 ---
 title: .NET
-sidebar_order: 10
 ---
 
 {% include learn-sdk.md platform="csharp" %}

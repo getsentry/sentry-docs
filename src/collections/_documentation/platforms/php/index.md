@@ -1,6 +1,5 @@
 ---
 title: PHP
-sidebar_order: 3
 ---
 
 {% include learn-sdk.md platform="php" %}
