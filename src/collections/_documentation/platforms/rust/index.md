@@ -1,6 +1,5 @@
 ---
 title: Rust
-sidebar_order: 15
 ---
 
 {% include learn-sdk.md platform="rust" %}

@@ -1,6 +1,5 @@
 ---
 title: Node.js
-sidebar_order: 2
 ---
 
 {% include learn-sdk.md platform="node" %}

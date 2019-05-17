@@ -1,6 +1,5 @@
 ---
 title: JavaScript
-sidebar_order: 3
 ---
 
 ## Integrating the SDK
