@@ -8,8 +8,8 @@ sidebar_order: 1011
 Our Koa integration only requires the installation of `@sentry/node`, and then you can use it like this:
 
 ```javascript
-const koa = require('koa');
-const app = koa();
+const Koa = require('koa');
+const app = new Koa();
 const Sentry = require('@sentry/node');
 
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
