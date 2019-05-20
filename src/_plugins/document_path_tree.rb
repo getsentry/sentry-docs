@@ -1,7 +1,7 @@
 Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
   def sort_key(item)
     if !item["document"].nil?
-      [item["document"].data["sidebar_order"] || 100, item["document"].data["title"]]
+      [item["document"].data["sidebar_order"] || 100, (item["document"].data["title"] || "").downcase]
     else
       [100, "zzzzz"]
     end
