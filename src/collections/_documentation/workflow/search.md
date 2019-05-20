@@ -40,7 +40,7 @@ The token `example error` is utilizing the optional raw search and is passed as 
 ### Advanced
 
 {% capture __alert_content -%}
-Advanced search is available for organizations on the Team and Business plans.
+Advanced search is available for organizations on the new Developer, Team, and Business plans.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
