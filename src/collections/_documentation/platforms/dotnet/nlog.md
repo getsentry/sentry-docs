@@ -156,7 +156,7 @@ Determines whether or not to include event-level data as data in breadcrumbs for
 
 Custom layout for breadcrumbs.
 
-#### layout
+#### Layout
 
 Configured layout for the NLog logger.
 
