@@ -10,7 +10,7 @@ All the existing RAM bundle formats are explained in detail in the [Metro Bundle
 
 To enable RAM bundles for your app, please consult with the [official React Native documentation](https://facebook.github.io/react-native/docs/performance#enable-the-ram-format).
 
-If you use the official `react-native-sentry` integration of version `0.43.0` or newer, no additional actions are required. `sentry-cli`, which is used internally by the integration, will detect the bundle type automatically, and then upload the extracted modules to Sentry.
+If you use the official `react-native-sentry` integration of version `0.43.1` or newer, no additional actions are required. `sentry-cli`, which is used internally by the integration, will detect the bundle type automatically, and then upload the extracted modules to Sentry.
 
 ## Uploading Bundles Manually
 
@@ -24,5 +24,5 @@ All bundle types (plain, Indexed RAM bundles, and File RAM bundles) are supporte
 
 ## RAM Bundles and Performance
 
-The initial Sentry support for RAM bundles, added in `sentry-cli 1.43.0` and `react-native-sentry 0.43.0`, is known to have performance issues when handling RAM bundles with a large number of modules. This will be fixed in future client versions.
+The initial Sentry support for RAM bundles, added in `sentry-cli 1.43.0` and `react-native-sentry 0.43.1`, is known to have performance issues when handling RAM bundles with a large number of modules. This will be fixed in future client versions.
 
