@@ -1,5 +1,6 @@
 ---
 title: Configuration
+sidebar_order: 1
 ---
 
 **Note:** Sentry’s library and framework integration documentation explains how to to do the initial Sentry configuration for each of the supported integrations. The configuration below can be used in combination with any of the integrations _once you set Sentry up with the integration_. Please check [the integration documentation]({%- link _documentation/clients/java/integrations.md -%}#integrations) before you attempt to do any advanced configuration.

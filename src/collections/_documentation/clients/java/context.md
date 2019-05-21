@@ -1,6 +1,6 @@
 ---
 title: 'Context & Breadcrumbs'
-sidebar_order: 1
+sidebar_order: 3
 ---
 
 The Java SDK implements the idea of a “context” to support attaching additional information to events, such as breadcrumbs. A context may refer to a single request to a web framework, to the entire lifetime of an Android application, or something else that better suits your application’s needs.
