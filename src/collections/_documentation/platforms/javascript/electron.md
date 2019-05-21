@@ -9,27 +9,9 @@ sidebar_order: 2000
 This SDK is still in beta and undergoing active development. It is part of an early access preview for the [next generation JavaScript SDKs](https://github.com/getsentry/sentry-javascript/blob/master/README.md). Until the _1.x_ stable release, APIs are still subject to change.
 {%- endcapture -%}
 {%- include components/alert.html
-  level="warning"
-  title="Warning"
-  content=__alert_content
-%}{% capture __alert_content -%}
-Support for Electron is currently limited to [sentry.io](https://sentry.io). The latest on-premise version of Sentry (_8.22.0_) does not provide server-side support for native crashes and their debug information files. Full support for Electron will made available to all on-premise customers with the next release.
-
-To use the Electron SDK for reporting JavaScript errors at your own discretion, disable native crash handling and use the DSN:
-
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Sentry On-Premise"
+  title="Support"
   content=__alert_content
 %}
-
-```javascript
-const { init } = require('@sentry/electron');
-init({
-    dsn: '___PUBLIC_DSN___',
-    enableNative: false,
-});
-```
 
 ## Wizard
 

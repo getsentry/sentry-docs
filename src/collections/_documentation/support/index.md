@@ -3,7 +3,7 @@ title: Support
 sidebar_order: 8
 ---
 
-As a paying customer of Hosted Sentry or Sentry On-Premise you have access to various forms of support; and if you are using the Open Source version you can get in contact with the Sentry community for questions. All Sentry repositories can be found on [GitHub](https://github.com/getsentry). 
+As a paying customer of Sentry you have access to various forms of support; and if you are using the Open Source version you can get in contact with the Sentry community for questions. All Sentry repositories can be found on [GitHub](https://github.com/getsentry). 
 
 ## System Status
 
@@ -19,4 +19,4 @@ If you’re looking for support on a specific SDK, check the documentation speci
 
 ## Paid Support
 
-If you are a paid customer of either our hosted offering or On-Premise, you can contact support from within your Sentry organization. This can be found by going to the dropdown menu under your organization's name in the top left, and clicking "Support". We suggest reserving that for actual problems with the service, and when possible referring to our documentation and community support.
+If you are a paid customer, you can contact support from within your Sentry organization. This can be found by going to the dropdown menu under your organization's name in the top left, and clicking "Support". We suggest reserving that for actual problems with the service, and when possible referring to our documentation and community support.

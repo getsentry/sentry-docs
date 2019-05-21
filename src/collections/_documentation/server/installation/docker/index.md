@@ -2,7 +2,7 @@
 title: 'Installation with Docker'
 ---
 
-This guide will step you through setting up your own on-premise Sentry in [Docker](https://www.docker.com/).
+This guide will step you through setting up your own self-hosted version of Sentry in [Docker](https://www.docker.com/).
 
 ## Dependencies
 
