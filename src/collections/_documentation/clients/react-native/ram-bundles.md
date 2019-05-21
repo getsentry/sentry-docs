@@ -24,7 +24,7 @@ All bundle types (plain, Indexed RAM bundles, and File RAM bundles) are supporte
 
 ## RAM Bundles and Performance
 
-The initial Sentry support for RAM bundles, added in `sentry-cli 1.43.0` and `react-native-sentry 0.43.1`, is known to have performance issues when handling RAM bundles with a large number of modules. This will be fixed in future client versions.
+The initial Sentry support for RAM bundles, added in `sentry-cli 1.43.0` and `react-native-sentry 0.43.1`, is known to have an upload performance issue when handling RAM bundles with a large number of modules. This will be fixed in future client versions.
 
 By default, when running as part of Xcode build step (normally called "Bundle React Native Code And Images"), `sentry-cli` uploads source maps to Sentry in the background. To make it run in the foreground and track its progress, you can add `--force-foreground` parameter to the `sentry-cli` command in your Xcode project configuration file `project.pbxproj`, so the command looks similar to:
 
