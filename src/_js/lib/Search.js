@@ -1,10 +1,9 @@
 import instantsearch from 'instantsearch.js';
-import { searchBox, hits } from 'instantsearch.js/es/widgets';
+import { connectHits } from 'instantsearch.js/es/connectors';
+import { searchBox } from 'instantsearch.js/es/widgets';
 $(function() {
   const search = instantsearch({
-    appId: 'OOK48W9UCL',
-    apiKey: '2d64ec1106519cbc672d863b0d200782',
-    indexName: 'sentry-docs',
+    ...(window.ALGOLIA || {}),
     searchFunction: function(helper) {
       var $hits = $('#hits');
       if (helper.state.query === '') {
@@ -18,9 +17,53 @@ $(function() {
     }
   });
 
+  const escapeHtml = unsafe => {
+    return unsafe
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
+  const renderHit = hit => {
+    const categories = hit.categories.length
+      ? hit.categories.map(
+          category =>
+            `<span class="badge badge-secondary">${escapeHtml(category)}</span>`
+        )
+      : '';
+    // TODO(dcramer): switch to instantsearch.{highlight,snippet}
+    return `
+      <a href="${escapeHtml(
+        hit.url
+      )}" class="list-group-item list-group-item-action">
+      <h6 class="mb-1">
+        ${hit._highlightResult?.title?.value || ''}
+        ${categories}
+      </h6>
+      ${hit._snippetResult?.content?.value || ''}
+      </a>
+    `;
+  };
+
+  const renderHits = (renderOptions, isFirstRender) => {
+    const { hits, widgetParams } = renderOptions;
+    if (!hits.length) {
+      widgetParams.container.innerHTML =
+        '<div class="list-group search-results"><div class="list-group-item">No results</div></div>';
+    } else {
+      widgetParams.container.innerHTML = `<div class="list-group search-results">${hits
+        .map(renderHit)
+        .join('')}</div>`;
+    }
+  };
+
+  const customHits = connectHits(renderHits);
+
   search.addWidget(
     searchBox({
-      container: '#search-box',
+      container: document.querySelector('#search-box'),
       placeholder: 'Search the docs',
       magnifier: false,
       reset: false,
@@ -31,16 +74,8 @@ $(function() {
   );
 
   search.addWidget(
-    hits({
-      container: '#hits',
-      cssClasses: {
-        root: 'list-group search-results'
-      },
-      templates: {
-        empty: '<div class="list-group-item">No results</div>',
-        allItems:
-          '{{#hits}}<a href="{{ url }}" class="list-group-item list-group-item-action"><h6 class="mb-1">{{{ _highlightResult.title.value }}}</h6>{{{ _snippetResult.content.value }}}</a>{{/hits}}'
-      }
+    customHits({
+      container: document.querySelector('#hits')
     })
   );
 
