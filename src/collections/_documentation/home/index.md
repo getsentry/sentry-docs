@@ -8,7 +8,9 @@ permalink: /
   {% asset on-fire.png %}
 </div>
 
-Welcome to the Sentry documentation.  Sentry is an open-source error tracking tool that helps you monitor and fix crashes in real time.  Here we cover everything about the product, the platform integrations, and our on-premise offering.
+Welcome to the Sentry documentation.  
+
+Welcome to the Sentry documentation.  Sentry is an open-source application monitoring platform that helps you identify issues in real-time.  Here we cover everything about the product, the platform integrations, and open source Sentry.
 
 ## Getting Started
 
@@ -17,7 +19,7 @@ To get you started, you might find some of these links relevant:
 -   New to Sentry? Have a look at the [_Getting Started_]({%- link _documentation/error-reporting/quickstart.md -%}).
 -   No account yet? You can sign up for one at [sentry.io](https://sentry.io/signup/).
 -   Stuck? Feel free to contact [_Support_]({%- link _documentation/support/index.md -%}).
--   Installing the Sentry server yourself? See [_Installation_]({%- link _documentation/server/installation/index.md -%}).
+-   Self-hosting the Sentry server? See [_Installation_]({%- link _documentation/server/installation/index.md -%}).
 
 ## Contributing
 

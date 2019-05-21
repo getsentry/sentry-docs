@@ -183,7 +183,7 @@ Create a more efficient workflow by linking your Sentry Issues with your Clubhou
 
 {% include components/alert.html
   title="Note"
-  content="This integration **won't** work on-premise."
+  content="This integration **won't** work with self-hosted Sentry."
   level="warning"
 %}
 
@@ -763,7 +763,7 @@ Rookout's new integration adds a layer of depth to Sentry Issues by allowing you
 
 {% include components/alert.html
   title="Note"
-  content="This integration **won't** work on-premise."
+  content="This integration **won't** work with self-hosted Sentry."
   level="warning"
 %}
 
