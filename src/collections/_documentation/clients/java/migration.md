@@ -1,6 +1,6 @@
 ---
 title: 'Migration from Raven Java'
-sidebar_order: 4
+sidebar_order: 10
 ---
 
 The old `raven-java` library has been overhauled and renamed to `sentry-java`. The focus of the new release was to improve APIs, make the underlying client completely independent of logging integrations, and to rename (from `raven-*`) for clarity.
