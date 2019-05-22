@@ -1,9 +1,9 @@
-The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
+Add the `@sentry/browser` to your project:
 
-```html
-<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous"></script>
+```bash
+$ npm install --save @sentry/browser
 ```
 
 {% wizard hide %}
-You can also [NPM install our browser library](?platform=browsernpm).
+You can also [use our more convenient CDN version](?platform=browser).
 {% endwizard %}
