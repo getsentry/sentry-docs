@@ -5,5 +5,5 @@ import * as Sentry from '@sentry/browser';
 
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
 
-ReactDOM.render(</App>, document.querySelector('#app'));
+ReactDOM.render(<App />, document.querySelector('#app'));
 ```
