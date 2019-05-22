@@ -32,6 +32,12 @@ module Jekyll
               record[:categories] |= []
               record[:categories].push platform
             end
+          elsif record[:url].match(/^\/clients\//)
+            platform = platforms[record[:url].split('/', 4)[2]]
+            unless platform.nil?
+              record[:categories] |= []
+              record[:categories].push platform + " (Legacy)"
+            end
           else
             doc_root = doc_categories[record[:url].split('/', 3)[1]]
             unless doc_root.nil? || doc_root == "Home"
