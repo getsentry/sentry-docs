@@ -27,7 +27,7 @@ $(function() {
   };
 
   const renderHit = hit => {
-    const categories = hit.categories.length
+    const categories = hit.categories?.length
       ? hit.categories.map(
           category =>
             `<span class="badge badge-secondary">${escapeHtml(category)}</span>`
