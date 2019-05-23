@@ -126,7 +126,7 @@ The SDK can also be configured via `NLog.config` XML file:
 
 #### MinimumBreadcrumbLevel
 
-A `LogLevel` which indicates the minimum level a log message has to be included as a breadcrumb. By default this value is `Info`.
+A `LogLevel` which indicates the minimum level a log message needs to be, for Sentry to receive it as an event. By default, this value is `Info`.
 
 #### MinimumEventLevel
 
