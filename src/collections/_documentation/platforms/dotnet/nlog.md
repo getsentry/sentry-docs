@@ -30,7 +30,7 @@ This package extends `Sentry` main SDK. That means that besides the logging rela
 
 Two separate settings define the minimum log level to keep the log entry as a `Breadcrumb` and to send an `Event` to Sentry. The events include any stored breadcrumb on that [scope]({% link _documentation/enriching-error-data/scopes.md %}).
 
-By default, any message with log level `Info` or higher will be kept as a `Breadcrumb`.
+By default, Sentry will keep any message with log level `Info` or higher as a `Breadcrumb`.
 
 The default value to report a log entry as an event to Sentry is `Error`.
 
