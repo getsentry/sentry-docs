@@ -28,13 +28,8 @@ In development mode React will rethrow errors caught within an error boundary. T
 %}
 
 ```jsx
+import React from 'react';
 import * as Sentry from '@sentry/browser';
-
-// Sentry.init({
-//  dsn: "___PUBLIC_DSN___"
-// });
-// should have been called before using it here
-// ideally before even rendering your react app
 
 class ExampleBoundary extends Component {
     constructor(props) {
@@ -57,10 +52,10 @@ class ExampleBoundary extends Component {
             return (
               <a onClick={() => Sentry.showReportDialog({ eventId: this.state.eventId })}>Report feedback</a>
             );
-        } else {
-            //when there's not an error, render children untouched
-            return this.props.children;
         }
+
+        //when there's not an error, render children untouched
+        return this.props.children;
     }
 }
 ```

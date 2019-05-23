@@ -3,7 +3,8 @@ title: Ember
 sidebar_order: 50
 ---
 <!-- WIZARD -->
-To use Sentry with your Ember application, you will need to use `@sentry/browser` (Sentry’s browser JavaScript SDK).  
+To use Sentry with your Ember application, you will need to use Sentry’s browser JavaScript SDK: `@sentry/browser`.
+
 On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
 In order to use ESM imports without any additional configuration, you can use `ember-auto-import`
 by installing it with `ember install ember-auto-import`.
@@ -12,9 +13,11 @@ Starting with version `5.x` our `Ember` integration lives in it's own package `@
 You can install it with `npm` / `yarn` like:
 
 ```bash
-npm install @sentry/integrations
-# or
+# Using yarn
 yarn add @sentry/integrations
+
+# Using npm
+npm install @sentry/integrations
 ```
 
 Then add this to your `app.js`:
