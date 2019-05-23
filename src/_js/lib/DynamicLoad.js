@@ -19,6 +19,7 @@ const isSameHash = function(here, there) {
 class DynamicLoad {
   constructor() {
     this.load = this.load.bind(this);
+    this.lastRoute = document.location.pathname + document.location.search;
     this.linkClickHandler = this.linkClickHandler.bind(this);
     this.didUpdateHandler = this.didUpdateHandler.bind(this);
     this.registerHandlers = this.registerHandlers.bind(this);
@@ -51,6 +52,7 @@ class DynamicLoad {
 
         if (pushState) {
           window.history.pushState(null, document.title, fullPath(url));
+          this.lastRoute = window.location.pathname + window.location.search;
         }
 
         $('body').removeClass('loading');
@@ -98,7 +100,10 @@ class DynamicLoad {
   }
 
   popstateHandler(event) {
-    this.load(document.location);
+    const curRoute = window.location.pathname + window.location.search;
+    if (curRoute !== this.lastRoute) {
+      this.load(window.location);
+    }
   }
 
   registerHandlers() {
