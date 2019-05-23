@@ -35,7 +35,11 @@ describe('DynamicLoad', function() {
     });
 
     window.ra = { page: jest.fn() };
-    window.amplitude = { getInstance: jest.fn(() => { return { logEvent: jest.fn() } }) };
+    window.amplitude = {
+      getInstance: jest.fn(() => {
+        return { logEvent: jest.fn() };
+      })
+    };
 
     document.body.innerHTML = `
     <!DOCTYPE html>
@@ -190,8 +194,23 @@ describe('DynamicLoad', function() {
         return Promise.resolve();
       });
       DynamicLoad.registerHandlers();
+      window.history.pushState(
+        {},
+        'Docs',
+        `${window.location.pathname}?${window.location.search}#not-my-url`
+      );
       dispatchEvent(new PopStateEvent('popstate', {}));
-      expect(DynamicLoad.load).toHaveBeenCalled();
+      expect(DynamicLoad.load).toHaveBeenCalledTimes(0);
+
+      // add a param to our URL to ensure we propagate state
+      window.history.pushState(
+        {},
+        'Docs',
+        `${window.location.pathname}?platform=javascript`
+      );
+
+      dispatchEvent(new PopStateEvent('popstate', {}));
+      expect(DynamicLoad.load).toHaveBeenCalledTimes(1);
       expect(DynamicLoad.load.mock.calls[0][1]).toBeFalsy();
       DynamicLoad.load.mockRestore();
     });
