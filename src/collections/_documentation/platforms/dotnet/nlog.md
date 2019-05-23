@@ -64,7 +64,7 @@ LogManager.Configuration
 ```
 
 It's also possible to initialize the SDK through the NLog integration (as opposed to using `SentrySdk.Init`). 
-This is useful when the NLog is the only integration being used in your application. To initialize the Sentry SDK through the NLog integration, provide it with the DSN:
+This is useful when NLog is the only integration being used in your application. To initialize the Sentry SDK through the NLog integration, provide it with the DSN:
 
 ```csharp
 LogManager.Configuration = new LoggingConfiguration();
@@ -78,6 +78,10 @@ LogManager.Configuration
 
 > NOTE:
 The SDK only needs to be initialized once. If a `DSN` is made available to this integration, by default it **will** initialize the SDK. If you do not wish to initialize the SDK via this integration, set the `InitializeSdk` flag to **false**. Not providing a DSN or leaving it as `null` instructs the integration not to initialize the SDK and unless another integration initializes it or you call `SentrySdk.Init`, the SDK will stay disabled.
+
+> Minimum log level
+Two log levels are used to configure this integration (see options below). One will configure the lowest level required for a log message to become an event (`MinimumEventLevel`) sent to Sentry. The other options (`MinimumBreadcrumbLevel`) configures the lowest level a message has to be to become a breadcrumb. Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.Info` or `logger.Warn`, no event is sent to Sentry. If you then log with `logger.Error`, an event is sent to Sentry which includes those 100 `Info` or `Warn` messages. For this to work the `SentryTarget` needs to receive all log entries in order to decide what to keep as breadcrumb or sent as event. Make sure to set the `NLog` `LogLevel` configuration to a value lower than what you set for the `MinimumBreadcrumbLevel` and `MinimumEventLevel` to make sure `SentryTarget` receives these log messages.
+
 
 The SDK can also be configured via `NLog.config` XML file:
 
@@ -126,7 +130,7 @@ The SDK can also be configured via `NLog.config` XML file:
 
 #### MinimumBreadcrumbLevel
 
-A `LogLevel` which indicates the minimum level a log message needs to be, for Sentry to receive it as an event. By default, this value is `Info`.
+A `LogLevel` that indicates the minimum level a log message needs to be in order to become a breadcrumb. By default, this value is `Info`.
 
 #### MinimumEventLevel
 
@@ -154,7 +158,7 @@ Determines whether or not to include event-level data as data in breadcrumbs for
 
 #### BreadcrumbLayout
 
-Custom layout for breadcrumbs.
+Custom layout for breadcrumbs. See [NLog layout renderers](https://nlog-project.org/config/?tab=layout-renderers) for more.
 
 #### Layout
 
