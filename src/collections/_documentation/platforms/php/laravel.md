@@ -52,7 +52,16 @@ Add your DSN to ``.env``:
 ```sh
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
-<!-- ENDWIZARD -->
+You can easily verify that Sentry is capturing errors in your Laravel application by creating a debug route that will throw an exception:
+
+```php
+Route::get('/debug-sentry', function () {
+    throw new Exception('My first Sentry error!');
+});
+```
+
+Visiting this route will trigger an exception that will be captured by Sentry.
+{% endwizard %}
 
 ## Laravel 4.x
 
