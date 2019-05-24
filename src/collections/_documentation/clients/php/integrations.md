@@ -362,9 +362,9 @@ $monolog->pushHandler($handler);
 
 Symfony is supported via the [sentry-symfony](https://github.com/getsentry/sentry-symfony) package as a native bundle.
 
-<!-- WIZARD symfony2 -->
 ### Symfony 2+
 
+<!-- WIZARD symfony2 -->
 Install the `sentry/sentry-symfony` package:
 
 ```bash
