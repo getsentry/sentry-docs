@@ -374,19 +374,12 @@ $ composer require sentry/sentry-symfony
 Enable the bundle in `app/AppKernel.php`:
 
 ```php
-<?php
-class AppKernel extends Kernel
+public function registerBundles()
 {
-    public function registerBundles()
-    {
-        $bundles = array(
-            // ...
-
-            new Sentry\SentryBundle\SentryBundle(),
-        );
-
+    $bundles = [
         // ...
-    }
+        new Sentry\SentryBundle\SentryBundle(),
+    );
 
     // ...
 }
