@@ -216,7 +216,7 @@ Navigate to **Data Forwarding**, and enable the Splunk integration:
 
 {% asset splunk-data-forwarding-setting.png %}
 
-You’re instance URL is going to vary based on the type of Splunk service you’re using. If you’re using self-service Splunk Cloud, the instance URL will use the `input` prefix:
+Your instance URL is going to vary based on the type of Splunk service you’re using. If you’re using self-service Splunk Cloud, the instance URL will use the `input` prefix:
 
 ```
 https://input-<host>:8088
