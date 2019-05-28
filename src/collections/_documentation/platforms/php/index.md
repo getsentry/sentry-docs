@@ -284,6 +284,10 @@ the FQCN of the classes of the exceptions that you don't want to capture. The
 check is done using the `instanceof` operator against each item of the array
 and if at least one of them passes the event will be discarded.
 
+Note that this behavior applies to the `captureException` function/method, which 
+is also used in the automatic capture of errors; it's not applied to the `captureEvent`
+function/method instead, that could be used as a manual override.
+
 ##### prefixes
 
 This option sets the list of prefixes which should be stripped from the filenames
