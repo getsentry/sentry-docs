@@ -4,7 +4,7 @@ sidebar_order: 1010
 ---
 
 <!-- WIZARD -->
-If you are using `yarn` or `npm` you can add our package as a dependency easily:
+If you are using `yarn` or `npm`, you can add our package as a dependency:
 
 ```bash
 # Using yarn
