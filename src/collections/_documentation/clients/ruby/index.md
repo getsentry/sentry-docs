@@ -54,7 +54,7 @@ rescue ZeroDivisionError => exception
 end
 ```
 
-You can add either of the snippets above into your application to verify that the Sentry is working.
+You can add either of the snippets above into your application to verify that Sentry is set up correctly.
 <!-- ENDWIZARD -->
 
 ## Additional Context
