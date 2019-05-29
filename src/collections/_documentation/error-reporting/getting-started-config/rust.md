@@ -1,4 +1,4 @@
-Initialize Sentry, returning you a guard that when freed will prevent process exit until all events have been sent (within a timeout):
+`sentry.init()` will return you a guard that when freed, will prevent process exit until all events have been sent (within a timeout):
 
 ```rust
 extern crate sentry;
