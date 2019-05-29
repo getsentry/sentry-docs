@@ -13,8 +13,8 @@ To handle normal `error` responses, we have two options: `CaptureErrorAndWait` a
 ```go
 f, err := os.Open("filename.ext")
 if err != nil {
-    raven.CaptureErrorAndWait(err, nil)
-    log.Panic(err)
+	raven.CaptureErrorAndWait(err, nil)
+	log.Panic(err)
 }
 ```
 
@@ -24,9 +24,12 @@ Capturing a panic is pretty simple as well. We just need to wrap our code in `Ca
 
 ```go
 raven.CapturePanic(func() {
-    // do all of the scary things here
+	// do all of the scary things here
+	panic("My first Sentry error!")
 }, nil)
 ```
+
+You can verify your Sentry integration by using the above snippet to send a test event.
 <!-- ENDWIZARD -->
 
 Other than regular Errors and Panics, there are also two additional methods that allow sending information to Sentry.
@@ -46,11 +49,11 @@ To form a `Packet`, you can use `Packet` type directly, or `NewPacket` and `NewP
 
 ```go
 packet := &raven.Packet{
-    Message: "Hand-crafted event",
-    Extra: &raven.Extra{
-        "runtime.Version": runtime.Version(),
-        "runtime.NumCPU": runtime.NumCPU(),
-    },
+	Message: "Hand-crafted event",
+	Extra: &raven.Extra{
+		"runtime.Version": runtime.Version(),
+		"runtime.NumCPU": runtime.NumCPU(),
+	},
 }
 raven.Capture(packet)
 ```

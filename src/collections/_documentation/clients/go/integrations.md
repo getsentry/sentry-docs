@@ -27,7 +27,7 @@ package main
 import "github.com/getsentry/raven-go"
 
 func init() {
-    raven.SetDSN("___DSN___")
+	raven.SetDSN("___DSN___")
 }
 ```
 
@@ -36,10 +36,12 @@ If you don’t call `SetDSN`, we will attempt to read it from your environment u
 Next, we need to wrap our `http.Handler` with our `RecoveryHandler`:
 
 ```go
-func root(w http.ResponseWriter, r *http.Request) {
-    // ... do stuff
+func raisesError(w http.ResponseWriter, r *http.Request) {
+	panic("My first Sentry error!")
 }
-http.HandleFunc("/", raven.RecoveryHandler(root))
-```
-<!-- ENDWIZARD -->
 
+http.HandleFunc("/debug-sentry", raven.RecoveryHandler(raisesError))
+```
+
+You can use the above snippet to verify the Sentry integration by visiting the above route in your application and verifying the error in Sentry.
+<!-- ENDWIZARD -->
