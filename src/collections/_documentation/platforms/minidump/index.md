@@ -13,12 +13,14 @@ In order to receive symbolicated stack traces, you have to upload debug informat
 <!-- WIZARD -->
 ## Platform and Language Support
 
-Minidumps are currently supported for **Windows, macOS and Linux**. There is no limitation as to which programming language can be used. Sentry can also demangle symbols from the following languages; other languages will show the mangled name instead:
+Minidumps are currently supported for **Windows, macOS and Linux**. There is no limitation as to which programming language can be used. Sentry can also demangle symbols from the following languages:
 
 -   C and C++
 -   ObjectiveC and ObjectiveC++
 -   Swift
 -   Rust
+
+Other languages will show the mangled name instead.
 <!-- ENDWIZARD -->
 
 ## What is a Minidump? {#what-is-a-minidump}
