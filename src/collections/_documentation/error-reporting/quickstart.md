@@ -66,7 +66,7 @@ Once you have Sentry integrated into your project, you probably want to verify t
 
 ## Next Steps
 
-Now that you’ve got basic reporting setup, you’ll want to explore adding additional context to your data.
+Now that you’ve got basic reporting set up, you’ll want to explore adding additional context to your data.
 
 {% include components/platform_content.html content_dir='getting-started-next-steps' %}
 -   [_manual error and event capturing_]({%- link _documentation/error-reporting/capturing.md -%})
