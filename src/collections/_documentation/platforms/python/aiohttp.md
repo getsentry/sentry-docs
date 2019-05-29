@@ -27,7 +27,7 @@ Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
     ```python
     import sentry_sdk
     from sentry_sdk.integrations.aiohttp import AioHttpIntegration
-    
+
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
         integrations=[AioHttpIntegration()]
