@@ -1,4 +1,4 @@
-You can easily cause a python error by inserting a divide by zero expression
+You can cause a Python error by inserting a divide by zero expression
 into your application:
 
 ```py
