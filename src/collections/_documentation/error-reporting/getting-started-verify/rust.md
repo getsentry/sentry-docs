@@ -1,4 +1,4 @@
-The quickets way to verify Sentry in your rust application is to cause a panic:
+The quickest way to verify Sentry in your Rust application is to cause a panic:
 
 ```rust
 fn main() {
