@@ -14,7 +14,7 @@ $ yarn add @sentry/node@{% sdk_version sentry.javascript.node %}
 $ npm install @sentry/node@{% sdk_version sentry.javascript.node %}
 ```
 
-Sentry should be initalized as early in your app as possible.
+Sentry should be initialized as early in your app as possible.
 
 ```javascript
 const express = require('express');
