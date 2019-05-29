@@ -53,6 +53,8 @@ rescue ZeroDivisionError => exception
   Raven.capture_exception(exception)
 end
 ```
+
+You can add either of the snippets above into your application to verify that the Sentry is working.
 <!-- ENDWIZARD -->
 
 ## Additional Context
