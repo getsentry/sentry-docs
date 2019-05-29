@@ -1024,6 +1024,7 @@ You may want to setup other loggers as well.
   title="Note"
   content=__alert_content
 %}
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Pyramid

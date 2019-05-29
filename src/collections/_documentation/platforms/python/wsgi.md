@@ -21,6 +21,7 @@ sentry_sdk.init(dsn="___PUBLIC_DSN___")
 wsgi_app = SentryWsgiMiddleware(wsgi_app)
 ```
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Behavior

@@ -31,6 +31,7 @@ The integration has been confirmed to work with Falcon 1.4 and 2.0.
     api = falcon.API()
     ```
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Behavior

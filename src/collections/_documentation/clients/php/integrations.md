@@ -356,6 +356,7 @@ $client = new Raven_Client('___PUBLIC_DSN___');
 $handler = new \Raven_Breadcrumbs_MonologHandler($client);
 $monolog->pushHandler($handler);
 ```
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Symfony
