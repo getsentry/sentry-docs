@@ -652,6 +652,10 @@ To configure Issue sync, navigate to Organization Settings > **Integrations**, a
 
 [{% asset jira-sync.png %}]({% asset jira-sync.png @path %})
 
+Sentry's assignee sync requires that user's email addresses be visible. You may
+need to adjust your Jira instance's privacy settings or the privacy settings of
+individual users if you experience assignee sync not behaving as expected.
+
 ### JIRA Server
 
 Connect errors from Sentry with your Jira Server issues.
