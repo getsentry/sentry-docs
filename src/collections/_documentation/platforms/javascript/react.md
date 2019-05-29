@@ -15,7 +15,7 @@ After you've completed setting up a project in Sentry, Sentry will give you a va
 
 On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
 
-You can trigger your first event from your development environment by raising an exception somewhere within your application. A simple example of this would be rendering a button like so:
+You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button like so:
 
 ```jsx
 return <button onClick={methodDoesNotExist}>Break the world</button>;
