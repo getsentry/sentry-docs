@@ -391,4 +391,18 @@ Add your DSN to `app/config/config.yml`:
 sentry:
     dsn: "___PUBLIC_DSN___"
 ```
+
+You can easily verify that Sentry is capturing errors in your Symfony application by creating a debug route that will throw an exception:
+
+```php
+/**
+ * @Route("/debug-sentry")
+ */
+public function debug_sentry()
+{
+    throw new Exception('My first Sentry error!');
+}
+```
+
+Visiting this route will trigger an exception that will be captured by Sentry.
 <!-- ENDWIZARD -->
