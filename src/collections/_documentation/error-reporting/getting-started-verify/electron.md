@@ -1,4 +1,4 @@
-A simple way to break your Electron application is to call an undefined function:
+One way to break your Electron application is to call an undefined function:
 
 ```js
 myUndefinedFunction();
