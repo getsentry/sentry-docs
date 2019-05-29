@@ -1,4 +1,4 @@
-Import and initialize the sentry SDK early in your applications startup:
+Import and initialize the Sentry SDK early in your application's setup:
 
 ```python
 import sentry_sdk
