@@ -31,6 +31,7 @@ compile 'org.slf4j:slf4j-nop:1.7.25'
 ```
 
 For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-android%7C1.7.16%7Cjar).
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ### Initialization
@@ -68,6 +69,7 @@ public class MainActivity extends Activity {
 
 You can optionally configure other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- WIZARD android -->
 ### Usage
 
@@ -120,6 +122,7 @@ public class MyClass {
     }
 }
 ```
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ### ProGuard
@@ -292,6 +295,7 @@ For other dependency managers see the [central Maven repository](https://search.
 This module provides a new `SentryClientFactory` implementation which replaces the default async system with a Google App Engine compatible one. You’ll need to configure Sentry to use the `io.sentry.appengine.AppEngineSentryClientFactory` as its factory.
 
 The queue size and thread options will not be used as they are specific to the default Java threading system.
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ### Queue Name
@@ -369,6 +373,7 @@ $ java -Djava.util.logging.config.file=/path/to/app.properties MyClass
 ```
 
 Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ### In Practice
@@ -500,6 +505,7 @@ Alternatively, using the `log4j.xml` format:
 ```
 
 Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ### Additional Data
@@ -638,6 +644,7 @@ Example configuration using the `log4j2.xml` format:
 ```
 
 Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ### Additional Data
@@ -783,6 +790,7 @@ Example configuration using the `logback.xml` format:
 ```
 
 Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#setting-the-dsn) for ways you can do this.
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ### Additional Data

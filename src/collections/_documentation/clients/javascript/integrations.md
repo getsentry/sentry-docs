@@ -144,6 +144,7 @@ angular.module(moduleName, [
 
 module.exports = moduleName;
 ```
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Angular
@@ -253,6 +254,7 @@ export class AppModule { }
 ```
 
 Once you’ve completed that step, you are done.
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Backbone
@@ -276,6 +278,7 @@ Raven.config('___PUBLIC_DSN___').install()
 ```
 
 At this point, Raven is ready to capture any uncaught exception.
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Ember

@@ -33,6 +33,7 @@ However the integration with the development version (0.13) doesn't work properl
     app = Bottle()
     ```
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Behavior

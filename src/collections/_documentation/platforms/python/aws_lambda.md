@@ -20,6 +20,7 @@ sentry_sdk.init(
 def my_function(event, context):
     ...
 ```
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Behavior

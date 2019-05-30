@@ -33,6 +33,7 @@ Framework](https://trypyramid.com/).
         ...
     ```
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Behavior

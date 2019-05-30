@@ -90,4 +90,5 @@ like this:
   });
 </script>
 ```
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->

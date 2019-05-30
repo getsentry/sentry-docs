@@ -73,6 +73,7 @@ Sentry.config('___PUBLIC_DSN___').install();
 ```
 
 You can pass additional configuration options to the `config()` method if you want to do so.
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Mixed Stacktraces

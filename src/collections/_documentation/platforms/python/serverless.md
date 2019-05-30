@@ -22,6 +22,7 @@ sentry_sdk.init(dsn="___PUBLIC_DSN___")
 def my_function(...):
     ...
 ```
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Behavior

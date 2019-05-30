@@ -25,6 +25,7 @@ rq worker \
     --sentry-dsn=""  # only necessary for RQ < 1.0
 ```
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 The integration will automatically report errors from all RQ jobs.

@@ -71,6 +71,7 @@ If using an environment with Plug or Phoenix add the following to your router:
 use Plug.ErrorHandler
 use Sentry.Plug
 ```
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Filtering Events
