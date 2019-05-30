@@ -4,8 +4,15 @@ sidebar_order: 1012
 ---
 
 <!-- WIZARD -->
+If you are using `yarn` or `npm`, you can add our package as a dependency:
 
-Our Connect integration only requires the installation of `@sentry/node`, and then you can use it like this:
+```bash
+# Using yarn
+$ yarn add @sentry/node@{% sdk_version sentry.javascript.node %}
+
+# Using npm
+$ npm install @sentry/node@{% sdk_version sentry.javascript.node %}
+```
 
 ```javascript
 const connect = require('connect');
@@ -15,14 +22,14 @@ const Sentry = require('@sentry/node');
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
 
 function mainHandler(req, res) {
-  throw new Error('Broke!');
+  throw new Error('My first Sentry error!');
 }
 
 function onError(err, req, res, next) {
   // The error id is attached to `res.sentry` to be returned
   // and optionally displayed to the user for support.
   res.statusCode = 500;
-  res.end(res.sentry + '\n');
+  res.end(res.sentry + "\n");
 }
 
 connect(
