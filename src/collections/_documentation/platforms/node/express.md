@@ -4,8 +4,17 @@ sidebar_order: 1010
 ---
 
 <!-- WIZARD -->
+If you are using `yarn` or `npm`, you can add our package as a dependency:
 
-Our Express integration only requires the installation of `@sentry/node`, and then you can use it like this:
+```bash
+# Using yarn
+$ yarn add @sentry/node@{% sdk_version sentry.javascript.node %}
+
+# Using npm
+$ npm install @sentry/node@{% sdk_version sentry.javascript.node %}
+```
+
+Sentry should be initialized as early in your app as possible.
 
 ```javascript
 const express = require('express');
@@ -16,10 +25,6 @@ Sentry.init({ dsn: '___PUBLIC_DSN___' });
 
 // The request handler must be the first middleware on the app
 app.use(Sentry.Handlers.requestHandler());
-
-app.get('/', function mainHandler(req, res) {
-  throw new Error('Broke!');
-});
 
 // The error handler must be before any other error middleware
 app.use(Sentry.Handlers.errorHandler());
@@ -34,6 +39,16 @@ app.use(function onError(err, req, res, next) {
 
 app.listen(3000);
 ```
+
+You can verify the Sentry integration by creating a route that will throw an error:
+
+```js
+app.get('/debug-sentry', function mainHandler(req, res) {
+  throw new Error('My first Sentry error!');
+});
+```
+
+<!-- ENDWIZARD -->
 
 If you use TypeScript, you need to cast our handlers to express specific types.
 They are fully compatible, so the only things you need to change are:
@@ -56,5 +71,3 @@ app.use(Sentry.Handlers.errorHandler());
 // to
 app.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
 ```
-
-<!-- ENDWIZARD -->
