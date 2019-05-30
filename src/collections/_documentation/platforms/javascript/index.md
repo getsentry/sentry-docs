@@ -12,8 +12,6 @@ After you've completed setting up a project in Sentry, Sentry will give you a va
 
 {% include components/platform_content.html content_dir='getting-started-dsn' %}
 
-Most SDKs will now automatically collect data if available; some require extra configuration as automatic error collecting is not possible due to platform limitations.
-
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 

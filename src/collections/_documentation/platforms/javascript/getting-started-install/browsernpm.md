@@ -1,7 +1,11 @@
-Add the `@sentry/browser` to your project:
+Add the Sentry SDK as a dependency using `yarn` or `npm`:
 
 ```bash
-$ npm install --save @sentry/browser
+# Using yarn
+$ yarn add @sentry/browser
+
+# Using npm
+$ npm install @sentry/browser
 ```
 
 {% wizard hide %}

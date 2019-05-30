@@ -36,8 +36,6 @@ After you completed setting up a project in Sentry, you’ll be given a value wh
 
 {% include components/platform_content.html content_dir='getting-started-config' %}
 
-Most SDKs will now automatically collect data if available, some require some extra configuration as automatic error collecting is not
-available due to platform limitations.
 {% endwizard %}
 
 {% capture __alert_content -%}
