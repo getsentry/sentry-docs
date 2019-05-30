@@ -20,7 +20,7 @@ Sentry currently supports minidumps for **Windows, macOS and Linux**. There is n
 -   Swift
 -   Rust
 
-Other languages will show the mangled name instead.
+Languages not listed above will show the mangled name instead.
 <!-- ENDWIZARD -->
 
 ## What is a Minidump? {#what-is-a-minidump}
