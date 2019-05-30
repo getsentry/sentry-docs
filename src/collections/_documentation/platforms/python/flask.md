@@ -31,7 +31,7 @@ You can easily verify your Sentry installation by creating a route that triggers
 
 ```py
 @app.route('/debug-sentry')
-def hello_world():
+def trigger_error():
     division_by_zero = 1 / 0
 ```
 
