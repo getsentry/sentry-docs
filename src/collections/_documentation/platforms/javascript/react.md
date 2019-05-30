@@ -15,7 +15,14 @@ After you've completed setting up a project in Sentry, Sentry will give you a va
 
 On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
 
-## Error Boundaries
+You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button:
+
+```jsx
+return <button onClick={methodDoesNotExist}>Break the world</button>;
+```
+<!-- ENDWIZARD -->
+
+### Error Boundaries
 
 If you’re using React 16 or above, Error Boundaries are an important tool for defining the behavior of your application in the face of errors. Be sure to send errors they catch to Sentry using `Sentry.captureException`. This is also a great opportunity to collect user feedback by using `Sentry.showReportDialog`.
 
@@ -59,4 +66,3 @@ class ExampleBoundary extends Component {
     }
 }
 ```
-<!-- ENDWIZARD -->
