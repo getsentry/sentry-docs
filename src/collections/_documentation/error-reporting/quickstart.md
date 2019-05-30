@@ -56,9 +56,17 @@ Note: If you’re using Heroku, and you’ve added Hosted Sentry via the standar
   content=__alert_content
 %}
 
+## Capturing your first event
+
+Once you have Sentry integrated into your project, you probably want to verify that everything is working as expected before deploying it, and what better way to do that than to break your application!
+
+{% wizard %}
+{% include components/platform_content.html content_dir='getting-started-verify' %}
+{% endwizard %}
+
 ## Next Steps
 
-Now that you’ve got basic reporting setup, you’ll want to explore adding additional context to your data.
+Now that you’ve got basic reporting set up, you’ll want to explore adding additional context to your data.
 
 {% include components/platform_content.html content_dir='getting-started-next-steps' %}
 -   [_manual error and event capturing_]({%- link _documentation/error-reporting/capturing.md -%})
