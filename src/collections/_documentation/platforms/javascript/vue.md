@@ -19,7 +19,7 @@ On its own, `@sentry/browser` will report any uncaught exceptions triggered by y
 Additionally, the Vue _integration_ will capture the name and props state of the active component where the error was thrown. This is reported via Vue’s `config.errorHandler` hook.
 
 Starting with version `5.x` our `Vue` integration lives in its own package `@sentry/integrations`.
-You can install it with `npm` / `yarn` like:
+You can install it with `npm` / `yarn`:
 
 ```bash
 # Using yarn
