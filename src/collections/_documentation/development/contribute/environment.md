@@ -51,8 +51,15 @@ nvm install
 Run the following to install the Python and JavaScript libraries and database services that Sentry depends on and some extra pieces that hold the development environment together:
 
 ```bash
-make develop
+make bootstrap
 ```
+
+{% capture __alert_content -%}
+`make bootstrap` will run `sentry upgrade`, which will prompt you to create a user. It is recommended to supply the prompts with a proper email address and password. It is also required to designate said user as a superuser because said user is responsible for the initial configurations.
+{%- endcapture -%}{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
 
 ## Running the Development Server
 
@@ -64,25 +71,13 @@ sentry init --dev
 
 This file ends up in `~/.sentry/sentry.conf.py`
 
-Next, we need to start up our development services. This includes running services like Postgres, Redis, etc. `sentry devservices` depends on Docker, which should have gotten installed during `make develop`. If not, you can install with `brew cask install docker`. After installing Docker, make sure it is running by just launching `/Applications/Docker.app`.
+Next, we need to start up our development services. This includes running services like Postgres, Redis, etc. `sentry devservices` depends on Docker, which should have gotten installed during `make bootstrap`. If not, you can install with `brew cask install docker`. After installing Docker, make sure it is running by just launching `/Applications/Docker.app`.
 
 ```bash
 sentry devservices up
 ```
 
-Lastly, we need to run our database migrations:
-
-```bash
-sentry upgrade
-```
-
 {% capture __alert_content -%}
-You will be prompted to create a user during `sentry upgrade`. It is recommended to supply the prompts with a proper email address and password. It is also required to designate said user as a superuser because said user is responsible for the initial configurations.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}{% capture __alert_content -%}
 If you would like to import an example dataset, running `./bin/load-mocks` will add a few example projects and teams to the main organization.
 {%- endcapture -%}
 {%- include components/alert.html
