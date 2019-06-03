@@ -35,7 +35,7 @@ In development mode React will rethrow errors caught within an error boundary. T
 %}
 
 ```jsx
-import React from 'react';
+import React, { Component } from 'react';
 import * as Sentry from '@sentry/browser';
 
 class ExampleBoundary extends Component {
