@@ -35,7 +35,7 @@ Various built-in filters are available within Sentry. You can find these by goin
 
 ### IP Blocklist
 
-If you have a rogue client, you may find yourself simply wanting to block that IP from sending data. Sentry supports this by going to **[Project] » Project Settings » Inbound Filters** and adding the IP addresses (or subnets) under the **Filter errors from these IP addresses** section. For example, you can enter '127.0.0.1 or 10.0.0.0/8'.
+If you have a rogue client, you may find yourself simply wanting to block that IP from sending data. Sentry supports this by going to **[Project] » Project Settings » Inbound Filters** and adding the IP addresses (or subnets) under the **Filter errors from these IP addresses** section. For example, you can enter '127.0.0.1' or '10.0.0.0/8'.
 
 ### Filter by releases
 
