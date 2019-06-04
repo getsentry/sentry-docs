@@ -1108,6 +1108,30 @@ basic stack trace. This exception is stored here for further data extraction.
 
 : For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API. This holds the original xhr object.
 
+## Example Use-Cases
+
+[ code snippet here ]
+
+### Handling JavaScript Promises
+
+[ code snippet here ]
+
+### Another popular way to track errors
+
+[ code snippet here ]
+
+### Sanitizing PII
+
+[ code snippet here ]
+
+### Tracking feature flags
+
+[ code snippet here ]
+
+### Distributed Tracing
+
+[ code snippet here ]
+
 ## Additional Resources
 - [Optimizing the Sentry Workflow](https://blog.sentry.io/2018/03/06/the-sentry-workflow)
 - [Debug Tough Front-End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues)
