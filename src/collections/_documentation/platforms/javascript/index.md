@@ -60,14 +60,7 @@ try {
 }
 ```
 
-{% capture __alert_content -%}
 It's possible to throw strings as errors. In this case, the Sentry SDK will not record tracebacks.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="warning"
-%}
 
 ### Automatically Capturing Errors
 By including and configuring the Sentry Browser SDK, Sentry will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
@@ -176,14 +169,7 @@ module.exports = {
 };
 ```
 
-{% capture __alert_content -%}
 In case you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, leave `noSources` turned off, so Sentry can display proper source code context in event stack traces.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="info"
-%}
 
 #### SystemJS
 SystemJS is the default module loader for Angular 2 projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and you can configured it to output source maps.
@@ -269,14 +255,7 @@ $ sentry-cli releases finalize <release_name>
 
 For convenience, you can alternatively pass the `--finalize` flag to the `new` command which will immediately finalize the release.
 
-{% capture __alert_content -%}
 You don't _have_ to upload the source files (ref’d by source maps), but without them, the grouping algorithm will not be as strong, and the UI will not show any contextual source.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="info"
-%}
 
 For more information, see [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
 
