@@ -27,6 +27,5 @@ Sentry is a set of open source services that power the cloud-hosted offering and
 -   [Plugins]({%- link _documentation/server/plugins.md -%})
 -   [Adding Integrations]({%- link _documentation/server/integrations/index.md -%})
 -   [System Warnings]({%- link _documentation/server/warnings.md -%})
--   [System Debug Symbols]({%- link _documentation/server/dsym.md -%})
 -   [Frequently Asked Questions]({%- link _documentation/server/faq.md -%})
 -   [Changelog]({%- link _documentation/server/changelog.md -%})
