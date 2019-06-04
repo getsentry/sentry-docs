@@ -744,15 +744,6 @@ For more information, see:
 - [Full documentation on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%})
 - [Introducing User Feedback](https://blog.sentry.io/2016/04/21/introducing-user-feedback)
 
-### Security Policy Reporting
-Sentry provides the ability to collect information on Content-Security-Policy (CSP) violations, as well as Expect-CT and HTTP Public Key Pinning (HPKP) failures by setting the proper HTTP header which results in a violation/failure to be sent to the Sentry endpoint specified in the report-uri.
-
-For more information:
-
-- [Full documentation on Security Policy Reporting]({%- link _documentation/error-reporting/security-policy-reporting.md -%})
-- [Capture Content Security Policy Violations with Sentry](https://blog.sentry.io/2018/09/04/how-sentry-captures-csp-violations)
-- [How a Content Security Policy Could Have Protected Newegg](https://blog.sentry.io/2018/09/20/content-security-policy-newegg-breach)
-
 ### SDK Integrations
 All of Sentry's SDKs provide Integrations, which provide additional functionality.
 
