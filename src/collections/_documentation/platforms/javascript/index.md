@@ -350,7 +350,7 @@ If you want to keep your source maps secret and choose not to upload your source
   content=__alert_content
 %}
 
-## Context
+## Adding Context Data
 You can also set context when manually triggering events.
 
 ### Setting Context {#context}
@@ -358,7 +358,7 @@ Sentry supports additional context with events. Often this context is shared amo
 
 **Structured Contexts**
 
-: Specific structured contexts --- OS info, runtime information, etc.  This is typically set automatically.
+Specific structured contexts --- OS info, runtime information, etc.  This is typically set automatically.
 
 [**User**](#capturing-the-user)
 
@@ -379,6 +379,17 @@ Sentry supports additional context with events. Often this context is shared amo
 [**Unstructured Extra Data**](#extra-context)
 
 : Arbitrary unstructured data which the Sentry SDK stores with an event sample
+
+### Adding Context to Events
+There are two ways you can add context to events.
+
+#### Use-Case: local/event-specific
+
+[ code snippet here ]
+
+#### Use-Case: global/middleware-type context
+
+[ code snippet here ]
 
 ### Extra Context {#extra-context}
 In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
