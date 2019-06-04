@@ -5,7 +5,21 @@ title: JavaScript
 ## Integrating the SDK
 All our JavaScript-related SDKs provide the same API. Still, there are some differences between them, such as installation, which this section of the docs explains.
 
-{% include components/platform_content.html content_dir='getting-started-install' %}
+The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
+
+``` javascript
+<script src="https://browser.sentry-cdn.com/5.4.0/bundle.min.js" crossorigin="anonymous"></script>
+```
+
+You can also add the Sentry SDK as a dependency using yarn or npm:
+
+``` bash
+# Using yarn
+$ yarn add @sentry/browser
+
+# Using npm
+$ npm install @sentry/browser
+```
 
 ### Connecting the SDK to Sentry
 After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
