@@ -24,14 +24,9 @@ You should `init` the Sentry Browser SDK as soon as possible during your page lo
 
 ``` javascript
 Sentry.init({ dsn: 'https://<key>@sentry.io/<project>' });
-```
 
-When using yarn or npm:
-
-``` javascript
+// When using npm, import Sentry
 import * as Sentry from '@sentry/browser';
-
-Sentry.init({ dsn: 'https://<key>@sentry.io/<project>' });
 ```
 
 ### Verifying Your Setup
