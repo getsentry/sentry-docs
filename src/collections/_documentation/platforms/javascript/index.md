@@ -54,7 +54,7 @@ try {
 It's possible to throw strings as errors. In this case, the Sentry SDK will not record tracebacks.
 
 ### Automatically Capturing Errors
-By including and configuring the Sentry Browser SDK, Sentry will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
+By including and configuring Sentry, the SDK will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
 
 [{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
 
