@@ -339,7 +339,7 @@ If you want to keep your source maps secret and choose not to upload your source
   content=__alert_content
 %}
 
-## Adding Context Data
+## Adding Context
 You can also set context when manually triggering events.
 
 ### Setting Context {#context}
