@@ -73,7 +73,7 @@ The following example will just completely overwrite Sentry's grouping by omitti
 
 ## Grouping Algorithm Versioning
 
-When a Sentry project is created the latest and greatest version of the grouping algorithm is automatically selected.  However we will improve the grouping system going forward but only new projects will see these improvements not to create new groups for you.  If you do want to upgrade an existing project to a new grouping algorithm version you can do so in the project settings.  Note taht you can only upgrade.  To downgrade you will need to contract customer support.
+When a Sentry project is created the latest and greatest version of the grouping algorithm is automatically selected.  However we will improve the grouping system going forward but only new projects will see these improvements not to create new groups for you.  If you do want to upgrade an existing project to a new grouping algorithm version you can do so in the project settings.  Note that you can only upgrade.  To downgrade you will need to contract customer support.
 
 ## Grouping Enhancements and Server Side Fingerprinting
 
