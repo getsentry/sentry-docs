@@ -11,13 +11,9 @@ The quickest way to get started is to use the CDN hosted version of the JavaScri
 <script src="https://browser.sentry-cdn.com/5.4.0/bundle.min.js" crossorigin="anonymous"></script>
 ```
 
-You can also add the Sentry SDK as a dependency using yarn or npm:
+You can also add the Sentry SDK as a dependency using npm:
 
 ``` bash
-# Using yarn
-$ yarn add @sentry/browser
-
-# Using npm
 $ npm install @sentry/browser
 ```
 
