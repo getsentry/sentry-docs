@@ -160,25 +160,6 @@ module.exports = {
 
 In case you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, leave `noSources` turned off, so Sentry can display proper source code context in event stack traces.
 
-#### SystemJS
-SystemJS is the default module loader for Angular 2 projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and you can configured it to output source maps.
-
-```javascript
-builder.bundle('src/app.js', 'dist/app.min.js', {
-    minify: true,
-    sourceMaps: true,
-    sourceMapContents: true
-});
-```
-
-{% capture __alert_content -%}
-All of the example configurations above inline your original, un-transformed source files into the generated source map file. Sentry requires both source map(s) **and** your original source files to perform reverse transformations. If you choose NOT to inline your source files, you must make those source files available to Sentry in _addition_ to your source maps (see below).
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Inline Sources"
-  content=__alert_content
-%}
-
 #### TypeScript
 The TypeScript compiler can output source maps. Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
 
