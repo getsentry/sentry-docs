@@ -55,27 +55,26 @@ make bootstrap
 ```
 
 {% capture __alert_content -%}
-`make bootstrap` will run `sentry upgrade`, which will prompt you to create a user. It is recommended to supply the prompts with a proper email address and password. It is also required to designate said user as a superuser because said user is responsible for the initial configurations.
+`make bootstrap` will run `sentry upgrade`, which will prompt you to create a user. It is recommended to supply the prompts with a proper email address and password. It is also required to designate said user as a **superuser** because said user is responsible for the initial configurations.
 {%- endcapture -%}{%- include components/alert.html
   title="Note"
   content=__alert_content
 %}
 
-## Running the Development Server
-
-Before you can run the development server, you need to first create a development configuration file:
+`make bootstrap` will generally run these sequence of commands (you can poke around through the `Makefile` file to see more details):
 
 ```bash
+make install-system-pkgs
+make develop
+# creates a development configuration file at ~/.sentry/sentry.conf.py
 sentry init --dev
-```
-
-This file ends up in `~/.sentry/sentry.conf.py`
-
-Next, we need to start up our development services. This includes running services like Postgres, Redis, etc. `sentry devservices` depends on Docker, which should have been installed during `make bootstrap`. If not, you can install with `brew cask install docker`. After installing Docker, make sure it is running by just launching `/Applications/Docker.app`.
-
-```bash
+# start up our development services
 sentry devservices up
+make create-db
+make apply-migrations
 ```
+
+## Running the Development Server
 
 {% capture __alert_content -%}
 If you would like to import an example dataset, running `./bin/load-mocks` will add a few example projects and teams to the main organization.
