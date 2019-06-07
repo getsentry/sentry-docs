@@ -65,8 +65,7 @@ Not all events count towards your monthly event quota. In general, when events a
 
 {% include components/alert.html
     title="Note"
-    content="Delete and discard and per-project rate limits are only available to Business plans"
-    level="info"
+    content="Delete and discard and per-project rate limits are only available on Business and Enterprise plans"
 %}
 
 ## Increasing Quotas
