@@ -40,7 +40,6 @@ Then, you can see the error in your dashboard:
 [{% asset js-index/error-message.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/error-message.png @path %})
 
 ## Capturing Errors
-### Capturing Errors / Exceptions {#capturing-errors}
 In JavaScript, you can pass an error object to `captureException()` to get it captured as an event.
 
 ```javascript
