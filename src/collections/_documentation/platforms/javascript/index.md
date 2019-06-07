@@ -40,7 +40,7 @@ Then, you can see the error in your dashboard:
 [{% asset js-index/error-message.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/error-message.png @path %})
 
 ## Capturing Errors
-In JavaScript, you can pass an error object to `captureException()` to get it captured as an event.
+In most situations, you can capture errors automatically with `captureException()`.
 
 ```javascript
 try {
@@ -49,6 +49,7 @@ try {
   Sentry.captureException(err);
 }
 ```
+For additional functionality, see [SDK Integrations](#sdk-integrations).
 
 ### Automatically Capturing Errors
 By including and configuring Sentry, the SDK will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
@@ -327,7 +328,7 @@ Sentry supports additional context with events. Often this context is shared amo
 
 **Structured Contexts**
 
-Specific structured contexts --- OS info, runtime information, etc.  This is typically set automatically.
+Structured contexts are typically set automatically.
 
 [**User**](#capturing-the-user)
 
