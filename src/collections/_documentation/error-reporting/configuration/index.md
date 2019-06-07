@@ -195,9 +195,10 @@ sending.
 ### `before-breadcrumb`
 
 This function is called with an SDK specific breadcrumb object before the breadcrumb is added to the
-scope.  When nothing is returned from the function the breadcrumb is dropped.  The callback typically
-gets a second argument (called a "hint") which contains the original object that the breadcrumb was
-created from to further customize what the breadcrumb should look like.
+scope.  When nothing is returned from the function, the breadcrumb is dropped.  To pass the 
+breadcrumb through, simply return the first argument, which contains the breadcrumb object.
+The callback typically gets a second argument (called a "hint") which contains the original object 
+that the breadcrumb was created from to further customize what the breadcrumb should look like.
 
 ## Transport Options
 
