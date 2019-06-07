@@ -30,7 +30,7 @@ This will run Bundler to install all the necessary dependencies and then run a w
 There are a number of enhancements in place that are only available when developing locally.
 
 - Numerous optimizations have been made to speed up builds. See [environment-variables] for more info.
-- Pressing the `\`` key reveals a drawer with meta info for each page.
+- Pressing the `` ` `` (backtick) key reveals a drawer with meta info for each page.
 - The sidebar includes links to documentation of special components available to the docs.
 
 ### Environment Variables
