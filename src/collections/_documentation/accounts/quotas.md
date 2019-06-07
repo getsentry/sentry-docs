@@ -5,9 +5,72 @@ sidebar_order: 2
 
 Each subscription tier in Sentry provides different monthly quotas for your event capacity. The tiers let you pre-pay for reserved event capacity, and you can also specify a spending cap for on-demand capacity if you need additional events. When you consume your reserved and on-demand capacity for the month, the server will respond with a 429 HTTP status code when it receives an event over quota. 
 
+## What Counts Towards My Quota?
+
+Not all events count towards your monthly event quota. In general, when events are processed or stored they will count towards your quota. Please see the table below to see which events count.
+
+
+<table>
+  <tbody>
+    <tr>
+      <td>
+        <strong>Events which are...</strong>
+      </td>
+      <td>
+        <strong>Count towards quota</strong>
+      </td>
+    </tr>
+    <tr>
+      <td>filtered by SDK configuration</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>dropped because of SDK sampling rate</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>filtered using inbound filters in project settings  </td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>dropped because of spike protection</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>dropped after exceeding quota</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>in a resolved issue</td>
+      <td>yes</td>
+    </tr>
+    <tr>
+      <td>in a deleted issue</td>
+      <td>yes</td>
+    </tr>
+    <tr>
+      <td>in an ignored issue</td>
+      <td>yes, even after the issue is ignored</td>
+    </tr>
+    <tr>
+      <td>in a delete-and-discarded issue*</td>
+      <td>only events before delete-and-discard is enabled</td>
+    </tr>
+    <tr>
+      <td>over the per-project rate limit*</td>
+      <td>no</td>
+    </tr>
+  </tbody>
+</table>
+
+{% include components/alert.html
+    title="Note"
+    content="Delete and discard and per-project rate limits are only available on Business and Enterprise plans"
+%}
+
 ## Increasing Quotas
 
-You can add additional quota at any time during your billing period, either by upgrading to a higer tier or increasing your on-demand capacity. While the available plans will fit most individual and business needs, Sentry is designed to handle large throughput so if your team needs more, we’re happy to help. Reach out to our sales team at [sales@sentry.io](mailto:sales%40sentry.io) to learn more about increasing capacity.
+You can add additional quota at any time during your billing period, either by upgrading to a higher tier or increasing your on-demand capacity. While the available plans will fit most individual and business needs, Sentry is designed to handle large throughput so if your team needs more, we’re happy to help. Reach out to our sales team at [sales@sentry.io](mailto:sales%40sentry.io) to learn more about increasing capacity.
 
 ## Rate Limiting Projects {#id1}
 
