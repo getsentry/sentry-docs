@@ -5,12 +5,29 @@ title: JavaScript
 ## Integrating the SDK
 All our JavaScript-related SDKs provide the same API. Still, there are some differences between them, such as installation, which this section of the docs explains.
 
-{% include components/platform_content.html content_dir='getting-started-install' %}
+The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
+
+``` javascript
+<script src="https://browser.sentry-cdn.com/5.4.0/bundle.min.js" crossorigin="anonymous"></script>
+```
+
+You can also add the Sentry SDK as a dependency using npm:
+
+``` bash
+$ npm install @sentry/browser
+```
 
 ### Connecting the SDK to Sentry
 After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
-{% include components/platform_content.html content_dir='getting-started-dsn' %}
+You should `init` the Sentry Browser SDK as soon as possible during your page load:
+
+``` javascript
+Sentry.init({ dsn: 'https://<key>@sentry.io/<project>' });
+
+// When using npm, import Sentry
+import * as Sentry from '@sentry/browser';
+```
 
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
@@ -23,8 +40,7 @@ Then, you can see the error in your dashboard:
 [{% asset js-index/error-message.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/error-message.png @path %})
 
 ## Capturing Errors
-### Capturing Errors / Exceptions {#capturing-errors}
-In JavaScript, you can pass an error object to `captureException()` to get it captured as an event.
+In most situations, you can capture errors automatically with `captureException()`.
 
 ```javascript
 try {
@@ -33,18 +49,10 @@ try {
   Sentry.captureException(err);
 }
 ```
-
-{% capture __alert_content -%}
-It's possible to throw strings as errors. In this case, the Sentry SDK will not record tracebacks.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="warning"
-%}
+For additional functionality, see [SDK Integrations](#sdk-integrations).
 
 ### Automatically Capturing Errors
-By including and configuring the Sentry Browser SDK, Sentry will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
+By including and configuring Sentry, the SDK will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
 
 [{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
 
@@ -150,33 +158,7 @@ module.exports = {
 };
 ```
 
-{% capture __alert_content -%}
 In case you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, leave `noSources` turned off, so Sentry can display proper source code context in event stack traces.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="info"
-%}
-
-#### SystemJS
-SystemJS is the default module loader for Angular 2 projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and you can configured it to output source maps.
-
-```javascript
-builder.bundle('src/app.js', 'dist/app.min.js', {
-    minify: true,
-    sourceMaps: true,
-    sourceMapContents: true
-});
-```
-
-{% capture __alert_content -%}
-All of the example configurations above inline your original, un-transformed source files into the generated source map file. Sentry requires both source map(s) **and** your original source files to perform reverse transformations. If you choose NOT to inline your source files, you must make those source files available to Sentry in _addition_ to your source maps (see below).
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Inline Sources"
-  content=__alert_content
-%}
 
 #### TypeScript
 The TypeScript compiler can output source maps. Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
@@ -243,14 +225,7 @@ $ sentry-cli releases finalize <release_name>
 
 For convenience, you can alternatively pass the `--finalize` flag to the `new` command which will immediately finalize the release.
 
-{% capture __alert_content -%}
 You don't _have_ to upload the source files (ref’d by source maps), but without them, the grouping algorithm will not be as strong, and the UI will not show any contextual source.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="info"
-%}
 
 For more information, see [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
 
@@ -345,7 +320,7 @@ If you want to keep your source maps secret and choose not to upload your source
   content=__alert_content
 %}
 
-## Context
+## Adding Context
 You can also set context when manually triggering events.
 
 ### Setting Context {#context}
@@ -353,7 +328,7 @@ Sentry supports additional context with events. Often this context is shared amo
 
 **Structured Contexts**
 
-: Specific structured contexts --- OS info, runtime information, etc.  This is typically set automatically.
+Structured contexts are typically set automatically.
 
 [**User**](#capturing-the-user)
 
@@ -727,15 +702,6 @@ Sentry provides the ability to collect additional feedback from the user upon hi
 For more information, see:
 - [Full documentation on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%})
 - [Introducing User Feedback](https://blog.sentry.io/2016/04/21/introducing-user-feedback)
-
-### Security Policy Reporting
-Sentry provides the ability to collect information on Content-Security-Policy (CSP) violations, as well as Expect-CT and HTTP Public Key Pinning (HPKP) failures by setting the proper HTTP header which results in a violation/failure to be sent to the Sentry endpoint specified in the report-uri.
-
-For more information:
-
-- [Full documentation on Security Policy Reporting]({%- link _documentation/error-reporting/security-policy-reporting.md -%})
-- [Capture Content Security Policy Violations with Sentry](https://blog.sentry.io/2018/09/04/how-sentry-captures-csp-violations)
-- [How a Content Security Policy Could Have Protected Newegg](https://blog.sentry.io/2018/09/20/content-security-policy-newegg-breach)
 
 ### SDK Integrations
 All of Sentry's SDKs provide Integrations, which provide additional functionality.
