@@ -26,6 +26,11 @@ Sentry.init({ dsn: '___PUBLIC_DSN___' });
 // The request handler must be the first middleware on the app
 app.use(Sentry.Handlers.requestHandler());
 
+// All controllers should live here
+app.get('/', function rootHandler(req, res) {
+  res.end('Hello world!');
+});
+
 // The error handler must be before any other error middleware
 app.use(Sentry.Handlers.errorHandler());
 
