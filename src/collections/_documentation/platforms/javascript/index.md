@@ -539,7 +539,7 @@ Please add the script tag below before loading our SDK.
 
 We need `Promise`, `Object.assign`, `Number.isNaN` and `String.prototype.includes` polyfill.
 
-Additionally, keep in mind to define `<!doctype html>` on top of your HTML page, to make sure IE does not go into compatibility mode.
+Additionally, keep in mind to define a valid HTML doctype on top of your HTML page, to make sure IE does not go into compatibility mode.
 {% endcapture %}
 
 {% include components/alert.html
