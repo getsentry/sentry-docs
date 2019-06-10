@@ -30,10 +30,10 @@ sidebar_order: 1
   - Pull Requests
   
 5. Take note of the following values after you have created your app:
-  - App ID (GITHUB_APP_ID)
-  - App Name (GITHUB_APP_NAME)
-  - Client ID (GITHUB_CLIENT_ID)
-  - Client Secret (GITHUB_CLIENT_SECRET)
+  - App ID (`GITHUB_APP_ID`)
+  - App Name (`GITHUB_APP_NAME`)
+  - Client ID (`GITHUB_CLIENT_ID`)
+  - Client Secret (`GITHUB_CLIENT_SECRET`)
 
 6. Generate and download a private key for your app.
 
@@ -52,10 +52,23 @@ github-app.client-secret: 'GITHUB_CLIENT_SECRET'
 ```
 
 {% include components/alert.html
-    content="Make sure to replace these values with the ones you noted in step 4."
+    content="Make sure to replace these values with the ones you noted in step 5."
     level="warning"
   %}
-  
+
+**YML Tip:** `github-app.private-key` can span multiple lines as seen below
+
+```yml
+github-app.private-key: |
+  -----BEGIN RSA PRIVATE KEY-----
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  -----END RSA PRIVATE KEY-----
+```
+
 ## Redeploy your Sentry Instance
 
 ### Docker
