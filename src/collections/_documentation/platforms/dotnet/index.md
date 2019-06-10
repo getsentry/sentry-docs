@@ -13,6 +13,7 @@ This section will describe features, configurations and general functionality wh
 - [_log4net_]({% link _documentation/platforms/dotnet/log4net.md %})
 - [_Microsoft.Extensions.Logging_]({% link _documentation/platforms/dotnet/microsoft-extensions-logging.md %})
 - [_Serilog_]({% link _documentation/platforms/dotnet/serilog.md %})
+- [_NLog_]({% link _documentation/platforms/dotnet/nlog.md %})
 
 ## Compatibility
 
