@@ -956,6 +956,26 @@ They are available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProc
 
 #### Hints for Events
 
+##### Use-Case: `before-send`
+
+The `before-send` callback is passed the event and a second argument `hint` which holds one or more hints. Typically this hint holds the original exception so that additional data can be extracted or grouping is affected. `before-send` will be called right before the event is sent to the server, so it’s the last place where you can edit its data.
+
+In this example the fingerprint is forced to a common value if an exception of a certain type has been caught:
+
+```javascript
+import * as Sentry from '@sentry/browser';
+
+init({
+  beforeSend(event, hint) {
+    const error = hint.originalException;
+    if (error && error.message && error.message.match(/database unavailable/i)) {
+      event.fingerprint = ['database-unavailable'];
+    }
+    return event;
+  }
+});
+```
+
 `originalException`
 
 : The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
@@ -966,6 +986,27 @@ They are available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProc
 basic stack trace. This exception is stored here for further data extraction.
 
 #### Hints for Breadcrumbs
+
+##### Use-Case: `before-breadcrumb`
+
+Similar to `before-send` hints are also supported in `before-breadcrumb`. This is particularly useful when breadcrumbs should be augmented or changed with some extra data from log records or events. The following example shows a typical situation where you might want to extract extra information and how to do it:
+
+```javascript
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: 'https://<key>@sentry.io/',
+  beforeBreadcrumb(breadcrumb, hint) {
+    if (breadcrumb.category === 'ui.click') {
+      const { target } = hint.event;
+      if (target.ariaLabel) {
+        breadcrumb.message = target.ariaLabel;
+      }
+    }
+    return breadcrumb;
+  },
+});
+```
 
 `event`
 
