@@ -5,6 +5,11 @@ sidebar_order: 1
 
 As with any third-party service it’s important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored. We recommend filtering or scrubbing sensitive data within the SDK, so that data is not sent with the event, and also configuring server-side scrubbing to ensure the data is not stored.
 
+There are two great examples for data scrubbing that every company should think about:
+
+- PII (Personally Identifiable Information) such as a user's name or email address, which post-GDPR should be on every company's mind
+- Authentication credentials, like tokens and passwords
+
 ## Custom Event Processing in the SDK
 
 In the SDKs you can configure a `before-send` function which is invoked before an event is sent and can be used to modify the event data and remove sensitive data. See [_Filtering Events_]({%- link _documentation/error-reporting/configuration/filtering.md -%}) for more information.
