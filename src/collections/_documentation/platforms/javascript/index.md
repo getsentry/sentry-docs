@@ -960,7 +960,7 @@ They are available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProc
 
 The `before-send` callback is passed the event and a second argument `hint` which holds one or more hints. Typically this hint holds the original exception so that additional data can be extracted or grouping is affected. `before-send` will be called right before the event is sent to the server, so it’s the last place where you can edit its data.
 
-In this example the fingerprint is forced to a common value if an exception of a certain type has been caught:
+In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
 
 ```javascript
 import * as Sentry from '@sentry/browser';
