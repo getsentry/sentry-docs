@@ -7,8 +7,8 @@ All our JavaScript-related SDKs provide the same API. Still, there are some diff
 
 The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
 
-``` javascript
-<script src="https://browser.sentry-cdn.com/5.4.0/bundle.min.js" crossorigin="anonymous"></script>
+```html
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous"></script>
 ```
 
 You can also add the Sentry SDK as a dependency using npm:
@@ -22,18 +22,18 @@ After you've completed setting up a project in Sentry, Sentry will give you a va
 
 You should `init` the Sentry Browser SDK as soon as possible during your page load:
 
-``` javascript
-Sentry.init({ dsn: 'https://<key>@sentry.io/<project>' });
-
+```javascript
 // When using npm, import Sentry
 import * as Sentry from '@sentry/browser';
+
+Sentry.init({ dsn: '___PUBLIC_DSN___' });
 ```
 
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
 ```javascript
-Sentry.captureException(new Error("This is my fake error message"));
+Sentry.captureException(new Error("Something broke"));
 ```
 Then, you can see the error in your dashboard:
 
@@ -354,9 +354,7 @@ Structured contexts are typically set automatically.
 In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
 
 ```javascript
-Sentry.configureScope((scope) => {
-  scope.setExtra("character_name", "Mighty Fighter");
-});
+Sentry.setExtra("character_name", "Mighty Fighter");
 ```
 
 {% capture __alert_content -%}
@@ -375,9 +373,7 @@ There are two different scopes for unsetting context --- a global scope which Se
 
 ```javascript
 // This will be changed for all future events
-Sentry.configureScope(scope => {
-  scope.setUser(someUser);
-});
+Sentry.setUser(someUser);
 
 // This will be changed only for the error caught inside and automatically discarded afterward
 Sentry.withScope(scope => {
@@ -403,9 +399,7 @@ Sending users to Sentry will unlock many features, primarily the ability to dril
 Capturing the user is fairly straight forward:
 
 ```javascript
-Sentry.configureScope((scope) => {
-  scope.setUser({"email": "john.doe@example.com"});
-});
+Sentry.setUser({"email": "john.doe@example.com"});
 ```
 
 Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
@@ -434,9 +428,7 @@ Sentry implements a system it calls tags. Tags are various key/value pairs that 
 Most SDKs generally support configuring tags by configuring the scope:
 
 ```javascript
-Sentry.configureScope((scope) => {
-  scope.setTag("page_locale", "de-at");
-});
+Sentry.setTag("page_locale", "de-at");
 ```
 
 Several common uses for tags include:
@@ -902,11 +894,11 @@ like this:
 
 ```html
 <!-- Note that we now also provide a es6 build only -->
-<!-- <script src="https://browser.sentry-cdn.com/5.0.0/bundle.es6.min.js" crossorigin="anonymous"></script> -->
-<script src="https://browser.sentry-cdn.com/5.0.0/bundle.min.js" crossorigin="anonymous"></script>
+<!-- <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.es6.min.js" crossorigin="anonymous"></script> -->
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous"></script>
 
 <!-- If you include the integration it will be available under Sentry.Integrations.Vue -->
-<script src="https://browser.sentry-cdn.com/5.0.0/vue.min.js" crossorigin="anonymous"></script>
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/vue.min.js" crossorigin="anonymous"></script>
 
 <script>
   Sentry.init({
