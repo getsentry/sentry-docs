@@ -61,7 +61,6 @@ capture_message('Something went wrong')
 
 A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
 
-- Apply [source maps]({%- link _documentation/platforms/javascript/sourcemaps.md -%}) to receive the full benefit of error tracking and monitoring
 - Determine the issue and regressions introduced in a new release
 - Predict which commit caused an issue and who is likely responsible
 - Resolve issues by including the issue number in your commit message
