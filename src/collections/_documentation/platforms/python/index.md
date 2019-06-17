@@ -12,6 +12,30 @@ Install our Python SDK using `pip`:
 $ pip install --upgrade sentry-sdk
 ```
 
+### Connecting the SDK to Sentry
+
+After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
+
+Import and initialize the Sentry SDK early in your application’s setup:
+
+```python
+import sentry_sdk
+sentry_sdk.init("https://<key>@sentry.io/<project>")
+```
+
+### Verifying Your Setup
+
+Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
+
+```python
+sentry_sdk.capture_exception(Exception("This is my fake error message"))
+```
+
+Once the exception is captured, you'll see the error in your Sentry dashboard.
+
+
+
+
 ****************
 ****************
 ****************
