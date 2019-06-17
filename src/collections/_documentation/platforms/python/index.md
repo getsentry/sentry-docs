@@ -259,6 +259,29 @@ For more information, see:
 - [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
 - [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
+### Filter Events & Custom Logic
+
+Sentry exposes a beforeSend callback which can be used to filter out information or add additional context to the event object.
+
+```python
+import sentry_sdk
+
+def strip_sensitive_data(event, hint):
+    # modify event here
+    return event
+
+sentry_sdk.init(
+    before_send=strip_sensitive_data
+)
+```
+
+For more information, see:
+
+- [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%})
+- [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
+
+
+
 
 
 ****************
