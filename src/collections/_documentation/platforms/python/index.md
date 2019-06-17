@@ -280,6 +280,48 @@ For more information, see:
 - [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%})
 - [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 
+### Capturing Messages
+
+Typically, the Sentry SDK does not emit messages. A message is just some textual information that should be sent to Sentry. This is most useful when you’ve overridden fingerprinting but need to give a useful message.
+
+```python
+from sentry_sdk import capture_message
+
+capture_message('Something went wrong')
+```
+
+### Integrations
+
+*Integrations* extend the functionality of the SDK for some common frameworks and libraries. Similar to plugins, they extend the functionality of the Sentry SDK. A call to `sentry_sdk.init` configures integrations. Unless you set `default_integrations` to `False`, Sentry automatically adds any default integration not in the list below.
+
+### **Web Frameworks**
+
+- [Django]({%- link _documentation/platforms/python/django.md -%})
+- [Flask]({%- link _documentation/platforms/python/flask.md -%})
+- [Sanic]({%- link _documentation/platforms/python/sanic.md -%})
+- [Pyramid]({%- link _documentation/platforms/python/pyramid.md -%})
+- [AIOHTTP]({%- link _documentation/platforms/python/aiohttp.md -%})
+- [Tornado]({%- link _documentation/platforms/python/tornado.md -%})
+- [Bottle]({%- link _documentation/platforms/python/bottle.md -%})
+- [Falcon]({%- link _documentation/platforms/python/falcon.md -%})
+- [Generic WSGI]({%- link _documentation/platforms/python/wsgi.md -%})
+
+### **Task Queues**
+
+- [Celery]({%- link _documentation/platforms/python/celery.md -%})
+- [RQ (Redis Queue)]({%- link _documentation/platforms/python/rq.md -%})
+
+### **Serverless**
+
+- [AWS Lambda]({%- link _documentation/platforms/python/aws_lambda.md -%})
+- [Generic Serverless]({%- link _documentation/platforms/python/serverless.md -%})
+
+### **Other Integrations**
+
+- [Logging]({%- link _documentation/platforms/python/logging.md -%})
+- [GNU Backtrace]({%- link _documentation/platforms/python/gnu_backtrace.md -%})
+- [Default integrations]({%- link _documentation/platforms/python/default-integrations.md -%})
+
 
 
 
