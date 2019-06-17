@@ -33,6 +33,29 @@ sentry_sdk.capture_exception(Exception("This is my fake error message"))
 
 Once the exception is captured, you'll see the error in your Sentry dashboard.
 
+## Capturing Errors
+
+In Python you can either capture a caught exception or the one currently held in `sys.exc_info()` by not passing an argument:
+
+```python
+from sentry_sdk import capture_exception
+
+try:
+    a_potentially_failing_function()
+except Exception as e:
+    # Alternatively the argument can be omitted
+    capture_exception(e)
+```
+
+### Capturing Messages
+
+Another common operation is to capture a bare message. A message is just some textual information that your app can send to Sentry. Typically, messages are not emitted, but there are situations when this is useful.
+
+```python
+from sentry_sdk import capture_message
+
+capture_message('Something went wrong')
+```
 
 
 
