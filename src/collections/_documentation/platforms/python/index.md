@@ -74,6 +74,152 @@ After configuring your SDK, setting up releases is a 2-step process:
 
 For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
 
+## Adding Context
+
+You can also set context when manually triggering events.
+
+### Setting Context
+
+Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
+
+**Structured Contexts**
+
+: Structured contexts are typically set automatically.
+
+[**User**](#capturing-the-user)
+
+: Information about the current actor
+
+[**Tags**](#tagging-events)
+
+: Key/value pairs which generate breakdown charts and search filters
+
+[**Level**](#level)
+
+: An event's severity
+
+[**Fingerprint**](#setting-the-fingerprint)
+
+: A value used for grouping events into issues
+
+[**Unstructured Extra Data**](#extra-context)
+
+: Arbitrary unstructured data which the Sentry SDK stores with an event sample
+
+### Extra Contex
+
+In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
+
+```python
+from sentry_sdk import configure_scope
+
+with configure_scope() as scope:
+    scope.set_extra("character_name", "Mighty Fighter")
+```
+
+### Unsetting Context
+
+Context is held in the current scope and thus is cleared out at the end of each operation — request, etc. You can also append and pop your own scopes to apply context data to a specific code block or function. Typically, unsetting context happens within an integration. For more information, see our [Python integrations](#integrations).
+
+There are two different scopes for unsetting context — a global scope which Sentry does not discard at the end of an operation, and a scope that can be created by the user.
+
+```python
+from sentry_sdk import configure_scope, push_scope, capture_exception
+
+# This will be changed for all future events
+with configure_scope() as scope:
+    scope.user = some_user
+
+with push_scope() as scope:
+    # This will be changed only for the error caught inside and automatically discarded afterward
+    scope.user = some_user
+    capture_exception(...)
+```
+
+### Capturing the User
+
+Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
+
+Capturing the user is fairly straight forward:
+
+```python
+from sentry_sdk import configure_scope
+
+with configure_scope() as scope:
+    scope.user = {"email": "john.doe@example.com"}
+```
+
+Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
+
+**`id`**
+
+: Your internal identifier for the user.
+
+**`username`**
+
+: The user’s username. Generally used as a better label than the internal ID.
+
+**`email`**
+
+: An alternative, or addition, to a username. Sentry is aware of email addresses and can show things like Gravatars, unlock messaging capabilities, and more.
+
+**`ip_address`**
+
+: The IP address of the user. If the user is unauthenticated providing the IP address will suggest that this is unique to that IP. If available, we will attempt to pull this from the HTTP request data.
+
+Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
+
+### Tagging Events
+
+Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and the user can later use them as a breakdown or quick access to finding related events.
+
+Most SDKs generally support configuring tags by configuring the scope:
+
+```python
+from sentry_sdk import configure_scope
+
+with configure_scope() as scope:
+    scope.set_tag("page_locale", "de-at")
+```
+
+Several common uses for tags include:
+
+- The hostname of the server
+- The version of your platform (e.g. iOS 5.0)
+- The user’s language
+
+Once you’ve started sending tagged data, you’ll see it show up in a few places:
+
+- The filters within the sidebar on the project stream page.
+- Summarized within an event on the sidebar.
+- The tags page on an aggregated event.
+
+We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
+
+### Setting the Level
+
+You can set the severity of an event to one of five values: fatal, error, warning, info, and debug. error is the default, fatal is the most severe and debug is the least severe.
+
+```python
+from sentry_sdk import configure_scope
+
+with configure_scope() as scope:
+    scope.level = 'warning'
+```
+
+### Setting the Fingerprint
+
+Sentry uses one or more “fingerprints” to decide how to group errors into issues.
+
+For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings.
+
+If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{{default}}` as one of the items.
+
+For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
+
+
+
+
 
 ****************
 ****************
