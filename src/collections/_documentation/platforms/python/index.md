@@ -217,6 +217,28 @@ If you wish to append information, thus making the grouping slightly less aggres
 
 For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
+## Advanced Usage
+
+### Advanced Configuration
+
+The Sentry SDK sets the options when you first initialize the SDK.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    'https://<key>@sentry.io/<project>',
+    max_breadcrumbs=50,
+    debug=True,
+)
+```
+
+For more information, see:
+
+- [Sentry’s complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
+- [Full documentation on Environments]({%- link _documentation/enriching-error-data/environments.md -%})
+
+
 
 
 
