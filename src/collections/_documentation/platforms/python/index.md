@@ -293,7 +293,7 @@ capture_message('Something went wrong')
 
 *Integrations* extend the functionality of the SDK for some common frameworks and libraries. Similar to plugins, they extend the functionality of the Sentry SDK. A call to `sentry_sdk.init` configures integrations. Unless you set `default_integrations` to `False`, Sentry automatically adds any default integration not in the list below.
 
-### **Web Frameworks**
+#### **Web Frameworks**
 
 - [Django]({%- link _documentation/platforms/python/django.md -%})
 - [Flask]({%- link _documentation/platforms/python/flask.md -%})
@@ -305,17 +305,17 @@ capture_message('Something went wrong')
 - [Falcon]({%- link _documentation/platforms/python/falcon.md -%})
 - [Generic WSGI]({%- link _documentation/platforms/python/wsgi.md -%})
 
-### **Task Queues**
+#### **Task Queues**
 
 - [Celery]({%- link _documentation/platforms/python/celery.md -%})
 - [RQ (Redis Queue)]({%- link _documentation/platforms/python/rq.md -%})
 
-### **Serverless**
+#### **Serverless**
 
 - [AWS Lambda]({%- link _documentation/platforms/python/aws_lambda.md -%})
 - [Generic Serverless]({%- link _documentation/platforms/python/serverless.md -%})
 
-### **Other Integrations**
+#### **Other Integrations**
 
 - [Logging]({%- link _documentation/platforms/python/logging.md -%})
 - [GNU Backtrace]({%- link _documentation/platforms/python/gnu_backtrace.md -%})
