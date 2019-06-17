@@ -238,8 +238,26 @@ For more information, see:
 - [Sentry’s complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
 - [Full documentation on Environments]({%- link _documentation/enriching-error-data/environments.md -%})
 
+### Breadcrumbs
 
+Sentry will automatically record certain events, such as changes to the URL and XHR requests to provide context to an error.
 
+You can manually add breadcrumbs on other events or disable breadcrumbs.
+
+```python
+from sentry_sdk import add_breadcrumb
+
+add_breadcrumb(
+    category='auth',
+    message='Authenticated user %s' % user.email,
+    level='info',
+)
+```
+
+For more information, see:
+
+- [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
+- [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
 
 
