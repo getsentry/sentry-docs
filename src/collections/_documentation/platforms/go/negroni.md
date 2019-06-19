@@ -5,29 +5,30 @@ title: Negroni
 ## Negroni Handler for Sentry-go SDK
 
 **Godoc:** https://godoc.org/github.com/getsentry/sentry-go/negroni
+
 **Example:** https://github.com/getsentry/sentry-go/tree/master/example/negroni
 
 ### Installation
 
-```sh
-go get github.com/getsentry/sentry-go/negroni
+```bash
+$ go get github.com/getsentry/sentry-go/negroni
 ```
 
 ```go
 import (
-    "fmt"
-    "net/http"
+	"fmt"
+	"net/http"
 
-    "github.com/getsentry/sentry-go"
-    sentrynegroni "github.com/getsentry/sentry-go/negroni"
-    "github.com/urfave/negroni"
+	"github.com/getsentry/sentry-go"
+	sentrynegroni "github.com/getsentry/sentry-go/negroni"
+	"github.com/urfave/negroni"
 )
 
 // To initialize Sentry's handler, you need to initialize Sentry itself beforehand
 if err := sentry.Init(sentry.ClientOptions{
-    Dsn: "your-public-dsn",
+	Dsn: "your-public-dsn",
 }); err != nil {
-    fmt.Printf("Sentry initialization failed: %v\n", err)
+	fmt.Printf("Sentry initialization failed: %v\n", err)
 }
 
 // Then create your app
@@ -40,7 +41,7 @@ app.Use(sentrynegroni.New(sentrynegroni.Options{}))
 mux := http.NewServeMux()
 
 mux.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Hello world!")
+	fmt.Fprintf(w, "Hello world!")
 })
 
 app.UseHandler(mux)
@@ -58,13 +59,13 @@ Currently it respects 3 options:
 ```go
 // Whether Sentry should repanic after recovery, in most cases it should be set to true,
 // as negroni.Classic includes its own Recovery middleware that handles http responses.
-Repanic         bool
+Repanic bool
 // Whether you want to block the request before moving forward with the response.
 // Because Negroni's default `Recovery` handler doesn't restart the application,
 // it's safe to either skip this option or set it to `false`.
 WaitForDelivery bool
 // Timeout for the event delivery requests.
-Timeout         time.Duration
+Timeout time.Duration
 ```
 
 ### Usage
@@ -79,30 +80,30 @@ And it should be used instead of the global `sentry.CaptureMessage`, `sentry.Cap
 app := negroni.Classic()
 
 app.Use(sentrynegroni.New(sentrynegroni.Options{
-    Repanic: true,
+	Repanic: true,
 }))
 
 app.Use(negroni.HandlerFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-    hub := sentry.GetHubFromContext(r.Context())
-    hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
-    next(rw, r)
+	hub := sentry.GetHubFromContext(r.Context())
+	hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
+	next(rw, r)
 }))
 
 mux := http.NewServeMux()
 
 mux.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
-    hub := sentry.GetHubFromContext(r.Context())
-    hub.WithScope(func(scope *sentry.Scope) {
-        scope.SetExtra("unwantedQuery", "someQueryDataMaybe")
-        hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
-    })
-    rw.WriteHeader(http.StatusOK)
+	hub := sentry.GetHubFromContext(r.Context())
+	hub.WithScope(func(scope *sentry.Scope) {
+		scope.SetExtra("unwantedQuery", "someQueryDataMaybe")
+		hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
+	})
+	rw.WriteHeader(http.StatusOK)
 })
 
 mux.HandleFunc("/foo", func(rw http.ResponseWriter, r *http.Request) {
-    // sentrynagroni handler will catch it just fine. Also, because we attached "someRandomTag"
-    // in the middleware before, it will be sent through as well
-    panic("y tho")
+	// sentrynagroni handler will catch it just fine. Also, because we attached "someRandomTag"
+	// in the middleware before, it will be sent through as well
+	panic("y tho")
 })
 
 app.UseHandler(mux)
@@ -114,16 +115,16 @@ http.ListenAndServe(":3000", app)
 
 ```go
 sentry.Init(sentry.ClientOptions{
-    Dsn: "your-public-dsn",
-    BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-        if hint.Context != nil {
-            if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
-                // You have access to the original Request here
-            }
-        }
+	Dsn: "your-public-dsn",
+	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+		if hint.Context != nil {
+			if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
+				// You have access to the original Request here
+			}
+		}
 
-        return event
-    },
+		return event
+	},
 })
 ```
 
@@ -146,7 +147,7 @@ app.Use(recovery)
 
 mux := http.NewServeMux()
 mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-    panic("y tho")
+	panic("y tho")
 })
 
 app.UseHandler(mux)

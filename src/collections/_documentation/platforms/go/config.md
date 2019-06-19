@@ -12,7 +12,7 @@ All available options are passed to the `Init()` call in the form of the `Client
 type ClientOptions struct {
 	// The DSN to use. If the DSN is not set, the client is effectively disabled.
 	Dsn string
-    // In debug mode, the debug information is printed to stdout to help you understand what
+	// In debug mode, the debug information is printed to stdout to help you understand what
 	// sentry is doing.
 	Debug bool
 	// Configures whether SDK should generate and attach stacktraces to pure capture message calls.
@@ -69,21 +69,21 @@ By default, TLS uses the host's root CA set. If you don't have `ca-certificates`
 package main
 
 import (
-    "log"
+	"log"
 
-    "github.com/certifi/gocertifi"
-    "github.com/getsentry/sentry-go"
+	"github.com/certifi/gocertifi"
+	"github.com/getsentry/sentry-go"
 )
 
 sentryClientOptions := sentry.ClientOptions{
-    Dsn: "https://16427b2f210046b585ee51fd8a1ac54f@sentry.io/1",
+	Dsn: "https://16427b2f210046b585ee51fd8a1ac54f@sentry.io/1",
 }
 
 rootCAs, err := gocertifi.CACerts()
 if err != nil {
-    log.Println("Coudnt load CA Certificates: %v\n", err)
+	log.Println("Coudnt load CA Certificates: %v\n", err)
 } else {
-    sentryClientOptions.CaCerts = rootCAs
+	sentryClientOptions.CaCerts = rootCAs
 }
 
 sentry.Init(sentryClientOptions)

@@ -15,19 +15,19 @@ To configure transport, provide an instance of `sentry.Transport` interface to `
 package main
 
 import (
-    "time"
+	"time"
 
-    "github.com/getsentry/sentry-go"
+	"github.com/getsentry/sentry-go"
 )
 
 func main() {
-    sentrySyncTransport := sentry.NewHTTPSyncTransport()
-    sentrySyncTransport.Timeout = time.Second * 3
-    
-    sentry.Init(sentry.ClientOptions{
-        Dsn: "___DSN___",
-        Transport: sentrySyncTransport,
-    })
+	sentrySyncTransport := sentry.NewHTTPSyncTransport()
+	sentrySyncTransport.Timeout = time.Second * 3
+	
+	sentry.Init(sentry.ClientOptions{
+		Dsn: "___DSN___",
+		Transport: sentrySyncTransport,
+	})
 }
 ```
 

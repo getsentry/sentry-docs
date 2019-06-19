@@ -10,6 +10,6 @@ If there is an errors package that's not working out of the box, let us know!
 ```go
 f, err := os.Open("filename.ext")
 if err != nil {
-    sentry.CaptureException(err)
+	sentry.CaptureException(err)
 }
 ```

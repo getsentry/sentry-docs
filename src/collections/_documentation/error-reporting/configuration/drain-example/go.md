@@ -4,8 +4,8 @@ The client provides a `Flush` method that takes the time in `time.Duration` for 
 sentry.CaptureMessage("my message")
 
 if sentry.Flush(time.Second * 2) {
-    fmt.Println("All queued events delivered!")
+	fmt.Println("All queued events delivered!")
 } else {
-    fmt.Println("Flush timeout reached")
+	fmt.Println("Flush timeout reached")
 }
 ```

@@ -1,5 +1,5 @@
 ```go
 sentry.Init(sentry.ClientOptions{
-   Environment: "{{ page.example_environment }}",
+	Environment: "{{ page.example_environment }}",
 })
 ```

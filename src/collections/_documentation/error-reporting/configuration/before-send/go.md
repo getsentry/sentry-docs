@@ -2,14 +2,14 @@ In Go, a function can be used to modify the event or return a completely new one
 
 ```go
 sentry.Init(sentry.ClientOptions{
-    BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-        // Modify the event here
-        if event.user != nil {
-            // Don't send user's email address
-            event.user.email = nil
-        }
-        
-        return event
-    },
+	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+		// Modify the event here
+		if event.user != nil {
+			// Don't send user's email address
+			event.user.email = nil
+		}
+		
+		return event
+	},
 })
 ```

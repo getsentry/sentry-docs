@@ -46,25 +46,25 @@ More on this in [Configuration]({%- link _documentation/platforms/go/config.md -
 package main
 
 import (
-    "fmt"
-    "os"
+	"fmt"
+	"os"
 
-    "github.com/getsentry/sentry-go"
+	"github.com/getsentry/sentry-go"
 )
 
 func main() {
-  err := sentry.Init(sentry.ClientOptions{
-    Dsn: "___DSN___",
-  })
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "___DSN___",
+	})
 
-  if err != nil {
-    fmt.Printf("Sentry initialization failed: %v\n", err)
-  }
-  
-  f, err := os.Open("filename.ext")
-  if err != nil {
-    sentry.CaptureException(err)
-  }
+	if err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+	
+	f, err := os.Open("filename.ext")
+	if err != nil {
+		sentry.CaptureException(err)
+	}
 }
 ```
 <!-- ENDWIZARD -->

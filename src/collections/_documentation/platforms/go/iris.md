@@ -5,28 +5,29 @@ title: Iris
 ## Iris Handler for Sentry-go SDK
 
 **Godoc:** https://godoc.org/github.com/getsentry/sentry-go/iris
+
 **Example:** https://github.com/getsentry/sentry-go/tree/master/example/iris
 
 ### Installation
 
-```sh
-go get github.com/getsentry/sentry-go/iris
+```bash
+$ go get github.com/getsentry/sentry-go/iris
 ```
 
 ```go
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/getsentry/sentry-go"
-    sentryiris "github.com/getsentry/sentry-go/iris"
-    "github.com/kataras/iris"
+	"github.com/getsentry/sentry-go"
+	sentryiris "github.com/getsentry/sentry-go/iris"
+	"github.com/kataras/iris"
 )
 
 // To initialize Sentry's handler, you need to initialize Sentry itself beforehand
 if err := sentry.Init(sentry.ClientOptions{
-    Dsn: "your-public-dsn",
+	Dsn: "your-public-dsn",
 }); err != nil {
-    fmt.Printf("Sentry initialization failed: %v\n", err)
+	fmt.Printf("Sentry initialization failed: %v\n", err)
 }
 
 // Then create your app
@@ -37,7 +38,7 @@ app.Use(sentryiris.New(sentryiris.Options{}))
 
 // Set up routes
 app.Get("/", func(ctx iris.Context) {
-    ctx.Writef"Hello world!")
+	ctx.Writef"Hello world!")
 })
 
 // And run it
@@ -53,13 +54,13 @@ Currently it respects 3 options:
 ```go
 // Whether Sentry should repanic after recovery, in most cases it should be set to true,
 // as iris.Default includes its own Recovery middleware what handles http responses.
-Repanic         bool
+Repanic bool
 // Whether you want to block the request before moving forward with the response.
 // Because Iris's default `Recovery` handler doesn't restart the application,
 // it's safe to either skip this option or set it to `false`.
 WaitForDelivery bool
 // Timeout for the event delivery requests.
-Timeout         time.Duration
+Timeout time.Duration
 ```
 
 ### Usage
@@ -74,30 +75,30 @@ And it should be used instead of the global `sentry.CaptureMessage`, `sentry.Cap
 app := iris.Default()
 
 app.Use(sentryiris.New(sentryiris.Options{
-    Repanic: true,
+	Repanic: true,
 }))
 
 app.Use(func(ctx iris.Context) {
-    if hub := sentryiris.GetHubFromContext(ctx); hub != nil {
-        hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
-    }
-    ctx.Next()
+	if hub := sentryiris.GetHubFromContext(ctx); hub != nil {
+		hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
+	}
+	ctx.Next()
 })
 
 app.Get("/", func(ctx iris.Context) {
-    if hub := sentryiris.GetHubFromContext(ctx); hub != nil {
-        hub.WithScope(func(scope *sentry.Scope) {
-            scope.SetExtra("unwantedQuery", "someQueryDataMaybe")
-            hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
-        })
-    }
-    ctx.StatusCode(http.StatusOK)
+	if hub := sentryiris.GetHubFromContext(ctx); hub != nil {
+		hub.WithScope(func(scope *sentry.Scope) {
+			scope.SetExtra("unwantedQuery", "someQueryDataMaybe")
+			hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
+		})
+	}
+	ctx.StatusCode(http.StatusOK)
 })
 
 app.Get("/foo", func(ctx iris.Context) {
-    // sentryiris handler will catch it just fine. Also, because we attached "someRandomTag"
-    // in the middleware before, it will be sent through as well
-    panic("y tho")
+	// sentryiris handler will catch it just fine. Also, because we attached "someRandomTag"
+	// in the middleware before, it will be sent through as well
+	panic("y tho")
 })
 
 app.Run(iris.Addr(":3000"))
@@ -107,15 +108,15 @@ app.Run(iris.Addr(":3000"))
 
 ```go
 sentry.Init(sentry.ClientOptions{
-    Dsn: "your-public-dsn",
-    BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-        if hint.Context != nil {
-            if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
-                // You have access to the original Request here
-            }
-        }
+	Dsn: "your-public-dsn",
+	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+		if hint.Context != nil {
+			if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
+				// You have access to the original Request here
+			}
+		}
 
-        return event
-    },
+		return event
+	},
 })
 ```
