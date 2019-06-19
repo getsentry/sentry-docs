@@ -257,16 +257,6 @@ For more information, see:
 - [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%})
 - [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 
-### Capturing Messages
-
-Typically, the Sentry SDK does not emit messages. A message is just some textual information that should be sent to Sentry. This is most useful when you’ve overridden fingerprinting but need to give a useful message.
-
-```python
-from sentry_sdk import capture_message
-
-capture_message('Something went wrong')
-```
-
 ### Integrations
 
 *Integrations* extend the functionality of the SDK for some common frameworks and libraries. Similar to plugins, they extend the functionality of the Sentry SDK. A call to `sentry_sdk.init` configures integrations. Unless you set `default_integrations` to `False`, Sentry automatically adds any default integration not in the list below.
