@@ -47,16 +47,6 @@ except Exception as e:
     capture_exception(e)
 ```
 
-### Capturing Messages
-
-Another common operation is to capture a bare message. A message is just some textual information that your app can send to Sentry. Typically, messages are not emitted, but there are situations when this is useful.
-
-```python
-from sentry_sdk import capture_message
-
-capture_message('Something went wrong')
-```
-
 ## Releases
 
 A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
