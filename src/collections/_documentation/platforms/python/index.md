@@ -375,7 +375,7 @@ System integrations are integrations enabled by default that integrate into the 
 
 : *Import name: `sentry_sdk.integrations.argv.ArgvIntegration`*
 
-: *(New in version 0.5.0 )*
+: *(New in version 0.5.0)*
 
 : Adds `sys.argv` as `extra` attribute to each event.
 
