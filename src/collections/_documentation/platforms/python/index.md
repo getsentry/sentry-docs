@@ -171,19 +171,7 @@ with configure_scope() as scope:
     scope.set_tag("page_locale", "de-at")
 ```
 
-Several common uses for tags include:
-
-- The hostname of the server
-- The version of your platform (e.g. iOS 5.0)
-- The user’s language
-
-Once you’ve started sending tagged data, you’ll see it show up in a few places:
-
-- The filters within the sidebar on the project stream page.
-- Summarized within an event on the sidebar.
-- The tags page on an aggregated event.
-
-We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
+For more information, see the [Tagging Events section]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events) in Context.
 
 ### Setting the Level
 
