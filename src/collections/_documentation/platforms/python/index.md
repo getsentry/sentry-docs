@@ -20,7 +20,7 @@ Import and initialize the Sentry SDK early in your application’s setup:
 
 ```python
 import sentry_sdk
-sentry_sdk.init("https://<key>@sentry.io/<project>")
+sentry_sdk.init({ dsn: '___PUBLIC_DSN___' })
 ```
 
 ### Verifying Your Setup
