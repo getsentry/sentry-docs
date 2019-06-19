@@ -1,10 +1,9 @@
 ---
 title: Go
-sidebar_relocation: platforms
 ---
 
 {% capture __alert_content -%}
-The Sentry Go SDK is maintained and supported by Sentry but currently under development. Learn more about the project on [GitHub](https://github.com/getsentry/raven-go).
+The `raven-go` SDK is no longer maintained and was superseded by the `sentry-go` SDK. Learn more about the project on [GitHub](https://github.com/getsentry/sentry-go) and check out the [migration guide]({%- link _documentation/platforms/go/migration.md -%}).
 {%- endcapture -%}
 {%- include components/alert.html
   level="warning"
