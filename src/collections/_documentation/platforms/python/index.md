@@ -198,7 +198,7 @@ with configure_scope() as scope:
 
 ### Setting the Fingerprint
 
-Sentry uses one or more “fingerprints” to decide how to group errors into issues.
+Sentry uses a fingerprint to decide how to group errors into issues.
 
 For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings.
 
