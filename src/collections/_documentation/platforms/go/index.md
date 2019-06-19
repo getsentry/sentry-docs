@@ -76,6 +76,7 @@ For more detailed information about how to get the most out of `sentry-go` there
 - [Configuration]({%- link _documentation/platforms/go/config.md -%})
 - [Error Reporting]({%- link _documentation/error-reporting/quickstart.md -%}?platform={{ include.platform }})
 - [Enriching Error Data]({%- link _documentation/enriching-error-data/context.md -%}?platform={{ include.platform }})
+- [Transports]({%- link _documentation/platforms/go/transports.md -%})
 - [Integrations]({%- link _documentation/platforms/go/integrations.md -%})
   - [net/http]({%- link _documentation/platforms/go/http.md -%})
   - [echo]({%- link _documentation/platforms/go/echo.md -%})

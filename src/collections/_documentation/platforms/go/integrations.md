@@ -1,6 +1,6 @@
 ---
 title: Integrations
-sidebar_order: 3
+sidebar_order: 4
 ---
 
 The sentry-go package currently comes with an integration for the native `net/http` package, `echo`, `gin`, `iris`, `martini` and `negroni` to make it easy to handle common scenarios.
