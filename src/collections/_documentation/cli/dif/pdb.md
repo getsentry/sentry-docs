@@ -8,18 +8,19 @@ are the debug information container used by Microsoft for the Windows platform.
 Note that at the moment Sentry will upload Native PDBs, but not .NET Portable
 PDBs.
 
-In addition to PDBs, always consider to upload the actual executables and
-libraries. `sentry-cli` will determine during the upload process whether those
-files contain useful debug information. This is especially important for
+In addition to PDBs, always consider uploading the actual executables and
+libraries. The `sentry-cli` will determine during the upload process whether
+those files contain useful debug information. This is especially important for
 _64-bit_ systems, where unwind information is not stored in the PDB.
 
 ## Basic Upload
 
 Use `upload-dif` to upload PDBs and specify the `pdb` and `pe` types. The
-command will recurively scan the provided folders or ZIP archives. Depending on
+command will recursively scan the provided folders or ZIP archives. Depending on
 whether the executables contain debug information usable by Sentry, they may be
 selected for upload in addition to the PDBs. On 32-bit Intel platforms, expect
-that executables are omitted, on 64-bit Intel and other architectures they are usually uploaded.
+that executables are omitted. On 64-bit Intel and other architectures, they are
+usually uploaded.
 
 {% capture __alert_content -%}
 Because debug files belong to projects, you will need to specify the organization and project you are working with. For more information about this refer to [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects).
@@ -44,13 +45,13 @@ Example:
 
 ## Upload Options
 
-There are a few options you can supply for the upload process
+There are a few options you can supply for the upload process:
 
 `--no-unwind`
 
 : Do not scan for stack unwinding information. Specify this flag for builds with
-  disabled FPO, or when stackwalking occurs on the device. This usually excludes
-  executables and libraries for 64-bit builds.
+  disabled FPO, or when stack walking occurs on the device. This usually
+  excludes executables and libraries for 64-bit builds.
 
 `--no-debug`
 
@@ -60,14 +61,14 @@ There are a few options you can supply for the upload process
 
 `--no-zips`
 
-: By default, sentry-cli will open and search ZIP archives for files. Use this
-  switch to disable if your search paths contain large ZIP archives without
+: By default, the `sentry-cli` will open and search ZIP archives for files. Use
+  this switch to disable if your search paths contain large ZIP archives without
   debug information files to speed up the search.
 
 `--no-reprocessing`
 
 : This parameter prevents Sentry from triggering reprocessing right away. It can
   be useful under rare circumstances where you want to upload files in multiple
-  batches and you want to ensure that Sentry does not start reprocessing before
-  some optional dsyms are uploaded. Note though that someone can still in the
+  batches, and you want to ensure that Sentry does not start reprocessing before
+  some optional dSYMs are uploaded. Note though, that someone can still in the
   meantime trigger reprocessing from the UI.
