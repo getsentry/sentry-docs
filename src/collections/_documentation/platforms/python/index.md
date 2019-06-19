@@ -63,10 +63,6 @@ After configuring your SDK, setting up releases is a 2-step process:
 
 For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
 
-## Adding Context
-
-You can also set context when manually triggering events.
-
 ### Setting Context
 
 Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
