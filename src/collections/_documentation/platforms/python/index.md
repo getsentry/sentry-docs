@@ -63,7 +63,7 @@ After configuring your SDK, setting up releases is a 2-step process:
 
 For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
 
-### Setting Context
+## Context
 
 Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
 
@@ -91,9 +91,22 @@ Sentry supports additional context with events. Often this context is shared amo
 
 : Arbitrary unstructured data which the Sentry SDK stores with an event sample
 
+### Setting Context
+
+In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening.
+
+`.set_context()` will take an object as the second argument and place the object inside `contexts` in the event payload.
+
+```python
+from sentry_sdk import configure_scope
+
+with configure_scope() as scope:
+    scope.set_context('my_cool_data', {'foo': 'bar'})
+```
+
 ### Extra Context
 
-In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
+`.set_extra()` will [ some text here ].
 
 ```python
 from sentry_sdk import configure_scope
