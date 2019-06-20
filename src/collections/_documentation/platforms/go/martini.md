@@ -5,28 +5,29 @@ title: Martini
 ## Martini Handler for Sentry-go SDK
 
 **Godoc:** https://godoc.org/github.com/getsentry/sentry-go/martini
+
 **Example:** https://github.com/getsentry/sentry-go/tree/master/example/martini
 
 ### Installation
 
-```sh
-go get github.com/getsentry/sentry-go/martini
+```bash
+$ go get github.com/getsentry/sentry-go/martini
 ```
 
 ```go
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/getsentry/sentry-go"
-    sentrymartini "github.com/getsentry/sentry-go/martini"
-    "github.com/go-martini/martini"
+	"github.com/getsentry/sentry-go"
+	sentrymartini "github.com/getsentry/sentry-go/martini"
+	"github.com/go-martini/martini"
 )
 
 // To initialize Sentry's handler, you need to initialize Sentry itself beforehand
 if err := sentry.Init(sentry.ClientOptions{
-    Dsn: "your-public-dsn",
+	Dsn: "your-public-dsn",
 }); err != nil {
-    fmt.Printf("Sentry initialization failed: %v\n", err)
+	fmt.Printf("Sentry initialization failed: %v\n", err)
 }
 
 // Then create your app
@@ -37,7 +38,7 @@ app.Use(sentrymartini.New(sentrymartini.Options{}))
 
 // Set up routes
 app.Get("/", func() string {
-    return "Hello world!"
+	return "Hello world!"
 })
 
 // And run it
@@ -53,13 +54,13 @@ Currently it respects 3 options:
 ```go
 // Whether Sentry should repanic after recovery, in most cases it should be set to true,
 // as martini.Classic includes its own Recovery middleware that handles http responses.
-Repanic         bool
+Repanic bool
 // Whether you want to block the request before moving forward with the response.
 // Because Martini's default `Recovery` handler doesn't restart the application,
 // it's safe to either skip this option or set it to `false`.
 WaitForDelivery bool
 // Timeout for the event delivery requests.
-Timeout         time.Duration
+Timeout time.Duration
 ```
 
 ### Usage
@@ -74,27 +75,27 @@ And it should be used instead of the global `sentry.CaptureMessage`, `sentry.Cap
 app := martini.Classic()
 
 app.Use(sentrymartini.New(sentrymartini.Options{
-    Repanic: true,
+	Repanic: true,
 }))
 
 app.Use(func(rw http.ResponseWriter, r *http.Request, c martini.Context, hub *sentry.Hub) {
-    hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
+	hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
 })
 
 app.Get("/", func(rw http.ResponseWriter, r *http.Request, hub *sentry.Hub) {
-    if someCondition {
-        hub.WithScope(func (scope *sentry.Scope) {
-            scope.SetExtra("unwantedQuery", rw.URL.RawQuery)
-            hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
-        })
-    }
-    rw.WriteHeader(http.StatusOK)
+	if someCondition {
+		hub.WithScope(func (scope *sentry.Scope) {
+			scope.SetExtra("unwantedQuery", rw.URL.RawQuery)
+			hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
+		})
+	}
+	rw.WriteHeader(http.StatusOK)
 })
 
 app.Get("/foo", func() string {
-    // sentrymartini handler will catch it just fine. Also, because we attached "someRandomTag"
-    // in the middleware before, it will be sent through as well
-    panic("y tho")
+	// sentrymartini handler will catch it just fine. Also, because we attached "someRandomTag"
+	// in the middleware before, it will be sent through as well
+	panic("y tho")
 })
 
 app.Run()
@@ -104,15 +105,15 @@ app.Run()
 
 ```go
 sentry.Init(sentry.ClientOptions{
-    Dsn: "your-public-dsn",
-    BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-        if hint.Context != nil {
-            if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
-                // You have access to the original Request here
-            }
-        }
+	Dsn: "your-public-dsn",
+	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+		if hint.Context != nil {
+			if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
+				// You have access to the original Request here
+			}
+		}
 
-        return event
-    },
+		return event
+	},
 })
 ```

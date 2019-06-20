@@ -1,30 +1,30 @@
 ```go
 type MyRPCError struct {
-    message      string
-    functionName string
-    errorCode    int
+	message      string
+	functionName string
+	errorCode    int
 }
 
 func (e MyRPCError) Error() string {
-    return "MyRPCError: " + e.message
+	return "MyRPCError: " + e.message
 }
 
 func (e MyRPCError) ErrorCode() string {
-    return strconv.Itoa(e.errorCode)
+	return strconv.Itoa(e.errorCode)
 }
 
 func (e MyRPCError) FunctionName() string {
-    return e.functionName
+	return e.functionName
 }
 
 sentry.Init(sentry.ClientOptions{
-    // ...
-    BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-        if ex, ok := hint.OriginalException.(MyRPCError); ok {
-            event.Fingerprint = []string{ex.ErrorCode(), ex.FunctionName()}
-        }
+	// ...
+	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+		if ex, ok := hint.OriginalException.(MyRPCError); ok {
+			event.Fingerprint = []string{ex.ErrorCode(), ex.FunctionName()}
+		}
 
-        return event
-    },
+		return event
+	},
 })
 ```

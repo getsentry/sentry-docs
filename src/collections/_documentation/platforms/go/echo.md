@@ -5,30 +5,31 @@ title: Echo
 ## Echo Handler for Sentry-go SDK
 
 **Godoc:** https://godoc.org/github.com/getsentry/sentry-go/echo
+
 **Example:** https://github.com/getsentry/sentry-go/tree/master/example/echo
 
 ### Installation
 
-```sh
-go get github.com/getsentry/sentry-go/echo
+```bash
+$ go get github.com/getsentry/sentry-go/echo
 ```
 
 ```go
 import (
-    "fmt"
-    "net/http"
+	"fmt"
+	"net/http"
 
-    "github.com/getsentry/sentry-go"
-    sentryecho "github.com/getsentry/sentry-go/echo"
-    "github.com/labstack/echo/v4"
-    "github.com/labstack/echo/v4/middleware"
+	"github.com/getsentry/sentry-go"
+	sentryecho "github.com/getsentry/sentry-go/echo"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 // To initialize Sentry's handler, you need to initialize Sentry itself beforehand
 if err := sentry.Init(sentry.ClientOptions{
-    Dsn: "your-public-dsn",
+	Dsn: "your-public-dsn",
 }); err != nil {
-    fmt.Printf("Sentry initialization failed: %v\n", err)
+	fmt.Printf("Sentry initialization failed: %v\n", err)
 }
 
 // Then create your app
@@ -42,7 +43,7 @@ app.Use(sentryecho.New(sentryecho.Options{}))
 
 // Set up routes
 app.GET("/", func(ctx echo.Context) error {
-    return ctx.String(http.StatusOK, "Hello, World!")
+	return ctx.String(http.StatusOK, "Hello, World!")
 })
 
 // And run it
@@ -117,15 +118,15 @@ app.Logger.Fatal(app.Start(":3000"))
 
 ```go
 sentry.Init(sentry.ClientOptions{
-    Dsn: "your-public-dsn",
-    BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-        if hint.Context != nil {
-            if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
-                // You have access to the original Request here
-            }
-        }
+	Dsn: "your-public-dsn",
+	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+		if hint.Context != nil {
+			if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {
+				// You have access to the original Request here
+			}
+		}
 
-        return event
-    },
+		return event
+	},
 })
 ```

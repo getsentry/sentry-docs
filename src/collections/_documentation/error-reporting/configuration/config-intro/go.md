@@ -2,7 +2,7 @@ Options are passed to the `Init()` method as an instance of `sentry.ClientOption
 
 ```go
 sentry.Init(sentry.ClientOptions{
-    Dsn: '___PUBLIC_DSN___',
-    Debug: true,
+	Dsn: '___PUBLIC_DSN___',
+	Debug: true,
 })
 ```
