@@ -138,8 +138,6 @@ with push_scope() as scope:
 
 Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
 
-Capturing the user is fairly straight forward:
-
 ```python
 from sentry_sdk import configure_scope
 
