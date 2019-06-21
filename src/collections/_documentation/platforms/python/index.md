@@ -28,7 +28,7 @@ sentry_sdk.init({ dsn: '___PUBLIC_DSN___' })
 Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
 ```python
-sentry_sdk.capture_exception(Exception("This is my fake error message"))
+sentry_sdk.capture_exception(Exception("This is an example of an error message."))
 ```
 
 Once the exception is captured, you'll see the error in your Sentry dashboard.
@@ -101,12 +101,12 @@ In addition to the structured context that Sentry understands, you can send arbi
 from sentry_sdk import configure_scope
 
 with configure_scope() as scope:
-    scope.set_context('my_cool_data', {'foo': 'bar'})
+    scope.set_context("my_cool_data", {"foo": "bar"})
 ```
 
 ### Extra Context
 
-`.set_extra()` will [ some text here ].
+`.set_extra()` is similar to `.set_context()`, but it does not accept objects as a second argument. .
 
 ```python
 from sentry_sdk import configure_scope
