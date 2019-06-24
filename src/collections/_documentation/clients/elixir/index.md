@@ -112,6 +112,7 @@ config :sentry,
 Sentry.Context.set_extra_context(%{day_of_week: "Friday"})
 Sentry.Context.set_user_context(%{id: 24, username: "user_username", has_subscription: true})
 Sentry.Context.set_tags_context(%{locale: "en-us"})
+Sentry.Context.set_http_context(%{path: "/my_path/34"})
 Sentry.Context.add_breadcrumb(%{category: "web.request"})
 
 # Event-based Context
