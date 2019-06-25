@@ -12,7 +12,7 @@ function makeRequest(method, path, options) {
     return fetch(method, path, options).catch(err => {
         Sentry.withScope(scope => {
           // extend the fingerprint with the request path
-          scope.setFingerprint(['{{ default }}', path]);
+          scope.setFingerprint(['{% raw %}{{ default }}{% endraw %}', path]);
           Sentry.captureException(err);
         });
     });
