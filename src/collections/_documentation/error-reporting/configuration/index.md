@@ -59,9 +59,11 @@ environment variable (except for the browser SDK where this is not applicable).
 {:.config-key}
 ### `error_types`
 
+{% supported php %}
 Sets which errors are reported. It takes the same values as PHP's [`error_reporting`](https://www.php.net/manual/errorfunc.configuration.php#ini.error-reporting) configuration parameter.
 
-By default all types of errors will be reported (equivalent to `E_ALL`).
+By default all types of errors are be reported (equivalent to `E_ALL`).
+{% endsupported %}
 
 {:.config-key}
 ### `sample-rate`
