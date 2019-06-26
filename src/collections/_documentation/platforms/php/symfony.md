@@ -9,7 +9,7 @@ Symfony is supported via the [sentry-symfony](https://github.com/getsentry/sentr
 {% capture markdown_content %}
 This documentation refers to the v3.0 of the bundle. This version supports the newest [Unified API client]({%- link _documentation/platforms/php/index.md -%}).
 
-You can continue to use [the previous versions]({%- link _site/clients/php/integrations/symfony2/index.html %}) if you're still using Symfony 2.
+You can continue to use [the previous versions]({%- link _documentation/clients/php/integrations.md#symfony2 %}) if you're still using Symfony 2.
 {% endcapture %}
 
 {% include components/alert.html
