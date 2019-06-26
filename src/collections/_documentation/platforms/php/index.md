@@ -168,12 +168,13 @@ through the client builder, but you can override it using the appropriate method
 
 ```php
 use Sentry\ClientBuilder;
+use Sentry\Options;
 use Sentry\Transport\HttpTransport;
 use Sentry\State\Hub;
 
 $options = ['dsn' => '___PUBLIC_DSN___'];
 
-$transport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
+$transport = new HttpTransport(new Options($options), HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
 
 $builder = ClientBuilder::create($options);
 $builder->setTransport($transport);
@@ -198,6 +199,7 @@ care of sending them. Currently only spooling to memory is supported.
 
 ```php
 use Sentry\ClientBuilder;
+use Sentry\Options;
 use Sentry\Transport\SpoolTransport;
 use Sentry\Transport\HttpTransport;
 use Sentry\State\Hub;
@@ -206,7 +208,7 @@ $options = ['dsn' => '___PUBLIC_DSN___'];
 
 $spool = new MemorySpool();
 $transport = new SpoolTransport($spool);
-$httpTransport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
+$httpTransport = new HttpTransport(new Options($options), HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
 
 $builder = ClientBuilder::create($options);
 $builder->setTransport($transport);
