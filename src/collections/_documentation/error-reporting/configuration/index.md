@@ -57,6 +57,13 @@ By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT`
 environment variable (except for the browser SDK where this is not applicable).
 
 {:.config-key}
+### `error_types`
+
+Sets which errors are reported. It takes the same values as PHP's [`error_reporting`](https://www.php.net/manual/errorfunc.configuration.php#ini.error-reporting) configuration parameter.
+
+By default all types of errors will be reported (equivalent to `E_ALL`).
+
+{:.config-key}
 ### `sample-rate`
 
 Configures the sample rate as a percentage of events to be sent in the range of `0.0` to `1.0`.  The
