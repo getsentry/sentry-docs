@@ -363,14 +363,25 @@ $monolog->pushHandler($handler);
 
 Symfony is supported via the [sentry-symfony](https://github.com/getsentry/sentry-symfony) package as a native bundle.
 
-### Symfony 2+
+### Symfony 2
 
 <!-- WIZARD symfony2 -->
 Install the `sentry/sentry-symfony` package:
 
 ```bash
-$ composer require sentry/sentry-symfony
+$ composer require sentry/sentry-symfony:^2
 ```
+{% capture markdown_content %}
+This documentation refers to the v2.x of the bundle. This version does not support the newest [Unified API client]({%- link _documentation/platforms/php/index.md -%}).
+
+You can upgrade to [the newer version]({%- link _documentation/platforms/php/symfony.md -%}) if you're on PHP 7.1+ and Symfony 3.4+.
+{% endcapture %}
+
+{% include components/alert.html
+  title="Newer version"
+  content=markdown_content
+  level="warning"
+%}
 
 Enable the bundle in `app/AppKernel.php`:
 

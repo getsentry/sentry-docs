@@ -13,7 +13,7 @@ You can continue to use [the previous versions]({%- link _documentation/clients/
 {% endcapture %}
 
 {% include components/alert.html
-  title="Under development"
+  title="New version"
   content=markdown_content
   level="warning"
 %}
