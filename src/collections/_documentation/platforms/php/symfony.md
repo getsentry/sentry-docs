@@ -28,7 +28,7 @@ $ composer require sentry/sentry-symfony
 
 ### Enabling the bundle
 {% include components/alert.html
-  content="If you're using the Symfony Flex plugin, you can skip this step; the bundle will be automatically enabled by the Flex recipe."
+  content="If you're using the Symfony Flex plugin, you can skip this step; the Flex recipe will automatically enable the bundle."
 %}
 Enable the bundle in `app/AppKernel.php`:
 
