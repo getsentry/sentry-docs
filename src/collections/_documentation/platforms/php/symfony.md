@@ -119,7 +119,7 @@ sentry:
 ```
 ### DSN
 The DSN option is the only required option: it sets the Sentry DSN, and so reports all events to the related project. If it's
-left empty, it actually disables Sentry reporting. Since the bundle is enabled in all environments, it's recommended to 
+left empty, it disables Sentry reporting. Because Sentry enables the bundle in all environments, it's recommended to 
 disable it in the `test` and `dev` environments.
 
 ### Options
