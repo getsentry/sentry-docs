@@ -128,7 +128,7 @@ you can read more about those in the [Unified API configuration docs]({% link _d
 and on the [PHP specific SDK docs]({% link _documentation/platforms/php/index.md %}#php-specific-options).
 
 Below you can find additional documentation that is specific to the bundle usage, or information about the sensible default
-values that are used in some cases.
+values that you can use in some cases.
 
 #### before_breadcrumb and before_send
 The `before_breadcrumb` and `before_send` options both accept a `callable`; thus, you cannot provide it directly through
