@@ -70,7 +70,7 @@ The [Sentry 2.0 SDK]({% link _documentation/platforms/php/index.md %}#php-specif
 hold information about the current state of the app, and attach it to any event that is reported. 
 This bundle has three listeners (`RequestListener`, `SubRequestListener` and `ConsoleListener`) that add some easy 
 default information. Those listeners normally are executed with a priority of `1` to allow easier customization with 
-custom listeners, that by default run afterwards, with a lower priority of `0`.
+custom listeners, that by default run afterward, with a lower priority of `0`.
 
 Those listeners are `final` so not extendable, but you can look at those to know how to add more information to the 
 current `Scope` and enrich you Sentry events.
