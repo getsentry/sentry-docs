@@ -59,7 +59,7 @@ sentry:
     dsn: "___PUBLIC_DSN___"
 ```
 
-If you're using the Symfony Flex plugin, you'll find this file already created for you; it will suggest to use an environment variable to inject the DSN value securely.
+If you're using the Symfony Flex plugin, you'll find this file already created for you; it will suggest using an environment variable to inject the DSN value securely.
 
 <!-- ENDWIZARD -->
 
