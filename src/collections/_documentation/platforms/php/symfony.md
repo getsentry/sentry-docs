@@ -118,7 +118,7 @@ sentry:
         console: 1
 ```
 ### DSN
-The DSN option is the only required one: it sets the Sentry DSN, and so reports all events to the related project. If it's
+The DSN option is the only required option: it sets the Sentry DSN, and so reports all events to the related project. If it's
 left empty, it actually disables Sentry reporting. Since the bundle is enabled in all environments, it's recommended to 
 disable it in the `test` and `dev` environments.
 
