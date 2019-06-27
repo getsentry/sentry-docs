@@ -135,7 +135,7 @@ The `before_breadcrumb` and `before_send` options both accept a `callable`; thus
  a YAML file; the bundle accepts a service reference (starting with `@`), which you can build in your DIC container.
 
 #### environment
-The `environment` option defaults to the same environment of your Symfony application (i.e. `dev`, `test`, `prod`...).
+The `environment` option defaults to the same environment of your Symfony application (For example,`dev`, `test`, `prod`...).
 
 #### in_app_exclude
 The `in_app_exclude` option is used to mark files as non belonging to your app's source code in events' stack traces.
