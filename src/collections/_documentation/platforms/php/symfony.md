@@ -147,5 +147,5 @@ In this bundle it has two default values:
 The `project_root` options defaults to `%kernel.project_dir%`.
 
 ### Listener priorities
-The `listener_priorities` options are used to change the priority at which the bundle's listener are called. They all default
+The `listener_priorities` options are used to change the priority at which the bundle's listener is called. They all default
 to `1`, so they are called just before the default priority of `0`, at which you can easily add your custom listeners.
