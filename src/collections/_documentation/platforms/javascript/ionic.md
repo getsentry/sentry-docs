@@ -64,6 +64,25 @@ class SentryIonicErrorHandler extends IonicErrorHandler {
 }
 ```
 
+Or `ErrorHandler` for Ionic v4:
+
+```javascript
+import { ErrorHandler } from '@angular/core';
+
+import * as Sentry from 'sentry-cordova';
+
+class SentryIonicErrorHandler extends ErrorHandler {
+  handleError(error) {
+    super.handleError(error);
+    try {
+      Sentry.captureException(error.originalError || error);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+```
+
 Then change the `@NgModule{providers:[]}` in `app.module.ts` to:
 
 ```javascript
@@ -72,7 +91,7 @@ Then change the `@NgModule{providers:[]}` in `app.module.ts` to:
     providers: [
         StatusBar,
         SplashScreen,
-        // {provide: ErrorHandler, useClass: IonicErrorHandler} remove this, add next line
+        // {provide: ErrorHandler, useClass: IonicErrorHandler} remove this, add next line (for Ionic 4 this line doen't exist by default)
         {provide: ErrorHandler, useClass: SentryIonicErrorHandler}
     ]
 })
