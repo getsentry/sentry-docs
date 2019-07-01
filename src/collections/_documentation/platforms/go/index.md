@@ -45,7 +45,7 @@ More on this in [Configuration]({%- link _documentation/platforms/go/config.md -
 ## Usage {#usage}
 
 {% capture __alert_content -%}
-  By default, Sentry Go SDK uses asynchronous transport, which in the code example below, requires explicit awaiting for event delivery to be finished using `sentry.Flush` method. It is necessary, because Go programs does not wait for async HTTP calls to return a response and close the process immediately if it reaches the end of the `main` function. It would not be required inside a running go-routine or if you would use `HTTPSyncTransport`, which you can read about in `Transports` section.
+  By default, Sentry Go SDK uses asynchronous transport, which in the code example below requires an explicit awaiting for event delivery to be finished using `sentry.Flush` method. It is necessary, because otherwise the program would not wait for the async HTTP calls to return a response, and exit the process immediately when it reached the end of the `main` function. It would not be required inside a running goroutine or if you would use `HTTPSyncTransport`, which you can read about in `Transports` section.
 {%- endcapture -%}
 {%- include components/alert.html
 	level="info"
