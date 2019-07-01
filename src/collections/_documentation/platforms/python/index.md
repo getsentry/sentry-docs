@@ -106,7 +106,7 @@ with configure_scope() as scope:
 
 ### Extra Context
 
-`.set_extra()` is similar to `.set_context()`, but it does not accept objects as a second argument. .
+`.set_extra()` is similar to `.set_context()`, however it doesn't have reserved keys.
 
 ```python
 from sentry_sdk import configure_scope
