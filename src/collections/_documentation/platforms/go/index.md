@@ -42,12 +42,24 @@ To use `sentry-go`, you’ll need to import the `sentry-go` package and initiali
 
 More on this in [Configuration]({%- link _documentation/platforms/go/config.md -%}) section.
 
+## Usage {#usage}
+
+{% capture __alert_content -%}
+  By default, Sentry Go SDK uses asynchronous transport, which in the code example below requires an explicit awaiting for event delivery to be finished using `sentry.Flush` method. It is necessary, because otherwise the program would not wait for the async HTTP calls to return a response, and exit the process immediately when it reached the end of the `main` function. It would not be required inside a running goroutine or if you would use `HTTPSyncTransport`, which you can read about in `Transports` section.
+{%- endcapture -%}
+{%- include components/alert.html
+	level="info"
+	title="Awaiting Event Delivery"
+	content=__alert_content
+%}
+
 ```go
 package main
 
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 )
@@ -64,9 +76,11 @@ func main() {
 	f, err := os.Open("filename.ext")
 	if err != nil {
 		sentry.CaptureException(err)
+		sentry.Flush(time.Second * 5)
 	}
 }
 ```
+
 <!-- ENDWIZARD -->
 
 ## Next Steps
@@ -77,6 +91,7 @@ For more detailed information about how to get the most out of `sentry-go` there
 - [Error Reporting]({%- link _documentation/error-reporting/quickstart.md -%}?platform={{ include.platform }})
 - [Enriching Error Data]({%- link _documentation/enriching-error-data/context.md -%}?platform={{ include.platform }})
 - [Transports]({%- link _documentation/platforms/go/transports.md -%})
+- [Goroutines]({%- link _documentation/platforms/go/goroutines.md -%})
 - [Integrations]({%- link _documentation/platforms/go/integrations.md -%})
   - [net/http]({%- link _documentation/platforms/go/http.md -%})
   - [echo]({%- link _documentation/platforms/go/echo.md -%})
