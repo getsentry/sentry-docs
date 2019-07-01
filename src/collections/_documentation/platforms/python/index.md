@@ -294,7 +294,6 @@ For more information, see:
 
 - [Logging]({%- link _documentation/platforms/python/logging.md -%})
 - [GNU Backtrace]({%- link _documentation/platforms/python/gnu_backtrace.md -%})
-- [Default integrations]({%- link _documentation/platforms/python/default-integrations.md -%})
 
 ### Default Integrations
 
