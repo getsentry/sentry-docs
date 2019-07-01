@@ -182,7 +182,7 @@ For more information, see the [Tagging Events section]({%- link _documentation/e
 
 ### Setting the Level
 
-You can set the severity of an event to one of five values: fatal, error, warning, info, and debug. error is the default, fatal is the most severe and debug is the least severe.
+You can set the severity of an event to one of five values: fatal, error, warning, info, and debug. error is the default, fatal is the most severe, and debug is the least severe.
 
 ```python
 from sentry_sdk import configure_scope
