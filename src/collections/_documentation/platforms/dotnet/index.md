@@ -40,6 +40,13 @@ Of those, we run our unit/integration tests against:
   level="info"
 %}
 
+{% include components/alert.html
+  title="Upgrading the SDK and want to understand what's new?"
+  content="Have a look at the [Changelog](https://github.com/getsentry/sentry-dotnet/releases)."
+  level="info"
+%}
+
+
 ## Automatically discovering release version
 
 The SDK attempts to locate the release to add that to the events sent to Sentry.

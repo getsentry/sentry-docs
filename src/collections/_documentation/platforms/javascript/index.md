@@ -17,6 +17,12 @@ You can also add the Sentry SDK as a dependency using npm:
 $ npm install @sentry/browser
 ```
 
+{% include components/alert.html
+  title="Upgrading the SDK and want to understand what's new?"
+  content="Have a look at the [Changelog](https://github.com/getsentry/sentry-javascript/releases)."
+  level="info"
+%}
+
 ### Connecting the SDK to Sentry
 After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
