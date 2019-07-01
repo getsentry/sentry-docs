@@ -31,7 +31,7 @@ app.get('/', function rootHandler(req, res) {
   res.end('Hello world!');
 });
 
-// The error handler must be before any other error middleware
+// The error handler must be before any other error middleware and after all controllers
 app.use(Sentry.Handlers.errorHandler());
 
 // Optional fallthrough error handler
