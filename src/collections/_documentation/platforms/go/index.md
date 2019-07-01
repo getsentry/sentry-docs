@@ -42,12 +42,24 @@ To use `sentry-go`, you’ll need to import the `sentry-go` package and initiali
 
 More on this in [Configuration]({%- link _documentation/platforms/go/config.md -%}) section.
 
+## Usage {#usage}
+
+{% capture __alert_content -%}
+  By default, Sentry Go SDK uses asynchronous transport, which in the code example below, requires explicit awaiting for event delivery to be finished using `sentry.Flush` method. It is necessary, because Go programs does not wait for async HTTP calls to return a response and close the process immediately if it reaches the end of the `main` function. It would not be required inside a running go-routine or if you would use `HTTPSyncTransport`, which you can read about in `Transports` section.
+{%- endcapture -%}
+{%- include components/alert.html
+	level="info"
+	title="Awaiting Event Delivery"
+	content=__alert_content
+%}
+
 ```go
 package main
 
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 )
@@ -64,9 +76,11 @@ func main() {
 	f, err := os.Open("filename.ext")
 	if err != nil {
 		sentry.CaptureException(err)
+		sentry.Flush(time.Second * 5)
 	}
 }
 ```
+
 <!-- ENDWIZARD -->
 
 ## Next Steps
