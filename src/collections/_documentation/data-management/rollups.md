@@ -73,7 +73,7 @@ The following example will just completely overwrite Sentry's grouping by omitti
 
 ## Grouping Algorithm Versioning
 
-When you create a Sentry project, the latest and greatest version of the grouping algorithm is automatically selected. The newest improvement on the grouping system will make it so new projects will not create new groups. However, only new projects will see this improvement. If you want to upgrade an existing project to a new grouping algorithm version, you can do so in the project settings. Note that you can only upgrade. To downgrade, you will need to contact customer support.
+When you create a Sentry project, the latest and greatest version of the grouping algorithm is automatically selected. This means that the grouping behavior is consistent within a project. However, only new projects will see improvements in the grouping algorithm. If you want to upgrade an existing project to a new grouping algorithm version, you can do so in the project settings. Note that you can only upgrade. To downgrade, you will need to contact customer support. When upgrading you will very likely see new groups being created.
 
 ## Grouping Enhancements and Server Side Fingerprinting
 
@@ -92,6 +92,14 @@ The syntax for grouping enhancements is roughly like this:
 
 ```
 matcher-name:expression other-matcher:expression ... action1 action2 ...
+```
+
+Here is a practical example to see how this looks like:
+
+```
+family:native function:std::*   -app
+path:**/node_modules/**         -app
+path:**/generated/**.js         -group
 ```
 
 #### Rules
@@ -232,5 +240,4 @@ family:native function:malloc -> memory-allocation-error
 
 # force all events with a certain message to be matched together
 message:"unexpected i/o error: *" -> io-error
-
 ```
