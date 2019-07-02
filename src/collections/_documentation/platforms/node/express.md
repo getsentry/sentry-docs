@@ -53,6 +53,20 @@ app.get('/debug-sentry', function mainHandler(req, res) {
 });
 ```
 
+By default, `errorHandler` will capture only errors with status code of `500` or higher. If you want to change it, provide it with `shouldHandleError` callback, which accepts middleware error as its argument and decides, whether error should be sent or not, by returning an appropriate boolean value.
+
+```js
+app.use(Sentry.Handlers.errorHandler({
+  shouldHandleError(error) {
+    // Capture all 404 and 500 errors
+    if (error.status === 404 || error.status === 500) {
+      return true
+    }
+    return false
+  }
+}));
+```
+
 <!-- ENDWIZARD -->
 
 If you use TypeScript, you need to cast our handlers to express specific types.
