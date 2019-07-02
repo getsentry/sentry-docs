@@ -279,7 +279,7 @@ logger.error('There was some crazy error', exc_info=True, extra={
 })
 ```
 
-### 404 Logging {#logging}
+### 404 Logging {#404-logging}
 
 In certain conditions you may wish to log 404 events to the Sentry server. To do this, you simply need to enable a Django middleware:
 
