@@ -492,7 +492,7 @@ Sentry owner or manager permissions and GitLab owner or maintainer permissions a
 
     1. The GitLab URL is the base URL for your GitLab instance. If using gitlab.com, enter https://gitlab.com/.
 
-    1. Find the GitLab Group Path in your group’s GitLab page.
+    1. Find the GitLab Group Path in your group’s GitLab page. Groups might contain subgroups and projects. You should not specify the URL to any specific project, just to a group och subgroup.
 
         [{% asset gitlab/gitlab-groups.png alt="GitLab page showing group path" %}]({% asset gitlab/gitlab-groups.png @path %})
 
