@@ -44,17 +44,17 @@ class ExampleBoundary extends Component {
         this.state = { eventId: null };
     }
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
+    static getDerivedStateFromError(error) {
+      return { hasError: true };
+    }
 
-  componentDidCatch(error, errorInfo) {
-    Sentry.withScope(scope => {
-        scope.setExtra(errorInfo);
-        const eventId = Sentry.captureException(error);
-        this.setState({ eventId });
-    });
-  }
+    componentDidCatch(error, errorInfo) {
+      Sentry.withScope(scope => {
+          scope.setExtra(errorInfo);
+          const eventId = Sentry.captureException(error);
+          this.setState({ eventId });
+      });
+    }
 
     render() {
         if (this.state.hasError) {
