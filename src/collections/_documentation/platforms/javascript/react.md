@@ -41,7 +41,7 @@ import * as Sentry from '@sentry/browser';
 class ExampleBoundary extends Component {
     constructor(props) {
         super(props);
-        this.state = { error: null, eventId: null };
+        this.state = { eventId: null };
     }
 
   static getDerivedStateFromError(error) {
@@ -57,7 +57,7 @@ class ExampleBoundary extends Component {
   }
 
     render() {
-        if (this.state.error) {
+        if (this.state.hasError) {
             //render fallback UI
             return (
               <button onClick={() => Sentry.showReportDialog({ eventId: this.state.eventId })}>Report feedback</button>
@@ -68,4 +68,6 @@ class ExampleBoundary extends Component {
         return this.props.children;
     }
 }
+
+export default ExampleBoundary
 ```
