@@ -50,9 +50,9 @@ class ExampleBoundary extends Component {
 
   componentDidCatch(error, errorInfo) {
     Sentry.withScope(scope => {
-      scope.setExtra(errorInfo);
-      const eventId = Sentry.captureException(error);
-      this.setState({ eventId });
+        scope.setExtra(errorInfo);
+        const eventId = Sentry.captureException(error);
+        this.setState({ eventId });
     });
   }
 
