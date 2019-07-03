@@ -35,7 +35,7 @@ In development mode React will rethrow errors caught within an error boundary. T
 %}
 
 ```jsx
-import React from 'react';
+import React, { Component } from 'react';
 import * as Sentry from '@sentry/browser';
 
 class ExampleBoundary extends Component {
@@ -44,20 +44,23 @@ class ExampleBoundary extends Component {
         this.state = { error: null, eventId: null };
     }
 
-    componentDidCatch(error, errorInfo) {
-      this.setState({ error });
-      Sentry.withScope(scope => {
-          scope.setExtras(errorInfo);
-          const eventId = Sentry.captureException(error);
-          this.setState({eventId})
-      });
-    }
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    Sentry.withScope(scope => {
+      scope.setExtra(errorInfo);
+      const eventId = Sentry.captureException(error);
+      this.setState({ eventId });
+    });
+  }
 
     render() {
         if (this.state.error) {
             //render fallback UI
             return (
-              <a onClick={() => Sentry.showReportDialog({ eventId: this.state.eventId })}>Report feedback</a>
+              <button onClick={() => Sentry.showReportDialog({ eventId: this.state.eventId })}>Report feedback</button>
             );
         }
 
