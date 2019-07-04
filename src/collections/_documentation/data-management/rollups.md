@@ -5,7 +5,7 @@ sidebar_order: 0
 
 An important part of Sentry is the way similar events are grouped together. This turns out to be a pretty complex issue, and it's not always obvious why events are being grouped the way they are.
 
-Errors are aggregated (and deduplicated) based on the fingerprint of the event. By default Sentry will generate its own fingerprint, but you can also customize this behavior using `scope.set_fingerprint` or equivilent API in our SDKs. For example, in JavaScript this might look like this:
+Errors are aggregated (and deduplicated) based on the fingerprint of the event. By default Sentry will generate its own fingerprint, but you can also customize this behavior using `scope.set_fingerprint` or equivalent API in our SDKs. For example, in JavaScript this might look like this:
 
 ```javascript
 function makeRequest(method, path, options) {
