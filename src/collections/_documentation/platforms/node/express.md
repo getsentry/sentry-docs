@@ -76,3 +76,11 @@ app.use(Sentry.Handlers.errorHandler());
 // to
 app.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
 ```
+
+### Troubleshooting
+
+When capturing errors locally, ensure that your project's data filter for filtering localhost events is toggled off:
+
+{% asset express-data-filters.png %}
+
+This ensures that errors produced by your browser (such as errors produced by HTTP methods) are properly captured.
