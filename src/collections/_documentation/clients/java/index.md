@@ -20,7 +20,7 @@ Getting started with Sentry is a three step process:
 
 1.  [Sign up for an account](https://sentry.io/signup/)
 2.  [Install your SDK](#install)
-3.  [Configure it](#configure)
+3.  [Configure it](#config)
 
 ## Installation {#install}
 
