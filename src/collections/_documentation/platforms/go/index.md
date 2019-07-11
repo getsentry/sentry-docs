@@ -24,16 +24,10 @@ Getting started with Sentry is a three step process:
 <!-- WIZARD -->
 ## Installation {#install}
 
-sentry-go can be installed like any other Go library through `go get`:
+sentry-go can be installed like any other Go library through `go get`, and if using Go Modules, it will pick up the latest tagged version:
 
 ```bash
 $ go get github.com/getsentry/sentry-go
-```
-
-Or, if you are already using Go Modules, specify a version number as well:
-
-```bash
-$ go get github.com/getsentry/sentry-go@v{% sdk_version sentry.go %}
 ```
 
 ## Configuration {#configure}

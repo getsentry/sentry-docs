@@ -16,7 +16,7 @@ $ go get github.com/getsentry/raven-go
 sentry-go
 
 ```bash
-$ go get github.com/getsentry/sentry-go@v{% sdk_version sentry.go %}
+$ go get github.com/getsentry/sentry-go
 ```
 
 ### Configuration
