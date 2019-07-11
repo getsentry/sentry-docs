@@ -95,7 +95,7 @@ sentry.Init(sentryClientOptions)
 
 If you want to read more about them, see the [source code](https://github.com/getsentry/sentry-go/blob/master/integrations.go) directly.
 
-However, there are some cases where you may want to disable some of them. To do this, you can use `Integrations` configuration option and filter unwanted integrations. For example:
+However, there are some cases where you may want to disable some of them. To do this, you can use the `Integrations` configuration option and filter unwanted integrations. For example:
 
 ```go
 sentry.Init(sentry.ClientOptions{
