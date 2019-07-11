@@ -46,4 +46,4 @@ Most (if not all) serverless solutions won't wait for network responses before c
 Because of that, we need to make sure ourselves that the event is delivered to Sentrys severs.
 
 It can be achieved twofold, using `sentry.Flush` method or by swapping the transport to `HTTPSyncTransport`.
-Both ways are described in the [Usage]({%- link _documentation/platforms/go/index.md#usage -%}) section of this documentation.
+Both ways are described in the [Usage]({%- link _documentation/platforms/go/index.md -%}#usage) section of this documentation.
