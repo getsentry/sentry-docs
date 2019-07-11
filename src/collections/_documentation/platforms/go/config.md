@@ -88,3 +88,26 @@ if err != nil {
 
 sentry.Init(sentryClientOptions)
 ```
+
+### Removing Default Integrations
+
+`sentry-go` SDK has few built-in integrations that enhance events with additional information, or manage them in one way or another.
+
+If you want to read more about them, see the [source code](https://github.com/getsentry/sentry-go/blob/master/integrations.go) directly.
+
+However, there are some cases where you may want to disable some of them. To do this, you can use the `Integrations` configuration option and filter unwanted integrations. For example:
+
+```go
+sentry.Init(sentry.ClientOptions{
+	Integrations: func(integrations []sentry.Integration) []sentry.Integration {
+		var filteredIntegrations []sentry.Integration
+		for _, integration := range integrations {
+			if integration.Name() == "ContextifyFrames" {
+				continue
+			}
+			filteredIntegrations = append(filteredIntegrations, integration)
+		}
+		return filteredIntegrations
+	},
+})
+```
