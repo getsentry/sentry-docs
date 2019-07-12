@@ -2,6 +2,13 @@
 title: PHP
 ---
 
+
+
+
+
+
+
+_ --- - --- ____ -----  ---- ______
 {% include learn-sdk.md platform="php" %}
 
 The [Sentry PHP SDK](https://packagist.org/packages/sentry/sentry) provides
