@@ -88,6 +88,89 @@ Sentry supports additional context with events. Often this context is shared amo
 
 : Arbitrary unstructured data which the Sentry SDK stores with an event sample
 
+### Setting Context
+
+`[ EDIT: PHP version of .set_context() ]` will take an object as the second argument and place the object inside `contexts` in the event payload.
+
+```php
+[ EDIT: needs a code snippet ]
+```
+
+### Extra Context
+
+```php
+Sentry\configureScope(function (Sentry\State\Scope $scope): void {
+  $scope->setExtra('character_name', 'Mighty Fighter');
+});
+```
+
+### Unsetting Context
+
+Context is held in the current scope and thus is cleared out at the end of each operation (request, etc.). You can also push and pop your own scopes to apply context data to a specific code block or function.
+
+```php
+[ EDIT: needs a code snippet ]
+```
+
+### Capturing the User
+
+Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
+
+```php
+Sentry\configureScope(function (Sentry\State\Scope $scope): void {
+  $scope->setUser(['email' => 'john.doe@example.com']);
+});
+```
+
+Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
+
+**`id`**
+
+Your internal identifier for the user.
+
+**`username`**
+
+The user’s username. Generally used as a better label than the internal ID.
+
+**`email`**
+
+An alternative, or addition, to a username. Sentry is aware of email addresses and can show things like Gravatars, unlock messaging capabilities, and more.
+
+**`ip_address`**
+
+The IP address of the user. If the user is unauthenticated providing the IP address will suggest that this is unique to that IP. If available, we will attempt to pull this from the HTTP request data.
+
+Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
+
+### Tagging Events
+
+Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and the user can later use them as a breakdown or quick access to finding related events.
+
+Most SDKs generally support configuring tags by configuring the scope:
+
+```php
+Sentry\configureScope(function (Sentry\State\Scope $scope): void {
+  $scope->setTag('page_locale', 'de-at');
+});
+```
+
+Several common uses for tags include:
+
+- The hostname of the server
+- The version of your platform (For example, iOS 5.0)
+- The user’s language
+
+Once you’ve started sending tagged data, you’ll see it show up in a few places:
+
+- The filters within the sidebar on the project stream page.
+- Summarized within an event on the sidebar.
+- The tags page on an aggregated event.
+
+We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
+
+
+
+
 
 
 
