@@ -2,10 +2,17 @@
 title: PHP
 ---
 
+The Sentry PHP SDK provides support for PHP 7.1 or later.
 
+## Integrating the SDK
 
+Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
 
+To install the PHP SDK, you need to be using Composer in your project. For more details about Composer, see the [Composer documentation](https://getcomposer.org/doc/).
 
+```bash
+composer require sentry/sdk:2.0.3
+```
 
 
 _ --- - --- ____ -----  ---- ______
