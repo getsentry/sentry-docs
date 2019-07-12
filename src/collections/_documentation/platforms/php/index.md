@@ -60,7 +60,33 @@ After configuring your SDK, setting up releases is a 2-step process:
 
 For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
 
+## Context
 
+Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
+
+**Structured Contexts**
+
+: Structured contexts are typically set automatically.
+
+[**User**](#capturing-the-user)
+
+: Information about the current actor
+
+[**Tags**](#tagging-events)
+
+: Key/value pairs which generate breakdown charts and search filters
+
+[**Level**](#setting-the-level)
+
+: An event's severity
+
+[**Fingerprint**](#setting-the-fingerprint)
+
+: A value used for grouping events into issues
+
+[**Unstructured Extra Data**](#extra-context)
+
+: Arbitrary unstructured data which the Sentry SDK stores with an event sample
 
 
 
