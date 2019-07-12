@@ -168,10 +168,25 @@ Once you’ve started sending tagged data, you’ll see it show up in a few plac
 
 We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
 
+### Setting the Level
 
+You can set the severity of an event to one of five values: 'fatal,' 'error,' 'warning,' 'info,' and 'debug.' 'error' is the default, 'fatal' is the most severe and 'debug' is the least severe.
 
+```php
+Sentry\configureScope(function (Sentry\State\Scope $scope): void {
+  $scope->setLevel(Sentry\Severity::warning());
+});
+```
 
+### Setting the Fingerprint
 
+Sentry uses one or more “fingerprints” to decide how to group errors into issues.
+
+For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings.
+
+If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{{default}}` as one of the items.
+
+For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
 
 
