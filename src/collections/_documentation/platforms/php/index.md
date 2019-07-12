@@ -14,6 +14,19 @@ To install the PHP SDK, you need to be using Composer in your project. For more 
 composer require sentry/sdk:2.0.3
 ```
 
+## Connecting the SDK to Sentry
+
+After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
+
+To capture all errors, even the one during the startup of your application, you should initialize the Sentry PHP SDK as soon as possible.
+
+```php
+Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
+```
+
+
+
+
 
 _ --- - --- ____ -----  ---- ______
 {% include learn-sdk.md platform="php" %}
