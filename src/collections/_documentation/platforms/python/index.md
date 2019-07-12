@@ -12,6 +12,8 @@ Install our Python SDK using `pip`:
 $ pip install --upgrade sentry-sdk
 ```
 
+The SDK provides support for Python 2.7 and 3.4 or later.
+
 {% include components/alert.html
   title="Upgrading the SDK and want to understand what's new?"
   content="Have a look at the [Changelog](https://github.com/getsentry/sentry-python/releases)."
