@@ -62,7 +62,7 @@ _Import name: `Sentry.Integrations.OnUnhandledRejection`_
 This integration attaches global unhandled rejection handlers.
 
 {% capture __alert_content -%}
-This integration supresses default Node's warning about unhandled promise rejection. If you want to restore this behaviour, use `--unhandled-rejections=warn` flag to run your code.
+This integration suppresses the default Node warning about unhandled promise rejection. If you want to restore this behavior, use the `--unhandled-rejections=warn` flag to run your code.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
