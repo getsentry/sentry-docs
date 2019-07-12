@@ -48,6 +48,37 @@ connect(
 ).listen(3000);
 ```
 
+`requestHandler` accepts some options that let you decide what data should be included in the event sent to Sentry.
+
+Possible options are:
+
+```js
+// request data (path, method, query params etc.)
+request?: boolean; // default: true
+// server name
+serverName?: boolean; // default: true
+// generate transaction name
+//   path == request.path (eg. "/foo")
+//   methodPath == request.method + request.path (eg. "GET|/foo")
+//   handler == function name (eg. "fooHandler")
+transaction?: boolean | 'path' | 'methodPath' | 'handler'; // default: true = 'methodPath'
+// keys to be extracted from req.user
+user?: boolean | string[]; // default: true = ['id', 'username', 'email']
+// node version
+version?: boolean; // default: true
+// timeout for fatal route errors to be delivered
+flushTimeout?: number; // default: 2000
+```
+
+For example, if you want to skip server name and add just user, you would use `requestHandler` like this:
+
+```js
+app.use(Sentry.Handlers.requestHandler({
+  serverName: false,
+  user: ['email']
+}));
+```
+
 By default, `errorHandler` will capture only errors with status code of `500` or higher. If you want to change it, provide it with `shouldHandleError` callback, which accepts middleware error as its argument and decides, whether error should be sent or not, by returning an appropriate boolean value.
 
 ```js
