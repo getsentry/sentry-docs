@@ -75,7 +75,7 @@ version?: boolean; // default: true
 flushTimeout?: number; // default: 2000
 ```
 
-For example, if you want to skip server name and add just user, you would use `requestHandler` like this:
+For example, if you want to skip the server name and add just user, you would use `requestHandler` like this:
 
 ```js
 app.use(Sentry.Handlers.requestHandler({
@@ -84,7 +84,7 @@ app.use(Sentry.Handlers.requestHandler({
 }));
 ```
 
-By default, `errorHandler` will capture only errors with status code of `500` or higher. If you want to change it, provide it with `shouldHandleError` callback, which accepts middleware error as its argument and decides, whether error should be sent or not, by returning an appropriate boolean value.
+By default, `errorHandler` will capture only errors with a status code of `500` or higher. If you want to change it, provide it with the `shouldHandleError` callback, which accepts middleware errors as its argument and decides, whether an error should be sent or not, by returning an appropriate boolean value.
 
 ```js
 app.use(Sentry.Handlers.errorHandler({
