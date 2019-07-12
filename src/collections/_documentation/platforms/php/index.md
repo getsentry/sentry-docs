@@ -24,6 +24,28 @@ To capture all errors, even the one during the startup of your application, you 
 Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
 ```
 
+## Verifying Your Setup
+
+Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. You can trigger a PHP exception by throwing one in your application:
+
+```php
+throw new Exception("My first Sentry error!");
+```
+
+## Capturing Errors
+
+In PHP you can either capture a caught exception or capture the last error with captureLastError.
+
+```php
+try {
+    $this->functionFailsForSure();
+} catch (\Throwable $exception) {
+    Sentry\captureException($exception);
+}
+```
+
+
+
 
 
 
