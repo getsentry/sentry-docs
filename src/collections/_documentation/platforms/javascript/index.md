@@ -67,7 +67,7 @@ By default, Sentry for JavaScript captures unhandled promise rejections as descr
 
 Configuration may be required if you are using a third-party library to implement promises.
 
-Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by setting `captureUnhandledRejections` option to `false` and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
+Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by changing `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 For example, the [RSVP.js library](https://github.com/tildeio/rsvp.js/) (used by Ember.js) allows you to bind an event handler to a [global error event](https://github.com/tildeio/rsvp.js#error-handling).
 
@@ -77,7 +77,7 @@ RSVP.on('error', function(reason) {
 });
 ```
 
-[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections to a global DOM event, `unhandledRejection`. In this case, you don't need to do anything; we've already got you covered with the default `captureUnhandledRejections: true` setting.
+[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections to a global DOM event, `unhandledRejection`. In this case, you don't need to do anything; we've already got you covered with the default [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and its `onhandledrejection: true` setting.
 
 Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
 
