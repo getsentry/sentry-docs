@@ -14,7 +14,7 @@ To install the PHP SDK, you need to be using Composer in your project. For more 
 composer require sentry/sdk:2.0.3
 ```
 
-## Connecting the SDK to Sentry
+### Connecting the SDK to Sentry
 
 After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
@@ -24,7 +24,7 @@ To capture all errors, even the one during the startup of your application, you 
 Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
 ```
 
-## Verifying Your Setup
+### Verifying Your Setup
 
 Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. You can trigger a PHP exception by throwing one in your application:
 
@@ -43,6 +43,22 @@ try {
     Sentry\captureException($exception);
 }
 ```
+
+## Releases
+
+A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
+
+- Determine the issue and regressions introduced in a new release
+- Predict which commit caused an issue and who is likely responsible (suspect commits)
+- Resolve issues by including the issue number in your commit message
+- Receive email notifications when your code gets deployed
+
+After configuring your SDK, setting up releases is a 2-step process:
+
+1. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
+2. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
+
+For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
 
 
 
