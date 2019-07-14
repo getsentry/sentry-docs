@@ -40,7 +40,7 @@ Framework](https://trypyramid.com/).
 
 * The Sentry Python SDK will install the Pyramid integration for all of your apps. The integration hooks into Pyramid itself, not any of your apps specifically.
 
-*The SDK will report all exceptions leading to an Internal Server Error. These two kinds of exceptions are:
+* The SDK will report all exceptions leading to an Internal Server Error. These two kinds of exceptions are:
 
   * exceptions that are not handled by any exception view
   * exceptions whose exception view returns a status code of 500 (Pyramid version 1.9+ only)
