@@ -446,7 +446,7 @@ To get rid of the warning, configure your `lint.xml` as follows:
 </lint>
 ```
 
-And in your gradle plugin:
+And in your Gradle plugin:
 
 ```groovy
 android {
