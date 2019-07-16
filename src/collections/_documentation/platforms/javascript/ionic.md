@@ -52,7 +52,7 @@ import { IonicErrorHandler } from 'ionic-angular';
 
 import * as Sentry from 'sentry-cordova';
 
-class SentryIonicErrorHandler extends IonicErrorHandler {
+export class SentryIonicErrorHandler extends IonicErrorHandler {
   handleError(error) {
     super.handleError(error);
     try {
@@ -71,7 +71,7 @@ import { ErrorHandler } from '@angular/core';
 
 import * as Sentry from 'sentry-cordova';
 
-class SentryIonicErrorHandler extends ErrorHandler {
+export class SentryIonicErrorHandler extends ErrorHandler {
   handleError(error) {
     super.handleError(error);
     try {
