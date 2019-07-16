@@ -229,29 +229,17 @@ For more information, see:
 - [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters)
 
 
-
-
-
-_ --- - --- ____ -----  ---- ______
-{% include learn-sdk.md platform="php" %}
-
-The [Sentry PHP SDK](https://packagist.org/packages/sentry/sentry) provides
-support for PHP 7.1 or later.
-
-This documentation goes over some PHP specific things such as integrations to
-frameworks.
-
-## Integrations
+### Integrations
 
 *Integrations* extend the functionality of the SDK for some common frameworks and
 libraries.  Similar to plugins, they extend the functionality of the Sentry SDK.  
 Integrations are configured by a call to `init()` method.
 
-## PHP Specific Options
+#### PHP Specific Options
 
 PHP provides some additional options, all options can be passed into `init()`.
 
-#### capture_silenced_errors
+##### capture_silenced_errors
 {% include components/alert.html
     content="This option was introduced in version 2.0.1"
     level="notice"
@@ -259,17 +247,17 @@ PHP provides some additional options, all options can be passed into `init()`.
 This option enables capturing errors which were silenced using the `@` operator 
 in your source code. Defaults to `false`. 
 
-#### context_lines
+##### context_lines
 
 This option sets the number of lines of code context to capture. If `null` is
 set as the value, no source code lines will be added to each stack trace frame.
 By default this option is set to `3`.
 
-#### enable_compression
+##### enable_compression
 
 If this option is enabled, `gzip` compression will be enabled. Default is `true`.
 
-#### error_types
+##### error_types
 
 This option accepts an int bitmask like the native PHP function [`error_reporting`](https://www.php.net/manual/en/function.error-reporting.php).
 This value is used in the default `ErrorListenerIntegration` to filter out errors:
@@ -279,23 +267,23 @@ exclude some types of errors, you just need to apply the right bitmask.
 For example, if you want to get all errors but exclude notices and deprecations,
 the right bitmask to apply is `E_ALL & ~E_NOTICE & ~E_DEPRECATED`.
 
-#### excluded_app_paths
+##### excluded_app_paths
 
 This option configures the list of paths to exclude from the `app_path` detection.
 
-#### excluded_exceptions
+##### excluded_exceptions
 
 Sometimes you may want to skip capturing certain exceptions. This option sets
 the FQCN of the classes of the exceptions that you don't want to capture. The
 check is done using the `instanceof` operator against each item of the array
 and if at least one of them passes the event will be discarded.
 
-#### prefixes
+##### prefixes
 
 This option sets the list of prefixes which should be stripped from the filenames
 to create relative paths.
 
-#### project_root
+##### project_root
 
 The root of the project source code. As Sentry is able to distinguish project
 files from third-party ones (e.g. vendors), this option can be configured to
@@ -316,13 +304,13 @@ code".
 
 ``` 
 
-#### send_attempts
+##### send_attempts
 
 The number of attempts that should be made to send an event before erroring
 and dropping it from the queue.
 By default this option is set to `6`.
 
-## Transport
+### Transport
 
 Sentry PHP is not tied to any specific library that sends HTTP messages. Instead,
 it uses [Httplug](https://github.com/php-http/httplug) to let users choose whichever PSR-7 implementation and HTTP client
@@ -350,7 +338,7 @@ following command to install the adapter and Guzzle itself:
 composer require php-http/guzzle6-adapter
 ```
 
-### Transport Classes
+#### Transport Classes
 
 Transports are the classes in Sentry PHP that are responsible for communicating
 with a service in order to deliver an event. There are several types of transports
@@ -367,7 +355,7 @@ The examples below pretty much replace the `init()` call.
 Please also keep in mind that once a Client is initialized with a Transport it cannot be
 changed.
 
-#### NullTransport
+##### NullTransport
 
 Although not so common there could be cases in which you don't want to send
 events at all. The `NullTransport` transport does this: it simply ignores
@@ -391,7 +379,7 @@ Hub::getCurrent()->bindClient($builder->getClient());
     level="warning"
 %}
 
-#### HttpTransport
+##### HttpTransport
 
 The `HttpTransport` sends events over the HTTP protocol using [Httplug](http://httplug.io/).
 The best adapter available is automatically selected when creating a client instance
@@ -418,7 +406,7 @@ Hub::getCurrent()->bindClient($builder->getClient());
     level="warning"
 %}
 
-#### SpoolTransport
+##### SpoolTransport
 
 The default behavior is to send events immediately. You may, however, want to
 avoid waiting for the communication to the Sentry server that could be slow
