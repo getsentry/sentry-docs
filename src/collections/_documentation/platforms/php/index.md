@@ -210,6 +210,27 @@ For more information, see:
 - [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
 - [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs)
 
+### Filter Events & Custom Logic
+
+Sentry exposes a beforeSend callback which can be used to filter out information or add additional context to the event object.
+
+```php
+Sentry\init([
+  'dsn' => '___PUBLIC_DSN___',
+  'before_send' => function (Sentry\Event $event): ?Event {
+    return $event;
+  },
+]);
+```
+
+For more information, see:
+
+- [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%})
+- [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters)
+
+
+
+
 
 _ --- - --- ____ -----  ---- ______
 {% include learn-sdk.md platform="php" %}
