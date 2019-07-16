@@ -188,6 +188,27 @@ If you wish to append information, thus making the grouping slightly less aggres
 
 For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
+## Advanced Usage
+
+### Breadcrumbs
+
+Sentry will automatically record specific events, such as changes to the URL and XHR requests to provide context to an error.
+
+You can manually add breadcrumbs on other events or disable breadcrumbs.
+
+```php
+Sentry\addBreadcrumb(new Sentry\Breadcrumb(
+  Sentry\Breadcrumb::LEVEL_ERROR, 
+  Sentry\Breadcrumb::TYPE_ERROR, 
+  'error_reporting', 
+  'foo bar'
+));
+```
+
+For more information, see:
+
+- [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
+- [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs)
 
 
 _ --- - --- ____ -----  ---- ______
