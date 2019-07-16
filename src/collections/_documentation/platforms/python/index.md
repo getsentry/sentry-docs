@@ -287,6 +287,7 @@ For more information, see:
 - [Bottle]({%- link _documentation/platforms/python/bottle.md -%})
 - [Falcon]({%- link _documentation/platforms/python/falcon.md -%})
 - [Generic WSGI]({%- link _documentation/platforms/python/wsgi.md -%})
+- [Generic ASGI]({%- link _documentation/platforms/python/asgi.md -%})
 
 #### Task Queues
 
@@ -302,6 +303,7 @@ For more information, see:
 
 - [Logging]({%- link _documentation/platforms/python/logging.md -%})
 - [GNU Backtrace]({%- link _documentation/platforms/python/gnu_backtrace.md -%})
+- [Redis]({%- link _documentation/platforms/python/redis.md -%})
 
 ### Default Integrations
 
