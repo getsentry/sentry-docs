@@ -431,3 +431,29 @@ factory=my.company.SentryClientFactory
 ```
 
 Your factory class will need to be available on your classpath with a zero argument constructor or an error will be thrown.
+
+## Linter configuration
+
+Sometimes linters can warn about types used by the SDK that are not available in your app. This can happen, for example, when using the Android integration due to the base SDK having JNDI lookup that takes no effect in Android.
+
+To get rid of the warning, configure your `lint.xml` as follows:
+
+```xml
+<lint>
+    <issue id="InvalidPackage">
+        <ignore path="**/sentry*.jar"/>
+    </issue>
+</lint>
+```
+
+And in your Gradle plugin:
+
+```groovy
+android {
+    lintOptions {
+        lintConfig file("path/to/lint.xml")
+    }
+}
+```
+
+Where `path/to/lint.xml` is the path to the linting configuration file mentioned above.
