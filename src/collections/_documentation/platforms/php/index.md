@@ -173,9 +173,10 @@ use Sentry\State\Hub;
 
 $options = ['dsn' => '___PUBLIC_DSN___'];
 
-$transport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
-
 $builder = ClientBuilder::create($options);
+
+$transport = new HttpTransport($options, $builder->wrapHttpClientWithPlugins(HttpAsyncClientDiscovery::find()), MessageFactoryDiscovery::find());
+
 $builder->setTransport($transport);
 
 Hub::getCurrent()->bindClient($builder->getClient());
