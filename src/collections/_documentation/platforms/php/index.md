@@ -231,7 +231,17 @@ For more information, see:
 libraries.  Similar to plugins, they extend the functionality of the Sentry SDK.  
 Integrations are configured by a call to `init()` method.
 
-#### PHP Specific Options
+#### Web Frameworks
+- [Laravel]({%- link _documentation/platforms/php/laravel.md -%})
+- [Symfony]({%- link _documentation/platforms/php/symfony.md -%})
+
+#### Default Integrations
+Default integrations are integrations enabled by default that integrate into the standard library or the interpreter itself. They are documented so you can see what they do and that they can be disabled if they cause issues. To disable system integrations set default_integrations => false when calling init().
+
+For more information, see full documentation on [Default Integrations]({%- link _documentation/platforms/php/default-integrations.md -%}).
+
+
+### PHP Specific Options
 
 PHP provides some additional options, all options can be passed into `init()`.
 
