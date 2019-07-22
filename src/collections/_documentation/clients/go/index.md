@@ -40,7 +40,7 @@ package main
 import "github.com/getsentry/raven-go"
 
 func init() {
-	raven.SetDSN("___DSN___")
+	raven.SetDSN("___PUBLIC_DSN___")
 }
 ```
 <!-- ENDWIZARD -->

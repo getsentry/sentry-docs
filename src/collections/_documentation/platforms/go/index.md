@@ -60,7 +60,7 @@ import (
 
 func main() {
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn: "___DSN___",
+		Dsn: "___PUBLIC_DSN___",
 	})
 
 	if err != nil {

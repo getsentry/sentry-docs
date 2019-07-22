@@ -27,7 +27,7 @@ raven-go
 import "github.com/getsentry/raven-go"
 
 func main() {
-	raven.SetDSN("___DSN___")
+	raven.SetDSN("___PUBLIC_DSN___")
 }
 ```
 
@@ -41,7 +41,7 @@ import (
 
 func main() {
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn: "___DSN___",
+		Dsn: "___PUBLIC_DSN___",
 	})
 
 	if err != nil {
@@ -67,7 +67,7 @@ sentry-go
 
 ```go
 sentry.Init(sentry.ClientOptions{
-	Dsn: "___DSN___",
+	Dsn: "___PUBLIC_DSN___",
 	DebugWriter: os.Stderr,
 	Debug: true,
 	Environment: "environment",
@@ -95,7 +95,7 @@ import (
 )
 
 sentryClientOptions := sentry.ClientOptions{
-	Dsn: "___DSN___",
+	Dsn: "___PUBLIC_DSN___",
 }
 
 rootCAs, err := gocertifi.CACerts()

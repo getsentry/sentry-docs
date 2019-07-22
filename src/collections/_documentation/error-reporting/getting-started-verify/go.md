@@ -9,7 +9,7 @@ import (
 
 func main() {
 	sentry.Init(sentry.ClientOptions{
-		Dsn: "___DSN___",
+		Dsn: "___PUBLIC_DSN___",
 	})
 
 	sentry.CaptureException(errors.New("my error"))
