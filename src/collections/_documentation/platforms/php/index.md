@@ -99,15 +99,8 @@ Sentry supports additional context with events. Often this context is shared amo
 
 : Arbitrary unstructured data which the Sentry SDK stores with an event sample
 
-### Setting Context
-
-`[ EDIT: PHP version of .set_context() ]` will take an object as the second argument and place the object inside `contexts` in the event payload.
-
-```php
-[ EDIT: needs a code snippet ]
-```
-
 ### Extra Context
+In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening.
 
 ```php
 Sentry\configureScope(function (Sentry\State\Scope $scope): void {
