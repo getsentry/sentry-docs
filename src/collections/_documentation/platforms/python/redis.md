@@ -13,7 +13,7 @@ import sentry_sdk
 from sentry_sdk.integrations.redis import RedisIntegration
 
 sentry_sdk.init(
-    dsn='___PUBLIC_DSN___",
+    dsn='___PUBLIC_DSN___',
     integrations=[RedisIntegration()]
 )
 ```
