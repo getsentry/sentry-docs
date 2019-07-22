@@ -43,7 +43,7 @@ sidebar_order: 1
 Add the following values to your `config.yml` file
 
 ```yml
-github-app.id: 'GITHUB_APP_ID'
+github-app.id: GITHUB_APP_ID
 github-app.name: 'GITHUB_APP_NAME'
 github-app.webhook-secret: 'GITHUB_WEBHOOK_SECRET' # Use only if configured in GitHub
 github-app.private-key: "GITHUB_APP_SECRET" # Replace new lines with \n to preserve them.
