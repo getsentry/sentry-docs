@@ -57,6 +57,13 @@ A release is a version of your code that you deploy to an environment. When you 
 - Resolve issues by including the issue number in your commit message
 - Receive email notifications when your code gets deployed
 
+```php
+Sentry\init([
+  'dsn' => '___PUBLIC_DSN___',
+  'release' => 'your release name'
+]);
+```
+
 After configuring your SDK, setting up releases is a 2-step process:
 
 1. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
