@@ -25,7 +25,7 @@ func main() {
 	sentrySyncTransport.Timeout = time.Second * 3
 	
 	sentry.Init(sentry.ClientOptions{
-		Dsn: "___DSN___",
+		Dsn: "___PUBLIC_DSN___",
 		Transport: sentrySyncTransport,
 	})
 }

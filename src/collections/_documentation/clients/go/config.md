@@ -15,7 +15,7 @@ When set to an empty string, SDK won't send any events to Sentry, and all `Captu
 will effectively act as no-ops.
 
 ```go
-raven.SetDSN("___DSN___")
+raven.SetDSN("___PUBLIC_DSN___")
 ```
 
 {:.config-key}
