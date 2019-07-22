@@ -42,6 +42,10 @@ try {
 } catch (\Throwable $exception) {
     Sentry\captureException($exception);
 }
+
+// OR
+
+Sentry\captureLastError();
 ```
 
 ## Releases
