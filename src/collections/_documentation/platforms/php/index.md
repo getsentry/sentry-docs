@@ -108,14 +108,6 @@ Sentry\configureScope(function (Sentry\State\Scope $scope): void {
 });
 ```
 
-### Unsetting Context
-
-Context is held in the current scope and thus is cleared out at the end of each operation (request, etc.). You can also push and pop your own scopes to apply context data to a specific code block or function.
-
-```php
-[ EDIT: needs a code snippet ]
-```
-
 ### Capturing the User
 
 Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
