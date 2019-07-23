@@ -2,25 +2,250 @@
 title: PHP
 ---
 
-{% include learn-sdk.md platform="php" %}
+The Sentry PHP SDK provides support for PHP 7.1 or later.
 
-The [Sentry PHP SDK](https://packagist.org/packages/sentry/sentry) provides
-support for PHP 7.1 or later.
+## Integrating the SDK
 
-This documentation goes over some PHP specific things such as integrations to
-frameworks.
+Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
 
-## Integrations
+To install the PHP SDK, you need to be using Composer in your project. For more details about Composer, see the [Composer documentation](https://getcomposer.org/doc/).
+
+```bash
+composer require sentry/sdk:{% sdk_version sentry.php.sdk %}
+```
+
+### Connecting the SDK to Sentry
+
+After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
+
+To capture all errors, even the one during the startup of your application, you should initialize the Sentry PHP SDK as soon as possible.
+
+```php
+Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
+```
+
+### Verifying Your Setup
+
+Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. You can trigger a PHP exception by throwing one in your application:
+
+```php
+throw new Exception("My first Sentry error!");
+```
+
+## Capturing Errors
+
+In PHP you can either capture a caught exception or capture the last error with captureLastError.
+
+```php
+try {
+    $this->functionFailsForSure();
+} catch (\Throwable $exception) {
+    Sentry\captureException($exception);
+}
+
+// OR
+
+Sentry\captureLastError();
+```
+
+## Releases
+
+A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
+
+- Determine the issue and regressions introduced in a new release
+- Predict which commit caused an issue and who is likely responsible (suspect commits)
+- Resolve issues by including the issue number in your commit message
+- Receive email notifications when your code gets deployed
+
+```php
+Sentry\init([
+  'dsn' => '___PUBLIC_DSN___',
+  'release' => 'your release name'
+]);
+```
+
+After configuring your SDK, setting up releases is a 2-step process:
+
+1. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
+2. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
+
+For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
+
+## Context
+
+Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
+
+**Structured Contexts**
+
+: Structured contexts are typically set automatically.
+
+[**User**](#capturing-the-user)
+
+: Information about the current actor
+
+[**Tags**](#tagging-events)
+
+: Key/value pairs which generate breakdown charts and search filters
+
+[**Level**](#setting-the-level)
+
+: An event's severity
+
+[**Fingerprint**](#setting-the-fingerprint)
+
+: A value used for grouping events into issues
+
+[**Unstructured Extra Data**](#extra-context)
+
+: Arbitrary unstructured data which the Sentry SDK stores with an event sample
+
+### Extra Context
+In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening.
+
+```php
+Sentry\configureScope(function (Sentry\State\Scope $scope): void {
+  $scope->setExtra('character_name', 'Mighty Fighter');
+});
+```
+
+### Capturing the User
+
+Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
+
+```php
+Sentry\configureScope(function (Sentry\State\Scope $scope): void {
+  $scope->setUser(['email' => 'john.doe@example.com']);
+});
+```
+
+Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
+
+**`id`**
+
+Your internal identifier for the user.
+
+**`username`**
+
+The user’s username. Generally used as a better label than the internal ID.
+
+**`email`**
+
+An alternative, or addition, to a username. Sentry is aware of email addresses and can show things like Gravatars, unlock messaging capabilities, and more.
+
+**`ip_address`**
+
+The IP address of the user. If the user is unauthenticated providing the IP address will suggest that this is unique to that IP. If available, we will attempt to pull this from the HTTP request data.
+
+Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
+
+### Tagging Events
+
+Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and the user can later use them as a breakdown or quick access to finding related events.
+
+Most SDKs generally support configuring tags by configuring the scope:
+
+```php
+Sentry\configureScope(function (Sentry\State\Scope $scope): void {
+  $scope->setTag('page_locale', 'de-at');
+});
+```
+
+Several common uses for tags include:
+
+- The hostname of the server
+- The version of your platform (For example, iOS 5.0)
+- The user’s language
+
+Once you’ve started sending tagged data, you’ll see it show up in a few places:
+
+- The filters within the sidebar on the project stream page.
+- Summarized within an event on the sidebar.
+- The tags page on an aggregated event.
+
+We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
+
+### Setting the Level
+
+You can set the severity of an event to one of five values: 'fatal,' 'error,' 'warning,' 'info,' and 'debug.' 'error' is the default, 'fatal' is the most severe and 'debug' is the least severe.
+
+```php
+Sentry\configureScope(function (Sentry\State\Scope $scope): void {
+  $scope->setLevel(Sentry\Severity::warning());
+});
+```
+
+### Setting the Fingerprint
+
+Sentry uses one or more “fingerprints” to decide how to group errors into issues.
+
+For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings.
+
+If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{{default}}` as one of the items.
+
+For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
+
+## Advanced Usage
+
+### Breadcrumbs
+
+Sentry will automatically record specific events, such as changes to the URL and XHR requests to provide context to an error.
+
+You can manually add breadcrumbs on other events or disable breadcrumbs.
+
+```php
+Sentry\addBreadcrumb(new Sentry\Breadcrumb(
+  Sentry\Breadcrumb::LEVEL_ERROR, 
+  Sentry\Breadcrumb::TYPE_ERROR, 
+  'error_reporting', 
+  'foo bar'
+));
+```
+
+For more information, see:
+
+- [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
+- [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs)
+
+### Filter Events & Custom Logic
+
+Sentry exposes a beforeSend callback which can be used to filter out information or add additional context to the event object.
+
+```php
+Sentry\init([
+  'dsn' => '___PUBLIC_DSN___',
+  'before_send' => function (Sentry\Event $event): ?Event {
+    return $event;
+  },
+]);
+```
+
+For more information, see:
+
+- [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%})
+- [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters)
+
+
+### Integrations
 
 *Integrations* extend the functionality of the SDK for some common frameworks and
 libraries.  Similar to plugins, they extend the functionality of the Sentry SDK.  
 Integrations are configured by a call to `init()` method.
 
-## PHP Specific Options
+#### Web Frameworks
+- [Laravel]({%- link _documentation/platforms/php/laravel.md -%})
+- [Symfony]({%- link _documentation/platforms/php/symfony.md -%})
+
+#### Default Integrations
+Default integrations are integrations enabled by default that integrate into the standard library or the interpreter itself. They are documented so you can see what they do and that they can be disabled if they cause issues. To disable system integrations set default_integrations => false when calling init().
+
+For more information, see full documentation on [Default Integrations]({%- link _documentation/platforms/php/default-integrations.md -%}).
+
+
+### PHP Specific Options
 
 PHP provides some additional options, all options can be passed into `init()`.
 
-#### capture_silenced_errors
+##### capture_silenced_errors
 {% include components/alert.html
     content="This option was introduced in version 2.0.1"
     level="notice"
@@ -28,17 +253,17 @@ PHP provides some additional options, all options can be passed into `init()`.
 This option enables capturing errors which were silenced using the `@` operator 
 in your source code. Defaults to `false`. 
 
-#### context_lines
+##### context_lines
 
 This option sets the number of lines of code context to capture. If `null` is
 set as the value, no source code lines will be added to each stack trace frame.
 By default this option is set to `3`.
 
-#### enable_compression
+##### enable_compression
 
 If this option is enabled, `gzip` compression will be enabled. Default is `true`.
 
-#### error_types
+##### error_types
 
 This option accepts an int bitmask like the native PHP function [`error_reporting`](https://www.php.net/manual/en/function.error-reporting.php).
 This value is used in the default `ErrorListenerIntegration` to filter out errors:
@@ -48,23 +273,23 @@ exclude some types of errors, you just need to apply the right bitmask.
 For example, if you want to get all errors but exclude notices and deprecations,
 the right bitmask to apply is `E_ALL & ~E_NOTICE & ~E_DEPRECATED`.
 
-#### excluded_app_paths
+##### excluded_app_paths
 
 This option configures the list of paths to exclude from the `app_path` detection.
 
-#### excluded_exceptions
+##### excluded_exceptions
 
 Sometimes you may want to skip capturing certain exceptions. This option sets
 the FQCN of the classes of the exceptions that you don't want to capture. The
 check is done using the `instanceof` operator against each item of the array
 and if at least one of them passes the event will be discarded.
 
-#### prefixes
+##### prefixes
 
 This option sets the list of prefixes which should be stripped from the filenames
 to create relative paths.
 
-#### project_root
+##### project_root
 
 The root of the project source code. As Sentry is able to distinguish project
 files from third-party ones (e.g. vendors), this option can be configured to
@@ -85,13 +310,13 @@ code".
 
 ``` 
 
-#### send_attempts
+##### send_attempts
 
 The number of attempts that should be made to send an event before erroring
 and dropping it from the queue.
 By default this option is set to `6`.
 
-## Transport
+### Transport
 
 Sentry PHP is not tied to any specific library that sends HTTP messages. Instead,
 it uses [Httplug](https://github.com/php-http/httplug) to let users choose whichever PSR-7 implementation and HTTP client
@@ -119,7 +344,7 @@ following command to install the adapter and Guzzle itself:
 composer require php-http/guzzle6-adapter
 ```
 
-### Transport Classes
+#### Transport Classes
 
 Transports are the classes in Sentry PHP that are responsible for communicating
 with a service in order to deliver an event. There are several types of transports
@@ -136,7 +361,7 @@ The examples below pretty much replace the `init()` call.
 Please also keep in mind that once a Client is initialized with a Transport it cannot be
 changed.
 
-#### NullTransport
+##### NullTransport
 
 Although not so common there could be cases in which you don't want to send
 events at all. The `NullTransport` transport does this: it simply ignores
@@ -160,7 +385,7 @@ Hub::getCurrent()->bindClient($builder->getClient());
     level="warning"
 %}
 
-#### HttpTransport
+##### HttpTransport
 
 The `HttpTransport` sends events over the HTTP protocol using [Httplug](http://httplug.io/).
 The best adapter available is automatically selected when creating a client instance
@@ -187,7 +412,7 @@ Hub::getCurrent()->bindClient($builder->getClient());
     level="warning"
 %}
 
-#### SpoolTransport
+##### SpoolTransport
 
 The default behavior is to send events immediately. You may, however, want to
 avoid waiting for the communication to the Sentry server that could be slow
