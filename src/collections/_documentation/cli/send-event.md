@@ -39,7 +39,7 @@ $ sentry-cli send-event -m "Hello %s!" -a "Peter"
 You can also pass a logfile to the `send-event` command which will be parsed and sent along as breadcrumbs. The last 100 items will be sent:
 
 ```bash
-$ sentry-cli send-event -m “task failed” –logfile error.log
+$ sentry-cli send-event -m “task failed” –-logfile error.log
 ```
 
 The logfile can be in various formats. If you want to create one yourself you can do something along those lines:
