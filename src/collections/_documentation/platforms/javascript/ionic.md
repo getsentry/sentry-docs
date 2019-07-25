@@ -25,6 +25,11 @@ When building your app with ionic for production make sure you have source maps 
     "ionic_generate_source_map": "true"
 }
 ```
+Enable source maps for Ionic v4:
+
+```
+ionic build --prod --source-map
+```
 
 Otherwise we are not able to upload source maps to Sentry.
 
