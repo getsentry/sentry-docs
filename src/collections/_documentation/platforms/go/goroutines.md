@@ -9,7 +9,9 @@ The easiest way to handle this, is to create a new `Hub` for every goroutine you
 
 Once cloned, `Hub` is completly isolated and can be used safely inside concurrent call. However, instead of using globally exposed methods, they should be called directly on the `Hub`.
 
-Here are two examples: one that is non-deterministic, would leak information between threads, and one that is totally safe, and should be used instead.
+Here are two examples: 
+- a recommended deterministic call on `Hub` that is safe
+- a discouraged non-deterministic call on `Hub` that would leak information between threads
 
 ```go
 // Example of __INCORRECT__ use of scopes inside a Goroutines - DON'T USE IT!
