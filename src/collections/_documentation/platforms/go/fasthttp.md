@@ -33,7 +33,7 @@ if err := sentry.Init(sentry.ClientOptions{
 // Create an instance of sentryfasthttp
 sentryHandler := sentryfasthttp.New(sentryfasthttp.Options{})
 
-// Once it's done, you can attach the handler as one of your middlewares
+// After creating the instance, you can attach the handler as one of your middleware
 fastHTTPHandler := sentryHandler.Handle(func(ctx *fasthttp.RequestCtx) {
 	panic("y tho")
 })
@@ -50,15 +50,15 @@ if err := fasthttp.ListenAndServe(":3000", fastHTTPHandler); err != nil {
 
 `sentryfasthttp` accepts a struct of `Options` that allows you to configure how the handler will behave.
 
-Currently it respects 3 options:
+Currently, it respects three options:
 
 ```go
-// Repanic configures whether Sentry should repanic after recovery, in most cases it should be set to false,
-// as fasthttp doesn't include it's own Recovery handler.
+// Repanic configures whether Sentry should repanic after recovery, in most cases, it defaults to false,
+// as fasthttp doesn't include its own Recovery handler.
 Repanic bool
 // WaitForDelivery configures whether you want to block the request before moving forward with the response.
-// Because fasthttp doesn't include it's own `Recovery` handler, it will restart the application,
-// and event won't be delivered otherwise.
+// Because fasthttp doesn't include its own `Recovery` handler, it will restart the application,
+// and the event won't be delivered otherwise.
 WaitForDelivery bool
 // Timeout for the event delivery requests.
 Timeout time.Duration
@@ -70,7 +70,7 @@ Timeout time.Duration
 You can access it by using the `sentryfasthttp.GetHubFromContext()` method on the context itself in any of your proceeding middleware and routes.
 And it should be used instead of the global `sentry.CaptureMessage`, `sentry.CaptureException`, or any other calls, as it keeps the separation of data between the requests.
 
-**Keep in mind that `*sentry.Hub` won't be available in middleware attached before to `sentryfasthttp`!**
+**Keep in mind that `*sentry.Hub` won't be available in middleware attached before `sentryfasthttp`!**
 
 ```go
 func enhanceSentryEvent(handler fasthttp.RequestHandler) fasthttp.RequestHandler {
