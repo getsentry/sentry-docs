@@ -68,8 +68,21 @@ module Jekyll
       get_info["repo_url"]
     end
   end
+
+  class SdkCdnChecksumTag < ReleaseRegistryTag
+    def entity
+      "sdks"
+    end
+
+    def render(context)
+      file = @params[2]
+      algorithm = @params[3] || "sha384-base64"
+      get_info["files"][file]["checksums"][algorithm]
+    end
+  end
 end
 
 Liquid::Template.register_tag('package_version', Jekyll::PackageVersionTag)
 Liquid::Template.register_tag('sdk_version', Jekyll::SdkVersionTag)
 Liquid::Template.register_tag('sdk_repo_url', Jekyll::SdkRepoUrlTag)
+Liquid::Template.register_tag('sdk_cdn_checksum', Jekyll::SdkCdnChecksumTag)
