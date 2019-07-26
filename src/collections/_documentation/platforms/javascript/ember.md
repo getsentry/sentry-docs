@@ -37,8 +37,8 @@ like this:
 
 ```html
 <!-- Note that we now also provide a es6 build only -->
-<!-- <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.es6.min.js" crossorigin="anonymous"></script> -->
-<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous"></script>
+<!-- <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.es6.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.es6.min.js %}" crossorigin="anonymous"></script> -->
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.min.js %}" crossorigin="anonymous"></script>
 
 <!-- If you include the integration it will be available under Sentry.Integrations.Ember -->
 <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/ember.min.js" crossorigin="anonymous"></script>

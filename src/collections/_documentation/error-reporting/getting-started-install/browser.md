@@ -1,7 +1,7 @@
 The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
 
 ```html
-<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" crossorigin="anonymous">
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.min.js %}" crossorigin="anonymous">
 </script>
 ```
 
