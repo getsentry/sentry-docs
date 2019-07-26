@@ -76,8 +76,14 @@ module Jekyll
 
     def render(context)
       file = @params[2]
-      algorithm = @params[3] || "sha384-base64"
-      get_info["files"][file]["checksums"][algorithm]
+      algorithm = "sha384-base64"
+      checksum = get_info["files"][file]["checksums"][algorithm]
+      
+      if !checksum || checksum.empty?
+        raise RuntimeError.new("WARN: Failed to fetch checksum for file '#{file}' from '#{name}' '#{version}' sdk: #{e}")
+      end
+      
+      return "#{algorithm.split("-").first()}-#{checksum}"
     end
   end
 end
