@@ -89,6 +89,7 @@ For more detailed information about how to get the most out of `sentry-go` there
 - [Integrations]({%- link _documentation/platforms/go/integrations.md -%})
   - [net/http]({%- link _documentation/platforms/go/http.md -%})
   - [echo]({%- link _documentation/platforms/go/echo.md -%})
+  - [fasthttp]({%- link _documentation/platforms/go/fasthttp.md -%})
   - [gin]({%- link _documentation/platforms/go/gin.md -%})
   - [iris]({%- link _documentation/platforms/go/iris.md -%})
   - [martini]({%- link _documentation/platforms/go/martini.md -%})
