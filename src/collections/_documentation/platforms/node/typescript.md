@@ -43,7 +43,7 @@ Create a new one called _tsconfig.production.json_ and paste the snippet below:
 {
   "extends": "./tsconfig",
   "compilerOptions": {
-    "sourceMap": true,
+    "inlineSourceMap": true,
     "inlineSources": true,
     "sourceRoot": "/"
   }
