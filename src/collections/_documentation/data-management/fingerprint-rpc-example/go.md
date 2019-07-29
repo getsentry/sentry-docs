@@ -21,7 +21,7 @@ sentry.Init(sentry.ClientOptions{
 	// ...
 	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 		if ex, ok := hint.OriginalException.(MyRPCError); ok {
-			event.Fingerprint = []string{ex.ErrorCode(), ex.FunctionName()}
+			event.Fingerprint = []string{"{% raw %}{{ default }}{% endraw %}", ex.ErrorCode(), ex.FunctionName()}
 		}
 
 		return event
