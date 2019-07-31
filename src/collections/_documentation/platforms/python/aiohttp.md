@@ -38,7 +38,7 @@ Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
     async def hello(request):
         return web.Response(text="Hello, world")
 
-        app = web.Application()
+    app = web.Application()
     app.add_routes([web.get('/', hello)])
 
     web.run_app(app)
