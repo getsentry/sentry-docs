@@ -1,5 +1,6 @@
 ---
 title: Go
+keywords: ["golang"]
 ---
 
 {% capture __alert_content -%}
