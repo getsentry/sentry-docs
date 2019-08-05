@@ -1,6 +1,7 @@
 ---
 title: React
 sidebar_order: 30
+keywords: ["reactjs"]
 ---
 <!-- WIZARD -->
 To use Sentry with your React application, you will need to use `@sentry/browser` (Sentry’s browser JavaScript SDK).
