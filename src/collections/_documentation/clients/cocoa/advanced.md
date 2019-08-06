@@ -111,7 +111,7 @@ Client.shared?.trackMemoryPressureAsEvent()
 
 ## Change event before sending it {#before-serialize-event}
 
-With version _1.3.0_ we added the possibility to change an event before it will be sent to the server. You have to set the block somewhere in you code.
+With version _1.3.0_ we added the possibility to change an event before it will be sent to the server. You have to set the block somewhere in your code.
 
 ```swift
 Client.shared?.beforeSerializeEvent = { event in
