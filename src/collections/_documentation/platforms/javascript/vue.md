@@ -29,9 +29,9 @@ yarn add @sentry/integrations
 npm install @sentry/integrations
 ```
 
-Passing in `Vue` is optional, if you do not pass it `window.Vue` must be present.
-
-Passing in `attachProps` is optional and is `true` if it is not provided. If you set it to `false`, Sentry will suppress sending all Vue components' props for logging.
+- Passing in `Vue` is optional, if you do not pass it `window.Vue` must be present.
+- Passing in `attachProps` is optional and is `true` if it is not provided. If you set it to `false`, Sentry will suppress sending all Vue components' props for logging.
+- Passing in `logErrors` is optional and is `false` if it is not provided. If you set it to `true`, Sentry will call original Vue's `logError` function as well.
 
 {% capture __alert %}
 Please note that if you enable this integration Vue internally will not call `logError` due to a currently know limitation see: [GitHub Issue](https://github.com/vuejs/vue/issues/8433). This means that errors occurring in the Vue renderer will not show up in the developer console.
