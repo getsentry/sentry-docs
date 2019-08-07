@@ -53,8 +53,8 @@ connect(
 Possible options are:
 
 ```js
-// request data (path, method, query params, etc.)
-request?: boolean; // default: true
+// keys to be extracted from req
+request?: boolean | string[]; // default: true = ['cookies', 'data', 'headers', 'method', 'query_string', 'url']
 // server name
 serverName?: boolean; // default: true
 // generate transaction name
