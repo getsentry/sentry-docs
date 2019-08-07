@@ -47,19 +47,19 @@ All official plugins are tested against the latest version of Sentry, and compat
 -   Amazon SQS
 -   Asana
 -   Clubhouse
--   [Flowdock](https://github.com/getsentry/sentry-flowdock)
 -   Heroku
--   [IRC](https://github.com/getsentry/sentry-irc
 -   Pagerduty
 -   Phabricator
 -   Pivotal
 -   Pushover
--   [Redmine](https://github.com/getsentry/sentry-redmine)
 -   Segment
 -   Sessionstack
 -   Splunk
--   [Trello](https://github.com/getsentry/sentry-trello)
 -   Victorops
+-   [Flowdock](https://github.com/getsentry/sentry-flowdock)
+-   [IRC](https://github.com/getsentry/sentry-irc
+-   [Redmine](https://github.com/getsentry/sentry-redmine)
+-   [Trello](https://github.com/getsentry/sentry-trello)
 
 Most of the official plugins can be found in the [official sentry plugins repository](https://github.com/getsentry/sentry-plugins).
 
