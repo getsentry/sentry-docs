@@ -787,10 +787,19 @@ _Import name: `Sentry.Integrations.UserAgent`_
 This integration attaches user-agent information to the event, which allows us to correctly catalog and tag them with specific OS, Browser and version information.
 
 ### Pluggable Integrations
-Pluggable integrations are integrations that can be additionally enabled, to provide some very specific features. Sentry documents them so you can see what they do and that they can be enabled. To enable pluggable integrations, provide a new instance with your config to `integrations` option. For example: `integrations: [new Sentry.Integrations.ReportingObserver()]`.
+Pluggable integrations are integrations that can be additionally enabled, to provide some very specific features. Sentry documents them so you can see what they do and that they can be enabled. To enable pluggable integrations, install @sentry/integrations package and provide a new instance with your config to `integrations` option. For example: 
+```js
+import * as Sentry from '@sentry/browser';
+import * as Integrations from '@sentry/integrations';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [new Integrations.ReportingObserver()]
+});
+```
 
 ##### ExtraErrorData
-_Import name: `Sentry.Integrations.ExtraErrorData`_
+_Import name: `Integrations.ExtraErrorData`_
 
 This integration extracts all non-native attributes from the Error object and attaches them to the event as the `extra` data.
 
@@ -804,7 +813,7 @@ Available options:
 
 ### CaptureConsole
 
-_Import name: `Sentry.Integrations.CaptureConsole`_
+_Import name: `Integrations.CaptureConsole`_
 
 This integration captures all `Console API` calls and redirects them to Sentry using `captureMessage` call.
 It then retriggers to preserve default native behaviour.
@@ -816,12 +825,12 @@ It then retriggers to preserve default native behaviour.
 ```
 
 ##### Dedupe
-_Import name: `Sentry.Integrations.Dedupe`_
+_Import name: `Integrations.Dedupe`_
 
 This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only compare stack traces and fingerprints.
 
 #### Debug
-_Import name: `Sentry.Integrations.Debug`_
+_Import name: `Integrations.Debug`_
 
 This integration allows you to inspect the content of the processed event, that will be passed to `beforeSend` and effectively send to the Sentry SDK.
 
@@ -835,7 +844,7 @@ Available options:
 ```
 
 #### RewriteFrames
-_Import name: `Sentry.Integrations.RewriteFrames`_
+_Import name: `Integrations.RewriteFrames`_
 
 This integration allows you to apply a transformation to each frame of the stack trace. In the simple scenario, it can be used to change the name of the file the frame originates from or can be fed with an iterated function, to apply any arbitrary transformation.
 
@@ -851,7 +860,7 @@ Available options:
 #### Browser specific
 
 ##### ReportingObserver
-_Import name: `Sentry.Integrations.ReportingObserver`_
+_Import name: `Integrations.ReportingObserver`_
 
 This integration hooks into the ReportingObserver API and sends captured events through to Sentry. It can be configured to handle only specific issue types.
 
