@@ -57,7 +57,7 @@ All official plugins are tested against the latest version of Sentry, and compat
 -   Splunk
 -   Victorops
 
-All of the official plugins can be found in the [official sentry plugins repositroy](https://github.com/getsentry/sentry-plugins).
+All of the official plugins can be found in the [official sentry plugins repository](https://github.com/getsentry/sentry-plugins).
 
 ## Deprecated plugins
 
@@ -65,7 +65,7 @@ The following plugins are deprecated and have been replaced with Sentry's built 
 
 * Slack
 * GitHub
-* Gitlab
+* GitLab
 * Bitbucket
 * Visual Studio Team Services
 * Jira
