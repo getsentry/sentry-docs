@@ -42,7 +42,7 @@ Sentry.init({
 });
 ```
 
-Additionally, `Integrations.Vue` accepts few different configuration options that let you change its behaviour:
+Additionally, `Integrations.Vue` accepts a few different configuration options that let you change its behavior:
 
 - Passing in `Vue` is optional, if you do not pass it `window.Vue` must be present.
 - Passing in `attachProps` is optional and is `true` if it is not provided. If you set it to `false`, Sentry will suppress sending all Vue components' props for logging.
