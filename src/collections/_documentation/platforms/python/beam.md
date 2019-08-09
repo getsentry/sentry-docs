@@ -7,7 +7,7 @@ The Beam integration currently parses the functions in [ParDo](https://github.co
 
 The functions get injected with an inspect function to patch getting the [function signature](https://github.com/apache/beam/blob/release-2.13.0/sdks/python/apache_beam/transforms/core.py#L288L298).
 
-**This integration is experimental.** It may be removed in minor versions. When enabling this integration, expect to see incorrect server_name and ip due to some distributed within Beam.
+**This integration is experimental.** It may be removed in minor versions. When enabling this integration, expect to see incorrect server_name and ip due to some distributed properties within Beam.
 
 Add ``BeamIntegration()`` to your ``integrations`` list:
 
