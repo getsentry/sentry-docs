@@ -50,7 +50,7 @@ Additionally, `Integrations.Vue` accepts a few different configuration options t
 
 {% capture __alert %}
 Please note that if you enable this integration, Vue will not call its `logError` internally. This means that errors occurring in the Vue renderer will not show up in the developer console.
-If you want to preserve this functionality, make sure to pass `logErrors: true` option.
+If you want to preserve this functionality, make sure to pass the `logErrors: true` option.
 {% endcapture %}
 
 {% include components/alert.html
