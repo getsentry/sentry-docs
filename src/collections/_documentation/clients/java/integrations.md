@@ -53,9 +53,7 @@ public class MainApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        Context ctx = this.getApplicationContext();
-        Sentry.init("___PUBLIC_DSN___", new AndroidSentryClientFactory(ctx));
+        Sentry.init("___PUBLIC_DSN___", new AndroidSentryClientFactory(this));
     }
 }
 ```
@@ -70,9 +68,7 @@ public class MainApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        Context ctx = this.getApplicationContext();
-        Sentry.init(new AndroidSentryClientFactory(ctx));
+        Sentry.init(new AndroidSentryClientFactory(this));
     }
 }
 ```
