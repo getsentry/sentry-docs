@@ -6,8 +6,6 @@ sidebar_order: 4
 {% version_added: 0.6.1 %}
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.aiohttp.AioHttpIntegration`*
-
 The AIOHTTP integration adds support for the [AIOHTTP-Server Web
 Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
 3.6 or greater is required.
@@ -29,7 +27,7 @@ Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
     ```python
     import sentry_sdk
     from sentry_sdk.integrations.aiohttp import AioHttpIntegration
-    
+
     sentry_sdk.init(
         dsn="___PUBLIC_DSN___",
         integrations=[AioHttpIntegration()]
@@ -40,12 +38,13 @@ Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
     async def hello(request):
         return web.Response(text="Hello, world")
 
-        app = web.Application()
+    app = web.Application()
     app.add_routes([web.get('/', hello)])
 
     web.run_app(app)
     ```
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Behavior

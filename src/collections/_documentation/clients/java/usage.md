@@ -1,9 +1,9 @@
 ---
 title: 'Manual Usage'
-sidebar_order: 2
+sidebar_order: 5
 ---
 
-**Note:** The following page provides examples on how to configure and use Sentry directly. It is **highly recommended** that you use one of the [provided integrations]({%- link _documentation/clients/java/modules/index.md -%}#integrations) if possible. Once the integration is configured you can _also_ use Sentry’s static API, as shown below, in order to do things like record breadcrumbs, set the current user, or manually send events.
+**Note:** The following page provides examples on how to configure and use Sentry directly. It is **highly recommended** that you use one of the [provided integrations]({%- link _documentation/clients/java/integrations.md -%}) if possible. Once the integration is configured you can _also_ use Sentry’s static API, as shown below, in order to do things like record breadcrumbs, set the current user, or manually send events.
 
 <!-- WIZARD installation -->
 ## Installation
@@ -14,23 +14,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
-    <version>1.7.16</version>
+    <version>1.7.26</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry:1.7.16'
+compile 'io.sentry:sentry:1.7.26'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry" % "1.7.16"
+libraryDependencies += "io.sentry" % "sentry" % "1.7.26"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.16%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.26%7Cjar).
 <!-- ENDWIZARD -->
 
 <!-- WIZARD capture-an-error -->

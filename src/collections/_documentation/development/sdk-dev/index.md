@@ -12,5 +12,5 @@ typically look and behave.
 -   [Unified API]({%- link _documentation/development/sdk-dev/unified-api.md -%})
 -   [Expected Features]({%- link _documentation/development/sdk-dev/features.md -%})
 -   [Attributes]({%- link _documentation/development/sdk-dev/attributes.md -%})
--   [Interfaces]({%- link _documentation/development/sdk-dev/interfaces/index.md -%})
+-   [Interfaces]({%- link _documentation/development/sdk-dev/interfaces.md -%})
 -   [Data Handling]({%- link _documentation/development/sdk-dev/data-handling.md -%})

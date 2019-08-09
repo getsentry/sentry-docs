@@ -16,7 +16,7 @@ import Sentry from 'sentry-expo';
 Sentry.config('___PUBLIC_DSN___').install();
 ```
 
-Note that for Expo you have to use you public DSN instead of the private one. This is due Expo isn’t using the native integration yet, this could change in future releases.
+Note that for Expo you have to use you public DSN instead of the private one. This is due to the fact that Expo isn’t using the native integration yet, this could change in future releases.
 
 For uploading source maps you have to add this to your `exp.json` or `app.json`
 

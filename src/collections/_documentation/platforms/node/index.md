@@ -1,11 +1,23 @@
 ---
 title: Node.js
-sidebar_order: 2
 ---
 
 {% include learn-sdk.md platform="node" %}
 
 All our JavaScript-related SDKs provide the same API. Still, there are some differences between them which this section of the docs explains.
+
+{% capture __alert_content -%}
+The default configuration of the SDK captures unhandled promise rejections, which prevents Node.js from emitting default warnings about them. If you want to restore this behavior, use `--unhandled-rejections=warn` flag to run your code.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="info"
+%}
+
+```bash
+$ node --unhandled-rejections=warn app.js
+```
 
 ## Integrations
 

@@ -5,17 +5,18 @@ sidebar_order: 50
 
 Laravel is supported via a native package, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
-<!-- WIZARD -->
 ## Laravel 5.x
 
+{% wizard %}
 Install the `sentry/sentry-laravel` package:
 
 ```bash
 $ composer require sentry/sentry-laravel:{% sdk_version sentry.php.laravel %}
 ```
 
-If you're on Laravel 5.4 or earlier, you'll need to add the following to your `config/app.php` (for Laravel 5.5+ these will be auto-discovered by Laravel):
+If you're on Laravel 5.5 or later the package will be auto-discovered. Otherwise you will need to manually configure it in your `config/app.php`.
 
+{% wizard hide %}
 ```php
 'providers' => array(
     // ...
@@ -27,6 +28,7 @@ If you're on Laravel 5.4 or earlier, you'll need to add the following to your `c
     'Sentry' => Sentry\Laravel\Facade::class,
 )
 ```
+{% endwizard %}
 
 Add Sentry reporting to `App/Exceptions/Handler.php`:
 
@@ -52,7 +54,16 @@ Add your DSN to ``.env``:
 ```sh
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
-<!-- ENDWIZARD -->
+You can easily verify that Sentry is capturing errors in your Laravel application by creating a debug route that will throw an exception:
+
+```php
+Route::get('/debug-sentry', function () {
+    throw new Exception('My first Sentry error!');
+});
+```
+
+Visiting this route will trigger an exception that will be captured by Sentry.
+{% endwizard %}
 
 ## Laravel 4.x
 

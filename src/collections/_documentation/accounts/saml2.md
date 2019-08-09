@@ -49,26 +49,21 @@ For this method to work, an administrator needs to provide the contents of the I
 Here’s an example of what the Metadata XML contents look like.
 
 ```
+<?xml version="1.0" encoding="UTF-8"?>
 <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="http://www.okta.com/exkf25e40eapgLtXx0h7">
-<md:IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-<md:KeyDescriptor use="signing">
-<ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
-<ds:X509Data>
-<ds:X509Certificate>
-MIIDpDCCAoygAwIBAgIGAV3jWPYbMA0GCSqGSIb3DQEBCwUAMIGSMQswCQYDVQQGEwJVUzETMBEG A1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzENMAsGA1UECgwET2t0YTEU MBIGA1UECwwLU1NPUHJvdmlkZXIxEzARBgNVBAMMCmRldi01MTcyNDkxHDAaBgkqhkiG9w0BCQEW DWluZm9Ab2t0YS5jb20wHhcNMTcwODE1MDA0MzA0WhcNMjcwODE1MDA0NDAzWjCBkjELMAkGA1UE BhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExFjAUBgNVBAcMDVNhbiBGcmFuY2lzY28xDTALBgNV BAoMBE9rdGExFDASBgNVBAsMC1NTT1Byb3ZpZGVyMRMwEQYDVQQDDApkZXYtNTE3MjQ5MRwwGgYJ KoZIhvcNAQkBFg1pbmZvQG9rdGEuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA o7OQ51PQdel7doiZ4tXRBGoB+6TgUZLqA0JGMcRCBsS6ApMaxho7kc+urC3I6CrL4pw4Dw6RGXY4 bENVbhAJo46U1kN2QYnnyV/e+GqJgKQK4qGllS2dfGsMeiyj9QXocP+h13VNeeHb0xBAo7qZTGxW aNn16+OGuw02JQY5F7MRT0UKNNVnuXjp3z8NdUHqoxMmdo0TTgOXb9BgmgYSxkRn6iBF0tG3tpig lUt2CJUKsLPgq/dSMlce+XUIwdDErebfqtB3dQ9O7iIp5ZpynPUkcEMmjMznK/pptHzvoUY8sWBN XJcqEsXT83RTNTdoo0zpUDjaWMVH/su6seGDqwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQCOqhYY w8cmqvJyihgY8Ir50Zg6EQqlLS0whNuUOgQDHEMxSbkC+/dfuOSIeS9Ps/7sg5J4wcDs/enrKOMS BD3r9jH7E6KNEoleRv8AWRXlwQnIOajPQKFSTUQDF5Z/aDPc4SvrAQvXE+KggviwA80xxyGDf64L qYeCG3WiShHgBOVIpXuItSQTRZFjIvZRDJyawXpYfuSj2jxNdg+ChuhF4+baHfKwYvP6Z6YuoQvM aRjS00xKN7h4Pq1KtCfxyQC+WobCErYojEasRS/JUS4cCAkwtUKcha63HIayTCdgrfaKW9aEwACk IXWNkhXDx03WbSxgxRMidkA1eADs30r1
-</ds:X509Certificate>
-</ds:X509Data>
-</ds:KeyInfo>
-</md:KeyDescriptor>
-<md:NameIDFormat>
-urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified
-</md:NameIDFormat>
-<md:NameIDFormat>
-urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress
-</md:NameIDFormat>
-<md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://dev-517249.oktapreview.com/app/sentry/exkf25e40eapgLtXx0h7/sso/saml"/>
-<md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://dev-517249.oktapreview.com/app/sentry/exkf25e40eapgLtXx0h7/sso/saml"/>
-</md:IDPSSODescriptor>
+  <md:IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+    <md:KeyDescriptor use="signing">
+      <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:X509Data>
+          <ds:X509Certificate>...</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </md:KeyDescriptor>
+    <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified</md:NameIDFormat>
+    <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
+    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://dev-517249.oktapreview.com/app/sentry/exkf25e40eapgLtXx0h7/sso/saml" />
+    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://dev-517249.oktapreview.com/app/sentry/exkf25e40eapgLtXx0h7/sso/saml" />
+  </md:IDPSSODescriptor>
 </md:EntityDescriptor>
 ```
 

@@ -1,6 +1,5 @@
 ---
 title: .NET
-sidebar_order: 10
 ---
 
 {% include learn-sdk.md platform="csharp" %}
@@ -14,6 +13,7 @@ This section will describe features, configurations and general functionality wh
 - [_log4net_]({% link _documentation/platforms/dotnet/log4net.md %})
 - [_Microsoft.Extensions.Logging_]({% link _documentation/platforms/dotnet/microsoft-extensions-logging.md %})
 - [_Serilog_]({% link _documentation/platforms/dotnet/serilog.md %})
+- [_NLog_]({% link _documentation/platforms/dotnet/nlog.md %})
 
 ## Compatibility
 
@@ -39,6 +39,13 @@ Of those, we run our unit/integration tests against:
   content="[Our legacy SDK](https://docs.sentry.io/clients/csharp/) supports .NET Framework as early as 3.5."
   level="info"
 %}
+
+{% include components/alert.html
+  title="Upgrading the SDK and want to understand what's new?"
+  content="Have a look at the [Changelog](https://github.com/getsentry/sentry-dotnet/releases)."
+  level="info"
+%}
+
 
 ## Automatically discovering release version
 

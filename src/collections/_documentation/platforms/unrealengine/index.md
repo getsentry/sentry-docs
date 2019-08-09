@@ -1,6 +1,5 @@
 ---
 title: Unreal Engine 4
-sidebar_order: 20
 ---
 
 Installation of a Sentry SDK is not required in order to capture the crashes of your

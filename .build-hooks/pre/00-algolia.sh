@@ -16,4 +16,4 @@ if [ "$api_key" = '' ]; then
   exit 1
 fi
 
-ALGOLIA_API_KEY=$api_key bundle exec jekyll algolia
+ALGOLIA_API_KEY=$api_key JEKYLL_ALGOLIA=1 bundle exec jekyll algolia

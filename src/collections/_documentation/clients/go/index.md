@@ -1,11 +1,9 @@
 ---
 title: Go
-sidebar_order: 5
-sidebar_relocation: platforms
 ---
 
 {% capture __alert_content -%}
-The Sentry Go SDK is maintained and supported by Sentry but currently under development. Learn more about the project on [GitHub](https://github.com/getsentry/raven-go).
+The `raven-go` SDK is no longer maintained and was superseded by the `sentry-go` SDK. Learn more about the project on [GitHub](https://github.com/getsentry/sentry-go) and check out the [migration guide]({%- link _documentation/platforms/go/migration.md -%}).
 {%- endcapture -%}
 {%- include components/alert.html
   level="warning"
@@ -42,7 +40,7 @@ package main
 import "github.com/getsentry/raven-go"
 
 func init() {
-    raven.SetDSN("___DSN___")
+	raven.SetDSN("___PUBLIC_DSN___")
 }
 ```
 <!-- ENDWIZARD -->
@@ -54,8 +52,8 @@ For more detailed information about how to get the most out of `raven-go` there 
 - [Configuration]({%- link _documentation/clients/go/config.md -%})
 - [Usage]({%- link _documentation/clients/go/usage.md -%})
 - [Context]({%- link _documentation/clients/go/context.md -%})
-- [Integrations]({%- link _documentation/clients/go/integrations/index.md -%})
-  - [net/http]({%- link _documentation/clients/go/integrations/http.md -%})
+- [Integrations]({%- link _documentation/clients/go/integrations.md -%})
+  - [net/http]({%- link _documentation/clients/go/integrations.md -%})
 
 Resources:
 

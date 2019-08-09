@@ -2,6 +2,6 @@
 Sentry.addBreadcrumb({
   category: 'auth',
   message: 'Authenticated user ' + user.email,
-  level: 'info'
+  level: Sentry.Severity.Info
 });
 ```

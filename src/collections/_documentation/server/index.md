@@ -1,9 +1,9 @@
 ---
-title: 'Sentry Server'
+title: 'Self-Hosted Sentry'
 sidebar_order: 5
 ---
 
-The Sentry Server is the core Python application that powers all of our Sentry installations. This covers everything related to getting it running on your own infrastructure.
+Sentry is a set of open source services that power the cloud-hosted offering and can be run on your own infrastructure (on-premises). While these docs will not be exhaustive -- its expected you are familiar with the required technology -- they contain the core configuration and documentation for running Sentry.
 
 -   [Installation]({%- link _documentation/server/installation/index.md -%})
 -   [Upgrading]({%- link _documentation/server/upgrading.md -%})
@@ -25,7 +25,7 @@ The Sentry Server is the core Python application that powers all of our Sentry i
 -   [Queue Monitoring]({%- link _documentation/server/monitoring.md -%}#queue-monitoring)
 -   [Beacon]({%- link _documentation/server/beacon.md -%})
 -   [Plugins]({%- link _documentation/server/plugins.md -%})
+-   [Adding Integrations]({%- link _documentation/server/integrations/index.md -%})
 -   [System Warnings]({%- link _documentation/server/warnings.md -%})
--   [System Debug Symbols]({%- link _documentation/server/dsym.md -%})
 -   [Frequently Asked Questions]({%- link _documentation/server/faq.md -%})
 -   [Changelog]({%- link _documentation/server/changelog.md -%})

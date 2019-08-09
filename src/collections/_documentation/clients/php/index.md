@@ -69,10 +69,10 @@ Want more? Have a look at the full documentation for more information.
 
 -   [Usage]({%- link _documentation/clients/php/usage.md -%})
 -   [Configuration]({%- link _documentation/clients/php/config.md -%})
--   [Integrations]({%- link _documentation/clients/php/integrations/index.md -%})
-    -   [Laravel]({%- link _documentation/clients/php/integrations/laravel.md -%})
-    -   [Monolog]({%- link _documentation/clients/php/integrations/monolog.md -%})
-    -   [Symfony]({%- link _documentation/clients/php/integrations/symfony2.md -%})
+-   [Integrations]({%- link _documentation/clients/php/integrations.md -%})
+    -   [Laravel]({%- link _documentation/clients/php/integrations.md -%}#laravel)
+    -   [Monolog]({%- link _documentation/clients/php/integrations.md -%}#monolog)
+    -   [Symfony]({%- link _documentation/clients/php/integrations.md -%}#symfony2)
 
 Resources:
 

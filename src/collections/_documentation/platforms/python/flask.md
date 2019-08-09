@@ -4,38 +4,45 @@ sidebar_order: 2
 ---
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.flask.FlaskIntegration`*
-
 The Flask integration adds support for the [Flask Web
 Framework](http://flask.pocoo.org/).
 
-1. Install `sentry-sdk` from PyPI with the `flask` extra:
+Install `sentry-sdk` from PyPI with the `flask` extra:
 
-    ```bash
-    $ pip install --upgrade 'sentry-sdk[flask]=={% sdk_version sentry.python %}'
-    ```
+```bash
+$ pip install --upgrade 'sentry-sdk[flask]=={% sdk_version sentry.python %}'
+```
 
-2.  To configure the SDK, initialize it with the integration before or after your app has been initialized:
+To configure the SDK, initialize it with the integration before or after your app has been initialized:
 
-    ```python
-    import sentry_sdk
-    from sentry_sdk.integrations.flask import FlaskIntegration
+```python
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 
-    sentry_sdk.init(
-        dsn="___PUBLIC_DSN___",
-        integrations=[FlaskIntegration()]
-    )
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[FlaskIntegration()]
+)
 
-    app = Flask(__name__)
-    ```
+app = Flask(__name__)
+```
 
+You can easily verify your Sentry installation by creating a route that triggers an error:
+
+```py
+@app.route('/debug-sentry')
+def trigger_error():
+    division_by_zero = 1 / 0
+```
+
+Visiting this route will trigger an error that will be captured by Sentry.
 <!-- ENDWIZARD -->
 
 ## Behavior
 
 * The Sentry Python SDK will install the Flask integration for all of your apps. It hooks into Flask’s signals, not anything on the app object.
 
-* All exceptions leading to an Internal Server Error are reported.
+* All unhandled exceptions will be reported. Note that `@app.errorhandler(Exception)` will prevent all exceptions from being sent to Sentry while `@app.errorhandler(500)` will not.
 
 * {% include platforms/python/request-data.md %}
 

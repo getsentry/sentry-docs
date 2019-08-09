@@ -89,9 +89,11 @@ Additional information can be found in the [Releases API documentation]({%- link
 For Sentry to understand how to resolve errors sources, we need to modify the data we send. Thankfully, we have an integration called `RewriteFrames` which can be used to do just that.
 
 ```javascript
+import { RewriteFrames } from '@sentry/integrations';
+
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: [new Sentry.Integrations.RewriteFrames()]
+  integrations: [new RewriteFrames()]
 });
 ```
 

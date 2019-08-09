@@ -1,17 +1,13 @@
-If you are using `yarn` you can add our package as a dependency:
+Add the Sentry SDK as a dependency using `yarn` or `npm`:
 
 ```bash
-$ yarn add @sentry/browser@{% sdk_version sentry.javascript.browser %}
+# Using yarn
+$ yarn add @sentry/browser
+
+# Using npm
+$ npm install @sentry/browser
 ```
 
-Or alternatively, you can npm install it:
-
-```bash
-$ npm install @sentry/browser@{% sdk_version sentry.javascript.browser %}
-```
-
-{% include components/alert.html
-  title="Want a CDN?"
-  content="You can also [use our more convenient CDN version](?platform=browser)"
-  level="info"
-%}
+{% wizard hide %}
+You can also [use our more convenient CDN version](?platform=browser).
+{% endwizard %}

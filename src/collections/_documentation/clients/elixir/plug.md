@@ -7,6 +7,7 @@ Sentry.Plug provides basic functionality to handle Plug.ErrorHandler.
 To capture errors, simply put the following in your router:
 
 ```elixir
+use Plug.ErrorHandler
 use Sentry.Plug
 ```
 

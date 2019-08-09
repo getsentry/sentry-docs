@@ -1,6 +1,5 @@
 ---
 title: Cocoa
-sidebar_order: 1
 sidebar_relocation: platforms
 ---
 
@@ -86,6 +85,8 @@ Before you can start capturing crashes you will need to tell Sentry about the de
 
 -   [With Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#dsym-with-bitcode)
 -   [Without Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#dsym-without-bitcode)
+
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Testing a Crash

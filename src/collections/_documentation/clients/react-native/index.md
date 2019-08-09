@@ -1,6 +1,5 @@
 ---
 title: 'React Native'
-sidebar_order: 11
 sidebar_relocation: platforms
 ---
 
@@ -73,7 +72,8 @@ import { Sentry } from 'react-native-sentry';
 Sentry.config('___PUBLIC_DSN___').install();
 ```
 
-You can pass additional configuration options to the _config()_ method if you want to do so.
+You can pass additional configuration options to the `config()` method if you want to do so.
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Mixed Stacktraces
@@ -87,6 +87,7 @@ Currently we only support mixed stack traces on iOS. By default this feature is 
 -   [Using Sentry with CodePush]({%- link _documentation/clients/react-native/codepush.md -%})
 -   [Source maps for Other Platforms]({%- link _documentation/clients/react-native/sourcemaps.md -%})
 -   [Setup With CocoaPods]({%- link _documentation/clients/react-native/cocoapods.md -%})
+-   [Using RAM Bundles]({%- link _documentation/clients/react-native/ram-bundles.md -%})
 -   [Manual Setup]({%- link _documentation/clients/react-native/manual-setup.md -%})
     -   [iOS]({%- link _documentation/clients/react-native/manual-setup.md -%}#ios)
     -   [Android]({%- link _documentation/clients/react-native/manual-setup.md -%}#android)

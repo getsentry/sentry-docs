@@ -6,8 +6,6 @@ sidebar_order: 4
 {% version_added: 0.6.3 %}
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.tornado.TornadoIntegration`*
-
 The Tornado integration adds support for the [Tornado Web
 Framework](https://www.tornadoweb.org/). A Tornado version of 5 or greater and
 Python 3.6 or greater is required.

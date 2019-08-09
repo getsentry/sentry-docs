@@ -17,7 +17,7 @@ $ sentry-cli login
 
 This will give you the option to visit your auth token user settings, where you can create a new auth token, or simply copy an existing one. When you return to the CLI, you'll paste in your token and it will get added to `~/.sentryclirc` automatically.
 
-By default, `sentry-cli` will connect to sentry.io but for on-premise you can also sign in elsewhere:
+By default, `sentry-cli` will connect to sentry.io, but for self-hosted you can also sign in elsewhere:
 
 ```bash
 $ sentry-cli --url https://myserver.invalid/ login

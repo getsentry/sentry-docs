@@ -44,19 +44,35 @@ All official plugins are tested against the latest version of Sentry, and compat
   content=__alert_content
 %}
 
--   [GitHub](https://github.com/getsentry/sentry-github)
--   [JIRA](https://github.com/getsentry/sentry-jira)
--   [Hipchat](https://github.com/getsentry/sentry-hipchat-ac)
--   [Slack](https://github.com/getsentry/sentry-slack)
--   [GitLab](https://github.com/getsentry/sentry-gitlab)
--   [Phabricator](https://github.com/getsentry/sentry-phabricator)
--   [Pivotal Tracker](https://github.com/getsentry/sentry-pivotal)
--   [Pushover](https://github.com/getsentry/sentry-pushover)
+-   Amazon SQS
+-   Asana
+-   Clubhouse
+-   Heroku
+-   Pagerduty
+-   Phabricator
+-   Pivotal
+-   Pushover
+-   Segment
+-   Sessionstack
+-   Splunk
+-   Victorops
 -   [Flowdock](https://github.com/getsentry/sentry-flowdock)
+-   [IRC](https://github.com/getsentry/sentry-irc
 -   [Redmine](https://github.com/getsentry/sentry-redmine)
--   [BitBucket](https://github.com/getsentry/sentry-bitbucket)
 -   [Trello](https://github.com/getsentry/sentry-trello)
--   [IRC](https://github.com/getsentry/sentry-irc)
+
+Most of the official plugins can be found in the [official sentry plugins repository](https://github.com/getsentry/sentry-plugins).
+
+## Deprecated plugins
+
+The following plugins are deprecated and have been replaced with Sentry's built in [Global Integrations]({%- link _documentation/workflow/integrations/index.md -%}).
+
+* Slack
+* GitHub
+* GitLab
+* Bitbucket
+* Visual Studio Team Services
+* Jira
 
 ## 3rd Party Plugins {#rd-party-plugins}
 

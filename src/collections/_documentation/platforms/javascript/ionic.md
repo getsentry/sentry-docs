@@ -25,6 +25,11 @@ When building your app with ionic for production make sure you have source maps 
     "ionic_generate_source_map": "true"
 }
 ```
+Enable source maps for Ionic v4:
+
+```
+ionic build --prod --source-map
+```
 
 Otherwise we are not able to upload source maps to Sentry.
 
@@ -52,7 +57,26 @@ import { IonicErrorHandler } from 'ionic-angular';
 
 import * as Sentry from 'sentry-cordova';
 
-class SentryIonicErrorHandler extends IonicErrorHandler {
+export class SentryIonicErrorHandler extends IonicErrorHandler {
+  handleError(error) {
+    super.handleError(error);
+    try {
+      Sentry.captureException(error.originalError || error);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+```
+
+Or `ErrorHandler` for Ionic v4:
+
+```javascript
+import { ErrorHandler } from '@angular/core';
+
+import * as Sentry from 'sentry-cordova';
+
+export class SentryIonicErrorHandler extends ErrorHandler {
   handleError(error) {
     super.handleError(error);
     try {
@@ -72,7 +96,7 @@ Then change the `@NgModule{providers:[]}` in `app.module.ts` to:
     providers: [
         StatusBar,
         SplashScreen,
-        // {provide: ErrorHandler, useClass: IonicErrorHandler} remove this, add next line
+        // {provide: ErrorHandler, useClass: IonicErrorHandler} remove this, add next line (for Ionic 4 this line doen't exist by default)
         {provide: ErrorHandler, useClass: SentryIonicErrorHandler}
     ]
 })

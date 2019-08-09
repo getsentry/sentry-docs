@@ -5,7 +5,7 @@ sidebar_order: 3
 
 Sentry provides the ability to collect information on [Content-Security-Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) violations, as well as [Expect-CT](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT) and [HTTP Public Key Pinning (HPKP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Public_Key_Pinning) failures by setting the proper HTTP header which results in violation/failure to be sent to Sentry endpoint specified in _report-uri_.
 
-The integration process consists of configuring the the appropriate header with your project key’s Security Header endpoint found at **Project Settings > Security Headers**.
+The integration process consists of configuring the appropriate header with your project key’s Security Header endpoint found at **Project Settings > Security Headers**.
 
 ## Content-Security-Policy
 

@@ -34,6 +34,13 @@ Sentry supports additional context with events. Often this context is shared amo
 
 : Arbitrary unstructured data which is stored with an event sample
 
+{% capture __alert_content -%}
+Sentry will try it's best to accommodate the data you send it, but large context payloads will be trimmed or may be truncated entirely. For more details see the [data handling SDK documentation]({%- link _documentation/development/sdk-dev/data-handling.md -%})
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Context Size Limits"
+  content=__alert_content
+%}
 
 ## Capturing the User
 

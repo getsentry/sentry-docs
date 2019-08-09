@@ -62,7 +62,7 @@ _Import name: `Sentry.Integrations.OnUnhandledRejection`_
 This integration attaches global unhandled rejection handlers.
 
 {% capture __alert_content -%}
-This integration supresses default Node's warning about unhandled promise rejection. If you want to restore this behaviour, attach another handler using the snippet below.
+This integration suppresses the default Node warning about unhandled promise rejection. If you want to restore this behavior, use the `--unhandled-rejections=warn` flag to run your code.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -70,10 +70,8 @@ This integration supresses default Node's warning about unhandled promise reject
     level="info"
 %}
 
-```js
-process.on('unhandledRejection', (reason, p) => {
-  console.log('Unhandled Rejection at:', p, 'reason:', reason);
-});
+```bash
+$ node --unhandled-rejections=warn app.js
 ```
 
 ### LinkedErrors

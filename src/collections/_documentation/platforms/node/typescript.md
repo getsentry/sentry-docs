@@ -80,9 +80,11 @@ global.__rootdir__ = __dirname || process.cwd();
 ```
 
 ```javascript
+import { RewriteFrames } from '@sentry/integrations';
+
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: [new Sentry.Integrations.RewriteFrames({
+  integrations: [new RewriteFrames({
     root: global.__rootdir__
   })]
 });

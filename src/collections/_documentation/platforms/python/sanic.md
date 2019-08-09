@@ -6,11 +6,10 @@ sidebar_order: 3
 {% version_added 0.3.6 %}
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.sanic.SanicIntegration`*
-
 The Sanic integration adds support for the [Sanic Web
-Framework](https://github.com/huge-success/sanic). A Python version of 3.6 or
-greater is required.
+Framework](https://github.com/huge-success/sanic). We support all LTS versions
+of Sanic starting from `0.8`. Additionally, a Python version of 3.6 or greater
+is required.
 
 1. Install `sentry-sdk` from PyPI:
 
@@ -39,6 +38,7 @@ greater is required.
     app = Sanic(__name__)
     ```
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Behavior

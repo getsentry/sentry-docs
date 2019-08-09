@@ -1,6 +1,5 @@
 ---
 title: Java
-sidebar_order: 6
 sidebar_relocation: platforms
 ---
 
@@ -21,19 +20,20 @@ Getting started with Sentry is a three step process:
 
 1.  [Sign up for an account](https://sentry.io/signup/)
 2.  [Install your SDK](#install)
-3.  [Configure it](#configure)
+3.  [Configure it](#config)
 
 ## Installation {#install}
 
 Once you've configured one of the integrations below, you can _also_ use Sentry's [static API]({%- link _documentation/clients/java/usage.md -%}) in order to do things like record breadcrumbs, set the current user, or manually send events.
 
--   [Android]({%- link _documentation/clients/java/modules/android.md -%})
--   [Google App Engine]({%- link _documentation/clients/java/modules/appengine.md -%})
--   [java.util.logging]({%- link _documentation/clients/java/modules/jul.md -%})
--   [Log4j 1.x]({%- link _documentation/clients/java/modules/log4j.md -%})
--   [Log4j 2.x]({%- link _documentation/clients/java/modules/log4j2.md -%})
--   [Logback]({%- link _documentation/clients/java/modules/logback.md -%})
--   [Spring]({%- link _documentation/clients/java/modules/spring.md -%})
+-   [Android]({%- link _documentation/clients/java/integrations.md -%}#android)
+-   [Proguard/R8]({%- link _documentation/clients/java/integrations.md -%}#proguard)
+-   [Google App Engine]({%- link _documentation/clients/java/integrations.md -%}#google-app-engine)
+-   [java.util.logging]({%- link _documentation/clients/java/integrations.md -%}#javautillogging)
+-   [Log4j 1.x]({%- link _documentation/clients/java/integrations.md -%}#log4j-1x)
+-   [Log4j 2.x]({%- link _documentation/clients/java/integrations.md -%}#log4j-2x)
+-   [Logback]({%- link _documentation/clients/java/integrations.md -%}#logback)
+-   [Spring]({%- link _documentation/clients/java/integrations.md -%}#spring)
 
 ## Configuration {#config}
 

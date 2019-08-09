@@ -6,8 +6,6 @@ sidebar_order: 5
 {% version_added 0.5.0 %}
 
 <!-- WIZARD -->
-*Import name: `sentry_sdk.integrations.pyramid.PyramidIntegration`*
-
 The Pyramid integration adds support for the [Pyramid Web
 Framework](https://trypyramid.com/).
 
@@ -35,13 +33,17 @@ Framework](https://trypyramid.com/).
         ...
     ```
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
 ## Behavior
 
 * The Sentry Python SDK will install the Pyramid integration for all of your apps. The integration hooks into Pyramid itself, not any of your apps specifically.
 
-* All exceptions leading to an Internal Server Error are reported.
+* The SDK will report all exceptions leading to an Internal Server Error. These two kinds of exceptions are:
+
+  * exceptions that are not handled by any exception view
+  * exceptions whose exception view returns a status code of 500 (Pyramid version 1.9+ only)
 
 * {% include platforms/python/request-data.md %}
 

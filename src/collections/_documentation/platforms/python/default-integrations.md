@@ -23,6 +23,22 @@ This integration registers with the interpreter's except hook system.  Through t
 any exception that is unhandled will be reported to Sentry automatically.  Exceptions
 raised interactive interpreter sessions will not be reported.
 
+### Options
+
+You can pass the following keyword arguments to `ExcepthookIntegration()`:
+
+* `always_run`:
+    
+  ```bash
+  $ python
+  >>> import sentry_sdk
+  >>> from sentry_sdk.integrations.excepthook import ExcepthookIntegration
+  >>> sentry_sdk.init(..., integrations=[ExcepthookIntegration(always_run=True)])
+  >>> raise Exception("I will become an error")
+  ```
+
+  By default, the SDK does not capture errors occurring in the REPL (`always_run=False`).
+
 ## Deduplication
 *Import name: `sentry_sdk.integrations.dedupe.DedupeIntegration`*
 
@@ -33,9 +49,9 @@ This integration deduplicates certain events. The Sentry Python SDK enables it b
 
 The stdlib integration instruments certain modules in the standard library to emit breadcrumbs.  The Sentry Python SDK enables this by default, and it rarely makes sense to disable.
 
-In detail it provides:
+* Any outgoing HTTP request done with `httplib` will result in a [breadcrumb]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}) being logged. `urllib3` and `requests` use `httplib` under the hood, so HTTP requests from those packages should be covered as well.
 
-* Breadcrumbs for HTTP requests. The breadcrumbs are done using `httplib`, which also includes traffic going through `requests`.
+* {% version_added 0.10.0 %} Subprocesses spawned with the `subprocess` module will result in a [breadcrumb]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}) being logged.
 
 ## Modules
 *Import name: `sentry_sdk.integrations.modules.ModulesIntegration`*

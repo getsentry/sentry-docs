@@ -1,12 +1,10 @@
 Install the **NuGet** package:
 
-Package Manager:
 ```shell
+# Using Package Manager
 Install-Package Sentry -Version {% sdk_version sentry.dotnet %}
-```
 
-.NET Core CLI:
-```shell
+# Or using .NET Core CLI
 dotnet add package Sentry -v {% sdk_version sentry.dotnet %}
 ```
 

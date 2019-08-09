@@ -13,8 +13,8 @@ To handle normal `error` responses, we have two options: `CaptureErrorAndWait` a
 ```go
 f, err := os.Open("filename.ext")
 if err != nil {
-    raven.CaptureErrorAndWait(err, nil)
-    log.Panic(err)
+	raven.CaptureErrorAndWait(err, nil)
+	log.Panic(err)
 }
 ```
 
@@ -24,9 +24,12 @@ Capturing a panic is pretty simple as well. We just need to wrap our code in `Ca
 
 ```go
 raven.CapturePanic(func() {
-    // do all of the scary things here
+	// do all of the scary things here
+	panic("My first Sentry error!")
 }, nil)
 ```
+
+You can verify your Sentry integration by using the above snippet to send a test event.
 <!-- ENDWIZARD -->
 
 Other than regular Errors and Panics, there are also two additional methods that allow sending information to Sentry.
@@ -41,13 +44,13 @@ raven.CaptureMessageAndWait("Something bad happened and I would like to know abo
 
 ## Capturing Events
 
-`Capture` is a low-level method that can be used to deliver hand-crafter events (named type Packet in The Sentry Go SDK). It has no `CaptureAndWait` counterpart, but returns a channel in case you want to verify delivery status.
+`Capture` is a low-level method that can be used to deliver hand-crafted events (named type Packet in The Sentry Go SDK). It has no `CaptureAndWait` counterpart, but returns a channel in case you want to verify delivery status.
 To form a `Packet`, you can use `Packet` type directly, or `NewPacket` and `NewPacketWithExtra` helper methods which creates an empty event with a message and optional extra data.
 
 ```go
 packet := &raven.Packet{
     Message: "Hand-crafted event",
-    Extra: raven.Extra{
+    Extra: &raven.Extra{
         "runtime.Version": runtime.Version(),
         "runtime.NumCPU": runtime.NumCPU(),
     },

@@ -15,7 +15,7 @@ Getting started with Sentry is a three step process:
 
 ## Install an SDK {#pick-a-client-integration}
 
-Sentry captures data by using an SDK within your application’s runtime. These are platform specific and allow Sentry to have a deep understanding of both how your application works. In case your environment is very specific, you can also roll your own SDK using our document [_SDK API_]({%- link _documentation/development/sdk-dev/index.md -%}).
+Sentry captures data by using an SDK within your application’s runtime. These are platform specific and allow Sentry to have a deep understanding of how your application works.
 
 {% capture __alert_content -%}
 Your platform is not listed?  There are more SDKs we support: [list of SDKs]({%- link _documentation/platforms/index.md -%})
@@ -36,29 +36,19 @@ After you completed setting up a project in Sentry, you’ll be given a value wh
 
 {% include components/platform_content.html content_dir='getting-started-config' %}
 
-Most SDKs will now automatically collect data if available, some require some extra configuration as automatic error collecting is not
-available due to platform limitations.
 {% endwizard %}
 
-{% capture __alert_content -%}
-As of Sentry 9, we removed the need to provide the secret key. Older versions of SDKs may still require you to provide the DSN including the secret which is now called DSN (Legacy). Please check the corresponding docs of the SDK you are using if you still need to provide the secret.
+## Capturing your first event
 
-The DSN can be found in Sentry by navigating to [Project Name] -> Project Settings -> Client Keys (DSN). Its template resembles the following:
+Once you have Sentry integrated into your project, you probably want to verify that everything is working as expected before deploying it, and what better way to do that than to break your application!
 
-```
-'{PROTOCOL}://{PUBLIC_KEY}@{HOST}/{PROJECT_ID}'
-```
-
-Note: If you’re using Heroku, and you’ve added Hosted Sentry via the standard addon hooks, most SDKs will automatically pick up the `SENTRY_DSN` environment variable that we’ve already configured for you.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
+{% wizard %}
+{% include components/platform_content.html content_dir='getting-started-verify' %}
+{% endwizard %}
 
 ## Next Steps
 
-Now that you’ve got basic reporting setup, you’ll want to explore adding additional context to your data.
+Now that you’ve got basic reporting set up, you’ll want to explore adding additional context to your data.
 
 {% include components/platform_content.html content_dir='getting-started-next-steps' %}
 -   [_manual error and event capturing_]({%- link _documentation/error-reporting/capturing.md -%})

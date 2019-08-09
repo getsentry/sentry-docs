@@ -5,9 +5,9 @@ import User from './lib/User';
 import DynamicLoad from './lib/DynamicLoad';
 import './lib/PlatformContent';
 import './lib/HeaderLinker';
-import './lib/Feedback';
 import './lib/Search';
 import './lib/Sidebar';
+import './lib/TableOfContents';
 
 $(document).on('page.willUpdate', function(event) {
   $('[data-toggle="tooltip"]').tooltip('dispose');

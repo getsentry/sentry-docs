@@ -1,6 +1,6 @@
 ---
 title: 'Migration from Raven Java'
-sidebar_order: 4
+sidebar_order: 10
 ---
 
 The old `raven-java` library has been overhauled and renamed to `sentry-java`. The focus of the new release was to improve APIs, make the underlying client completely independent of logging integrations, and to rename (from `raven-*`) for clarity.
@@ -157,4 +157,4 @@ What follows is a small guide explaining the major changes.
 
 `Now (sentry-java)`
 
-: Android users now use the same `Sentry` and `SentryClient` classes as everyone, they just need to initialize it with their application context and the `AndroidSentryClientFactory`. For an example, [see the Android documentation]({%- link _documentation/clients/java/modules/android.md -%}).
+: Android users now use the same `Sentry` and `SentryClient` classes as everyone, they just need to initialize it with their application context and the `AndroidSentryClientFactory`. For an example, [see the Android documentation]({%- link _documentation/clients/java/integrations.md -%}).

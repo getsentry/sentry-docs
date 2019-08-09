@@ -11,28 +11,46 @@ config :sentry,
   dsn: "___PUBLIC_DSN___"
 ```
 
-If using an environment with Plug or Phoenix add the following to your router:
+### Setup with Plug or Phoenix
+
+If using an environment with Plug or Phoenix, add the following to your Plug.Router or Phoenix.Router:
 
 ```elixir
 use Plug.ErrorHandler
 use Sentry.Plug
 ```
 
-If you’d like to capture errors from separate processes like _Task_ that may crash, add the line `:ok = :error_logger.add_report_handler(Sentry.Logger)` to your application’s start function:
+If you are using Phoenix, you can also include [Sentry.Phoenix.Endpoint](https://hexdocs.pm/sentry/Sentry.Phoenix.Endpoint.html) in your Endpoint. This module captures errors occurring in the Phoenix pipeline before the request reaches the Router:
+
+```elixir
+use Phoenix.Endpoint, otp_app: :my_app
+use Sentry.Phoenix.Endpoint
+```
+
+More information on why this may be necessary can be found here: https://github.com/getsentry/sentry-elixir/issues/229 and https://github.com/phoenixframework/phoenix/issues/2791
+
+### Capture Crashed Process Exceptions
+
+This library comes with an extension to capture all error messages that the Plug handler might not.  This is based on [Logger.Backend](https://hexdocs.pm/logger/Logger.html#module-backends).
+
+To set this up, add `{:ok, _} = Logger.add_backend(Sentry.LoggerBackend)` to your application's start function. Example:
 
 ```elixir
 def start(_type, _opts) do
   children = [
-    supervisor(Task.Supervisor, [[name: Sentry.TaskSupervisor]]),
-    :hackney_pool.child_spec(Sentry.Client.hackney_pool_name(),  [timeout: Config.hackney_timeout(), max_connections: Config.max_hackney_connections()])
+    supervisor(MyApp.Repo, []),
+    supervisor(MyAppWeb.Endpoint, [])
   ]
-  opts = [strategy: :one_for_one, name: Sentry.Supervisor]
 
-  :ok = :error_logger.add_report_handler(Sentry.Logger)
+  opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+
+  {:ok, _} = Logger.add_backend(Sentry.LoggerBackend)
 
   Supervisor.start_link(children, opts)
 end
 ```
+
+The backend can also be configured to capture Logger metadata, which is detailed [here](https://hexdocs.pm/sentry/Sentry.LoggerBackend.html).
 
 ## Required settings
 
@@ -122,9 +140,16 @@ end
 
 : A glob that is expanded to select files from the `:root_source_code_path`. Defaults to `"**/*.ex"`.
 
+`json_library`
+
+: The JSON library used to encode HTTP requests.  Defaults to `Jason`.
+
+`log_level`
+: This sets the log level used when Sentry fails to send an event due to an invalid event or API error. Defaults to `:warn`.
+
 ## Testing Your Configuration
 
-To ensure you’ve set up your configuration correctly we recommend running the included mix task. It can be tested on different Mix environments and will tell you if it is not currently configured to send events in that environment:
+To ensure you’ve set up your configuration correctly, we recommend running the included mix task. It can be tested on different Mix environments and will tell you if it is not currently configured to send events in that environment:
 
 ```bash
 $ MIX_ENV=dev mix sentry.send_test_event

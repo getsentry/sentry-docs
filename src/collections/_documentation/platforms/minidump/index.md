@@ -1,12 +1,11 @@
 ---
 title: Minidump
-sidebar_order: 8
 ---
 
 Sentry can process Minidump crash reports, a memory dump used on Windows and by open-source libraries like [_Breakpad_]({%- link _documentation/platforms/minidump/breakpad.md -%}) or [_Crashpad_]({%- link _documentation/platforms/minidump/crashpad.md -%}). You can either choose to generate and upload minidumps yourself or use a higher-level SDK for platforms with built-in support for native crashes:
 
 -   [_Cocoa_]({%- link _documentation/clients/cocoa/index.md -%})
--   [_Electron_]({%- link _documentation/platforms/javascript/electron/index.md -%})
+-   [_Electron_]({%- link _documentation/platforms/javascript/electron.md -%})
 -   [_Unreal Engine 4_]({%- link _documentation/platforms/unrealengine/index.md -%})
 
 In order to receive symbolicated stack traces, you have to upload debug information to Sentry. For more information, see [Uploading Debug Information](#minidump-dif).
@@ -14,12 +13,14 @@ In order to receive symbolicated stack traces, you have to upload debug informat
 <!-- WIZARD -->
 ## Platform and Language Support
 
-Minidumps are currently supported for **Windows, macOS and Linux**. There is no limitation as to which programming language can be used. Sentry can also demangle symbols from the following languages; other languages will show the mangled name instead:
+Sentry currently supports minidumps for **Windows, macOS and Linux**. There is no limitation as to which programming language you can use. Sentry can also demangle symbols from the following languages:
 
 -   C and C++
 -   ObjectiveC and ObjectiveC++
 -   Swift
 -   Rust
+
+Languages not listed above will show the mangled name instead.
 <!-- ENDWIZARD -->
 
 ## What is a Minidump? {#what-is-a-minidump}
