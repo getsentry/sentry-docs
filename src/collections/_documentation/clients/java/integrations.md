@@ -49,19 +49,29 @@ Then initialize the Sentry client in your application’s main `onCreate` method
 import io.sentry.Sentry;
 import io.sentry.android.AndroidSentryClientFactory;
 
-public class MainActivity extends Activity {
+public class MainApplication extends Application {
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreate() {
+        super.onCreate();
 
         Context ctx = this.getApplicationContext();
+        Sentry.init("___PUBLIC_DSN___", new AndroidSentryClientFactory(ctx));
+    }
+}
+```
 
-        // Use the Sentry DSN (client key) from the Project Settings page on Sentry
-        String sentryDsn = "https://publicKey:secretKey@host:port/1?options";
-        Sentry.init(sentryDsn, new AndroidSentryClientFactory(ctx));
+Alternatively, if you configured your DSN in a `sentry.properties` file (see the configuration documentation):
 
-        // Alternatively, if you configured your DSN in a `sentry.properties`
-        // file (see the configuration documentation).
+```java
+import io.sentry.Sentry;
+import io.sentry.android.AndroidSentryClientFactory;
+
+public class MainApplication extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        Context ctx = this.getApplicationContext();
         Sentry.init(new AndroidSentryClientFactory(ctx));
     }
 }
