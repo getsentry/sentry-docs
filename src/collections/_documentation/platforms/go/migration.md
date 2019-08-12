@@ -344,7 +344,7 @@ raven-go
 path := "filename.ext"
 f, err := os.Open(path)
 if err != nil {
-	err = raven.WrapWithExtra(err, map[string]string{"path": path, "cwd": os.Getwd()}
+	err = raven.WrapWithExtra(err, map[string]string{"path": path, "cwd": os.Getwd()})
 	raven.CaptureError(err, nil)
 }
 ```
@@ -357,7 +357,7 @@ path := "filename.ext"
 f, err := os.Open(path)
 if err != nil {
 	sentry.WithScope(func(scope *sentry.Scope) {
-		sentry.SetExtras(map[string]interface{}{"path": path, "cwd": os.Getwd())
+		sentry.SetExtras(map[string]interface{}{"path": path, "cwd": os.Getwd()})
 		sentry.CaptureException(err)
 	})
 }
