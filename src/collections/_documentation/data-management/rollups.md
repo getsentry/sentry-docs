@@ -43,6 +43,15 @@ function makeRequest(method, path, options) {
 }
 ```
 
+The following extra values are available for fingerprints:
+
+- `{% raw %}{{ default }}{% endraw %}`: adds the default fingerprint values
+- `{% raw %}{{ transaction }}{% endraw %}`: groups by the event's transaction
+- `{% raw %}{{ function }}{% endraw %}`: groups by the event's function name
+- `{% raw %}{{ type }}{% endraw %}`: groups by the event's exception type name
+- `{% raw %}{{ module }}{% endraw %}`: groups by the event's module name
+- `{% raw %}{{ package }}{% endraw %}`: groups by the event's package name
+
 ### Grouping by Stacktrace
 
 When Sentry detects a stack trace in the event data (either directly or as part of an exception), the grouping is effectively based entirely on the stack trace. This grouping is fairly involved but easy enough to understand.
@@ -258,13 +267,22 @@ The matchers are the same as for grouping enhancements but some extra ones are a
 
 #### Examples
 
-```
+```{% raw %}
 # force all errors of the same type to have the same fingerprint
 type:DatabaseUnavailable -> system-down
+
+# force all events with a certain message to be matched together
+message:"unexpected i/o error: *" -> io-error
+
+# group all TimeoutError exceptions by the transaction that caused them
+type:TimeoutError -> {{ transaction }}
+
+# group all javascript errors in a module by the topmost module and function name
+path:**/some-module/** -> {{ module }}, {{ function }}
 
 # force all memory allocation errors to be grouped together
 family:native function:malloc -> memory-allocation-error
 
-# force all events with a certain message to be matched together
-message:"unexpected i/o error: *" -> io-error
-```
+# group all allocation errors by the package (dylib, executable) that caused them
+function:*alloc* -> {{ package }}
+{% endraw %}```
