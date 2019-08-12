@@ -265,6 +265,9 @@ The matchers are the same as for grouping enhancements but some extra ones are a
 - `value`: matches on an exception value
 - `message`: matches on a log message
 
+Don't forget that yuo can also use variables like `{% raw %}{{ function }}{% endraw %}` to
+customize fingerprinting like you can do if the client submits them.
+
 #### Examples
 
 ```{% raw %}
