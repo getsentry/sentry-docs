@@ -12,6 +12,10 @@ $(document).on('page.didUpdate', function(event) {
     .filter((i, l) => pathname === trimEndSlash($(l).attr('href')))
     .last();
 
+  if($active.length > 0) {
+    $active[0].scrollIntoView();
+  }
+
   $links.each((i, el) => {
     const $el = $(el);
     $el.toggleClass('active', $el.is($active));

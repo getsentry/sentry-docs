@@ -5,26 +5,48 @@ title: JavaScript
 ## Integrating the SDK
 All our JavaScript-related SDKs provide the same API. Still, there are some differences between them, such as installation, which this section of the docs explains.
 
-{% include components/platform_content.html content_dir='getting-started-install' %}
+The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
+
+```html
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.min.js %}" crossorigin="anonymous"></script>
+```
+
+You can also add the Sentry SDK as a dependency using npm:
+
+``` bash
+$ npm install @sentry/browser
+```
+
+{% include components/alert.html
+  title="Upgrading the SDK and want to understand what's new?"
+  content="Have a look at the [Changelog](https://github.com/getsentry/sentry-javascript/releases)."
+  level="info"
+%}
 
 ### Connecting the SDK to Sentry
 After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
-{% include components/platform_content.html content_dir='getting-started-dsn' %}
+You should `init` the Sentry Browser SDK as soon as possible during your page load:
+
+```javascript
+// When using npm, import Sentry
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({ dsn: '___PUBLIC_DSN___' });
+```
 
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
 ```javascript
-Sentry.captureException(new Error("This is my fake error message"));
+Sentry.captureException(new Error("Something broke"));
 ```
 Then, you can see the error in your dashboard:
 
 [{% asset js-index/error-message.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/error-message.png @path %})
 
 ## Capturing Errors
-### Capturing Errors / Exceptions {#capturing-errors}
-In JavaScript, you can pass an error object to `captureException()` to get it captured as an event.
+In most situations, you can capture errors automatically with `captureException()`.
 
 ```javascript
 try {
@@ -33,18 +55,10 @@ try {
   Sentry.captureException(err);
 }
 ```
-
-{% capture __alert_content -%}
-It's possible to throw strings as errors. In this case, the Sentry SDK will not record tracebacks.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="warning"
-%}
+For additional functionality, see [SDK Integrations](#sdk-integrations).
 
 ### Automatically Capturing Errors
-By including and configuring the Sentry Browser SDK, Sentry will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
+By including and configuring Sentry, the SDK will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
 
 [{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
 
@@ -53,7 +67,7 @@ By default, Sentry for JavaScript captures unhandled promise rejections as descr
 
 Configuration may be required if you are using a third-party library to implement promises.
 
-Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by setting `captureUnhandledRejections` option to `false` and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
+Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by changing `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 For example, the [RSVP.js library](https://github.com/tildeio/rsvp.js/) (used by Ember.js) allows you to bind an event handler to a [global error event](https://github.com/tildeio/rsvp.js#error-handling).
 
@@ -63,7 +77,7 @@ RSVP.on('error', function(reason) {
 });
 ```
 
-[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections to a global DOM event, `unhandledRejection`. In this case, you don't need to do anything; we've already got you covered with the default `captureUnhandledRejections: true` setting.
+[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections to a global DOM event, `unhandledRejection`. In this case, you don't need to do anything; we've already got you covered with the default [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and its `onhandledrejection: true` setting.
 
 Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
 
@@ -150,33 +164,7 @@ module.exports = {
 };
 ```
 
-{% capture __alert_content -%}
 In case you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, leave `noSources` turned off, so Sentry can display proper source code context in event stack traces.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="info"
-%}
-
-#### SystemJS
-SystemJS is the default module loader for Angular 2 projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and you can configured it to output source maps.
-
-```javascript
-builder.bundle('src/app.js', 'dist/app.min.js', {
-    minify: true,
-    sourceMaps: true,
-    sourceMapContents: true
-});
-```
-
-{% capture __alert_content -%}
-All of the example configurations above inline your original, un-transformed source files into the generated source map file. Sentry requires both source map(s) **and** your original source files to perform reverse transformations. If you choose NOT to inline your source files, you must make those source files available to Sentry in _addition_ to your source maps (see below).
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Inline Sources"
-  content=__alert_content
-%}
 
 #### TypeScript
 The TypeScript compiler can output source maps. Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
@@ -243,14 +231,7 @@ $ sentry-cli releases finalize <release_name>
 
 For convenience, you can alternatively pass the `--finalize` flag to the `new` command which will immediately finalize the release.
 
-{% capture __alert_content -%}
 You don't _have_ to upload the source files (ref’d by source maps), but without them, the grouping algorithm will not be as strong, and the UI will not show any contextual source.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="info"
-%}
 
 For more information, see [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
 
@@ -345,7 +326,7 @@ If you want to keep your source maps secret and choose not to upload your source
   content=__alert_content
 %}
 
-## Context
+## Adding Context
 You can also set context when manually triggering events.
 
 ### Setting Context {#context}
@@ -353,7 +334,7 @@ Sentry supports additional context with events. Often this context is shared amo
 
 **Structured Contexts**
 
-: Specific structured contexts --- OS info, runtime information, etc.  This is typically set automatically.
+Structured contexts are typically set automatically.
 
 [**User**](#capturing-the-user)
 
@@ -379,9 +360,7 @@ Sentry supports additional context with events. Often this context is shared amo
 In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
 
 ```javascript
-Sentry.configureScope((scope) => {
-  scope.setExtra("character_name", "Mighty Fighter");
-});
+Sentry.setExtra("character_name", "Mighty Fighter");
 ```
 
 {% capture __alert_content -%}
@@ -400,9 +379,7 @@ There are two different scopes for unsetting context --- a global scope which Se
 
 ```javascript
 // This will be changed for all future events
-Sentry.configureScope(scope => {
-  scope.setUser(someUser);
-});
+Sentry.setUser(someUser);
 
 // This will be changed only for the error caught inside and automatically discarded afterward
 Sentry.withScope(scope => {
@@ -428,9 +405,7 @@ Sending users to Sentry will unlock many features, primarily the ability to dril
 Capturing the user is fairly straight forward:
 
 ```javascript
-Sentry.configureScope((scope) => {
-  scope.setUser({"email": "john.doe@example.com"});
-});
+Sentry.setUser({"email": "john.doe@example.com"});
 ```
 
 Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
@@ -459,9 +434,7 @@ Sentry implements a system it calls tags. Tags are various key/value pairs that 
 Most SDKs generally support configuring tags by configuring the scope:
 
 ```javascript
-Sentry.configureScope((scope) => {
-  scope.setTag("page_locale", "de-at");
-});
+Sentry.setTag("page_locale", "de-at");
 ```
 
 Several common uses for tags include:
@@ -564,7 +537,7 @@ Please add the script tag below before loading our SDK.
 
 We need `Promise`, `Object.assign`, `Number.isNaN` and `String.prototype.includes` polyfill.
 
-Additionally, keep in mind to define `<!doctype html>` on top of your HTML page, to make sure IE does not go into compatibility mode.
+Additionally, keep in mind to define a valid HTML doctype on top of your HTML page, to make sure IE does not go into compatibility mode.
 {% endcapture %}
 
 {% include components/alert.html
@@ -728,15 +701,6 @@ For more information, see:
 - [Full documentation on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%})
 - [Introducing User Feedback](https://blog.sentry.io/2016/04/21/introducing-user-feedback)
 
-### Security Policy Reporting
-Sentry provides the ability to collect information on Content-Security-Policy (CSP) violations, as well as Expect-CT and HTTP Public Key Pinning (HPKP) failures by setting the proper HTTP header which results in a violation/failure to be sent to the Sentry endpoint specified in the report-uri.
-
-For more information:
-
-- [Full documentation on Security Policy Reporting]({%- link _documentation/error-reporting/security-policy-reporting.md -%})
-- [Capture Content Security Policy Violations with Sentry](https://blog.sentry.io/2018/09/04/how-sentry-captures-csp-violations)
-- [How a Content Security Policy Could Have Protected Newegg](https://blog.sentry.io/2018/09/20/content-security-policy-newegg-breach)
-
 ### SDK Integrations
 All of Sentry's SDKs provide Integrations, which provide additional functionality.
 
@@ -823,10 +787,19 @@ _Import name: `Sentry.Integrations.UserAgent`_
 This integration attaches user-agent information to the event, which allows us to correctly catalog and tag them with specific OS, Browser and version information.
 
 ### Pluggable Integrations
-Pluggable integrations are integrations that can be additionally enabled, to provide some very specific features. Sentry documents them so you can see what they do and that they can be enabled. To enable pluggable integrations, provide a new instance with your config to `integrations` option. For example: `integrations: [new Sentry.Integrations.ReportingObserver()]`.
+Pluggable integrations are integrations that can be additionally enabled, to provide some very specific features. Sentry documents them so you can see what they do and that they can be enabled. To enable pluggable integrations, install @sentry/integrations package and provide a new instance with your config to `integrations` option. For example: 
+```js
+import * as Sentry from '@sentry/browser';
+import * as Integrations from '@sentry/integrations';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [new Integrations.ReportingObserver()]
+});
+```
 
 ##### ExtraErrorData
-_Import name: `Sentry.Integrations.ExtraErrorData`_
+_Import name: `Integrations.ExtraErrorData`_
 
 This integration extracts all non-native attributes from the Error object and attaches them to the event as the `extra` data.
 
@@ -840,7 +813,7 @@ Available options:
 
 ### CaptureConsole
 
-_Import name: `Sentry.Integrations.CaptureConsole`_
+_Import name: `Integrations.CaptureConsole`_
 
 This integration captures all `Console API` calls and redirects them to Sentry using `captureMessage` call.
 It then retriggers to preserve default native behaviour.
@@ -852,12 +825,12 @@ It then retriggers to preserve default native behaviour.
 ```
 
 ##### Dedupe
-_Import name: `Sentry.Integrations.Dedupe`_
+_Import name: `Integrations.Dedupe`_
 
 This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only compare stack traces and fingerprints.
 
 #### Debug
-_Import name: `Sentry.Integrations.Debug`_
+_Import name: `Integrations.Debug`_
 
 This integration allows you to inspect the content of the processed event, that will be passed to `beforeSend` and effectively send to the Sentry SDK.
 
@@ -871,7 +844,7 @@ Available options:
 ```
 
 #### RewriteFrames
-_Import name: `Sentry.Integrations.RewriteFrames`_
+_Import name: `Integrations.RewriteFrames`_
 
 This integration allows you to apply a transformation to each frame of the stack trace. In the simple scenario, it can be used to change the name of the file the frame originates from or can be fed with an iterated function, to apply any arbitrary transformation.
 
@@ -887,7 +860,7 @@ Available options:
 #### Browser specific
 
 ##### ReportingObserver
-_Import name: `Sentry.Integrations.ReportingObserver`_
+_Import name: `Integrations.ReportingObserver`_
 
 This integration hooks into the ReportingObserver API and sends captured events through to Sentry. It can be configured to handle only specific issue types.
 
@@ -936,11 +909,11 @@ like this:
 
 ```html
 <!-- Note that we now also provide a es6 build only -->
-<!-- <script src="https://browser.sentry-cdn.com/5.0.0/bundle.es6.min.js" crossorigin="anonymous"></script> -->
-<script src="https://browser.sentry-cdn.com/5.0.0/bundle.min.js" crossorigin="anonymous"></script>
+<!-- <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.es6.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.es6.min.js %}" crossorigin="anonymous"></script> -->
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.min.js %}" crossorigin="anonymous"></script>
 
 <!-- If you include the integration it will be available under Sentry.Integrations.Vue -->
-<script src="https://browser.sentry-cdn.com/5.0.0/vue.min.js" crossorigin="anonymous"></script>
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/vue.min.js" crossorigin="anonymous"></script>
 
 <script>
   Sentry.init({

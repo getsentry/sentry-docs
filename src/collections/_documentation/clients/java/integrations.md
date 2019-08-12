@@ -9,7 +9,7 @@ The Sentry Java SDK comes with support for some frameworks and libraries so that
 
 ### Features
 
-The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options]({%- link _documentation/clients/java/config.md -%}), and more. Adding version `1.7.16` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
+The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options]({%- link _documentation/clients/java/config.md -%}), and more. Adding version `1.7.26` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
 
 Events will be [buffered to disk]({%- link _documentation/clients/java/config.md -%}#buffering-events-to-disk) (in the application’s cache directory) by default. This allows events to be sent at a later time if the device does not have connectivity when an event is created. This can be disabled by [setting the option]({%- link _documentation/clients/java/config.md -%}#configuration) `buffer.enabled` to `false`.
 
@@ -23,14 +23,14 @@ The `AndroidEventBuilderHelper` is enabled by default, which will automatically 
 Using Gradle (Android Studio) in your `app/build.gradle` add:
 
 ```groovy
-compile 'io.sentry:sentry-android:1.7.16'
+compile 'io.sentry:sentry-android:1.7.26'
 
 // this dependency is not required if you are already using your own
 // slf4j implementation
 compile 'org.slf4j:slf4j-nop:1.7.25'
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-android%7C1.7.16%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-android%7C1.7.26%7Cjar).
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
@@ -49,20 +49,26 @@ Then initialize the Sentry client in your application’s main `onCreate` method
 import io.sentry.Sentry;
 import io.sentry.android.AndroidSentryClientFactory;
 
-public class MainActivity extends Activity {
+public class MainApplication extends Application {
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreate() {
+        super.onCreate();
+        Sentry.init("___PUBLIC_DSN___", new AndroidSentryClientFactory(this));
+    }
+}
+```
 
-        Context ctx = this.getApplicationContext();
+Alternatively, if you configured your DSN in a `sentry.properties` file (see the configuration documentation):
 
-        // Use the Sentry DSN (client key) from the Project Settings page on Sentry
-        String sentryDsn = "https://publicKey:secretKey@host:port/1?options";
-        Sentry.init(sentryDsn, new AndroidSentryClientFactory(ctx));
+```java
+import io.sentry.Sentry;
+import io.sentry.android.AndroidSentryClientFactory;
 
-        // Alternatively, if you configured your DSN in a `sentry.properties`
-        // file (see the configuration documentation).
-        Sentry.init(new AndroidSentryClientFactory(ctx));
+public class MainApplication extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Sentry.init(new AndroidSentryClientFactory(this));
     }
 }
 ```
@@ -142,7 +148,7 @@ And declare a dependency in your toplevel `build.gradle`:
 ```groovy
 buildscript {
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.16'
+        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.26'
     }
 }
 ```
@@ -272,23 +278,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-appengine</artifactId>
-    <version>1.7.16</version>
+    <version>1.7.26</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-appengine:1.7.16'
+compile 'io.sentry:sentry-appengine:1.7.26'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-appengine" % "1.7.16"
+libraryDependencies += "io.sentry" % "sentry-appengine" % "1.7.26"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-appengine%7C1.7.16%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-appengine%7C1.7.26%7Cjar).
 
 ### Usage
 
@@ -331,23 +337,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
-    <version>1.7.16</version>
+    <version>1.7.26</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry:1.7.16'
+compile 'io.sentry:sentry:1.7.26'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry" % "1.7.16"
+libraryDependencies += "io.sentry" % "sentry" % "1.7.26"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.16%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.26%7Cjar).
 
 ### Usage
 
@@ -433,23 +439,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-log4j</artifactId>
-    <version>1.7.16</version>
+    <version>1.7.26</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-log4j:1.7.16'
+compile 'io.sentry:sentry-log4j:1.7.26'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-log4j" % "1.7.16"
+libraryDependencies += "io.sentry" % "sentry-log4j" % "1.7.26"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j%7C1.7.16%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j%7C1.7.26%7Cjar).
 
 ### Usage
 
@@ -598,23 +604,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-log4j2</artifactId>
-    <version>1.7.16</version>
+    <version>1.7.26</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-log4j2:1.7.16'
+compile 'io.sentry:sentry-log4j2:1.7.26'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-log4j2" % "1.7.16"
+libraryDependencies += "io.sentry" % "sentry-log4j2" % "1.7.26"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j2%7C1.7.16%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j2%7C1.7.26%7Cjar).
 
 ### Usage
 
@@ -740,23 +746,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-logback</artifactId>
-    <version>1.7.16</version>
+    <version>1.7.26</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-logback:1.7.16'
+compile 'io.sentry:sentry-logback:1.7.26'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-logback" % "1.7.16"
+libraryDependencies += "io.sentry" % "sentry-logback" % "1.7.26"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-logback%7C1.7.16%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-logback%7C1.7.26%7Cjar).
 
 ### Usage
 
@@ -887,23 +893,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring</artifactId>
-    <version>1.7.16</version>
+    <version>1.7.26</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-spring:1.7.16'
+compile 'io.sentry:sentry-spring:1.7.26'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-spring" % "1.7.16"
+libraryDependencies += "io.sentry" % "sentry-spring" % "1.7.26"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-spring%7C1.7.16%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-spring%7C1.7.26%7Cjar).
 
 ### Usage
 

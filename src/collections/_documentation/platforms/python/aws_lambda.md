@@ -20,6 +20,16 @@ sentry_sdk.init(
 def my_function(event, context):
     ...
 ```
+
+{% capture __alert_content -%}
+If you are using another web framework inside of AWS Lambda, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [*Integrations*]({% link _documentation/platforms/python/index.md %}#integrations) for more information.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="info"
+%}
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
@@ -28,15 +38,6 @@ def my_function(event, context):
 With the AWS Lambda integration enabled, the Python SDK will:
 
 * Automatically report all uncaught exceptions from your lambda functions.
-
-    {% capture __alert_content -%}
-    If you are using another web framework inside of AWS Lambda, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists.
-    {%- endcapture -%}
-    {%- include components/alert.html
-      title="Note"
-      content=__alert_content
-      level="info"
-    %}
 
 * {% include platforms/python/request-data.md %}
 

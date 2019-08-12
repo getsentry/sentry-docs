@@ -57,6 +57,15 @@ By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT`
 environment variable (except for the browser SDK where this is not applicable).
 
 {:.config-key}
+### `error_types`
+
+{% supported php %}
+Sets which errors are reported. It takes the same values as PHP's [`error_reporting`](https://www.php.net/manual/errorfunc.configuration.php#ini.error-reporting) configuration parameter.
+
+By default all types of errors are be reported (equivalent to `E_ALL`).
+{% endsupported %}
+
+{:.config-key}
 ### `sample-rate`
 
 Configures the sample rate as a percentage of events to be sent in the range of `0.0` to `1.0`.  The
@@ -83,7 +92,7 @@ This feature is `off` by default.
 {:.config-key}
 ### `send-default-pii`
 
-{% unsupported browser javascript %}
+{% unsupported browser javascript node %}
 If this flag is enabled, certain personally identifiable information is added by active
 integrations.  Without this flag they are never added to the event, to begin with.  If possible,
 it's recommended to turn on this feature and use the server side PII stripping to remove the
@@ -195,9 +204,10 @@ sending.
 ### `before-breadcrumb`
 
 This function is called with an SDK specific breadcrumb object before the breadcrumb is added to the
-scope.  When nothing is returned from the function the breadcrumb is dropped.  The callback typically
-gets a second argument (called a "hint") which contains the original object that the breadcrumb was
-created from to further customize what the breadcrumb should look like.
+scope.  When nothing is returned from the function, the breadcrumb is dropped.  To pass the 
+breadcrumb through, simply return the first argument, which contains the breadcrumb object.
+The callback typically gets a second argument (called a "hint") which contains the original object 
+that the breadcrumb was created from to further customize what the breadcrumb should look like.
 
 ## Transport Options
 
@@ -216,15 +226,17 @@ setup that requires proxy authentication.
 {:.config-key}
 ### `http-proxy`
 
+{% unsupported browser %}
 When set a proxy can be configured that should be used for outbound requests.  This is also used for
 HTTPS requests unless a separate `https-proxy` is configured.  Note however that not all SDKs
 support a separate HTTPS proxy.  SDKs will attempt to default to the system-wide configured proxy
 if possible.  For instance, on unix systems, the `http_proxy` environment variable will be picked up.
+{% endunsupported %}
 
 {:.config-key}
 ### `https-proxy`
 
-{% unsupported csharp aspnetcore php %}
+{% unsupported browser csharp aspnetcore php %}
 Configures a separate proxy for outgoing HTTPS requests.  This value might not be supported by all
 SDKs.  When not supported the `http-proxy` value is also used for HTTPS requests at all times.
 {% endunsupported %}

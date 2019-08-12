@@ -18,12 +18,12 @@ Getting started with Sentry is a three step process:
 Edit your mix.exs file to add it as a dependency and add the `:sentry` package to your applications:
 
 ```elixir
-defp application do
- [applications: [:sentry, :logger]]
-end
-
 defp deps do
-  [{:sentry, "~> 6.4"}]
+  [
+    # ...
+    {:sentry, "~> 7.0"},
+    {:jason, "~> 1.1"},
+  ]
 end
 ```
 
@@ -63,9 +63,9 @@ config :sentry, dsn: "___PUBLIC_DSN___",
   environment_name: System.get_env("RELEASE_LEVEL") || "development"
 ```
 
-In this example, we are getting the environment name from the `RELEASE_LEVEL` environment variable. If that variable does not exist, we default to `"development"`. Now, on our servers, we can set the environment variable appropriately. On our local development machines, exceptions will never be sent, because the default value is not in the list of `included_environments`.
+In this example, we are getting the environment name from the `RELEASE_LEVEL` environment variable. If that variable does not exist, it will default to `"development"`. Now, on our servers, we can set the environment variable appropriately. On our local development machines, exceptions will never be sent, because the default value is not in the list of `included_environments`.
 
-If using an environment with Plug or Phoenix add the following to your router:
+If using an environment with Plug or Phoenix, add the following to your Plug.Router or Phoenix.Router:
 
 ```elixir
 use Plug.ErrorHandler
@@ -76,7 +76,7 @@ use Sentry.Plug
 
 ## Filtering Events
 
-If you would like to prevent certain exceptions, the `:filter` configuration option allows you to implement the `Sentry.EventFilter` behaviour. The first argument is the exception to be sent, and the second is the source of the event. `Sentry.Plug` will have a source of `:plug`, `Sentry.Logger` will have a source of `:logger`, and `Sentry.Phoenix.Endpoint` will have a source of `:endpoint`. If an exception does not come from either of those sources, the source will be nil unless the `:event_source` option is passed to `Sentry.capture_exception/2`
+If you would like to prevent certain exceptions, the `:filter` configuration option allows you to implement the `Sentry.EventFilter` behaviour. The first argument is the exception to be sent, and the second is the source of the event. `Sentry.Plug` will have a source of `:plug`, `Sentry.LoggerBackend` will have a source of `:logger`, and `Sentry.Phoenix.Endpoint` will have a source of `:endpoint`. If an exception does not come from either of those sources, the source will be nil unless the `:event_source` option is passed to `Sentry.capture_exception/2`
 
 A configuration like below will prevent sending `Phoenix.Router.NoRouteError` from `Sentry.Plug`, but allows other exceptions to be sent.
 
@@ -112,6 +112,7 @@ config :sentry,
 Sentry.Context.set_extra_context(%{day_of_week: "Friday"})
 Sentry.Context.set_user_context(%{id: 24, username: "user_username", has_subscription: true})
 Sentry.Context.set_tags_context(%{locale: "en-us"})
+Sentry.Context.set_http_context(%{path: "/my_path/34"})
 Sentry.Context.add_breadcrumb(%{category: "web.request"})
 
 # Event-based Context

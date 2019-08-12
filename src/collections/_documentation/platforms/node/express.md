@@ -26,7 +26,12 @@ Sentry.init({ dsn: '___PUBLIC_DSN___' });
 // The request handler must be the first middleware on the app
 app.use(Sentry.Handlers.requestHandler());
 
-// The error handler must be before any other error middleware
+// All controllers should live here
+app.get('/', function rootHandler(req, res) {
+  res.end('Hello world!');
+});
+
+// The error handler must be before any other error middleware and after all controllers
 app.use(Sentry.Handlers.errorHandler());
 
 // Optional fallthrough error handler
@@ -46,6 +51,51 @@ You can verify the Sentry integration by creating a route that will throw an err
 app.get('/debug-sentry', function mainHandler(req, res) {
   throw new Error('My first Sentry error!');
 });
+```
+
+`requestHandler` accepts some options that let you decide what data should be included in the event sent to Sentry.
+
+Possible options are:
+
+```js
+// keys to be extracted from req
+request?: boolean | string[]; // default: true = ['cookies', 'data', 'headers', 'method', 'query_string', 'url']
+// server name
+serverName?: boolean; // default: true
+// generate transaction name
+//   path == request.path (eg. "/foo")
+//   methodPath == request.method + request.path (eg. "GET|/foo")
+//   handler == function name (eg. "fooHandler")
+transaction?: boolean | 'path' | 'methodPath' | 'handler'; // default: true = 'methodPath'
+// keys to be extracted from req.user
+user?: boolean | string[]; // default: true = ['id', 'username', 'email']
+// node version
+version?: boolean; // default: true
+// timeout for fatal route errors to be delivered
+flushTimeout?: number; // default: 2000
+```
+
+For example, if you want to skip the server name and add just user, you would use `requestHandler` like this:
+
+```js
+app.use(Sentry.Handlers.requestHandler({
+  serverName: false,
+  user: ['email']
+}));
+```
+
+By default, `errorHandler` will capture only errors with a status code of `500` or higher. If you want to change it, provide it with the `shouldHandleError` callback, which accepts middleware errors as its argument and decides, whether an error should be sent or not, by returning an appropriate boolean value.
+
+```js
+app.use(Sentry.Handlers.errorHandler({
+  shouldHandleError(error) {
+    // Capture all 404 and 500 errors
+    if (error.status === 404 || error.status === 500) {
+      return true
+    }
+    return false
+  }
+}));
 ```
 
 <!-- ENDWIZARD -->
@@ -71,3 +121,11 @@ app.use(Sentry.Handlers.errorHandler());
 // to
 app.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
 ```
+
+### Troubleshooting
+
+When capturing errors locally, ensure that your project's data filter for filtering localhost events is toggled off:
+
+{% asset express-data-filters.png %}
+
+This ensures that errors produced by your browser (such as errors produced by HTTP methods) are properly captured.

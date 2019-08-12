@@ -51,6 +51,8 @@ The stdlib integration instruments certain modules in the standard library to em
 
 * Any outgoing HTTP request done with `httplib` will result in a [breadcrumb]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}) being logged. `urllib3` and `requests` use `httplib` under the hood, so HTTP requests from those packages should be covered as well.
 
+* {% version_added 0.10.0 %} Subprocesses spawned with the `subprocess` module will result in a [breadcrumb]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}) being logged.
+
 ## Modules
 *Import name: `sentry_sdk.integrations.modules.ModulesIntegration`*
 

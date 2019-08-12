@@ -5,6 +5,8 @@ sidebar_order: 2
 
 To report to Sentry you’ll need to use a language-specific SDK. The Sentry team builds and maintains these for most popular languages, but there’s also a large ecosystem supported by the community.
 
+If your use-case is very specific, or not covered by Sentry, you'll find documentation on how to report events on your own using our [_SDK API_]({%- link _documentation/development/sdk-dev/index.md -%}).
+
 ## Languages
 
 {% include platform_icon_links.html select="languages" %}

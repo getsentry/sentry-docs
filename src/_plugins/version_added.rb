@@ -7,7 +7,7 @@ module Jekyll
     end
 
     def render(context)
-      "*(New in version #{@text})*"
+      "*(New in version #{@text.strip})*"
     end
   end
 end

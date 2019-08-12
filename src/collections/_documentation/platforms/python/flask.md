@@ -42,7 +42,7 @@ Visiting this route will trigger an error that will be captured by Sentry.
 
 * The Sentry Python SDK will install the Flask integration for all of your apps. It hooks into Flask’s signals, not anything on the app object.
 
-* All exceptions leading to an Internal Server Error are reported.
+* All unhandled exceptions will be reported. Note that `@app.errorhandler(Exception)` will prevent all exceptions from being sent to Sentry while `@app.errorhandler(500)` will not.
 
 * {% include platforms/python/request-data.md %}
 
