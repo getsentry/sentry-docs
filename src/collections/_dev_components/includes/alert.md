@@ -13,6 +13,10 @@ arguments:
     type: String
     required: false
     desc: Severity of the alert. Must be a valid [Bootstrap severity level](https://getbootstrap.com/docs/4.0/components/alerts/).
+  - name: deep_link=""
+    type: String
+    required: false
+    desc: Slug to use after \# in a URL, to jump to the alert.
 examples:
   - title: Basic use
     source: |
@@ -34,6 +38,7 @@ examples:
   - title: Kitchen sink
     source: |
       {% include components/alert.html
+        deep_link="jump-here"
         title="Pay attention"
         content="This is the body of the alert"
         level="danger"
