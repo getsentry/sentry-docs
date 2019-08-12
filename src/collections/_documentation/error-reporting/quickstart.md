@@ -21,7 +21,6 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 Your platform is not listed?  There are more SDKs we support: [list of SDKs]({%- link _documentation/platforms/index.md -%})
 {%- endcapture -%}
 {%- include components/alert.html
-  deep_link="test-link"
   title="Note"
   content=__alert_content
 %}
