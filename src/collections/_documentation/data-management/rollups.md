@@ -273,6 +273,7 @@ customize fingerprinting like you can do if the client submits them.
 ```{% raw %}
 # force all errors of the same type to have the same fingerprint
 type:DatabaseUnavailable -> system-down
+type:RedisConnectionError -> system-down
 
 # force all events with a certain message to be matched together
 message:"unexpected i/o error: *" -> io-error
