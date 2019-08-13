@@ -310,7 +310,7 @@ If you’ve uploaded source maps and they aren’t applying to your code in an i
 
 
 {% capture __alert_content-%}
-You may want to use the [`rewriteFrames`]({%- link _documentation/platforms/javascript/index.md -%}#rewriteframes) integration to change your `abs_path` values in the case that you have dynamic values in your path i.e. `https://www.site.com/{some_value}/scripts/script.js`
+If you have dynamic values in your path (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the [`rewriteFrames`]({%- link _documentation/platforms/javascript/index.md -%}#rewriteframes) integration to change your `abs_path` values.
 {%- endcapture -%}
 {%- include components/alert.html
   deep_link="rewriteFrames"
