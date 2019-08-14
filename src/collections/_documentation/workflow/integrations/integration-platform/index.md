@@ -7,9 +7,11 @@ Sentry’s Integration Platform provides a way for external services to interact
 
 [ SCREENSHOT: screenshot of the developer settings page where you can choose b/n public  and internal ]
 
-## Configuration
+## Creating an Integration
 
-The examples below demonstrate a potential use-case that involves a Flask app receiving new issue webhooks from Sentry, calling the Sentry API for more data about the issue, and pushing it to [Pushover](https://pushover.net/) as a generator of desktop/mobile notifications. 
+In Sentry, navigate to Organization Settings > Developer Settings. From here, you can choose to create a New Internal Integration or New Public Integration. 
+
+[ SCREENSHOT: screenshot of the developer settings page where you can choose b/n public  and internal ]
 
 ### Creating an Integration
 
