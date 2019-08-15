@@ -269,7 +269,23 @@ You can have up to 20 tokens at a time for any given internal integration.
 
 Authentication tokens are passed using an auth header, and are used to authenticate as a user account with the API. For more information, see the [LINK: full documentation on Authentication ](https://docs.sentry.io/api/auth/).
 
+## Webhooks
 
+Webhooks allows your service to get requests about specific resources, depending on your selection.
+
+### Headers
+
+All webhooks will contain the following set of request headers: 
+
+```
+    {
+    'Content-Type': 'application/json',
+    'Request-ID': <request_uuid>,
+    'Sentry-Hook-Resource': <resource>,
+    'Sentry-Hook-Timestamp': six.text_type(int(time())),
+    'Sentry-Hook-Signature': <generated_signature>
+    }
+```
 
 
 
