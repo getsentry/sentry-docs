@@ -251,7 +251,11 @@ When making requests to the Sentry API, you use the access token just like you w
 
 - **Internal Integrations**: tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed). 
 
+#### 3. Expiration
 
+- **Public Integrations**: tokens expire every eight hours
+
+- **Internal Integrations**: tokens never expire, but you can [ LINK: manually revoke them ](link to token section below)
 
 
 
