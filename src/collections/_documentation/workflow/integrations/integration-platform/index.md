@@ -86,6 +86,36 @@ In the case a user has not completed the setup on your end, whatever the case ma
 
 [ SCREENSHOT: screenshot of pending state ]
 
+#### Refreshing Tokens
+
+The Access Tokens you receive from Sentry expire after eight hours. To retrieve a new token, you’ll make a request to the same Authorization endpoint used in the /setup endpoint above, but with a slightly different request body.
+
+```python
+    def refresh_token(install_id):
+        url = u'http://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+        url = url.format(install_id)
+        
+        refresh_token = retrieve_refresh_token_from_db(install_id)
+        
+        payload = {
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
+            'client_id': 'your-client-id',
+            'client_secret': 'your-client-secret',
+        }
+        
+        resp = requests.post(url, json=payload)
+        data = resp.json()
+        
+        new_access_token = data['token']
+        new_refresh_token = data['refreshToken']
+        # ... Securely update the access_token and refresh_token in DB...
+        
+        return new_access_token
+```
+
+
+
 
 
 
