@@ -440,6 +440,36 @@ All webhook requests have some common elements.
 - type: string
 - description: The label of the rule that was triggered 
 
+##### Payload
+
+```python
+{
+  "action": "triggered",
+  "installation": {
+    "uuid": <uuid>
+  },
+  "data": {
+    "event": {
+      ... <event_attributes>
+      "url": event_api_url,
+      "web_url": event_link_url,
+      "issue_url": issue_api_url,
+    },
+    "triggered_rule": <rule_label>, 
+  },
+  "actor": {
+    'type': 'application',
+    'id': 'sentry',
+    'name': 'Sentry', 
+  },    
+}
+```
+
+
+
+
+
+
 
 
 
