@@ -315,8 +315,52 @@ A hash generated using your Client Secret and the request itself – used to ver
             raise UnauthorizedError
 ```
 
+### Request Structure
 
+All webhook requests have some common elements.
 
+**action**
+: The action that corresponds with the resource in the header. For example, if the resource is `issue` the action could be `created` (among other options).
+
+**installation**
+
+: The installation is just an object with the `uuid` of the installation so that you know to map the webhook request to the appropriate installation. 
+
+**data**
+
+: The data object contains information about the resource and will differ in content depending on the type of webhook.
+
+**actor**
+
+: The actor is who, if anyone, triggered the webhook. If a user in Sentry triggered the action, then the actor is the user. If the Sentry App itself triggers the action, then the actor is the Application. And if the action is triggered automatically somehow within Sentry, then the actor is ‘Sentry.’
+
+```python
+    Samples cases:
+
+    # user installs sentry app
+
+    "actor": {
+    'type': 'user',
+    'id': <user-id>,
+    'name': <user-name>, 
+    }
+    
+    # sentry app makes request assign an issue
+
+    "actor": {
+    'type': 'application',
+    'id': <sentry-app-uuid>,
+    'name': <sentry-app-name>, 
+    }, 
+    
+    # sentry (sentry.io) auto resolves an issue
+
+    "actor": {
+    'type': 'application',
+    'id': 'sentry',
+    'name': 'Sentry', 
+    },
+```
 
 
 
