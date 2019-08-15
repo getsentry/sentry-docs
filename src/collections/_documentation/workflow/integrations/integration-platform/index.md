@@ -465,9 +465,55 @@ All webhook requests have some common elements.
 }
 ```
 
+#### Issues
 
+`'Sentry-Hook-Resource': 'issue'`
 
+**Attributes**
 
+: **action**
+- type: string
+- description: can be `created`, `resolved`, `assigned`, or `ignored`
+
+: **data['issue']**
+- type: object
+- description: the issue
+
+: **data['issue']['url']**
+- type: string
+- description: the api url for the issue
+
+: **data['issue']['web_url']**
+- type: string
+- description: the web url for the issue
+
+: **data['issue']['project_url']**
+- type: string
+- description: the api url to the project the issue is a part of 
+
+##### Payload
+
+```python
+{
+  "action": "created",
+  "installation": {
+    "uuid": <install-uuid>
+  },
+  "data": {
+    "issue": {
+      ... <issue_attributes>
+      "url": issue_api_url,
+      "html_url": issue_link_url,
+      "project_url": project_api_url,
+    },
+  },
+  "actor": {
+    'type': 'application',
+    'id': 'sentry',
+    'name': 'Sentry', 
+  },  
+}
+```
 
 
 
