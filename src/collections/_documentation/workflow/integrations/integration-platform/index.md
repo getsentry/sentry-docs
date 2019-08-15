@@ -410,6 +410,35 @@ All webhook requests have some common elements.
     }
 ```
 
+#### 2. Alerts 
+
+`'Sentry-Hook-Resource': 'event_alert'`
+
+##### Attributes
+
+**action**
+- type: string
+- description: will always be `triggered`
+
+**data['event']**
+- type: object
+- description: the event that triggered the alert rule
+
+**data['event']['url']**
+- type: string
+- description: the api url for the event
+
+**data['event']['web_url']**
+- type: string
+- description: the web url for the event
+
+**data['event']['issue_url']**
+- type: string
+- description: the api url for the associated issue
+
+**data['triggered_rule']**
+- type: string
+- description: The label of the rule that was triggered 
 
 
 
