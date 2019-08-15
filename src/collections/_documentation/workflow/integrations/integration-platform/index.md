@@ -179,6 +179,14 @@ When you are ready for the publication process, you can click the 'publish' butt
 
 [ SCREENSHOT: screenshot of publish button ]
 
+## Internal Integrations
+
+Internal integrations are meant for custom integrations unique to your organization. They can also be as simple as an organization-wide token. Whether you are using just the API or all the Integration Platform features combined, internal integrations are for use within a single Sentry organization. 
+
+
+
+
+
 
 
 
