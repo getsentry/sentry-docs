@@ -287,6 +287,19 @@ All webhooks will contain the following set of request headers:
     }
 ```
 
+**`Sentry-Hook-Resource`**
+
+This is the resource that triggered the action. The action will be in the payload.
+
+**Resources**
+
+- installation
+- event_alert (payload will be a serialized event)
+- issue
+
+**`Sentry-Hook-Signature`**
+
+A hash generated using your Client Secret and the request itself – used to verify the authenticity of the request.
 
 
 
