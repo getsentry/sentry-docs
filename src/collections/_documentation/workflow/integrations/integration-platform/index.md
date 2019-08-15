@@ -165,6 +165,17 @@ Continuing from our example, here we're implementing the Webhook URL endpoint, /
 
 For more information, see the [LINK: full documentation on Webhooks ](ink to larger Webhooks section below )
 
+### Alerts
+
+There is an option called Alert Rule Action for the integration platform. What this means is that, when enabled, your integration will show up as a service in the action section when creating a new alert rule. For more information, see the [LINK: full documentation on alert rules](https://docs.sentry.io/workflow/notifications/alerts/).
+
+[SCREENSHOT: screenshot of the dropdown menu for alert rules ]
+
+For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via <your service>` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [LINK: webhooks section below](link to Webhooks section).
+
+
+
+
 
 
 
