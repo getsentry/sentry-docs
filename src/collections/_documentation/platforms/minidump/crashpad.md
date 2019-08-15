@@ -41,10 +41,6 @@ bool startCrashpad() {
     /* asynchronous_start */ false
   );
 
-  if (success) {
-    success = client.WaitForHandlerStart(INFINITE);
-  }
-
   return success;
 }
 ```
