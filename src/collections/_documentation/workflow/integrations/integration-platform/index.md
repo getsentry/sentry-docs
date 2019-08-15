@@ -114,9 +114,56 @@ The Access Tokens you receive from Sentry expire after eight hours. To retrieve 
         return new_access_token
 ```
 
+### Uninstallation
 
+When a user uninstalls your integration, you will receive a webhook request to your Webhook URL. 
 
+### Webhooks
 
+In addition to the [un]installation webhook requests, all of the webhooks that you selected when configuring your integration will be routed to your Webhook URL. 
+
+Continuing from our example, here we're implementing the Webhook URL endpoint, /webhook. In this case, that includes when an issue is created. In this method, you'll use the Sentry API to check if the issue belongs to a project called Backend, and if it does, you'll forward the issue to Pushover.
+
+```python
+    @app.route('/webhook', methods=['POST'])
+    def webhook():
+        data = json.loads(request.data)
+        
+        if data['action'] != 'created':
+            return
+        
+        issue_id = data['data']['issue']['id']
+        install_id = data['installation']['uuid']
+        
+        issue_details = get_sentry_issue(install_id, issue_id)
+        
+        if issue_details['project']['name'] != 'Backend':
+            return
+            
+        event = data['data']['event']
+        
+        payload = {
+            'user': 'pushover-user-key',
+            'token': 'pushover-api-token',
+            'message': event['message'][:1024],
+            'title': event['message'][:250],
+            'url': event['url'],
+            'url_title': 'Issue Details',
+            'priority': 0,
+        }
+        requests.post('https://api.pushover.net/1/messages.json', data=payload)
+
+    def get_sentry_issue(install_id, issue_id):
+        access_token = retrieve_from_db(install_id)
+        
+        url = 'https://sentry.io/api/0/issues/{}/'.format(issue_id)
+        headers = {'Authorization': 'Bearer {}'.format(access_token)}
+        
+        resp = requests.get(url, headers=headers)
+        return resp.json()
+```
+
+For more information, see the [LINK: full documentation on Webhooks ](ink to larger Webhooks section below )
 
 
 
