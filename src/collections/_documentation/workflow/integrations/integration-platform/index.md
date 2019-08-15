@@ -183,6 +183,17 @@ When you are ready for the publication process, you can click the 'publish' butt
 
 Internal integrations are meant for custom integrations unique to your organization. They can also be as simple as an organization-wide token. Whether you are using just the API or all the Integration Platform features combined, internal integrations are for use within a single Sentry organization. 
 
+### Installation
+
+Creating an internal integration will automatically install it on your organization. 
+
+### Alerts
+
+Alerts are the same as public integrations -- see the [LINK: Alerts section above under Public Integrations](link to Alerts section under Public Integrations) for general information and see the [LINK: Alerts section under Webhooks] for more detail on the request and payload. 
+
+### Webhooks
+
+Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [LINK: full documentation on Webhooks ]( link to larger Webhooks section below).
 
 
 
