@@ -19,6 +19,9 @@ Permissions specify what level of access your service requires of Sentry resourc
 
 [{% asset integration-platform-index/permissions.png alt="Form that allows developer to set what permissions they'll need from their user." %}]({% asset integration-platform-index/permissions.png @path %})
 
+## Webhooks
+Webhooks allows your service to get requests about specific resources, depending on your selection. For more information, see the [ LINK: full documentation on webhooks ](links to the webhook section).
+
 ### Resource Subscriptions
 
 Selecting a resource subscription determines the types of webhook requests sent to your service. Currently you can get requests for issues when they are created, assigned, ignored, or resolved. 
