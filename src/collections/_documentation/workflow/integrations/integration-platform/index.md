@@ -245,17 +245,11 @@ The data you can expect back for both the initial grant code exchange and subseq
 
 #### 2. How to use for requests
 
-When making requests to the Sentry API, you use the access token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}).
-
-- **Public Integrations**: tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration. 
-
-- **Internal Integrations**: tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed). 
+When making requests to the Sentry API, you use the access token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration. 
 
 #### 3. Expiration
 
-- **Public Integrations**: tokens expire every eight hours
-
-- **Internal Integrations**: tokens never expire, but you can [ LINK: manually revoke them ](link to token section below)
+Tokens expire every eight hours
 
 ### Internal
 
@@ -264,6 +258,14 @@ When you create an internal integration, an access token is automatically genera
 [SCREENSHOT: screenshot of tokens]
 
 You can have up to 20 tokens at a time for any given internal integration.
+
+#### 1. How to use for requests
+
+When making requests to the Sentry API, you use the access token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed). 
+
+#### 2. Expiration
+
+Tokens never expire, but you can manually revoke them.
 
 ### Using API Tokens
 
