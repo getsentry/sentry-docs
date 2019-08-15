@@ -363,23 +363,23 @@ All webhook requests have some common elements.
 ```
 
 ### Event Types
-#### 1. [Un]Installation
+#### [Un]Installation
 
 `'Sentry-Hook-Resource': 'installation'`
 
 `'Sentry-Hook-Resource': 'uninstallation'`
 
-##### Attributes
+**Attributes**
 
-**action**
+: **action**
 - type: string
 - description: will either be `created` or `deleted`
 
-**data['installation']**
+: **data['installation']**
 - type: object
 - description: The installation
 
-**actor**
+: **actor**
 - type: object
 - description: The user who either installed or uninstalled the integration 
 
@@ -410,33 +410,33 @@ All webhook requests have some common elements.
     }
 ```
 
-#### 2. Alerts 
+#### Alerts 
 
 `'Sentry-Hook-Resource': 'event_alert'`
 
-##### Attributes
+**Attributes**
 
-**action**
+: **action**
 - type: string
 - description: will always be `triggered`
 
-**data['event']**
+: **data['event']**
 - type: object
 - description: the event that triggered the alert rule
 
-**data['event']['url']**
+: **data['event']['url']**
 - type: string
 - description: the api url for the event
 
-**data['event']['web_url']**
+: **data['event']['web_url']**
 - type: string
 - description: the web url for the event
 
-**data['event']['issue_url']**
+: **data['event']['issue_url']**
 - type: string
 - description: the api url for the associated issue
 
-**data['triggered_rule']**
+: **data['triggered_rule']**
 - type: string
 - description: The label of the rule that was triggered 
 
@@ -464,6 +464,10 @@ All webhook requests have some common elements.
   },    
 }
 ```
+
+
+
+
 
 
 
