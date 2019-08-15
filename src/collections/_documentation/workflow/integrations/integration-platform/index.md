@@ -243,7 +243,13 @@ The data you can expect back for both the initial grant code exchange and subseq
 }
 ```
 
+#### 2. How to use for requests
 
+When making requests to the Sentry API, you use the access token just like you would when you're typically making [LINK:  API requests ](https://docs.sentry.io/api/auth/). 
+
+- **Public Integrations**: tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration. 
+
+- **Internal Integrations**: tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed). 
 
 
 
