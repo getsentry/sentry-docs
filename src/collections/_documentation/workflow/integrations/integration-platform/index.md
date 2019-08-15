@@ -13,14 +13,23 @@ In Sentry, navigate to Organization Settings > Developer Settings. From here, yo
 
 [ SCREENSHOT: screenshot of the developer settings page where you can choose b/n public  and internal ]
 
-## Permissions
+### Permissions
 
 Permissions specify what level of access your service requires of Sentry resources. For public integrations, Sentry will prompt users to approve of these permissions upon installation. For more information on Permissions, [see full documentation]({%- link _documentation/api/permissions.md -%}).
 
 [{% asset integration-platform-index/permissions.png alt="Form that allows developer to set what permissions they'll need from their user." %}]({% asset integration-platform-index/permissions.png @path %})
 
-## Webhooks
+### Webhooks
 Webhooks allows your service to get requests about specific resources, depending on your selection. For more information, see the [ LINK: full documentation on webhooks ](links to the webhook section).
+
+## Public Integrations
+
+Sentry built public integrations for the 'general public' of Sentry users. Public integrations start in an unpublished state for development purposes and can later be submitted for approval to publish. For more information, see the [ LINK: full documentation on publishing](links to publication state).
+
+The  code examples in the sections below demonstrate a potential use-case that involves a Flask app receiving new issue webhooks from Sentry, calling the Sentry API for more data about the issue, and pushing it to Pushover as a generator of desktop/mobile notifications.
+
+
+
 
 ### Resource Subscriptions
 
