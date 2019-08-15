@@ -71,6 +71,29 @@ Start your build by implementing the Redirect URL endpoint, /setup — typically
         return redirect('http://sentry.io/settings/')
 ```
 
+#### Verifying Installations (optional)
+
+Typically if you have the Redirect URL configured, there is work happening on your end to 'finalize' the installation. If this is the case, we recommend enabling the Verify Install option for your integration. Once enabled, you will need to send a request marking the installation as officially 'installed.'
+
+```python
+requests.put(
+    'https://sentry.io/api/0/sentry-app-installations/{}/'.format(install_id),
+    json={'status': 'installed'},
+)
+```
+
+In the case a user has not completed the setup on your end, whatever the case may be, Sentry will show the installation as 'pending' in the UI. 
+
+[ SCREENSHOT: screenshot of pending state ]
+
+
+
+
+
+
+
+
+
 
 ### Resource Subscriptions
 
