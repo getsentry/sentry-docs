@@ -13,15 +13,9 @@ In Sentry, navigate to Organization Settings > Developer Settings. From here, yo
 
 [ SCREENSHOT: screenshot of the developer settings page where you can choose b/n public  and internal ]
 
-### Creating an Integration
+## Permissions
 
-In Sentry, navigate to Organization Settings > Developer Settings > Create New Integration.
-
-[{% asset integration-platform-index/create-new-integration.png alt="Form that allows user to fill in their integration details." %}]({% asset integration-platform-index/create-new-integration.png @path %})
-
-### Permissions
-
-Permissions specify what level of access your service requires of Sentry resources. Sentry will prompt your user to approve of these permissions upon installation. For more information on Permissions, [see full documentation]({%- link _documentation/api/permissions.md -%}).
+Permissions specify what level of access your service requires of Sentry resources. For public integrations, Sentry will prompt users to approve of these permissions upon installation. For more information on Permissions, [see full documentation]({%- link _documentation/api/permissions.md -%}).
 
 [{% asset integration-platform-index/permissions.png alt="Form that allows developer to set what permissions they'll need from their user." %}]({% asset integration-platform-index/permissions.png @path %})
 
