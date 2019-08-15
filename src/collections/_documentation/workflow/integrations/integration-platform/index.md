@@ -257,6 +257,22 @@ When making requests to the Sentry API, you use the access token just like you w
 
 - **Internal Integrations**: tokens never expire, but you can [ LINK: manually revoke them ](link to token section below)
 
+### Internal
+
+When you create an internal integration, an access token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your Developer Settings > Your Internal Integration and do so.
+
+[SCREENSHOT: screenshot of tokens]
+
+You can have up to 20 tokens at a time for any given internal integration.
+
+### Using API Tokens
+
+Authentication tokens are passed using an auth header, and are used to authenticate as a user account with the API. For more information, see the [LINK: full documentation on Authentication ](https://docs.sentry.io/api/auth/).
+
+
+
+
+
 
 
 
