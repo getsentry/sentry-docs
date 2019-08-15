@@ -515,10 +515,59 @@ All webhook requests have some common elements.
 }
 ```
 
+#### Error
 
+The `error.created` resource subscription is only available for Business plans and above. 
 
+```python
+'Sentry-Hook-Resource': 'error'
+```
 
+**Attributes**
 
+: **action**
+- type: string
+- description: only option currently is `created`
+
+: **data['error']**
+- type: object
+- description: the error that was created
+
+: **data['error']['url']**
+- type: string
+- description: the api url for the error
+
+: **data['error']['web_url']**
+- type: string
+- description: the web url for the error
+
+: **data['error']['issue_url']**
+- type: string
+- description: the api url for the associated issue
+
+##### Payload
+
+```python
+    {
+    "action": "created",
+    "installation": {
+        "uuid": <uuid>
+    },
+    "data": {
+        "error": {
+        ... <event_attributes>
+        "url": event_api_url,
+        "web_url": event_link_url,
+        "issue_url": issue_api_url,
+        },
+    },
+    "actor": {
+        'type': 'application',
+        'id': 'sentry',
+        'name': 'Sentry', 
+    },    
+    }
+```
 
 
 
