@@ -363,13 +363,13 @@ All webhook requests have some common elements.
 ```
 
 ### Event Types
-**1. [Un]Installation**
+#### 1. [Un]Installation
 
 `'Sentry-Hook-Resource': 'installation'`
 
 `'Sentry-Hook-Resource': 'uninstallation'`
 
-#### Attributes
+##### Attributes
 
 **action**
 - type: string
