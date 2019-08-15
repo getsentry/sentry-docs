@@ -313,7 +313,7 @@ A hash generated using your Client Secret and the request itself – used to ver
         digestmod=sha256,
     ).hexdigest()
 
-    if not expected == request.headers['Sentry-Hook-Signature']:
+    if expected != request.headers['Sentry-Hook-Signature']:
             raise UnauthorizedError
 ```
 
