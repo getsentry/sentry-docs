@@ -173,6 +173,11 @@ There is an option called Alert Rule Action for the integration platform. What t
 
 For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via <your service>` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [LINK: webhooks section below](link to Webhooks section).
 
+### Published State
+
+When you are ready for the publication process, you can click the 'publish' button next to the integration you wish to submit. This will send an email to partners@sentry.io letting us know your integration is ready for review. 
+
+[ SCREENSHOT: screenshot of publish button ]
 
 
 
