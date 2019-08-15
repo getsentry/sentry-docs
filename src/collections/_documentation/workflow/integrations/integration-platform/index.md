@@ -28,7 +28,48 @@ Sentry built public integrations for the 'general public' of Sentry users. Publi
 
 The  code examples in the sections below demonstrate a potential use-case that involves a Flask app receiving new issue webhooks from Sentry, calling the Sentry API for more data about the issue, and pushing it to Pushover as a generator of desktop/mobile notifications.
 
+###  Installation
 
+Users will have the option to install your integrations on the Integrations Page in Sentry. If your integration is still in an unpublished state, the only Sentry organization that will be able to install that integration will be the organization that created the integration. Clicking 'Install' will allow users to see a description of your integration and the option to 'Continue' accepting permissions needed for installation. 
+
+[ SCREENSHOT: screenshot of integrations page? ]
+
+#### OAuth Process
+
+After installation, if your user has approved of all permissions, Sentry will generate a grant code and an installation ID. This information, the grant code, and the installation ID are sent via the `installation.created` webhook to the Webhook URL specified in your configuration. 
+
+However, if your integration has a Redirect URL configured, the integration redirects the user’s browser to the configured URL with the grant code and installation ID in the query params.
+
+Start your build by implementing the Redirect URL endpoint, /setup — typically where you exchange the grant code for an access token that allows you to make API calls to Sentry.
+
+```python
+    import requests
+    from flask import redirect, request
+
+    @app.route('/setup', methods=['GET'])
+    def setup():
+        code = request.args.get('code')
+        install_id = request.args.get('installationId')
+        
+        url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+        url = url.format(install_id)
+        
+        payload = {
+            'grant_type': 'authorization_code',
+            'code': code,
+            'client_id': 'your-client-id',
+            'client_secret': 'your-client-secret',
+        }
+        
+        resp = requests.post(url, json=payload)
+        data = resp.json()
+        
+        access_token = data['token']
+        refresh_token = data['refreshToken']
+        # ... Securely store the install_id, access_token and refresh_token in DB ...
+        
+        return redirect('http://sentry.io/settings/')
+```
 
 
 ### Resource Subscriptions
