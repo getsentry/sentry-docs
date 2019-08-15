@@ -76,10 +76,10 @@ Start your build by implementing the Redirect URL endpoint, /setup — typically
 Typically if you have the Redirect URL configured, there is work happening on your end to 'finalize' the installation. If this is the case, we recommend enabling the Verify Install option for your integration. Once enabled, you will need to send a request marking the installation as officially 'installed.'
 
 ```python
-requests.put(
-    'https://sentry.io/api/0/sentry-app-installations/{}/'.format(install_id),
-    json={'status': 'installed'},
-)
+    requests.put(
+        'https://sentry.io/api/0/sentry-app-installations/{}/'.format(install_id),
+        json={'status': 'installed'},
+    )
 ```
 
 In the case a user has not completed the setup on your end, whatever the case may be, Sentry will show the installation as 'pending' in the UI. 
@@ -206,41 +206,41 @@ Sentry's Integration Platform uses API Tokens, which are a similar concept to Ac
 Upon the initial installation, you'll need the grant code given to you in either the installation webhook request or the redirect URL, in addition to your integration's client ID and client Secret.
 
 ```python
-url = 'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
-url = url.format(install_id)
+    url = 'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+    url = url.format(install_id)
 
-payload = {
-    'grant_type': 'authorization_code',
-    'code': code,
-    'client_id': 'your-client-id',
-    'client_secret': 'your-client-secret',
-}
+    payload = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'client_id': 'your-client-id',
+        'client_secret': 'your-client-secret',
+    }
 ```
 
 Tokens expire after eight hours, so you'll need to refresh your tokens accordingly. 
 
 ```python
-url = 'http://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
-url = url.format(install_id)
+    url = 'http://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+    url = url.format(install_id)
 
-refresh_token = retrieve_refresh_token_from_db(install_id)
+    refresh_token = retrieve_refresh_token_from_db(install_id)
 
-payload = {
-    'grant_type': 'refresh_token',
-    'refresh_token': refresh_token,
-    'client_id': 'your-client-id',
-    'client_secret': 'your-client-secret',
-}
+    payload = {
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token,
+        'client_id': 'your-client-id',
+        'client_secret': 'your-client-secret',
+    }
 ```
 
 The data you can expect back for both the initial grant code exchange and subsequent token refreshes is as follows:
 
 ```python
-{
-	'token': '<example_token_value',
-	'refreshToken': '<example_refresh_token_value>',
-	# all the other things im forgetting plz add thnx bai
-}
+    {
+        'token': '<example_token_value',
+        'refreshToken': '<example_refresh_token_value>',
+        # all the other things im forgetting plz add thnx bai
+    }
 ```
 
 #### 2. How to use for requests
@@ -443,26 +443,26 @@ All webhook requests have some common elements.
 ##### Payload
 
 ```python
-{
-  "action": "triggered",
-  "installation": {
-    "uuid": <uuid>
-  },
-  "data": {
-    "event": {
-      ... <event_attributes>
-      "url": event_api_url,
-      "web_url": event_link_url,
-      "issue_url": issue_api_url,
+    {
+    "action": "triggered",
+    "installation": {
+        "uuid": <uuid>
     },
-    "triggered_rule": <rule_label>, 
-  },
-  "actor": {
-    'type': 'application',
-    'id': 'sentry',
-    'name': 'Sentry', 
-  },    
-}
+    "data": {
+        "event": {
+        ... <event_attributes>
+        "url": event_api_url,
+        "web_url": event_link_url,
+        "issue_url": issue_api_url,
+        },
+        "triggered_rule": <rule_label>, 
+    },
+    "actor": {
+        'type': 'application',
+        'id': 'sentry',
+        'name': 'Sentry', 
+    },    
+    }
 ```
 
 #### Issues
@@ -494,25 +494,25 @@ All webhook requests have some common elements.
 ##### Payload
 
 ```python
-{
-  "action": "created",
-  "installation": {
-    "uuid": <install-uuid>
-  },
-  "data": {
-    "issue": {
-      ... <issue_attributes>
-      "url": issue_api_url,
-      "html_url": issue_link_url,
-      "project_url": project_api_url,
+    {
+    "action": "created",
+    "installation": {
+        "uuid": <install-uuid>
     },
-  },
-  "actor": {
-    'type': 'application',
-    'id': 'sentry',
-    'name': 'Sentry', 
-  },  
-}
+    "data": {
+        "issue": {
+        ... <issue_attributes>
+        "url": issue_api_url,
+        "html_url": issue_link_url,
+        "project_url": project_api_url,
+        },
+    },
+    "actor": {
+        'type': 'application',
+        'id': 'sentry',
+        'name': 'Sentry', 
+    },  
+    }
 ```
 
 #### Error
