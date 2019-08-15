@@ -195,6 +195,55 @@ Alerts are the same as public integrations -- see the [LINK: Alerts section abov
 
 Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [LINK: full documentation on Webhooks ]( link to larger Webhooks section below).
 
+## API Token(s)
+
+Sentry's Integration Platform uses API Tokens, which are a similar concept to Access Tokens.
+
+### Public
+
+#### 1. Token Exchange
+
+Upon the initial installation, you'll need the grant code given to you in either the installation webhook request or the redirect URL, in addition to your integration's client ID and client Secret.
+
+```python
+url = 'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+url = url.format(install_id)
+
+payload = {
+    'grant_type': 'authorization_code',
+    'code': code,
+    'client_id': 'your-client-id',
+    'client_secret': 'your-client-secret',
+}
+```
+
+Tokens expire after eight hours, so you'll need to refresh your tokens accordingly. 
+
+```python
+url = 'http://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+url = url.format(install_id)
+
+refresh_token = retrieve_refresh_token_from_db(install_id)
+
+payload = {
+    'grant_type': 'refresh_token',
+    'refresh_token': refresh_token,
+    'client_id': 'your-client-id',
+    'client_secret': 'your-client-secret',
+}
+```
+
+The data you can expect back for both the initial grant code exchange and subsequent token refreshes is as follows:
+
+```python
+{
+	'token': '<example_token_value',
+	'refreshToken': '<example_refresh_token_value>',
+	# all the other things im forgetting plz add thnx bai
+}
+```
+
+
 
 
 
