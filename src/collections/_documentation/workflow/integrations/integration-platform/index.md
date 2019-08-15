@@ -3,7 +3,7 @@ title: Integration Platform
 sidebar_order: 2
 ---
 
-Sentry’s Integration Platform provides a way for external services to interact with the Sentry SaaS service using the REST API and webhooks. Integrations utilizing this platform are first-class actors within Sentry, and you can build them for [LINK: public](links to the public section below) as well as [LINK: internal ](links to the internal section below) use cases.  
+Sentry’s Integration Platform provides a way for external services to interact with the Sentry SaaS service using the REST API and webhooks. Integrations utilizing this platform are first-class actors within Sentry, and you can build them for [public](#public-integrations) as well as [internal](#internal-integrations) use cases.  
 
 [ SCREENSHOT: screenshot of the developer settings page where you can choose b/n public  and internal ]
 
@@ -15,16 +15,16 @@ In Sentry, navigate to Organization Settings > Developer Settings. From here, yo
 
 ### Permissions
 
-Permissions specify what level of access your service requires of Sentry resources. For public integrations, Sentry will prompt users to approve of these permissions upon installation. For more information on Permissions, [see full documentation]({%- link _documentation/api/permissions.md -%}).
+Permissions specify what level of access your service requires of Sentry resources. For public integrations, Sentry will prompt users to approve of these permissions upon installation. For more information, see the [full documentation on Permissions]({%- link _documentation/api/permissions.md -%}).
 
 [{% asset integration-platform-index/permissions.png alt="Form that allows developer to set what permissions they'll need from their user." %}]({% asset integration-platform-index/permissions.png @path %})
 
-### Webhooks
-Webhooks allows your service to get requests about specific resources, depending on your selection. For more information, see the [ LINK: full documentation on webhooks ](links to the webhook section).
+### Integration Webhooks
+Webhooks allows your service to get requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks](#webhooks).
 
 ## Public Integrations
 
-Sentry built public integrations for the 'general public' of Sentry users. Public integrations start in an unpublished state for development purposes and can later be submitted for approval to publish. For more information, see the [ LINK: full documentation on publishing](links to publication state).
+Sentry built public integrations for the 'general public' of Sentry users. Public integrations start in an unpublished state for development purposes and can later be submitted for approval to publish. For more information, see the [section on Publishing](#published-state).
 
 The  code examples in the sections below demonstrate a potential use-case that involves a Flask app receiving new issue webhooks from Sentry, calling the Sentry API for more data about the issue, and pushing it to Pushover as a generator of desktop/mobile notifications.
 
@@ -118,7 +118,7 @@ The Access Tokens you receive from Sentry expire after eight hours. To retrieve 
 
 When a user uninstalls your integration, you will receive a webhook request to your Webhook URL. 
 
-### Webhooks
+### Integration Webhooks
 
 In addition to the [un]installation webhook requests, all of the webhooks that you selected when configuring your integration will be routed to your Webhook URL. 
 
@@ -163,15 +163,15 @@ Continuing from our example, here we're implementing the Webhook URL endpoint, /
         return resp.json()
 ```
 
-For more information, see the [LINK: full documentation on Webhooks ](ink to larger Webhooks section below )
+For more information, see the [full documentation on Webhooks](#webhooks).
 
-### Alerts
+### Public Alerts
 
-There is an option called Alert Rule Action for the integration platform. What this means is that, when enabled, your integration will show up as a service in the action section when creating a new alert rule. For more information, see the [LINK: full documentation on alert rules](https://docs.sentry.io/workflow/notifications/alerts/).
+There is an option called Alert Rule Action for the integration platform. What this means is that, when enabled, your integration will show up as a service in the action section when creating a new alert rule. For more information, see the [full documentation on Alert Rules]({%- link _documentation/workflow/notifications/alerts.md -%}).
 
 [SCREENSHOT: screenshot of the dropdown menu for alert rules ]
 
-For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via <your service>` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [LINK: webhooks section below](link to Webhooks section).
+For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via <your service>` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [full documentation on Webhooks](#webhooks).
 
 ### Published State
 
@@ -189,11 +189,11 @@ Creating an internal integration will automatically install it on your organizat
 
 ### Alerts
 
-Alerts are the same as public integrations -- see the [LINK: Alerts section above under Public Integrations](link to Alerts section under Public Integrations) for general information and see the [LINK: Alerts section under Webhooks] for more detail on the request and payload. 
+Alerts are the same as public integrations -- see [Public Alerts](#public-alerts) for general information and see [Webhook Alerts](#webhook-alerts) for more detail on the request and payload. 
 
-### Webhooks
+### Integration Webhooks
 
-Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [LINK: full documentation on Webhooks ]( link to larger Webhooks section below).
+Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [full documentation on Webhooks](#webhooks).
 
 ## API Token(s)
 
@@ -245,7 +245,7 @@ The data you can expect back for both the initial grant code exchange and subseq
 
 #### 2. How to use for requests
 
-When making requests to the Sentry API, you use the access token just like you would when you're typically making [LINK:  API requests ](https://docs.sentry.io/api/auth/). 
+When making requests to the Sentry API, you use the access token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}).
 
 - **Public Integrations**: tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration. 
 
@@ -267,7 +267,7 @@ You can have up to 20 tokens at a time for any given internal integration.
 
 ### Using API Tokens
 
-Authentication tokens are passed using an auth header, and are used to authenticate as a user account with the API. For more information, see the [LINK: full documentation on Authentication ](https://docs.sentry.io/api/auth/).
+Authentication tokens are passed using an auth header, and are used to authenticate as a user account with the API. For more information, see the [full documentation on Authentication]({%- link _documentation/api/auth.md -%}).
 
 ## Webhooks
 
@@ -410,7 +410,7 @@ All webhook requests have some common elements.
     }
 ```
 
-#### Alerts 
+#### Webhook Alerts 
 
 `'Sentry-Hook-Resource': 'event_alert'`
 
@@ -584,7 +584,7 @@ Through a JSON-Schema based system, you can have Sentry render a way for Users t
 }
 ```
 
-For more information about UI Components, see [full documentation]({%- link _documentation/workflow/integrations/integration-platform/ui-components.md -%}).
+For more information, see the [full documentation on UI Components]({%- link _documentation/workflow/integrations/integration-platform/ui-components.md -%}).
 
 ## FAQ
 
