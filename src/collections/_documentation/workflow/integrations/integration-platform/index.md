@@ -362,6 +362,53 @@ All webhook requests have some common elements.
     },
 ```
 
+### Event Types
+**1. [Un]Installation**
+
+`'Sentry-Hook-Resource': 'installation'`
+
+`'Sentry-Hook-Resource': 'uninstallation'`
+
+#### Attributes
+
+**action**
+- type: string
+- description: will either be `created` or `deleted`
+
+**data['installation']**
+- type: object
+- description: The installation
+
+**actor**
+- type: object
+- description: The user who either installed or uninstalled the integration 
+
+```python
+    {
+    "action": "created",
+    "installation": {
+        "uuid": <install-uuid>
+    },
+    "data": {
+        "installation": {
+        "app": {
+            "uuid": <app-uuid>,
+            "slug": "your-app-slug"
+        }
+        "organization": {
+            "slug": "sentry-org-slug"
+        },
+        "uuid": <install-uuid>,
+        "code": <grant-code>
+        }
+    },
+    "actor": {
+        'type': 'user',
+        'id': <user-id>,
+        'name': <user-name>, 
+    },  
+    }
+```
 
 
 
