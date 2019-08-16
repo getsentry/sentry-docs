@@ -17,6 +17,10 @@ An `UncaughtExceptionHandler` is configured so that crash events will be stored 
 
 The `AndroidEventBuilderHelper` is enabled by default, which will automatically enrich events with data about the current state of the device, such as memory usage, storage usage, display resolution, connectivity, battery level, model, Android version, whether the device is rooted or not, etc.
 
+`Application Not Responding` (or ANR) can also be automatically detected and reported to Sentry.
+For that, you must configure the SDK with the option `anr.enabled=true`
+By default the UI thread needs to be blocked for at least 5 seconds for an event to be raised. If you wish to change this value, you can do that via the option `anr.timeoutIntervalMills`. For example, to detect if the UI thread is blocked for longer than 3 seconds, set it to: `anr.timeoutIntervalMills=3000`.
+
 <!-- WIZARD android -->
 ### Installation
 
