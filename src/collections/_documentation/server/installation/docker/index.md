@@ -51,7 +51,7 @@ docker run \
   --name sentry-postgres \
   --env POSTGRES_PASSWORD=secret \
   --env POSTGRES_USER=sentry \
-  postgres:9.5
+  postgres:9.6
 ```
 
 _Note that Postgres versions 9.5, 9.6 are the only tested and recommended versions._
