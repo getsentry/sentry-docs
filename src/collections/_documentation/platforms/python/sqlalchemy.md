@@ -8,7 +8,9 @@ sidebar_order: 5
 
 <!-- WIZARD -->
 
-The SQLAlchemy integration captures queries from [SQLAlchemy](https://www.sqlalchemy.org/) as breadcrumbs.
+The SQLAlchemy integration captures queries from
+[SQLAlchemy](https://www.sqlalchemy.org/) as breadcrumbs. The integration is
+being tested with SQLAlchemy 1.2 or later.
 
 ```python
 import sentry_sdk
