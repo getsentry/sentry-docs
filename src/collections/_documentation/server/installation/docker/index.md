@@ -54,7 +54,7 @@ docker run \
   postgres:9.5
 ```
 
-> Note that postgres versions 9.5, 9.6 are the tested and recommended versions
+_Note that Postgres versions 9.5, 9.6 are the only tested and recommended versions._
 
 ### Outbound Email
 
