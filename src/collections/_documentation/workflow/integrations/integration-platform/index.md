@@ -229,11 +229,15 @@ Tokens expire after eight hours, so you'll need to refresh your tokens according
 
 The data you can expect back for both the initial grant code exchange and subsequent token refreshes is as follows:
 
-```
+```json
     {
-        'token': '<example_token_value',
-        'refreshToken': '<example_refresh_token_value>',
-        # all the other things im forgetting plz add thnx bai
+        "id": "38",
+        "token": "ec48bf98637d44c294ead7566513686237e74ab67a074c64b3aaca2d93dbb8f1",
+        "refreshToken": "c866f154a65841638d44ee26364409b0a1a67bd642bd46e7a476f34f810712d6",
+        "dateCreated": "2019-08-07T20:25:09.870Z",
+        "expiresAt": "2019-08-08T04:25:09.870Z",
+        "state": null,
+        "application": null
     }
 ```
 
