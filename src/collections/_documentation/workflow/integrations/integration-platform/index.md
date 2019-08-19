@@ -82,8 +82,6 @@ Typically if you have the Redirect URL configured, there is work happening on yo
 
 In the case a user has not completed the setup on your end, whatever the case may be, Sentry will show the installation as 'pending' in the UI. 
 
-[ SCREENSHOT: screenshot of pending state ]
-
 #### Refreshing Tokens
 
 The Access Tokens you receive from Sentry expire after eight hours. To retrieve a new token, you’ll make a request to the same Authorization endpoint used in the /setup endpoint above, but with a slightly different request body.
@@ -167,7 +165,7 @@ For more information, see the [full documentation on Webhooks](#webhooks).
 
 There is an option called Alert Rule Action for the integration platform. What this means is that, when enabled, your integration will show up as a service in the action section when creating a new alert rule. For more information, see the [full documentation on Alert Rules]({%- link _documentation/workflow/notifications/alerts.md -%}).
 
-[SCREENSHOT: screenshot of the dropdown menu for alert rules ]
+[{% asset integration-platform-index/alert-rules.png alt="Dropdown menu of options for alert rules." %}]({% asset integration-platform-index/alert-rules.png @path %})
 
 For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via <your service>` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [full documentation on Webhooks](#webhooks).
 
