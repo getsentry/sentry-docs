@@ -191,9 +191,9 @@ Alerts are the same as public integrations -- see [Alerts](#alerts) for general 
 
 Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [full documentation on Webhooks](#webhooks).
 
-## API Token(s)
+## Auth Token(s)
 
-Sentry's Integration Platform uses API Tokens, which are a similar concept to Access Tokens.
+Sentry's Integration Platform uses Auth Tokens, which are a similar concept to Access Tokens.
 
 ### Public
 
@@ -263,7 +263,7 @@ Tokens never expire, but you can manually revoke them.
 
 [{% asset integration-platform-index/tokens.png alt="Image showing the ability to copy tokens, create new tokens, revoke tokens, and when they were created in UTC." %}]({% asset integration-platform-index/tokens.png @path %})
 
-### Using API Tokens
+### Using Auth Tokens
 
 Authentication tokens are passed using an auth header, and are used to authenticate as a user account with the API. For more information, see the [full documentation on Authentication]({%- link _documentation/api/auth.md -%}).
 
