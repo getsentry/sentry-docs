@@ -161,7 +161,7 @@ Continuing from our example, here we're implementing the Webhook URL endpoint, /
 
 For more information, see the [full documentation on Webhooks](#webhooks).
 
-### Public Alerts
+### Alerts
 
 There is an option called Alert Rule Action for the integration platform. What this means is that, when enabled, your integration will show up as a service in the action section when creating a new alert rule. For more information, see the [full documentation on Alert Rules]({%- link _documentation/workflow/notifications/alerts.md -%}).
 
@@ -183,9 +183,9 @@ Internal integrations are meant for custom integrations unique to your organizat
 
 Creating an internal integration will automatically install it on your organization. 
 
-### Alerts
+### Webhooks and Alerts
 
-Alerts are the same as public integrations -- see [Public Alerts](#public-alerts) for general information and see [Webhook Alerts](#webhook-alerts) for more detail on the request and payload. 
+Alerts are the same as public integrations -- see [Alerts](#alerts) for general information and see [Webhook Alerts](#webhook-alerts) for more detail on the request and payload. 
 
 ### Integration Webhooks
 
