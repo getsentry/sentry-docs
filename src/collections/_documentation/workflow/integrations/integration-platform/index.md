@@ -231,7 +231,7 @@ Tokens expire after eight hours, so you'll need to refresh your tokens according
 
 The data you can expect back for both the initial grant code exchange and subsequent token refreshes is as follows:
 
-```python
+```
     {
         'token': '<example_token_value',
         'refreshToken': '<example_refresh_token_value>',
