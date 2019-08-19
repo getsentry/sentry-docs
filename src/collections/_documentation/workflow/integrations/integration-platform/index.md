@@ -11,8 +11,6 @@ In Sentry, navigate to Organization Settings > Developer Settings. From here, yo
 
 [{% asset integration-platform-index/dev-settings.png alt="Settings page that allows developer to choose between public or internal integrations." %}]({% asset integration-platform-index/dev-settings.png @path %})
 
-[ SCREENSHOT: screenshot of the developer settings page where you can choose b/n public  and internal ]
-
 ### Permissions
 
 Permissions specify what level of access your service requires of Sentry resources. For public integrations, Sentry will prompt users to approve of these permissions upon installation. For more information, see the [full documentation on Permissions]({%- link _documentation/api/permissions.md -%}).
@@ -32,7 +30,7 @@ The  code examples in the sections below demonstrate a potential use-case that i
 
 Users will have the option to install your integrations on the Integrations Page in Sentry. If your integration is still in an unpublished state, the only Sentry organization that will be able to install that integration will be the organization that created the integration. Clicking 'Install' will allow users to see a description of your integration and the option to 'Continue' accepting permissions needed for installation. 
 
-[ SCREENSHOT: screenshot of integrations page? ]
+[{% asset integration-platform-index/integrations.png alt="A list of integrations that a user can install." %}]({% asset integration-platform-index/integrations.png @path %})
 
 #### OAuth Process
 
