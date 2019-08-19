@@ -80,8 +80,6 @@ Typically if you have the Redirect URL configured, there is work happening on yo
     )
 ```
 
-In the case a user has not completed the setup on your end, whatever the case may be, Sentry will show the installation as 'pending' in the UI. 
-
 #### Refreshing Tokens
 
 The Access Tokens you receive from Sentry expire after eight hours. To retrieve a new token, you’ll make a request to the same Authorization endpoint used in the /setup endpoint above, but with a slightly different request body.
