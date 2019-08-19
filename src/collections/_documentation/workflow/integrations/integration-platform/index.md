@@ -382,29 +382,30 @@ All webhook requests have some common elements.
 - description: The user who either installed or uninstalled the integration 
 
 ```python
-    {
-    "action": "created",
-    "installation": {
-        "uuid": <install-uuid>
-    },
-    "data": {
-        "installation": {
-        "app": {
-            "uuid": <app-uuid>,
-            "slug": "your-app-slug"
-        }
-        "organization": {
-            "slug": "sentry-org-slug"
+    {  
+        "action": "created",
+        "data": {  
+            "installation": {  
+                "status": "pending",
+                "organization": {  
+                    "slug": "test-org"
+                },
+                "app": {  
+                    "uuid": "2ebf071f-28df-4989-aca9-c37c763b278f",
+                    "slug": "webhooks-galore"
+                },
+                "code": "f3c71b491e3949b6b033ae45312a4fcb",
+                "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+            }
         },
-        "uuid": <install-uuid>,
-        "code": <grant-code>
+        "installation": {  
+            "uuid":"a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+        },
+        "actor": {  
+            "type": "user",
+            "id": 1,
+            "name": "Meredith Heller"
         }
-    },
-    "actor": {
-        'type': 'user',
-        'id': <user-id>,
-        'name': <user-name>, 
-    },  
     }
 ```
 
