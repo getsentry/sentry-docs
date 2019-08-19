@@ -1083,4 +1083,4 @@ Sentry Integration apps will be able to augment Sentry’s UI in meaningful and 
 
 #### How can I build an Integration with Sentry?
 
-Email [partners@sentry.io](mailto:partners@sentry.io) to get started.
+You can visit Organization Settings > Developer Settings.
