@@ -582,24 +582,207 @@ The `error.created` resource subscription is only available for Business plans a
 ##### Payload
 
 ```python
-    {
-    "action": "created",
-    "installation": {
-        "uuid": <uuid>
-    },
-    "data": {
-        "error": {
-        ... <event_attributes>
-        "url": event_api_url,
-        "web_url": event_link_url,
-        "issue_url": issue_api_url,
+    {  
+        "action":"created",
+        "data":{  
+            "error":{  
+                "event_id":"bb78c1407cea4519aa397afc059c793d",
+                "project":1,
+                "release":null,
+                "dist":null,
+                "platform":"javascript",
+                "message":"",
+                "datetime":"2019-08-19T20:58:37.391000Z",
+                "time_spent":null,
+                "tags":[  
+                    [  
+                    "browser",
+                    "Chrome 75.0.3770"
+                    ],
+                    [  
+                    "browser.name",
+                    "Chrome"
+                    ],
+                    [  
+                    "handled",
+                    "no"
+                    ],
+                    [  
+                    "level",
+                    "error"
+                    ],
+                    [  
+                    "mechanism",
+                    "onerror"
+                    ],
+                    [  
+                    "os",
+                    "Mac OS X 10.14.0"
+                    ],
+                    [  
+                    "os.name",
+                    "Mac OS X"
+                    ],
+                    [  
+                    "user",
+                    "ip:162.217.75.90"
+                    ],
+                    [  
+                    "url",
+                    "https://null.jsbin.com/runner"
+                    ]
+                ],
+                "_ref":1293919,
+                "_ref_version":2,
+                "contexts":{  
+                    "os":{  
+                    "version":"10.14.0",
+                    "type":"os",
+                    "name":"Mac OS X"
+                    },
+                    "browser":{  
+                    "version":"75.0.3770",
+                    "type":"browser",
+                    "name":"Chrome"
+                    }
+                },
+                "culprit":"?(runner)",
+                "exception":{  
+                    "values":[  
+                    {  
+                        "stacktrace":{  
+                            "frames":[  
+                                {  
+                                "function":null,
+                                "abs_path":"https://null.jsbin.com/runner",
+                                "errors":null,
+                                "pre_context":[  
+                                    "<!doctype html>",
+                                    "<html>"
+                                ],
+                                "vars":null,
+                                "package":null,
+                                "context_line":"<meta charset=utf-8>",
+                                "symbol":null,
+                                "image_addr":null,
+                                "post_context":[  
+                                    "<title>JS Bin Runner</title>",
+                                    "",
+                                    "<style type=\"text/css\">",
+                                    "  body {",
+                                    "    margin: 0;"
+                                ],
+                                "in_app":false,
+                                "symbol_addr":null,
+                                "filename":"/runner",
+                                "module":"runner",
+                                "colno":5,
+                                "raw_function":null,
+                                "trust":null,
+                                "data":{  
+                                    "orig_in_app":1
+                                },
+                                "platform":null,
+                                "instruction_addr":null,
+                                "lineno":3
+                                }
+                            ]
+                        },
+                        "type":"ReferenceError",
+                        "mechanism":{  
+                            "synthetic":null,
+                            "help_link":null,
+                            "data":{  
+                                "message":"blooopy is not defined",
+                                "mode":"stack",
+                                "name":"ReferenceError"
+                            },
+                            "meta":null,
+                            "handled":false,
+                            "type":"onerror",
+                            "description":null
+                        },
+                        "value":"blooopy is not defined"
+                    }
+                    ]
+                },
+                "fingerprint":[  
+                    "{{ default }}"
+                ],
+                "grouping_config":{  
+                    "enhancements":"eJybzDhxY05qemJypZWRgaGlroGxrqHRBABbEwcC",
+                    "id":"legacy:2019-03-12"
+                },
+                "hashes":[  
+                    "07d2da329989f6cd310eb5f1c5e828a4"
+                ],
+                "key_id":"667532",
+                "level":"error",
+                "location":"/runner",
+                "logger":"",
+                "metadata":{  
+                    "type":"ReferenceError",
+                    "value":"blooopy is not defined",
+                    "filename":"/runner"
+                },
+                "received":1566248317.391,
+                "request":{  
+                    "cookies":null,
+                    "url":"https://null.jsbin.com/runner",
+                    "headers":[  
+                    [  
+                        "User-Agent",
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"
+                    ]
+                    ],
+                    "env":null,
+                    "fragment":null,
+                    "query_string":[  
+
+                    ],
+                    "data":null,
+                    "method":null,
+                    "inferred_content_type":null
+                },
+                "sdk":{  
+                    "version":"5.5.0",
+                    "name":"sentry.javascript.browser",
+                    "packages":[  
+                    {  
+                        "version":"5.5.0",
+                        "name":"npm:@sentry/browser"
+                    }
+                    ],
+                    "integrations":[  
+                    "InboundFilters",
+                    "FunctionToString",
+                    "TryCatch",
+                    "Breadcrumbs",
+                    "GlobalHandlers",
+                    "LinkedErrors",
+                    "UserAgent"
+                    ]
+                },
+                "timestamp":1566248317.391,
+                "title":"ReferenceError: blooopy is not defined",
+                "type":"error",
+                "user":{  
+                    "ip_address":"162.218.85.90"
+                },
+                "version":"7",
+                "url":"https://sentry.io/api/0/projects/test-org/front-end/events/bb78c1407cea4519aa397afc059c793d/",
+                "web_url":"https://sentry.io/organizations/test-org/issues/1170820242/events/bb78c1407cea4519aa397afc059c793d/",
+                "issue_url":"https://sentry.io/api/0/issues/1170820242/"
+            }
         },
-    },
-    "actor": {
-        'type': 'application',
-        'id': 'sentry',
-        'name': 'Sentry', 
-    },    
+        "installation":{  
+            "uuid":"a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+        },
+        "actor":{  
+            "type":"application",
+            "id":"sentry",
+            "name":"Sentry"
+        }
     }
 ```
 
