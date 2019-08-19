@@ -493,24 +493,59 @@ All webhook requests have some common elements.
 ##### Payload
 
 ```python
-    {
-    "action": "created",
-    "installation": {
-        "uuid": <install-uuid>
-    },
-    "data": {
-        "issue": {
-        ... <issue_attributes>
-        "url": issue_api_url,
-        "html_url": issue_link_url,
-        "project_url": project_api_url,
+    {  
+        "action":"created",
+        "data":{  
+            "issue":{  
+                "platform":"javascript",
+                "lastSeen":"2019-08-19T20:58:37.391000Z",
+                "numComments":0,
+                "userCount":1,
+                "culprit":"?(runner)",
+                "title":"ReferenceError: blooopy is not defined",
+                "id":"1170820242",
+                "assignedTo":null,
+                "logger":null,
+                "type":"error",
+                "annotations":[  
+
+                ],
+                "metadata":{  
+                    "type":"ReferenceError",
+                    "value":"blooopy is not defined",
+                    "filename":"/runner"
+                },
+                "status":"unresolved",
+                "subscriptionDetails":null,
+                "isPublic":false,
+                "hasSeen":false,
+                "shortId":"FRONT-END-9",
+                "shareId":null,
+                "firstSeen":"2019-08-19T20:58:37.391000Z",
+                "count":"1",
+                "permalink":null,
+                "level":"error",
+                "isSubscribed":false,
+                "isBookmarked":false,
+                "project":{  
+                    "platform":"",
+                    "slug":"front-end",
+                    "id":"1",
+                    "name":"front-end"
+                },
+                "statusDetails":{  
+
+                }
+            }
         },
-    },
-    "actor": {
-        'type': 'application',
-        'id': 'sentry',
-        'name': 'Sentry', 
-    },  
+        "installation":{  
+            "uuid":"a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+        },
+        "actor":{  
+            "type":"application",
+            "id":"sentry",
+            "name":"Sentry"
+        }
     }
 ```
 
