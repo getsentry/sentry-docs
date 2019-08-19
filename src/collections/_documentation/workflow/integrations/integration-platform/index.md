@@ -277,13 +277,13 @@ Webhooks allows your service to get requests about specific resources, depending
 
 All webhooks will contain the following set of request headers: 
 
-```
+```json
     {
-    'Content-Type': 'application/json',
-    'Request-ID': <request_uuid>,
-    'Sentry-Hook-Resource': <resource>,
-    'Sentry-Hook-Timestamp': six.text_type(int(time())),
-    'Sentry-Hook-Signature': <generated_signature>
+    "Content-Type": "application/json",
+    "Request-ID": "<request_uuid>",
+    "Sentry-Hook-Resource": "<resource>",
+    "Sentry-Hook-Timestamp": "<timestamp>",
+    "Sentry-Hook-Signature": "<generated_signature>"
     }
 ```
 
