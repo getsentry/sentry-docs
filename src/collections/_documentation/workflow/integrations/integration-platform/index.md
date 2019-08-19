@@ -108,6 +108,8 @@ The Access Tokens you receive from Sentry expire after eight hours. To retrieve 
         return new_access_token
 ```
 
+Instead of keeping track of times and passively refreshing at the time a token expires, one painless way you can handle refreshing tokens is to actively capture exceptions raised by requests that receive a 401 Unauthorized response from Sentry, refresh the token, and remake the request.
+
 ### Uninstallation
 
 When a user uninstalls your integration, you will receive a webhook request to your Webhook URL. 
