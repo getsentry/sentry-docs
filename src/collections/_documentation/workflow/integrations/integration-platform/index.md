@@ -49,7 +49,7 @@ Start your build by implementing the Redirect URL endpoint, /setup — typically
         code = request.args.get('code')
         install_id = request.args.get('installationId')
         
-        url = 'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+        url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
         url = url.format(install_id)
         
         payload = {
@@ -75,7 +75,7 @@ Typically if you have the Redirect URL configured, there is work happening on yo
 
 ```python
     requests.put(
-        'https://sentry.io/api/0/sentry-app-installations/{}/'.format(install_id),
+        u'https://sentry.io/api/0/sentry-app-installations/{}/'.format(install_id),
         json={'status': 'installed'},
     )
 ```
@@ -88,7 +88,7 @@ The Access Tokens you receive from Sentry expire after eight hours. To retrieve 
 
 ```python
     def refresh_token(install_id):
-        url = 'http://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+        url = u'http://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
         url = url.format(install_id)
         
         refresh_token = retrieve_refresh_token_from_db(install_id)
@@ -152,8 +152,8 @@ Continuing from our example, here we're implementing the Webhook URL endpoint, /
     def get_sentry_issue(install_id, issue_id):
         access_token = retrieve_from_db(install_id)
         
-        url = 'https://sentry.io/api/0/issues/{}/'.format(issue_id)
-        headers = {'Authorization': 'Bearer {}'.format(access_token)}
+        url = u'https://sentry.io/api/0/issues/{}/'.format(issue_id)
+        headers = {'Authorization': u'Bearer {}'.format(access_token)}
         
         resp = requests.get(url, headers=headers)
         return resp.json()
@@ -202,7 +202,7 @@ Sentry's Integration Platform uses API Tokens, which are a similar concept to Ac
 Upon the initial installation, you'll need the grant code given to you in either the installation webhook request or the redirect URL, in addition to your integration's client ID and client Secret.
 
 ```python
-    url = 'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+    url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
     url = url.format(install_id)
 
     payload = {
@@ -216,7 +216,7 @@ Upon the initial installation, you'll need the grant code given to you in either
 Tokens expire after eight hours, so you'll need to refresh your tokens accordingly. 
 
 ```python
-    url = 'http://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+    url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
     url = url.format(install_id)
 
     refresh_token = retrieve_refresh_token_from_db(install_id)
