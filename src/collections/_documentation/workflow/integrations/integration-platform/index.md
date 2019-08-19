@@ -49,7 +49,7 @@ Start your build by implementing the Redirect URL endpoint, /setup — typically
         code = request.args.get('code')
         install_id = request.args.get('installationId')
         
-        url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+        url = 'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
         url = url.format(install_id)
         
         payload = {
