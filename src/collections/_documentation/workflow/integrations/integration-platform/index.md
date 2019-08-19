@@ -5,11 +5,11 @@ sidebar_order: 2
 
 Sentry’s Integration Platform provides a way for external services to interact with the Sentry SaaS service using the REST API and webhooks. Integrations utilizing this platform are first-class actors within Sentry, and you can build them for [public](#public-integrations) as well as [internal](#internal-integrations) use cases.  
 
-[ SCREENSHOT: screenshot of the developer settings page where you can choose b/n public  and internal ]
-
 ## Creating an Integration
 
 In Sentry, navigate to Organization Settings > Developer Settings. From here, you can choose to create a New Internal Integration or New Public Integration. 
+
+[{% asset integration-platform-index/dev-settings.png alt="Settings page that allows developer to choose between public or internal integrations." %}]({% asset integration-platform-index/dev-settings.png @path %})
 
 [ SCREENSHOT: screenshot of the developer settings page where you can choose b/n public  and internal ]
 
