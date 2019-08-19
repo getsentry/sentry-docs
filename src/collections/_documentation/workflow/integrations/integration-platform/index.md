@@ -173,7 +173,7 @@ For your service to receive webhooks for alert rules, users must add to existing
 
 When you are ready for the publication process, you can click the 'publish' button next to the integration you wish to submit. This will send an email to partners@sentry.io letting us know your integration is ready for review. 
 
-[ SCREENSHOT: screenshot of publish button ]
+[{% asset integration-platform-index/publish-button.png alt="Buttons providing the options to publish or delete." %}]({% asset integration-platform-index/publish-button.png @path %})
 
 ## Internal Integrations
 
