@@ -88,7 +88,7 @@ The Access Tokens you receive from Sentry expire after eight hours. To retrieve 
 
 ```python
     def refresh_token(install_id):
-        url = u'http://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+        url = 'http://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
         url = url.format(install_id)
         
         refresh_token = retrieve_refresh_token_from_db(install_id)
