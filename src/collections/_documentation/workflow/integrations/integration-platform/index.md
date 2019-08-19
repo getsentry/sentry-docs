@@ -1055,7 +1055,7 @@ Auth tokens are personal access tokens a user can use to invoke APIs directly. S
 
 #### We use the Sentry API internally at our company. Should we switch to the Sentry Integration Platform?
 
-If you're looking for any of the new features below, we recommend you switch to the Sentry Integration Platform.
+If you're looking for any of the new features below, we recommend you switch to the Sentry Integration Platform utilizing the [Internal Integrations](#internal-integrations).
 
 **Permissions**
 
