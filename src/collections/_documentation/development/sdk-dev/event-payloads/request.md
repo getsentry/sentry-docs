@@ -1,5 +1,5 @@
 ---
-title: Request Interface 
+title: Request Interface
 sidebar_order: 8
 ---
 
@@ -16,33 +16,33 @@ body.
 
 ## Attributes
 
-`url`
+`url`:
 
 : The full URL of the request if available.
 
-`method`
+`method`:
 
 : The actual HTTP method of the request.
 
-`data`
+`data`:
 
 : Submitted data in whatever format makes most sense. SDKs should discard large
   bodies by default.
 
-`query_string`
+`query_string`:
 
 : The unparsed query string as it is provided.
 
-`cookies`
+`cookies`:
 
 : The cookie values. Typically unparsed as a string.
 
-`headers`
+`headers`:
 
 : A dictionary of submitted headers. If a header appears multiple times it needs
   to be merged according to the HTTP standard for header merging.
 
-`env`
+`env`:
 
 : Optional environment data. This is where information such as CGI/WSGI/Rack
   keys go that are not HTTP headers.

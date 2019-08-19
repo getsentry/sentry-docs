@@ -9,7 +9,7 @@ Attributes are simple data that Sentry understands to provide the most basic
 information about events. These are things like the unique ID of an event or the
 time when it occurred.
 
-The following attributes are required for all events. 
+The following attributes are required for all events.
 
 `event_id`
 
@@ -33,10 +33,10 @@ The following attributes are required for all events.
     "timestamp": "2011-05-02T17:41:36Z"
   }
   ```
-  
+
   Alternatively, the timestamp can be specified as floating-point UNIX
   timestamp.
-  
+
   ```json
   {
     "timestamp": 1304358096000
@@ -148,7 +148,7 @@ highly encouraged:
     "release": "721e41770371db95eee98ca2707686226b993eda"
   }
   ```
-  
+
 `dist`
 
 : The distribution of the application.
@@ -156,7 +156,7 @@ highly encouraged:
   Distributions are used to disambiguate build or deployment variants of the
   same release of an application. For example, the dist can be the build number
   of an XCode build or the version code of an Android build.
-  
+
   ```json
   {
     "release": "721e41770371db95eee98ca2707686226b993eda",

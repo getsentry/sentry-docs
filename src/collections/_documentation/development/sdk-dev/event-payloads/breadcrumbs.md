@@ -18,37 +18,37 @@ provided the rendering might be different:
 
 ## Attributes
 
-`timestamp`
+`timestamp`:
 
 : **Required**. A timestamp representing when the breadcrumb occurred. This can
   be either an ISO datetime string, or a Unix timestamp.
 
-`type`
+`type`:
 
 : _Optional_. The type of breadcrumb. The default type is `default` which
   indicates no specific handling. Other types are currently `http` for HTTP
   requests and `navigation` for navigation events. More about types later.
 
-`category`
+`category`:
 
 : _Optional_. A dotted string indicating what the crumb is or where it comes
   from. Typically it is a module name or a descriptive string. For instance,
   _ui.click_ could be used to indicate that a click happend in the UI or _flask_
   could be used to indicate that the event originated in the Flask framework.
 
-`message`
+`message`:
 
 : _Optional_. If a message is provided it is rendered as text with all
   whitespace preserved. Very long text might be truncated in the UI.
 
-`data`
+`data`:
 
 : _Optional_. Arbitrary data associated with this breadcrumb. Contains a
   dictionary whose contents depend on the breadcrumb `type`. See descriptions of
   breadcrumb types below. Additional parameters that are unsupported by the type
   are rendered as a key/value table.
 
-`level`
+`level`:
 
 : _Optional_. This defines the severity level of the breadcrumb. Allowed values
   are, from highest to lowest: `fatal`, `error`, `warning`, `info` and `debug`.
@@ -84,11 +84,11 @@ web application, or a UI transition in a mobile or desktop application, etc.
 
 Its `data` property has the following sub-properties:
 
-`from`
+`from`:
 
 : **Required**. A string representing the original application state / location.
 
-`to`
+`to`:
 
 : **Required**. A string representing the new application state / location.
 

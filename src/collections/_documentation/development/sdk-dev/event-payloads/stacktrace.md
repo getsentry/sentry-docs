@@ -1,5 +1,5 @@
 ---
-title: Stack Trace Interface 
+title: Stack Trace Interface
 sidebar_order: 4
 ---
 
@@ -35,67 +35,67 @@ contain the actual register values of the thread, thus mapping to the top frame.
 
 Each frame must at least one of the following attributes:
 
-`filename`
+`filename`:
 
 : The relative filepath to the call.
 
-`function`
+`function`:
 
 : The name of the function being called.
 
   This function name may be shortened or demangled. If not, Sentry will demangle
   and shorten it. The original function name will be stored in `raw_function`.
 
-`raw_function`
+`raw_function`:
 
 : The original function name, if the function name is shortened or demangled.
   Sentry shows the raw function when clicking on the shortened one in the UI.
 
-`module`
+`module`:
 
 : Platform-specific module path (e.g. `sentry.interfaces.Stacktrace`).
 
-`lineno`
+`lineno`:
 
 : The line number of the call, starting at 1.
 
-`colno`
+`colno`:
 
 : The column number of the call, starting at 1.
 
-`abs_path`
+`abs_path`:
 
 : The absolute path to filename.
 
-`context_line`
+`context_line`:
 
 : Source code in filename at `lineno`.
 
-`pre_context`
+`pre_context`:
 
 : A list of source code lines before `context_line` (in order) – usually
   `[lineno - 5:lineno]`.
 
-`post_context`
+`post_context`:
 
-: A list of source code lines after `context_line` (in order) – usually 
+: A list of source code lines after `context_line` (in order) – usually
   `[lineno + 1:lineno + 5]`.
 
-`in_app`
+`in_app`:
 
 : Signals whether this frame is related to the execution of the relevant code
   in this stack trace. For example, the frames that might power the framework’s
   webserver of your app are probably not relevant, however calls to the
   framework’s library once you start handling code likely are.
 
-`vars`
+`vars`:
 
 : A mapping of variables which were available within this frame (usually
   context-locals).
 
 The following attributes are primarily used for C-based languages:
 
-`instruction_addr`
+`instruction_addr`:
 
 : An optional instruction address for symbolication. This should be a string as
   hexadecimal number with a `0x` prefix. If this is set and a known image is
@@ -103,23 +103,23 @@ The following attributes are primarily used for C-based languages:
   _documentation/development/sdk-dev/event-payloads/debugmeta.md -%}), then
   symbolication can take place.
 
-`symbol_addr`
+`symbol_addr`:
 
 : An optional address that points to a symbol. We actually use the instruction
   address for symbolication but this can be used to calculate an instruction
   offset automatically.
 
-`image_addr`
+`image_addr`:
 
 : Optionally an address of the debug image to reference.
 
-`package`
+`package`:
 
 : The "package" the frame was contained in. Depending on the platform, this can
   be different things. For C# it can be the name of the assembly, for native
   code it can be the path of the dynamic library, etc.
 
-`platform`
+`platform`:
 
 : This can override the platform for a single frame. Otherwise the platform of
   the event is assumed. This can be used for multi-platform stack traces, such

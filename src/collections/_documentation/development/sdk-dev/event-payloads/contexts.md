@@ -1,5 +1,5 @@
 ---
-title: Contexts Interface 
+title: Contexts Interface
 sidebar_order: 9
 ---
 
@@ -232,7 +232,7 @@ Attributes:
 `version`:
 
 : _Optional_. Version string of the browser.
-  
+
 ## GPU Context
 
 Describes the GPU of the device.
@@ -263,7 +263,7 @@ Describes the GPU of the device.
 
 `api_type`:
 
-: _Optional_. The device low level API type. 
+: _Optional_. The device low level API type.
 
   Examples: `"Apple Metal"` or `"Direct3D11"`
 
