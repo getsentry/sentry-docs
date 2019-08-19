@@ -19,7 +19,7 @@ function makeRequest(method, path, options) {
 }
 ```
 
-The default fingerprint is generated based on information available to Sentry within the event. (Such information is stored in [_interfaces_]({%- link _documentation/development/sdk-dev/interfaces.md -%}) such as `exception`, `stacktrace`, and `message`.) Fingerprints prioritize higher-value and more precise data when possible.
+The default fingerprint is generated based on information available to Sentry within the event. (Such information is stored in [_interfaces_]({%- link _documentation/development/sdk-dev/event-payloads/index.md -%}) such as `exception`, `stacktrace`, and `message`.) Fingerprints prioritize higher-value and more precise data when possible.
 
 A simple way to understand the logic is:
 

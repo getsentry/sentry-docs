@@ -160,9 +160,10 @@ between them is that attributes are very barebones key/value pairs (for the
 most part) and interfaces are rich styled interface elements. Examples of
 attribute are `event_id` or `tags` whereas the `exception` key is an interface.
 
-For a list of all supported attributes see [_Attributes_]({%- link
-_documentation/development/sdk-dev/attributes.md -%}). For a list of built-in interfaces
-see [_Interfaces_]({%- link _documentation/development/sdk-dev/interfaces.md -%}).
+For a list of all supported attributes and interfaces in event payloads, see
+[_Event Payloads_]({%- link
+_documentation/development/sdk-dev/event-payloads/index.md
+-%}).
 
 ## Authentication
 
