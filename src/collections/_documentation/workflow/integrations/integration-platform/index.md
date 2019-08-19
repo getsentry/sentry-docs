@@ -66,7 +66,7 @@ Start your build by implementing the Redirect URL endpoint, /setup — typically
         refresh_token = data['refreshToken']
         # ... Securely store the install_id, access_token and refresh_token in DB ...
         
-        return redirect('http://sentry.io/settings/')
+        return redirect('https://sentry.io/settings/')
 ```
 
 #### Verifying Installations (optional)
@@ -86,11 +86,7 @@ The Access Tokens you receive from Sentry expire after eight hours. To retrieve 
 
 ```python
     def refresh_token(install_id):
-<<<<<<< HEAD
-        url = 'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
-=======
-        url = u'http://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
->>>>>>> 2f94d16d75887c34f8f63057892322d5ced89823
+        url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
         url = url.format(install_id)
         
         refresh_token = retrieve_refresh_token_from_db(install_id)
@@ -218,11 +214,7 @@ Upon the initial installation, you'll need the grant code given to you in either
 Tokens expire after eight hours, so you'll need to refresh your tokens accordingly. 
 
 ```python
-<<<<<<< HEAD
-    url = 'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
-=======
     url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
->>>>>>> 2f94d16d75887c34f8f63057892322d5ced89823
     url = url.format(install_id)
 
     refresh_token = retrieve_refresh_token_from_db(install_id)
