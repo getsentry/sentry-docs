@@ -251,8 +251,6 @@ Tokens expire every eight hours
 
 When you create an internal integration, an access token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your Developer Settings > Your Internal Integration and do so.
 
-[SCREENSHOT: screenshot of tokens]
-
 You can have up to 20 tokens at a time for any given internal integration.
 
 #### 1. How to use for requests
@@ -262,6 +260,8 @@ When making requests to the Sentry API, you use the access token just like you w
 #### 2. Expiration
 
 Tokens never expire, but you can manually revoke them.
+
+[{% asset integration-platform-index/tokens.png alt="Image showing the ability to copy tokens, create new tokens, revoke tokens, and when they were created in UTC." %}]({% asset integration-platform-index/tokens.png @path %})
 
 ### Using API Tokens
 
