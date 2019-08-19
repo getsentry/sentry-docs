@@ -272,6 +272,7 @@ Tokens never expire, but you can manually revoke them.
 Authentication tokens are passed using an auth header, and are used to authenticate as a user account with the API. For more information, see the [full documentation on Authentication]({%- link _documentation/api/auth.md -%}).
 
 ## Webhooks
+Webhooks allows your service to receive requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ## UI Components
 

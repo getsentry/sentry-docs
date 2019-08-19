@@ -3,11 +3,9 @@ title: Webhooks
 sidebar_order: 1
 ---
 
-## Webhooks
+Webhooks allows your service to receive requests about specific resources, depending on your selection.
 
-Webhooks allows your service to get requests about specific resources, depending on your selection.
-
-### Headers
+## Headers
 
 All webhooks will contain the following set of request headers: 
 
@@ -35,7 +33,7 @@ This is the resource that triggered the action. The action will be in the payloa
 
 A hash generated using your Client Secret and the request itself – used to verify the authenticity of the request.
 
-### Verifying the Signature
+## Verifying the Signature
 
 ```python
     body = json.dumps(request.body)
@@ -49,7 +47,7 @@ A hash generated using your Client Secret and the request itself – used to ver
             raise UnauthorizedError
 ```
 
-### Request Structure
+## Request Structure
 
 All webhook requests have some common elements.
 
@@ -96,8 +94,8 @@ All webhook requests have some common elements.
     },
 ```
 
-### Event Types
-#### [Un]Installation
+## Event Types
+### [Un]Installation
 
 `'Sentry-Hook-Resource': 'installation'`
 
@@ -145,7 +143,7 @@ All webhook requests have some common elements.
     }
 ```
 
-#### Webhook Alerts 
+### Webhook Alerts 
 
 `'Sentry-Hook-Resource': 'event_alert'`
 
@@ -175,7 +173,7 @@ All webhook requests have some common elements.
 - type: string
 - description: The label of the rule that was triggered 
 
-##### Payload
+#### Payload
 
 ```json
 {
@@ -422,7 +420,7 @@ All webhook requests have some common elements.
 }
 ```
 
-#### Issues
+### Issues
 
 `'Sentry-Hook-Resource': 'issue'`
 
@@ -448,7 +446,7 @@ All webhook requests have some common elements.
 - type: string
 - description: the api url to the project the issue is a part of 
 
-##### Payload
+#### Payload
 
 ```json
 {
@@ -503,7 +501,7 @@ All webhook requests have some common elements.
 }
 ```
 
-#### Error
+### Error
 
 The `error.created` resource subscription is only available for Business plans and above. 
 
@@ -533,7 +531,7 @@ The `error.created` resource subscription is only available for Business plans a
 - type: string
 - description: the api url for the associated issue
 
-##### Payload
+#### Payload
 
 ```json
 {
