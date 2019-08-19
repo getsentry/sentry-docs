@@ -1065,13 +1065,13 @@ OAuth apps and Auth Tokens allow you to access Sentry as a specific user in your
 - OAuth apps and Auth Tokens permit the user to access other Sentry organizations they belong to, so there is limited isolation.
 - Actions taken in Sentry will connect to this user rather than the integration/app. For example, if your alerting integration automatically assigns issues to a teammate, it will appear in the history as “Alice assigned Bob issue XYZ” rather than “<Your Sentry Integration apps> assigned Bob issue XYZ.”
 
-**Managing Subscriptions**
+**Managing Webhooks**
 
-With Sentry Integration apps you can manage resource subscriptions in the UI, as opposed to the current state where you need to make API calls to create/update/delete/retrieve subscriptions. The latter is not only more cumbersome but also harder to keep track of and maintain visibility across your team.
+With Sentry Integration apps you can manage webhooks in the UI, as opposed to the current state where you need to make API calls to create/update/delete/retrieve webhooks. The latter is not only more cumbersome but also harder to keep track of and maintain visibility across your team.
 
 **Scope**
 
-Currently, resource subscriptions must be configured per-project, which is unnecessary overhead especially when adding/removing projects. With Sentry Integration apps, you’ll receive notifications for all projects in your organization.
+Currently, webhooks must be configured per-project, which is unnecessary overhead especially when adding/removing projects. With Sentry Integration apps, you’ll receive notifications for all projects in your organization.
 
 **New Event Types**
 
