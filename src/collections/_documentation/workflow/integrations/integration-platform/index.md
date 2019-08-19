@@ -28,7 +28,7 @@ The  code examples in the sections below demonstrate a potential use-case that i
 
 ###  Installation
 
-Users will have the option to install your integrations on the Integrations Page in Sentry. If your integration is still in an unpublished state, the only Sentry organization that will be able to install that integration will be the organization that created the integration. Clicking 'Install' will allow users to see a description of your integration and the option to 'Continue' accepting permissions needed for installation. 
+Users will have the option to install your integrations on the Integrations Page in Sentry. If your integration is still in an unpublished state, the only Sentry organization that will be able to install that integration will be the organization that created the integration. Clicking 'Install' will allow users to see a description of your integration and the permissions that will be granted should the user choose to install. 
 
 [{% asset integration-platform-index/integrations.png alt="A list of integrations that a user can install." %}]({% asset integration-platform-index/integrations.png @path %})
 
