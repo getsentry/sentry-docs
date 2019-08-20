@@ -159,7 +159,7 @@ Continuing from our example, here we're implementing the Webhook URL endpoint, /
         return resp.json()
 ```
 
-For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%})
+For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ### Alerts
 
@@ -185,7 +185,7 @@ Creating an internal integration will automatically install it on your organizat
 
 ### Webhooks and Alerts
 
-Alerts are the same as public integrations -- see [Alerts](#alerts) for general information and see [Webhook Alerts](#webhook-alerts) for more detail on the request and payload. 
+Alerts are the same as public integrations -- see [Alerts](#alerts) for general information and see [Webhook Alerts]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}#webhook-alerts) for more detail on the request and payload. 
 
 ### Integration Webhooks
 
