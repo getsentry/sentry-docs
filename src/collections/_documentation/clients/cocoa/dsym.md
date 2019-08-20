@@ -103,7 +103,7 @@ Your project’s dSYM can be upload during the build phase as a “Run Script”
 You need to have an Auth Token for this to work. You can [create an Auth Token here](https://sentry.io/api/).
 
 1.  Download and install [sentry-cli](https://github.com/getsentry/sentry-cli/releases) — The best place to put this is in the _/usr/local/bin/_ directory
-2.  You will need to copy the below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_
+2.  You will need to copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_
 ```bash
 if which sentry-cli >/dev/null; then
 export SENTRY_ORG=___ORG_NAME___
