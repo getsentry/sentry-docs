@@ -304,6 +304,7 @@ For more information, see:
 - [Logging]({%- link _documentation/platforms/python/logging.md -%})
 - [GNU Backtrace]({%- link _documentation/platforms/python/gnu_backtrace.md -%})
 - [Redis]({%- link _documentation/platforms/python/redis.md -%})
+- [SQLAlchemy]({%- link _documentation/platforms/python/sqlalchemy.md -%})
 
 ### Default Integrations
 
