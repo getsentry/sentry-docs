@@ -89,7 +89,7 @@ from raven.breadcrumbs import record
 def process_crumb(data):
     data['data'] = compute_expensive_data()
 
-breadcrumbs.record(message='This is an important message',
-                   category='my_module', level='warning',
-                   processor=process_crumb)
+record(message='This is an important message',
+       category='my_module', level='warning',
+       processor=process_crumb)
 ```
