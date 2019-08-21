@@ -18,7 +18,7 @@ Permissions specify what level of access your service requires of Sentry resourc
 [{% asset integration-platform-index/permissions.png alt="Form that allows developer to set what permissions they'll need from their user." %}]({% asset integration-platform-index/permissions.png @path %})
 
 ### Integration Webhooks
-Webhooks allows your service to get requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks](#webhooks).
+Webhooks allows your service to get requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ## Public Integrations
 
@@ -159,7 +159,7 @@ Continuing from our example, here we're implementing the Webhook URL endpoint, /
         return resp.json()
 ```
 
-For more information, see the [full documentation on Webhooks](#webhooks).
+For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ### Alerts
 
@@ -167,7 +167,7 @@ There is an option called Alert Rule Action for the integration platform. What t
 
 [{% asset integration-platform-index/alert-rules.png alt="Dropdown menu of options for alert rules." %}]({% asset integration-platform-index/alert-rules.png @path %})
 
-For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via <your service>` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [full documentation on Webhooks](#webhooks).
+For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via <your service>` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ### Published State
 
@@ -185,11 +185,11 @@ Creating an internal integration will automatically install it on your organizat
 
 ### Webhooks and Alerts
 
-Alerts are the same as public integrations -- see [Alerts](#alerts) for general information and see [Webhook Alerts](#webhook-alerts) for more detail on the request and payload. 
+Alerts are the same as public integrations -- see [Alerts](#alerts) for general information and see [Webhook Alerts]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}#webhook-alerts) for more detail on the request and payload. 
 
 ### Integration Webhooks
 
-Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [full documentation on Webhooks](#webhooks).
+Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ## Auth Token(s)
 
