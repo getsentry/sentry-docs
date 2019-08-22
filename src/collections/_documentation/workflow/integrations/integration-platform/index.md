@@ -276,9 +276,6 @@ Alerts are the same as public integrations -- see [Alerts](#alerts) for general 
 
 Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
-## Webhooks
-Webhooks allows your service to receive requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
-
 ## UI Components
 
 The Sentry Integration Platform provides the ability to add rich UI components to Sentry itself through a declarative syntax that requires zero code. 
@@ -295,6 +292,9 @@ Through a JSON-Schema based system, you can have Sentry render a way for Users t
 ```
 
 For more information, see the [full documentation on UI Components]({%- link _documentation/workflow/integrations/integration-platform/ui-components.md -%}).
+
+## Webhooks
+Webhooks allows your service to receive requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ## FAQ
 
