@@ -15,27 +15,29 @@ The attributes `filename`, `context_line`, and `lineno` are required.
 
 `lineno`:
 
-: The line number of the call
+: The line number of the call.
 
 `abs_path`:
 
-: The absolute path to the template on the file system
+: The absolute path to the template on the file system.
 
 `filename`:
 
-: The filename as it was passed to the template loader
+: The filename as it was passed to the template loader.
 
 `context_line`:
 
-: Source code in filename at lineno
+: Source code in filename at lineno.
 
 `pre_context`:
 
-: A list of source code lines before context_line (in order) – usually `[lineno - 5:lineno]`
+: A list of source code lines before `context_line` (in order) – usually
+  `[lineno - 5:lineno]`.
 
 `post_context`:
 
-: A list of source code lines after context_line (in order) – usually `[lineno + 1:lineno + 5]`
+: A list of source code lines after `context_line` (in order) – usually 
+  `[lineno + 1:lineno + 5]`.
 
 ## Examples
 

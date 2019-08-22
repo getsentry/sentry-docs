@@ -7,8 +7,8 @@ The breadcrumbs interface specifies a series of application events, or
 `breadcrumbs`, that occurred before the main event. Its canonical name is
 `breadcrumbs`.
 
-This interface is an object with a single `values` key containing an ordered list
-of breadcrumb objects. The entries are ordered from oldest to newest.
+This interface is an object with a single `values` key containing an ordered
+list of breadcrumb objects. The entries are ordered from oldest to newest.
 Consequently, the last entry in the array should be the last entry before the
 event occurred.
 
@@ -31,10 +31,11 @@ provided, the rendering might be different:
 
 `category`:
 
-: _Optional_. A dotted string indicating what the crumb is or from where it comes.
-  Typically it is a module name or a descriptive string. For instance,
-  _ui.click_ could be used to indicate that a click happened in the UI or _flask_
-  could be used to indicate that the event originated in the Flask framework.
+: _Optional_. A dotted string indicating what the crumb is or from where it
+  comes. Typically it is a module name or a descriptive string. For instance,
+  _ui.click_ could be used to indicate that a click happened in the UI or
+  _flask_ could be used to indicate that the event originated in the Flask
+  framework.
 
 `message`:
 
@@ -62,8 +63,8 @@ properties look like.
 
 ### `default`
 
-Describes a generic breadcrumb. This is typically a log message or user-generated
-breadcrumb. The `data` part is entirely undefined and as such,
+Describes a generic breadcrumb. This is typically a log message or
+user-generated breadcrumb. The `data` part is entirely undefined and as such,
 completely rendered as a key/value table.
 
 ```json

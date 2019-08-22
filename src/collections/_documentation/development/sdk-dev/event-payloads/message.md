@@ -3,28 +3,30 @@ title: Message Interface
 sidebar_order: 3
 ---
 
-The Log Entry Interface is a slightly improved version of the `message`
-attribute and can be used to split the log message from the log message
-parameters:
-
-A standard message, generally associated with parameterized logging.
+The Message Interface carries a log message that describes an event or error.
+Optionally, it can carry a format string and structured parameters. This can
+help to group similar messages into the same issue.
 
 ## Attributes
 
+`formatted`:
+
+: **Required**. The fully formatted message. If missing, Sentry will try to
+  interpolate the message.
+  
+  It must not exceed 8192 characters. Longer messages will be truncated.
+
 `message`:
 
-: The raw message string (uninterpolated).
+: _Optional_. The raw message string (uninterpolated).
 
   It must not exceed 8192 characters. Longer messages will be truncated.
 
 `params`:
 
-: An optional list of formatting parameters.
+: _Optional_: A list of formatting parameters, preferrably strings. Non-strings
+  will be coerced to strings.
 
-`formatted`:
-
-: _Optional_. The fully formatted message. If missing, Sentry will try to
-  interpolate the message.
 
 ## Examples
 

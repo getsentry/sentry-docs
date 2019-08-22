@@ -27,7 +27,7 @@ authenticated user) or `ip_address` (their IP address).
 : The username of the user.
 
 All other keys are stored as extra information but not specifically processed by
-sentry.
+Sentry.
 
 ## Examples
 

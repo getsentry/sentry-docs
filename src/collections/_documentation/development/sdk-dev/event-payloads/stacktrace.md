@@ -24,7 +24,7 @@ The list of frames should be ordered by the oldest call first.
 
 `frames`:
 
-: A non-empty list of stack frames (see below).
+: **Required**. A non-empty list of stack frames (see below).
 
 `registers`:
 

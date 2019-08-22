@@ -7,9 +7,9 @@ The context interfaces provide additional context data. Typically, this is data
 related to the current user, the current HTTP request. Its canonical name is
 `contexts`.
 
-The `contexts` type can be used to define arbitrary contextual data on
-the event. It accepts an object of key/value pairs. The key is the “alias” of
-the context and can be freely chosen. However, as per policy, it should match the
+The `contexts` type can be used to define arbitrary contextual data on the
+event. It accepts an object of key/value pairs. The key is the “alias” of the
+context and can be freely chosen. However, as per policy, it should match the
 type of the context unless there are two values for a type. You can omit `type`
 if the key name is the type.
 
@@ -17,8 +17,10 @@ Unknown data for the contexts is rendered as a key/value list.
 
 ## Device Context
 
-This describes the device that caused the event. This is most appropriate for
-mobile applications.
+Device context describes the device that caused the event. This is most
+appropriate for mobile applications. 
+
+The `type` and default key is `"device"`.
 
 `name`:
 
@@ -26,9 +28,9 @@ mobile applications.
 
 `family`:
 
-: _Optional_. The family of the device. This is usually the common part of
-  model names across generations. For instance, `iPhone` would be a reasonable
-  family, so would be `Samsung Galaxy`.
+: _Optional_. The family of the device. This is usually the common part of model
+  names across generations. For instance, `iPhone` would be a reasonable family,
+  so would be `Samsung Galaxy`.
 
 `model`:
 
@@ -111,13 +113,13 @@ mobile applications.
 
 `external_storage_size`:
 
-: _Optional_. Total size of an attached external storage in bytes (for example, android
-  SDK card).
+: _Optional_. Total size of an attached external storage in bytes (for example,
+  android SDK card).
 
 `external_free_storage`:
 
-: _Optional_. Free size of an attached external storage in bytes (for example, android
-  SDK card).
+: _Optional_. Free size of an attached external storage in bytes (for example,
+  android SDK card).
 
 `boot_time`:
 
@@ -130,9 +132,11 @@ mobile applications.
 
 ## OS Context
 
-Describes the operating system on which the event was created. In web
-contexts, this is the operating system of the browser (generally pulled from
-the User-Agent string).
+OS context describes the operating system on which the event was created. In web
+contexts, this is the operating system of the browser (generally pulled from the
+User-Agent string).
+
+The `type` and default key is `"os"`.
 
 `name`:
 
@@ -148,8 +152,8 @@ the User-Agent string).
 
 `kernel_version`:
 
-: _Optional_. An independent kernel version string. This is typically the
-  entire output of the `uname` syscall.
+: _Optional_. An independent kernel version string. This is typically the entire
+  output of the `uname` syscall.
 
 `rooted`:
 
@@ -158,14 +162,16 @@ the User-Agent string).
 `raw_description`:
 
 : _Optional_. An unprocessed description string obtained by the operating
-  system. For some well-known runtimes, Sentry will attempt to parse `name`
-  and `version` from this string, if they are not explicitly given.
+  system. For some well-known runtimes, Sentry will attempt to parse `name` and
+  `version` from this string, if they are not explicitly given.
 
 ## Runtime Context
 
-Runtime context describes a runtime in more detail. Typically, this context is used multiple
-times if multiple runtimes are involved (for instance, if you have a JavaScript
-application running on top of JVM)
+Runtime context describes a runtime in more detail. Typically, this context is
+used multiple times if multiple runtimes are involved (for instance, if you have
+a JavaScript application running on top of JVM).
+
+The `type` and default key is `"runtime"`.
 
 `name`:
 
@@ -183,8 +189,11 @@ application running on top of JVM)
 
 ## App Context
 
-App context describes the application. As opposed to the runtime, this is the actual
-application that was running and carries metadata about the current session.
+App context describes the application. As opposed to the runtime, this is the
+actual application that was running and carries metadata about the current
+session.
+
+The `type` and default key is `"app"`.
 
 `app_start_time`:
 
@@ -200,8 +209,8 @@ application that was running and carries metadata about the current session.
 
 `app_identifier`:
 
-: _Optional_. Version-independent application identifier, often a dotted
-  bundle ID.
+: _Optional_. Version-independent application identifier, often a dotted bundle
+  ID.
 
 `app_name`:
 
@@ -209,8 +218,7 @@ application that was running and carries metadata about the current session.
 
 `app_version`:
 
-: _Optional_. Human readable application version, as it appears on the
-  platform.
+: _Optional_. Human readable application version, as it appears on the platform.
 
 `app_build`:
 
@@ -218,11 +226,11 @@ application that was running and carries metadata about the current session.
 
 ## Browser Context
 
-Browser context carries information about the browser or user agent for web-related errors.
-This can either be the browser this event occurred in or the user agent of a
-web request that triggered the event.
+Browser context carries information about the browser or user agent for
+web-related errors. This can either be the browser this event occurred in or the
+user agent of a web request that triggered the event.
 
-Attributes:
+The `type` and default key is `"browser"`.
 
 `name`:
 

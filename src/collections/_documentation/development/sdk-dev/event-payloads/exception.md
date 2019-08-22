@@ -171,7 +171,6 @@ circumstances.
 
 A single exception:
 
-
 ```json
 {
   "exception": {
