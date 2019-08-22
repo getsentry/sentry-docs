@@ -5,15 +5,6 @@ sidebar_order: 0
 
 The Sentry Integration Platform provides developers with the ability to define User Interface components they want to render within specific parts of Sentry's UI, through a JSON-based schema. Two possible use-cases are [Issue Link](#issue-link) and [Stack Trace Link](#stack-trace-link).
 
-## Stack Trace Linking
-
- This feature allows the developer to insert a link within a stack trace frame. The link contains details about the project, file, line number, etc. It can also be used to view the file on another website, continue debugging in a different monitoring tool, etc.
- 
-[ bullet points using one of our integrations]
-[ screenshot ]
-
-For more details on each component, see [EDIT: explicitly link to Issue Link and Stack Trace Link][Component Details](component-details).
-
 # Schema
 
 The UI components are specified in the schema section of integration details. The required form of this schema is:
@@ -182,7 +173,7 @@ Response from `uri`, when specified, *must* be in the following format:
 
 ## Stack Trace Link
 
-For an example use-case, see the stack trace link use-case at the top of the page.
+This feature allows the developer to insert a link within a stack trace frame. The link contains details about the project, file, line number, etc. It can also be used to view the file on another website, continue debugging in a different monitoring tool, etc.
 
 **Schema**
 
