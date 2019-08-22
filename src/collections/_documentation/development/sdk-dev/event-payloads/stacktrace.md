@@ -127,7 +127,7 @@ The following attributes are primarily used for C-based languages:
 
 ## Examples
 
-A Python stacktrace with source context:
+A Python stack trace with source context:
 
 ```json
 {
@@ -153,7 +153,7 @@ A Python stacktrace with source context:
 }
 ```
 
-A minimal native stacktrace with register values. Note that the `package` event
+A minimal native stack trace with register values. Note that the `package` event
 attribute must be `"native"` for these frames to be symbolicated.
 
 ```json
