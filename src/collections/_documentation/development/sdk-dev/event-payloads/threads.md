@@ -39,7 +39,7 @@ following attributes are known for each value:
   If this is an error event, the stack trace of the main exception should be
   declared in the [_Exception Interface_]({%- link
   _documentation/development/sdk-dev/event-payloads/exception.md -%}) instead.
-  Sentry will automatically move the stacktrace of the only crashed thread, if
+  Sentry will automatically move the stack trace of the only crashed thread, if
   there is a single exception.
 
 ```json
