@@ -54,7 +54,7 @@ There are two modes in which you can use this. One is the fully automatic mode. 
 sentry-cli releases set-commits "$VERSION" --auto
 ```
 
-In case you are deploying without access to the git repository, you can manually specify the commits instead. To do this, pass the `-commit` parameter to the `set-commits` command in the format `REPO_NAME@REVISION`. You can repeat this for as many repositories as you have:
+In case you are deploying without access to the git repository, you can manually specify the commits instead. To do this, pass the `--commit` parameter to the `set-commits` command in the format `REPO_NAME@REVISION`. You can repeat this for as many repositories as you have:
 
 ```bash
 sentry-cli releases set-commits "$VERSION" --commit "my-repo@deadbeef"
