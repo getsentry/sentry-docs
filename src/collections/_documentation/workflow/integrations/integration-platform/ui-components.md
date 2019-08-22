@@ -3,21 +3,24 @@ title: UI Components
 sidebar_order: 0
 ---
 
-The Sentry Integration Platform provides developers with the ability to define User Interface components they want to render within specific parts of Sentry's UI, through a JSON-based schema.
-
-# Use-Cases
-
-Currently, we support two types of UI components.
+The Sentry Integration Platform provides developers with the ability to define User Interface components they want to render within specific parts of Sentry's UI, through a JSON-based schema. Two possible use-cases are [Issue Linking](#issue-linking) and [Stack Trace Linking](#stack-trace-linking).
 
 ## Issue Linking
 
 With issue linking, the developer can connect Sentry issues with a task in their project management system. This functionality provides a way to use any project management tool the developer uses or develops.
 
-## Stack Trace Link
+[ bullet points using one of our integrations]
+
+[ screenshot ]
+
+## Stack Trace Linking
 
  This feature allows the developer to insert a link within a stack trace frame. The link contains details about the project, file, line number, etc. It can also be used to view the file on another website, continue debugging in a different monitoring tool, etc.
+ 
+[ bullet points using one of our integrations]
+[ screenshot ]
 
-For more details on each component, see Component Details at the bottom of the page.
+For more details on each component, see [EDIT: explicitly link to Issue Link and Stack Trace Link][Component Details](component-details).
 
 # Schema
 
