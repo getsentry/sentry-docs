@@ -173,7 +173,9 @@ Response from `uri`, when specified, *must* be in the following format:
 
 ## Stack Trace Link
 
-This feature allows the developer to insert a link within a stack trace frame. The link contains details about the project, file, line number, etc. It can also be used to view the file on another website, continue debugging in a different monitoring tool, etc.
+This feature allows the developer to insert a link within a stack trace frame. The link contains details about the project, file, line number, etc. It can also be used to view the file on another website, continue debugging in a different monitoring tool, etc. For example, this is what our Rookout integration looks like using stack trace linking.
+
+[{% asset integration-platform-index/ui-components/stack-trace-example.png alt="Example of a stack trace using Rookout." %}]({% asset integration-platform-index/ui-components/stack-trace-example.png @path %})
 
 **Schema**
 
