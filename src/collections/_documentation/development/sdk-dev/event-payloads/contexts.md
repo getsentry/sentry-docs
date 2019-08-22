@@ -3,15 +3,15 @@ title: Contexts Interface
 sidebar_order: 9
 ---
 
-The context interfaces provide additional context data. Typically this is data
+The context interfaces provide additional context data. Typically, this is data
 related to the current user, the current HTTP request. Its canonical name is
-`"contexts"`.
+`contexts`.
 
-The `contexts` type can be used to defined almost arbitrary contextual data on
-the event. It accepts an object of key, value pairs. The key is the “alias” of
-the context and can be freely chosen. However as per policy it should match the
-type of the context unless there are two values for a type. `type` can be
-omitted if the key name is the type.
+The `contexts` type can be used to define arbitrary contextual data on
+the event. It accepts an object of key/value pairs. The key is the “alias” of
+the context and can be freely chosen. However, as per policy, it should match the
+type of the context unless there are two values for a type. You can omit `type`
+if the key name is the type.
 
 Unknown data for the contexts is rendered as a key/value list.
 
@@ -26,13 +26,13 @@ mobile applications.
 
 `family`:
 
-: _Optional_. The family of the device. This is normally the common part of
-  model names across generations. For instance `iPhone` would be a reasonable
+: _Optional_. The family of the device. This is usually the common part of
+  model names across generations. For instance, `iPhone` would be a reasonable
   family, so would be `Samsung Galaxy`.
 
 `model`:
 
-: _Optional_. The model name. This for instance can be `Samsung Galaxy S3`.
+: _Optional_. The model name. This, for example, can be `Samsung Galaxy S3`.
 
 `model_id`:
 
@@ -44,7 +44,7 @@ mobile applications.
 
 `battery_level`:
 
-: _Optional_. If the device has a battery, this can be an floating point value
+: _Optional_. If the device has a battery, this can be a floating point value
   defining the battery level (in the range 0-100).
 
 `orientation`:
@@ -111,27 +111,27 @@ mobile applications.
 
 `external_storage_size`:
 
-: _Optional_. Total size of an attached external storage in bytes (e.g.: android
+: _Optional_. Total size of an attached external storage in bytes (for example, android
   SDK card).
 
 `external_free_storage`:
 
-: _Optional_. Free size of an attached external storage in bytes (e.g.: android
+: _Optional_. Free size of an attached external storage in bytes (for example, android
   SDK card).
 
 `boot_time`:
 
-: _Optional_. A formatted UTC timestamp when the system was booted, e.g.:
+: _Optional_. A formatted UTC timestamp when the system was booted. For example,
   `"2018-02-08T12:52:12Z"`.
 
 `timezone`:
 
-: _Optional_. The timezone of the device, e.g.: `Europe/Vienna`.
+: _Optional_. The timezone of the device. For example, `Europe/Vienna`.
 
 ## OS Context
 
 Describes the operating system on which the event was created. In web
-contexts, this is the operating system of the browser (normally pulled from
+contexts, this is the operating system of the browser (generally pulled from
 the User-Agent string).
 
 `name`:
@@ -163,8 +163,8 @@ the User-Agent string).
 
 ## Runtime Context
 
-Describes a runtime in more detail. Typically this context is used multiple
-times if multiple runtimes are involved (for instance if you have a JavaScript
+Runtime context describes a runtime in more detail. Typically, this context is used multiple
+times if multiple runtimes are involved (for instance, if you have a JavaScript
 application running on top of JVM)
 
 `name`:
@@ -183,21 +183,20 @@ application running on top of JVM)
 
 ## App Context
 
-Describes the application. As opposed to the runtime, this is the actual
-application that was running and carries meta data about the current session.
+App context describes the application. As opposed to the runtime, this is the actual
+application that was running and carries metadata about the current session.
 
 `app_start_time`:
 
-: _Optional_. Formatted UTC timestamp when the application was started by the
-  user.
+: _Optional_. Formatted UTC timestamp when the user started the application.
 
 `device_app_hash`:
 
-: _Optional_. Application specific device identifier.
+: _Optional_. Application-specific device identifier.
 
 `build_type`:
 
-: _Optional_. String identifying the kind of build, e.g. `testflight`.
+: _Optional_. String identifying the kind of build. For example, `testflight`.
 
 `app_identifier`:
 
@@ -219,8 +218,8 @@ application that was running and carries meta data about the current session.
 
 ## Browser Context
 
-Carries information about the browser or user agent for web-related errors.
-This can either be the browser this event ocurred in, or the user agent of a
+Browser context carries information about the browser or user agent for web-related errors.
+This can either be the browser this event occurred in or the user agent of a
 web request that triggered the event.
 
 Attributes:
@@ -235,7 +234,7 @@ Attributes:
 
 ## GPU Context
 
-Describes the GPU of the device.
+GPU context describes the GPU of the device.
 
 `name`:
 
@@ -243,7 +242,7 @@ Describes the GPU of the device.
 
 `version`:
 
-: _Optional_. The Version of graphics device.
+: _Optional_. The Version of the graphics device.
 
 `id`:
 
@@ -263,7 +262,7 @@ Describes the GPU of the device.
 
 `api_type`:
 
-: _Optional_. The device low level API type.
+: _Optional_. The device low-level API type.
 
   Examples: `"Apple Metal"` or `"Direct3D11"`
 

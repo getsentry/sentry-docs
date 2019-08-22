@@ -4,41 +4,41 @@ sidebar_order: 6
 ---
 
 The breadcrumbs interface specifies a series of application events, or
-“breadcrumbs”, that occurred before the main event. Its canonical name is
-`"breadcrumbs"`.
+`breadcrumbs`, that occurred before the main event. Its canonical name is
+`breadcrumbs`.
 
-This interface is an object with a sole `values` key containing an ordered list
+This interface is an object with a single `values` key containing an ordered list
 of breadcrumb objects. The entries are ordered from oldest to newest.
 Consequently, the last entry in the array should be the last entry before the
 event occurred.
 
 Each breadcrumb has a few properties of which at least `timestamp` and
-`category` must be provided. The rest is optional and depending on what is
-provided the rendering might be different:
+`category` must be provided. The rest is optional, and depending on what is
+provided, the rendering might be different:
 
 ## Attributes
 
 `timestamp`:
 
 : **Required**. A timestamp representing when the breadcrumb occurred. This can
-  be either an ISO datetime string, or a Unix timestamp.
+  be either an ISO DateTime string or a Unix timestamp.
 
 `type`:
 
-: _Optional_. The type of breadcrumb. The default type is `default` which
+: _Optional_. The type of breadcrumb. The default type is `default`, which
   indicates no specific handling. Other types are currently `http` for HTTP
   requests and `navigation` for navigation events. More about types later.
 
 `category`:
 
-: _Optional_. A dotted string indicating what the crumb is or where it comes
-  from. Typically it is a module name or a descriptive string. For instance,
-  _ui.click_ could be used to indicate that a click happend in the UI or _flask_
+: _Optional_. A dotted string indicating what the crumb is or from where it comes.
+  Typically it is a module name or a descriptive string. For instance,
+  _ui.click_ could be used to indicate that a click happened in the UI or _flask_
   could be used to indicate that the event originated in the Flask framework.
 
 `message`:
 
-: _Optional_. If a message is provided it is rendered as text with all
+: _Optional_. If a message is provided, it is rendered as text with all
   whitespace preserved. Very long text might be truncated in the UI.
 
 `data`:
@@ -51,7 +51,7 @@ provided the rendering might be different:
 `level`:
 
 : _Optional_. This defines the severity level of the breadcrumb. Allowed values
-  are, from highest to lowest: `fatal`, `error`, `warning`, `info` and `debug`.
+  are, from highest to lowest: `fatal`, `error`, `warning`, `info`, and `debug`.
   Levels are used in the UI to emphasize and deemphasize the crumb. Defaults to
   `info`.
 
@@ -62,8 +62,8 @@ properties look like.
 
 ### `default`
 
-Describes an generic breadcrumb. This is typically a log message or user
-generated breadcrumb. The `data` part is entirely undefined and as such
+Describes a generic breadcrumb. This is typically a log message or user-generated
+breadcrumb. The `data` part is entirely undefined and as such,
 completely rendered as a key/value table.
 
 ```json
