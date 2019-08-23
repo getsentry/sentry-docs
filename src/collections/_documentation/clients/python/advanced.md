@@ -250,7 +250,7 @@ For example, if you have HTTP 404 (page not found) errors, and you’d prefer th
 {% raw %}client.captureException(fingerprint=['{{ default }}', 'http://my-url/']){% endraw %}
 ```
 
-For more information, see [Customize Grouping with Fingerprints]({%- link _documentation/data-management/rollups.md -%}#custom-grouping).
+For more information, see [Customize Grouping with Fingerprints]({%- link _documentation/data-management/event-grouping/index.md -%}).
 
 ## Sampling Messages
 
