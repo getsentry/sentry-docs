@@ -24,7 +24,7 @@ The `type` and default key is `"device"`.
 
 `name`:
 
-: _Optional_. The name of the device. This is typically a hostname.
+: **Required**. The name of the device. This is typically a hostname.
 
 `family`:
 
@@ -140,7 +140,7 @@ The `type` and default key is `"os"`.
 
 `name`:
 
-: _Optional_. The name of the operating system.
+: **Required**. The name of the operating system.
 
 `version`:
 
@@ -175,7 +175,7 @@ The `type` and default key is `"runtime"`.
 
 `name`:
 
-: _Optional_. The name of the runtime.
+: **Required**. The name of the runtime.
 
 `version`:
 
@@ -234,7 +234,7 @@ The `type` and default key is `"browser"`.
 
 `name`:
 
-: _Optional_. Display name of the browser application.
+: **Required**. Display name of the browser application.
 
 `version`:
 
