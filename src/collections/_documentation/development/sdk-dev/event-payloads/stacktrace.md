@@ -7,37 +7,28 @@ A stack trace contains a list of frames, each with various bits (most optional)
 describing the context of that frame. Frames should be sorted from oldest to
 newest.
 
-The stack trace contains an element, `frames`, which is a list of hashes. Each
-hash must contain **at least** the `filename` attribute. The rest of the values
-are optional, but recommended.
-
-Additionally, if the list of frames is large, you can explicitly tell the system
-that you’ve omitted a range of frames. The `frames_omitted` must be a single
-tuple two values: start and end. For example, if you only removed the 8th frame,
-the value would be (8, 9), meaning it started at the 8th frame, and went until
-the 9th (the number of frames omitted is end-start). The values should be based
-on a one-index.
-
-The list of frames should be ordered by the oldest call first.
-
 ## Attributes
 
 `frames`:
 
-: **Required**. A non-empty list of stack frames (see below).
+: **Required**. A non-empty list of stack frames (see below). The list is
+  ordered from caller to callee, or oldest to youngest. The last frame is the
+  one creating the exception.
 
 `registers`:
 
 : _Optional_. A map of register names and their values. The values should
-contain the actual register values of the thread, thus mapping to the top frame.
+  contain the actual register values of the thread, thus mapping to the last
+  frame in the list.
 
 ## Frame Attributes
 
-Each frame must have at least one of the following attributes:
+Each object should contain **at least** a `filename`, `function` or
+`instruction_addr` attribute. All values are optional, but recommended. 
 
 `filename`:
 
-: The relative file path to the call.
+: The path to the source file relative to the project root directory.
 
 `function`:
 
@@ -97,9 +88,9 @@ The following attributes are primarily used for C-based languages:
 
 `instruction_addr`:
 
-: An optional instruction address for symbolication. This should be a string with
-  a hexadecimal number that includes a `0x` prefix. If this is set and a known image is
-  defined in the [_Debug Meta Interface_]({%- link
+: An optional instruction address for symbolication. This should be a string
+  with a hexadecimal number that includes a `0x` prefix. If this is set and a
+  known image is defined in the [_Debug Meta Interface_]({%- link
   _documentation/development/sdk-dev/event-payloads/debugmeta.md -%}), then
   symbolication can take place.
 
@@ -127,27 +118,49 @@ The following attributes are primarily used for C-based languages:
 
 ## Examples
 
-A Python stack trace with source context:
+For the given example program written in Python:
+
+```python
+def foo():
+  my_var = 'foo'
+  raise ValueError()
+
+def main():
+  foo()
+```
+
+A minimalistic stack trace for the above program in the correct order:
+
+```json
+{
+  "frames": [
+    {"function": "main"},
+    {"function": "foo"}
+  ]
+}
+```
+
+The top frame fully populated with five lines of source context:
 
 ```json
 {
   "frames": [{
+    "in_app": true,
+    "function": "myfunction",
     "abs_path": "/real/file/name.py",
     "filename": "file/name.py",
-    "function": "myfunction",
+    "lineno": 3,
     "vars": {
-      "key": "value"
+      "my_var": "'value'"
     },
     "pre_context": [
-      "line1",
-      "line2"
+      "def foo():",
+      "  my_var = 'foo'",
     ],
-    "context_line": "line3",
-    "lineno": 3,
-    "in_app": true,
+    "context_line": "  raise ValueError()",
     "post_context": [
-      "line4",
-      "line5"
+      "",
+      "def main():"
     ],
   }]
 }
