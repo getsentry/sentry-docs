@@ -53,7 +53,7 @@ The order of exceptions would be `Exception` and then `ValueError`.
 The exception mechanism is an optional field residing in the [_Exception
 Interface_](#exception-interface). It carries additional information about the
 way the exception was created on the target system. This includes general
-exception values obtained from operating system or runtime APIs, as well as
+exception values obtained from the operating system or runtime APIs, as well as
 mechanism-specific values.
 
 ### Attributes
@@ -65,7 +65,7 @@ mechanism-specific values.
 
 `description`:
 
-: Optional human readable description of the error mechanism and a possible hint
+: Optional human-readable description of the error mechanism and a possible hint
   on how to solve this error.
 
 `help_link`:
@@ -75,8 +75,8 @@ mechanism-specific values.
 
 `handled`:
 
-: Optional flag indicating whether the exception has been handled by the user
-  (e.g. via `try..catch`).
+: Optional flag indicating whether the user has handled the exception
+  (for example, via `try ... catch`).
 
 `meta`:
 
@@ -91,16 +91,16 @@ mechanism-specific values.
 {% capture __alert_content -%}
 The `type` attribute is required to send any exception mechanism attribute, even
 if the SDK cannot determine the specific mechanism. In this case, set the `type`
-to `"generic"`. See below for an example.
+to `generic`. See below for an example.
 {%- endcapture -%}
 
 {%- include components/alert.html title="Note" content=__alert_content %}
 
 ### Meta information
 
-The mechanism meta data usually carries error codes reported by the runtime or
-operating system, along with a platform dependent interpretation of these codes.
-SDKs can safely omit code names and descriptions for well known error codes, as
+The mechanism metadata usually carries error codes reported by the runtime or
+operating system, along with a platform-dependent interpretation of these codes.
+SDKs can safely omit code names and descriptions for well-known error codes, as
 it will be filled out by Sentry. For proprietary or vendor-specific error codes,
 adding these values will give additional information to the user.
 
@@ -151,8 +151,8 @@ descriptions.
 
 #### `errno`
 
-Error codes set by linux system calls and some library functions as specified in
-ISO C99, POSIX.1-2001 and POSIX.1-2008. See
+Error codes set by Linux system calls and some library functions as specified in
+ISO C99, POSIX.1-2001, and POSIX.1-2008. See
 [errno(3)](http://man7.org/linux/man-pages/man3/errno.3.html) for more
 information.
 

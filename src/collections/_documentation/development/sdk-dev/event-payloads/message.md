@@ -24,7 +24,7 @@ help to group similar messages into the same issue.
 
 `params`:
 
-: _Optional_: A list of formatting parameters, preferrably strings. Non-strings
+: _Optional_: A list of formatting parameters, preferably strings. Non-strings
   will be coerced to strings.
 
 

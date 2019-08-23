@@ -244,7 +244,7 @@ _documentation/data-management/rollups.md -%}#custom-grouping).
 
 ## Core Interfaces
 
-All values in the event payload that are not a basic attributes are data
+All values in the event payload that are not basic attributes are data
 interfaces. The key is the canonical interface short name, and the value is the
 data expected by the interface (usually a dictionary).
 

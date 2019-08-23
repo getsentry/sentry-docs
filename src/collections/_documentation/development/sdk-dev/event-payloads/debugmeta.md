@@ -4,14 +4,14 @@ sidebar_order: 11
 ---
 
 The debug meta interface carries debug information for processing errors and
-crash reports. The information in this interface is amended by Sentry.
+crash reports. Sentry amends the information in this interface.
 
 ## Attributes
 
 `sdk_info`:
 
 : An object describing the system SDK: `sdk_name`, `version_major`,
-  `version_minor` and `version_patchlevel`. This helps Sentry to locate iOS
+  `version_minor`, and `version_patchlevel`. This helps Sentry locate iOS
   system symbols, and is not required for other SDKs.
 
   ```json
@@ -53,7 +53,7 @@ Attributes:
 
 `image_addr`:
 
-: **Required**. Memory address, at which the the image is mounted in the virtual
+: **Required**. Memory address, at which the image is mounted in the virtual
   address space of the process. Should be a string in hex representation
   prefixed with `"0x"`.
 
@@ -117,7 +117,7 @@ Attributes:
 
 `image_addr`:
 
-: **Required**. Memory address, at which the the image is mounted in the virtual
+: **Required**. Memory address, at which the image is mounted in the virtual
   address space of the process. Should be a string in hex representation
   prefixed with `"0x"`.
 
@@ -130,9 +130,9 @@ Attributes:
 `debug_id`:
 
 : **Required**. Debug identifier of the dynamic library or executable. If a code
-  identifier is available, the debug identifier is the _little endian UUID_
-  representation of the first 16 bytes of that identifier (spaces inserted for
-  readability, note the byte order of the first fields):
+  identifier is available, the debug identifier is the _little-endian UUID_
+  representation of the first 16-bytes of that identifier. Spaces are inserted for
+  readability, note the byte order of the first fields:
 
   ```
   code id:  f1c3bcc0 2798 65fe 3058 404b2831d9e6 4135386c
@@ -140,8 +140,8 @@ Attributes:
   ```
 
   If no code id is available, the debug id should be computed by XORing the
-  first 4096 bytes of the `.text` section in 16 byte chunks, and representing it
-  as a little endian UUID (again swapping the byte order).
+  first 4096 bytes of the `.text` section in 16-byte chunks, and representing it
+  as a little-endian UUID (again swapping the byte order).
 
 `debug_file`:
 
@@ -194,7 +194,7 @@ debugging. Their structure is identical to other native images.
 
 `image_addr`:
 
-: **Required**. Memory address, at which the the image is mounted in the virtual
+: **Required**. Memory address, at which the image is mounted in the virtual
   address space of the process. Should be a string in hex representation
   prefixed with `"0x"`.
 
@@ -221,7 +221,7 @@ debugging. Their structure is identical to other native images.
 `debug_file`:
 
 : **Required**: Name of the PDB file containing debug information for this
-  image. This value is often required to retrieve debug files from certain
+  image. This value is often required to retrieve debug files from specific
   symbol servers.
 
 `code_id`:
@@ -237,14 +237,14 @@ debugging. Their structure is identical to other native images.
   code_id:           5ab380779000
   ```
 
-  The code identifier should be provided to allow server-side stackwalking of
+  The code identifier should be provided to allow server-side stack walking of
   binary crash reports, such as Minidumps.
 
 `code_file`:
 
 : _Optional_. The absolute path to the DLL or executable. This helps to locate
   the file if it is missing on Sentry. The code file should be provided to allow
-  server-side stackwalking of binary crash reports, such as Minidumps.
+  server-side stack walking of binary crash reports, such as Minidumps.
 
 `arch`:
 
@@ -268,7 +268,7 @@ Example:
 
 ### Proguard Images
 
-Proguard images refer to `mapping.txt` files generated when proguard obfuscates
+Proguard images refer to `mapping.txt` files generated when Proguard obfuscates
 function names. The Java SDK integrations assign this file a unique identifier,
 which has to be included in the list of images.
 
