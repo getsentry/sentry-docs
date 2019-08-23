@@ -17,8 +17,12 @@ Permissions specify what level of access your service requires of Sentry resourc
 
 [{% asset integration-platform-index/permissions.png alt="Form that allows developer to set what permissions they'll need from their user." %}]({% asset integration-platform-index/permissions.png @path %})
 
+### Using Auth Tokens
+
+Auth Tokens are passed using an auth header, and are used to authenticate as a user account with the API. The [Public Integration](#public-integrations) requires an OAuth flow for tokens. The [Internal Integration](#internal-integrations) automatically generates tokens after installation. For more information, see the [full documentation on Authentication]({%- link _documentation/api/auth.md -%}).
+
 ### Integration Webhooks
-Webhooks allows your service to get requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
+Webhooks allow your service to get requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ## Public Integrations
 
@@ -68,6 +72,65 @@ Start your build by implementing the Redirect URL endpoint, /setup — typically
         
         return redirect('https://sentry.io/settings/')
 ```
+
+#### Auth Tokens
+
+Auth Tokens are what the Integration Platform calls tokens. Access Tokens are the generalized name used when describing OAuth systems, but they are the same thing (opposed to similar concepts). Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API.
+
+**Token Exchange**
+
+Upon the initial installation, you'll need the grant code given to you in either the installation webhook request or the redirect URL, in addition to your integration's client ID and client Secret.
+
+```python
+    url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+    url = url.format(install_id)
+
+    payload = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'client_id': 'your-client-id',
+        'client_secret': 'your-client-secret',
+    }
+```
+
+Tokens expire after eight hours, so you'll need to refresh your tokens accordingly. 
+
+```python
+    url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
+    url = url.format(install_id)
+
+    refresh_token = retrieve_refresh_token_from_db(install_id)
+
+    payload = {
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token,
+        'client_id': 'your-client-id',
+        'client_secret': 'your-client-secret',
+    }
+```
+
+The data you can expect back for both the initial grant code exchange and subsequent token refreshes is as follows:
+
+```json
+    {
+        "id": "38",
+        "token": "ec48bf98637d44c294ead7566513686237e74ab67a074c64b3aaca2d93dbb8f1",
+        "refreshToken": "c866f154a65841638d44ee26364409b0a1a67bd642bd46e7a476f34f810712d6",
+        "dateCreated": "2019-08-07T20:25:09.870Z",
+        "expiresAt": "2019-08-08T04:25:09.870Z",
+        "state": null,
+        "application": null
+    }
+```
+
+**How to use for requests**
+
+When making requests to the Sentry API, you use the access token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration. 
+
+**Expiration**
+
+Tokens expire every eight hours.
+
 
 #### Verifying Installations (optional)
 
@@ -179,9 +242,31 @@ When you are ready for the publication process, you can click the 'publish' butt
 
 Internal integrations are meant for custom integrations unique to your organization. They can also be as simple as an organization-wide token. Whether you are using just the API or all the Integration Platform features combined, internal integrations are for use within a single Sentry organization. 
 
+Internal integrations don't require an OAuth flow. You receive an org-wide Auth Token immediately after creation.
+
+[{% asset integration-platform-index/authentication-flow.png alt="Buttons providing the options to publish or delete." %}]({% asset integration-platform-index/authentication-flow.png @path %})
+
 ### Installation
 
 Creating an internal integration will automatically install it on your organization. 
+
+#### Auth Tokens
+
+Auth Tokens are what the Integration Platform calls tokens. Access Tokens are the generalized name used when describing OAuth systems, but they are the same thing (opposed to similar concepts). Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API.
+
+When you create an Internal Integration, an access token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your Developer Settings > Your Internal Integration and do so.
+
+You can have up to 20 tokens at a time for any given internal integration.
+
+**How to use for requests**
+
+When making requests to the Sentry API, you use the access token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed). 
+
+**Expiration**
+
+Tokens never expire, but you can manually revoke them.
+
+[{% asset integration-platform-index/tokens.png alt="Image showing the ability to copy tokens, create new tokens, revoke tokens, and when they were created in UTC." %}]({% asset integration-platform-index/tokens.png @path %})
 
 ### Webhooks and Alerts
 
@@ -190,89 +275,6 @@ Alerts are the same as public integrations -- see [Alerts](#alerts) for general 
 ### Integration Webhooks
 
 Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
-
-## Auth Token(s)
-
-Sentry's Integration Platform uses Auth Tokens, which are a similar concept to Access Tokens.
-
-### Public
-
-#### 1. Token Exchange
-
-Upon the initial installation, you'll need the grant code given to you in either the installation webhook request or the redirect URL, in addition to your integration's client ID and client Secret.
-
-```python
-    url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
-    url = url.format(install_id)
-
-    payload = {
-        'grant_type': 'authorization_code',
-        'code': code,
-        'client_id': 'your-client-id',
-        'client_secret': 'your-client-secret',
-    }
-```
-
-Tokens expire after eight hours, so you'll need to refresh your tokens accordingly. 
-
-```python
-    url = u'https://sentry.io/api/0/sentry-app-installations/{}/authorizations/'
-    url = url.format(install_id)
-
-    refresh_token = retrieve_refresh_token_from_db(install_id)
-
-    payload = {
-        'grant_type': 'refresh_token',
-        'refresh_token': refresh_token,
-        'client_id': 'your-client-id',
-        'client_secret': 'your-client-secret',
-    }
-```
-
-The data you can expect back for both the initial grant code exchange and subsequent token refreshes is as follows:
-
-```json
-    {
-        "id": "38",
-        "token": "ec48bf98637d44c294ead7566513686237e74ab67a074c64b3aaca2d93dbb8f1",
-        "refreshToken": "c866f154a65841638d44ee26364409b0a1a67bd642bd46e7a476f34f810712d6",
-        "dateCreated": "2019-08-07T20:25:09.870Z",
-        "expiresAt": "2019-08-08T04:25:09.870Z",
-        "state": null,
-        "application": null
-    }
-```
-
-#### 2. How to use for requests
-
-When making requests to the Sentry API, you use the access token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration. 
-
-#### 3. Expiration
-
-Tokens expire every eight hours
-
-### Internal
-
-When you create an internal integration, an access token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your Developer Settings > Your Internal Integration and do so.
-
-You can have up to 20 tokens at a time for any given internal integration.
-
-#### 1. How to use for requests
-
-When making requests to the Sentry API, you use the access token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed). 
-
-#### 2. Expiration
-
-Tokens never expire, but you can manually revoke them.
-
-[{% asset integration-platform-index/tokens.png alt="Image showing the ability to copy tokens, create new tokens, revoke tokens, and when they were created in UTC." %}]({% asset integration-platform-index/tokens.png @path %})
-
-### Using Auth Tokens
-
-Authentication tokens are passed using an auth header, and are used to authenticate as a user account with the API. For more information, see the [full documentation on Authentication]({%- link _documentation/api/auth.md -%}).
-
-## Webhooks
-Webhooks allows your service to receive requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ## UI Components
 
@@ -290,6 +292,9 @@ Through a JSON-Schema based system, you can have Sentry render a way for Users t
 ```
 
 For more information, see the [full documentation on UI Components]({%- link _documentation/workflow/integrations/integration-platform/ui-components.md -%}).
+
+## Webhooks
+Webhooks allows your service to receive requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ## FAQ
 
@@ -311,7 +316,7 @@ Sentry Integration apps are similar to OAuth apps, except Sentry Integration app
 
 #### How is the Sentry Integration different from Auth Tokens?
 
-Auth tokens are personal access tokens a user can use to invoke APIs directly. Sentry Integration Apps do not represent a single user, but rather make requests as “itself."
+Auth Tokens are personal access tokens a user can use to invoke APIs directly. Sentry Integration Apps do not represent a single user, but rather make requests as “itself."
 
 #### We use the Sentry API internally at our company. Should we switch to the Sentry Integration Platform?
 
