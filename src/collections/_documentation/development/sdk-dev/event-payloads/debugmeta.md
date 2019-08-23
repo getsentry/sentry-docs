@@ -131,8 +131,8 @@ Attributes:
 
 : **Required**. Debug identifier of the dynamic library or executable. If a code
   identifier is available, the debug identifier is the _little-endian UUID_
-  representation of the first 16-bytes of that identifier. Spaces are inserted for
-  readability, note the byte order of the first fields:
+  representation of the first 16-bytes of that identifier. Spaces are inserted
+  for readability, note the byte order of the first fields:
 
   ```
   code id:  f1c3bcc0 2798 65fe 3058 404b2831d9e6 4135386c
@@ -154,10 +154,11 @@ Attributes:
 : _Optional_. Identifier of the dynamic library or executable. If the program
   was compiled with a relatively recent compiler, this should be the hex
   representation of the `NT_GNU_BUILD_ID` program header (type `PT_NOTE`), or
-  the value of the `.note.gnu.build-id` note section (type `SHT_NOTE`). If
-  neither of these values is present. Certain symbol servers use the code
-  identifier to locate debug information for ELF images, in which case this
-  field should be included.
+  the value of the `.note.gnu.build-id` note section (type `SHT_NOTE`).
+  Otherwise, leave this value empty.
+  
+  Certain symbol servers use the code identifier to locate debug information for
+  ELF images, in which case this field should be included if possible.
 
 `code_file`:
 
