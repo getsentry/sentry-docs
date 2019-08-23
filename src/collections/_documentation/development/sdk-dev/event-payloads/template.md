@@ -3,7 +3,7 @@ title: Template Interface
 sidebar_order: 5
 ---
 
-This interface is useful for template engine specific reporting when regular stack traces do not contain template data. This for instance is required in the Django framework where the templates do not integrate into the Python stack trace.
+Template interface is useful for template engine specific reporting when regular stack traces do not contain template data. This, for instance, is required in the Django framework where the templates do not integrate into the Python stack trace.
 
 A rendered template. This is generally used like a single frame in a stack trace
 and should only be used if the template system does not provide proper stack

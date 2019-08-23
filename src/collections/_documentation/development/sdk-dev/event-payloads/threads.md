@@ -3,10 +3,10 @@ title: Threads Interface
 sidebar_order: 10
 ---
 
-The threads interface allows you to specify the threads there were running at
+The threads interface allows you to specify the threads that were running at
 the time an event happened. These threads can also contain stack traces. As per
-policy the thread that actually crashed with an exception should not have a
-stack trace but instead the `thread_id` attribute should be set on the exception
+policy, the thread that crashed with an exception should not have a
+stack trace, but instead, the `thread_id` attribute should be set on the exception
 and Sentry will connect the two.
 
 This interface supports multiple thread values in the `values` key.
@@ -17,7 +17,7 @@ This interface supports multiple thread values in the `values` key.
 
 : **Required**. The ID of the thread. Typically a number or numeric string.
   Needs to be unique among the threads. An exception can set the `thread_id`
-  attribute to cross reference this thread.
+  attribute to cross-reference this thread.
 
 `crashed`:
 

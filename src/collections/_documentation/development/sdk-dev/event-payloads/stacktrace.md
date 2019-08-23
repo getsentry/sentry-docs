@@ -33,11 +33,11 @@ contain the actual register values of the thread, thus mapping to the top frame.
 
 ## Frame Attributes
 
-Each frame must at least one of the following attributes:
+Each frame must have at least one of the following attributes:
 
 `filename`:
 
-: The relative filepath to the call.
+: The relative file path to the call.
 
 `function`:
 
@@ -65,7 +65,7 @@ Each frame must at least one of the following attributes:
 
 `abs_path`:
 
-: The absolute path to filename.
+: The absolute path to the source file.
 
 `context_line`:
 
@@ -85,8 +85,8 @@ Each frame must at least one of the following attributes:
 
 : Signals whether this frame is related to the execution of the relevant code
   in this stack trace. For example, the frames that might power the framework’s
-  webserver of your app are probably not relevant, however calls to the
-  framework’s library once you start handling code likely are.
+  web server of your app are probably not relevant. However, calls to the
+  framework’s library once you start handling code likely are relevant.
 
 `vars`:
 
@@ -97,16 +97,16 @@ The following attributes are primarily used for C-based languages:
 
 `instruction_addr`:
 
-: An optional instruction address for symbolication. This should be a string as
-  hexadecimal number with a `0x` prefix. If this is set and a known image is
+: An optional instruction address for symbolication. This should be a string with
+  a hexadecimal number that includes a `0x` prefix. If this is set and a known image is
   defined in the [_Debug Meta Interface_]({%- link
   _documentation/development/sdk-dev/event-payloads/debugmeta.md -%}), then
   symbolication can take place.
 
 `symbol_addr`:
 
-: An optional address that points to a symbol. We actually use the instruction
-  address for symbolication but this can be used to calculate an instruction
+: An optional address that points to a symbol. We use the instruction
+  address for symbolication, but this can be used to calculate an instruction
   offset automatically.
 
 `image_addr`:
@@ -116,12 +116,12 @@ The following attributes are primarily used for C-based languages:
 `package`:
 
 : The "package" the frame was contained in. Depending on the platform, this can
-  be different things. For C# it can be the name of the assembly, for native
-  code it can be the path of the dynamic library, etc.
+  be different things. For C#, it can be the name of the assembly. For native
+  code, it can be the path of the dynamic library, etc.
 
 `platform`:
 
-: This can override the platform for a single frame. Otherwise the platform of
+: This can override the platform for a single frame. Otherwise, the platform of
   the event is assumed. This can be used for multi-platform stack traces, such
   as in React Native.
 

@@ -18,15 +18,15 @@ capture and transmit the event.
 
 `integrations`:
 
-: _Optional_. A list of integrations with the platform or a framework that were
-  explicitly actived by the user. This does not include default integrations.
+: _Optional_. A list of integrations with the platform or a framework that was
+  explicitly activated by the user. This does not include default integrations.
 
 `packages`:
 
 : _Optional_. A list of packages that were installed as part of this SDK or the
   activated integrations. Each package consists of a `name` in the format
   `source:identifier` and a semver `version`. If the source is a git repository,
-  a checkout link and git reference (branch, tag or sha) should be used.
+  a checkout link and git reference (branch, tag or SHA) should be used.
 
 ## Example
 
