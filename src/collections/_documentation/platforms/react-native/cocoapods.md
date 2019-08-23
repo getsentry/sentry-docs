@@ -5,9 +5,9 @@ title: 'Setup With CocoaPods'
 In order to use Sentry with CocoaPods you have to install the packages with `npm` or `yarn` and link them locally in your `Podfile`.
 
 ```bash
-npm install --save react react-native react-native-sentry
+npm install --save react react-native @sentry/react-native
 # OR
-yarn add react react-native react-native-sentry
+yarn add react react-native @sentry/react-native
 ```
 
 After that change your `Podfile` to reference to the packages in your `node_modules` folder. For the latest reference on how to use react-native with CocoaPods see: [Integration with existing apps](https://facebook.github.io/react-native/docs/integration-with-existing-apps.html#configuring-cocoapods-dependencies)

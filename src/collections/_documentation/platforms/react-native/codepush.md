@@ -9,12 +9,12 @@ import codePush from "react-native-code-push";
 
 codePush.getUpdateMetadata().then((update) => {
   if (update) {
-    Sentry.setVersion(update.appVersion + '-codepush:' + update.label);
+    Sentry.setRelease(update.appVersion + '-codepush:' + update.label);
   }
 });
 ```
 
-Put this somewhere in your code where you already use CodePush. This makes sure that we can associate crashes with the right source maps. `Sentry.setVersion` sets the release to `bundle_id-version` this works for iOS as well as Android. Make sure that you call this function otherwise Sentry is not able to symbolicate your crashes correctly.
+Put this somewhere in your code where you already use CodePush. This makes sure that we can associate crashes with the right source maps. `Sentry.setRelease` sets the release to `version` this works for iOS as well as Android. Make sure that you call this function otherwise Sentry is not able to symbolicate your crashes correctly.
 
 After updating your CodePush release you have to upload the new assets to Sentry:
 
