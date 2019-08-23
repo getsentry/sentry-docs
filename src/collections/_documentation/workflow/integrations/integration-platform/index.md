@@ -19,10 +19,10 @@ Permissions specify what level of access your service requires of Sentry resourc
 
 ### Using Auth Tokens
 
-Authentication tokens are passed using an auth header, and are used to authenticate as a user account with the API. For more information, see the [full documentation on Authentication]({%- link _documentation/api/auth.md -%}).
+Auth Tokens are passed using an auth header, and are used to authenticate as a user account with the API. The [Public Integration](#public-integrations) requires an OAuth flow for tokens. The [Internal Integration](#internal-integrations) automatically generates tokens after installation. For more information, see the [full documentation on Authentication]({%- link _documentation/api/auth.md -%}).
 
 ### Integration Webhooks
-Webhooks allows your service to get requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
+Webhooks allow your service to get requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ## Public Integrations
 
@@ -75,7 +75,7 @@ Start your build by implementing the Redirect URL endpoint, /setup — typically
 
 #### Auth Tokens
 
-Sentry's Integration Platform uses Auth Tokens, which are a similar concept to Access Tokens.
+Auth Tokens are what the Integration Platform calls tokens. Access Tokens are the generalized name used when describing OAuth systems, but they are the same thing (opposed to similar concepts). Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API.
 
 **Token Exchange**
 
@@ -252,9 +252,9 @@ Creating an internal integration will automatically install it on your organizat
 
 #### Auth Tokens
 
-Sentry's Integration Platform uses Auth Tokens, which are a similar concept to Access Tokens.
+ Auth Tokens are what the Integration Platform calls tokens. Access Tokens are the generalized name used when describing OAuth systems, but they are the same thing (opposed to similar concepts). Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API.
 
-When you create an internal integration, an access token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your Developer Settings > Your Internal Integration and do so.
+When you create an Internal Integration, an access token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your Developer Settings > Your Internal Integration and do so.
 
 You can have up to 20 tokens at a time for any given internal integration.
 
