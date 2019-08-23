@@ -9,8 +9,9 @@ policy the thread that actually crashed with an exception should not have a
 stack trace but instead the `thread_id` attribute should be set on the exception
 and Sentry will connect the two.
 
-This interface supports multiple thread values in the `values` key. The
-following attributes are known for each value:
+This interface supports multiple thread values in the `values` key.
+
+## Attributes
 
 `id`:
 
@@ -20,11 +21,12 @@ following attributes are known for each value:
 
 `crashed`:
 
-: _Optional_. A flag indicating whether the thread crashed.
+: _Optional_. A flag indicating whether the thread crashed. Defaults to `false`.
 
 `current`:
 
 : _Optional_. A flag indicating whether the thread was in the foreground.
+  Defaults to `false`.
 
 `name`:
 
@@ -41,6 +43,10 @@ following attributes are known for each value:
   _documentation/development/sdk-dev/event-payloads/exception.md -%}) instead.
   Sentry will automatically move the stack trace of the only crashed thread, if
   there is a single exception.
+
+## Examples
+
+A single thread wrapped in `values`:
 
 ```json
 {
