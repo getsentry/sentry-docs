@@ -252,7 +252,7 @@ Creating an internal integration will automatically install it on your organizat
 
 #### Auth Tokens
 
- Auth Tokens are what the Integration Platform calls tokens. Access Tokens are the generalized name used when describing OAuth systems, but they are the same thing (opposed to similar concepts). Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API.
+Auth Tokens are what the Integration Platform calls tokens. Access Tokens are the generalized name used when describing OAuth systems, but they are the same thing (opposed to similar concepts). Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API.
 
 When you create an Internal Integration, an access token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your Developer Settings > Your Internal Integration and do so.
 
