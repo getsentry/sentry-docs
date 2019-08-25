@@ -282,7 +282,7 @@ Optionally, you can set the logging level and if events should bubble on the dri
 ],
 ```
 
-### Naming you log channels
+### Naming your log channels
 
 If you have multiple log channels you would like to filter on inside the Sentry interface, you can add the `name` attribute to the log channel. 
 It will show up in Sentry as the `logger` tag, which is filterable.
