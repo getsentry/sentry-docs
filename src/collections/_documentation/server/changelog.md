@@ -518,7 +518,7 @@ As part of GDPR, the open source version of Sentry now changes the default polic
 -   The `sentry.interfaces.Message` interface now contains a `formatted` attribute.
 -   `SENTRY_MANAGED_USER_FIELDS` now defaults to an empty list.
 -   Issues now render based on the type of data present, which are represented by the type and metadata attributes in API responses.
--   Stacktrace rendering has been greatly simplified and unified across languages.
+-   Stack trace rendering has been greatly simplified and unified across languages.
 -   Client’s may now pass the ‘contexts’ attribute, which will eventually supercede ‘extra’.
 -   Various named contexts are now automatically generated and summarized for Cocoa and JavaScript issues.
 -   Added JSON formatting for logs with `system.logging-format`.
@@ -1133,7 +1133,7 @@ A new application called `nodestore` now manages the event blob data. By default
 -   Charts now show tooltips describing the datapoint.
 -   JavaScript source maps now support embedded sources.
 -   Stream annotations can now be customized to show any tags (not just number of users).
--   Stacktrace frames now get truncated down to a maximum length of 50.
+-   Stack trace frames now get truncated down to a maximum length of 50.
 
 ### Protocol Version 5
 
@@ -1292,7 +1292,7 @@ Additional, the following client protocol changes are part of this release:
 -   Cookies should be not be sent by default.
 -   POST data should not be sent by default.
 -   Recommended values regexp for sanitizing credit cards was updated.
--   `colno` was added to the Stacktrace spec.
+-   `colno` was added to the stack trace spec.
 -   Timestamps that are more than one minute in the future are now discarded.
 -   (Undocumented) Client-side support now exists for GET + Referrer store requests.
 
