@@ -7,6 +7,22 @@ A stack trace contains a list of frames, each with various bits (most optional)
 describing the context of that frame. Frames should be sorted from oldest to
 newest.
 
+{% capture __alert_content -%}
+
+Stack traces are always part of an exception or a thread. They cannot be
+declared as a top-level event property. When adding a stack trace to an event,
+follow this rule of thumb:
+
+- If the stack trace is part of an error, exception or crash, add it to the
+  [_Exception Interface_]({%- link
+  _documentation/development/sdk-dev/event-payloads/exception.md -%}).
+- Otherwise, add it as a thread in the [_Threads Interface_]({%- link
+  _documentation/development/sdk-dev/event-payloads/threads.md -%}).
+
+{%- endcapture -%}
+
+{% include components/alert.html title="Note" content=__alert_content %}
+
 ## Attributes
 
 `frames`:
@@ -24,7 +40,7 @@ newest.
 ## Frame Attributes
 
 Each object should contain **at least** a `filename`, `function` or
-`instruction_addr` attribute. All values are optional, but recommended. 
+`instruction_addr` attribute. All values are optional, but recommended.
 
 `filename`:
 
