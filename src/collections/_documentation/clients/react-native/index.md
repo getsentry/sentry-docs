@@ -76,7 +76,7 @@ You can pass additional configuration options to the `config()` method if you wa
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
-## Mixed Stacktraces
+## Mixed Stack Traces
 
 Currently we only support mixed stack traces on iOS. By default this feature is disabled. We recommend testing your app thoroughly when activating this, to turn it on `deactivateStacktraceMerging: false` see: [_Additional Configuration_]({%- link _documentation/clients/react-native/config.md -%}).
 

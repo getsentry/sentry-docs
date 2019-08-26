@@ -43,7 +43,7 @@ function makeRequest(method, path, options) {
 }
 ```
 
-### Grouping by Stacktrace
+### Grouping by Stack Trace
 
 When Sentry detects a stack trace in the event data (either directly or as part of an exception), the grouping is effectively based entirely on the stack trace. This grouping is fairly involved but easy enough to understand.
 
