@@ -31,7 +31,7 @@ Enable source maps for Ionic v4:
 ionic build --prod --source-map
 ```
 
-Otherwise we are not able to upload source maps to Sentry.
+Otherwise we are not able to upload source maps to Sentry. But keep in mind that this option significantly increases the size of the compiled application
 
 {% capture __alert_content -%}
 If you want to skip the automatic release version and set the release completely for yourself. You have to add this env var to disable it e.g.: `SENTRY_SKIP_AUTO_RELEASE=true ionic cordova emulate ios --prod`
