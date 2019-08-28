@@ -84,7 +84,7 @@ Several common uses for tags include:
 -   The version of your platform (e.g. iOS 5.0)
 -   The user’s language
 
-Once you’ve starting sending tagged data, you’ll see it show up in a few places:
+Once you’ve started sending tagged data, you’ll see it show up in a few places:
 
 -   The filters within the sidebar on the project stream page.
 -   Summarized within an event on the sidebar.
