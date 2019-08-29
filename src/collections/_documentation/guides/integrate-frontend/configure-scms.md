@@ -1,19 +1,19 @@
 ---
-title: Configure a Source Code Manager
+title: Integrate your Source Code Repository
 sidebar_order: 5
 ---
 
-Now that you created a release, the next step is to integrate your GitHub repository. Sentry will use the repository meta-data to help you resolve your issues faster. 
+Now that you created a release, the next step is to integrate your GitHub repository. Sentry will use the repository metadata to help you resolve your issues faster. 
 
 
 ## Description & Objectives
 You can tell Sentry which commits are associated with your release - this is called **Commit Tracking**. 
-This allows Sentry to 
-- Pinpoint **Suspect Commits**, commits which likely caused the issue, with a link to the commit itself.
+This allows Sentry to display:
+- **Suspect Commits** - commits which likely caused the issue, with a link to the commit itself.
 - **Suggested Assignees** - list the authors of those commits and suggest their assignment to resolve the issue.
 
 In this part you will
-- Integrate your Sentry organization with your GitHub account and repository - this will give Sentry access to you commit meta-data
+- Integrate your Sentry organization with your GitHub account and repository - this will give Sentry access to your commit metadata
 - Set up commit tracking - In your release process, after creating the release object in Sentry, associate it with commits from your linked repository.
 
 
@@ -55,7 +55,7 @@ In the demo project we're using a Makefile to handle our CI/CD related tasks.
 
     ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-02.png @path %})
 
-4. If your terminal is still serving the demo app on localhost, click `^C` to shut it down
+4. If your terminal is still serving the demo app on localhost, press `^C` to shut it down
 
 5.  Build, deploy and run the project again by running:
      ```

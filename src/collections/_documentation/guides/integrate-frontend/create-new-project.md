@@ -4,7 +4,7 @@ sidebar_order: 1
 ---
 
 
-In this tutorial you will create a new Project in your Sentry account. Projects allow you to scope events to a specific application in your organization and assign responsibility and ownership to specific users and teams within your organization. Each project is created based for a specific language or framework used in your application. For example, you might have separate projects for your API server and frontend client.
+In this tutorial you will create a new `Project` in your Sentry account. Projects allow you to scope events to a specific application in your organization and assign responsibility and ownership to specific users and teams within your organization. A project is created for a specific language or framework used in your application. For example, you might have separate projects for your API server and frontend client.
 
 ___
 
@@ -38,7 +38,10 @@ ___
 4. Copy the `DSN key` and save it in a notepad. You will need it later in your source code. 
 
     ![Copy DSN]({% asset guides/integrate-frontend/create-new-project-04.png @path %})
-    > The DSN (or Data Source Name) tells the SDK where to send the events to, associating them with the project you just created. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
+    > The DSN (or Data Source Name) tells the SDK where to send the events to, associating them with the project you just created. It consists of a few pieces, including the protocol, public key, server address, and project identifier and has the following format: 
+        ```
+        https://<Public Key>@<Sentry Server Address>/<Project Identifier>
+        ```
 
 5. Click on the `Got it!` button at the bottom to create the project. 
 

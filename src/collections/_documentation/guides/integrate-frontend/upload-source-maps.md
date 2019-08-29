@@ -16,7 +16,7 @@ sidebar_order: 4
     - Uploading the project's latest source maps (and associate them with the new release version)
 2. Add the release version to the Sentry SDK configuration - this will associate any error captured by the SDK in our app to this specific release. Sentry will use the release's source maps we uploaded to un-minify the error's stack-trace.
 
-**Note:** the demo project uses a Makefile to handle the `sentry-cli` related tasks through targets. If you're using a different code base you can still apply the settings and commands described below to your specific setup or run them directly in a command line shell. Click here for more information on working with the [Command Line Interface](https://docs.sentry.io/cli/)
+**Note:** As part of the **CI/CD workflow** for this app demo we're using a `Makefile` to handle the `sentry-cli` related tasks through make tasks (targets). If you're using a different code base you can still apply the settings and commands described below to your specific setup or run them directly in a command line shell. Click here for more information on working with the [Command Line Interface](https://docs.sentry.io/cli/)
 
 
 <!-- ## Prerequisites -->
@@ -33,7 +33,7 @@ We will use the `Makefile` in `sentry-react-demo` project to handle Sentry relat
 
 3. To find the SENTRY_ORG and SENTRY_PROJECT values
     - Open your Sentry account and click **Projects**
-    - Your Organization ID is part of the browser URL (https://sentry.io/organizations/<SENTRY_ORG>/issues/?project=1523617)
+    - Your Organization ID is part of the browser URL (https://sentry.io/organizations/**SENTRY_ORG**/issues/?project=1523617)
     - The SENTRY_PROJECT value is the name that appears in the project tile
         
         ![Sentry CLI variables]({% asset guides/integrate-frontend/upload-source-maps-011.png @path %})
@@ -104,7 +104,7 @@ Now we can invoke the `sentry-cli` to let Sentry know we have a new release and 
 
 4. Open the `index.html` file and add a new configuration option to the SDK: 
     
-    `release`: assign to the release version environment variable value
+    Assign the release version environment variable to the `release` key
 
 
     ```JavaScript

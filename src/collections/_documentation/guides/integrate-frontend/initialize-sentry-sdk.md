@@ -3,7 +3,7 @@ title: Introduce Sentry SDK to your Frontend Code
 sidebar_order: 2
 ---
 
-In this tutorial you will import the frontend app source code into your local development environment, add the Sentry SDK and initialize it. 
+In this tutorial you will import the demo frontend app source code into your local development environment, add the Sentry SDK and initialize it. 
 
 > **Note:** If you're using your own source code you can skip this tutorial and instead 
 > - Follow the instructions on [Getting Started](https://docs.sentry.io/error-reporting/quickstart/?platform=browser). Notice that you can select the desired platform. 
@@ -51,10 +51,7 @@ The demo project users REACT and Browser JS. The quickest way to get started is 
     ![Import and Configure SDK]({% asset guides/integrate-frontend/initialize-sentry-sdk-03.png @path %})
     
     * Notice that we import the JavaScript browser SDK and initialize it as early as possible in our code.
-    * When initializing the SDK we provide the desired configuration. The only mandatory key is the **dsn**  which has the following format: 
-    ```
-    https://<Public Key>@<Sentry Server Address>/<Project Identifier>
-    ```
+    * When initializing the SDK we provide the desired configuration. The only mandatory key is the **dsn**.
 
 
 2. In the Sentry SDK configuration, enter the `dsn` key value you copied from the project created in the previous tutorial. 
