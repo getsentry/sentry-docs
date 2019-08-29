@@ -1,6 +1,6 @@
 ---
 title: Bottle
-sidebar_order: 5
+sidebar_order: 4
 ---
 
 {% version_added 0.7.9 %}

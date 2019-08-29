@@ -1,6 +1,6 @@
 ---
 title: RQ (Redis Queue)
-sidebar_order: 2
+sidebar_order: 9
 ---
 
 {% version_added 0.5.1 %}

@@ -1,6 +1,6 @@
 ---
 title: Tornado
-sidebar_order: 4
+sidebar_order: 6
 ---
 
 {% version_added: 0.6.3 %}

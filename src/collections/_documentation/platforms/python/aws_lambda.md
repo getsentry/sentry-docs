@@ -1,6 +1,6 @@
 ---
 title: AWS Lambda
-sidebar_order: 4
+sidebar_order: 7
 ---
 
 {% version_added 0.3.5 %}
