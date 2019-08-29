@@ -11,6 +11,8 @@ The Beam integration currently parses the functions in [ParDo](https://github.co
 
 **This integration is experimental.** It may be removed in minor versions. When enabling this integration, expect to see incorrect server_name and ip due to some distributed properties within Beam.
 
+A Beam version of 2.12 or later is required.
+
 Add ``BeamIntegration()`` to your ``integrations`` list:
 
 ```python
