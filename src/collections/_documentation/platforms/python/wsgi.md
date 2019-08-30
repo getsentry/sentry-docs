@@ -1,6 +1,6 @@
 ---
 title: WSGI
-sidebar_order: 5
+sidebar_order: 8
 ---
 
 {% version_added 0.6.0 %}

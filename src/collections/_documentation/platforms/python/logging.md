@@ -1,6 +1,6 @@
 ---
 title: Logging
-sidebar_order: 2
+sidebar_order: 9
 ---
 Calling ``sentry_sdk.init()`` already integrates with the logging module. It is
 equivalent to this explicit configuration:

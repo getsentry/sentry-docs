@@ -1,6 +1,6 @@
 ---
 title: Falcon
-sidebar_order: 5
+sidebar_order: 9
 ---
 
 {% version_added 0.7.11 %}

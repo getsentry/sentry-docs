@@ -1,6 +1,6 @@
 ---
 title: Celery
-sidebar_order: 2
+sidebar_order: 3
 ---
 <!-- WIZARD -->
 The celery integration adds support for the [Celery Task Queue System](http://www.celeryproject.org/).

@@ -1,6 +1,6 @@
 ---
 title: Django
-sidebar_order: 2
+sidebar_order: 1
 ---
 <!-- WIZARD -->
 The Django integration adds support for the [Django Web Framework](https://www.djangoproject.com/)
