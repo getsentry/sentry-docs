@@ -761,6 +761,15 @@ To configure Issue sync, navigate to **Organization Settings** > **Integrations*
 
 [{% asset jira-sync.png %}]({% asset jira-sync.png @path %})
 
+{% capture __alert_content -%}
+If you hit a 4xx or 5xx error during or after setting up the Jira Server integration, please take a look at this [Help Center article](https://help.sentry.io/hc/en-us/articles/360034547794-Why-am-I-receiving-a-4xx-5xx-error-for-the-Jira-Server-Integration-).
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Troubleshooting"
+  content=__alert_content
+  level="warning"
+%}
+
 ### Rookout
 
 Rookout's new integration adds a layer of depth to Sentry Issues by allowing you to jump right from an Issue to a non-breaking breakpoint on the line that caused the error. 
