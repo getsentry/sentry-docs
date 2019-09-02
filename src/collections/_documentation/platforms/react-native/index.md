@@ -117,15 +117,24 @@ try {
 }
 ```
 
-For additional functionality, see [SDK Integrations](https://docs.sentry.io/platforms/javascript/#sdk-integrations).
+## Setting Release / Dist
+
+```javascript
+Sentry.setRelease('release');
+Sentry.setDist('dist');
+```
+
+Since this SDK is unified, all function that are available for JavaScript are also available in this SDK, for more examples:
+- [Adding Context]({%- link _documentation/platforms/javascript/index.md -%}#adding-context)
+- [JavaScript Advanded Usage]({%- link _documentation/platforms/javascript/index.md -%}#advanced-usage)
 
 ## Deep Dive
 
--   [Using Sentry with Expo]({%- link _documentation/clients/react-native/expo.md -%})
--   [Using Sentry with CodePush]({%- link _documentation/clients/react-native/codepush.md -%})
--   [Source maps for Other Platforms]({%- link _documentation/clients/react-native/sourcemaps.md -%})
--   [Setup With CocoaPods]({%- link _documentation/clients/react-native/cocoapods.md -%})
--   [Using RAM Bundles]({%- link _documentation/clients/react-native/ram-bundles.md -%})
--   [Manual Setup]({%- link _documentation/clients/react-native/manual-setup.md -%})
-    -   [iOS]({%- link _documentation/clients/react-native/manual-setup.md -%}#ios)
-    -   [Android]({%- link _documentation/clients/react-native/manual-setup.md -%}#android)
+-   [Using Sentry with Expo]({%- link _documentation/platforms/react-native/expo.md -%})
+-   [Using Sentry with CodePush]({%- link _documentation/platforms/react-native/codepush.md -%})
+-   [Source maps for Other Platforms]({%- link _documentation/platforms/react-native/sourcemaps.md -%})
+-   [Setup With CocoaPods]({%- link _documentation/platforms/react-native/cocoapods.md -%})
+-   [Using RAM Bundles]({%- link _documentation/platforms/react-native/ram-bundles.md -%})
+-   [Manual Setup]({%- link _documentation/platforms/react-native/manual-setup.md -%})
+    -   [iOS]({%- link _documentation/platforms/react-native/manual-setup.md -%}#ios)
+    -   [Android]({%- link _documentation/platforms/react-native/manual-setup.md -%}#android)
