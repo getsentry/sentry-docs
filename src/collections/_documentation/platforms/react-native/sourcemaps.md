@@ -33,7 +33,7 @@ The values for `RELEASE_NAME` and `DISTRIBUTION_NAME` are as follows:
 `RELEASE_NAME`:
 
 : the bundle ID or package name (reverse DNS notation of your app) followed by a dash and the human-readable version name that 
-is set for your release. So for instance `com.example.myapp-1.0`.
+is set for your release. For instance, `com.example.myapp-1.0`.
 
 If you set the release name within your app, the `RELEASE_NAME` should be the same value. For example:
 
