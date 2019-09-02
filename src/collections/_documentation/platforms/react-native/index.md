@@ -55,14 +55,15 @@ The following changes will be performed:
 
 <!-- ENDWIZARD -->
 
-## Upgrading
+## Upgrading from react-native-sentry
 
-If you are upgrading from an earlier version of sentry-react-native you should re-link the package to ensure the generated code is updated to the latest version:
+If you are upgrading from an earlier version of react-native-sentry you should unlink the package to ensure the generated code is updated to the latest version:
 
 ```bash
 $ react-native unlink react-native-sentry
-$ react-native link react-native-sentry
 ```
+
+After that remove `react-native-sentry` from your `package.json` and follow the installation instructions.
 
 ## iOS Specifics
 
