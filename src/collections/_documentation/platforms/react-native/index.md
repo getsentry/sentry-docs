@@ -84,7 +84,7 @@ To initialize the SDK, you need to call:
 import * as Sentry from '@sentry/react-native';
     
 Sentry.init({ 
-  dsn: '__PUBLIC_DSN__', 
+  dsn: '___PUBLIC_DSN___', 
 });
 ```
 
