@@ -14,7 +14,7 @@ If you use the official `react-native-sentry` integration of version `0.43.1` or
 
 ## Uploading Bundles Manually
 
-Starting from version `1.43.0`, `sentry-cli` provides two additional parameters to the `upload-sourcemaps` command in order to simplify bundle uploads: `--bundle` and `--bundle-sourcemap`. Using those parameters, you can pass the path to the application bundle, along with its source map, and the bundle will be automatically extracted before the upload, if necessary:
+Starting from version `1.43.0`, `sentry-cli` provides two additional parameters to the `upload-sourcemaps` command to simplify bundle uploads: `--bundle` and `--bundle-sourcemap`. Using those parameters, you can pass the path to the application bundle, along with its source map, and the bundle will be automatically extracted before the upload, if necessary:
 
 ```sh
 sentry-cli releases files RELEASE_ID upload-sourcemaps --bundle main.bundle --bundle-sourcemap main.bundle.map
@@ -26,7 +26,7 @@ All bundle types (plain, Indexed RAM bundles, and File RAM bundles) are supporte
 
 The initial Sentry support for RAM bundles, added in `sentry-cli 1.43.0` and `react-native-sentry 0.43.1`, is known to have an upload performance issue when handling RAM bundles with a large number of modules. This will be fixed in future client versions.
 
-By default, when running as part of Xcode build step (normally called "Bundle React Native Code And Images"), `sentry-cli` uploads source maps to Sentry in the background. To make it run in the foreground and track its progress, you can add `--force-foreground` parameter to the `sentry-cli` command in your Xcode project configuration file `project.pbxproj`, so the command looks similar to:
+By default, when running as part of Xcode build step (customarily called "Bundle React Native Code And Images"), `sentry-cli` uploads source maps to Sentry in the background. To make it run in the foreground and track its progress, you can add `--force-foreground` parameter to the `sentry-cli` command in your Xcode project configuration file `project.pbxproj`, so the command looks similar to:
 
 ```sh
 ./node_modules/@sentry/cli/bin/sentry-cli react-native xcode --force-foreground ../node_modules/react-native/scripts/react-native-xcode.sh

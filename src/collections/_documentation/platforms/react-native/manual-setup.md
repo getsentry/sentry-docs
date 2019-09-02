@@ -6,7 +6,8 @@ If you can’t (or don’t want) to run the linking step you can see here what i
 
 ## General
 
-You will want to make sure you have already created a `sentry.properties` file at the root of your react native project.  An example of this properties file can be found in the [examples GitHub](https://github.com/getsentry/examples/blob/master/react-native/sentry.properties).
+You will want to make sure you have already created a `sentry.properties` file at the root of your react native project.  An example of this properties file can be found in 
+ [Sentry's GitHub](https://github.com/getsentry/examples/blob/master/react-native/sentry.properties).
 
 ## iOS
 
@@ -18,7 +19,7 @@ The library you need to link is `node_modules/@sentry/react-native/ios/RNSentry.
 
 ### Build Steps
 
-When you use Xcode you can hook directly into the build process to upload debug symbols. When linking one build phase script is changed and two more are added.
+When you use Xcode, you can hook directly into the build process to upload debug symbols. When linking one build phase script is changed, and two more are added.
 
 #### Bundle React Native code and images
 
@@ -44,7 +45,7 @@ export SENTRY_PROPERTIES=../sentry.properties
   ../node_modules/react-native/packager/react-native-xcode.sh
 ```
 
-Additionally we add a build script called “Upload Debug Symbols to Sentry” which uploads debug symbols to Sentry.
+Additionally, we add a build script called “Upload Debug Symbols to Sentry” which uploads debug symbols to Sentry.
 
 #### Upload Debug Symbols to Sentry
 
@@ -57,15 +58,15 @@ export SENTRY_PROPERTIES=../sentry.properties
 ``` 
 
 For bitcode enabled builds via iTunes Connect, additional steps are required.
-Follow the instructions at [With Bitcode]({%- link
+Follow the instructions in [Sentry's bitcode documentation]({%- link
 _documentation/clients/cocoa/dsym.md -%}#dsym-with-bitcode) to set up uploads of
 symbols for all build variants.
 
-Note that uploading of debug simulator builds by default is disabled for speed reasons. If you do want to also generate debug symbols for debug builds you can pass `--allow-fetch` as a parameter to `react-native-xcode` in the above mentioned build phase.
+By default, uploading of debug simulator builds is disabled for speed reasons. If you want to generate debug symbols for debug builds, you can pass `--allow-fetch` as a parameter to `react-native-xcode` in the above mentioned build phase.
 
 ### Using node with nvm or notion
 
-If you are using nvm or notion, Xcode seems to have problems locating the default node binary. In that case you should change the scripts to this:
+If you are using nvm or notion, Xcode seems to have problems locating the default node binary. In this case, you should change the scripts:
 
 Build failure in Xcode looks something like:
 
@@ -145,9 +146,9 @@ $NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli upload-dif "$DWARF_DSYM_
 
 ## Android
 
-For Android we hook into gradle for the source map build process. When you run `react-native link` the gradle files are automatically updated.
+For Android, we hook into Gradle for the source map build process. When you run `react-native link`, the Gradle files are automatically updated.
 
-We enable the gradle integration in your `android/app/build.gradle` file by adding the following line after the `react.gradle` one:
+We enable the Gradle integration in your `android/app/build.gradle` file by adding the following line after the `react.gradle` one:
 
 ```gradle
 apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
@@ -161,7 +162,7 @@ project.ext.sentryCli = [
 ]
 ```
 
-We also support fetching different `sentry.properties` files for different flavors. For that you need to add:
+We also support fetching different `sentry.properties` files for different flavors. For that, you need to add:
 
 ```gradle
 project.ext.sentryCli = [
@@ -170,9 +171,9 @@ project.ext.sentryCli = [
 ]
 ```
 
-The corresponding flavor files should also be placed within the specific build type folder you intend to use them.  For example the "Android release" flavor would be `react-native/android/sentry-release.properties`.
+The corresponding flavor files should also be placed within the specific build type folder you intend to use them.  For example, the "Android release" flavor would be `react-native/android/sentry-release.properties`.
 
-We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavors name.
+We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavor's name.
 
 Include the project by adding it to our dependency list in `app/build.gradle`:
 

@@ -2,7 +2,7 @@
 title: 'React Native'
 ---
 
-This is the documentation for our React-Native SDK. The React-Native SDK uses a native extension for iOS and Android but will fall back to a pure JavaScript version if necessary.
+The React-Native SDK uses a native extension for iOS and Android but will fall back to a pure JavaScript version if necessary.
 
 <!-- WIZARD -->
 ## Integrating the SDK
@@ -22,7 +22,7 @@ yarn add @sentry/react-native
 
 ### Linking
 
-Since our SDK also supports native crashes we need to link the SDK to your native projects.
+Since our SDK also supports native crashes, we need to link the SDK to your native projects.
 
 Above `react-native >= 0.60` you need to do:
 
@@ -32,23 +32,23 @@ cd ios
 pod install
 ```
 
-Since our SDK supports [autolinking](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) and iOS relies on CocoaPods you need to install the dependencies.
+Since our SDK supports [auto-linking](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) and iOS relies on CocoaPods, you need to install the dependencies.
 
-If you are running a project with `react-native < 0.60` you still need to call `react-native link`
+If you are running a project with `react-native < 0.60` you still need to call `react-native link`.
 
 ```bash
 react-native link @sentry/react-native
 ```
 
-The *link* step or the `sentry-wizard` call will will patch your project accordingly. 
+The *link* step or the `sentry-wizard` call will patch your project accordingly. 
 
-The [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will guide you through the process of setting everything up correctly. This has to be done only once and the files created can go into you version control system.
+The [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will guide you through the process of setting everything up correctly. This has to be done only once, and the files created can go into your version control system.
 
-Following changes will be performed:
+The following changes will be performed:
 
 - add the sentry-java package for native crash reporting on Android
 - add the sentry-cocoa package for native crash reporting on iOS
-- enable the sentry gradle build step for android
+- enable the Sentry Gradle build step for Android
 - patch *_MainApplication.java_* for Android
 - configure Sentry for the supplied DSN in your *_index.js/App.js_* files
 - store build credentials in *_ios/sentry.properties_* and *_android/sentry.properties_*.
@@ -66,18 +66,18 @@ $ react-native link react-native-sentry
 
 ## iOS Specifics
 
-When you use Xcode you can hook directly into the build process to upload debug symbols and source maps. If you however are using bitcode you will need to disable the “Upload Debug Symbols to Sentry” build phase and then separately upload debug symbols from iTunes Connect to Sentry.
+When you use Xcode, you can hook directly into the build process to upload debug symbols and source maps. However, if you are using bitcode, you will need to disable the “Upload Debug Symbols to Sentry” build phase and then separately upload debug symbols from iTunes Connect to Sentry.
 
 ## Android Specifics
 
-For Android we hook into gradle for the source map build process. When you run `react-native link` the gradle files are automatically updated. When you run `./gradlew assembleRelease` source maps are automatically built and uploaded to Sentry.
+For Android, we hook into Gradle for the source map build process. When you run `react-native link`, the Gradle files are automatically updated. When you run `./gradlew assembleRelease` source maps are automatically built and uploaded to Sentry.
 
 <!-- WIZARD -->
 ## Connecting the SDK to Sentry
 
 After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
-To initialize the SDK you need to call:
+To initialize the SDK, you need to call:
 
 ```javascript
 import * as Sentry from '@sentry/react-native';

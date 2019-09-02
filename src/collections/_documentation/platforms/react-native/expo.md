@@ -2,7 +2,7 @@
 title: 'Using Sentry with Expo'
 ---
 
-[Expo](https://expo.io/) is an awesome way to quickly create and play around with your react native app. Now you can also use Sentry together with Expo which is pretty simple todo:
+[Expo](https://expo.io/) is an excellent way to quickly create and play around with your react native app. Now you can also use Sentry together with Expo which is pretty simple todo:
 
 ```bash
 npm install sentry-expo --save
@@ -22,7 +22,7 @@ Sentry.init({
 });
 ```
 
-For uploading source maps you have to add this to your `exp.json` or `app.json`
+For uploading source maps you have to add this to your `exp.json` or `app.json`.
 
 ```javascript
 {
@@ -44,4 +44,4 @@ For uploading source maps you have to add this to your `exp.json` or `app.json`
 }
 ```
 
-If you still need more help you can out the docs directly on [Expo’s docs page](https://docs.expo.io/versions/latest/guides/using-sentry/)
+If you still need more help you can out the docs directly on [Expo’s docs page](https://docs.expo.io/versions/latest/guides/using-sentry/).
