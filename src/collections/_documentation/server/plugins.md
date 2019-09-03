@@ -57,7 +57,7 @@ All official plugins are tested against the latest version of Sentry, and compat
 -   Splunk
 -   Victorops
 -   [Flowdock](https://github.com/getsentry/sentry-flowdock)
--   [IRC](https://github.com/getsentry/sentry-irc
+-   [IRC](https://github.com/getsentry/sentry-irc)
 -   [Redmine](https://github.com/getsentry/sentry-redmine)
 -   [Trello](https://github.com/getsentry/sentry-trello)
 
