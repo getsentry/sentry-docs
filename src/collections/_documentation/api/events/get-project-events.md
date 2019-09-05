@@ -21,7 +21,13 @@
       "type": "string"
     }
   ], 
-  "query_parameters": null, 
+  "query_parameters": [
+    {
+      "description": "if this is set to true then the event payload will include the full event body, including the stacktrace. Set to 1 to enable.", 
+      "name": "full", 
+      "type": "boolean"
+    }
+  ],  
   "sidebar_order": 1, 
   "title": "List a Project's Events", 
   "warning": null
