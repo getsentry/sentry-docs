@@ -23,7 +23,7 @@
   ], 
   "query_parameters": [
     {
-      "description": "if this is set to true then the event payload will include the full event body, including the stacktrace. Set to 1 to enable.", 
+      "description": "if this is set to true, then the event payload will include the full event body, including the stack trace. Set to 1 to enable.", 
       "name": "full", 
       "type": "boolean"
     }
