@@ -7,7 +7,7 @@ title: 'Using Sentry with Expo'
 ```bash
 npm install sentry-expo --save
 # OR
-yard add sentry-expo
+yarn add sentry-expo
 ```
 
 In your `main.js` or `app.js`:
