@@ -80,36 +80,6 @@ Issues are an aggregate of one or more events. Searchable properties include wor
 
 Below is a list of Issue-level tokens reserved and known to Sentry:
 
-`is`
-
-: Filter on the status of an issue.
-
-  Values are `resolved`, `unresolved`, `ignored`, `assigned`, and `unassigned`.
-
-`assigned`
-
-: Filter on the user which the issue is assigned to.
-
-  Values can be your user ID (your email address), `me` for yourself, or `#team-name`.
-
-`bookmarks`
-
-: Filter on the user which the issue is bookmarked by.
-
-  Values can be your user ID (your email address) or `me` for yourself.
-
-`has`
-
-: Restrict results to issues which have _any_ value for a tag.
-
-  `has:user`
-
-`first-release`
-
-: Restrict results to issues first seen within the given release.
-
-  Exact match on the version of a release.
-
 `age`
 
 : Restrict results to issues created since `age`. The syntax is similar to the Unix `find` command:
@@ -130,6 +100,54 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
 
   `m -> minutes` `h -> hours` `d -> days` `w -> weeks`
 
+`assigned`
+
+: Filter on the user which the issue is assigned to.
+
+  Values can be your user ID (your email address), `me` for yourself, or `#team-name`.
+
+`bookmarks`
+
+: Filter on the user which the issue is bookmarked by.
+
+  Values can be your user ID (your email address) or `me` for yourself.
+
+`first-release`
+
+: Restrict results to issues first seen within the given release.
+
+  Exact match on the version of a release.
+
+`has`
+
+: Restrict results to issues which have _any_ value for a tag.
+
+  `has:user`
+
+`is`
+
+: Filter on the status of an issue.
+
+  Values are `resolved`, `unresolved`, `ignored`, `assigned`, and `unassigned`.
+
+`lastSeen`
+
+: Restrict results that were last seen since or until a given point in time. Usage is similar to the `age` token (see above).
+
+  Issues last seen 30 days ago or more:
+
+  `lastSeen:+30d`
+
+  Issues last seen within the last two days:
+
+  `lastSeen:-2d`
+
+`status`
+
+: Filter on the status of an issue.
+
+  Values are `resolved`, `unresolved`, and `ignored`.
+
 `timesSeen`
 
 : Restrict results to issues that have been seen exactly, at least, or at most some number of times.
@@ -144,18 +162,6 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
   -   `timesSeen:>=10`
   -   `timesSeen:<10`
   -   `timesSeen:<=10`
-
-`lastSeen`
-
-: Restrict results that were last seen since or until a given point in time. Usage is similar to the `age` token (see above).
-
-  Issues last seen 30 days ago or more:
-
-  `lastSeen:+30d`
-
-  Issues last seen within the last two days:
-
-  `lastSeen:-2d`
 
 ### Event Properties
 
