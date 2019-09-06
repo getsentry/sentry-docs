@@ -5,8 +5,15 @@ sidebar_order: 2
 
 `sentry-cli` can upload PDB files, as well as Windows executables and DLLs. PDBs
 are the debug information container used by Microsoft for the Windows platform.
-Note that at the moment Sentry will upload Native PDBs, but not .NET Portable
-PDBs.
+
+{% capture __alert_content -%}
+At the moment Sentry supports Native PDBs only. PDBs for the .NET platform are not yet supported.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
 
 In addition to PDBs, always consider uploading the actual executables and
 libraries. The `sentry-cli` will determine during the upload process whether
