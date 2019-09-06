@@ -67,10 +67,10 @@ Many settings available in `config.yml` will also be able to be configured in th
 
 ## Logging
 
-Sentry logs to two major places: `stdout`, and it's internal project. To disable logging to the internal project, add a logger who's only handler is `'console'` and disable propagating upwards.
+Sentry logs to two major places — `stdout`, and its internal project. To disable logging to the internal project, add a logger whose only handler is `'console'` and disable propagating upwards.
 
   {% include components/alert.html
-    content="The CLI flag and environment variable explained below override the root logger and anything in `LOGGING.overridable`. Be very careful with this in a production system, because the celery logger can be extremely verbose when set to INFO or DEBUG."
+    content="Explained below are the CLI flag and environment variable. They override the root logger and anything in `LOGGING.overridable`. Be very careful with this in a production system, because the Celery logger can be extremely verbose when set to INFO or DEBUG."
     level="warning"
   %}
 
@@ -78,8 +78,8 @@ Sentry logs to two major places: `stdout`, and it's internal project. To disable
 
 : Declared on the command line.
 
-  Sentry has the ability to override logger levels by providing the CLI with the `-l/--loglevel` flag.
-  The value of this can be one of the [standard python logging level strings](https://docs.python.org/2/library/logging.html#levels).
+  Sentry can override logger levels by providing the CLI with the `-l/--loglevel` flag.
+  The value of this can be one of the [standard Python logging level strings](https://docs.python.org/2/library/logging.html#levels).
 
   ```shell
   sentry --loglevel=WARNING
@@ -89,8 +89,8 @@ Sentry logs to two major places: `stdout`, and it's internal project. To disable
 
 : Declared in system environment.
 
-  Sentry has the ability to override logger levels with the `SENTRY_LOG_LEVEL` environment variable.
-  The value of this can be one of the [standard python logging level strings](https://docs.python.org/2/library/logging.html#levels).
+  Sentry can override logger levels with the `SENTRY_LOG_LEVEL` environment variable.
+  The value of this can be one of the [standard Python logging level strings](https://docs.python.org/2/library/logging.html#levels).
 
   ```shell
   SENTRY_LOG_LEVEL=WARNING sentry ...
@@ -100,7 +100,7 @@ Sentry logs to two major places: `stdout`, and it's internal project. To disable
 
 : Declared in `sentry.conf.py`.
 
-  You can modify or override the full logging configuration with this setting. Be careful not to reomve or override important defaults. You can check [the default configuration](https://git.io/fjjna) for reference.
+  You can modify or override the full logging configuration with this setting. Be careful not to remove or override important defaults. You can check [the default configuration](https://git.io/fjjna) for reference.
   
   ```python
   LOGGING['default_level'] = 'WARNING'
