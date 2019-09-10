@@ -34,40 +34,40 @@ An example of a span that describes a call to the external service:
 ### Properties
 Each span has a unique identifier kept in the `span_id` attribute.
 
-Start time and end time that are stored in the `start_timestamp` and `timestamp`. (End time is captured in the attribute timestamp and not the end_timestamp for now because of compatibility reasons.)
+Start time and end time are stored in the `start_timestamp` and `timestamp`. (End time is captured in the attribute timestamp and not the end_timestamp for now because of compatibility reasons.)
 
-Name of the operation is stored in the “op” parameter. Examples are `http`, `sql.query`, `redis.command`. 
+The name of the operation is stored in the “op” parameter. Examples are `http`, `sql.query`, `redis.command`. 
 
 Additional data about the operation can be stored in the  `data` and `tags` attributes.
 
 ### Hierarchy
-Each span can be connected to other spans using a parent-child hierarchy. (There is also “Follows from” relationship that will be explained later on)
+Each span can be connected to other spans using a parent-child hierarchy. (There is also a “Follows from” relationship that will be explained later on.)
 
-For example a span called `updateJiraTask` would have child spans like `Check permissions`, `Update Task`, `sql.update`, `send.webhooks`.
+For example, a span called `updateJiraTask` would have child spans like `Check permissions`, `Update Task`, `sql.update`, `send.webhooks`.
 
-Each such a sub task would have in the attribute `parent_span_id` id of the “updateTask” span.
+Each sub-task would have an id in the attribute `parent_span_id` id of the “updateTask” span.
 
 ## Transaction
 There already was a concept of the transaction in the Sentry SDKs before we started with APM.
 
-Transaction is an event attribute that should provide initial context to the error report so that the error can be easily linked to a specific part of the system. An example of the transaction name can be "/users/<username>/" which is the name for the endpoint that received the request that failed during the processing.
+Transaction is an event attribute that provides initial context to the error report. This makes it possible for the error to be linked to a specific part of the system. An example of the transaction name can be "/users/&lt; username &gt;/" which is the name for the endpoint that received the request that failed during the processing.
 
-With the APM the transaction is a parent span to all the spans that are created during the processing of the request in the single server.
+With APM, the transaction is a parent span to all the spans that are created during the processing of the request in the single server.
 
-Once the request is processed the transaction is sent together with all child spans to Sentry.
+Once the request is processed, the transaction is sent together with all child spans to Sentry.
 
 ### Event Types
-For the initial version we want to reuse as much existing code as it is possible.
+For the initial version, we want to reuse as much existing code as possible.
 
-SDKs already collect a lot of information about the processing of the request and in case of error SDK attaches the info to the error report to provide rich context of what happened before the error appeared. (Information like tags and breadcrumbs).
+The SDKs already collect a lot of information about the processing of the request. In the case of an error, the SDK attaches the info to the error report to provide rich context of what happened before the error appeared. (Information like tags and breadcrumbs).
 
-If the error doesn’t appear during the processing of the request we discard the context data once the processing of the request is finished.
+If the error doesn’t appear during the processing of the request, we discard the context data once processing is complete.
 
-We want to leverage this context collection to build spans and once a request is finished we want to send the data to the sentry.
+We want to leverage this context collection to build spans, and once a request is finished, we want to send the data to Sentry.
 
-We will reuse and extend the existing Sentry event format, introducing a new type of the event for transactions.
+We will reuse and extend the existing Sentry event format, introducing a new type of event for transactions.
 
-With the next phases of the APM project we expect that these changes will evolve and we will be able to distribute the spans separately to a different endpoint at Sentry.
+With the next phases of the APM project, we expect that these changes will evolve and we will be able to distribute the spans separately to a different endpoint at Sentry.
 
 Example of the transaction event type:
 
