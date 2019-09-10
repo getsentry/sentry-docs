@@ -15,7 +15,7 @@ to `integrations` option. For example: to change fatal error handler
 
 ### InboundFilters
 
-_Import name: `Sentry.Integrations.InboundFilter`_
+_Import name: `Sentry.Integrations.InboundFilters`_
 
 This integration allows developers to ignore specific errors based on the type of message, as well as blacklist/whitelist URLs from which the exception originated.
 
