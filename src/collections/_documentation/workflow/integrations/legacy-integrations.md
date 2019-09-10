@@ -152,7 +152,7 @@ See the [Splunk documentation](http://dev.splunk.com/view/event-collector/SP-CAA
 
 #### Enabling HEC
 
-To get started, you’ll need to first eanble the HTTP Event Collector:
+To get started, you’ll need to first enable the HTTP Event Collector:
 
 Under **Settings**, select **Data Inputs**:
 
@@ -181,7 +181,7 @@ If you’re running Splunk in a privileged environment, you may need to expose t
 
 #### Creating a Sentry Input
 
-Under HTTP Event Collector,create a new Sentry input by clicking **New Token**:
+Under HTTP Event Collector, create a new Sentry input by clicking **New Token**:
 
 [{% asset splunk-new-http-input.png %}]({% asset splunk-new-http-input.png @path %})
 
