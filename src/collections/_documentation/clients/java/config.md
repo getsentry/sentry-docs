@@ -427,7 +427,7 @@ public class MySentryClientFactory extends DefaultSentryClientFactory {
 To use your custom `SentryClientFactory` implementation, use the `factory` option:
 
 ```
-factory=my.company.SentryClientFactory
+factory=my.company.MySentryClientFactory
 ```
 
 Your factory class will need to be available on your classpath with a zero argument constructor or an error will be thrown.
