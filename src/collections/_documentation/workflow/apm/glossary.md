@@ -1,5 +1,5 @@
 ---
-title: APM Glossary
+title: Glossary
 sidebar_order: 2
 ---
 
