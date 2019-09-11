@@ -187,6 +187,15 @@ Database_ files, commonly referred to as _PDB_.
   contain unwind information. In rare cases, they might have different file
   names than their corresponding executable.
 
+{% capture __alert_content -%}
+At the moment, Sentry supports Native PDBs only. PDBs for the .NET platform are
+not supported.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
 ### Breakpad Symbols
 
 The Google Breakpad library has established a a platform independent ASCII
@@ -231,7 +240,7 @@ associated executables and libraries as well as debug companions to ensure that
 they can be uniquely located via one common mechanism.
 
 {% capture __alert_content -%}
-Debug information do not have to be associated to releases. The unique debug
+Debug information does not have to be associated to releases. The unique debug
 identifier ensures that Sentry is able to choose the right files for every crash
 report. However, it is still recommended to configure releases in the client to
 benefit from other features.
