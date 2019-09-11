@@ -9,8 +9,15 @@ The React-Native SDK uses a native extension for iOS and Android but will fall b
 
 Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
 
-NOTE: If you are using `expo-cli` you need to use another SDK see: [https://docs.expo.io/versions/latest/guides/using-sentry/](https://docs.expo.io/versions/latest/guides/using-sentry/)
+{% capture __alert_content -%}
+If you are using `expo-cli` you need to use another SDK see: [https://docs.expo.io/versions/latest/guides/using-sentry/](https://docs.expo.io/versions/latest/guides/using-sentry/)
 This SDK only works for ejected projects or projects that directly use React Native.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
 
 To install the React Native SDK, add the dependency to your project by either using `npm` or `yarn`.
 
@@ -88,7 +95,14 @@ Sentry.init({
 });
 ```
 
-NOTE: The sentry-wizard will try to add it to your App.js
+{% capture __alert_content -%}
+The `sentry-wizard` will try to add it to your `App.js`
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
+
 
 ## Verifying Your Setup
 
@@ -126,13 +140,13 @@ Sentry.setDist('dist');
 
 Since this SDK is unified, all function that are available for JavaScript are also available in this SDK, for more examples:
 - [Adding Context]({%- link _documentation/platforms/javascript/index.md -%}#adding-context)
-- [JavaScript Advanded Usage]({%- link _documentation/platforms/javascript/index.md -%}#advanced-usage)
+- [JavaScript Advanced Usage]({%- link _documentation/platforms/javascript/index.md -%}#advanced-usage)
 
 ## Deep Dive
 
 -   [Using Sentry with Expo]({%- link _documentation/platforms/react-native/expo.md -%})
 -   [Using Sentry with CodePush]({%- link _documentation/platforms/react-native/codepush.md -%})
--   [Source maps for Other Platforms]({%- link _documentation/platforms/react-native/sourcemaps.md -%})
+-   [Source Maps for Other Platforms]({%- link _documentation/platforms/react-native/sourcemaps.md -%})
 -   [Setup With CocoaPods]({%- link _documentation/platforms/react-native/cocoapods.md -%})
 -   [Using RAM Bundles]({%- link _documentation/platforms/react-native/ram-bundles.md -%})
 -   [Manual Setup]({%- link _documentation/platforms/react-native/manual-setup.md -%})
