@@ -478,8 +478,8 @@ schemas applied for specific files:
 The path schemas in the table above are defined as follows:
 
 **Breakpad**
-  
-: Path: `[DebugName]/[BREAKPADid]/[SymName]`<br/>
+
+: Path: `&lt;DebugName&gt;/&lt;BREAKPADid&gt;/&lt;SymName&gt;`
   
   Breakpad always uses a _Breakpad ID_ to store symbols. These identifiers can
   be computed from _Debug Identifiers_ by removing dashes and applying the
@@ -544,7 +544,7 @@ The path schemas in the table above are defined as follows:
 
 **SSQP**
 
-: Path: `[file_name]/[prefix-][identifier]/[file_name]`
+: Path: `&lt;file_name&gt;/&lt;prefix&gt;-&lt;identifier&gt;/&lt;file_name&gt;`
    
   [SSQP Key Conventions] are an extension to the original Microsoft Symbol
   Server protocol for .NET. It specifies lookup paths for PE, PDB, MachO and ELF
@@ -556,12 +556,15 @@ The path schemas in the table above are defined as follows:
   for more information. This results in the following paths for all possible
   file types:
   
-   - `[code_name]/[timestamp][size_of_image]/[code_name]` (PE file)
-   - `[debug_name]/[signature][AGE]/[debug_name]` (PDB file)
-   - `[code_name]/elf-buildid-[buildid]/[code_name]` (ELF binary)
-   - `_.debug/elf-buildid-sym-[buildid]/_.debug` (ELF debug file)
-   - `[code_name]/mach-uuid-[uuid]/[code_name]` (MachO binary)
-   - `_.dwarf/mach-uuid-sym-[uuid]/_.dwarf` (MachO binary)
+   - `&lt;code_name&gt;/&lt;timestamp&gt;&lt;size_of_image&gt;/&lt;code_name&gt;`
+     (PE file)
+   - `&lt;debug_name&gt;/&lt;signature&gt;&lt;AGE&gt;/&lt;debug_name&gt;` (PDB
+     file)
+   - `&lt;code_name&gt;/elf-buildid-&lt;buildid&gt;/&lt;code_name&gt;` (ELF
+     binary)
+   - `_.debug/elf-buildid-sym-&lt;buildid&gt;/_.debug` (ELF debug file)
+   - `&lt;code_name&gt;/mach-uuid-&lt;uuid&gt;/&lt;code_name&gt;` (MachO binary)
+   - `_.dwarf/mach-uuid-sym-&lt;uuid&gt;/_.dwarf` (MachO binary)
   
   Note that SSQP specifies an additional lookup method by SHA1 checksum over the
   file contents, commonly used for source file lookups. Sentry does not support
@@ -573,11 +576,11 @@ The path schemas in the table above are defined as follows:
    - `libc-2.23.so/elf-buildid-b5381a457906d279073822a5ceb24c4bfef94ddb/libc-2.23.so`
    - `_.debug/elf-buildid-sym-b5381a457906d279073822a5ceb24c4bfef94ddb/_.debug`
    - `CoreFoundation/mach-uuid-36385a3a60d332dbbf55c6d8931a7aa6/CoreFoundation`
-   - `_.dwarf/mach-uuid-36385a3a60d332dbbf55c6d8931a7aa6/_.dwarf`
+   - `_.dwarf/mach-uuid-sym-36385a3a60d332dbbf55c6d8931a7aa6/_.dwarf`
 
 **SymStore**
 
-: Path: `[FileName]/[SIGNATUREage]/[FileName]`
+: Path: `&lt;FileName&gt;/&lt;SIGNATURE&gt;&lt;AGE&gt;/&lt;FileName&gt;`
   
   The public symbol server provided by Microsoft used to only host PDBs for the
   Windows platform. These use a _signature-age_ debug identifier in addition to
@@ -600,7 +603,7 @@ The path schemas in the table above are defined as follows:
 
 **Index2**
 
-: Path: `[Fi]/[FileName]/[SIGNATUREage]/[FileName]`
+: Path: `&lt;Fi&gt;/&lt;FileName&gt;/&lt;SIGNATURE&gt;&lt;AGE&gt;/&lt;FileName&gt;`
   
   This layout is identical to _SymStore_, except that the first two characters
   of the file name are prepended to the path as an additional folder.
@@ -612,6 +615,17 @@ The path schemas in the table above are defined as follows:
 [ssqp key conventions]: https://github.com/dotnet/symstore/blob/master/docs/specs/SSQP_Key_Conventions.md
 [file mapped uuid directories]: http://lldb.llvm.org/use/symbols.html#file-mapped-uuid-directories
 [build id method]: https://sourceware.org/gdb/onlinedocs/gdb/Separate-Debug-Files.html
+
+### Compression of Debug Files
+
+Sentry supports the following compression methods when downloading debug
+information files from external sources: Gzip, zlib (both with and
+without header), Zstandard, and Cabinet (CAB).
+
+The convention on Microsoft's Symbol Server protocol is to store such files with
+the last character of the file extension replaced with `_`. A full example would
+be: `KERNEL32.dll/590285E9e0000/KERNEL32.dl_`. This is not required on your own
+repositories, as Sentry detects compression on all paths.
 
 ## Source Context
 
