@@ -50,12 +50,9 @@ Sentry\captureLastError();
 
 ## Releases
 
-A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
+{% include platforms/configure-releases.md %}
 
-- Determine the issue and regressions introduced in a new release
-- Predict which commit caused an issue and who is likely responsible (suspect commits)
-- Resolve issues by including the issue number in your commit message
-- Receive email notifications when your code gets deployed
+Finally, configure the SDK to send release information:
 
 ```php
 Sentry\init([
@@ -64,40 +61,9 @@ Sentry\init([
 ]);
 ```
 
-After configuring your SDK, setting up releases is a 2-step process:
-
-1. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
-2. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
-
-For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
-
 ## Context
 
-Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
-
-**Structured Contexts**
-
-: Structured contexts are typically set automatically.
-
-[**User**](#capturing-the-user)
-
-: Information about the current actor
-
-[**Tags**](#tagging-events)
-
-: Key/value pairs which generate breakdown charts and search filters
-
-[**Level**](#setting-the-level)
-
-: An event's severity
-
-[**Fingerprint**](#setting-the-fingerprint)
-
-: A value used for grouping events into issues
-
-[**Unstructured Extra Data**](#extra-context)
-
-: Arbitrary unstructured data which the Sentry SDK stores with an event sample
+{% include platforms/event-contexts.md %}
 
 ### Extra Context
 In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening.
@@ -118,29 +84,12 @@ Sentry\configureScope(function (Sentry\State\Scope $scope): void {
 });
 ```
 
-Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
-
-**`id`**
-
-Your internal identifier for the user.
-
-**`username`**
-
-The user’s username. Generally used as a better label than the internal ID.
-
-**`email`**
-
-An alternative, or addition, to a username. Sentry is aware of email addresses and can show things like Gravatars, unlock messaging capabilities, and more.
-
-**`ip_address`**
-
-The IP address of the user. If the user is unauthenticated providing the IP address will suggest that this is unique to that IP. If available, we will attempt to pull this from the HTTP request data.
-
-Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
+{% include platforms/user-attributes.md %}
 
 ### Tagging Events
 
-Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and the user can later use them as a breakdown or quick access to finding related events.
+Tags are key/value pairs assigned to events that can be used for breaking down
+issues or quick access to finding related events.
 
 Most SDKs generally support configuring tags by configuring the scope:
 
