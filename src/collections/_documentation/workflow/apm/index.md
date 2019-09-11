@@ -22,9 +22,9 @@ to a nonzero value. The following configuration will capture 10% of
 all your transactions:
 
 ```python
-    import sentry_sdk
+import sentry_sdk
     
-    sentry_sdk.init("___PUBLIC_DSN___", traces_sample_rate=0.1)
+sentry_sdk.init("___PUBLIC_DSN___", traces_sample_rate=0.1)
 ```
 
 ### Automating Traces
