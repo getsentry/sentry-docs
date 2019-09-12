@@ -24,15 +24,15 @@ without using the Native SDK, see the following resources:
 The Native SDK currently supports **Windows, macOS and Linux**. There are three
 flavors to choose from:
 
-| Standalone       | With Breakpad   | With Crashpad   |
-|------------------|-----------------|-----------------|
-| Custom Messages  | Custom Messages | Custom Messages |
-| Custom Errors    | Custom Errors   | Custom Errors   |
-| Breadcrumbs      | Breadcrumbs     | Breadcrumbs     |
-| Stack Traces*    | Stack Traces    | Stack Traces    |
-| Capture Crashes* | Capture Crashes | Capture Crashes |
-|                  | Minidumps       | Minidumps       |
-|                  | Attachments     | Attachments     |
+|     Standalone     |  With Breakpad  |  With Crashpad  |
+| :----------------: | :-------------: | :-------------: |
+|  Custom Messages   | Custom Messages | Custom Messages |
+|   Custom Errors    |  Custom Errors  |  Custom Errors  |
+|    Breadcrumbs     |   Breadcrumbs   |   Breadcrumbs   |
+|  _Stack Traces*_   |  Stack Traces   |  Stack Traces   |
+| _Capture Crashes*_ | Capture Crashes | Capture Crashes |
+|        ---         |    Minidumps    |    Minidumps    |
+|        ---         |   Attachments   |   Attachments   |
 
 > \* Adding stack traces and capturing application crashes requires you to add
   an unwind library and hook into signal handlers of your process. The
@@ -90,11 +90,25 @@ int main(void) {
   sentry_init(options);
 
   /* ... */
+
+  // make sure everything flushes
+  sentry_shutdown();
 }
 ```
 
-Alternatively, the DSN can be passed as `SENTRY_DSN` environment variable when
-running the application. This can be especially useful for server applications.
+{% capture __alert_content -%}
+Calling `sentry_shutdown()` before exiting the application is critical. It
+ensures that events can be sent to Sentry before execution stops. Otherwise,
+event data may be lost.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Warning"
+  content=__alert_content
+  level="warning"
+%}
+
+Alternatively, the DSN can be passed as `SENTRY_DSN` environment variable during
+runtime. This can be especially useful for server applications.
 
 ### Verifying Your Setup
 
@@ -102,9 +116,11 @@ Now that SDK setup is complete, verify that all configuration is correct. Start
 by capturing a manual event:
 
 ```c
-sentry_value_t event = sentry_value_new_event();
-sentry_value_set_by_key(event, "message", sentry_value_new_string("Hello!"));
-sentry_capture_event(event);
+sentry_capture_event(sentry_value_new_message_event(
+  /*   level */ SENTRY_LEVEL_INFO,
+  /*  logger */ "custom",
+  /* message */ "It works!",
+));
 ```
 
 Once the event is captured, it will show up on the Sentry dashboard.
@@ -112,7 +128,12 @@ Once the event is captured, it will show up on the Sentry dashboard.
 ## Capturing Events
 
 The Native SDK exposes a _Value API_ to construct values like Exceptions, User
-objects, Tags, and even entire Events. To capture an event, follow these steps:
+objects, Tags, and even entire Events. There are several ways to create an
+event. 
+
+### Manual Events
+
+To create and capture a manual event, follow these steps:
 
 1. Create an event value using `sentry_value_new_event`. This internally
    creates an object value and initializes it with common event attributes, like
@@ -140,6 +161,47 @@ sentry_capture_event(event);
 For the full list of supported values, see [_Event Payloads_]({%- link
 _documentation/development/sdk-dev/event-payloads/index.md -%}) and linked
 documents.
+
+### C++ Exceptions
+
+In C/C++ you can capture exceptions by creating events containing the type and
+value of an exception. For example, C++ standard exceptions can be captured by
+creating an exception object using the type and value of the exception:
+
+```cpp
+#include <exception>
+#include <typeinfo>
+#include <sentry.h>
+
+try {
+  /* some code that can throw */
+} catch (const std::exception &e) {
+  sentry_value_t exc = sentry_value_new_object();
+  sentry_value_set_by_key(exc, "type", sentry_value_new_string(typeid(e).name()));
+  sentry_value_set_by_key(exc, "value", sentry_value_new_string(e.what()));
+
+  sentry_value_t event = sentry_value_new_event();
+  sentry_value_set_by_key(event, "exception", exc);
+  sentry_capture_event(event);
+}
+```
+
+This exception does not contain a stack trace, which must be added separately.
+
+### Message Events
+
+To simplify creating events, there are shorthand functions that construct
+prepopulated event objects. The most important one is
+`sentry_value_new_message_event`. The `logger` and `message` parameters are each
+optional.
+
+```c
+sentry_value_t event = sentry_value_new_message_event(
+  /*   level */ SENTRY_LEVEL_INFO,
+  /*  logger */ "custom",
+  /* message */ "It works!",
+);
+```
 
 ## Uploading Debug Information
 
@@ -252,10 +314,12 @@ of the most recent breadcrumbs is kept.
 
 You can manually add breadcrumbs using `sentry_add_breadcrumb`:
 
-```python
-sentry_value_t crumb = sentry_value_new_breadcrumb("http", "debug crumb");
-sentry_value_set_by_key(crumb, "category", sentry_value_new_string("example"));
-sentry_value_set_by_key(crumb, "level", sentry_value_new_string("debug"));
+```c
+#include <sentry.h>
+
+sentry_value_t crumb = sentry_value_new_breadcrumb("default", "Authenticated user");
+sentry_value_set_by_key(crumb, "category", sentry_value_new_string("auth"));
+sentry_value_set_by_key(crumb, "level", sentry_value_new_string("info"));
 sentry_add_breadcrumb(crumb);
 ```
 
@@ -266,6 +330,81 @@ For more information, see:
 - [Debug Issues Faster with
   Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
+### Filter Events & Custom Logic
+
+Sentry exposes a `before_send` callback which can be used to filter out
+information or add additional context to the event object. The callback must
+conform to the `sentry_event_function_t` signature.
+
+```c
+#include <sentry.h>
+
+sentry_value_t strip_sensitive_data(sentry_value_t event, void *hint) {
+  /* modify event here or return NULL to discard the event */
+  return event;
+}
+
+int main(void) {
+  sentry_options_t *options = sentry_options_new();
+  sentry_options_set_before_send(options, strip_sensitive_data);
+  sentry_init(options);
+  
+  /* ... */
+}
+```
+
+The callback is executed in the same thread as the call to
+`sentry_capture_event`. Work performed by the function may thus block the
+executing thread. For this reason, consider avoiding heavy work in
+`before_send`.
+
+For more information, see:
+
+- [Full documentation on Filtering Events]({%- link
+  _documentation/error-reporting/configuration/filtering.md -%})
+- [Manage Your Flow of Errors Using Inbound
+  Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
+
+### Transports
+
+The Native SDK uses _Transports_ to send event payloads to Sentry. The default
+transport depends on the target platform:
+
+ - **Linux**: Curl
+ - **macOS**: Curl
+ - **Windows**: WinHTTP
+
+To specify a custom transport, use the `sentry_options_set_transport` function
+and supply a transport that conforms to the `sentry_transport_function_t`
+signature:
+
+```c
+#include <sentry.h>
+
+void custom_transport(sentry_value_t event, void *data) {
+  /* 
+   * Send the event here. If the transport requires state, such as an HTTP 
+   * client object or request queue, it can be specified in the `data` 
+   * parameter when configuring the transport. It will be passed as second
+   * argument to this function.
+   */
+}
+
+int main(void) {
+  void *transport_data = 0;
+  
+  sentry_options_t *options = sentry_options_new();
+  sentry_options_set_transport(options, custom_transport, transport_data);
+  sentry_init(options);
+  
+  /* ... */
+}
+```
+
+The transport is invoked in the same thread as the call to
+`sentry_capture_event`. Consider to offload network communication to a
+background thread or thread pool to avoid blocking execution.
+
 ## Integrations
 
 *Integrations* extend the functionality of the SDK for some common frameworks
@@ -273,7 +412,7 @@ and libraries. Similar to plugins, they extend the functionality of the Sentry
 SDK. The Native SDK comes in two additional flavors that include integrations
 into the Breakpad and Crashpad libraries, respectively.
 
-### Breakpad
+### Google Breakpad
 
 [Breakpad](https://chromium.googlesource.com/breakpad/breakpad/) is an
 open-source multiplatform crash reporting system written in C++ by Google and
@@ -292,7 +431,7 @@ sentry_options_set_database_path(options, "sentry-db");
 sentry_init(options);
 ```
 
-### Crashpad
+### Google Crashpad
 
 [Crashpad](https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md)
 is an open-source multiplatform crash reporting system written in C++ by Google.
@@ -307,10 +446,14 @@ uploaded to Sentry.
 
 ```c
 sentry_options_t *options = sentry_options_new();
-sentry_options_set_handler_path(options, handler_path);
+sentry_options_set_handler_path(options, "path/to/crashpad_handler");
 sentry_options_set_database_path(options, "sentry-db");
 sentry_init(options);
 ```
+
+The crashpad handler executable must be shipped alongside your application so
+that it can be launched when initializing the SDK. The path is evaluated
+relative to the current working directory at runtime.
 
 ### Event Attachments (Preview)
 

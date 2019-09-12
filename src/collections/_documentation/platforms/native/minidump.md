@@ -53,6 +53,7 @@ In addition to this information, you can add further meta data specific to
 Sentry, which can help in organizing and analyzing issues. For more information,
 see [Passing Additional Data](#minidump-additional).
 
+<!-- WIZARD -->
 ## Creating and Uploading Minidumps {#minidump-integration}
 
 Depending on your operating system and programming language, there are various
@@ -78,6 +79,7 @@ $ curl -X POST \
 To send additional information, simply add more form fields to this request. For
 a full description of fields accepted by Sentry, see [Passing Additional
 Data](#minidump-additional).
+<!-- ENDWIZARD -->
 
 ## Passing Additional Data {#minidump-additional}
 
