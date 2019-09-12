@@ -75,5 +75,3 @@ with sentry_sdk.start_span(op="http", description="GET /") as span:
 ```
 
 The value of `op` and `description` can be freely chosen.
-
-##### Adding Tags
