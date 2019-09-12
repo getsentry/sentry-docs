@@ -17,7 +17,7 @@ one **must** be present for the Sentry SDK to capture the user:
 
 `ip_address`
 
-: The IP address of the user. If the user is unauthenticated providing the IP
+: The IP address of the user. If the user is unauthenticated, providing the IP
   address will suggest that this is unique to that IP. If available, we will
   attempt to pull this from the HTTP request data.
 

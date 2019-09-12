@@ -6,7 +6,7 @@ The Sentry Native SDK is intended for C and C++. However, since it builds as a
 dynamic library and exposes C-bindings, it can be used by any language that
 supports interoperability with C, such as the Foreign Function Interface (FFI).
 
-Sentry also offers higher-level SDKs for platofmrs with built-in support for
+Sentry also offers higher-level SDKs for platforms with built-in support for
 native crashes:
 
 - [_Cocoa_]({%- link _documentation/clients/cocoa/index.md -%})
@@ -34,9 +34,9 @@ flavors to choose from:
 |                  | Minidumps       | Minidumps       |
 |                  | Attachments     | Attachments     |
 
-> \* Adding stack traces and capturing application crashes requires to add an
-  unwind library and hook into signal handlers of your process. The Standalone
-  version currently does not contain integrations that perform this
+> \* Adding stack traces and capturing application crashes requires you to add
+  an unwind library and hook into signal handlers of your process. The
+  Standalone version currently does not contain integrations that perform this
   automatically.
 
 ### Building the SDK

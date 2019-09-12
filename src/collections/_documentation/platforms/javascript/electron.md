@@ -128,16 +128,16 @@ To allow Sentry to fully process native crashes and provide you with
 symbolicated stack traces, you need to upload _Debug Information Files_
 (sometimes also referred to as _Debug Symbols_ or just _Symbols_).
 
-First, make sure that the _Electron Symbol Server_ is enabled for your project. 
+First, make sure that the _Electron Symbol Server_ is enabled for your project.
 Go to _Project Settings > Debug Files_ and choose `Electron` from the list of
-_Builtin Repositories_. Depending on your needs, you may also want to add more
-symbol servers for the platforms you are deploying to.
+_Builtin Repositories_. You can add more symbol servers for the platforms you
+are deploying to, depending on your needs.
 
 If your application contains custom native extensions or you wish to symbolicate
 crashes from a spawned child process, upload their debug information manually
 during your build or release process. See [_Debug Information Files_]({%- link
 _documentation/workflow/debug-files.md -%}) for a detailed description of how to
-setup Sentry for native development. Additionally, see [_Uploading Debug
+set up Sentry for native development. Additionally, see [_Uploading Debug
 Information_]({%- link _documentation/cli/dif.md -%}) for the upload process.
 
 ### Child Processes

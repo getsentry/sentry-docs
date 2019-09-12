@@ -22,7 +22,7 @@ _documentation/cli/releases.md -%}#sentry-cli-sourcemaps).
 ## Checking Files
 
 Not all debug information files can be used by Sentry. To see if they are usable
-or not you can use the `sentry-cli difutil check` command:
+or not, you can use the `sentry-cli difutil check` command:
 
 ```bash
 $ sentry-cli difutil check mylibrary.so.debug
@@ -41,7 +41,7 @@ if it passes basic requirements for Sentry.
 
 ## Finding Files
 
-If you see in Sentry's UI that debug information files are missing but you are
+If you see in Sentry's UI that debug information files are missing, but you are
 not sure how to locate them, you can use the `sentry-cli difutil find` command
 to look for them:
 
@@ -54,11 +54,10 @@ folder or ZIP archive.
 
 ## Creating Source Bundles
 
-In order to get inline source context in stack traces in the Sentry UI,
-`sentry-cli` can scan debug files for references to source code files, resolve
-them in the local file system and bundle them up. The resulting source bundle is
-an archive containing all source files referenced by a specific debug
-information file. 
+To get inline source context in stack traces in the Sentry UI, `sentry-cli` can
+scan debug files for references to source code files, resolve them in the local
+file system and bundle them up. The resulting source bundle is an archive
+containing all source files referenced by a specific debug information file. 
 
 This is particularly useful when building and uploading debug information files
 are detached. In this case, a source bundle can be created when building and can
@@ -71,8 +70,8 @@ information file:
 $ sentry-cli difutil bundle-sources /path/to/file
 ```
 
-In order to create multiple source bundles for all debug information files, use
-the command on each file individually. 
+To create multiple source bundles for all debug information files, use the
+command on each file individually. 
 
 Alternatively, specify the `--include-sources` parameter to the upload command,
 which generates source bundles on the fly during the upload. This requires that
@@ -85,9 +84,9 @@ Sentry. The command will recurively scan the provided folders or ZIP archives.
 Files that have already been upload are skipped automatically.
 
 {% capture __alert_content -%
-Because debug files belong to projects, you will need to specify the
-organization and project you are working with. For more information about this
-refer to [Working with Projects]({%- link _documentation/cli/configuration.md
+You need to specify the organization and project you are working with because
+debug files belong to projects. For more information about this, refer to
+[Working with Projects]({%- link _documentation/cli/configuration.md
 -%}#sentry-cli-working-with-projects).
 {%- endcapture -%}
 {%- include components/alert.html
@@ -116,9 +115,9 @@ There are a few options you can supply to the upload command:
 `--no-unwind`
 
 : Do not scan for stack unwinding information. Specify this flag for builds with
-  disabled FPO, or when stackwalking occurs on the device. This usually excludes
-  executables and libraries. They might still be uploaded, if they contain debug
-  information.
+  disabled FPO, or when stack walking occurs on the device. This usually
+  excludes executables and libraries. They might still be uploaded, if they
+  contain debug information.
 
 `--no-debug`
 
@@ -129,15 +128,15 @@ There are a few options you can supply to the upload command:
 `--include-sources`
 
 : Scans the debug files for references to source code files. If referenced files
-  are available on the local file system, they are bundled and uploaded as
-  source archive. This allows to resolve source context. Only specify this
-  command when uploading from the same machine as the build. Otherwise, use
+  are available on the local file system, they are bundled and uploaded as a
+  source archive. This allows Sentry to resolve source context. Only specify
+  this command when uploading from the same machine as the build. Otherwise, use
   `difutil bundle-sources` to generate the bundle ahead of time.
 
 `--derived-data`
 
-: Search for dSYMs in derived data folder. This is the default location Xcode
-  stores its build output in.
+: Search for dSYMs in the derived data folder. Xcode stores its build output in
+  this default location.
 
 `--no-zips`
 
@@ -148,7 +147,7 @@ There are a few options you can supply to the upload command:
 
 `--force-foreground`
 
-: This option forces the upload to happen in foreground. This only affects
+: This option forces the upload to happen in the foreground. This only affects
   uploads invoked from Xcode build steps. By default, the upload process will
   detach when started from Xcode and finish in the background. If you need to
   debug the upload process it might be useful to force the upload to run in the
@@ -164,7 +163,7 @@ There are a few options you can supply to the upload command:
 : This parameter prevents Sentry from triggering reprocessing right away. It can
   be useful under rare circumstances where you want to upload files in multiple
   batches and you want to ensure that Sentry does not start reprocessing before
-  some optional dsyms are uploaded. Note though that someone can still in the
+  some optional dSYMs are uploaded. Note though that someone can still in the
   meantime trigger reprocessing from the UI.
 
 `--symbol-maps`
@@ -185,8 +184,8 @@ $ sentry-cli upload-dif ...
 > Warning: Found 10 symbol files with hidden symbols (need BCSymbolMaps)
 ```
 
-In this case, you need the BCSymbolMaps that match your files. Normally, these
-get generated by the Xcode build process. Supply the `--symbol-maps` parameter
+In this case, you need the BCSymbolMaps that match your files. Typically, these
+are generated by the Xcode build process. Supply the `--symbol-maps` parameter
 and point it to the folder containing the symbol maps:
 
 ```bash
@@ -205,16 +204,16 @@ of Breakpad symbols.
 
 ## ProGuard Mapping Upload
 
-`sentry-cli` can be used to upload ProGuard files to Sentry however in most
-situations you would use the [gradle
+`sentry-cli` can be used to upload ProGuard files to Sentry; however, in most
+situations, you would use the [Gradle
 plugin](https://github.com/getsentry/sentry-java) to do that. There are some
-situations however where you would upload ProGuard files manually (for instance
+situations, however, where you would upload ProGuard files manually (for instance
 when you only release some of the builds you are creating).
 
 {% capture __alert_content -%}
-Because ProGuard files work on projects you will need to specify the
-organization and project you are working with. For more information about this
-refer to [Working with Projects]({%- link _documentation/cli/configuration.md
+You need to specify the organization and project you are working with because
+ProGuard files work on projects. For more information about this refer to
+[Working with Projects]({%- link _documentation/cli/configuration.md
 -%}#sentry-cli-working-with-projects).
 {%- endcapture -%}
 {%- include components/alert.html
@@ -252,7 +251,7 @@ sentry-cli upload-proguard \
 : This parameter prevents Sentry from triggering reprocessing right away. It can
   be useful under rare circumstances where you want to upload files in multiple
   batches and you want to ensure that Sentry does not start reprocessing before
-  some optional dsyms are uploaded. Note though that someone can still in the
+  some optional dSYMs are uploaded. Note though that someone can still in the
   meantime trigger reprocessing from the UI.
 
 `--no-upload`
@@ -260,7 +259,7 @@ sentry-cli upload-proguard \
 : Disables the actual upload. This runs all steps for the processing but does
   not trigger the upload (this also automatically disables reprocessing. This is
   useful if you just want to verify the mapping files and write the ProGuard
-  UUIDs into a proeprties file.
+  UUIDs into a properties file.
 
 `--require-one`
 
