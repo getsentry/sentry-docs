@@ -608,7 +608,7 @@ Sentry.init({
 
 #### Decluttering Sentry
 
-The first thing to do is to consider constructing a whitelist of domains in which might raise acceptable exceptions.
+The first thing to do is consider constructing a whitelist of domains which might raise acceptable exceptions.
 
 If your scripts are loaded from `cdn.example.com` and your site is `example.com` it’d be reasonable to set `whitelistUrls` to:
 
@@ -620,9 +620,9 @@ Sentry.init({
 });
 ```
 
-There is also `blacklistUrls` if you only want to always block specifc urls.
+There is also `blacklistUrls` if you want to block specific URLs forever.
 
-The community has compiled a list of common ignore rules for common things, like Facebook, Chrome extensions, etc. So it’s recommended to at least check these out and see if they apply to you. [Check out the original gist](https://gist.github.com/impressiver/5092952). This is not the default value of our SDK, it just a highlight of an extensive example what it could be.
+The community has compiled a list of common ignore rules for everyday things, like Facebook, Chrome extensions, etc. So it’s recommended to at least check these out and see if they apply to you. [Here is the original gist](https://gist.github.com/impressiver/5092952). This is not the default value of our SDK; it's just a highlight of an extensive example of what it could be.
 
 ```javascript
 Sentry.init({
