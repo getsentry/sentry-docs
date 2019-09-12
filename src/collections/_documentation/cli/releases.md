@@ -123,7 +123,7 @@ The following options exist to change the behavior of the upload command:
 `--strip-prefix` / `--strip-common-prefix`
 
 : When paired with `--rewrite` this will chop-off a prefix from all sources references inside uploaded source maps. For instance, you can use this to remove a path that is build machine specific. The common prefix version will attempt to automatically guess what the common prefix is and chop that one off automatically.
-This will not modify the uploaded sources paths. To do that, point the upload or upload-sourcemaps command to a more precise directory instead.
+This will not modify the uploaded sources paths. To do that, point the `upload` or `upload-sourcemaps` command to a more precise directory instead.
 
 `--validate`
 
