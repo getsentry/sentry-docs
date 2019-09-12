@@ -44,8 +44,8 @@ We are creating spans for the following operations within a transaction:
 
 #### Managing Transactions
 
-Let's say you want to create your a transaction for a expensive operation `process_item`
-and send the result to Sentry:
+Let's say you want to create a transaction for an expensive operation `process_item` and 
+send the result to Sentry:
 
 ```python
 import sentry_sdk
@@ -60,10 +60,7 @@ while True:
 
 #### Adding additional Spans to the transaction
 
-Consider the next example is somewhere called in the `process_item` function from before.
-Our SDK is able to determine if there is a current open `transaction` and add all newly
-created spans as child operations to the transaction. Keep in mind, each individual `span`
-needs also to be finished otherwise it will not show up in the `transaction`.
+Consider the next example is called somewhere in the `process_item` function from before. Our SDK can determine if there is a current open `transaction` and add all newly created spans as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
 
 ```python
 import sentry_sdk
