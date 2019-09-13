@@ -47,16 +47,16 @@ platform, there is a `gen_*` subfolder that contains build files:
 
 **Windows**
 
-: A Microsoft Visual Studio 2017 solution. Open the solution and
-  add your own projects or copy the projects to an existing solution. Each
-  project supports a debug and release configuration and includes all sources
-  required for building.
+: A Microsoft Visual Studio 2017 solution. Open the solution and add your
+  projects or copy the projects to an existing solution. Each project supports a
+  debug and release configuration and includes all sources required for
+  building.
 
 **Linux and macOS**
 
 : Makefiles that can be used to produce dynamic libraries. Run `make help` to
-  see an overview over the available configurations and target. There are a
-  debug and release configuration, that can be toggled when building:
+  see an overview of the available configurations and target. There are debug
+  and release configurations, that can be toggled when building:
   
   ```bash
   make -j4 config=release sentry
@@ -64,14 +64,13 @@ platform, there is a `gen_*` subfolder that contains build files:
 
 There are multiple available targets to build:
 
- - `sentry`: Builds the Native SDK built as dynamic library.
- - `sentry_breakpad`: Builds the Native SDK with Google Breakpad as dynamic
+ - `sentry`: Builds the Native SDK built as a dynamic library.
+ - `sentry_breakpad`: Builds the Native SDK with Google Breakpad as a dynamic
    library. 
- - `sentry_crashpad`: Builds the Native SDK with Google Crashpad as dynamic
+ - `sentry_crashpad`: Builds the Native SDK with Google Crashpad as a dynamic
    library. 
- - `crashpad_*`: Builds crashpad utilities. In order to run the Crashpad version
-   of the SDK, at least `crashpad_handler` has to be built.
-
+ - `crashpad_*`: Builds crashpad utilities. To run the Crashpad version of the
+   SDK, you must build `crashpad_handler` and ship it with your application.
 
 ### Connecting the SDK to Sentry
 
@@ -271,9 +270,9 @@ For more information, see the [Tagging Events section]({%- link _documentation/e
 
 ### Setting the Level
 
-You can set the severity of an event to one of five values: `fatal`, `error`,
-`warning`, `info`, and `debug`. The default level is error, fatal is the most
-severe, and debug is the least severe.
+You can set the severity of an event to one of five values (sorted from most
+severe to least severe): `fatal`, `error`, `warning`, `info`, and `debug`. The
+default level is `error`.
 
 ```c
 sentry_set_level(SENTRY_LEVEL_WARNING);
@@ -309,8 +308,8 @@ For more information, see:
 ### Breadcrumbs
 
 To receive more information on actions leading up to an exception or crash, the
-SDK can record breadcrumbs that are automatically added to every event. A number
-of the most recent breadcrumbs is kept.
+SDK can record breadcrumbs that are automatically added to every event. The most
+recent breadcrumbs are kept in a buffer.
 
 You can manually add breadcrumbs using `sentry_add_breadcrumb`:
 
@@ -416,12 +415,12 @@ into the Breakpad and Crashpad libraries, respectively.
 
 [Breakpad](https://chromium.googlesource.com/breakpad/breakpad/) is an
 open-source multiplatform crash reporting system written in C++ by Google and
-the predecessor of Crashpad. It supports macOS, Windows and Linux, and features
+the predecessor of Crashpad. It supports macOS, Windows, and Linux, and features
 an uploader to submit minidumps to a configured URL right when the process
 crashes.
 
 To use the Breakpad integration with the Native SDK, build and link the
-`sentry_breakpad` dynamic library. Then, configure a path at which breakpad can
+`sentry_breakpad` dynamic library. Then, configure a path at which Breakpad can
 store its database. This location temporarily hosts Minidumps before they are
 uploaded to Sentry.
 
@@ -435,12 +434,12 @@ sentry_init(options);
 
 [Crashpad](https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md)
 is an open-source multiplatform crash reporting system written in C++ by Google.
-It supports macOS, Windows and Linux (limited), and features an uploader to
+It supports macOS, Windows, and Linux (limited), and features an uploader to
 submit minidumps to a configured URL right when the process crashes.
 
 To use the Crashpad integration with the Native SDK, build and link the
 `sentry_crashpad` dynamic library. Additonally, build the standalone
-`crashpad_handler` application. Then, configure a path at which breakpad can
+`crashpad_handler` application. Then, configure a path at which Crashpad can
 store its database. This location temporarily hosts Minidumps before they are
 uploaded to Sentry.
 

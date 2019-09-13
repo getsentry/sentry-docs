@@ -33,10 +33,9 @@ _documentation/cli/releases.md -%}#sentry-cli-sourcemaps).
 %}
 
 Sentry requires access to debug information files of your application as well as
-system libraries in order to provde fully symbolicated crash reports. You can
-either [upload](#uploading-files) your files to Sentry or put them on a
-compatible [Symbol Server](#symbol-servers) to be downloaded by Sentry when
-needed.
+system libraries to provide fully symbolicated crash reports. You can either
+[upload](#uploading-files) your files to Sentry or put them on a compatible
+[Symbol Server](#symbol-servers) to be downloaded by Sentry when needed.
 
 Debug information files can be managed on the _Debug Files_ section in _Project
 Settings_. This page lists all uploaded files and allows to configure symbol
@@ -52,27 +51,27 @@ Sentry differentiates in four kinds of debug information:
   throwing exceptions in C++, this information is often included in the
   executable or library. If an uploaded file contains this information, it shows
   the `unwind` tag.
-  
+
 - **Debug Information:** Provides function names, paths to source files, line
   numbers and inline frames. The process of resolving this information from
   instruction addresses is called "symbolication". This information is
   relatively large compared to the executable and usually put into a separate
   file. In Sentry, these files are designated as _debug companions_ and show the
   `debug` tag.
-  
+
 - **Symbol Tables:** If debug information is not available for a certain
   library, Sentry can use symbol tables as a fallback to retrieve function
   names. Symbol tables are usually included in both the executable and debug
   companion files. However, they do not contain sufficient information to
-  resolve inline functions or file names and line numbers. Symbol tables are
-  indicated by the `symtab` tag.
-  
+  resolve inline functions or file names and line numbers. The `symtab` tag
+  indicates symbol tables.
+
 - **Source Code:** Conventionally, source code is not part of regular debug
   information files. Sentry CLI can bundle source code of your application and
   upload it to display source context in stack traces in Sentry. These bundles
   show up with the `sources` tag.
 
-Compilers place the above debug information in different files pased on the
+Compilers place the above debug information in different files passed on the
 target platform, architecture, build flags or optimization level. Consequently,
 Sentry might not need all of the above information to process crash reports.
 Still, it is always a good idea to provide all available debug information.
@@ -132,7 +131,7 @@ This results in the following structure:
 
 - **Executables** do not carry a file extension. If stripped like above,
   executables contain a symbol table, but no debug information. If the build
-  runs omits frame pointers, unwind information will also be retained. Both can
+  run omits frame pointers, unwind information will also be retained. Both can
   be further stripped using flags like `--strip-all`.
   
 - **Shared Libraries** use the `.so` extension, and otherwise behave exactly
@@ -477,12 +476,12 @@ selected layout and the file type, we try to download files at specific paths.
 The following table contains a mapping from the supported layouts to file path
 schemas applied for specific files:
 
-| Layout                          | MachO    | ELF      | PE       | PDB      | Breakpad |
-|---------------------------------|:--------:|:--------:|:--------:|:--------:|:--------:|
-| Platform-Specific               | LLDB     | BuildID  | SymStore | SymStore | Breakpad |
-| Microsoft SymStore              | -        | -        | SymStore | SymStore | -        |
-| Microsoft SymStore (index2.txt) | -        | -        | Index2   | Index2   | -        |
-| Microsoft SSQP                  | SSQP     | SSQP     | SSQP     | SSQP     | -        |
+| Layout                          | MachO |   ELF   |    PE    |   PDB    | Breakpad |
+| ------------------------------- | :---: | :-----: | :------: | :------: | :------: |
+| Platform-Specific               | LLDB  | BuildID | SymStore | SymStore | Breakpad |
+| Microsoft SymStore              |   -   |    -    | SymStore | SymStore |    -     |
+| Microsoft SymStore (index2.txt) |   -   |    -    |  Index2  |  Index2  |    -     |
+| Microsoft SSQP                  | SSQP  |  SSQP   |   SSQP   |   SSQP   |    -     |
 
 The path schemas in the table above are defined as follows:
 
