@@ -1,6 +1,6 @@
 ---
 title: Logging
-sidebar_order: 2
+sidebar_order: 9
 ---
 Calling ``sentry_sdk.init()`` already integrates with the logging module. It is
 equivalent to this explicit configuration:
@@ -83,6 +83,4 @@ Instead of using `LoggingIntegration`, you can use two regular logging `logging.
 
 **Usually, you don't need this.** You *can* use this together with `default_integrations=False` if you want to opt into what the Sentry Python SDK captures. However, correctly setting up logging is difficult. Also, an opt-in approach to capturing data will miss errors you may not think of on your own. 
 
-See the [API
-documentation](https://getsentry.github.io/sentry-python/integrations/logging.m.html#header-classes)
-for more information.
+See the [API documentation](https://getsentry.github.io/sentry-python/integrations.html#module-sentry_sdk.integrations.logging) for more information.

@@ -3,11 +3,11 @@ title: Introduce Sentry SDK to your Frontend Code
 sidebar_order: 2
 ---
 
-In this tutorial you will import the demo frontend app source code into your local development environment, add the Sentry SDK and initialize it. 
+In this tutorial, you will import the demo frontend app source code into your local development environment, add the Sentry SDK and initialize it. 
 
 > **Note:** If you're using your own source code you can skip this tutorial and instead 
-> - Follow the instructions on [Getting Started](https://docs.sentry.io/error-reporting/quickstart/?platform=browser). Notice that you can select the desired platform. 
-> - Continue with the [Next tutorial]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%})
+> * Follow the instructions on [Getting Started](https://docs.sentry.io/error-reporting/quickstart/?platform=browser). Notice that you can select the desired platform. 
+> * Continue with the [Next tutorial]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%})
 
 ***
 ## Prerequisites
@@ -26,7 +26,7 @@ The demo app source code requires a **NodeJS** development environment to build 
     ![Fork Repository]({% asset guides/integrate-frontend/initialize-sentry-sdk-01.png @path %})
     
 
-3. Once the fork is complete, click on `Clone or download` and copy the repository HTTPS url
+3. Once the fork is complete, click on `Clone or download` and copy the repository HTTPS URL
 
     ![Clone Repository]({% asset guides/integrate-frontend/initialize-sentry-sdk-02.png @path %})
 
@@ -42,7 +42,7 @@ The demo app source code requires a **NodeJS** development environment to build 
 
 ## Step 2: Install the SDK
 
-Sentry captures data by using a platform specific SDK within your application runtime. To use the SDK, import and configure it in your source code.
+Sentry captures data by using a platform-specific SDK within your application runtime. To use the SDK, import and configure it in your source code.
 
 The demo project users REACT and Browser JS. The quickest way to get started is by using the CDN hosted version of the JavaScript browser SDK, however you can [NPM install](https://docs.sentry.io/error-reporting/quickstart/?platform=browsernpm) the browser library as well.
 

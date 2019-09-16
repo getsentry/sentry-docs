@@ -36,48 +36,48 @@ Now that the Demo App is up and running on your local environment integrated wit
 
 ## Step 2: Handle the Error
 
-1. Go to your email Inbox and open the email notification from Sentry
+1. Go to your email inbox and open the email notification from Sentry
 
     ![Import and Configure SDK]({% asset guides/integrate-frontend/generate-first-error-04.png @path %})
 
 2. Click on `View on Sentry` to view the full details and context of this error in your Sentry account
 
-3.  The `Event` is opened in the `Issue` details page. 
+3. The `Event` is opened in the `Issue` details page.
 
     ![Import and Configure SDK]({% asset guides/integrate-frontend/generate-first-error-05.png @path %})
     > **Note:** Similar errors (events) are aggregated into one Issue
 
 4. Scroll down to the `Exception Stack-trace`
-    
+
     ![Error Stack-trace]({% asset guides/integrate-frontend/generate-first-error-06.png @path %})
 
-    > - Notice that the stack-trace is **minified** and unreadable. This is usually the case with JavaScript code in a production environment.
-    > - An readable stack-trace would be extremely useful here to understand where and why this error occurred. 
-    > - Sentry can run-minify the code back to is readable form. We will configure that in the next tutorial.
-    
+    > * Notice that the stack-trace is **minified** and unreadable. This is usually the case with JavaScript code in a production environment.
+    > * An readable stack-trace would be extremely useful here to understand where and why this error occurred.
+    > * Sentry can run-minify the code back to is readable form. We will configure that in the next tutorial.
+
 ***
 
 ## Step 3: Create New Alerts
 
-You can create various alert rules per project and let Sentry know when, how, and who you want notified when errors occurs in your application. **Alert rules** consist of **Conditions** and **Actions** which are performed once the associated conditions are met. Click  here to read more about [Alerts](https://docs.sentry.io/workflow/notifications/alerts/).
+You can create various alert rules per project and let Sentry know when, how, and who you want notified when errors occur in your application. **Alert rules** consist of **Conditions** and **Actions** which are performed once the associated conditions are met. Click here to read more about [Alerts](https://docs.sentry.io/workflow/notifications/alerts/).
 
 By default, each project is created with one initial alert rule, notifying all project team members (via email) the first time a new **issue** is seen. This means that the next time the Checkout **error** in our demo app occurs, we will not be notified about it.
 
-In this step we will create a new Alert rule to notify us **every time** an event occurs even if its associated with an already existing **issue**.
+In this step, we will create a new Alert rule to notify us **every time** an event occurs even if it's associated with an already existing **issue**.
 
  1. Click on the **cog icon** next to the project name to open the `Project Settings`
-    
+
     ![Open Project Settings]({% asset guides/integrate-frontend/generate-first-error-07.png @path %})
 
 2. Click on `Alerts` to open the Alerts Configuration page
     > Notice the default alert rule already defined in your project
 
 3. Click on `New Alert Rule`
-    
+
     ![Alerts Configuration]({% asset guides/integrate-frontend/generate-first-error-08.png @path %})
 
 4. In the New Alert Rule form enter the following values 
-    
+
     ![New Alert Rule form]({% asset guides/integrate-frontend/generate-first-error-09.png @path %})
 
     > The new alert rule will notify you Every time _An event is seen_ in _All Environments_ via _Mail_
@@ -87,6 +87,7 @@ In this step we will create a new Alert rule to notify us **every time** an even
 6. To test the new rule, reproduce the error in the demo app. 
 
 ***
+
 ## Next
 
 [Enable Readable Stack-traces in your Errors]({%- link _documentation/guides/integrate-frontend/upload-source-maps.md -%})

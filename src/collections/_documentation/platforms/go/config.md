@@ -18,7 +18,7 @@ type ClientOptions struct {
 	// Configures whether SDK should generate and attach stacktraces to pure capture message calls.
 	AttachStacktrace bool
 	// The sample rate for event submission (0.0 - 1.0, defaults to 1.0)
-	SampleRate float32
+	SampleRate float64
 	// List of regexp strings that will be used to match against event's message
 	// and if applicable, caught errors type and value.
 	// If the match is found, then a whole event will be dropped.
@@ -55,7 +55,7 @@ type ClientOptions struct {
 	// This will default to the `HTTPS_PROXY` environment variable
 	// or `http_proxy` if that one exists.
 	HTTPSProxy string
-	// An optionsl CaCerts to use.
+	// An optional CaCerts to use.
 	// Defaults to `gocertifi.CACerts()`.
 	CaCerts *x509.CertPool
 }

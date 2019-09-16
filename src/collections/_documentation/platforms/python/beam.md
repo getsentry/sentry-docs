@@ -1,6 +1,6 @@
 ---
 title: Apache Beam
-sidebar_order: 2
+sidebar_order: 9
 ---
 
 {% version_added 0.11.0 %}
@@ -10,6 +10,8 @@ sidebar_order: 2
 The Beam integration currently parses the functions in [ParDo](https://github.com/apache/beam/blob/release-2.13.0/sdks/python/apache_beam/transforms/core.py#L991) to return exceptions in their respective setup, start_bundle, process, and finish_bundle functions.
 
 **This integration is experimental.** It may be removed in minor versions. When enabling this integration, expect to see incorrect server_name and ip due to some distributed properties within Beam.
+
+A Beam version of 2.12 or later is required.
 
 Add ``BeamIntegration()`` to your ``integrations`` list:
 

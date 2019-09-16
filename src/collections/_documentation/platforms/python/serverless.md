@@ -1,6 +1,6 @@
 ---
 title: Serverless
-sidebar_order: 4
+sidebar_order: 9
 ---
 
 {% version_added 0.7.3 %}
