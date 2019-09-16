@@ -59,7 +59,7 @@ platform, there is a `gen_*` subfolder that contains build files:
   and release configurations, that can be toggled when building:
   
   ```bash
-  make -j4 config=release sentry
+  make config=release sentry
   ```
 
 There are multiple available targets to build:
