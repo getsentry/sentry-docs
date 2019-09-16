@@ -57,34 +57,28 @@ With APM, the transaction is a parent span to all the spans that are created dur
 Once the request is processed, the transaction is sent together with all child spans to Sentry.
 
 ### Event Types
-For the initial version, we want to reuse as much existing code as possible.
-
 The SDKs already collect a lot of information about the processing of the request. In the case of an error, the SDK attaches the info to the error report to provide rich context of what happened before the error appeared. (Information like tags and breadcrumbs).
 
 If the error doesn’t appear during the processing of the request, we discard the context data once processing is complete.
 
 We want to leverage this context collection to build spans, and once a request is finished, we want to send the data to Sentry.
 
-We will reuse and extend the existing Sentry event format, introducing a new type of event for transactions.
-
-With the next phases of the APM project, we expect that these changes will evolve and we will be able to distribute the spans separately to a different endpoint at Sentry.
-
 Example of the transaction event type:
 
 ```json
     {
       "start_timestamp": "2019-06-14T14:01:40Z",     
-      "transaction": "tracing.decode_base64",      <----- NAME OF THE TRANSACTION
-      "type": "transaction",                       <----- TYPE OF THE EVENT
+      "transaction": "tracing.decode_base64",      
+      "type": "transaction",                       
       "event_id": "2975518984734ef49d2f75db4e928ddc",
       "contexts": {
     	"trace": {                   
-    		"parent_span_id": "946edde6ee421874",      <----- SPAN RELATED
-    		"trace_id": "a0fa8803753e40fd8124b21eeb2986b5", <----- SPAN RELATED
-    		"span_id": "9c2a6db8c79068a2"   <----- SPAN RELATED
+    		"parent_span_id": "946edde6ee421874",      
+    		"trace_id": "a0fa8803753e40fd8124b21eeb2986b5", 
+    		"span_id": "9c2a6db8c79068a2"   
     	}
       },
-      "timestamp": "2019-06-14T14:01:41Z",    <----- SPAN RELATED - end time
+      "timestamp": "2019-06-14T14:01:41Z",    
       "server_name": "apfeltasche.local",
       "extra": {
     	"sys.argv": ["/Users/untitaker/projects/sentry-python/.venv/bin/flask","worker"]
