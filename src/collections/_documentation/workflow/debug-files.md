@@ -197,9 +197,9 @@ not supported.
 
 ### Breakpad Symbols
 
-The Google Breakpad library has established a a platform independent ASCII
-format to store debug information. Such files are usually generated for
-applications using Breakpad, Crashpad or the Electron Framework.
+The Google Breakpad library has established a platform-independent ASCII format
+to store debug information. Such files are usually generated for applications
+using Breakpad, Crashpad or the Electron Framework.
 
 The Breakpad repository includes `dump_syms` tools for each platform that can
 convert from native debug files to Breakpad symbols. These converters bundle all
@@ -213,20 +213,20 @@ traces.
 
 ### ProGuard Mappings
 
-ProGuard mapping files allow Sentry to resolve obfuscated java class paths and
+ProGuard mapping files allow Sentry to resolve obfuscated Java classpaths and
 method names into their original form. In that sense, they act as debug
 information files for Java and Android applications.
 
 ## Debug Identifiers
 
 Each debug information file specifies a unique identifier. Crash reports declare
-these identifier to allow debuggers and crash reporting systems to resolve the
-correct files. Sentry distinguishes in two kinds of identifiers:
+these identifiers to allow debuggers and crash reporting systems to resolve the
+correct files. Sentry distinguishes two kinds of identifiers:
 
 - **Code Identifier**: The unique identifier of the executable or dynamic
-  library -- the code file. The contents of this identifier are platform
-  dependent: MachO files use a UUID, ELF files a SHA hash, PE files use a
-  concatenation of certain header attributes.
+  library -- the code file. The contents of this identifier are
+  platform-dependent: MachO files use a UUID, ELF files a SHA hash, PE files use
+  a concatenation of certain header attributes.
   
 - **Debug Identifier**: The unique identifier of the debug companion file. In
   contrast to the code identifier, Sentry enforces the same structure on all
@@ -235,12 +235,12 @@ correct files. Sentry distinguishes in two kinds of identifiers:
 
 When uploading debug information files to Sentry, the CLI and server will always
 compute a _Debug Identifier_ for each uploaded file. This identifier is
-associated executables and libraries as well as debug companions to ensure that
-they can be uniquely located via one common mechanism.
+associated with executables and libraries as well as debug companions to ensure
+that they can be uniquely located via one common mechanism.
 
 {% capture __alert_content -%}
-Debug information does not have to be associated to releases. The unique debug
-identifier ensures that Sentry is able to choose the right files for every crash
+Debug information does not have to be associated with releases. The unique debug
+identifier ensures that Sentry can choose the right files for every crash
 report. However, it is still recommended to configure releases in the client to
 benefit from other features.
 {%- endcapture -%}
@@ -260,7 +260,7 @@ _documentation/cli/dif.md -%}#checking-files) for more information.
 
 ### GNU Build Identifiers
 
-For ELF files on linux, Sentry uses the GNU build identifier to compute the
+For ELF files on Linux, Sentry uses the GNU build identifier to compute the
 debug identifier. All recent compilers and linkers support the emission of build
 IDs, but sometimes they might require additional configuration. `gcc` does this
 by default, for `clang` use one of the following flags:
@@ -319,7 +319,7 @@ def get_proguard_uuid(filename):
 
 ## Uploading Files
 
-The most straight-forward way to provide Sentry with debug information file is
+The most straightforward way to provide Sentry with debug information file is
 to upload them using `sentry-cli`. Depending on your workflow, you may want to
 upload as part of your build pipeline or when deploying and publishing your
 application:
@@ -348,7 +348,7 @@ Information_]({%- link _documentation/cli/dif.md -%}#uploading-files).
 Always ensure that debug files are uploaded before deploying or releasing your
 application so that crash reports can be processed.
 
-If you upload a file that was prior reported as missing by Sentry in a crash
+If you upload a file that was priorly reported as missing by Sentry in a crash
 report, it may take up to one hour until Sentry starts using this file for new
 crash reports. Existing events and issues are not processed again.
 {%- endcapture -%}
@@ -358,7 +358,7 @@ crash reports. Existing events and issues are not processed again.
   content=__alert_content
 %}
 
-In Sentry, your uploaded files are associated to projects. You can view and
+In Sentry, your uploaded files are associated with projects. You can view and
 manage uploads at _Project Settings > Debug Files_. This screen displays the
 most important properties of debug files:
 
@@ -371,10 +371,10 @@ most important properties of debug files:
    match.
 4. The debug information available in these files. This can include `unwind`,
    `debug`, `symtab` and `sources`.
-5. Meta data like the size and time of upload.
+5. Metadata like the size and time of upload.
 
-If the same file is required by multiple projects, it needs to be re-uploaded.
-Sentry does not access debug files stored in other projects to symbolicate crash
+If multiple projects require the same file, it needs to be re-uploaded. Sentry
+does not access debug files stored in other projects to symbolicate crash
 reports.
 
 ## Reprocessing
@@ -389,7 +389,7 @@ issues stream. Instead, you will receive a warning that events cannot be
 processed until all debug files have been uploaded.
 
 Once an issue is shown in the issues stream, it is no longer processed. Even
-with enabled reprocessing, new file uploads will have no effect on such events.
+with enabled reprocessing, new file uploads will not effect such events.
 
 At the moment, this feature only applies to iOS crashes sent with the Cocoa SDK
 and is not compatible with Symbol Servers. 
@@ -425,9 +425,9 @@ symbolicate new crash reports. Likewise, any built-in repository can be disabled
 by clicking on the X next to the name.
 
 {% capture __alert_content -%}
-Adding or removing external repositories applies immediately. This may result in
-new issues as events may group differently with the new information. Beware that
-this cause notifications to your team members.
+Adding or removing external repositories applies immediately. As a result,
+events may group differently with the new information and create new issues.
+Beware that these cause notifications to your team members.
 {%- endcapture -%}
 {%- include components/alert.html
   level="warning"
@@ -447,12 +447,12 @@ repositories:
 - **Amazon S3 Bucket**: Either an entire S3 bucket or a subdirectory. This
   requires `s3:GetObject`, and optionally `s3:ListBucket` permissions for the
   configured Access Key. Lookups in the bucket are case sensitive, which is why
-  we recommend to store all files lower-cased.
+  we recommend storing all files lower-cased.
   
 - **Google Cloud Storage Bucket**: Either an entire GCS bucket or a
   subdirectory. This requires `storage.objects.get` and `storage.objects.list`
   permissions for the configured service account. Lookups in the bucket are case
-  sensitive, which is why we recommend to store all files lower-cased.
+  sensitive, which is why we recommend storing all files lower-cased.
   
 Apart from authentication configuration, all types have common config
 parameters:
@@ -537,7 +537,7 @@ The path schemas in the table above are defined as follows:
   
   GDB supports multiple lookup methods, depending on the way the debug info file
   is specified. Sentry uses the [Build ID Method]: Assuming that a GNU build ID
-  note or section have been written to the ELF file, this specifies a unique
+  note or section has been written to the ELF file, this specifies a unique
   identifier for the executable which is also retained in the debug file.
   
   The GNU build ID is a variable-length binary string, usually consisting of a
@@ -601,9 +601,9 @@ The path schemas in the table above are defined as follows:
      **lowercase**.
 
   Since the original Microsoft Symbol Server did not serve ELF or MachO files,
-  we do not recommend to use this convention for these types. However, Sentry
+  we do not recommend using this convention for these types. However, Sentry
   will support the SSQP conventions with adapted casing rules when this layout
-  selected.
+  is selected.
   
   Examples:
    - `wkernel32.pdb/FF9F9F7841DB88F0CDEDA9E1E9BFF3B5A/wkernel32.pdb`
@@ -643,11 +643,11 @@ context automatically, such as the Python SDK, because they have access to
 unobfuscated source code at runtime.
 
 To get source context for native applications, source code needs to be uploaded
-alongside the debug information files. The recommended way to do this is using
-`sentry-cli`. See [Creating Source Bundles]({%- link _documentation/cli/dif.md
--%}#creating-source-bundles) for more information.
+alongside the debug information files. The recommended way to do this is by
+using `sentry-cli`. See [Creating Source Bundles]({%- link
+_documentation/cli/dif.md -%}#creating-source-bundles) for more information.
 
 Source bundles show up as regular debug files on the _Debug Files_ settings
-page. They are designated as "source bundle" and feature a `sources` tag. In
-order to match them with crash reports, they carry the same debug file as the
-respective debug information file they have been created from.
+page. They are designated as "source bundle" and feature a `sources` tag. To
+match them with crash reports, they carry the same debug file as the respective
+debug information file they have been created from.
