@@ -4,4 +4,4 @@ sidebar_order: 0
 ---
 
 
-[Monitor Errors in a Frontend Application]({%- link _documentation/guides/integrate-frontend/index.md -%})
+[Monitor Errors in Frontend Applications]({%- link _documentation/guides/integrate-frontend/index.md -%})

@@ -10,7 +10,9 @@ In this tutorial, you will import the demo frontend app source code into your lo
 > * Continue with the [Next tutorial]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%})
 
 ***
+
 ## Prerequisites
+
 The demo app source code requires a **NodeJS** development environment to build install and run the application. Make sure that you have the following in place:
 - A source code editor (like [VS-Code](https://code.visualstudio.com))
 - [Node and NPM](https://nodejs.org/en/)
@@ -19,6 +21,7 @@ The demo app source code requires a **NodeJS** development environment to build 
 ***
 
 ## Step 1: Get the Code
+
 1. Open the sample [code repository](https://github.com/idosun/sentry-react-demo) on GitHub
 
 2. Click on `Fork` and select the target GitHub account you wish this repository to be forked in to
@@ -50,9 +53,7 @@ The demo project users REACT and Browser JS. The quickest way to get started is 
 
     ![Import and Configure SDK]({% asset guides/integrate-frontend/initialize-sentry-sdk-03.png @path %})
     
-    * Notice that we import the JavaScript browser SDK and initialize it as early as possible in our code.
-    * When initializing the SDK we provide the desired configuration. The only mandatory key is the **dsn**.
-
+    > Notice that we import the JavaScript browser SDK and initialize it as early as possible in our code. When initializing the SDK we provide the desired configuration. The only mandatory key is the **dsn**.
 
 2. In the Sentry SDK configuration, enter the `dsn` key value you copied from the project created in the previous tutorial. 
 
@@ -84,12 +85,11 @@ To build and run the Demo application on your localhost
     $ npm run deploy
     ```
 
-    
     ![Deploy & Serve]({% asset guides/integrate-frontend/initialize-sentry-sdk-04.png @path %})
     > Once the deploy finishes successfully, you'll see the confirmation in your terminal 
 
 ***
 
-## Next 
+## Next
 
 [Capture your First Error]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%})

@@ -31,7 +31,6 @@ Now that the Demo App is up and running on your local environment integrated wit
     
         ![Import and Configure SDK]({% asset guides/integrate-frontend/generate-first-error-03.png @path %})
 
-
 ***
 
 ## Step 2: Handle the Error
@@ -51,9 +50,8 @@ Now that the Demo App is up and running on your local environment integrated wit
 
     ![Error Stack-trace]({% asset guides/integrate-frontend/generate-first-error-06.png @path %})
 
-    > * Notice that the stack-trace is **minified** and unreadable. This is usually the case with JavaScript code in a production environment.
-    > * An readable stack-trace would be extremely useful here to understand where and why this error occurred.
-    > * Sentry can run-minify the code back to is readable form. We will configure that in the next tutorial.
+    > * Notice that the stack-trace is **minified**. This is usually the case with JavaScript code in a production environment.
+    > * Sentry can un-minify the code back to it's readable form and display source (code) context lines in the stack frames . We will configure that in the next tutorial.
 
 ***
 
@@ -61,9 +59,9 @@ Now that the Demo App is up and running on your local environment integrated wit
 
 You can create various alert rules per project and let Sentry know when, how, and who you want notified when errors occur in your application. **Alert rules** consist of **Conditions** and **Actions** which are performed once the associated conditions are met. Click here to read more about [Alerts](https://docs.sentry.io/workflow/notifications/alerts/).
 
-By default, each project is created with one initial alert rule, notifying all project team members (via email) the first time a new **issue** is seen. This means that the next time the Checkout **error** in our demo app occurs, we will not be notified about it.
+By default, each project is created with one initial alert rule, notifying all project team members (via email) the first time a new **issue** is seen. This means that the next time the Checkout **error** occurs, you will not be notified about it.
 
-In this step, we will create a new Alert rule to notify us **every time** an event occurs even if it's associated with an already existing **issue**.
+In this step, you will create a new Alert rule notifying **every time** an event occurs even if it's associated with an already existing **issue**.
 
  1. Click on the **cog icon** next to the project name to open the `Project Settings`
 
