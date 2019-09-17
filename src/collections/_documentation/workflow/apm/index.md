@@ -3,7 +3,7 @@ title: APM
 sidebar_order: 0
 ---
 
-Sentry's APM (Application Performance Management) features provide users with a view of the general health of their system. The APM tools will give insight on an application's low performance, even when there aren't errors.
+Sentry's APM (Application Performance Management) features provide users with a view of the general health of their system. The APM tools will give insight on an application's performance bottleneck, even when there aren't errors.
 
 {% include components/alert.html
 title="Note"
