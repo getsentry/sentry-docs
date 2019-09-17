@@ -134,7 +134,7 @@ A list of string prefixes of module names that belong to the app. This option ta
 {:.config-key}
 ### `in-app-exclude`
 
-{% supported python rust csharp %}
+{% supported python rust csharp php %}
 A list of string prefixes of module names that do not belong to the app, but rather third-party packages. Modules considered not to be part of the app will be hidden from stack traces by default.
 
 This option can be overridden using `in-app-include`.
@@ -143,7 +143,7 @@ This option can be overridden using `in-app-include`.
 {:.config-key}
 ### `request-bodies`
 
-{% supported python %}
+{% supported python php %}
 This parameter controls if integrations should capture HTTP request bodies.  It can be set to one
 of the following values:
 
