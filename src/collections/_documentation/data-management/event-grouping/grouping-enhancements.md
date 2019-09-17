@@ -30,7 +30,7 @@ path:**/generated/**.js         -group
 The following **matchers** exist. Multiple matchers can be defined in a line:
 
 - `family`: matches on the general platform family. Right now there are `javascript`, `native` and `other`. To make a rule apply to multiple platforms, you can comma separate them.
-  For example: `family:native,javascript` applies to both Javascript and Native.
+  For example: `family:native,javascript` applies to both JavaScript and Native.
 - `path`: this matches case insensitive with Unix glob behavior on a path. The path separators are normalized to `/`. As a special rule, if the filename is relative, it still matches on `**/`. Examples:
   - `path:**/project/**.c`: matches on all files under `project` with a `.c` extension
   - `path:**/vendor/foo/*.c`: matches on vendor/foo without sub folders
