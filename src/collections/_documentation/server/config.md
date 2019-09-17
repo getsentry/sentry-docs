@@ -27,7 +27,7 @@ Many settings available in `config.yml` will also be able to be configured in th
 
   The environment name for this installation. This will also control defaults for things like `DEBUG`.
 
-  ```python
+  ```bash
   SENTRY_ENVIRONMENT=production sentry ...
   ```
 
@@ -37,7 +37,7 @@ Many settings available in `config.yml` will also be able to be configured in th
 
   The technical contact address for this installation. This will be reported to upstream to the Sentry team (as part of the Beacon), and will be the point of contact for critical updates and security notifications.
 
-  ```python
+  ```yaml
   system.admin-email: 'admin@example.com'
   ```
 
@@ -47,7 +47,7 @@ Many settings available in `config.yml` will also be able to be configured in th
 
   The URL prefix in which Sentry is accessible. This will be used both for referencing URLs in the UI, as well as in outbound notifications.
 
-  ```python
+  ```yaml
   system.url-prefix: 'https://sentry.example.com'
   ```
 
@@ -57,13 +57,54 @@ Many settings available in `config.yml` will also be able to be configured in th
 
   A secret key used for session signing. If this becomes compromised it’s important to regenerate it as otherwise its much easier to hijack user sessions.
 
-  ```python
+  ```yaml
   system.secret-key: 'a-really-long-secret-value'
   ```
 
   To generate a new value, we’ve provided a helper:
 
   > $ sentry config generate-secret-key
+
+## Logging
+
+Sentry logs to two major places — `stdout`, and its internal project. To disable logging to the internal project, add a logger whose only handler is `'console'` and disable propagating upwards.
+
+  {% include components/alert.html
+    content="Explained below are the CLI flag and environment variable. They override the root logger and anything in `LOGGING.overridable`. Be very careful with this in a production system, because the Celery logger can be extremely verbose when set to INFO or DEBUG."
+    level="warning"
+  %}
+
+`-l/--loglevel`
+
+: Declared on the command line.
+
+  Sentry can override logger levels by providing the CLI with the `-l/--loglevel` flag.
+  The value of this can be one of the [standard Python logging level strings](https://docs.python.org/2/library/logging.html#levels).
+
+  ```shell
+  sentry --loglevel=WARNING
+  ```
+
+`SENTRY_LOG_LEVEL`
+
+: Declared in system environment.
+
+  Sentry can override logger levels with the `SENTRY_LOG_LEVEL` environment variable.
+  The value of this can be one of the [standard Python logging level strings](https://docs.python.org/2/library/logging.html#levels).
+
+  ```shell
+  SENTRY_LOG_LEVEL=WARNING sentry ...
+  ```
+
+`LOGGING`
+
+: Declared in `sentry.conf.py`.
+
+  You can modify or override the full logging configuration with this setting. Be careful not to remove or override important defaults. You can check [the default configuration](https://git.io/fjjna) for reference.
+  
+  ```python
+  LOGGING['default_level'] = 'WARNING'
+  ```
 
 ## Redis
 
@@ -75,7 +116,7 @@ Many settings available in `config.yml` will also be able to be configured in th
 
   For example,
 
-  ```python
+  ```yaml
   redis.clusters:
     default:  # cluster name
       hosts:  # connection options, passed to `rb.Cluster`

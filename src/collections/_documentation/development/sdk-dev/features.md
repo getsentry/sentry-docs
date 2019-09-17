@@ -55,7 +55,7 @@ Respect Sentry’s HTTP 429 Retry-After header when the user goes over their lim
 
 Stack parsing can tell which frames should be identified as part of the user’s application (as opposed to part of the language, a library, or a framework), either automatically or by user configuration at startup, often declared as a package/module prefix.
 
-## Surrounding Source in Stacktrace
+## Surrounding Source in Stack Trace
 
 Lines of source code to provide context in stack traces. This is easier in interpreted languages, may be hard or impossible in compiled ones.
 

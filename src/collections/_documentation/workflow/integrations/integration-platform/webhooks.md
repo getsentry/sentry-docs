@@ -1,0 +1,737 @@
+---
+title: Webhooks
+sidebar_order: 1
+---
+
+Webhooks allows your service to receive requests about specific resources, depending on your selection.
+
+## Headers
+
+All webhooks will contain the following set of request headers: 
+
+```json
+    {
+    "Content-Type": "application/json",
+    "Request-ID": "<request_uuid>",
+    "Sentry-Hook-Resource": "<resource>",
+    "Sentry-Hook-Timestamp": "<timestamp>",
+    "Sentry-Hook-Signature": "<generated_signature>"
+    }
+```
+
+**`Sentry-Hook-Resource`**
+
+This is the resource that triggered the action. The action will be in the payload.
+
+**Resources**
+
+- installation
+- event_alert (payload will be a serialized event)
+- issue
+
+**`Sentry-Hook-Signature`**
+
+A hash generated using your Client Secret and the request itself – used to verify the authenticity of the request.
+
+## Verifying the Signature
+
+```python
+    body = json.dumps(request.body)
+    expected = hmac.new(
+        key=client_secret.encode('utf-8'),
+        msg=body,
+        digestmod=sha256,
+    ).hexdigest()
+
+    if expected != request.headers['Sentry-Hook-Signature']:
+            raise UnauthorizedError
+```
+
+## Request Structure
+
+All webhook requests have some common elements.
+
+**action**
+: The action that corresponds with the resource in the header. For example, if the resource is `issue` the action could be `created` (among other options).
+
+**installation**
+
+: The installation is just an object with the `uuid` of the installation so that you know to map the webhook request to the appropriate installation. 
+
+**data**
+
+: The data object contains information about the resource and will differ in content depending on the type of webhook.
+
+**actor**
+
+: The actor is who, if anyone, triggered the webhook. If a user in Sentry triggered the action, then the actor is the user. If the Sentry App itself triggers the action, then the actor is the Application. And if the action is triggered automatically somehow within Sentry, then the actor is ‘Sentry.’
+
+```python
+    Samples cases:
+
+    # user installs sentry app
+
+    "actor": {
+      'type': 'user',
+      'id': <user-id>,
+      'name': <user-name>, 
+    }
+    
+    # sentry app makes request assign an issue
+
+    "actor": {
+      'type': 'application',
+      'id': <sentry-app-uuid>,
+      'name': <sentry-app-name>, 
+    }, 
+    
+    # sentry (sentry.io) auto resolves an issue
+
+    "actor": {
+      'type': 'application',
+      'id': 'sentry',
+      'name': 'Sentry', 
+    },
+```
+
+## Event Types
+### [Un]Installation
+
+`'Sentry-Hook-Resource': 'installation'`
+
+`'Sentry-Hook-Resource': 'uninstallation'`
+
+**Attributes**
+
+: **action**
+- type: string
+- description: will either be `created` or `deleted`
+
+: **data['installation']**
+- type: object
+- description: The installation
+
+: **actor**
+- type: object
+- description: The user who either installed or uninstalled the integration 
+
+```python
+    {  
+        "action": "created",
+        "data": {  
+            "installation": {  
+                "status": "pending",
+                "organization": {  
+                    "slug": "test-org"
+                },
+                "app": {  
+                    "uuid": "2ebf071f-28df-4989-aca9-c37c763b278f",
+                    "slug": "webhooks-galore"
+                },
+                "code": "f3c71b491e3949b6b033ae45312a4fcb",
+                "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+            }
+        },
+        "installation": {  
+            "uuid":"a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+        },
+        "actor": {  
+            "type": "user",
+            "id": 1,
+            "name": "Meredith Heller"
+        }
+    }
+```
+
+### Webhook Alerts 
+
+`'Sentry-Hook-Resource': 'event_alert'`
+
+**Attributes**
+
+: **action**
+- type: string
+- description: will always be `triggered`
+
+: **data['event']**
+- type: object
+- description: the event that triggered the alert rule
+
+: **data['event']['url']**
+- type: string
+- description: the api url for the event
+
+: **data['event']['web_url']**
+- type: string
+- description: the web url for the event
+
+: **data['event']['issue_url']**
+- type: string
+- description: the api url for the associated issue
+
+: **data['triggered_rule']**
+- type: string
+- description: The label of the rule that was triggered 
+
+#### Payload
+
+```json
+{
+    "action": "triggered",
+    "actor": {
+        "id": "sentry",
+        "name": "Sentry",
+        "type": "application"
+    },
+    "data": {
+        "event": {
+            "_ref": 1,
+            "_ref_version": 2,
+            "contexts": {
+                "browser": {
+                    "name": "Chrome",
+                    "type": "browser",
+                    "version": "75.0.3770"
+                },
+                "os": {
+                    "name": "Mac OS X",
+                    "type": "os",
+                    "version": "10.14.0"
+                }
+            },
+            "culprit": "?(<anonymous>)",
+            "datetime": "2019-08-19T21:06:17.677000Z",
+            "dist": null,
+            "event_id": "e4874d664c3540c1a32eab185f12c5ab",
+            "exception": {
+                "values": [
+                    {
+                        "mechanism": {
+                            "data": {
+                                "message": "heck is not defined",
+                                "mode": "stack",
+                                "name": "ReferenceError"
+                            },
+                            "description": null,
+                            "handled": false,
+                            "help_link": null,
+                            "meta": null,
+                            "synthetic": null,
+                            "type": "onerror"
+                        },
+                        "stacktrace": {
+                            "frames": [
+                                {
+                                    "abs_path": "https://static.jsbin.com/js/prod/runner-4.1.7.min.js",
+                                    "colno": 10866,
+                                    "context_line": "{snip} e(a.old),a.active=b,e(a.target,b),setTimeout(function(){c&&c();for(var b,d=a.target.getElementsByTagName(\"iframe\"),e=d.length,f=0,g=a.active {snip}",
+                                    "data": {
+                                        "orig_in_app": 1
+                                    },
+                                    "errors": null,
+                                    "filename": "/js/prod/runner-4.1.7.min.js",
+                                    "function": null,
+                                    "image_addr": null,
+                                    "in_app": false,
+                                    "instruction_addr": null,
+                                    "lineno": 1,
+                                    "module": "prod/runner-4.1.7",
+                                    "package": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                },
+                                {
+                                    "abs_path": "https://static.jsbin.com/js/prod/runner-4.1.7.min.js",
+                                    "colno": 13924,
+                                    "context_line": "{snip} e){i._raw(\"error\",e&&e.stack?e.stack:a+\" (line \"+c+\")\")},c.write(f),c.close(),b.postMessage(\"complete\"),k.wrap(e,a.options)})},b[\"console:ru {snip}",
+                                    "data": {
+                                        "orig_in_app": 1
+                                    },
+                                    "errors": null,
+                                    "filename": "/js/prod/runner-4.1.7.min.js",
+                                    "function": null,
+                                    "image_addr": null,
+                                    "in_app": false,
+                                    "instruction_addr": null,
+                                    "lineno": 1,
+                                    "module": "prod/runner-4.1.7",
+                                    "package": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                },
+                                {
+                                    "abs_path": "<anonymous>",
+                                    "colno": 5,
+                                    "context_line": null,
+                                    "data": {
+                                        "orig_in_app": 1
+                                    },
+                                    "errors": null,
+                                    "filename": "<anonymous>",
+                                    "function": null,
+                                    "image_addr": null,
+                                    "in_app": false,
+                                    "instruction_addr": null,
+                                    "lineno": 3,
+                                    "module": null,
+                                    "package": null,
+                                    "platform": null,
+                                    "post_context": null,
+                                    "pre_context": null,
+                                    "raw_function": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                }
+                            ]
+                        },
+                        "type": "ReferenceError",
+                        "value": "heck is not defined"
+                    }
+                ]
+            },
+            "fingerprint": [
+                "{{ default }}"
+            ],
+            "grouping_config": {
+                "enhancements": "eJybzDhxY05qemJypZWRgaGlroGxrqHRBABbEwcC",
+                "id": "legacy:2019-03-12"
+            },
+            "hashes": [
+                "29f7ffc4903a8a990408b80a3b4c95a2"
+            ],
+            "issue_url": "https://sentry.io/api/0/issues/1117540176/",
+            "key_id": "667532",
+            "level": "error",
+            "location": "<anonymous>",
+            "logger": "",
+            "message": "",
+            "metadata": {
+                "filename": "<anonymous>",
+                "type": "ReferenceError",
+                "value": "heck is not defined"
+            },
+            "platform": "javascript",
+            "project": 1,
+            "received": 1566248777.677,
+            "release": null,
+            "request": {
+                "cookies": null,
+                "data": null,
+                "env": null,
+                "fragment": null,
+                "headers": [
+                    [
+                        "User-Agent",
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"
+                    ]
+                ],
+                "inferred_content_type": null,
+                "method": null,
+                "query_string": [],
+                "url": "https://null.jsbin.com/runner"
+            },
+            "sdk": {
+                "integrations": [
+                    "InboundFilters",
+                    "FunctionToString",
+                    "TryCatch",
+                    "Breadcrumbs",
+                    "GlobalHandlers",
+                    "LinkedErrors",
+                    "UserAgent"
+                ],
+                "name": "sentry.javascript.browser",
+                "packages": [
+                    {
+                        "name": "npm:@sentry/browser",
+                        "version": "5.5.0"
+                    }
+                ],
+                "version": "5.5.0"
+            },
+            "tags": [
+                [
+                    "browser",
+                    "Chrome 75.0.3770"
+                ],
+                [
+                    "browser.name",
+                    "Chrome"
+                ],
+                [
+                    "handled",
+                    "no"
+                ],
+                [
+                    "level",
+                    "error"
+                ],
+                [
+                    "mechanism",
+                    "onerror"
+                ],
+                [
+                    "os",
+                    "Mac OS X 10.14.0"
+                ],
+                [
+                    "os.name",
+                    "Mac OS X"
+                ],
+                [
+                    "user",
+                    "ip:162.217.75.90"
+                ],
+                [
+                    "url",
+                    "https://null.jsbin.com/runner"
+                ]
+            ],
+            "time_spent": null,
+            "timestamp": 1566248777.677,
+            "title": "ReferenceError: heck is not defined",
+            "type": "error",
+            "url": "https://sentry.io/api/0/projects/test-org/front-end/events/e4874d664c3540c1a32eab185f12c5ab/",
+            "user": {
+                "ip_address": "162.218.85.90"
+            },
+            "version": "7",
+            "web_url": "https://sentry.io/organizations/test-org/issues/1117540176/events/e4874d664c3540c1a32eab185f12c5ab/"
+        },
+        "triggered_rule": "Very Important Alert Rule!"
+    },
+    "installation": {
+        "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+    }
+}
+```
+
+### Issues
+
+`'Sentry-Hook-Resource': 'issue'`
+
+**Attributes**
+
+: **action**
+- type: string
+- description: can be `created`, `resolved`, `assigned`, or `ignored`
+
+: **data['issue']**
+- type: object
+- description: the issue
+
+: **data['issue']['url']**
+- type: string
+- description: the api url for the issue
+
+: **data['issue']['web_url']**
+- type: string
+- description: the web url for the issue
+
+: **data['issue']['project_url']**
+- type: string
+- description: the api url to the project the issue is a part of 
+
+#### Payload
+
+```json
+{
+    "action": "created",
+    "actor": {
+        "id": "sentry",
+        "name": "Sentry",
+        "type": "application"
+    },
+    "data": {
+        "issue": {
+            "annotations": [],
+            "assignedTo": null,
+            "count": "1",
+            "culprit": "?(runner)",
+            "firstSeen": "2019-08-19T20:58:37.391000Z",
+            "hasSeen": false,
+            "id": "1170820242",
+            "isBookmarked": false,
+            "isPublic": false,
+            "isSubscribed": false,
+            "lastSeen": "2019-08-19T20:58:37.391000Z",
+            "level": "error",
+            "logger": null,
+            "metadata": {
+                "filename": "/runner",
+                "type": "ReferenceError",
+                "value": "blooopy is not defined"
+            },
+            "numComments": 0,
+            "permalink": null,
+            "platform": "javascript",
+            "project": {
+                "id": "1",
+                "name": "front-end",
+                "platform": "",
+                "slug": "front-end"
+            },
+            "shareId": null,
+            "shortId": "FRONT-END-9",
+            "status": "unresolved",
+            "statusDetails": {},
+            "subscriptionDetails": null,
+            "title": "ReferenceError: blooopy is not defined",
+            "type": "error",
+            "userCount": 1
+        }
+    },
+    "installation": {
+        "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+    }
+}
+```
+
+### Error
+
+The `error.created` resource subscription is only available for Business plans and above. 
+
+```python
+'Sentry-Hook-Resource': 'error'
+```
+
+**Attributes**
+
+: **action**
+- type: string
+- description: only option currently is `created`
+
+: **data['error']**
+- type: object
+- description: the error that was created
+
+: **data['error']['url']**
+- type: string
+- description: the api url for the error
+
+: **data['error']['web_url']**
+- type: string
+- description: the web url for the error
+
+: **data['error']['issue_url']**
+- type: string
+- description: the api url for the associated issue
+
+#### Payload
+
+```json
+{
+    "action": "created",
+    "actor": {
+        "id": "sentry",
+        "name": "Sentry",
+        "type": "application"
+    },
+    "data": {
+        "error": {
+            "_ref": 1293919,
+            "_ref_version": 2,
+            "contexts": {
+                "browser": {
+                    "name": "Chrome",
+                    "type": "browser",
+                    "version": "75.0.3770"
+                },
+                "os": {
+                    "name": "Mac OS X",
+                    "type": "os",
+                    "version": "10.14.0"
+                }
+            },
+            "culprit": "?(runner)",
+            "datetime": "2019-08-19T20:58:37.391000Z",
+            "dist": null,
+            "event_id": "bb78c1407cea4519aa397afc059c793d",
+            "exception": {
+                "values": [
+                    {
+                        "mechanism": {
+                            "data": {
+                                "message": "blooopy is not defined",
+                                "mode": "stack",
+                                "name": "ReferenceError"
+                            },
+                            "description": null,
+                            "handled": false,
+                            "help_link": null,
+                            "meta": null,
+                            "synthetic": null,
+                            "type": "onerror"
+                        },
+                        "stacktrace": {
+                            "frames": [
+                                {
+                                    "abs_path": "https://null.jsbin.com/runner",
+                                    "colno": 5,
+                                    "context_line": "<meta charset=utf-8>",
+                                    "data": {
+                                        "orig_in_app": 1
+                                    },
+                                    "errors": null,
+                                    "filename": "/runner",
+                                    "function": null,
+                                    "image_addr": null,
+                                    "in_app": false,
+                                    "instruction_addr": null,
+                                    "lineno": 3,
+                                    "module": "runner",
+                                    "package": null,
+                                    "platform": null,
+                                    "post_context": [
+                                        "<title>JS Bin Runner</title>",
+                                        "",
+                                        "<style type=\"text/css\">",
+                                        "  body {",
+                                        "    margin: 0;"
+                                    ],
+                                    "pre_context": [
+                                        "<!doctype html>",
+                                        "<html>"
+                                    ],
+                                    "raw_function": null,
+                                    "symbol": null,
+                                    "symbol_addr": null,
+                                    "trust": null,
+                                    "vars": null
+                                }
+                            ]
+                        },
+                        "type": "ReferenceError",
+                        "value": "blooopy is not defined"
+                    }
+                ]
+            },
+            "fingerprint": [
+                "{{ default }}"
+            ],
+            "grouping_config": {
+                "enhancements": "eJybzDhxY05qemJypZWRgaGlroGxrqHRBABbEwcC",
+                "id": "legacy:2019-03-12"
+            },
+            "hashes": [
+                "07d2da329989f6cd310eb5f1c5e828a4"
+            ],
+            "issue_url": "https://sentry.io/api/0/issues/1170820242/",
+            "key_id": "667532",
+            "level": "error",
+            "location": "/runner",
+            "logger": "",
+            "message": "",
+            "metadata": {
+                "filename": "/runner",
+                "type": "ReferenceError",
+                "value": "blooopy is not defined"
+            },
+            "platform": "javascript",
+            "project": 1,
+            "received": 1566248317.391,
+            "release": null,
+            "request": {
+                "cookies": null,
+                "data": null,
+                "env": null,
+                "fragment": null,
+                "headers": [
+                    [
+                        "User-Agent",
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"
+                    ]
+                ],
+                "inferred_content_type": null,
+                "method": null,
+                "query_string": [],
+                "url": "https://null.jsbin.com/runner"
+            },
+            "sdk": {
+                "integrations": [
+                    "InboundFilters",
+                    "FunctionToString",
+                    "TryCatch",
+                    "Breadcrumbs",
+                    "GlobalHandlers",
+                    "LinkedErrors",
+                    "UserAgent"
+                ],
+                "name": "sentry.javascript.browser",
+                "packages": [
+                    {
+                        "name": "npm:@sentry/browser",
+                        "version": "5.5.0"
+                    }
+                ],
+                "version": "5.5.0"
+            },
+            "tags": [
+                [
+                    "browser",
+                    "Chrome 75.0.3770"
+                ],
+                [
+                    "browser.name",
+                    "Chrome"
+                ],
+                [
+                    "handled",
+                    "no"
+                ],
+                [
+                    "level",
+                    "error"
+                ],
+                [
+                    "mechanism",
+                    "onerror"
+                ],
+                [
+                    "os",
+                    "Mac OS X 10.14.0"
+                ],
+                [
+                    "os.name",
+                    "Mac OS X"
+                ],
+                [
+                    "user",
+                    "ip:162.217.75.90"
+                ],
+                [
+                    "url",
+                    "https://null.jsbin.com/runner"
+                ]
+            ],
+            "time_spent": null,
+            "timestamp": 1566248317.391,
+            "title": "ReferenceError: blooopy is not defined",
+            "type": "error",
+            "url": "https://sentry.io/api/0/projects/test-org/front-end/events/bb78c1407cea4519aa397afc059c793d/",
+            "user": {
+                "ip_address": "162.218.85.90"
+            },
+            "version": "7",
+            "web_url": "https://sentry.io/organizations/test-org/issues/1170820242/events/bb78c1407cea4519aa397afc059c793d/"
+        }
+    },
+    "installation": {
+        "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+    }
+}
+```

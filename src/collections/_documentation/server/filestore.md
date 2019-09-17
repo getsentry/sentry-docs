@@ -34,3 +34,14 @@ filestore.options:
   secret_key: '...'
   bucket_name: '...'
 ```
+
+## MinIO S3 Backend
+
+```yaml
+filestore.backend: 's3'
+filestore.options:
+  access_key: '...'
+  secret_key: '...'
+  bucket_name: '...'
+  endpoint_url: 'https://minio.example.org/'
+```

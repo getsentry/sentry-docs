@@ -7,8 +7,8 @@ Before running Sentry itself, there are a few minimum services that are required
 
 ## Services
 
--   [PostgreSQL](http://www.postgresql.org/)
-    -   Docker image [postgres:9.5](https://hub.docker.com/_/postgres/)
+-   [PostgreSQL](http://www.postgresql.org/) (current tested versions are 9.5, 9.6)
+    -   Docker image [postgres:9.6](https://hub.docker.com/_/postgres/)
 -   [Redis](http://redis.io) (the minimum version requirement is 2.8.9, but 2.8.18, 3.0, or newer are recommended)
     -   If running Ubuntu < 15.04, you’ll need to install from a different PPA. We recommend [chris-lea/redis-server](https://launchpad.net/~chris-lea/+archive/ubuntu/redis-server)
     -   Docker image [redis:3.2-alpine](https://hub.docker.com/_/redis/).

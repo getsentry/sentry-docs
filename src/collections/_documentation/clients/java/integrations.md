@@ -9,7 +9,7 @@ The Sentry Java SDK comes with support for some frameworks and libraries so that
 
 ### Features
 
-The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options]({%- link _documentation/clients/java/config.md -%}), and more. Adding version `1.7.26` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
+The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options]({%- link _documentation/clients/java/config.md -%}), and more. Adding version `1.7.27` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
 
 Events will be [buffered to disk]({%- link _documentation/clients/java/config.md -%}#buffering-events-to-disk) (in the application’s cache directory) by default. This allows events to be sent at a later time if the device does not have connectivity when an event is created. This can be disabled by [setting the option]({%- link _documentation/clients/java/config.md -%}#configuration) `buffer.enabled` to `false`.
 
@@ -17,20 +17,24 @@ An `UncaughtExceptionHandler` is configured so that crash events will be stored 
 
 The `AndroidEventBuilderHelper` is enabled by default, which will automatically enrich events with data about the current state of the device, such as memory usage, storage usage, display resolution, connectivity, battery level, model, Android version, whether the device is rooted or not, etc.
 
+`Application Not Responding` (or ANR) can also be automatically detected and reported to Sentry.
+For that, you must configure the SDK with the option `anr.enabled=true`
+By default the UI thread needs to be blocked for at least 5 seconds for an event to be raised. If you wish to change this value, you can do that via the option `anr.timeoutIntervalMills`. For example, to detect if the UI thread is blocked for longer than 3 seconds, set it to: `anr.timeoutIntervalMills=3000`.
+
 <!-- WIZARD android -->
 ### Installation
 
 Using Gradle (Android Studio) in your `app/build.gradle` add:
 
 ```groovy
-compile 'io.sentry:sentry-android:1.7.26'
+compile 'io.sentry:sentry-android:1.7.27'
 
 // this dependency is not required if you are already using your own
 // slf4j implementation
 compile 'org.slf4j:slf4j-nop:1.7.25'
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-android%7C1.7.26%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-android%7C1.7.27%7Cjar).
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
@@ -148,7 +152,7 @@ And declare a dependency in your toplevel `build.gradle`:
 ```groovy
 buildscript {
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.26'
+        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.27'
     }
 }
 ```
@@ -278,23 +282,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-appengine</artifactId>
-    <version>1.7.26</version>
+    <version>1.7.27</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-appengine:1.7.26'
+compile 'io.sentry:sentry-appengine:1.7.27'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-appengine" % "1.7.26"
+libraryDependencies += "io.sentry" % "sentry-appengine" % "1.7.27"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-appengine%7C1.7.26%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-appengine%7C1.7.27%7Cjar).
 
 ### Usage
 
@@ -337,23 +341,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
-    <version>1.7.26</version>
+    <version>1.7.27</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry:1.7.26'
+compile 'io.sentry:sentry:1.7.27'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry" % "1.7.26"
+libraryDependencies += "io.sentry" % "sentry" % "1.7.27"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.26%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.27%7Cjar).
 
 ### Usage
 
@@ -439,23 +443,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-log4j</artifactId>
-    <version>1.7.26</version>
+    <version>1.7.27</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-log4j:1.7.26'
+compile 'io.sentry:sentry-log4j:1.7.27'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-log4j" % "1.7.26"
+libraryDependencies += "io.sentry" % "sentry-log4j" % "1.7.27"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j%7C1.7.26%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j%7C1.7.27%7Cjar).
 
 ### Usage
 
@@ -604,23 +608,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-log4j2</artifactId>
-    <version>1.7.26</version>
+    <version>1.7.27</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-log4j2:1.7.26'
+compile 'io.sentry:sentry-log4j2:1.7.27'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-log4j2" % "1.7.26"
+libraryDependencies += "io.sentry" % "sentry-log4j2" % "1.7.27"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j2%7C1.7.26%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j2%7C1.7.27%7Cjar).
 
 ### Usage
 
@@ -746,23 +750,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-logback</artifactId>
-    <version>1.7.26</version>
+    <version>1.7.27</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-logback:1.7.26'
+compile 'io.sentry:sentry-logback:1.7.27'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-logback" % "1.7.26"
+libraryDependencies += "io.sentry" % "sentry-logback" % "1.7.27"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-logback%7C1.7.26%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-logback%7C1.7.27%7Cjar).
 
 ### Usage
 
@@ -893,23 +897,23 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring</artifactId>
-    <version>1.7.26</version>
+    <version>1.7.27</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-spring:1.7.26'
+compile 'io.sentry:sentry-spring:1.7.27'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-spring" % "1.7.26"
+libraryDependencies += "io.sentry" % "sentry-spring" % "1.7.27"
 ```
 
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-spring%7C1.7.26%7Cjar).
+For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-spring%7C1.7.27%7Cjar).
 
 ### Usage
 

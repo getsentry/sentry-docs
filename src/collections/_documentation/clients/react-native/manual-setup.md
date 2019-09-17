@@ -22,9 +22,9 @@ Update your `AppDelegate.m` file to pull in the proper native library and initia
 
 ```objc
 #if __has_include(<React/RNSentry.h>)
-#import <React/RNSentry.h> // This is used for versions of react >= 0.40
+#import <React/RNSentry.h> // This is used for versions of react-native >= 0.40
 #else
-#import "RNSentry.h" // This is used for versions of react < 0.40
+#import "RNSentry.h" // This is used for versions of react-native < 0.40
 #endif
 
 /* in your didFinishLaunchingWithOptions */

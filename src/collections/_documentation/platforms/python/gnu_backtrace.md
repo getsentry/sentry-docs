@@ -1,6 +1,6 @@
 ---
 title: GNU Backtrace
-sidebar_order: 2
+sidebar_order: 9
 ---
 <!-- WIZARD -->
 The GNU backtrace integration parses native stack trace produced by [`backtrace_symbols`](https://linux.die.net/man/3/backtrace_symbols) from error messages and concatenates them with the Python traceback.

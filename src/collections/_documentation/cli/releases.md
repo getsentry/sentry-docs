@@ -54,7 +54,7 @@ There are two modes in which you can use this. One is the fully automatic mode. 
 sentry-cli releases set-commits "$VERSION" --auto
 ```
 
-In case you are deploying without access to the git repository, you can manually specify the commits instead. To do this, pass the `-commit` parameter to the `set-commits` command in the format `REPO_NAME@REVISION`. You can repeat this for as many repositories as you have:
+In case you are deploying without access to the git repository, you can manually specify the commits instead. To do this, pass the `--commit` parameter to the `set-commits` command in the format `REPO_NAME@REVISION`. You can repeat this for as many repositories as you have:
 
 ```bash
 sentry-cli releases set-commits "$VERSION" --commit "my-repo@deadbeef"
@@ -122,7 +122,8 @@ The following options exist to change the behavior of the upload command:
 
 `--strip-prefix` / `--strip-common-prefix`
 
-: When paired with `--rewrite` this will chop-off a prefix from uploaded files. For instance, you can use this to remove a path that is build machine specific. The common prefix version will attempt to automatically guess what the common prefix is and chop that one off automatically.
+: When paired with `--rewrite` this will chop-off a prefix from all sources references inside uploaded source maps. For instance, you can use this to remove a path that is build machine specific. The common prefix version will attempt to automatically guess what the common prefix is and chop that one off automatically.
+This will not modify the uploaded sources paths. To do that, point the `upload` or `upload-sourcemaps` command to a more precise directory instead.
 
 `--validate`
 

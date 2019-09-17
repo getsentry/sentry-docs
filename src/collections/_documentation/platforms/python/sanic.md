@@ -1,6 +1,6 @@
 ---
 title: Sanic
-sidebar_order: 3
+sidebar_order: 9
 ---
 
 {% version_added 0.3.6 %}

@@ -203,9 +203,12 @@ with configure_scope() as scope:
 
 Sentry uses a fingerprint to decide how to group errors into issues.
 
-For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings.
-
+For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be an array of strings. 
+{% raw %}
 If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{{default}}` as one of the items.
+{% endraw %}
+
+For code samples, see the [Grouping & Fingerprints]({%- link _documentation/data-management/rollups.md -%}?platform=python#use-cases) page.
 
 For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
@@ -293,6 +296,7 @@ For more information, see:
 
 - [Celery]({%- link _documentation/platforms/python/celery.md -%})
 - [RQ (Redis Queue)]({%- link _documentation/platforms/python/rq.md -%})
+- [Apache Beam]({%- link _documentation/platforms/python/beam.md -%})
 
 #### Serverless
 
@@ -304,6 +308,7 @@ For more information, see:
 - [Logging]({%- link _documentation/platforms/python/logging.md -%})
 - [GNU Backtrace]({%- link _documentation/platforms/python/gnu_backtrace.md -%})
 - [Redis]({%- link _documentation/platforms/python/redis.md -%})
+- [SQLAlchemy]({%- link _documentation/platforms/python/sqlalchemy.md -%})
 
 ### Default Integrations
 

@@ -32,4 +32,5 @@ Most arbitrary values in Sentry have their size restricted. This means any value
 -   Extra contextual data is limited to 4096 characters.
 -   Messages are limited to ~10kb.
 -   HTTP data (the body) is limited to 2048 characters.
--   Stacktraces are limited to 50 frames. If more are sent, data will be removed from the middle of the stack.
+-   Stack traces are limited to 50 frames. If more are sent, data will be
+    removed from the middle of the stack.
