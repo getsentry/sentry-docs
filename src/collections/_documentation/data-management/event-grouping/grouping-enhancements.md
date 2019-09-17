@@ -1,10 +1,10 @@
 ---
-title: 'Custom Grouping Rules'
+title: 'Custom Grouping Enhancements'
 sidebar_order: 2
 ---
 
-
 If you use stack traces for grouping, the enhancements rules are used to influence the data.
+These rules can be configured on a per-project basis under *Project Settings > General Settings > Grouping Settings*.
 
 Enhancements are rules written in a pretty straightforward way. Each line is a
 single enhancement rule. It's one or multiple match expressions followed by one

@@ -3,7 +3,13 @@ title: 'Server-side Fingerprinting'
 sidebar_order: 1
 ---
 
-Server-side fingerprinting is also configured with a config similar to grouping enhancements, but the syntax is slightly different. The matchers are the same but instead of flipping flags, a fingerprint is assigned that overrides the default grouping entirely.
+Server-side fingerprinting is also configured with a config similar to
+[grouping enhancements]({% link _documentation/data-management/event-grouping/grouping-enhancements.md %}),
+but the syntax is slightly different. The matchers are the same
+but instead of flipping flags, a fingerprint is assigned that overrides the
+default grouping entirely.
+
+These rules can be configured on a per-project basis under *Project Settings > General Settings > Grouping Settings*.
 
 ```
 (matcher:expression)+ -> list, of, values
@@ -12,7 +18,8 @@ Server-side fingerprinting is also configured with a config similar to grouping 
 All values are matched against, and in the case of stack traces, all frames are considered.
 If all matches in a line match then the fingerprint is applied.
 
-The matchers are the same as for grouping enhancements but some extra ones are available:
+The matchers are [the same as for grouping enhancements]({% link _documentation/data-management/event-grouping/grouping-enhancements.md %}#rules)
+but some extra ones are available:
 
 - `type`: matches on an exception type
 - `value`: matches on an exception value

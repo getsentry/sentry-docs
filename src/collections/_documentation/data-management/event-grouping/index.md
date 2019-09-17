@@ -5,12 +5,9 @@ sidebar_order: 0
 
 All events have a fingerprint and events with the same fingerprint are grouped together. By default, Sentry will run one of our built-in grouping algorithms to generate a fingerprint based on information available within the event such as `stacktrace`, `exception`, and `message`. To extend the default grouping behavior or change it completely, you can use a combination of the following options:
 
-
 1. [SDK Fingerprinting]({%- link _documentation/data-management/event-grouping/sdk-fingerprinting.md -%})
-2. [Server-side Fingerprinting]({%- link _documentation/data-management/event-grouping/sever-side-fingerprinting.md -%})
-3. [Custom Grouping Rules]({%- link _documentation/data-management/event-grouping/custom-grouping-rules.md -%})
-
-
+2. [Server-side Fingerprinting]({%- link _documentation/data-management/event-grouping/server-side-fingerprinting.md -%})
+3. [Custom Grouping Enhancements]({%- link _documentation/data-management/event-grouping/grouping-enhancements.md -%})
 
 ## Grouping Algorithms
 
