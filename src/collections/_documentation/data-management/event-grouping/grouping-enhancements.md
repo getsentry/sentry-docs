@@ -35,7 +35,7 @@ The following **matchers** exist. Multiple matchers can be defined in a line:
   - `path:**/project/**.c`: matches on all files under `project` with a `.c` extension
   - `path:**/vendor/foo/*.c`: matches on vendor/foo without sub folders
   - `path:**/*.c`: matches on `foo.c` as well as `foo/bar.c`.
-- `module`: is similar to `path` but matches on the module. This is not used for Native, but it is used for Javascript, Python, and similar platforms. Matches are case sensitive, and normal globbing is available.
+- `module`: is similar to `path` but matches on the module. This is not used for Native, but it is used for JavaScript, Python, and similar platforms. Matches are case sensitive, and normal globbing is available.
 - `function`: matches on a function, and is case sensitive with normal globbing.
 - `function:myproject_*` matches all functions starting with `myproject_`
 - `function:malloc` matches on the malloc function
