@@ -666,7 +666,7 @@ from werkzeug.contrib.fixers import ProxyFix
 app.wsgi_app = ProxyFix(app.wsgi_app)
 ```
 
-This may also require [changes](http://flask.pocoo.org/docs/0.12/deploying/wsgi-standalone/#proxy-setups) to the proxy configuration to pass the right headers if it isn’t doing so already.
+This may also require [changes](http://flask.pocoo.org/docs/1.1.x/deploying/wsgi-standalone/#proxy-setups) to the proxy configuration to pass the right headers if it isn’t doing so already.
 
 ### Signals
 
