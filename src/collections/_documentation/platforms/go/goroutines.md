@@ -11,30 +11,9 @@ Once cloned, `Hub` is completly isolated and can be used safely inside concurren
 
 Here are two examples: 
 - a recommended deterministic call on `Hub` that is safe
-- a discouraged non-deterministic call on `Hub` that would leak information between threads
 
 ```go
-// Example of __INCORRECT__ use of scopes inside a Goroutines - DON'T USE IT!
-
-go func() {
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("secretTag", "go#1")
-	})
-	sentry.CaptureMessage("Hello from Goroutine! #1")
-}()
-
-go func() {
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetTag("secretTag", "go#2")
-	})
-	sentry.CaptureMessage("Hello from Goroutine! #2")
-}()
-
-// at this point both events can have either `go#1` tag or `go#2` tag. We'll never know.
-```
-
-```go
-// Example of __CORRECT__ use of scopes inside a Goroutines
+// Example of __CORRECT__ use of scopes inside a Goroutine
 
 go func(localHub *sentry.Hub) {
 	// as goroutine argument
@@ -52,4 +31,26 @@ go func() {
 	})
 	localHub.CaptureMessage("Hello from Goroutine! #2")
 }()
+```
+
+- a discouraged non-deterministic call on `Hub` that would leak information between threads
+
+```go
+// Example of __INCORRECT__ use of scopes inside a Goroutine - DON'T USE IT!
+
+go func() {
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetTag("secretTag", "go#1")
+	})
+	sentry.CaptureMessage("Hello from Goroutine! #1")
+}()
+
+go func() {
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetTag("secretTag", "go#2")
+	})
+	sentry.CaptureMessage("Hello from Goroutine! #2")
+}()
+
+// at this point both events can have either `go#1` tag or `go#2` tag. We'll never know.
 ```
