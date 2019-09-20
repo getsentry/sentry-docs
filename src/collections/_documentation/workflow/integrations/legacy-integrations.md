@@ -142,6 +142,15 @@ You’ll start getting rich commit information and deploy emails with each new r
 Connect Splunk to Sentry with the [Data Forwarding]({%- link _documentation/data-management/data-forwarding.md -%}) feature.
 
 {% capture __alert_content -%}
+We only support Splunk Cloud plans. We do not support Splunk Enterprise plans.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="info"
+%}
+
+{% capture __alert_content -%}
 See the [Splunk documentation](http://dev.splunk.com/view/event-collector/SP-CAAAE7F) for specific details on your Splunk installation.
 {%- endcapture -%}
 {%- include components/alert.html
