@@ -74,9 +74,9 @@ Now suspect commits and suggested assignees should start appearing on the issue 
 
 2. Check your Email for the alert about the new error and click **View on Sentry** to open the issue page
 
-3. In the main pain, notice the `SUSPECT COMMITS` section now points to a commit that most likely introduced the error. You can click on the commit button to see the actual commit details on GitHub
+3. In the main panel, notice the `SUSPECT COMMITS` section now points to a commit that most likely introduced the error. You can click on the commit button to see the actual commit details on GitHub
 
-4. In the right side pain, under `Suggested Assignees` - you'll see that the author of the suspect commit is listed as a suggested assignee for this issue
+4. In the right side panel, under `Suggested Assignees` - you'll see that the author of the suspect commit is listed as a suggested assignee for this issue
 
     ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-04.png @path %})
 
@@ -88,7 +88,7 @@ Now suspect commits and suggested assignees should start appearing on the issue 
     ![Suspect Commit]({% asset guides/integrate-frontend/configure-scms-05.png @path %})
 
 
-6. From the main pain, find the the `release` tag and **hover over** the `i` icon
+6. From the main panel, find the the `release` tag and **hover over** the `i` icon
 
 7. In the release popup notice the release now contains the commit data
 
