@@ -41,6 +41,14 @@ urlpatterns = [
 Visiting this route will trigger an error that will be captured by Sentry.
 <!-- ENDWIZARD -->
 
+## A note on Django Channels
+
+A Django application using [Channels 2.0](https://channels.readthedocs.io/en/latest/) will be correctly instrumented under Python 3.7. For older versions of Python you'll have to install `aiocontextvars` from PyPI or your application will not start.
+
+If you experience memory leaks in your channels consumers while using the SDK, you need to wrap your entire application in Sentry's [ASGI middleware]({% link _documentation/platforms/python/asgi.md %}).
+
+Unfortunately the SDK is not able to do so by itself, as [Channels is missing some hooks for instrumentation](https://github.com/django/channels/issues/1348).
+
 ## Behavior
 
 * All exceptions leading to an Internal Server Error are reported.
