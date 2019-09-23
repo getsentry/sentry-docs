@@ -324,7 +324,7 @@ to upload them using `sentry-cli`. Depending on your workflow, you may want to
 upload as part of your build pipeline or when deploying and publishing your
 application:
 
-[Visualization release process]
+{% asset debug-files-workflow.png %}
 
 Files can be uploaded using the `upload-dif` command. This command will scan a
 given folder recursively for files and upload them to Sentry:
@@ -407,8 +407,8 @@ repositories:
 
 1. **Custom Repositories:** Configures custom repositories containing debug
    files. You can choose from configuring an HTTP symbol server, Amazon S3
-   bucket or Google Cloud Storage bucket. This requires a Business or Enterprise
-   plan.
+   bucket or Google Cloud Storage bucket. This requires a _Business_ or
+   _Enterprise_ plan.
 
 2. **Built-In Repositories:** Allows to select from a list of pre-configured
    symbol servers. By default, _iOS_ and _Microsoft_ are enabled.
@@ -439,8 +439,8 @@ Beware that these cause notifications to your team members.
 ### Custom Repositories
 
 {% capture __alert_content -%}
-Custom repositories are available for organizations on the Business and
-Enterprise plans.
+Custom repositories are available for organizations on the _Business_ and
+_Enterprise_ plans.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

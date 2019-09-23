@@ -63,11 +63,11 @@ This is particularly useful when building and uploading debug information files
 are detached. In this case, a source bundle can be created when building and can
 be uploaded at any later point in time.
 
-To create a source bundle, use the `difutil bundle-sources` command on a debug
-information file: 
+To create a source bundle, use the `difutil bundle-sources` command on a list of
+debug information files: 
 
 ```bash
-$ sentry-cli difutil bundle-sources /path/to/file
+$ sentry-cli difutil bundle-sources /path/to/files...
 ```
 
 To create multiple source bundles for all debug information files, use the

@@ -22,7 +22,7 @@ without using the Native SDK, see the following resources:
 ## Integrating the SDK
 
 The Native SDK currently supports **Windows, macOS and Linux**. There are three
-flavors to choose from:
+distribution to choose from:
 
 |     Standalone     |  With Breakpad  |  With Crashpad  |
 | :----------------: | :-------------: | :-------------: |
@@ -34,10 +34,10 @@ flavors to choose from:
 |        ---         |    Minidumps    |    Minidumps    |
 |        ---         |   Attachments   |   Attachments   |
 
-> \* Adding stack traces and capturing application crashes requires you to add
-  an unwind library and hook into signal handlers of your process. The
-  Standalone version currently does not contain integrations that perform this
-  automatically.
+\* _Adding stack traces and capturing application crashes requires you to add an
+unwind library and hook into signal handlers of your process. The Standalone
+distribution currently does not contain integrations that perform this
+automatically._
 
 ### Building the SDK
 
@@ -47,17 +47,18 @@ platform, there is a `gen_*` subfolder that contains build files:
 
 **Windows**
 
-: A Microsoft Visual Studio 2017 solution. Open the solution and add your
-  projects or copy the projects to an existing solution. Each project supports a
-  debug and release configuration and includes all sources required for
-  building.
+: `gen_windows` contains a Microsoft Visual Studio 2017 solution. Open the
+  solution and add your projects or copy the projects to an existing solution.
+  Each project supports a debug and release configuration and includes all
+  sources required for building.
 
 **Linux and macOS**
 
-: Makefiles that can be used to produce dynamic libraries. Run `make help` to
-  see an overview of the available configurations and target. There are debug
-  and release configurations, that can be toggled when building:
-  
+: `gen_linux` and `gen_macos` contain Makefiles that can be used to produce
+  dynamic libraries. Run `make help` to see an overview of the available
+  configurations and target. There are debug and release configurations, that
+  can be toggled when building:
+
   ```bash
   make config=release sentry
   ```
@@ -66,11 +67,11 @@ There are multiple available targets to build:
 
  - `sentry`: Builds the Native SDK built as a dynamic library.
  - `sentry_breakpad`: Builds the Native SDK with Google Breakpad as a dynamic
-   library. 
+   library.
  - `sentry_crashpad`: Builds the Native SDK with Google Crashpad as a dynamic
-   library. 
- - `crashpad_*`: Builds crashpad utilities. To run the Crashpad version of the
-   SDK, you must build `crashpad_handler` and ship it with your application.
+   library.
+ - `crashpad_*`: Builds crashpad utilities. To run the Crashpad distribution of
+   the SDK, you must build `crashpad_handler` and ship it with your application.
 
 ### Connecting the SDK to Sentry
 
@@ -128,7 +129,7 @@ Once the event is captured, it will show up on the Sentry dashboard.
 
 The Native SDK exposes a _Value API_ to construct values like Exceptions, User
 objects, Tags, and even entire Events. There are several ways to create an
-event. 
+event.
 
 ### Manual Events
 
@@ -340,7 +341,7 @@ int main(void) {
   sentry_options_t *options = sentry_options_new();
   sentry_options_set_before_send(options, strip_sensitive_data);
   sentry_init(options);
-  
+
   /* ... */
 }
 ```
@@ -374,9 +375,9 @@ signature:
 #include <sentry.h>
 
 void custom_transport(sentry_value_t event, void *data) {
-  /* 
-   * Send the event here. If the transport requires state, such as an HTTP 
-   * client object or request queue, it can be specified in the `data` 
+  /*
+   * Send the event here. If the transport requires state, such as an HTTP
+   * client object or request queue, it can be specified in the `data`
    * parameter when configuring the transport. It will be passed as second
    * argument to this function.
    */
@@ -384,11 +385,11 @@ void custom_transport(sentry_value_t event, void *data) {
 
 int main(void) {
   void *transport_data = 0;
-  
+
   sentry_options_t *options = sentry_options_new();
   sentry_options_set_transport(options, custom_transport, transport_data);
   sentry_init(options);
-  
+
   /* ... */
 }
 ```
@@ -401,8 +402,8 @@ background thread or thread pool to avoid blocking execution.
 
 *Integrations* extend the functionality of the SDK for some common frameworks
 and libraries. Similar to plugins, they extend the functionality of the Sentry
-SDK. The Native SDK comes in two additional flavors that include integrations
-into the Breakpad and Crashpad libraries, respectively.
+SDK. The Native SDK comes in two additional distributions that include
+integrations into the Breakpad and Crashpad libraries, respectively.
 
 ### Google Breakpad
 
@@ -422,6 +423,17 @@ sentry_options_t *options = sentry_options_new();
 sentry_options_set_database_path(options, "sentry-db");
 sentry_init(options);
 ```
+
+{% capture __alert_content -%}
+Breakpad on macOS has been deprecated. If you are setting up a new project,
+consider to use the [Crashpad distribution](#google-crashpad) instead. The
+Sentry SDK is subject to limitations of Breakpad.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Warning"
+  content=__alert_content
+  level="warning"
+%}
 
 ### Google Crashpad
 
@@ -447,6 +459,24 @@ The crashpad handler executable must be shipped alongside your application so
 that it can be launched when initializing the SDK. The path is evaluated
 relative to the current working directory at runtime.
 
+{% capture __alert_content -%}
+We do not recommend to run Crashpad on Linux as development of the Crashpad
+library for Linux has not been completed. The Sentry SDK is subject to
+limitations of Crashpad, which on Linux include:
+
+ - No support for HTTPs uploads. Crash reports can only be uploaded to Sentry
+   using insecure HTTP connections.
+ - Limited crash handler support. In some cases, the crash handler may be
+   unstable or not capture the process state correctly.
+
+Consider to use the [Breakpad distribution](#google-breakpad) instead.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Warning"
+  content=__alert_content
+  level="warning"
+%}
+
 ### Event Attachments (Preview)
 
 Besides the Minidump file, Sentry can optionally store additional files uploaded
@@ -454,10 +484,9 @@ in the same request, such as log files.
 
 {% include platforms/event-attachments.md %}
 
-Attachments are only supported when using the Breakpad or Crashpad version of
-the SDK. To add an attachment, the path to the file has to be configured when
-initializing the SDK. It will monitor the file and add it to any Minidump that
-is sent to Sentry:
+Attachments require the _Crashpad_ distribution of the SDK. To add an
+attachment, the path to the file has to be configured when initializing the SDK.
+It will monitor the file and add it to any Minidump that is sent to Sentry:
 
 ```c
 sentry_options_add_attachment(options, "log", "/var/server.log");
