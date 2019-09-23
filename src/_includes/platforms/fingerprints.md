@@ -11,7 +11,8 @@ string `{{default}}` as one of the items.
 {% endraw %}
 
 For code samples, see [Grouping & Fingerprints]({%- link
-_documentation/data-management/rollups.md -%}?platform=python#use-cases).
+_documentation/data-management/event-grouping/index.md
+-%}?platform=python#use-cases).
 
 For more information, see [Aggregate Errors with Custom
 Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
