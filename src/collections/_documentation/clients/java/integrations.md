@@ -137,7 +137,7 @@ public class MyClass {
 
 ### ProGuard
 
-In order to use ProGuard with Sentry you will need to upload the proguard mapping files to Sentry by using our Gradle integration (recommended) or manually by using [_sentry-cli_]({%- link _documentation/cli/dif/proguard.md -%})
+To use ProGuard with Sentry, you will need to upload the ProGuard mapping files to Sentry by using our Gradle integration (recommended) or manually by using [_sentry-cli_]({%- link _documentation/cli/dif.md -%}#proguard-mapping-upload)
 
 #### Gradle Integration
 
@@ -205,7 +205,7 @@ First, you need to add the following to your ProGuard rules file:
 After ProGuard files are generated you will need to embed the UUIDs of the ProGuard mapping files in a properties file named `sentry-debug-meta.properties` in the assets folder. The Java SDK will look for the UUIDs there to link events to the correct mapping files on the server side.
 
 {% capture __alert_content -%}
-Sentry calculates UUIDs for proguard files. For more information about how this works see [UUID Format]({%- link _documentation/cli/dif/proguard.md -%}#proguard-uuids).
+Sentry calculates UUIDs for ProGuard files. For more information about how this works see [ProGuard UUIDs]({%- link _documentation/workflow/debug-files.md -%}#proguard-uuids).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

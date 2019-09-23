@@ -8,39 +8,7 @@ example_extra_key: character_name
 example_extra_value: 'Mighty Fighter'
 ---
 
-Sentry supports additional context with events. Often this context is shared amongst any issue captured in its lifecycle, and includes the following components:
-
-**Structured Contexts**
-
-: Specific structured contexts (OS info, runtime information etc.).  This is normally set automatically.
-
-[**User**](#capturing-the-user)
-
-: Information about the current actor
-
-[**Tags**](#tagging-events)
-
-: Key/value pairs which generate breakdowns charts and search filters
-
-[**Level**](#setting-the-level)
-
-: An event's severity 
-
-[**Fingerprint**](#setting-the-fingerprint)
-
-: A value used for grouping events into issues
-
-[**Unstructured Extra Data**](#extra-context)
-
-: Arbitrary unstructured data which is stored with an event sample
-
-{% capture __alert_content -%}
-Sentry will try its best to accommodate the data you send it, but large context payloads will be trimmed or may be truncated entirely. For more details see the [data handling SDK documentation]({%- link _documentation/development/sdk-dev/data-handling.md -%})
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Context Size Limits"
-  content=__alert_content
-%}
+{% include platforms/event-contexts.md %}
 
 ## Capturing the User
 
@@ -72,7 +40,8 @@ Additionally you can provide arbitrary key/value pairs beyond the reserved names
 
 ## Tagging Events
 
-Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and can later be used as a breakdown or quick access to finding related events.
+Tags are key/value pairs assigned to events that can be used for breaking down
+issues or quick access to finding related events.
 
 Most SDKs generally support configuring tags by configuring the scope:
 

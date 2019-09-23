@@ -6,6 +6,17 @@ title: 'Google Breakpad'
 
 As opposed to Crashpad, Breakpad uses in-process crash reporting. This is less robust and has several disadvantages over out-of-process crash reporting. Unless you have integrated Breakpad already, we strongly recommend you to consider using Crashpad instead.
 
+{% capture __alert_content -%}
+Sentry offers a higher-level [Native SDK]({%- link
+_documentation/platforms/native/index.md -%}) that has an integration with
+Breakpad. If you're setting up Breakpad for the first time, you might save some
+time this way!
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Heads Up"
+  content=__alert_content
+%}
+
 ## Integration
 
 Build and integration depend on the target platform. Please refer to [Breakpad Integration Overview](https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/getting_started_with_breakpad.md#integration-overview) for official instructions on how to integrate with your program. Generally, you will need to add the Breakpad headers to the include path and then start a platform dependent `ExceptionHandler`.

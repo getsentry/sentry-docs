@@ -57,47 +57,11 @@ except Exception as e:
 
 ## Releases
 
-A release is a version of your code that you deploy to an environment. When you give Sentry information about your releases, you unlock many new features:
-
-- Determine the issue and regressions introduced in a new release
-- Predict which commit caused an issue and who is likely responsible
-- Resolve issues by including the issue number in your commit message
-- Receive email notifications when your code gets deployed
-
-After configuring your SDK, setting up releases is a 2-step process:
-
-1. [Create Release and Associate Commits]({%- link _documentation/workflow/releases.md -%}#create-release)
-2. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases.md -%}#create-deploy)
-
-For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
+{% include platforms/configure-releases.md %}
 
 ## Context
 
-Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
-
-**Structured Contexts**
-
-: Structured contexts are typically set automatically.
-
-[**User**](#capturing-the-user)
-
-: Information about the current actor
-
-[**Tags**](#tagging-events)
-
-: Key/value pairs which generate breakdown charts and search filters
-
-[**Level**](#setting-the-level)
-
-: An event's severity
-
-[**Fingerprint**](#setting-the-fingerprint)
-
-: A value used for grouping events into issues
-
-[**Unstructured Extra Data**](#extra-context)
-
-: Arbitrary unstructured data which the Sentry SDK stores with an event sample
+{% include platforms/event-contexts.md %}
 
 ### Setting Context
 
@@ -144,7 +108,9 @@ with push_scope() as scope:
 
 ### Capturing the User
 
-Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
+Sending users to Sentry will unlock many features, primarily the ability to
+drill down into the number of users affecting an issue, as well as to get a
+broader sense about the quality of the application.
 
 ```python
 from sentry_sdk import configure_scope
@@ -153,29 +119,12 @@ with configure_scope() as scope:
     scope.user = {"email": "john.doe@example.com"}
 ```
 
-Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
-
-**`id`**
-
-: Your internal identifier for the user.
-
-**`username`**
-
-: The user’s username. Generally used as a better label than the internal ID.
-
-**`email`**
-
-: An alternative, or addition, to a username. Sentry is aware of email addresses and can show things like Gravatars, unlock messaging capabilities, and more.
-
-**`ip_address`**
-
-: The IP address of the user. If the user is unauthenticated providing the IP address will suggest that this is unique to that IP. If available, we will attempt to pull this from the HTTP request data.
-
-Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
+{% include platforms/user-attributes.md %}
 
 ### Tagging Events
 
-Sentry implements a system it calls tags. Tags are various key/value pairs that get assigned to an event, and the user can later use them as a breakdown or quick access to finding related events.
+Tags are key/value pairs assigned to events that can be used for breaking down
+issues or quick access to finding related events.
 
 Most SDKs generally support configuring tags by configuring the scope:
 

@@ -3,7 +3,21 @@ title: 'Google Crashpad'
 sidebar_order: 1
 ---
 
-[Crashpad](https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md) is an open-source multiplatform crash reporting system written in C++ by Google. It supports macOS, Windows and Linux (limited), and features an uploader to submit minidumps to a configured URL right when the process crashes.
+[Crashpad](https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md)
+is an open-source multiplatform crash reporting system written in C++ by Google.
+It supports macOS, Windows and Linux (limited), and features an uploader to
+submit minidumps to a configured URL right when the process crashes.
+
+{% capture __alert_content -%}
+Sentry offers a higher-level [Native SDK]({%- link
+_documentation/platforms/native/index.md -%}) that has an integration with
+Crashpad. If you're setting up Crashpad for the first time, you might save some
+time this way!
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Heads Up"
+  content=__alert_content
+%}
 
 Follow the [Crashpad developer docs](https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/doc/developing.md) for instructions on how to build Crashpad from source. Make sure that crashpad’s header files are in your include path, then add a call to [StartHandler()](https://crashpad.chromium.org/doxygen/classcrashpad_1_1CrashpadClient.html#a810ad9941bedba543bf60507c31c55da) during your program startup:
 

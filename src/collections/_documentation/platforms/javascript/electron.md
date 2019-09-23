@@ -110,7 +110,6 @@ The Electron SDK supports [Source Maps](http://www.html5rocks.com/en/tutorials/d
 
 ## Native
 
-
 Sentry can process Minidumps created when the Electron process or one of its renderers crashes. To do so, the SDK needs to upload those files once the application restarts (or immediately for renderer crashes). All event meta data including user information and breadcrumbs are included in these uploads.
 
 Due to restrictions of macOS app sandboxing, native crashes cannot be collected in Mac App Store builds. In this case, native crash handling will be disabled, regardless of the `enableNative` setting.
@@ -123,27 +122,23 @@ Minidumps are memory dumps of the process at the moment it crashes. As such, the
   content=__alert_content
 %}
 
-### Uploading Debug Information
+### Providing Debug Information
 
-To allow Sentry to fully process native crashes and provide you with symbolicated stack traces, you need to upload _Debug Information Files_ (sometimes also referred to as _Debug Symbols_ or just _Symbols_).
+To allow Sentry to fully process native crashes and provide you with
+symbolicated stack traces, you need to upload _Debug Information Files_
+(sometimes also referred to as _Debug Symbols_ or just _Symbols_).
 
-Sentry Wizard creates a convenient `sentry-symbols.js` script that will upload the Electron symbols for you. After installing the SDK and every time you upgrade the Electron version, run this script:
+First, make sure that the _Electron Symbol Server_ is enabled for your project.
+Go to _Project Settings > Debug Files_ and choose `Electron` from the list of
+_Builtin Repositories_. You can add more symbol servers for the platforms you
+are deploying to, depending on your needs.
 
-```sh
-$ node sentry-symbols.js
-```
-
-This script will download symbol archives for all platforms from the Electron [releases page](https://github.com/electron/electron/releases/latest) and upload them to Sentry. If your app uses a custom Electron fork or you simply prefer to upload them manually, you can do so with our CLI:
-
-```sh
-$ export VERSION=v1.8.4
-$ sentry-cli upload-dif -t dsym electron-$VERSION-darwin-x64-dsym.zip
-$ sentry-cli upload-dif -t breakpad electron-$VERSION-linux-x64-symbols.zip
-$ sentry-cli upload-dif -t breakpad electron-$VERSION-win32-x64-symbols.zip
-$ sentry-cli upload-dif -t breakpad electron-$VERSION-win32-ia32-symbols.zip
-```
-
-Likewise, if your app uses custom native extensions or you wish to symbolicate crashes from a spawned child process, upload its debug information manually during your build or release process. For more information on uploading debug information and their supported formats, see [Debug Information Files]({%- link _documentation/cli/dif/index.md -%}#sentry-cli-dif).
+If your application contains custom native extensions or you wish to symbolicate
+crashes from a spawned child process, upload their debug information manually
+during your build or release process. See [_Debug Information Files_]({%- link
+_documentation/workflow/debug-files.md -%}) for a detailed description of how to
+set up Sentry for native development. Additionally, see [_Uploading Debug
+Information_]({%- link _documentation/cli/dif.md -%}) for the upload process.
 
 ### Child Processes
 
