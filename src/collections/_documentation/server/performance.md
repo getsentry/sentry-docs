@@ -44,9 +44,20 @@ server {
   location / {
     include     uwsgi_params;
     uwsgi_pass  127.0.0.1:9000;
+    uwsgi_param HTTP_TRANSFER_ENCODING "";
   }
 }
 ```
+
+{% capture __alert_wsgi_content -%}
+In the example, the `HTTP_TRANSFER_ENCODING` param will unset the same header while handling request, due to a bug in how nginx handles chunked requests. That configuration is strongly suggested, because otherwise the proxied requests will have both the `Transfer-Encoding` and `Content-Length` headers set, which per HTTP/1.1 specs is not valid.
+
+For further reference, you can check [this PR on the PHP SDK repository](https://github.com/getsentry/sentry-php/pull/857), where this issue emerged.  
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_wsgi_content
+%}
 
 You also will likely want to run more web processes, which will spawn as children of the Sentry master process. The default number of workers is `3`. It’s possible to bump this up to `36` or more depending on how many cores you have on the machine. You can do this either by editing `SENTRY_WEB_OPTIONS` again:
 

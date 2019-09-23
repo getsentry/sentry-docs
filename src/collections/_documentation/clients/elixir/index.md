@@ -122,7 +122,7 @@ Sentry.capture_exception(exception, [tags: %{locale: "en-us", }, user: %{id: 34}
 
 ## Fingerprinting
 
-By default, Sentry aggregates reported events according to the attributes of the event, but users may need to override this functionality via [fingerprinting]({%- link _documentation/data-management/rollups.md -%}#customize-grouping-with-fingerprints).
+By default, Sentry aggregates reported events according to the attributes of the event, but users may need to override this functionality via [fingerprinting]({%- link _documentation/data-management/event-grouping/index.md -%}).
 
 To achieve that in Sentry Elixir, one can use the `before_send_event` configuration callback. If there are certain types of errors you would like to have grouped differently, they can be matched on in the callback, and have the fingerprint attribute changed before the event is sent.
 

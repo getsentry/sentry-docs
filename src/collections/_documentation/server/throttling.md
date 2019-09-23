@@ -25,13 +25,30 @@ SENTRY_QUOTA_OPTIONS = {
 }
 ```
 
-You can also configure the system-wide maximum per-minute rate limit:
+If you have additional needs, you’re freely available to extend the base Quota class just as the Redis implementation does.
+
+### System-wide Rate Limiting
+
+You can configure the system-wide maximum per-minute rate limit:
 
 ```yaml
 system.rate-limit: 500
 ```
 
-If you have additional needs, you’re freely available to extend the base Quota class just as the Redis implementation does.
+For example, in your project's `sentry.conf.py`, you can do something like this:
+
+```python
+from sentry.conf.server import SENTRY_OPTIONS
+
+
+SENTRY_OPTIONS['system.rate-limit'] = 500
+```
+
+Alternatively, if you navigate to `/manage/settings/` you will find an admin panel with an option for setting `Rate Limit`, which gets stored in your quota implementation described above.
+
+### Project-based Rate Limiting
+
+For doing project-based rate limiting, click on a project's `Settings`. Under the `Client Keys (DSN)` tab, find the key that you'd like to rate-limit, and click the corresponding `Configure` button. That should bring up key/project-specific rate-limiting settings.
 
 ## Notification Rate Limits
 

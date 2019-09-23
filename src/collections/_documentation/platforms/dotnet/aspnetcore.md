@@ -89,31 +89,41 @@ ASP.NET Core will automatically read this environment variable and bind it to th
 
 When configuring the SDK via the frameworks configuration system, it's possible to add the SDK by simply calling `UseSentry` without providing any further information:
 
+ASP.NET Core 2.x:
+
 ```csharp
 public static IWebHost BuildWebHost(string[] args) =>
     WebHost.CreateDefaultBuilder(args)
-        .UseStartup<Startup>()
-        // Add this:
+        // Add the following line:
         .UseSentry()
-        .Build();
 ```
+
+ASP.NET Core 3.0:
+
+```csharp
+public static IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(webBuilder =>
+        {
+            // Add the following line:
+            webBuilder.UseSentry();
+        });
+```
+
+Your DSN would be location if it was defined in `appsettings.json` or any other form of configuration.
 
 Some of the settings require actual code. For those, like the `BeforeSend` callback you can simply:
 
 ```csharp
-public static IWebHost BuildWebHost(string[] args) =>
-    WebHost.CreateDefaultBuilder(args)
-        .UseStartup<Startup>()
-        .UseSentry(options =>
-        {
-            options.BeforeSend = @event =>
-            {
-                // Never report server names
-                @event.ServerName = null;
-                return @event;
-            };
-        })
-        .Build();
+.UseSentry(options =>
+{
+    options.BeforeSend = @event =>
+    {
+        // Never report server names
+        @event.ServerName = null;
+        return @event;
+    };
+})
 ```
 
 > Example modifying all events before they are sent to avoid server names being reported.
