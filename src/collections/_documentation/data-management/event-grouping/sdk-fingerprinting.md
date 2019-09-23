@@ -7,8 +7,8 @@ In supported SDKs, you can override the Sentry default grouping passing the `fin
 
 ```javascript
 function makeRequest(method, path, options) {
-    return fetch(method, path, options).catch(err => {
-        Sentry.withScope(scope => {
+    return fetch(method, path, options).catch(function(err) {
+        Sentry.withScope(function(scope) {
           // group errors together based on their request and response
           scope.setFingerprint([method, path, err.statusCode]);
           Sentry.captureException(err);
@@ -21,8 +21,8 @@ Similarly, you can pass `{% raw %}{{ default }}{% endraw %}` in the fingerprint 
 
 ```javascript
 function makeRequest(method, path, options) {
-    return fetch(method, path, options).catch(err => {
-        Sentry.withScope(scope => {
+    return fetch(method, path, options).catch(function(err) {
+        Sentry.withScope(function(scope) {
           // extend the fingerprint with the request path
           scope.setFingerprint(['{% raw %}{{ default }}{% endraw %}', path]);
           Sentry.captureException(err);

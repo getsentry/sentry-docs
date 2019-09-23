@@ -385,7 +385,7 @@ There are two different scopes for unsetting context --- a global scope which Se
 Sentry.setUser(someUser);
 
 // This will be changed only for the error caught inside and automatically discarded afterward
-Sentry.withScope(scope => {
+Sentry.withScope(function(scope) {
   scope.setUser(someUser);
   Sentry.captureException(error);
 });
@@ -466,7 +466,7 @@ Sentry.captureMessage('this is a debug message', 'debug');
 To set the level within scope, you can call `setLevel()`:
 
 ```javascript
-Sentry.configureScope((scope) => {
+Sentry.configureScope(function(scope) {
   scope.setLevel('warning');
 });
 ```
@@ -474,7 +474,7 @@ Sentry.configureScope((scope) => {
 or per event:
 
 ```javascript
-Sentry.withScope((scope) => {
+Sentry.withScope(function(scope) {
   scope.setLevel("info");
   Sentry.captureException(error);
 });
@@ -493,7 +493,7 @@ For more information, see [Aggregate Errors with Custom Fingerprints](https://bl
 This minimal example will put all exceptions of the current scope into the same issue/group:
 
 ```javascript
-Sentry.configureScope((scope) => {
+Sentry.configureScope(function(scope) {
   scope.setFingerprint(['my-view-function']);
 });
 ```
@@ -507,8 +507,8 @@ The following example will split up the default group Sentry would create (repre
 
 ```javascript
 function makeRequest(path, options) {
-    return fetch(path, options).catch(err => {
-        Sentry.withScope(scope => {
+    return fetch(path, options).catch(function(err) {
+        Sentry.withScope(function(scope) {
           scope.setFingerprint(['{{default}}', path]);
           Sentry.captureException(err);
         });
@@ -520,7 +520,7 @@ function makeRequest(path, options) {
 If you have an error that has many different stack traces and never groups together, you can merge them together by omitting `{{ "{{default"}}}}` from the fingerprint array.
 
 ```javascript
-Sentry.withScope(scope => {
+Sentry.withScope(function(scope) {
   scope.setFingerprint(['Database Connection Error']);
   Sentry.captureException(err);
 });
@@ -686,7 +686,7 @@ Sentry.captureMessage('This shouldnt happen', 'info');
 
 // or more explicit
 
-Sentry.withScope((scope) => {
+Sentry.withScope(function(scope) {
   scope.setLevel('info');
   Sentry.captureMessage('This shouldnt happen');
 });
@@ -721,7 +721,7 @@ By default, the _Loader_ contains all information needed for our SDK to function
 
 
 ```javascript
-Sentry.onLoad(() => {
+Sentry.onLoad(function() {
   Sentry.init({
     release: '1.0.0',
     environment: 'prod'
@@ -746,7 +746,7 @@ The _Loader_ also provides a function called `forceLoad()` which does the same, 
 ```html
 <script>
   Sentry.forceLoad();
-  Sentry.onLoad(() => {
+  Sentry.onLoad(function() {
     // Use whatever Sentry.* function you want
   });
 </script>
@@ -1001,7 +1001,7 @@ import * as Sentry from '@sentry/browser';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: integrations => {
+  integrations: function(integrations) {
     // integrations will be all default integrations
     return integrations.filter(integration => integration.name !== 'Breadcrumbs');
   }
@@ -1014,9 +1014,9 @@ import * as Sentry from '@sentry/browser';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: integrations => {
+  integrations: function(integrations) {
     // integrations will be all default integrations
-    return [...integrations, new MyCustomIntegration()];
+    return [].concat(integrations).push(new MyCustomIntegration());
   }
 });
 ```

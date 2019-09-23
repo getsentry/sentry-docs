@@ -1,5 +1,5 @@
 ```javascript
-Sentry.configureScope((scope) => {
+Sentry.configureScope(function(scope) {
   scope.setFingerprint(['my-view-function']);
 });
 ```

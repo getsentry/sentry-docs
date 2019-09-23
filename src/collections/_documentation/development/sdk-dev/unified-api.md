@@ -159,7 +159,7 @@ A scope holds data that should implicitly be sent with Sentry events. It can hol
 The user should be able to modify the current scope easily (to set extra, tags, current user), through a global function `configure_scope`.  `configure_scope` takes a callback function to which it passes the current scope. Here's an example from another place in the docs:
 
 ```javascript
-Sentry.configureScope(scope => {
+Sentry.configureScope(function(scope) {
   scope.setExtra("character_name", "Mighty Fighter");
 });
 ```

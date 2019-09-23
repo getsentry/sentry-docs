@@ -30,7 +30,7 @@ const client = new BrowserClient({
 
 const hub = new Hub(client);
 
-hub.configureScope(scope => {
+hub.configureScope(function(scope) {
   scope.setTag("a", "b");
 });
 
@@ -43,7 +43,7 @@ try {
   hub.captureException(e);
 }
 
-hub.withScope(scope => {
+hub.withScope(function(scope) {
   hub.addBreadcrumb({ message: "crumb 2" });
   hub.captureMessage("test2");
 });
@@ -99,14 +99,14 @@ const hub2 = new Sentry.Hub(client2);
 
 hub1.run(currentHub => { // The hub.run method makes sure that Sentry.getCurrentHub() returns this hub during the callback
   currentHub.captureMessage("a");
-  currentHub.configureScope(scope => {
+  currentHub.configureScope(function(scope) {
     scope.setTag("a", "b");
   });
 });
 
 hub2.run(currentHub => { // The hub.run method makes sure that Sentry.getCurrentHub() returns this hub during the callback
   currentHub.captureMessage("x");
-  currentHub.configureScope(scope => {
+  currentHub.configureScope(function(scope) {
     scope.setTag("c", "d");
   });
 });
