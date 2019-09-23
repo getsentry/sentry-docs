@@ -61,7 +61,7 @@ containing all source files referenced by a specific debug information file.
 
 This is particularly useful when building and uploading debug information files
 are detached. In this case, a source bundle can be created when building and can
-be uploaded at any later point in time.
+be uploaded at any later point in time with `sentry-cli upload-dif`.
 
 To create a source bundle, use the `difutil bundle-sources` command on a list of
 debug information files: 
