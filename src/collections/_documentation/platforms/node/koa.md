@@ -16,7 +16,9 @@ Sentry.init({ dsn: '___PUBLIC_DSN___' });
 
 app.on('error', (err, ctx) => {
   Sentry.withScope(function(scope) {
-    scope.addEventProcessor(event => Sentry.Handlers.parseRequest(event, ctx.request));
+    scope.addEventProcessor(function(event) {
+      return Sentry.Handlers.parseRequest(event, ctx.request); 
+    });
     Sentry.captureException(err);
   });
 });

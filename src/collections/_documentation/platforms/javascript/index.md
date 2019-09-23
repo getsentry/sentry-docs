@@ -1003,7 +1003,9 @@ Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: function(integrations) {
     // integrations will be all default integrations
-    return integrations.filter(integration => integration.name !== 'Breadcrumbs');
+    return integrations.filter(function(integration) {
+      return integration.name !== 'Breadcrumbs';
+    });
   }
 });
 ```
@@ -1016,7 +1018,7 @@ Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: function(integrations) {
     // integrations will be all default integrations
-    return [].concat(integrations).push(new MyCustomIntegration());
+    return integrations.concat(new MyCustomIntegrations());
   }
 });
 ```
