@@ -83,10 +83,15 @@ Use the `sentry-cli upload-dif` command to upload debug information files to
 Sentry. The command will recurively scan the provided folders or ZIP archives.
 Files that have already been upload are skipped automatically.
 
-{% capture __alert_content -%
+We recommend uploading debug information files when publishing or releasing your
+application. Alternatively, files can be uploaded during the build process. See
+[_Debug Information Files_]({%- link _documentation/workflow/debug-files.md -%})
+for more information.
+
+{% capture __alert_content -%}
 You need to specify the organization and project you are working with because
-debug files belong to projects. For more information about this, refer to
-[Working with Projects]({%- link _documentation/cli/configuration.md
+debug information files work on projects. For more information about this refer
+to [Working with Projects]({%- link _documentation/cli/configuration.md
 -%}#sentry-cli-working-with-projects).
 {%- endcapture -%}
 {%- include components/alert.html
