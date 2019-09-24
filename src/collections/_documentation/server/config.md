@@ -45,7 +45,7 @@ Many settings available in `config.yml` will also be able to be configured in th
 
 : Declared in `config.yml`.
 
-  The URL prefix in which Sentry is accessible. This will be used both for referencing URLs in the UI, as well as in outbound notifications.
+  The URL prefix in which Sentry is accessible. This will be used both for referencing URLs in the UI, as well as in outbound notifications. This only works for scheme, hostname and port.
 
   ```yaml
   system.url-prefix: 'https://sentry.example.com'
