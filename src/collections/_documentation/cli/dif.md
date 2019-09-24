@@ -80,7 +80,7 @@ the upload is performed on the same machine as the application build.
 ## Uploading Files
 
 Use the `sentry-cli upload-dif` command to upload debug information files to
-Sentry. The command will recurively scan the provided folders or ZIP archives.
+Sentry. The command will recursively scan the provided folders or ZIP archives.
 Files that have already been upload are skipped automatically.
 
 We recommend uploading debug information files when publishing or releasing your
