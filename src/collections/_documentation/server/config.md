@@ -332,29 +332,6 @@ The following settings are available for the built-in SMTP mail server:
   SENTRY_SMTP_HOSTNAME = 'reply.getsentry.com'
   ```
 
-## Data Sampling
-
-`SENTRY_SAMPLE_DATA`
-
-: Declared in `sentry.conf.py`.
-
-  Controls sampling of data.
-
-  Defaults to `True`.
-
-  If this is enabled, data will be sampled in a manner similar to the following:
-
-  -   50 messages stores ~50 results
-  -   1000 messages stores ~400 results
-  -   10000 messages stores ~900 results
-  -   100000 messages stores ~1800 results
-  -   1000000 messages stores ~3600 results
-  -   10000000 messages stores ~4500 results
-
-  ```python
-  SENTRY_SAMPLE_DATA = False
-  ```
-
 ## Beacon
 
 `SENTRY_BEACON`
