@@ -169,7 +169,7 @@ docker run \
   run cron
 ```
 
-It’s recommended to only run one of them at the time or you will see unnecessary extra tasks being pushed onto the queues but the system will still behave as intended if multiple beat processes are run. This can be used to achieve high availability.
+It’s recommended to only run one cron container at a time or you will see unnecessary extra tasks being pushed onto the queues, but the system will still behave as intended if multiple beat processes are run. This can be used to achieve high availability.
 
 ## What’s Next? {#what-s-next}
 
