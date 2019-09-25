@@ -3,7 +3,7 @@ class DatabaseConnectionError extends Error {}
 
 Sentry.init({
   ...,
-  beforeSend: (event, hint) => {
+  beforeSend: function(event, hint) {
     const exception = hint.originalException;
 
     if (exception instanceof DatabaseConnectionError) {

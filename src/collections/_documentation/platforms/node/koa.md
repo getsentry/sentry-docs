@@ -15,8 +15,10 @@ const Sentry = require('@sentry/node');
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
 
 app.on('error', (err, ctx) => {
-  Sentry.withScope(scope => {
-    scope.addEventProcessor(event => Sentry.Handlers.parseRequest(event, ctx.request));
+  Sentry.withScope(function(scope) {
+    scope.addEventProcessor(function(event) {
+      return Sentry.Handlers.parseRequest(event, ctx.request); 
+    });
     Sentry.captureException(err);
   });
 });

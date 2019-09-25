@@ -72,7 +72,7 @@ Modern applications have many components that can produce errors, making it hard
 ```javascript
 // generate unique transactionId and set as Sentry tag
 const transactionId = getUniqueId();
-Sentry.configureScope(scope => {
+Sentry.configureScope(function(scope) {
     scope.setTag("transaction_id", transactionId);
 });
 

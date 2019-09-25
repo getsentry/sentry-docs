@@ -48,9 +48,11 @@ import * as Sentry from '@sentry/node';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: integrations => {
+  integrations: function(integrations) {
     // integrations will be all default integrations
-    return integrations.filter(integration => integration.name !== 'Console');
+    return integrations.filter(function(integration) { 
+      return integration.name !== 'Console';
+    });
   }
 });
 ```
@@ -62,9 +64,9 @@ import * as Sentry from '@sentry/node';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: integrations => {
+  integrations: function(integrations) {
     // integrations will be all default integrations
-    return [...integrations, new MyCustomIntegration()];
+    return integrations.concat(new MyCustomIntegrations());
   }
 });
 ```
@@ -119,8 +121,8 @@ Also, `eventProcessors` optionally receive the hint (see: [Hints](#hints)).
 
 ```javascript
 // This will be set globally for every succeeding event send
-Sentry.configureScope(scope => {
-  scope.addEventProcessor((event, hint) => {
+Sentry.configureScope(function(scope) {
+  scope.addEventProcessor(function(event, hint) {
     // Add anything to the event here
     // returning null will drop the event
     return event;
@@ -129,8 +131,8 @@ Sentry.configureScope(scope => {
 
 // Using withScope, will only call the event processor for all "sends"
 // that happen within withScope
-Sentry.withScope(scope => {
-  scope.addEventProcessor((event, hint) => {
+Sentry.withScope(function(scope) {
+  scope.addEventProcessor(function(event, hint) {
     // Add anything to the event here
     // returning null will drop the event
     return event;

@@ -14,7 +14,7 @@ Generate a unique transaction identifier and set as a Sentry tag in the service 
 ```javascript
 // generate unique transactionId and set as Sentry tag
 const transactionId = Math.random().toString(36).substr(2, 9);
-Sentry.configureScope(scope => {
+Sentry.configureScope(function(scope) {
     scope.setTag("transaction_id", transactionId);
 });
 ```
@@ -48,7 +48,7 @@ In the receiving service (the server responding to the request), extract the uni
 let transactionId = request.header('X-Transaction-ID');
 
 if (transactionId) {
-    Sentry.configureScope(scope => {
+    Sentry.configureScope(function(scope) {
         scope.setTag("transaction_id", transactionId);
     });
 }
@@ -128,7 +128,7 @@ class RequestIdMiddleware:
 app.use((req, res, next) => {
       let requestId = req.headers['x-request-id'];
       if (requestId) {
-        Sentry.configureScope((scope) => {
+        Sentry.configureScope(function(scope) {
           scope.setTag("request_id", requestId);
         });
       }
