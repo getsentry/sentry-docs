@@ -56,7 +56,7 @@ checking the box for: `Include Debug Files`.
 Now that the *Crash Reporter* and *Debug Files* are included, UE4 needs to know where to send the
 crash. For that, we add the Sentry *DSN* (Data Source Name) to game's configuration file. This will
 include which project within Sentry you want to see the crashes arriving in real time.
-That's accomplished by configuring the `CashReportClient` in the *DefaultEngine.ini* file.
+That's accomplished by configuring the `CrashReportClient` in the *DefaultEngine.ini* file.
 
 Edit the file:
 > project-root\Config\DefaultEngine.ini
