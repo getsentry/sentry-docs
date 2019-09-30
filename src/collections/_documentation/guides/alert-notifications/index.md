@@ -5,13 +5,15 @@ sidebar_order: 5
 
 Sentry’s alert notifications give real-time visibility into errors happening in your code and the impact they are having on your users regardless of where your code is deployed. They explain why you’re being notified and uncover meaningful and customizable information about the error and its context. In addition, Sentry will also notify your project team members about various workflow activities.
 
-## **Default Project Alert**
+## **Alert Notifications**
 
 When you create a new project in Sentry, a **default alert rule** populates within the project's Alerts view. The default alert notifies **all** project team members any time an error is **first** encountered (i.e. a new **issue** is created) in this project. This notification is sent via email and any other _legacy Integration_ services you might have enabled.
 
 ![Default Alert]({% asset guides/alert-notifications/alerts_notifications_01.png @path %})
 
 Getting notified **once** when an error is first seen is generally useful for catching new errors in real-time, but will not notify you about subsequent instances of the same errors. This means that with only the default alert rule in place, you might be losing visibility into critical issues building up in your code.
+
+For a tighter control over the alerts you're receiving, create **custom alert rules** in your project settings.
 
 ## **Workflow Notifications**
 
