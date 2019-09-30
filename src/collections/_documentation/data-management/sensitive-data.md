@@ -11,6 +11,12 @@ There are two great examples for data scrubbing that every company should think 
 - PII (Personally Identifiable Information) such as a user's name or email address, which post-GDPR should be on every company's mind
 - Authentication credentials, like tokens and passwords
 
+## Default PII
+
+Our newer SDKs do not purposefully send PII to stay on the safe side. This behavior is controlled by an option called [`send-default-pii`]({%- link _documentation/error-reporting/configuration/index.md -%}#send-default-pii -%}).
+
+Turning this option on is required for certain features in Sentry to work, but also means you will need to be even more careful about what data is being sent to Sentry (using the options below).
+
 ## Custom Event Processing in the SDK
 
 In the SDKs you can configure a `before-send` function which is invoked before an event is sent and can be used to modify the event data and remove sensitive data. See [_Filtering Events_]({%- link _documentation/error-reporting/configuration/filtering.md -%}) for more information.
