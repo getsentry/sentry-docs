@@ -93,7 +93,7 @@ This feature is `off` by default.
 ### `send-default-pii`
 
 {% unsupported browser javascript node %}
-If this flag is enabled, certain personally identifiable information is added by active integrations. By default no such data it sent.
+If this flag is enabled, certain personally identifiable information is added by active integrations. By default no such data is sent.
 
 If possible, it's recommended to turn on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_]({%- link _documentation/data-management/sensitive-data.md -%}).
 {% endunsupported %}
