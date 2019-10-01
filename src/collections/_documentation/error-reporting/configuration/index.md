@@ -93,10 +93,9 @@ This feature is `off` by default.
 ### `send-default-pii`
 
 {% unsupported browser javascript node %}
-If this flag is enabled, certain personally identifiable information is added by active
-integrations.  Without this flag they are never added to the event, to begin with.  If possible,
-it's recommended to turn on this feature and use the server side PII stripping to remove the
-values instead.
+If this flag is enabled, certain personally identifiable information is added by active integrations. By default no such data is sent.
+
+If possible, it's recommended to turn on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_]({%- link _documentation/data-management/sensitive-data.md -%}).
 {% endunsupported %}
 
 {:.config-key}
