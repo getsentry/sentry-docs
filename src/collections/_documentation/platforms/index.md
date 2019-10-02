@@ -19,7 +19,7 @@ If your use-case is very specific, or not covered by Sentry, you'll find documen
 
 These SDKs are [maintained and supported](https://forum.sentry.io) by the Sentry community. While generally our community does a great job at responding to issues, it's important to understand that Sentry staff cannot help you with issues using a community-supported SDK
 
-* [ Flutter ](https://flutter.dev/docs/cookbook/maintenance/error-reporting)
+* [_Flutter_](https://flutter.dev/docs/cookbook/maintenance/error-reporting)
 * [_C++_](https://github.com/nlohmann/crow)
 * [_Clojure_](https://github.com/sethtrain/raven-clj#alternatives)
 * [_Crystal_](https://github.com/Sija/raven.cr)
