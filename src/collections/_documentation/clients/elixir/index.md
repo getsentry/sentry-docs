@@ -130,7 +130,7 @@ An example configuration and implementation could look like:
 
 ```elixir
 # sentry.ex
-defmodule MyApp.Sentry
+defmodule MyApp.Sentry do
   def before_send(%{exception: [%{type: DBConnection.ConnectionError}]} = event) do
     %{event | fingerprint: ["ecto", "db_connection", "timeout"]}
   end
