@@ -119,7 +119,7 @@ by capturing a manual event:
 sentry_capture_event(sentry_value_new_message_event(
   /*   level */ SENTRY_LEVEL_INFO,
   /*  logger */ "custom",
-  /* message */ "It works!",
+  /* message */ "It works!"
 ));
 ```
 
@@ -192,7 +192,7 @@ optional.
 sentry_value_t event = sentry_value_new_message_event(
   /*   level */ SENTRY_LEVEL_INFO,
   /*  logger */ "custom",
-  /* message */ "It works!",
+  /* message */ "It works!"
 );
 ```
 
