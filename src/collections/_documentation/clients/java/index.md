@@ -37,7 +37,7 @@ Once you've configured one of the integrations below, you can _also_ use Sentry'
 
 ## Configuration {#config}
 
-Use the configuration below in combination with any of the integrations from above. The configuration will only work after an integration is installed. After that, [set your DSN]{#setting-the-dsn}.
+Use the configuration below in combination with any of the integrations from above. The configuration will only work after an integration is installed. After that, [set your DSN](#setting-the-dsn).
 
 ### Setting the DSN (Data Source Name) {#setting-the-dsn}
 
