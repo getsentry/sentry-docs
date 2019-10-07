@@ -25,9 +25,9 @@ Now that the Demo App is up and running on your local environment integrated wit
     ![Import and Configure SDK]({% asset guides/integrate-frontend/generate-first-error-01.png @path %})
     
     Notice that:
-    * An error message **Something went wrong** is displayed in the app 
-    * The error stack trace is shown in the browser console
-    * An alert was sent to your email address configured on Sentry.io. notifying you about an error that occurred in your app
+    * An error message **Something went wrong** displays in the app 
+    * The error stack trace shows in the browser console
+    * An alert sent to your email address configured on Sentry.io notifying you about an error that occurred in your app
     
         ![Import and Configure SDK]({% asset guides/integrate-frontend/generate-first-error-03.png @path %})
 
@@ -35,23 +35,23 @@ Now that the Demo App is up and running on your local environment integrated wit
 
 ## Step 2: Handle the Error
 
-1. Go to your email inbox and open the email notification from Sentry
+1. Go to your email Inbox and open the email notification from Sentry
 
     ![Import and Configure SDK]({% asset guides/integrate-frontend/generate-first-error-04.png @path %})
 
 2. Click on `View on Sentry` to view the full details and context of this error in your Sentry account
 
-3. The `Event` is opened in the `Issue` details page.
+3. Open the `Event` in the `Issue` details page
 
     ![Import and Configure SDK]({% asset guides/integrate-frontend/generate-first-error-05.png @path %})
-    > **Note:** Similar errors (events) are aggregated into one Issue
+    > **Note:** Sentry aggregates similar errors (events) into one Issue
 
-4. Scroll down to the `Exception Stack-trace`
+4. Scroll down to the `Exception` stack trace
 
     ![Error Stack-trace]({% asset guides/integrate-frontend/generate-first-error-06.png @path %})
 
-    > * Notice that the stack-trace is **minified**. This is usually the case with JavaScript code in a production environment.
-    > * Sentry can un-minify the code back to it's readable form and display source (code) context lines in the stack frames . We will configure that in the next tutorial.
+    > * Notice that the stack trace is **minified**. This is usually the case with JavaScript code in a production environment.
+    > * Sentry can un-minify the code back to its readable form and display source (code) context lines in the stack frames. We will configure that in the next tutorial.
 
 ***
 
