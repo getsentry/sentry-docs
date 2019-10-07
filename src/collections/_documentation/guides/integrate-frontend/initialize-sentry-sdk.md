@@ -3,17 +3,17 @@ title: Introduce Sentry SDK to your Frontend Code
 sidebar_order: 2
 ---
 
-In this tutorial, you will import the demo frontend app source code into your local development environment, add the Sentry SDK and initialize it. 
+In this tutorial, you will import the demo frontend app source code into your local development environment, add the Sentry SDK, and initialize it. 
 
 > **Note:** If you're using your own source code you can skip this tutorial and instead 
 > * Follow the instructions on [Getting Started](https://docs.sentry.io/error-reporting/quickstart/?platform=browser). Notice that you can select the desired platform. 
-> * Continue with the [Next tutorial]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%})
+> * Continue with the [Next tutorial]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%}).
 
 ***
 
 ## Prerequisites
 
-The demo app source code requires a **NodeJS** development environment to build install and run the application. Make sure that you have the following in place:
+The demo app source code requires a **NodeJS** development environment to install and run the application. Make sure that you have the following in place:
 - A source code editor (like [VS-Code](https://code.visualstudio.com))
 - [Node and NPM](https://nodejs.org/en/)
 - [NVM](https://github.com/nvm-sh/nvm) 
@@ -29,7 +29,7 @@ The demo app source code requires a **NodeJS** development environment to build 
     ![Fork Repository]({% asset guides/integrate-frontend/initialize-sentry-sdk-01.png @path %})
     
 
-3. Once the fork is complete, click on `Clone or download` and copy the repository HTTPS URL
+3. Once the fork is complete, click on `Clone or download`, and copy the repository HTTPS URL
 
     ![Clone Repository]({% asset guides/integrate-frontend/initialize-sentry-sdk-02.png @path %})
 
@@ -47,22 +47,22 @@ The demo app source code requires a **NodeJS** development environment to build 
 
 Sentry captures data by using a platform-specific SDK within your application runtime. To use the SDK, import and configure it in your source code.
 
-The demo project users REACT and Browser JS. The quickest way to get started is by using the CDN hosted version of the JavaScript browser SDK, however you can [NPM install](https://docs.sentry.io/error-reporting/quickstart/?platform=browsernpm) the browser library as well.
+The demo project uses React and Browser JS. The quickest way to get started is by using the CDN hosted version of the JavaScript browser SDK, however, you can [NPM install](https://docs.sentry.io/error-reporting/quickstart/?platform=browsernpm) the browser library as well.
 
 1. Open the `index.html` file (located under _./sentry-react-demo/public/_)
 
     ![Import and Configure SDK]({% asset guides/integrate-frontend/initialize-sentry-sdk-03.png @path %})
     
-    > Notice that we import the JavaScript browser SDK and initialize it as early as possible in our code. When initializing the SDK we provide the desired configuration. The only mandatory key is the **dsn**.
+    > Notice that we import the JavaScript browser SDK and initialize it as early as possible in our code. When initializing the SDK, we provide the desired configuration. The only mandatory key is the **DSN**.
 
-2. In the Sentry SDK configuration, enter the `dsn` key value you copied from the project created in the previous tutorial. 
+2. In the Sentry SDK configuration, enter the `DSN` key value you copied from the project created in the previous tutorial. 
 
     ```javascript
     Sentry.init({
         dsn: '<PASTE YOUR DSN KEY HERE>'
     });
     ```
-    > Besides `dsn`, the SDK configuration supports multiple other options. Take a look at our [Configuration](https://docs.sentry.io/error-reporting/configuration) documentation for more information. 
+    > Besides the `DSN`, the SDK configuration supports multiple other options. Take a look at our [Configuration](https://docs.sentry.io/error-reporting/configuration) documentation for more information. 
 
 ***
 
@@ -72,7 +72,7 @@ To build and run the Demo application on your localhost
 
 1. Open a shell terminal and change directory to the `sentry-react-demo` project folder 
 
-2. Use the nvmrc file to set the node version compatible with this project. Run: 
+2. Use the nvmrc file to set the Node version compatible with this project. Run: 
      ```bash
     $ nvm use
     ```
@@ -80,7 +80,7 @@ To build and run the Demo application on your localhost
      ```bash
     $ npm install
     ```
-4. Build, deploy and run the project on your localhost by running:
+4. Build, deploy, and run the project on your localhost by running:
      ```bash
     $ npm run deploy
     ```
