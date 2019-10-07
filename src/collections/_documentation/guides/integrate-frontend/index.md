@@ -9,7 +9,7 @@ This step-by-step guide walks you through the flow of setting up and configuring
 - Display a readable stack trace with source code context in the stack frame for debugging
 - Suggest suspected commits and suitable developers to quickly resolve issues
 
-> **Note:**  We provided the source code for a sample REACT application to use along with this guide. This allows us to streamline the steps required to getting the maximum value out of integrating Sentry into your development workflow.
+> **Note:**  We provided the source code for a sample React application to use along with this guide. This allows us to streamline the steps required to getting the maximum value out of integrating Sentry into your development workflow.
 >
 > Alternatively, you can follow this guide as a reference and apply the relevant changes directly to your source code.
 
