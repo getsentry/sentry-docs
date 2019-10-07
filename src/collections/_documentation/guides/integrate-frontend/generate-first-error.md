@@ -57,9 +57,9 @@ Now that the Demo App is up and running on your local environment integrated wit
 
 ## Step 3: Create New Alerts
 
-You can create various alert rules per project and let Sentry know when, how, and who you want notified when errors occur in your application. **Alert rules** consist of **Conditions** and **Actions** which are performed once the associated conditions are met. Click here to read more about [Alerts](https://docs.sentry.io/workflow/notifications/alerts/).
+You can create various alert rules per project and let Sentry know when, how, and who you want notified when errors occur in your application. **Alert rules** consist of **Conditions** and **Actions** which are performed once the associated conditions are met. For more information, see [Alerts](https://docs.sentry.io/workflow/notifications/alerts/).
 
-By default, each project is created with one initial alert rule, notifying all project team members (via email) the first time a new **issue** is seen. This means that the next time the Checkout **error** occurs, you will not be notified about it.
+By default, each project is created with one initial alert rule, notifying all project team members (via email) the first time a new **issue** appears. This means that the next time the Checkout **error** occurs, you will not be notified about it.
 
 In this step, you will create a new Alert rule notifying **every time** an event occurs even if it's associated with an already existing **issue**.
 
@@ -74,18 +74,18 @@ In this step, you will create a new Alert rule notifying **every time** an event
 
     ![Alerts Configuration]({% asset guides/integrate-frontend/generate-first-error-08.png @path %})
 
-4. In the New Alert Rule form enter the following values 
+4. In the New Alert Rule form, enter the following values 
 
     ![New Alert Rule form]({% asset guides/integrate-frontend/generate-first-error-09.png @path %})
 
-    > The new alert rule will notify you Every time _An event is seen_ in _All Environments_ via _Mail_
+    > The new alert rule will notify you every time _an event is seen_ in _All Environments_ via _Mail_
 
 5. Click `Save Rule` to create the new rule
 
-6. To test the new rule, reproduce the error in the demo app. 
+6. To test the new rule, reproduce the error in the demo app 
 
 ***
 
 ## Next
 
-[Enable Readable Stack-traces in your Errors]({%- link _documentation/guides/integrate-frontend/upload-source-maps.md -%})
+[Enable Readable Stack Traces in your Errors]({%- link _documentation/guides/integrate-frontend/upload-source-maps.md -%})
