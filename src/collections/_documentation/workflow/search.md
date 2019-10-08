@@ -72,7 +72,7 @@ In the example above, the search query will match on `browser` values like `"Saf
 
 #### Tag Syntax
 
-Search supports an implicit and explicit tag search. If you wish to use a reserved keyword as a tag (such as `product_id`), you will need to wrap the search paramater in `tags[]` such as: 
+Search supports an implicit and explicit tag search. If you wish to use a reserved keyword as a tag (such as `product_id`), you will need to wrap the search parameter in `tags[]` such as: 
 ```
 tags[product_id]:123
 ```
