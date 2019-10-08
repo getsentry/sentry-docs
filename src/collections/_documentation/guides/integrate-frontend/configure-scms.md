@@ -78,16 +78,16 @@ Now suspect commits and suggested assignees should start appearing on the issue 
     ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-04.png @path %})
 
     > You can assign the suggested assignee to the issue by clicking on the icon. However, in this case, the commit originates in the repository upstream, and the suggested assignee is not part of your organization.
-    > Alternatively, you can manually assign the issue to other users or teams assigned to the project
+    > Alternatively, you can manually assign the issue to other users or teams assigned to the project.
 
-5. Click on the `ASSIGNEE` drop-down and select one of the project users or teams
+5. Click on the `ASSIGNEE` dropdown and select one of the project users or teams
 
     ![Suspect Commit]({% asset guides/integrate-frontend/configure-scms-05.png @path %})
 
 
-6. From the main panel, find the the `release` tag and **hover over** the `i` icon
+6. From the main panel, find the `release` tag and **hover over** the `i` icon
 
-7. In the release popup notice the release now contains the commit data
+7. In the release popup, notice the release now contains the commit data
 
     ![Assign Manually]({% asset guides/integrate-frontend/configure-scms-06.png @path %})
 
