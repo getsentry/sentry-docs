@@ -146,7 +146,7 @@ $NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli upload-dif "$DWARF_DSYM_
 
 ## Android
 
-For Android, we hook into Gradle for the source map build process. When you run `react-native link`, the Gradle files are automatically updated.
+For Android, we hook into Gradle for the source map build process. When you run `react-native link` or `yarn sentry-wizard -i reactNative -p ios android` (if react-native `> 0.60`), the Gradle files are automatically updated.
 
 We enable the Gradle integration in your `android/app/build.gradle` file by adding the following line after the `react.gradle` one:
 
@@ -175,16 +175,14 @@ The corresponding flavor files should also be placed within the specific build t
 
 We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavor's name.
 
-Include the project by adding it to our dependency list in `app/build.gradle`:
-
-```java
-dependencies {
-    // ... other dependencies listed here //
-    implementation project(':@sentry/react-native')
-}
-```
-
 Please make sure your `MainApplication.java` looks something like this:
+{% capture __alert_content -%}
+This is only necessary for react-native versions `< 0.60`.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+%}
 
 ```java
 import io.sentry.RNSentryPackage;
@@ -200,11 +198,4 @@ public class MainApplication extends Application implements ReactApplication {
     }
 
 }
-```
-
-
-Add the following to your `settings.gradle` file:
-```java
-include ':@sentry/react-native'
-project(':@sentry/react-native').projectDir = new File(rootProject.projectDir, '../node_modules/@sentry/react-native/android')
 ```
