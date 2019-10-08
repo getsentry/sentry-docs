@@ -70,6 +70,21 @@ browser:"Safari 11*"
 
 In the example above, the search query will match on `browser` values like `"Safari 11.0.2"`, `"Safari 11.0.3"`, etc.
 
+#### Tag Syntax
+
+Search supports an implicit and explicit tag search. If you wish to use a reserved keyword as a tag (such as `product_id`), you will need to wrap the search paramater in `tags[]` such as: 
+```
+tags[product_id]:123
+```
+
+This is optional, and only really required to be explicit and use special keywords as tags. If you run into issues with your search using custom tags, it may be a good idea to try explicitly wrapping them.
+
+```
+browser:"Safari 11*"
+```
+
+In the example above, the search query will match on `browser` values like `"Safari 11.0.2"`, `"Safari 11.0.3"`, etc.
+
 ## Search Properties
 
 In the examples above, we've highlighted a couple of example properties you can search on: `is`, `user`, `server`, `browser`, etc. Below is a canonical list of all available search terms.
