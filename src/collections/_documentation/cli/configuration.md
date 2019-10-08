@@ -168,7 +168,7 @@ org=my-org
 
 ### Environment Variables
 
-You can also set these defaults in environment variables. There are two environment vaiables that control this (`SENTRY_ORG` and `SENTRY_PROJECT`) which you can export:
+You can also set these defaults in environment variables. There are two environment variables that control this (`SENTRY_ORG` and `SENTRY_PROJECT`) which you can export:
 
 ```bash
 export SENTRY_ORG=my-org
