@@ -177,7 +177,7 @@ We recommend leaving `logLevel: "debug"` since we look for specific `sentry.prop
 
 Please make sure your `MainApplication.java` looks something like this:
 {% capture __alert_content -%}
-This is only nessecary for react-native versions `< 0.60`.
+This is only necessary for react-native versions `< 0.60`.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
