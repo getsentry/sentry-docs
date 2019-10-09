@@ -135,13 +135,13 @@ require __DIR__ . '/../app/Http/routes.php';
 Add Sentry reporting to `app/Exceptions/Handler.php`:
 
 ```php
-public function report(Exception $e)
+public function report(Exception $exception)
 {
-    if (app()->bound('sentry') && $this->shouldReport($e)) {
-        app('sentry')->captureException($e);
+    if (app()->bound('sentry') && $this->shouldReport($exception)) {
+        app('sentry')->captureException($exception);
     }
 
-    parent::report($e);
+    parent::report($exception);
 }
 ```
 
