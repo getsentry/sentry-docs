@@ -1,6 +1,7 @@
 ---
 title: Platforms
 sidebar_order: 2
+keywords: ["flutter"]
 ---
 
 To report to Sentry you’ll need to use a language-specific SDK. The Sentry team builds and maintains these for most popular languages, but there’s also a large ecosystem supported by the community.
