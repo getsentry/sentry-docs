@@ -72,7 +72,7 @@ In the example above, the search query will match on `browser` values like `"Saf
 
 #### Tag Syntax
 
-Search supports an implicit and explicit tag search. We can automatically recognize most tags implicitly, but if you wish to use an explicit tag syntax, you can wrap the tag in `tags[]` such as: 
+Search supports an implicit and explicit tag search. We can automatically recognize most tags implicitly, but if you wish to use an explicit tag syntax, you can wrap the tag using our `tags[]` syntax like so: 
 
 ```
 tags[tag_name]:tag_value
