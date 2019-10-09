@@ -29,7 +29,7 @@ To use Raven Ruby all you need is your DSN. Like most Sentry libraries it will h
 
 ```ruby
 Raven.configure do |config|
-  config.dsn = '___DSN___'
+  config.dsn = '___PUBLIC_DSN___'
 end
 ```
 

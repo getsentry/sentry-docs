@@ -414,8 +414,8 @@ Sentry.captureMessage('this is a debug message', 'debug');
 To set the level within scope, you can call `setLevel()`:
 
 ```javascript
-Sentry.configureScope(function(scope) {
-  scope.setLevel('warning');
+Sentry.configureScope(function(scope) { 
+  scope.setLevel(Sentry.Severity.Warning); 
 });
 ```
 
