@@ -15,7 +15,7 @@ After that change your `Podfile` to reference to the packages in your `node_modu
 target 'YOUR-TARGET' do
     # Your react-native and other pods
 
-    pod 'SentryReactNative', :path => '../node_modules/react-native-sentry/SentryReactNative.podspec' # or your path to node_modules
+      pod 'RNSentry', :path => '../node_modules/@sentry/react-native/RNSentry.podspec' # or your path to node_modules
 end
 ```
 
