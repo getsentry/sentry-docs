@@ -479,8 +479,8 @@ Sentry.withScope(function(scope) {
 ![Sauce Test Status]({%- asset browser-support.svg @path -%})
 
 {% capture __alert %}
-Our SDK needs some polyfills for older browsers like IE 11 and lower.
-Please add the script tag below before loading our SDK.
+Prior to version 5.7.0, our SDK needed some polyfills for older browsers like IE 11 and lower.
+If you are using it, please upgrade to the latest version or add the script tag below before loading our SDK.
 
 ```
 <script src="https://polyfill.io/v3/polyfill.min.js?features=Promise%2CObject.assign%2CString.prototype.includes%2CNumber.isNaN"></script>
