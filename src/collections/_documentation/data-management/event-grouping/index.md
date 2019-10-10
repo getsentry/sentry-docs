@@ -11,7 +11,7 @@ All events have a fingerprint and events with the same fingerprint are grouped t
 
 ## Grouping Algorithms
 
-Each time the default behavior is modified, Sentry releases it as a new version so it does not affect how existing issues are grouped. When you create a Sentry project, the latest and greatest version of the grouping algorithm is automatically selected. This means that the grouping behavior is consistent within a project. If you want to upgrade an existing project to a new grouping algorithm version, you can do so in the project settings. Note that you can only upgrade whhen upgrading you will very likely see new groups being created.
+Each time the default behavior is modified, Sentry releases it as a new version so it does not affect how existing issues are grouped. When you create a Sentry project, the latest and greatest version of the grouping algorithm is automatically selected. This means that the grouping behavior is consistent within a project. If you want to upgrade an existing project to a new grouping algorithm version, you can do so in the project settings. When upgrading you will very likely see new groups being created.
 
 All versions consider the `stacktrace`, `exception` and `message`. 
 
