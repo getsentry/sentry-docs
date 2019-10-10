@@ -202,7 +202,7 @@ A Client is the part of the SDK that is responsible for event creation. To give 
 
 - `Client::from_config(config)`: (alternatively normal ctor) This takes typically an object with options + dsn.
 
-- `Client::capture_event(event, scope)`: Captures the the event by merging it with other data with defaults from the client + if a scope is passed to this system the data from the scope and passes it on to the internal transport.
+- `Client::capture_event(event, scope)`: Captures the event by merging it with other data with defaults from the client. In addition, if a scope is passed to this system, the data from the scope passes it to the internal transport.
 
 - `Client::close(timeout)`: Flushes out the queue for up to timeout seconds. If the client can guarantee delivery of events only up to the current point in time this is preferred. This might block for timeout seconds. The client should be disabled or disposed after close is called
 

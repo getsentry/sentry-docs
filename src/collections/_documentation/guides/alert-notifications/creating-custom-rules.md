@@ -63,7 +63,7 @@ An event's {attribute} value {match} {value}
 In addition, you can also set up rules that account for multiple different attributes at once, and chain that logic together.
 
 ![Alert Rule Event Attributes 2]({% asset guides/alert-notifications/alerts_notifications_13.png @path %})
-> In this more advanced example, a notification containing the the message, platform, and type attribute values gets routed to the _Android Dev_ team in _Slack_ if a _RunTimeError_ with the message _Failed to Reload Index_ comes in from our _Java platform_.
+> In this more advanced example, a notification containing the message, platform, and type attribute values gets routed to the _Android Dev_ team in _Slack_ if a _RunTimeError_ with the message _Failed to Reload Index_ comes in from our _Java platform_.
 
 ### **Event Thresholds**
 
