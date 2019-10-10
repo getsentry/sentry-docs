@@ -88,7 +88,7 @@ Now suspect commits and suggested assignees should start appearing on the issue 
     ![Suspect Commit]({% asset guides/integrate-frontend/configure-scms-05.png @path %})
 
 
-6. From the main panel, find the the `release` tag and **hover over** the `i` icon
+6. From the main panel, find the `release` tag and **hover over** the `i` icon
 
 7. In the release popup notice the release now contains the commit data
 
