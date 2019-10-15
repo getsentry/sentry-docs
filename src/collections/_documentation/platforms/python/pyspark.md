@@ -64,7 +64,7 @@ In your `spark_submit` command, add the following configuration options so the s
 
 <!-- ENDWIZARD -->
 
-## Behaviour
+## Behavior
 
 * You must have the sentry python sdk installed on all your clusters to use the Spark integration. The easiest way to do this is to run an initialization script on all your clusters:
 
