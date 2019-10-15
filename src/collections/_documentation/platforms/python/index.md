@@ -4,7 +4,7 @@ title: Python
 
 ## Integrating the SDK
 
-Sentry captures data by using an SDK within your application’s runtime. These are platform specific and allow Sentry to have a deep understanding of how your application works.
+Sentry captures data by using an SDK within your application’s runtime. These are platform specific and allow Sentry to have a deep understanding of how your application works
 
 Install our Python SDK using `pip`:
 
