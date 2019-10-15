@@ -79,7 +79,7 @@ pip install --upgrade 'sentry-sdk=={% sdk_version sentry.python %}'
 
 ## Google Cloud Dataproc
 
-This integration can be setup to be used with [Google Cloud Dataproc](https://cloud.google.com/dataproc/). It is recommended that Cloud Dataproc image version 1.4 as it comes with Spark 2.4 (required by the worker integration).
+This integration can be set up to be used with [Google Cloud Dataproc](https://cloud.google.com/dataproc/). It is recommended that Cloud Dataproc image version 1.4 be used as it comes with Spark 2.4 (required by the worker integration).
 
 1. Set up an [Initialization action](https://cloud.google.com/dataproc/docs/concepts/configuring-clusters/init-actions) to install the `sentry-sdk` on your Dataproc cluster.  
 
