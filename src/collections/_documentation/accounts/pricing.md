@@ -90,4 +90,4 @@ After the new spending cap is in effect, all additional events will be rejected 
 
 `If I want to cancel monthly billing, what happens?`
 
-Your plan will continue until the end of the current billing cycle. After this, you’ll revert to the base developer plan, with includes a limited number of events and team members.
+Your plan will continue until the end of the current billing cycle. After this, you’ll revert to the base developer plan, which includes a limited number of events and team members.
