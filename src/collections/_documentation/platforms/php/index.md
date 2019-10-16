@@ -427,9 +427,16 @@ use Sentry\State\Hub;
 
 $options = ['dsn' => '___PUBLIC_DSN___'];
 
-$spool = new MemorySpool();
-$transport = new SpoolTransport($spool);
+
 $httpTransport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
+
+$transportFactory = new class implements TransportFactoryInterface {
+    public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
+    {
+        $spool = new MemorySpool();
+        return new SpoolTransport($spool);
+    }
+};
 
 $builder = ClientBuilder::create($options);
 $builder->setTransport($transport);
