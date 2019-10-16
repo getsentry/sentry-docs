@@ -439,7 +439,7 @@ $transportFactory = new class implements TransportFactoryInterface {
 };
 
 $builder = ClientBuilder::create($options);
-$builder->setTransport($transport);
+$builder->setTransportFactory($transportFactory);
 
 Hub::getCurrent()->bindClient($builder->getClient());
 
