@@ -175,7 +175,7 @@ The corresponding flavor files should also be placed within the specific build t
 
 We recommend leaving `logLevel: "debug"` since we look for specific `sentry.properties` files depending on your flavor's name.
 
-Include the project by adding it to our dependency list in `app/build.gradle`:	
+Include the project by adding it to your dependency list in `app/build.gradle`:	
 ```java	
 dependencies {	
     // ... other dependencies listed here //	
