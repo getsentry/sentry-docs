@@ -3,7 +3,7 @@ title: Apache Spark
 sidebar_order: 9
 ---
 
-{% version_added INSERT_VERSION_HERE %}
+{% version_added 0.13.0 %}
 
 <!-- WIZARD -->
 The Spark Integration adds support for the Python API for Apache Spark, [PySpark](https://spark.apache.org/).
