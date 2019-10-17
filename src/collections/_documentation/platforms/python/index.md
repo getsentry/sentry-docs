@@ -245,7 +245,10 @@ For more information, see:
 
 - [Celery]({%- link _documentation/platforms/python/celery.md -%})
 - [RQ (Redis Queue)]({%- link _documentation/platforms/python/rq.md -%})
+
+#### Data
 - [Apache Beam]({%- link _documentation/platforms/python/beam.md -%})
+- [PySpark]({%- link _documentation/platforms/python/pyspark.md -%})
 
 #### Serverless
 
