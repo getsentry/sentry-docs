@@ -538,6 +538,10 @@ For more information, see:
 - [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
 - [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
+### Truncating length of strings in events
+
+After version `5.0.0` we introduced a new option called `maxValueLength`. The default value is `250` you can adjust this value according to your needs if your messages are longer than that.
+
 ### Filter Events & Custom Logic
 Sentry exposes a beforeSend callback which can be used to filter out information or add additional context to the event object.
 
