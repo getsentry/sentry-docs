@@ -272,7 +272,7 @@ By default this option is set to `6`.
 
 ##### max_request_body_size
 
-This option represents the size limit in bytes beyond which the body of the request is not captured. Default value is `medium`. Possible values are `none` = never send body, `small`, `medium`, `alawys` = always send the body, no matter how large it is.
+This option represents the size limit in bytes beyond which the body of the request is not captured. The default value is `medium`. Possible values are `none` = never send body, `small`, `medium`, `always` = always send the body, no matter how large it is.
 The values are chosen like this on purpose since the SDK internally can define what the exact limits are.
 
 ### Transport
