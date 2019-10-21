@@ -36,7 +36,6 @@ SDKs generally also provide ways to capture entire custom event objects.  This i
 integrations internally use to capture bespoke events with a lot of extra data fed
 into.  For more information about that consult the API documentation of the SDK.
 
-
 ## Next Steps
 
 * Need to add extra data to your events? Have a look at [our context
