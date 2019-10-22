@@ -22,7 +22,7 @@ provided, the SDK will try to read it from the `SENTRY_DSN` environment
 variable. If that variable also does not exist, the SDK will just not send any
 events.
 
-Note: In runtimes without a process environment (such as the browser) that fallback does not apply.
+In runtimes without a process environment (such as the browser) that fallback does not apply.
 
 {:.config-key}
 ### `debug`
@@ -81,8 +81,8 @@ to `100`.
 {:.config-key}
 ### `attach-stacktrace`
 
-When enabled, stack traces are automatically attached to all messages logged.  Note that stack traces
-are always attached to exceptions but when this is set stack traces are also sent with messages.  This, for instance, means that stack traces appear next to all log messages.
+When enabled, stack traces are automatically attached to all messages logged.  Stack traces
+are always attached to exceptions but when this is set stack traces are also sent with messages. This, for instance, means that stack traces appear next to all log messages.
 
 It's important to note that grouping in Sentry is different for events with stack traces and without.
 This means that you will get new groups as you enable or disable this flag for certain events.
@@ -102,8 +102,8 @@ If possible, it's recommended to turn on this feature to send all such data by d
 ### `server-name`
 
 {% unsupported browser %}
-Can be used to supply a "server name".  When provided, the name of the server is sent along and
-persisted in the event.  Note that for many integrations the server name actually corresponds to
+Can be used to supply a "server name."  When provided, the name of the server is sent along and
+persisted in the event.  For many integrations the server name actually corresponds to
 the device hostname even in situations where the machine is not actually a server.  Most SDKs
 will attempt to auto-discover this value.
 {% endunsupported %}
@@ -226,10 +226,10 @@ setup that requires proxy authentication.
 ### `http-proxy`
 
 {% unsupported browser %}
-When set a proxy can be configured that should be used for outbound requests.  This is also used for
-HTTPS requests unless a separate `https-proxy` is configured.  Note however that not all SDKs
+When set, a proxy can be configured that should be used for outbound requests.  This is also used for
+HTTPS requests unless a separate `https-proxy` is configured.  However, not all SDKs
 support a separate HTTPS proxy.  SDKs will attempt to default to the system-wide configured proxy
-if possible.  For instance, on unix systems, the `http_proxy` environment variable will be picked up.
+if possible.  For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
 {% endunsupported %}
 
 {:.config-key}
