@@ -299,7 +299,7 @@ For more information, see the [full documentation on UI Components]({%- link _do
 Webhooks allows your service to receive requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ## Authorized Origins
-It is possible to use Auth Tokens from the browser if you whitelist the origins of the pages making the requests. In the field that is called `Authorized JavaScript Origins`, add each origin you want separated by a new line (for example, docs.sentry.io). You do not need the protocol in the origin (http or https). At this moment, you cannot use any wildcard characters (for example, *.sentry.io) so if you have multiple subdomains you will you need to add them individually.
+It is possible to use Auth Tokens from the browser if you whitelist the origins of the pages making the requests. In the field that is called `Authorized JavaScript Origins`, add each origin you want to be separated by a newline (for example, docs.sentry.io). You do not need the protocol in the origin (http or https). At this moment, you cannot use any wildcard characters (for example, *.sentry.io), so if you have multiple subdomains, you will need to add them individually.
 
 ## FAQ
 
