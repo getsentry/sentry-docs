@@ -43,8 +43,8 @@ Type
   * `http`: Renders the breadcrumb as HTTP request.
   * `error`: Renders the breadcrumb as a hard error.
 
-  Note that the type is not exclusively used to customize the rendering.  It's
-  best not to change the type from the default.
+  _The type is not exclusively used to customize the rendering.  It's
+  best not to change the type from the default._
 
 ## Recording Crumbs
 

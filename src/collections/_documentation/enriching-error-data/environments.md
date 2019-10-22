@@ -24,7 +24,7 @@ You can filter releases by which environment they’ve been deployed to (to lear
 
 If a certain environment is not a useful filter for your team, you can hide the environment from your environments dropdown by navigating to your project settings > Environments, and selecting ‘Hide’. Data sent from that environment will still be visible under _All Environments_, and will still count against your quota.
 
-If you want to change the name of a given environment, you will have to modify your SDK configuration. _Note: this will not change environment names for past data._
+If you want to change the name of a given environment, you will have to modify your SDK configuration. _This will not change environment names for past data._
 
 ## How to send environment data
 
