@@ -17,7 +17,7 @@ Permissions specify what level of access your service requires of Sentry resourc
 
 [{% asset integration-platform-index/permissions.png alt="Form that allows developer to set what permissions they'll need from their user." %}]({% asset integration-platform-index/permissions.png @path %})
 
-You cannot create an integration or change an existing integration to have permissions greater than your own user.
+You cannot create an integration or change an existing integration to have permissions greater than your own user settings.
 
 ### Using Auth Tokens
 
