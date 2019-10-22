@@ -538,6 +538,7 @@ you can find the user attributes under `data['error']['user']`.
 {% include components/alert.html
   title="Note"
   content=markdown_content
+  level="info"
 %}
 
 #### Payload
