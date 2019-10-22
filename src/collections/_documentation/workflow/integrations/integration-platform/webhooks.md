@@ -531,6 +531,15 @@ The `error.created` resource subscription is only available for Business plans a
 - type: string
 - description: the api url for the associated issue
 
+{% capture markdown_content %}
+If you've set up [capturing the user](https://docs.sentry.io/enriching-error-data/context/?platform=python#capturing-the-user),
+you can find the user attributes under `data['error']['user']`.
+{% endcapture %}
+{% include components/alert.html
+  title="Note"
+  content=markdown_content
+%}
+
 #### Payload
 
 ```json
