@@ -288,7 +288,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 5. Select which repositories Sentry should have access to (or select all repositories).
 6. You should then be redirected back to the Sentry **Integrations** page.
 7. On your new GitHub instance in Sentry, click **Configure**.
-8. Add any repositories from which you want to collect commit data. _Note: Make sure you have given Sentry access to these repositories in GitHub in the previous steps._
+8. Add any repositories from which you want to collect commit data. _Make sure you have given Sentry access to these repositories in GitHub in the previous steps._
 
     [{% asset github-global-add-repo.png %}]({% asset github-global-add-repo.png @path %})
 
@@ -420,7 +420,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 
     [{% asset github-e-configure.png %}]({% asset github-e-configure.png @path %})
   
-7. Add any repositories that you want to collect commit data from. Note: Make sure you have given Sentry access to these repositories in GitHub in the previous steps.
+7. Add any repositories that you want to collect commit data from. _Make sure you have given Sentry access to these repositories in GitHub in the previous steps._
 
     [{% asset github-e-add-repo.png %}]({% asset github-e-add-repo.png @path %})
     
@@ -508,7 +508,7 @@ Sentry owner or manager permissions and GitLab owner or maintainer permissions a
 
 1. In Sentry, return to Organization Settings > **Integrations**. You’ll see a new instance of GitLab underneath the list of integrations.
 
-1. Next to your GitLab Instance, click **Configure**. _Note: It’s important to configure to receive the full benefits of commit tracking._
+1. Next to your GitLab Instance, click **Configure**. _It’s important to configure to receive the full benefits of commit tracking._
 
     [{% asset gitlab/configure-button.png alt="GitLab instance with connected group and highlighted configure button" %}]({% asset gitlab/configure-button.png @path %})
 
@@ -533,7 +533,7 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
     
         [{% asset gitlab/gitlab-create-issue.png alt="pop-up modal to create issue" %}]({% asset gitlab/gitlab-create-issue.png @path %})
     
-    1. Or, in the pop-up, you can click the _Link_ tab, search the issue by name, and then click **Link Issue**. _Note: Issues aren't currently searchable by number._
+    1. Or, in the pop-up, you can click the _Link_ tab, search the issue by name, and then click **Link Issue**. _Issues aren't currently searchable by number._
     
         [{% asset gitlab/link-issue-by-name.png alt="pop-up modal to search issue name" %}]({% asset gitlab/link-issue-by-name.png @path %})
 
@@ -836,14 +836,7 @@ Sentry owner or manager permissions are required to install this integration. Sl
 
     [{% asset slack-auth-choose-workspace.png %}]({% asset slack-auth-choose-workspace.png @path %})
 
-    {% capture __alert_content -%}
     You can toggle the Slack workspace you want to connect in the dropdown menu in the upper right corner of the authentication window. To set up multiple workspaces, go through this process for each separate workspace.
-    {%- endcapture -%}
-    {%- include components/alert.html
-      title="Note"
-      content=__alert_content
-      level="info"
-    %}
 
 1. After you've connected to the correct workspace, click **Continue**.
 
@@ -872,17 +865,10 @@ Now your Slack integration is available to all projects in your Sentry organizat
     [{% asset slack-global-integration-project-settings-add-alert.png %}]({% asset slack-global-integration-project-settings-add-alert.png @path %})
 
     You can also access **Alerts** from your **Project Settings**. From here, you can configure when notifications are sent to your Slack workspace(s).
-    
-    {% capture __alert_content -%}
-    You can route notifications in a few ways: to a specific channel in your Slack workspace, to multiple channels in your Slack workspace, or to multiple Slack workspaces.
-    {%- endcapture -%}
-    {%- include components/alert.html
-      title="Note"
-      content=__alert_content
-      level="info"
-    %}
 
-1. Click **New Alert Rule** to configure a new Alert. 
+    You can route notifications in a few ways: to a specific channel in your Slack workspace, to multiple channels in your Slack workspace, or to multiple Slack workspaces.
+
+1. Click **New Alert Rule** to configure a new Alert.
 
     [{% asset slack-alert-rules.png %}]({% asset slack-alert-rules.png @path %})
 

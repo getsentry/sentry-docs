@@ -185,7 +185,7 @@ Conditions
 : The condition operators available are:
 - `IS NULL`, `IS NOT NULL` (for all column types)
 - `=`, `!=`, `LIKE`, `NOT LIKE` (for strings)
-  - Note that values used with `LIKE` are case sensitive and can be used with wildcard characters
+  - Values used with `LIKE` are _case sensitive_ and can be used with wildcard characters
   - e.g. `exception_stacks.type LIKE Validation%`
 - `>`, `>=`, `<`, `<=` (for numbers)
 
