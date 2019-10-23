@@ -74,6 +74,7 @@ In case you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-m
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 ### SystemJS
@@ -176,7 +177,7 @@ Sentry uses [**Releases**]({%- link _documentation/workflow/releases.md -%}) to 
 $ sentry-cli releases new <release_name>
 ```
 
-Note the release name must be **unique within your organization** and match the `release` option in your SDK initialization code. Then, use the `upload-sourcemaps` command to scan a folder for source maps, process them and upload them to Sentry:
+The release name must be **unique within your organization** and match the `release` option in your SDK initialization code. Then, use the `upload-sourcemaps` command to scan a folder for source maps, process them and upload them to Sentry:
 
 ```sh
 $ sentry-cli releases files <release_name> upload-sourcemaps /path/to/files
@@ -204,7 +205,14 @@ $ sentry-cli releases finalize <release_name>
 
 For convenience, you can alternatively pass the `--finalize` flag to the `new` command which will immediately finalize the release.
 
-Note: You dont _have_ to upload the source files (ref’d by source maps), but without them the grouping algorithm will not be as strong, and the UI will not show any contextual source.
+{% capture __alert_content -%}
+You dont have to upload the source files (referenced by source maps), but **without them the grouping algorithm will not be as strong**, and the UI will not show any contextual source.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
 
@@ -226,7 +234,7 @@ In this situation, **identical** JavaScript and source map files may be located 
 
     > ~/js/app.js
 
-The ~ prefix tells Sentry that for a given URL, **any** combination of protocol and hostname whose path is `/js/app.js` should use this artifact. **ONLY** use this method if your source/source map files are identical at all possible protocol/hostname combinations. Note that Sentry will prioritize full URLs over tilde prefixed paths if found.
+The ~ prefix tells Sentry that for a given URL, **any** combination of protocol and hostname whose path is `/js/app.js` should use this artifact. **ONLY** use this method if your source/source map files are identical at all possible protocol/hostname combinations. **Sentry will prioritize full URLs over tilde prefixed paths, if found**.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Assets Accessible at Multiple Origins"
@@ -308,15 +316,7 @@ then your uploaded artifact should be named `https://example.com/dist/maps/scrip
 
 If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
 
-
-{% capture __alert_content-%}
-If you have dynamic values in your path (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the [`rewriteFrames`]({%- link _documentation/platforms/javascript/index.md -%}#rewriteframes) integration to change your `abs_path` values.
-{%- endcapture -%}
-{%- include components/alert.html
-  deep_link="rewriteFrames"
-  title="Note"
-  content=__alert_content
-%}
+If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the [`rewriteFrames`]({%- link _documentation/platforms/javascript/index.md -%}#rewriteframes) integration to change your `abs_path` values.
 
 #### Using sentry-cli
 

@@ -23,13 +23,7 @@ When you use Xcode, you can hook directly into the build process to upload debug
 
 ## Run Script Phase
 
-{% capture __alert_content -%}
 If the wizard ran successfully, it should have done setup all the necessary steps for you. You can still check if everything was setup correctly.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
 
 If you want to run the debug symbol upload during building your app. You can add this as a run script phase in Xcode. Also make sure to set the `DEBUG_INFORMATION_FORMAT` in your project settings to `DWARF and dSYM file`.
 
@@ -81,7 +75,3 @@ do
 done
 ```
 {% endraw %}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
