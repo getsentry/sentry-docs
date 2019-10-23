@@ -66,6 +66,7 @@ Not all events count towards your monthly event quota. In general, when events a
 {% include components/alert.html
     title="Note"
     content="Delete and discard and per-project rate limits are only available on Business and Enterprise plans"
+    level="warning"
 %}
 
 ## Increasing Quotas
@@ -86,6 +87,7 @@ Per-key rate limiting is available only on Business and Enterprise Plans
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ## Inbound Filters {#inbound-data-filters}
@@ -110,6 +112,7 @@ Filter by releases is available only on Business and Enterprise Plans
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ### Filter by error message
@@ -122,6 +125,7 @@ Filter by error message is available only on Business and Enterprise Plans
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ### Filter by issue
@@ -134,6 +138,7 @@ Discarding issues is available only on Business and Enterprise Plans
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ## Spike Protection
@@ -144,7 +149,7 @@ When spike protection is activated, we limit the number of events accepted in an
 
 `maximum(20, 6 x average events per minute over the last 24 hours)`
 
-**Note:** The 24 hour window ends at the beginning of the current hour, not at the current minute.
+_The 24 hour window ends at the beginning of the current hour, not at the current minute._
 
 What this means is that if you experience a spike, we will temporarily protect you, but if the increase in volume is sustained, the spike protection limit will gradually increase until Sentry finally accepts all events.
 
