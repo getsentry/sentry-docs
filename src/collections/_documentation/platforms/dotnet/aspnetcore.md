@@ -175,7 +175,7 @@ Although this setting is part of the [Sentry]({%- link _documentation/platforms/
 
 The environment name is automatically populated by reading the frameworks `IHostingEnvironment` value. 
 
-> Note: This option is part of the [Sentry]({%- link _documentation/platforms/dotnet/index.md -%}) package. The value of `IHostingEnvironment` will only be used if **no other method was used**. 
+This option is part of the [Sentry]({%- link _documentation/platforms/dotnet/index.md -%}) package. The value of `IHostingEnvironment` will only be used if **no other method was used**.
 
 Methods that take precedence over `IHostingEnvironment` are:
 

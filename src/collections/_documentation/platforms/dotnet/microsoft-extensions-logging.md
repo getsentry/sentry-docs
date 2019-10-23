@@ -21,7 +21,14 @@ dotnet add package Sentry.Extensions.Logging -v {% sdk_version sentry.dotnet.ext
 
 This package extends `Sentry` main SDK. That means that besides the logging related features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
 
-> NOTE: Messages logged from assemblies with the name starting with `Sentry` will not generate events.
+{% capture __alert_content -%}
+Messages logged from assemblies with the name starting with `Sentry` will not generate events.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 ## Features
 
@@ -115,8 +122,14 @@ More settings can be passed via the callback configuring the `SentryOptions`.
 
 In cases where `AddSentry` is called without arguments, it's worth noting that an overload exists where `SentryOptions` can be configured just like if `SentrySdk.Init` had been called. 
 
-> NOTE:
-The SDK only needs to be initialized only once. If the `DSN` is made available to this integration, by default it **will** initialize the SDK. If you do not wish to initialize the SDK via this configuration, set the `InitializeSdk` flag to **false**. Not providing a DSN or leaving it as an _empty string_ will disable the SDK.
+{% capture __alert_content -%}
+The SDK needs to be initialized only once. If the `DSN` is made available to this integration, by default it **will** initialize the SDK. If you do not wish to initialize the SDK via this configuration, set the `InitializeSdk` flag to **false**. Not providing a DSN or leaving it as an _empty string_ will disable the SDK.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 For example:
 
