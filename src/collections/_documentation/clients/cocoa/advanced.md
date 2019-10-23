@@ -52,7 +52,7 @@ All of the above (_user_, _tags_, _extra_, _releaseName_, _dist_ and _environmen
 
 ## Disabling the Client
 
-You can disable the client to prevent events from being sent. Note that the events will still be stored to disk. This functionality is helpful in case you want to ask the user for consent if they want to send the crash reports for example.
+You can disable the client to prevent events from being sent. The events will still be stored to disk. This functionality is helpful in case you want to ask the user for consent if they want to send the crash reports for example.
 
 ```swift
 Client.shared?.enabled = false
