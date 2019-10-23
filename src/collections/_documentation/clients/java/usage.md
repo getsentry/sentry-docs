@@ -3,7 +3,14 @@ title: 'Manual Usage'
 sidebar_order: 5
 ---
 
-**Note:** The following page provides examples on how to configure and use Sentry directly. It is **highly recommended** that you use one of the [provided integrations]({%- link _documentation/clients/java/integrations.md -%}) if possible. Once the integration is configured you can _also_ use Sentry’s static API, as shown below, in order to do things like record breadcrumbs, set the current user, or manually send events.
+{% capture __alert_content -%}
+The following page provides examples on how to configure and use Sentry directly. It is **highly recommended** that you use one of the [provided integrations]({%- link _documentation/clients/java/integrations.md -%}), if possible. Once the integration is configured you can _also_ use Sentry’s static API, as shown below, in order to do things like record breadcrumbs, set the current user, or manually send events.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 <!-- WIZARD installation -->
 ## Installation
