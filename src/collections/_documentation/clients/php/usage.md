@@ -31,6 +31,7 @@ Calling `install()` on a Raven_Client instance will automatically register these
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 <!-- ENDWIZARD -->
 
