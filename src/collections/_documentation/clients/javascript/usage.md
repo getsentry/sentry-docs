@@ -265,11 +265,12 @@ Access-Control-Allow-Origin: *
 ```
 
 {% capture __alert_content -%}
-both of these steps need to be done or your scripts might not even get executed
+Both of these steps need to be done or your scripts might not even get executed
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ## Promises {#raven-js-promises}
