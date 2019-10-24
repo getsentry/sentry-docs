@@ -17,6 +17,7 @@ _documentation/cli/releases.md -%}#sentry-cli-sourcemaps).
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ## Checking Files
@@ -97,6 +98,7 @@ to [Working with Projects]({%- link _documentation/cli/configuration.md
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 A basic debug file upload can be started with:
@@ -224,6 +226,7 @@ ProGuard files work on projects. For more information about this refer to
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 The `upload-proguard` command is the one to use for uploading ProGuard files. It

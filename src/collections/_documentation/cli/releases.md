@@ -11,6 +11,7 @@ Because releases work on projects you will need to specify the organization and 
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ## Creating Releases
