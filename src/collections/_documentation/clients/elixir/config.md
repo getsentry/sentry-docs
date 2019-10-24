@@ -106,7 +106,7 @@ The backend can also be configured to capture Logger metadata, which is detailed
 
 `before_send_event`
 
-: This option allows performing operations on the event before it is sent by `Sentry.Client`. Accepts an anonymous function or a {module, function} tuple, and the event will be passed as the only argument.
+: This option allows performing operations on the event before it is sent by `Sentry.Client`. Accepts an anonymous function or a {module, function} tuple, and the event will be passed as the only argument. The function must return the modified event (or `nil` or `false` to prevent the event from being sent).
 
 `after_send_event`
 
