@@ -29,6 +29,7 @@ and **organization** release endpoints. The available endpoints are listed in th
 {% include components/alert.html
   title="Note"
   content=markdown_content
+  level="warning"
 %}
 
 ### Teams
@@ -56,6 +57,7 @@ Events in sentry are immutable and can only be deleted by deleting the whole iss
 {% include components/alert.html
   title="Note"
   content=markdown_content
+  level="warning"
 %}
 
 ### Releases
@@ -68,6 +70,7 @@ Be aware that if you're using `sentry-cli` to [manage your releases]({%- link _d
 {% include components/alert.html
   title="Note"
   content=markdown_content
+  level="warning"
 %}
 
 <style>

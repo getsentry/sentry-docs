@@ -21,6 +21,7 @@ API keys are a legacy means of authenticating. They will still be supported but 
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 API keys are passed using HTTP Basic auth where the username is your api key, and the password is an empty value.
@@ -37,6 +38,7 @@ You **must** pass a value for the password, which is the reason the `:` is prese
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ## DSN Authentication {#id3}
