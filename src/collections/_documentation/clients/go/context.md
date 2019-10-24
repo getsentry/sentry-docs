@@ -5,7 +5,7 @@ sidebar_order: 3
 
 All of the `Capture*` functions accept an additional argument for passing a `map` of tags as the second argument and context data as remaining ones.
 Tags in Sentry help categorize data and give you more information about the errors that happened, where other context data is more "environment" specific.
-(NOTE: direct low-level `Capture` call accepts second argument only - tags, without additional interfaces)
+**Direct low-level `Capture` call accepts second argument only --- tags, without additional interfaces.**
 
 For example:
 
