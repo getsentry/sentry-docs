@@ -40,6 +40,20 @@ Within your project settings you’ll find a **Data Scrubber** option. By defaul
     -   card[number]
 -   Any keys which match values that you’ve added to the list of additional fields in your Project Settings.
 
+Sentry will scrub arrays and literal values, but not entire objects. For example:
+
+```bash
+credentials = {
+  username: 'jane',
+  cats: ['pancake', 'maple', 'hellboy']
+  password: 'p4ssw0rd!',
+  lastLogin: 'yesterday',
+  ...
+}
+```
+
+using the default options would _not_ cause the contents of `credentials` to be scrubbed, but `password` would be scrubbed, and adding `cats`, `username`, and/or `lastLogin` to the list of additional fields will cause those values to be scrubbed. 
+
 You can choose to expand the keys which are scrubbed by the server, as well as prevent IP addresses from being stored. The latter is particularly important if you’re concerned about PII and using our Browser JavaScript SDK.
 
 As mentioned earlier, configure scrubbing within SDK if possible so that sensitive data is not sent with the request.
