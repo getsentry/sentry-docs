@@ -15,6 +15,7 @@ In some cases you may want to stop services before doing the upgrade process bet
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 ## Upgrading Sentry

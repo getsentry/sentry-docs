@@ -33,6 +33,7 @@ When in uwsgi mode, it’s not possible to access directly from a web browser or
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 With Sentry running in uwsgi protocol mode, it’ll require a slight modification to your nginx config to use `uwsgi_pass` rather than `proxy_pass`:
@@ -57,6 +58,7 @@ For further reference, you can check [this PR on the PHP SDK repository](https:/
 {%- include components/alert.html
   title="Note"
   content=__alert_wsgi_content
+  level="warning"
 %}
 
 You also will likely want to run more web processes, which will spawn as children of the Sentry master process. The default number of workers is `3`. It’s possible to bump this up to `36` or more depending on how many cores you have on the machine. You can do this either by editing `SENTRY_WEB_OPTIONS` again:

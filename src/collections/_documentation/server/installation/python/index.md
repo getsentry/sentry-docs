@@ -8,6 +8,7 @@ This method of installation is deprecated in favor of [_Docker_]({%- link _docum
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 This guide will step you through setting up a Python-based virtualenv, installing the required packages, and configuring the basic web service.
@@ -53,6 +54,7 @@ Activating the environment adjusts your `PATH`, so that things like `pip` now in
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 ## Install Sentry
@@ -115,13 +117,7 @@ Once your system is prepared, symlink your source into the virtualenv:
 $ pip install --editable .
 ```
 
-{% capture __alert_content -%}
 This command will install npm dependencies as well as compile static assets.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
 
 You can also use pip to directly install the package from GitHub:
 
@@ -234,13 +230,7 @@ $ SENTRY_CONF=/etc/sentry sentry createuser
 
 All schema changes and database upgrades are handled via the `upgrade` command, and this is the first thing you’ll want to run when upgrading to future versions of Sentry.
 
-{% capture __alert_content -%}
 Internally this uses [South](https://south.readthedocs.io/en/latest/index.html) to manage database migrations.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
 
 ## Starting the Web Service
 
@@ -264,13 +254,7 @@ SENTRY_CONF=/etc/sentry sentry run worker
 
 See [_Asynchronous Workers_]({%- link _documentation/server/queue.md -%}) for more details on configuring workers.
 
-{% capture __alert_content -%}
 [Celery](http://celeryproject.org/) is an open source task framework for Python.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
 
 ## Starting the Cron Process
 

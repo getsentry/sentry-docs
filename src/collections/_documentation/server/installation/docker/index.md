@@ -73,6 +73,7 @@ The image that is built, acts as the entrypoint for all running pieces for the S
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 `${REPOSITORY}` corresponds to the name used when building your image in the previous step. If this wasn’t specified, the default is `sentry-onpremise`. To test that the image is working correctly, you can do:
@@ -116,6 +117,7 @@ Further documentation will not mention container links or environment variables 
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 ### Running Migrations
