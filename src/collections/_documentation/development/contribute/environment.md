@@ -7,7 +7,7 @@ sidebar_order: 1
 
 ### Linux
 
-Just follow the [_official installation from source instructions_]({%- link _documentation/server/installation/python/index.md -%}).
+Follow the [_official installation from source instructions_]({%- link _documentation/server/installation/python/index.md -%}).
 
 ### Macintosh OS X
 
@@ -20,26 +20,15 @@ cd sentry
 
 Install [Homebrew](http://brew.sh), if you haven’t already. Run `brew bundle` to install the various system packages as listed in sentry's `Brewfile`. This will install, among other things, Python 2 and docker.
 
-It is highly recommended to develop inside a Python virtual environment, so install `virtualenv` and `virtualenvwrapper`:
+Setup and activate a python 2 virtual environment:
 
 ```bash
-pip install virtualenv virtualenvwrapper
+python2 -m pip install virtualenv
+python2 -m virtualenv .venv
+source .venv/bin/activate
 ```
 
-Then append the following to your shell profile (e.g. `~/.bashrc`) and reload it:
-
-```bash
-echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
-exec bash
-```
-
-Setup and activate a Python 2.7 virtual environment in the project root:
-
-```bash
-mkvirtualenv sentry
-```
-
-Install `nvm` and use it to install the node version specified in the `.nvmrc` file:
+Install `nvm` and use it to install the node version specified in sentry's `.nvmrc` file:
 
 ```bash
 brew install nvm
