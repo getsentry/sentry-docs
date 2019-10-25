@@ -15,6 +15,7 @@ SSO is not available on free, trial or certain grandfathered plans.
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ## Getting Started
@@ -62,6 +63,7 @@ SAML2 SSO requires a Business or Enterprise Plan.
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 #### OneLogin

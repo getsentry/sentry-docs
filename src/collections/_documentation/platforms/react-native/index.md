@@ -16,6 +16,7 @@ This SDK only works for ejected projects or projects that directly use React Nat
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 
@@ -95,14 +96,7 @@ Sentry.init({
 });
 ```
 
-{% capture __alert_content -%}
 The `sentry-wizard` will try to add it to your `App.js`
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
-
 
 ## Verifying Your Setup
 

@@ -21,7 +21,14 @@ dotnet add package Sentry.NLog -v {% sdk_version sentry.dotnet.nlog %}
 
 This package extends `Sentry` main SDK. That means that besides the logging related features, through this package you'll also get access to all API and features available in the main `Sentry` SDK.
 
-> NOTE: Messages logged from assemblies with the name starting with `Sentry` will not generate events.
+{% capture __alert_content -%}
+Messages logged from assemblies with the name starting with `Sentry` will not generate events.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 ## Features
 
@@ -76,10 +83,17 @@ LogManager.Configuration
     });  
 ```
 
-> **Note on SDK initialization**:
-The SDK only needs to be initialized once. If a `DSN` is made available to this integration, by default it **will** initialize the SDK. If you do not wish to initialize the SDK via this integration, set the `InitializeSdk` flag to **false**. Not providing a DSN or leaving it as `null` instructs the integration not to initialize the SDK and unless another integration initializes it or you call `SentrySdk.Init`, the SDK will stay disabled.
+{% capture __alert_content -%}
+The SDK needs to be initialized only once. If a `DSN` is made available to this integration, by default it **will** initialize the SDK. If you do not wish to initialize the SDK via this integration, set the `InitializeSdk` flag to **false**. Not providing a DSN or leaving it as `null` instructs the integration not to initialize the SDK and unless another integration initializes it or you call `SentrySdk.Init`, the SDK will stay disabled.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
-> **Note on minimum log level**: 
+### Minimum log level
+
 Two log levels are used to configure this integration (see options below). One will configure the lowest level required for a log message to become an event (`MinimumEventLevel`) sent to Sentry. The other option (`MinimumBreadcrumbLevel`) configures the lowest level a message has to be to become a breadcrumb. Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.Info` or `logger.Warn`, no event is sent to Sentry. If you then log with `logger.Error`, an event is sent to Sentry which includes those 100 `Info` or `Warn` messages. For this to work, `SentryTarget` needs to receive **all** log entries in order to decide what to keep as breadcrumb or sent as event. Make sure to set the `NLog` `LogLevel` configuration to a value lower than what you set for the `MinimumBreadcrumbLevel` and `MinimumEventLevel` to make sure `SentryTarget` receives these log messages.
 
 

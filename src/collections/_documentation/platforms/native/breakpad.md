@@ -15,6 +15,7 @@ time this way!
 {%- include components/alert.html
   title="Heads Up"
   content=__alert_content
+  level="info"
 %}
 
 ## Integration

@@ -48,6 +48,7 @@ make bootstrap
 {%- endcapture -%}{%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 `make bootstrap` will generally run these sequence of commands (you can poke around through the `Makefile` file to see more details):
@@ -71,6 +72,7 @@ If you would like to import an example dataset, running `./bin/load-mocks` will 
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 Once you’ve successfully stood up your datastore, you can now run the development server:
@@ -79,19 +81,9 @@ Once you’ve successfully stood up your datastore, you can now run the developm
 sentry devserver --workers
 ```
 
-{% capture __alert_content -%}
 If you are developing for aesthetics only and do not rely on the async workers, you can omit the `--workers` flag in order to use less system resources.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}{% capture __alert_content -%}
+
 If you would like to be able to run `devserver` outside of your root checkout, you can install `webpack` globally with `npm install -g webpack`.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
 
 When webpack finishes processing, you can find a login prompt for the user account you previously created at [http://localhost:8000](http://localhost:8000). From there, you are free to browse the website as an administrator.
 
@@ -101,6 +93,7 @@ When asked for the root address of the server, make sure that you use `http://lo
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 ## Staging Your Changes
@@ -115,10 +108,4 @@ There are no additional services required for running the Sentry test suite. To 
 make test
 ```
 
-{% capture __alert_content -%}
 If you find yourself constantly running `make test` and wishing it was faster, running either `make test-js` or `make test-python` will only run the test suite with the corresponding language, skipping over linting and dependency checks. If you would like to see even more options, check out other entry points in the `Makefile`.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}

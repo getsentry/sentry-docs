@@ -85,11 +85,4 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 ```
 
 ## Hosting Sentry at a Subpath
-
-{% capture __alert_content -%}
 This method is unsupported and there is no proven way to accomplish this. Please use a dedicated domain or subdomain.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}

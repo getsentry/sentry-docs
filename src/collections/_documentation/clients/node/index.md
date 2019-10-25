@@ -5,7 +5,14 @@ sidebar_order: 9
 
 raven-node is the official Node.js client for Sentry.
 
-**Note**: If you’re using JavaScript in the browser, you’ll need [raven-js](https://docs.sentry.io/clients/javascript).
+{% capture __alert_content -%}
+If you’re using JavaScript in the browser, you’ll need [raven-js](https://docs.sentry.io/clients/javascript).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 <!-- WIZARD installation -->
 ## Installation

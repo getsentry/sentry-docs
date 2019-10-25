@@ -26,7 +26,14 @@ On its own, Raven.js will report any uncaught exceptions triggered from your app
 
 Additionally, the Raven.js AngularJS plugin will catch any AngularJS-specific exceptions reported through AngularJS’s `$exceptionHandler` interface.
 
-**Note**: This documentation is for Angular 1.x. See also: [_Angular 2.x_](#angular).
+{% capture __alert_content -%}
+This documentation is for Angular 1.x. See also: [_Angular 2.x_](#angular).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="info"
+%}
 
 <!-- WIZARD angularjs -->
 ### Installation
@@ -559,6 +566,7 @@ Unless you have specific reasons not to, it’s recommended to instead the new [
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ### Installation

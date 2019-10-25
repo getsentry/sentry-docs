@@ -5,7 +5,13 @@ sidebar_order: 7
 
 Raven.js is the official browser JavaScript client for Sentry. It automatically reports uncaught JavaScript exceptions triggered from a browser environment, and provides a rich API for reporting your own errors.
 
-**Note**: If you’re using Node.js on the server, you’ll need [raven-node]({%- link _documentation/clients/node/index.md -%}).
+{% capture __alert_content -%}
+If you’re using Node.js on the server, you’ll need [raven-node]({%- link _documentation/clients/node/index.md -%}).{%- endcapture -%}
+{%- include components/alert.html
+    title="Node.js"
+    content=__alert_content
+    level="warning"
+%}
 
 <!-- WIZARD -->
 ## Installation

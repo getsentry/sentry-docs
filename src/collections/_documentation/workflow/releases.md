@@ -23,7 +23,16 @@ Setting up releases fully is a 3-step process:
 
 ### Configure Your SDK {#configure-sdk}
 
-Include a release ID (a.k.a version) where you configure your client SDK. This is commonly a git SHA or a custom version number. Note that releases are global per organization so make sure to prefix them with something project specific if needed:
+Include a release ID (a.k.a version) where you configure your client SDK. This is commonly a git SHA or a custom version number.
+
+{% capture __alert_content -%}
+Releases are global per organization, so make sure to prefix them with something project-specific.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 {% include components/platform_content.html content_dir='set-release' %}
 
@@ -227,7 +236,7 @@ In order for Sentry to use your commits, you must format your commits to match t
 : A list of the files that have been changed in the commit. Specifying the `patch_set` is necessary to power suspect commits and suggested assignees. It consists of two parts:
 
     `path`
-    : The path to the file. Note both forward and backward slashes (`'/' '\\'`) are supported.
+    : The path to the file. Both forward and backward slashes (`'/' '\\'`) are supported.
     
     `type`
     : The types of changes that happend in that commit. The options are: 

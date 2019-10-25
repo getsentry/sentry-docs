@@ -64,7 +64,7 @@ For Android we hook into gradle for the source map build process. When you run `
 <!-- WIZARD -->
 ## Client Configuration {#configure}
 
-Note: When you run `react-native link` we will automatically update your _index.ios.js_ / _index.android.js_ with the following changes:
+When you run `react-native link` we will automatically update your _index.ios.js_ / _index.android.js_ with the following changes:
 
 ```javascript
 import { Sentry } from 'react-native-sentry';

@@ -15,7 +15,7 @@ If there is a match, only Owners will receive the alert for the exception. By de
 
 [{% asset owners_default_everyone.png %}]({% asset owners_default_everyone.png @path %})
 
-Note that at this time the Issue Owners feature is only available for email notifications. This means that your alert rules must trigger email notifications in order to be affected by your Issue Owners rules.
+At this time, the Issue Owners feature is only available for email notifications. This means that your alert rules must trigger email notifications to be affected by your Issue Owners' rules.
 
 ## Configuration
 
@@ -45,13 +45,13 @@ Issue Owner rules use the following structure:
 
 `type` can be either `path` or `url`, depending on whether you’re specifying a path or URL.
 
-`glob` will be the path or URL you are specifying (for example, `src/javascript/*` or `https://www.example.io/checkout`. You can use the _*_ character to match everything, or the _?_ character to match any single character. _Note: this feature does not support regex._
+`glob` will be the path or URL you are specifying (for example, `src/javascript/*` or `https://www.example.io/checkout`. You can use the _*_ character to match everything, or the _?_ character to match any single character. _This feature does not support regex._
 
 `owner` can be the email of a Sentry user, or the name of a team, prefaced with `#` (i.e., `#backend-team`). To list multiple owners of the same path or URL, place them on the same line like so:
 
 `type:glob owner1 owner2 owner3`
 
-Note that teams and users must have access to the project to become owners. To grant a team access to a project, navigate to project settings > Project Teams, and click ‘Add Team to [project]’. To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a project’s team, navigate to Project Settings > Project Teams, select a team, then click ‘Add Member.’
+Teams and users _must_ have access to the project to become owners. To grant a team access to a project, navigate to project settings > Project Teams, and click ‘Add Team to [project]’. To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a project’s team, navigate to Project Settings > Project Teams, select a team, then click ‘Add Member.’
 
 ## Troubleshooting
 

@@ -17,6 +17,7 @@ time this way!
 {%- include components/alert.html
   title="Heads Up"
   content=__alert_content
+  level="info"
 %}
 
 Follow the [Crashpad developer docs](https://chromium.googlesource.com/crashpad/crashpad/+/HEAD/doc/developing.md) for instructions on how to build Crashpad from source. Make sure that crashpad’s header files are in your include path, then add a call to [StartHandler()](https://crashpad.chromium.org/doxygen/classcrashpad_1_1CrashpadClient.html#a810ad9941bedba543bf60507c31c55da) during your program startup:

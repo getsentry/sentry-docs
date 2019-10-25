@@ -35,4 +35,5 @@ _documentation/development/sdk-dev/data-handling.md -%})
 {%- include components/alert.html
   title="Context Size Limits"
   content=__alert_content
+  level="warning"
 %}

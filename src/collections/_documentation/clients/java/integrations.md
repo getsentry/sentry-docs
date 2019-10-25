@@ -157,7 +157,7 @@ buildscript {
 }
 ```
 
-The plugin will then automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assembleRelease`. The credentials for the upload step are loaded via environment variables _or_ from a `sentry.properties` file in your project root. Please note the `sentry.properties` in your project root that configures `sentry-cli` is *different* than the one you include in your application resources to configure the Sentry SDK at runtime (as seen in the [configuration documentation]({%- link _documentation/clients/java/config.md -%})).
+The plugin will then automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assembleRelease`. The credentials for the upload step are loaded via environment variables _or_ from a `sentry.properties` file in your project root. The `sentry.properties` in your project root that configures `sentry-cli` is **different** than the one you include in your application resources to configure the Sentry SDK at runtime (as seen in the [configuration documentation]({%- link _documentation/clients/java/config.md -%})).
 
 For more information [see the sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values). At the very minimum you will need something like this:
 
@@ -204,13 +204,7 @@ First, you need to add the following to your ProGuard rules file:
 
 After ProGuard files are generated you will need to embed the UUIDs of the ProGuard mapping files in a properties file named `sentry-debug-meta.properties` in the assets folder. The Java SDK will look for the UUIDs there to link events to the correct mapping files on the server side.
 
-{% capture __alert_content -%}
-Sentry calculates UUIDs for ProGuard files. For more information about how this works see [ProGuard UUIDs]({%- link _documentation/workflow/debug-files.md -%}#proguard-uuids).
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
+**Sentry calculates UUIDs for ProGuard files.** For more information about how this works, see [ProGuard UUIDs]({%- link _documentation/workflow/debug-files.md -%}#proguard-uuids).
 
 `sentry-cli` can write the `sentry-debug-meta.properties` file for you:
 
@@ -222,7 +216,7 @@ sentry-cli upload-proguard \
     app/build/outputs/mapping/release/mapping.txt
 ```
 
-Note that this file needs to be in your APK, so this needs to be run before the APK is packaged. You can do that by creating a gradle task that runs before the dex packaging.
+This file needs to be in your APK, so **this needs to be run before the APK is packaged**. You can do that by creating a gradle task that runs before the dex packaging.
 
 You can for example add a gradle task after the proguard step and before the dex one which executes `sentry-cli` to validate and process the mapping files and to write the UUIDs into the properties file:
 
@@ -330,7 +324,14 @@ The `sentry` library provides a [java.util.logging Handler](http://docs.oracle.c
 
 The source for `sentry` can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry).
 
-**Note:** The old `raven` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
+{% capture __alert_content -%}
+The old `raven` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven`, you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 <!-- WIZARD logging -->
 ### Installation
@@ -432,7 +433,14 @@ The `sentry-log4j` library provides [Log4j 1.x](https://logging.apache.org/log4j
 
 The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-log4j).
 
-**Note:** The old `raven-log4j` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j.rst).
+{% capture __alert_content -%}
+The old `raven-log4j` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j`, you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j.rst).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 <!-- WIZARD log4j -->
 ### Installation
@@ -597,7 +605,14 @@ The `sentry-log4j2` library provides [Log4j 2.x](https://logging.apache.org/log4
 
 The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-log4j2).
 
-**Note:** The old `raven-log4j2` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j2` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j2` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j2.rst).
+{% capture __alert_content -%}
+The old `raven-log4j2` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j2` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j2`, you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j2.rst).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 <!-- WIZARD log4j2 -->
 ### Installation
@@ -739,7 +754,14 @@ The `sentry-logback` library provides [Logback](http://logback.qos.ch/) support 
 
 The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-logback).
 
-**Note:** The old `raven-logback` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-logback` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-logback` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/logback.rst).
+{% capture __alert_content -%}
+The old `raven-logback` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-logback` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-logback` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/logback.rst).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 <!-- WIZARD logback -->
 ### Installation
@@ -883,11 +905,17 @@ The `sentry-spring` library provides [Spring](https://spring.io/) support for Se
 
 The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring).
 
-### Important Note About Logging Integrations
-
-**Note** that you should **not** configure `sentry-spring` alongside a Sentry logging integration (such as `sentry-logback`), or you will most likely double-report exceptions.
+{% capture __alert_content -%}
+You should **not** configure `sentry-spring` alongside a Sentry logging integration (such as `sentry-logback`), or you will most likely double-report exceptions.
 
 A Sentry logging integration is more general and will capture errors (and possibly warnings, depending on your configuration) that occur inside _or outside_ of a Spring controller. In most scenarios, using one of the logging integrations instead of `sentry-spring` is preferred.
+
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Important Note About Logging Integrations"
+    content=__alert_content
+    level="warning"
+%}
 
 ### Installation
 

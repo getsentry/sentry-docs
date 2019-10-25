@@ -106,7 +106,7 @@ You can use the following methods to cause a crash:
     [SentryClient.sharedClient crash];
     ```
 
-_Note that if you crash with a debugger attached nothing will happen._
+_If you crash with a debugger attached, nothing will happen._
 
 Crashes are only submitted upon re-launching the application. To see the crash in Sentry, close the app and launch it again from the springboard.
 

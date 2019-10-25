@@ -48,14 +48,12 @@ This can be done, for example, via the `app.config` for console and desktop apps
 
 In the example above, the `SendIdentity` flag was switched on. The SDK then will take the log4net `Identity` value and report to Sentry as the user's id.
 
-#### Dsn
+#### DSN
 
 Also in the example above, you can find the [DSN](https://docs.sentry.io/quickstart/#configure-the-dsn) being set. That will instruct the `SentryAppender` to initialize the SDK.
 
-> NOTE:
 This is only one of the ways to initialize the SDK. If you wish to configure the SDK programatically, you could **leave the DSN out** from the appender configuration section. The SDK needs to be initialized only **once** and since other integrations (like ASP.NET) are also able to initialize the SDK, you only need to pass the DSN to one of these integrations.
 One common case to not add the DSN to the XML configuration file (which would initialize it via the log4net integration) is to have full access to the [SDK option](https://docs.sentry.io/error-reporting/configuration/?platform=csharp).
-
 
 ### Sample
 
