@@ -94,7 +94,7 @@ if the SDK cannot determine the specific mechanism. In this case, set the `type`
 to `generic`. See below for an example.
 {%- endcapture -%}
 
-{%- include components/alert.html title="Note" content=__alert_content %}
+{%- include components/alert.html title="Note" content=__alert_content level="warning"%}
 
 ### Meta information
 
