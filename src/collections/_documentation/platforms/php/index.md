@@ -11,7 +11,7 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 To install the PHP SDK, you need to be using Composer in your project. For more details about Composer, see the [Composer documentation](https://getcomposer.org/doc/).
 
 ```bash
-composer require sentry/sdk:{% sdk_version sentry.php.sdk %}
+composer require sentry/sdk
 ```
 
 ### Connecting the SDK to Sentry
