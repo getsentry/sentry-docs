@@ -30,7 +30,7 @@ Include a release ID (a.k.a version) where you configure your client SDK. This i
 
 How you make the version available to your code is up to you. For example, you could use an environment variable that is set during the build process.
 
-This tags each event with the release value. We recommend that you tell Sentry about a new release prior to deploying it as this will unlock a few more features (explained in Step 2) . But if you don’t, Sentry will automatically create a release entity in the system the first time it sees an event with that release ID.
+This tags each event with the release value. We recommend that you tell Sentry about a new release before deploying it, as this will unlock a few more features (explained in Step 2). But if you don’t, Sentry will automatically create a release entity in the system the first time it sees an event with that release ID.
 
 After this, you should see information about the release, such as new issues and regressions introduced in the release.
 
@@ -65,7 +65,7 @@ If you’re still having trouble adding it, you can try to [disconnect](https://
 
 ### Create Release and Associate Commits {#create-release}
 
-In this step you tell Sentry about a new release and which commits are associated with it. This allows Sentry to pinpoint which commits likely caused an issue, and allow your team to resolve issues by referencing the issue number in a commit message.
+In this step, you tell Sentry about a new release and which commits are associated with it. This allows Sentry to pinpoint, which commits likely caused an issue, and allow your team to resolve issues by referencing the issue number in a commit message.
 
 
 #### Associate Commits with a Release
@@ -101,7 +101,7 @@ You need to make sure you’re using [Auth Tokens]({%- link _documentation/api/a
   level="warning"
 %}
 
-In the above example, we’re using the `propose-version` sub-command to automatically determine a release ID. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally we’re using the `--auto` flag to automatically determine the repository name, and associate commits between the previous release’s commit and the current head commit with the release. If you have never associated commits before, we’ll use the latest 20 commits.
+In the above example, we’re using the `propose-version` sub-command to determine a release ID automatically. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally, we’re using the `--auto` flag to determine the repository name automatically, and associate commits between the previous release’s commit and the current head commit with the release. If you have never associated commits before, we’ll use the latest 20 commits.
 
 If you want more control over which commits to associate, or are unable to execute the command inside the repository, you can manually specify a repository and range:
 
