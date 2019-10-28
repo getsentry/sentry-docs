@@ -269,6 +269,12 @@ The number of attempts that should be made to send an event before erroring
 and dropping it from the queue.
 By default this option is set to `6`.
 
+
+##### max_request_body_size
+
+This option represents the size limit in bytes beyond which the body of the request is not captured. The default value is `medium`. Possible values are `none` = never send body, `small`, `medium`, `always` = always send the body, no matter how large it is.
+The values are chosen like this on purpose since the SDK internally can define what the exact limits are.
+
 ### Transport
 
 Sentry PHP is not tied to any specific library that sends HTTP messages. Instead,
