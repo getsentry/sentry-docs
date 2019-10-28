@@ -381,6 +381,14 @@ http.HandleFunc("/", raven.RecoveryHandler(root))
 
 sentry-go
 
+```bash
+$ go get github.com/getsentry/sentry-go/http
+```
+
+```go
+import sentryhttp "github.com/getsentry/sentry-go/http"
+```
+
 ```go
 sentryHandler := sentryhttp.New(sentryhttp.Options{
 	Repanic: false,
