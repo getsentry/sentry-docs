@@ -7,7 +7,7 @@ For common environments and frameworks like [Rails](#ruby-on-rails), [Rack](#rac
 The following integrations are available:
 
 -   Sidekiq (`:sidekiq`)
--   `Delayed::Job` (`:delayed_job`)
+-   Delayed::Job (`:delayed_job`)
 -   Rake (`:rake`)
 -   Rack (`:rack`)
 -   Rails (`:railties`)
