@@ -816,7 +816,7 @@ Sentry.init({
 });
 ```
 
-##### ExtraErrorData
+#### ExtraErrorData
 _Import name: `Integrations.ExtraErrorData`_
 
 This integration extracts all non-native attributes from the Error object and attaches them to the event as the `extra` data.
@@ -829,7 +829,7 @@ Available options:
 }
 ```
 
-### CaptureConsole
+#### CaptureConsole
 
 _Import name: `Integrations.CaptureConsole`_
 
@@ -842,7 +842,7 @@ It then retriggers to preserve default native behaviour.
 }
 ```
 
-##### Dedupe
+#### Dedupe
 _Import name: `Integrations.Dedupe`_
 
 This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only compare stack traces and fingerprints.
