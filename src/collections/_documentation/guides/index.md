@@ -15,6 +15,6 @@ sidebar_order: 0
 
 * Setting up your Sentry Account
 
-* [Alert Notifications]({%- link _documentation/guides/alert-notifications/index.md -%})
+* [Manage your Event Stream]({%- link _documentation/guides/manage-event-stream/index.md -%})
 
-* Manage your Event Stream
+* [Alert Notifications]({%- link _documentation/guides/alert-notifications/index.md -%})

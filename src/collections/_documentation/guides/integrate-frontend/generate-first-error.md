@@ -7,9 +7,6 @@ Now that the Demo App is up and running on your local environment integrated wit
 
 > **Note:** If you're using your own source code, follow [Capturing your first event](https://docs.sentry.io/error-reporting/quickstart/?platform=browser) to introduce an error to your source code and continue with [Step 2](#step-2-handle-the-error)
 
-<!-- ## Prerequisites -->
-
-
 ## Step 1: Capture your First Event
 
 1. Launch the demo app by opening the [localhost link](https://localhost:5000) in your browser 
@@ -18,17 +15,17 @@ Now that the Demo App is up and running on your local environment integrated wit
 
     ![Import and Configure SDK]({% asset guides/integrate-frontend/generate-first-error-02.png @path %})
 
-2. Click on any of the **Buy!** buttons to add products to your shopping cart
+3. Click on any of the **Buy!** buttons to add products to your shopping cart
 
-3. Click on the **Checkout** button on the left panel to generate an error
+4. Click on the **Checkout** button on the left panel to generate an error
 
     ![Import and Configure SDK]({% asset guides/integrate-frontend/generate-first-error-01.png @path %})
-    
+
     Notice that:
     * An error message **Something went wrong** displays in the app 
     * The error stack trace shows in the browser console
     * An alert sent to your email address configured on Sentry.io notifying you about an error that occurred in your app
-    
+
         ![Import and Configure SDK]({% asset guides/integrate-frontend/generate-first-error-03.png @path %})
 
 ***
