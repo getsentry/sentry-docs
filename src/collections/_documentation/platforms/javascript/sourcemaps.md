@@ -3,7 +3,7 @@ title: 'Source Maps'
 sidebar_order: 60
 ---
 
-Sentry supports un-minifying JavaScript via source maps. This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (e.g. UglifyJS), or transpiled code from a higher-level language (e.g. TypeScript, ES6).
+Sentry supports un-minifying JavaScript via source maps. This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (for example, TypeScript, ES6).
 
 ## Specify the release
 
@@ -123,9 +123,9 @@ Source maps can be either:
 
 Except for [webpack]({%- link _documentation/platforms/javascript/sourcemaps.md -%}#webpack), the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
 
-Now you need to set up your build system to create a release, and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
+Now you need to set up your build system to create a release, and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (for example, app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
-Sentry uses [**Releases**]({%- link _documentation/workflow/releases.md -%}) to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
+Sentry uses [**Releases**]({%- link _documentation/workflow/releases.md -%}) to match the correct source maps to your events. To create a new release, run the following command (for example, during publishing):
 
 ```sh
 $ sentry-cli releases new <release_name>
@@ -137,7 +137,7 @@ The release name must be **unique within your organization** and match the `rele
 $ sentry-cli releases files <release_name> upload-sourcemaps /path/to/files
 ```
 
-This command will upload all files ending in _.js_ and _.map_ to the specified release. If you wish to change these extensions – e.g. to upload typescript sources – use the `--ext` option:
+This command will upload all files ending in _.js_ and _.map_ to the specified release. If you wish to change these extensions – for example, to upload typescript sources – use the `--ext` option:
 
 ```sh
 $ sentry-cli releases files <release_name> upload-sourcemaps --ext ts --ext map /path/to/files
@@ -166,8 +166,8 @@ Additional information can be found in the [Releases API documentation]({%- link
 It’s not uncommon for a web application to be accessible at multiple origins. For example:
 
 -   Website is operable over both `https` and `http`
--   Geolocated web addresses: e.g. `https://us.example.com`, `https://eu.example.com`
--   Multiple static CDNs: e.g. `https://static1.example.com`, `https://static2.example.com`
+-   Geolocated web addresses: for example, `https://us.example.com`, `https://eu.example.com`
+-   Multiple static CDNs: for example, `https://static1.example.com`, `https://static2.example.com`
 -   Customer-specific domains/subdomains
 
 In this situation, **identical** JavaScript and source map files may be located at two or more distinct origins. If you are dealing with such a deployment, you have two choices for naming your uploaded artifacts:
@@ -262,7 +262,7 @@ To verify this, open up the issue from the Sentry UI and check if the release is
 
 Once your release is properly configured and issues are tagged, from within an issue you can then click on the release >> Artifacts (or **Releases >> your specific release >> Artifacts**) to check that your source maps and the associated files are in fact uploaded to the correct release.
 
-Additionally, make sure all of the necessary files are available. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
+Additionally, make sure all of the necessary files are available. For Sentry to de-minify your stack traces you must provide both the minified files (for example, app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
 ### Verify `sourceMappingURL` is present
 
@@ -399,7 +399,7 @@ var fs        = require('fs'),
 // file output by Webpack, Uglify, etc.
 var GENERATED_FILE = path.join('.', 'app.min.js.map');
 
-// line and column located in your generated file (e.g. source of your error
+// line and column located in your generated file (for example, the source of your error
 // from your minified file)
 var GENERATED_LINE_AND_COLUMN = {line: 1, column: 1000};
 
@@ -424,7 +424,7 @@ Often users hit this limit because they are transmitting source files at an inte
 
 ### Verify artifacts are not gzipped
 
-The Sentry API currently only works with source maps and source files that are uploaded as plain text (UTF-8 encoded). If the files are uploaded in a compressed format (e.g. gzip), they will be not be interpreted correctly.
+The Sentry API currently only works with source maps and source files that are uploaded as plain text (UTF-8 encoded). If the files are uploaded in a compressed format (for example, gzip), they will be not be interpreted correctly.
 
 This sometimes occurs with build scripts and plugins that produce pre-compressed minified files. For example, Webpack’s [compression plugin](https://github.com/webpack/compression-webpack-plugin). You’ll need to disable such plugins and perform the compression _after_ the generated source maps / source files have been uploaded to Sentry.
 
