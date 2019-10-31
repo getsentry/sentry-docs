@@ -515,6 +515,7 @@ Sentry.init({
 
 For more information, see:
 - [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
+- [Command Line Interface: Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
 - [Full documentation on Environments]({%- link _documentation/enriching-error-data/environments.md -%}).
 
 ### Breadcrumbs
