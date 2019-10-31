@@ -306,7 +306,7 @@ then your uploaded artifact should be named `https://example.com/dist/maps/scrip
 
 ### Verify artifact names match stack trace frames
 
-If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - i.e. `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
+If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - for example, `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
 
 If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the [`rewriteFrames`]({%- link _documentation/platforms/javascript/index.md -%}#rewriteframes) integration to change your `abs_path` values.
 
@@ -332,13 +332,13 @@ This command uploads all JavaScript files in the current directory. The Artifact
 ~/scripts/script.min.js.map
 ```
 
-Alternately you can specify which files to upload, i.e. 
+Alternately you can specify which files to upload. For example:
 
 ```
 sentry-cli releases files VERSION upload-sourcemaps script.min.js script.min.js.map --url-prefix '~/scripts'
 ```
 
-You can also upload it with the fully qualified URL i.e.
+You can also upload it with the fully qualified URL. For example:
 ```
 sentry-cli releases files VERSION upload-sourcemaps . --url-prefix 'http://localhost:8000/scripts'
 ```
