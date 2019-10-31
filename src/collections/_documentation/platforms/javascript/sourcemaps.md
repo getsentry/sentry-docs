@@ -116,8 +116,8 @@ The TypeScript compiler can output source maps. Configure the `sourceRoot` prope
 
 Source maps can be either:
 
-1.  Served publicly over HTTP alongside your source files.
-2.  Uploaded directly to Sentry (**recommended**).
+1.  Uploaded directly to Sentry (**recommended**).
+2.  Served publicly over HTTP alongside your source files.
 
 ### Hosting Source Map Files
 
@@ -188,14 +188,6 @@ This command will upload all files ending in _.js_ and _.map_ to the specified r
 ```sh
 $ sentry-cli releases files <release_name> upload-sourcemaps --ext ts --ext map /path/to/files
 ```
-
-{% capture __alert_content -%}
-Unfortunately, it can be quite challenging to ensure that source maps are actually valid and uploaded correctly. To ensure that everything is working as intended, you can add the `--validate` flag when uploading source maps. It attempts to parse the source maps and verify source references locally. Note that this flag might produce false positives if you have references to external source maps.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Validating source maps with Sentry CLI"
-  content=__alert_content
-%}
 
 Until now, the release is in a draft state (“_unreleased_”). Once all source maps have been uploaded and your app has been published successfully, finalize the release with the following command:
 
