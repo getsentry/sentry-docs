@@ -152,7 +152,7 @@ $ sentry-cli releases finalize <release_name>
 For convenience, you can alternatively pass the `--finalize` flag to the `new` command which will immediately finalize the release.
 
 {% capture __alert_content -%}
-You dont have to upload the source files (referenced by source maps), but **without them the grouping algorithm will not be as strong**, and the UI will not show any contextual source.
+You don't have to upload the source files (referenced by source maps), but **without them the grouping algorithm will not be as strong**, and the UI will not show any contextual source.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
