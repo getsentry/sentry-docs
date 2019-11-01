@@ -20,7 +20,7 @@ $ node --unhandled-rejections=warn app.js
 ```
 
 {% capture __alert_content -%}
-AWS's Node runtime doesn't include a global error handler in the same way Node does, so the Node.js SDK has no way of catching unhandled exceptions. The only way to send events to Sentry is manually, by using `Sentry.captureException()` or `Sentry.captureMessage()`.
+AWS's Node runtime doesn't include a global error handler in the same way Node does, so the Node.js SDK has no way of catching unhandled exceptions. The only way to send events to Sentry is to manually use `Sentry.captureException()` or `Sentry.captureMessage()`.
 {%- endcapture -%}
 {%- include components/alert.html
     title="AWS Lambda"
