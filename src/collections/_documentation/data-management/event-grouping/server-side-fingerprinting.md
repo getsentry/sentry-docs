@@ -25,6 +25,15 @@ but some extra ones are available:
 - `value`: matches on an exception value
 - `message`: matches on a log message
 
+{% capture __alert_content -%}
+Note that `message` **does not** match on exception messages, only `value` does.  They look similar in the UI but are different values.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="info"
+%}
+
 Don't forget that you can also use variables like `{% raw %}{{ function }}{% endraw %}` to
 customize fingerprinting like you can do if the client submits them.
 
