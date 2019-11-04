@@ -62,7 +62,7 @@ We use the `Makefile` in the `sentry-react-demo` project to handle Sentry relate
 ## Step 2: Create a Release & Upload Source Maps
 
 Now we can invoke the `sentry-cli` to let Sentry know we have a new release and upload the project's source maps to it. 
-- You can set a custom release version to suit your delivery processes or let the Sentry CLI calculate and generate a version. 
+- You can set a custom release version to suit your delivery processes or let the Sentry CLI propose a version.
 - To build the `sentry-react-demo` project, we use the `react-scripts` package that also generates source maps under _./build/static/js/_
 
 1. In the Makefile, add a new environment variable for the release version, utilizing Sentry CLI to propose the version value
