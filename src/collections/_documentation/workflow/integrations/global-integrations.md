@@ -177,6 +177,23 @@ Fixes MYAPP-317
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit, and, later, when that commit is part of a release, we’ll mark the issue as resolved.
 
+### ClickUp
+
+ClickUp’s core focus is about removing frustrations, inefficiencies, and disconnect caused by current project management solutions. You can create an issue in ClickUp from a Sentry issue or link it to an existing issue.
+
+
+{% include components/alert.html
+  title="Note"
+  content="This integration **won't** work with self-hosted Sentry."
+  level="warning"
+%}
+
+
+#### Install and Configure ClickUp
+
+Follow the instructions in the link below:  
+<https://docs.clickup.com/en/articles/3420285-sentry-io>
+
 ### Clubhouse
 
 Create a more efficient workflow by linking your Sentry Issues with your Clubhouse Stories. Errors, features, and anything else you track in Clubhouse can now live side by side. The new Clubhouse integration has feature parity with the Clubhouse plugin. If you're choosing between the two, we recommend installing the Clubhouse integration.
@@ -889,3 +906,34 @@ Now your Slack integration is available to all projects in your Sentry organizat
 #### Deleting the legacy Slack integration
 
 Once you configure the global Slack integration and Alert Rules, you can disable the old Slack integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy integration after setting up the global integration.
+
+
+
+## Other
+
+
+{% include components/alert.html
+  title="Note"
+  content="The following integrations **won't** work with self-hosted Sentry."
+  level="warning"
+%}
+
+### Amixr
+
+In Amixr, issues from Sentry get stored as well as alerts from other sources like Grafana or Alertmanager. The Amixr integration synchronizes issue statuses between Amixr and Sentry. Issues get posted to your Slack and users can change the statuses of those issues by clicking on buttons within the message.
+
+#### Install and Configure Amixr
+
+Follow the instructions in the link below:  
+<https://docs.amixr.io/#/integrations/sentry>
+
+### Split
+
+The Split integration quickly processes and displays Sentry exception data in the Split platform as track events for analysis. You can control what environments and traffic types you're capturing exceptions for in the Split dashboard without having to touch any code.
+
+The Split integration is only available for organizations on the Busines and Enterprise plans.
+
+#### Install and Configure Split
+
+Follow the instructions in the link below:  
+<https://help.split.io/hc/en-us/articles/360029879431>
