@@ -5,7 +5,7 @@ sidebar_order: 5
 
 ## AWS Lambda
 
-To setup Sentry error logging for a Lambda function, build a wrapper.
+To set up Sentry error logging for a Lambda function, build a wrapper.
 
 ```javascript
     "use strict";
