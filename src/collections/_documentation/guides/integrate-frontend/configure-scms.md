@@ -24,7 +24,7 @@ In this part, you will:
 
     ![Add project repository]({% asset guides/integrate-frontend/configure-scms-01.png @path %})
 
-GitHub should now enable and available for all projects under your Sentry organization.
+GitHub should now be enabled and available for all projects in your Sentry organization.
 
 
 ## Step 2: Set Up Commit Tracking
