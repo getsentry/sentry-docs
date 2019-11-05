@@ -26,7 +26,7 @@ ___
     ![Select project language]({% asset guides/integrate-frontend/create-new-project-02.png @path %})
 
 * `Assign a Team` to the project.
-    > If you haven't defined any teams, you can either select the default org team (the team has the same name as your Sentry Org) or click on the `+` button to create a new team.
+    > If you haven't defined any teams, you can either select the default org team (the team that has the same name as your Sentry Org) or click on the `+` button to create a new team.
 
     ![Select team]({% asset guides/integrate-frontend/create-new-project-03.png @path %})
 
