@@ -30,7 +30,7 @@ GitHub should now be enabled and available for all projects in your Sentry organ
 ## Step 2: Set Up Commit Tracking
 
 In the demo project, we use a Makefile to handle our build-related tasks. 
-> **Note:** If you are not using the using the provided React demo code and do not have a Makefile, you could optionally run the `sentry-cli` commands used in this tutorial directly from the `command line` or integrate the commands into the relevant build script.
+> **Note:** If you are not using the provided React demo code and do not have a Makefile, you could optionally run the `sentry-cli` commands used in this tutorial directly from the `command line` or integrate the commands into the relevant build script.
 
 1. Open the `Makefile` in your project 
 
