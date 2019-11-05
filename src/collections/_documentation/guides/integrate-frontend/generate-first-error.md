@@ -50,7 +50,7 @@ Now that the Demo App is up and running on your local environment integrated wit
 
     ![Error Stack-trace]({% asset guides/integrate-frontend/generate-first-error-06.png @path %})
 
-    > * Notice that the stack trace is **minified**.  JavaScript is typically minified to reduce to the size of the source code
+    > * Notice that the stack trace is **minified**.  JavaScript is typically minified to reduce to the size of the source code.
     > * Sentry can un-minify the code back to its readable form and display source (code) context lines in the stack frames, which is covered in the next tutorial.
 
 ***
