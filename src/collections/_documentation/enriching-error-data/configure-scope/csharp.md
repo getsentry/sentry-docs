@@ -15,7 +15,7 @@ SentrySdk.ConfigureScope(scope =>
 Or when an asynchronous call is required:
 
 ```csharp
-await SentrySdk.ConfigureScopeAsync(scope =>
+await SentrySdk.ConfigureScopeAsync(async scope =>
 {
     scope.User = await _context.Users.FindAsync(id);
 });

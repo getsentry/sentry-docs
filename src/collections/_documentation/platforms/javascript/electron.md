@@ -11,6 +11,7 @@ This SDK is still in beta and undergoing active development. It is part of an ea
 {%- include components/alert.html
   title="Support"
   content=__alert_content
+  level="info"
 %}
 
 ## Wizard
@@ -102,6 +103,7 @@ It is currently not possible to send events from native code (such as a C++ exte
 {%- include components/alert.html
   title="Known Issue"
   content=__alert_content
+  level="warning"
 %}
 
 ## Dealing with Minified Source Code
@@ -120,6 +122,7 @@ Minidumps are memory dumps of the process at the moment it crashes. As such, the
 {%- include components/alert.html
   title="A Word on Data Privacy"
   content=__alert_content
+  level="warning"
 %}
 
 ### Providing Debug Information

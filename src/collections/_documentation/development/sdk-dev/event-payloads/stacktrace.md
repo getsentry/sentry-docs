@@ -21,7 +21,7 @@ follow this rule of thumb:
 
 {%- endcapture -%}
 
-{% include components/alert.html title="Note" content=__alert_content %}
+{% include components/alert.html title="Note" content=__alert_content level="warning"%}
 
 ## Attributes
 

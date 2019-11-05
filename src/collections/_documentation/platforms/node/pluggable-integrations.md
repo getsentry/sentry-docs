@@ -55,7 +55,7 @@ Available options:
 
 ```js
 {
-  depth: number; // limit of how deep the object serializer should go. Anything deeper then limit will be replaced with standard Node.js REPL notation of [Object], [Array], [Function] or primitive value. Defaults to 3.
+  depth: number; // limit of how deep the object serializer should go. Anything deeper than the limit will be replaced with standard Node.js REPL notation of [Object], [Array], [Function] or primitive value. Defaults to 3.
 }
 ```
 

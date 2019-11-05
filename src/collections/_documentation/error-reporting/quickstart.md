@@ -23,6 +23,7 @@ Your platform is not listed?  There are more SDKs we support: [list of SDKs]({%-
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 {% wizard %}

@@ -15,34 +15,40 @@ Additionally, releases are used for applying [source maps]({%- link _documentati
 
 ## Setting up Releases
 
-Setting up releases fully is a 3-step process:
+Setting up releases fully is a 4-step process:
 
 1.  [Configure Your SDK](#configure-sdk)
-2.  [Create Release and Associate Commits](#create-release)
+2.  [Install Repository Integration](#install-repo-integration)
+3.  [Create Release and Associate Commits](#create-release)
 3.  [Tell Sentry When You Deploy a Release](#create-deploy)
 
 ### Configure Your SDK {#configure-sdk}
 
-Include a release ID (a.k.a version) where you configure your client SDK. This is commonly a git SHA or a custom version number. Note that releases are global per organization so make sure to prefix them with something project specific if needed:
+Include a release ID (a.k.a version) where you configure your client SDK. This is commonly a git SHA or a custom version number.
+
+{% capture __alert_content -%}
+Releases are global per organization, so make sure to prefix them with something project-specific.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 {% include components/platform_content.html content_dir='set-release' %}
 
 How you make the version available to your code is up to you. For example, you could use an environment variable that is set during the build process.
 
-This annotates each error with the release. We recommend that you tell Sentry about a new release prior to deploying it as this will unlock a few more features (explained in Step 2) . But if you don’t, Sentry will automatically create a release entity in the system the first time it sees an error with that release ID.
+This tags each event with the release value. We recommend that you tell Sentry about a new release before deploying it, as this will unlock a few more features (explained in Step 2). But if you don’t, Sentry will automatically create a release entity in the system the first time it sees an event with that release ID.
 
 After this, you should see information about the release, such as new issues and regressions introduced in the release.
 
 {% asset releases-overview.png %}
 
-### Create Release and Associate Commits {#create-release}
+### Install Repository Integration {#install-repo-integration}
 
-In this step you tell Sentry about a new release and which commits are associated with it. This allows Sentry to pinpoint which commits likely caused an issue, and allow your team to resolve issues by referencing the issue number in a commit message.
-
-There are two ways to create a release and associate commits: using a repository integration (recommended), or by manually supplying Sentry with your own commit metadata.
-
-#### Link a Repository
-
+This step is optional - you can manually supply Sentry with your own commit metadata if you wish. Skip ahead to [this section](#alternatively-without-a-repository-integration) to learn how to do this.
+  
 Using one of Sentry's repository integrations (e.g. GitHub, GitLab, Bitbucket, etc.) is the easiest way to connect your commit metadata to Sentry. For a list of available integrations, go to Organization Settings > Integrations.
 
 {% capture __alert_content -%}
@@ -65,6 +71,11 @@ In the 'Repositories' panel, click 'Add Repository', and add any repositories yo
 If you’re linking a GitHub repository, ensure you have Admin or Owner permissions on the repository, and that Sentry is an authorized GitHub app in your [GitHub account settings](https://github.com/settings/applications).
 
 If you’re still having trouble adding it, you can try to [disconnect](https://sentry.io/account/settings/identities/) and then [reconnect](https://sentry.io/account/settings/social/associate/github/) your GitHub identity.
+
+### Create Release and Associate Commits {#create-release}
+
+In this step, you tell Sentry about a new release and which commits are associated with it. This allows Sentry to pinpoint, which commits likely caused an issue, and allow your team to resolve issues by referencing the issue number in a commit message.
+
 
 #### Associate Commits with a Release
 
@@ -99,7 +110,7 @@ You need to make sure you’re using [Auth Tokens]({%- link _documentation/api/a
   level="warning"
 %}
 
-In the above example, we’re using the `propose-version` sub-command to automatically determine a release ID. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally we’re using the `--auto` flag to automatically determine the repository name, and associate commits between the previous release’s commit and the current head commit with the release. If you have never associated commits before, we’ll use the latest 10 commits.
+In the above example, we’re using the `propose-version` sub-command to determine a release ID automatically. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally, we’re using the `--auto` flag to determine the repository name automatically, and associate commits between the previous release’s commit and the current head commit with the release. If you have never associated commits before, we’ll use the latest 20 commits.
 
 If you want more control over which commits to associate, or are unable to execute the command inside the repository, you can manually specify a repository and range:
 
@@ -227,7 +238,7 @@ In order for Sentry to use your commits, you must format your commits to match t
 : A list of the files that have been changed in the commit. Specifying the `patch_set` is necessary to power suspect commits and suggested assignees. It consists of two parts:
 
     `path`
-    : The path to the file. Note both forward and backward slashes (`'/' '\\'`) are supported.
+    : The path to the file. Both forward and backward slashes (`'/' '\\'`) are supported.
     
     `type`
     : The types of changes that happend in that commit. The options are: 

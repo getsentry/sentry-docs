@@ -183,14 +183,7 @@ dependencies {
 }	
 ```
 
-Please make sure your `MainApplication.java` looks something like this:
-{% capture __alert_content -%}
-This is only necessary for react-native versions `< 0.60`.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
+Please make sure your `MainApplication.java` looks something like this (only necessary for react-native versions `< 0.60`):
 
 ```java
 import io.sentry.RNSentryPackage;

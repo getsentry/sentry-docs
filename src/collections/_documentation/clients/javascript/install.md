@@ -39,7 +39,7 @@ $ bower install raven-js --save
 <script src="/bower_components/raven-js/dist/raven.js"></script>
 ```
 
-Also note that the file is uncompresed but is ready to pass to any decent JavaScript compressor like [UglifyJS](https://github.com/mishoo/UglifyJS2).
+Also note that the file is uncompressed but is ready to pass to any decent JavaScript compressor like [UglifyJS](https://github.com/mishoo/UglifyJS2).
 
 ## npm
 
@@ -53,7 +53,14 @@ $ npm install raven-js --save
 <script src="/node_modules/raven-js/dist/raven.js"></script>
 ```
 
-Note that if you intend to use Raven with Node, [raven-node](https://github.com/getsentry/raven-node) is the client to use.
+{% capture __alert_content -%}
+If you intend to use Raven with Node, [raven-node](https://github.com/getsentry/raven-node) is the client to use.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 ## CommonJS
 
@@ -101,7 +108,14 @@ Or you can place those two things in a separate script tags. This will queue all
 
 Be aware however, that there are some trade-offs to this solution, as errors might provide less information due to them being “retriggered” instead of being caught from the original source.
 
-NOTE: This won’t work when opening `index.html` or any other html file from the file system, as it doesn’t support anonymous cross-origin scripts. The same thing can happen for any cross-origin scripts as well. To read more about it, see [What the heck is Script error?](https://blog.sentry.io/2016/05/17/what-is-script-error).
+{% capture __alert_content -%}
+This won’t work when opening `index.html` or any other html file from the file system, as it doesn’t support anonymous cross-origin scripts. The same thing can happen for any cross-origin scripts as well. To read more about it, see [What the heck is Script error?](https://blog.sentry.io/2016/05/17/what-is-script-error).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 To read un-minified source code for this loader, see [loader.js](https://github.com/getsentry/raven-js/blob/master/packages/raven-js/src/loader.js)
 

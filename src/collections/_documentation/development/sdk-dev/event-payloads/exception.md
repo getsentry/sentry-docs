@@ -94,7 +94,7 @@ if the SDK cannot determine the specific mechanism. In this case, set the `type`
 to `generic`. See below for an example.
 {%- endcapture -%}
 
-{%- include components/alert.html title="Note" content=__alert_content %}
+{%- include components/alert.html title="Note" content=__alert_content level="warning"%}
 
 ### Meta information
 
@@ -210,7 +210,7 @@ iOS native mach exception with mechanism:
   "exception": {
     "type": "EXC_BAD_ACCESS",
     "value": "Attempted to dereference a null pointer",
-    "meta": {
+    "mechanism": {
       "type": "mach",
       "handled": false,
       "data": {
@@ -242,7 +242,7 @@ JavaScript unhandled promise rejection:
   "exception": {
     "type": "TypeError",
     "value": "Object [object Object] has no method 'foo'",
-    "meta": {
+    "mechanism": {
       "type": "promise",
       "description": "This error originated either by throwing inside of an ...",
       "handled": false,

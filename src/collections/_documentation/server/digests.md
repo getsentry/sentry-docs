@@ -63,6 +63,7 @@ Changing the `cluster` value or the cluster configuration after data has been wr
 {%- include components/alert.html
   title="Important"
   content=__alert_content
+  level="warning"
 %}
 
 `ttl`

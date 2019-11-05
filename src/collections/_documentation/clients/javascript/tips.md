@@ -104,11 +104,16 @@ $(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
 });
 ```
 
-**Note:**
-
+{% capture __alert_content -%}
 -   This handler is not called for cross-domain script and cross-domain JSONP requests.
 -   If `$.ajax()` or `$.ajaxSetup()` is called with the `global` option set to `false`, the `.ajaxError()` method will not fire.
 -   As of jQuery 1.8, the `.ajaxError()` method should only be attached to document.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 ## Cross Origin
 

@@ -45,7 +45,6 @@ not supressed all the context you have bound to the scope in Sentry will flow al
 If however you suppress the flow, you get new scope data.
 {% endcapture %}
 {%- include components/alert.html
-  title="Note"
   content=__alert_content
 %}
 

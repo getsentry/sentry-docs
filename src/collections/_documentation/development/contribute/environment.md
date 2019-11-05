@@ -7,7 +7,7 @@ sidebar_order: 1
 
 ### Linux
 
-Just follow the [_official installation from source instructions_]({%- link _documentation/server/installation/python/index.md -%}).
+Follow the [_official installation from source instructions_]({%- link _documentation/server/installation/python/index.md -%}).
 
 ### Macintosh OS X
 
@@ -18,28 +18,17 @@ git clone https://github.com/<your github username>/sentry.git
 cd sentry
 ```
 
-Install [Homebrew](http://brew.sh), if you haven’t already, then run `brew install python@2`.
+Install [Homebrew](http://brew.sh), if you haven’t already. Run `brew bundle` to install the various system packages as listed in sentry's `Brewfile`. This will install, among other things, Python 2 and docker.
 
-It is highly recommended to develop inside a Python virtual environment, so install `virtualenv` and `virtualenvwrapper`:
-
-```bash
-pip install virtualenv virtualenvwrapper
-```
-
-Then append the following to your shell profile (e.g. `~/.bashrc`) and reload it:
+Setup and activate a python 2 virtual environment:
 
 ```bash
-echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
-exec bash
+python2 -m pip install virtualenv
+python2 -m virtualenv .venv
+source .venv/bin/activate
 ```
 
-Setup and activate a Python 2.7 virtual environment in the project root:
-
-```bash
-mkvirtualenv sentry
-```
-
-Install `nvm` and use it to install the node version specified in the `.nvmrc` file:
+Install `nvm` and use it to install the node version specified in sentry's `.nvmrc` file:
 
 ```bash
 brew install nvm
@@ -59,6 +48,7 @@ make bootstrap
 {%- endcapture -%}{%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 `make bootstrap` will generally run these sequence of commands (you can poke around through the `Makefile` file to see more details):
@@ -82,6 +72,7 @@ If you would like to import an example dataset, running `./bin/load-mocks` will 
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 Once you’ve successfully stood up your datastore, you can now run the development server:
@@ -90,19 +81,9 @@ Once you’ve successfully stood up your datastore, you can now run the developm
 sentry devserver --workers
 ```
 
-{% capture __alert_content -%}
 If you are developing for aesthetics only and do not rely on the async workers, you can omit the `--workers` flag in order to use less system resources.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}{% capture __alert_content -%}
+
 If you would like to be able to run `devserver` outside of your root checkout, you can install `webpack` globally with `npm install -g webpack`.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
 
 When webpack finishes processing, you can find a login prompt for the user account you previously created at [http://localhost:8000](http://localhost:8000). From there, you are free to browse the website as an administrator.
 
@@ -112,6 +93,7 @@ When asked for the root address of the server, make sure that you use `http://lo
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 ## Staging Your Changes
@@ -126,10 +108,4 @@ There are no additional services required for running the Sentry test suite. To 
 make test
 ```
 
-{% capture __alert_content -%}
 If you find yourself constantly running `make test` and wishing it was faster, running either `make test-js` or `make test-python` will only run the test suite with the corresponding language, skipping over linting and dependency checks. If you would like to see even more options, check out other entry points in the `Makefile`.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}

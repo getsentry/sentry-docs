@@ -166,7 +166,7 @@ highly encouraged:
 
 `tags`
 
-: A map or list of tags for this event.
+: A map or list of tags for this event. Each tag must be less than 200 characters.
 
   ```json
   {

@@ -207,7 +207,7 @@ $ sentry-cli releases files <release_name> upload-sourcemaps --ext ts --ext map 
 ```
 
 {% capture __alert_content -%}
-Unfortunately, it can be quite challenging to ensure that source maps are actually valid and uploaded correctly. To ensure that everything is working as intended, you can add the `--validate` flag when uploading source maps. It attempts to parse the source maps and verify source references locally. Note that this flag might produce false positives if you have references to external source maps.
+Unfortunately, it can be quite challenging to ensure that source maps are actually valid and uploaded correctly. To ensure that everything is working as intended, you can add the `--validate` flag when uploading source maps. It attempts to parse the source maps and verify source references locally. This flag might produce false positives if you have references to external source maps.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Validating source maps with Sentry CLI"
@@ -244,7 +244,7 @@ In this situation, **identical** JavaScript and source map files may be located 
 
     > ~/js/app.js
 
-The ~ prefix tells Sentry that for a given URL, **any** combination of protocol and hostname whose path is `/js/app.js` should use this artifact. **ONLY** use this method if your source/source map files are identical at all possible protocol/hostname combinations. Note that Sentry will prioritize full URLs over tilde prefixed paths if found.
+The ~ prefix tells Sentry that for a given URL, **any** combination of protocol and hostname whose path is `/js/app.js` should use this artifact. **ONLY** use this method if your source/source map files are identical at all possible protocol/hostname combinations. **Sentry will prioritize full URLs over tilde prefixed paths**, if found.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Assets Accessible at Multiple Origins"
@@ -515,6 +515,7 @@ Sentry.init({
 
 For more information, see:
 - [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
+- [Command Line Interface: Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
 - [Full documentation on Environments]({%- link _documentation/enriching-error-data/environments.md -%}).
 
 ### Breadcrumbs
@@ -657,7 +658,8 @@ But we also offer an alternative we call the _Loader_. You install by just addin
 #### Select SDK version to load
 
 If you go into the detail page (Configure button) of your DSN, you are able to select which SDK version the Loader should load.
-Note that it can take a few minutes until the change is visible in the code since it's cached.
+
+It can take a few minutes until the change is visible in the code, since it's cached.
 
 [{% asset js-loader-settings.png %}]({% asset js-loader-settings.png @path %})
 
@@ -815,7 +817,7 @@ Sentry.init({
 });
 ```
 
-##### ExtraErrorData
+#### ExtraErrorData
 _Import name: `Integrations.ExtraErrorData`_
 
 This integration extracts all non-native attributes from the Error object and attaches them to the event as the `extra` data.
@@ -828,7 +830,7 @@ Available options:
 }
 ```
 
-### CaptureConsole
+#### CaptureConsole
 
 _Import name: `Integrations.CaptureConsole`_
 
@@ -841,7 +843,7 @@ It then retriggers to preserve default native behaviour.
 }
 ```
 
-##### Dedupe
+#### Dedupe
 _Import name: `Integrations.Dedupe`_
 
 This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only compare stack traces and fingerprints.

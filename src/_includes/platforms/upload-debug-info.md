@@ -3,8 +3,8 @@ symbolicated stack traces, you need to upload _Debug Information Files_
 (sometimes also referred to as _Debug Symbols_ or just _Symbols_). We recommend
 uploading debug information during your build or release process.
 
-Note that for all libraries where you'd like to receive symbolication, you need
-to provide debug information. This includes dependencies and operating system
+For all libraries where you'd like to receive symbolication, **you need
+to provide debug information**. This includes dependencies and operating system
 libraries. If you are not sure which files are required, go to _Project
 Settings > Processing Issues_, which shows a list of all the necessary files and
 instructions to retrieve them.

@@ -170,15 +170,9 @@ sample_rate = 0.5
 
 : The maximum number of items a list-like container should store.
 
-If an iterable is longer than the specified length, the left-most elements up to length will be kept.
+If an iterable is longer than the specified length, the left-most elements up to length will be kept. This affects sets as well, which are unordered.
 
-{% capture __alert_content -%}
-This affects sets as well, which are unordered.
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Note"
-    content=__alert_content
-  %}```python
+```python
 list_max_length = 50
 
 ````

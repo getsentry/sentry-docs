@@ -11,7 +11,11 @@ The following pieces of information are requested and collected:
 -   The user’s email address
 -   A description of what happened
 
-When feedback is collected, Sentry will pair it up with the original event giving you additional insights into issues.
+When feedback is collected, Sentry will pair it up with the original event giving you additional insights into issues. 
+
+Below is an example of what the User Feedback widget could look like, depending on your customization.
+
+[{% asset user_feedback_widget.png alt="An example of a user feedback widget with text boxes for user name, email, and additional details about the break." %}]({% asset user_feedback_widget.png @path %})
 
 ## Collecting Feedback
 

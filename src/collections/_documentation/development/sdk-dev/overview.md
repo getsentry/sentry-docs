@@ -82,6 +82,7 @@ If an empty DSN is passed, you should treat it as valid option which signifies d
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 Additionally, you should provide global functions which allow for capturing of
@@ -126,13 +127,14 @@ The resulting POST request would then transmit to:
 ```
 
 {% capture __alert_content -%}
-Note that the secret part of the DSN is optional and effectively deprecated at this point.  While clients are
+The secret part of the DSN is optional and effectively deprecated at this point.  While clients are
 still supposed to honor it if supplied future versions of Sentry will entirely ignore it.  The DSN parsing
 code must not require the secret key to be set.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 ## Building the JSON Packet
@@ -186,6 +188,7 @@ You should include the SDK version string in the User-Agent portion of the heade
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 In situations where it’s not possible to send the custom `X-Sentry-Auth` header, it’s possible to send these values via the querystring:
@@ -293,6 +296,7 @@ The X-Sentry-Error header will not always be present but it can be used to debug
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 ## Handling Failures

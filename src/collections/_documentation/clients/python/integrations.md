@@ -36,6 +36,7 @@ Bottle will not propagate exceptions to the underlying WSGI middleware by defaul
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 Sentry will then act as Middleware:
@@ -159,13 +160,7 @@ INSTALLED_APPS = (
 )
 ```
 
-{% capture __alert_content -%}
 This causes Raven to install a hook in Django that will automatically report uncaught exceptions.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
 
 Additional settings for the client are configured using the `RAVEN_CONFIG` dictionary:
 
@@ -448,7 +443,14 @@ class MyMiddleware(object):
         return HttpResponse('foo')
 ```
 
-Note that this technique may break unit tests using the Django test client (`django.test.client.Client`) if a view under test generates a `Http404` or `PermissionDenied` exception, because the exceptions won’t be translated into the expected 404 or 403 response codes.
+{% capture __alert_content -%}
+This technique may break unit tests using the Django test client (`django.test.client.Client`) if a view under test generates a `Http404` or `PermissionDenied` exception, because the exceptions won’t be translated into the expected 404 or 403 response codes.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 Or, alternatively, you can just enable Sentry responses:
 
@@ -875,7 +877,7 @@ logger.error('There was an error, with a stack trace!', extra={
 Depending on the version of Python you’re using, `extra` might not be an acceptable keyword argument for a logger’s `.exception()` method (`.debug()`, `.info()`, `.warning()`, `.error()` and `.critical()` should work fine regardless of Python version). This should be fixed as of Python 2.7.4 and 3.2. Official issue here: [http://bugs.python.org/issue15541](http://bugs.python.org/issue15541).
 {%- endcapture -%}
 {%- include components/alert.html
-  title="Note"
+  title="Note on Python version"
   content=__alert_content
 %}
 
@@ -912,19 +914,9 @@ logger.error('There was some crazy error', exc_info=True, extra={
 })
 ```
 
-{% capture __alert_content -%}
 The `url` and `view` keys are used internally by Sentry within the extra data.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}{% capture __alert_content -%}
+
 Any key (in `data`) prefixed with `_` will not automatically output on the Sentry details view.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
 
 Sentry will intelligently group messages if you use proper string formatting. For example, the following messages would be seen as the same message within Sentry:
 
@@ -1017,13 +1009,8 @@ format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(name)s] %(message)s
 datefmt = %H:%M:%S
 ```
 
-{% capture __alert_content -%}
-You may want to setup other loggers as well.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
+You may want to set up other loggers as well.
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
@@ -1101,13 +1088,7 @@ format = %(asctime)s,%(msecs)03d %(levelname)-5.5s [%(name)s] %(message)s
 datefmt = %H:%M:%S
 ```
 
-{% capture __alert_content -%}
 You may want to setup other loggers as well. See the [Pyramid Logging Documentation](http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/logging.html) for more information.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
 
 Instead of defining the DSN in the _.ini_ file you can also use the environment variable `SENTRY_DSN` which overwrites the setting in this file. Because of a syntax check you cannot remove the `args` setting completely, as workaround you can define an empty list of arguments `args = ()`.
 <!-- ENDWIZARD -->
@@ -1262,13 +1243,7 @@ application = Sentry(
 )
 ```
 
-{% capture __alert_content -%}
 Many frameworks will not propagate exceptions to the underlying WSGI middleware by default.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-%}
 
 ## ZConfig logging configuration
 

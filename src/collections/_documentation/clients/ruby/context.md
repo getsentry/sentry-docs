@@ -76,6 +76,15 @@ Raven.tags_context(
   language: I18n.locale, # "en-us"
   timezone: current_user.time_zone # "PST"
 )
+
+# define a scope with block
+Raven.tags_context(my_tag: 'my value') do
+  # will be tagged with my_tag="my value"
+  Raven.capture_exception(exception)
+end
+
+# will not be tagged with my_tag
+Raven.capture_exception(exception)
 ```
 
 ### Additional Context
@@ -88,6 +97,15 @@ Raven.extra_context(
   happiness: 'very',
   emoji: ['much']
 )
+
+# define a scope with block
+Raven.extra_context(my_context: 'my value') do
+  # will be captured with my_context="my_value"
+  Raven.capture_exception(exception)
+end
+
+# will not be captured with my_context
+Raven.capture_exception(exception)
 ```
 
 ### Rack (HTTP) Context
@@ -104,7 +122,7 @@ If you’re using the Rack middleware, we’ve already taken care of cleanup for
 Raven::Context.clear!
 ```
 
-Note: the rack and user context will perform a set operation, whereas tags and extra context will merge with any existing request context.
+The rack and user context will perform a set operation, whereas tags and extra context will merge with any existing request context.
 
 ### Transactions
 

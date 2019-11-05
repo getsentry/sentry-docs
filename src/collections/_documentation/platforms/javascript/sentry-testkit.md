@@ -5,19 +5,17 @@ sidebar_order: 30002
 
 When building tests for your application, you want to assert, that the right flow-tracking or error is being sent to _Sentry_, **but** without really sending it to the _Sentry_ servers. This way you won't swamp Sentry with false reports during test runs or other CI operations.
 
-### This is where the Sentry Testkit comes in!
+## Sentry Testkit
 
 [Sentry Testkit](https://wix.github.io/sentry-testkit/) is a Sentry plugin that allows intercepting Sentry's reports and further inspection of the data being sent. It enables Sentry to work natively in your application, and by overriding the default Sentry's transport mechanism, the report is not really sent, but rather logged locally into the memory. This way, logged reports can be fetched later for your own usage, verification, or any other use you may have in your local developing/testing environment.
 
-### Getting Started
-
-#### Installation
+## Installation
 
 ```
 npm install sentry-testkit --save-dev
 ```
 
-#### Using in tests
+### Using in tests
 
 ```javascript
 const sentryTestkit = require("sentry-testkit")
@@ -40,7 +38,7 @@ expect(report).toHaveProperty(/*...*/)
 
 You may see more usage examples in the [testing section](https://github.com/wix/sentry-testkit/tree/master/test) of sentry-testkit repository as well.
 
-#### Testkit API
+### Testkit API
 
 Sentry Testkit consists of a very simple and straightforward API.
 See the full API description and documentation in [Sentry Testkit Docs](https://wix.github.io/sentry-testkit/).

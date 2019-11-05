@@ -83,7 +83,7 @@ Those configuration options are documented below:
 
   ```javascript
   {
-    whitelistUrls: [/getsentry\.com/, /cdn\.getsentry\.com/]
+    whitelistUrls: [/getsentry\.com/]
   }
   ```
 

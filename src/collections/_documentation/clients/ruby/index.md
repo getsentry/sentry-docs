@@ -74,7 +74,7 @@ Raven.tags_context interesting: 'yes'
 Raven.extra_context happiness: 'very'
 ```
 
-For more information see [_Context_]({%- link _documentation/clients/ruby/context.md -%}).
+For more information, see [_Context_]({%- link _documentation/clients/ruby/context.md -%}).
 
 ## Deep Dive
 

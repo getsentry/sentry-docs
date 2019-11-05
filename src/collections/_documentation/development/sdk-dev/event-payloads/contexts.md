@@ -264,7 +264,7 @@ GPU context describes the GPU of the device.
 
 : _Optional_. The vendor name as reported by the graphics device.
 
-`memry_size`:
+`memory_size`:
 
 : _Optional_. The total GPU memory available in Megabytes.
 

@@ -42,6 +42,7 @@ All official plugins are tested against the latest version of Sentry, and compat
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="warning"
 %}
 
 -   Amazon SQS

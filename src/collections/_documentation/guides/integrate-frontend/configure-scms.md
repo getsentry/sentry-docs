@@ -3,7 +3,7 @@ title: Integrate your Source Code Repository
 sidebar_order: 5
 ---
 
-Now that you created a release, the next step is to integrate your GitHub repository. Sentry will use the repository metadata to help you resolve your issues faster. 
+Now that you created a release, the next step is to integrate your GitHub repository. Sentry uses the repository metadata to help you resolve your issues faster. 
 
 ## Description & Objectives
 
@@ -15,7 +15,7 @@ This allows Sentry to display:
 
 In this part, you will:
 
-- Integrate your Sentry organization with your GitHub account and repository --- this will give Sentry access to your commit metadata.
+- Integrate your Sentry organization with your GitHub account and repository --- this gives Sentry access to your commit metadata.
 - Set up commit tracking. In your release process, after creating the release object in Sentry, associate it with commits from your linked repository.
 
 ## Step 1: Integrate your GitHub Account & Repositories
@@ -26,12 +26,12 @@ In this part, you will:
 
     ![Add project repository]({% asset guides/integrate-frontend/configure-scms-01.png @path %})
 
-GitHub should now be enabled for all projects under your Sentry organization.
+GitHub should now be enabled and available for all projects in your Sentry organization.
 
 ## Step 2: Set Up Commit Tracking
 
-In the demo project, we're using a Makefile to handle our CI/CD related tasks. 
-> **Note:** If you're using your own source code and don't have a Makefile, you could optionally run the `sentry-cli` commands used in this tutorial directly from the `command line`.
+In the demo project, we use a Makefile to handle our build-related tasks. 
+> **Note:** If you are not using the provided React demo code and do not have a Makefile, you could optionally run the `sentry-cli` commands used in this tutorial directly from the `command line` or integrate the commands into the relevant build script.
 
 1. Open the `Makefile` in your project 
 

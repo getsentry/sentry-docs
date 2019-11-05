@@ -9,6 +9,7 @@ This document aims to clarify concepts and frequently asked questions around pri
 {%- include components/alert.html
   title="Note"
   content=__alert_content
+  level="info"
 %}
 
 ## Concepts

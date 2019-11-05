@@ -42,7 +42,7 @@ This method only requires a Metadata URL provided by the IdP platform. After it 
 {% asset saml2-metadata-url.png %}
 
 ### Using Provider XML
-For this method to work, an administrator needs to provide the contents of the IdP’s generated metadata file. Once the contents are pasted directly into the text field, Sentry will do the rest. _Note: Sentry.io does not require a signing certificate._
+For this method to work, an administrator needs to provide the contents of the IdP’s generated metadata file. Once the contents are pasted directly into the text field, Sentry will do the rest. _Sentry.io does not require a signing certificate._
 
 {% asset saml2-provider-xml.png %}
 

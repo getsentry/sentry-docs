@@ -3,7 +3,13 @@ title: Configuration
 sidebar_order: 1
 ---
 
-**Note:** Sentry’s library and framework integration documentation explains how to to do the initial Sentry configuration for each of the supported integrations. The configuration below can be used in combination with any of the integrations _once you set Sentry up with the integration_. Please check [the integration documentation]({%- link _documentation/clients/java/integrations.md -%}#integrations) before you attempt to do any advanced configuration.
+{% capture __alert_content -%}
+Sentry’s library and framework integration documentation explains how to to do the initial Sentry configuration for each of the supported integrations. The configuration below can be used in combination with any of the integrations **once you set Sentry up with the integration**. Please check [the integration documentation]({%- link _documentation/clients/java/integrations.md -%}#integrations) before you attempt to do any advanced configuration.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 ## Setting the DSN (Data Source Name) {#setting-the-dsn}
 
@@ -53,7 +59,7 @@ sample.rate=0.75
 
 ### Configuration via the runtime environment
 
-This is the most flexible method for configuring the Sentry client because it can be easily changed based on the environment you run your application in. _(Note that neither Java System Properties or System Environment Variables are available for Android applications. Please configure Sentry for Android via code or the properties file.)_
+This is the most flexible method for configuring the Sentry client because it can be easily changed based on the environment you run your application in. _Neither Java System Properties or System Environment Variables are available for Android applications. Please configure Sentry for Android via code or the properties file._
 
 Two methods are available for runtime configuration, checked in this order: Java System Properties and System Environment Variables.
 
@@ -79,7 +85,7 @@ import io.sentry.Sentry;
 Sentry.init("https://public:private@host:port/1?option=value&other.option=othervalue");
 ```
 
-Note that Sentry will not be able to do anything with events until this line is run, so this method of configuration is not recommended if you might have errors occur during startup. In addition, by passing a hardcoded DSN you are no longer able to override the DSN at runtime via Java System Properties or System Environment Variables.
+Sentry **will not** be able to do anything with events until this line is run, so this method of configuration is not recommended if you might have errors occur during startup. In addition, by passing a hardcoded DSN you are no longer able to override the DSN at runtime via Java System Properties or System Environment Variables.
 
 ### Configuration via the DSN
 
@@ -114,7 +120,7 @@ release=1.0.0
 dist=x86
 ```
 
-Note that the distribution is only useful (and used) if the `release` is also set.
+The distribution is only useful (and used) if the `release` is also set.
 
 ### Environment
 
@@ -142,7 +148,7 @@ tags=tag1:value1,tag2:value2
 
 ### MDC Tags
 
-To set tag names that are extracted from the SLF4J MDC system, use the `mdctags` option with comma separated key names. Note that this option is only useful when are you using one of the logging integrations.
+To set tag names that are extracted from the SLF4J MDC system, use the `mdctags` option with comma separated key names. This option is only useful when you're using one of the logging integrations.
 
 ```
 mdctags=foo,bar
@@ -222,7 +228,7 @@ This option takes a number from 0.0 to 1.0, representing the percent of events t
 
 ### Uncaught Exception Handler
 
-By default, an `UncaughtExceptionHandler` is configured that will attempt to send exceptions to Sentry. To disable it, use the `uncaught.handler.enabled` option. Note that exceptions are sent asynchronously by default, and there is no guarantee they will be sent before the JVM exits. This option is best used in conjunction with the disk buffering system described below.
+By default, an `UncaughtExceptionHandler` is configured that will attempt to send exceptions to Sentry. To disable it, use the `uncaught.handler.enabled` option. Exceptions are sent asynchronously by default, and there is **no guarantee** they will be sent before the JVM exits. This option is best used in conjunction with the disk buffering system described below.
 
 ```
 uncaught.handler.enabled=false
