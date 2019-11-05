@@ -3,24 +3,24 @@ title: Enable Readable Stack Traces in your Errors
 sidebar_order: 4
 ---
 
- A `release version` is a dynamic identifier that changes whenever you ship a new version of your code. When you give Sentry information about your releases, you unlock several features and allow JavaScript and iOS Sentry projects to proactively unminify or symbolicate your error stack traces. For more information, see [Releases](https://docs.sentry.io/workflow/releases/?platform=browser).
+ A `release version` is a dynamic identifier that changes whenever you ship a new version of your code. When you give Sentry information about your releases, you unlock several features, including source mapping of JavaScript stack traces upon ingestion. For more information, see [Releases](https://docs.sentry.io/workflow/releases/?platform=browser).
 
 ## Description & Objectives
- Releases are used for applying `source maps` to minified JavaScript to view original, untransformed source code in the stack traces of errors associated with the respective release. This is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (for example, TypeScript, ES6).
+Releases are used for applying `source maps` to minified JavaScript to view original, untransformed source code in the stack traces of errors associated with the respective release. This is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (for example, TypeScript, ES6).
 
  In this tutorial, we will: 
  1. Utilize the `Sentry Command Line Interface` (CLI) **during the build process** to update your Sentry account by:
     - Creating a new release version
     - Uploading the project's latest source maps (and associate them with the new release version)
-2. Add the release version to the Sentry SDK configuration --- this will associate any error captured by the SDK in our app to this specific release. Sentry will use the release's source maps we uploaded to unminify the error's stack trace.
+2. Add the release version to the Sentry SDK configuration --- this associates any error captured by the SDK in our app to this specific release. Sentry uses the release's source maps we uploaded to source map the event's stack trace.
 
-**Note:** As part of the **CI/CD workflow** for this app demo, we're using a `Makefile` to handle the `sentry-cli` related tasks through make tasks (targets). If you're using a different code base, you can still apply the settings and commands described below to your specific setup or run them directly in a command line shell. For more information, see [Command Line Interface](https://docs.sentry.io/cli/).
+**Note:** As part of the **Continuous Integration workflow** for this app demo, we're using a `Makefile` to handle the `sentry-cli` related tasks through `make` targets. If you're using a different code base, you can still apply the settings and commands described below to your specific setup or run them directly in a command-line shell as part of your build process. For more information, see [Command Line Interface](https://docs.sentry.io/cli/).
 
 
 <!-- ## Prerequisites -->
 
 ## Step 1: Prepare the Build Environment
-We will use the `Makefile` in the `sentry-react-demo` project to handle Sentry related tasks utilizing the `sentry-cli`. The CLI is already available through the project dependencies (see `package.json`) and requires several parameters to be available to run.
+We use the `Makefile` in the `sentry-react-demo` project to handle Sentry related tasks utilizing the `sentry-cli`. The CLI is already available through the project dependencies (see `package.json`) and requires several parameters to be available to run.
 
 1. Open the `Makefile`
 
@@ -62,7 +62,7 @@ We will use the `Makefile` in the `sentry-react-demo` project to handle Sentry r
 ## Step 2: Create a Release & Upload Source Maps
 
 Now we can invoke the `sentry-cli` to let Sentry know we have a new release and upload the project's source maps to it. 
-- You can set a custom release version to suit your own delivery processes or let the Sentry CLI calculate and generate a version. 
+- You can set a custom release version to suit your delivery processes or let the Sentry CLI propose a version.
 - To build the `sentry-react-demo` project, we use the `react-scripts` package that also generates source maps under _./build/static/js/_
 
 1. In the Makefile, add a new environment variable for the release version, utilizing Sentry CLI to propose the version value
@@ -156,7 +156,7 @@ Creating a release version and uploading the source maps through the Sentry CLI,
 
     ![Release Created]({% asset guides/integrate-frontend/upload-source-maps-014.png @path %})
 
-3. Click on the `Artifacts` tab, notice the minified resources and source maps are available for this release and will be used to unminify error stack traces
+3. Click on the `Artifacts` tab, notice the minified resources and source maps are available for this release and used to source map stack traces
 
     ![Release Created]({% asset guides/integrate-frontend/upload-source-maps-015.png @path %})
 
