@@ -61,7 +61,7 @@ You can create various alert rules per project and let Sentry know when, how, an
 
 By default, each project is created with one initial alert rule, notifying all project team members (via email) the first time a new **issue** appears. This means that the next time the Checkout **error** occurs, the notification is not triggered since the error is not "new."
 
-In this step, you create a new Alert rule notifying **every time** an event occurs even if it's associated with an already existing **issue**.
+In this step, you create a new Alert rule notifying **every time** an event occurs, even if it's associated with an already existing **issue**.
 
  1. Click on the **cog icon** next to the project name to open the `Project Settings`
 
