@@ -3,7 +3,7 @@ title: Enable Readable Stack Traces in your Errors
 sidebar_order: 4
 ---
 
- A `release version` is a dynamic identifier that changes whenever you ship a new version of your code. When you give Sentry information about your releases, you unlock several features including source mapping of JavaScript stack traces upon ingestion. For more information, see [Releases](https://docs.sentry.io/workflow/releases/?platform=browser).
+ A `release version` is a dynamic identifier that changes whenever you ship a new version of your code. When you give Sentry information about your releases, you unlock several features, including source mapping of JavaScript stack traces upon ingestion. For more information, see [Releases](https://docs.sentry.io/workflow/releases/?platform=browser).
 
 ## Description & Objectives
 Releases are used for applying `source maps` to minified JavaScript to view original, untransformed source code in the stack traces of errors associated with the respective release. This is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (for example, TypeScript, ES6).
