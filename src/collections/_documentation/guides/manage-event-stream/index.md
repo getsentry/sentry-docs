@@ -67,7 +67,7 @@ Once applied, you can track the amount of filtered errors using the graph provid
 
 ## 2. Event Grouping
 
-Any event that makes it from your source code runtime though the outbound and inbound filters will be persisted and available in your Event Stream. **Similar _Events_ are grouped into unique _Issues_ based on the event's _Fingerprint_**. An event's fingerprint (and proper grouping) relies on its **Stacktrace**. If a stack-trace is not available, the fingerprint will be determined by the type and value of the **Exception** associated with this event. If all else fails, fingerprint will default to the **Event Message**.
+Any event that makes it from your source code runtime though the outbound and inbound filters will be persisted and available in your Event Stream. **Similar _Events_ are grouped into unique _Issues_ based on the event's _Fingerprint_**. An event's fingerprint (and proper grouping) relies on its **stack-trace**. If a stack-trace is not available, the fingerprint will be determined by the type and value of the **Exception** associated with this event. If all else fails, fingerprint will default to the **Event Message**.
 
 Sentry provides various configuration options to modify and fine-tune event grouping. For more information take a look at our docs on [Grouping & Fingerprints](https://docs.sentry.io/data-management/event-grouping/).
 
@@ -75,10 +75,10 @@ Sentry provides various configuration options to modify and fine-tune event grou
 
 Proper grouping of events into issues is essential for maintaining a meaningful Issue Stream, gaining accurate visibility into the health of your application code and leveraging Sentry workflows and integrations in a meaningful way. To make sure your events are grouped properly:
 
-1. With **Javascript SDKs**, a minimized source code will result in a nondeterministic stacktrace that will mess up associated event grouping. Make sure Sentry has access to your Source Maps and minimized artifacts. For more information take a look at our documentation on [Uploading Source Maps](https://docs.sentry.io/platforms/javascript/#source-maps).
+1. With **JavaScript SDKs**, a minimized source code will result in a nondeterministic stack-trace that will mess up associated event grouping. Make sure Sentry has access to your Source Maps and minimized artifacts. For more information take a look at our documentation on [Uploading Source Maps](https://docs.sentry.io/platforms/javascript/#source-maps).
 
-    ![JavaScript stacktrace without source maps]({% asset guides/manage-event-stream/04.png @path %})
-    ![JavaScript stacktrace with source maps]({% asset guides/manage-event-stream/05.png @path %})
+    ![JavaScript stack-trace without source maps]({% asset guides/manage-event-stream/04.png @path %})
+    ![JavaScript stack-trace with source maps]({% asset guides/manage-event-stream/05.png @path %})
 
 2. Similarly, projects using the Sentry **Native SDK** should provide debug information, which allows Sentry to extract stack-traces and symbolicate stack frames into function names and line numbers. For more information take a look at the following resources:
 
