@@ -10,6 +10,7 @@ sidebar_order: 0
 
 * Monitor Errors in Native Applications
 
+* [Issue Grouping and Setting the Fingerprint]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
 
 ## Best Practices
 
