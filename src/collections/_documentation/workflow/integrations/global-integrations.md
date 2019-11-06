@@ -884,7 +884,7 @@ Once you configure the global Slack integration and Alert Rules, you can disable
 
 ### Amixr
 
-In Amixr, issues from Sentry get stored as well as alerts from other sources like Grafana or Alertmanager. The Amixr integration synchronizes issue statuses between Amixr and Sentry. Issues get posted to your Slack and users can change the statuses of those issues by clicking on buttons within the message.
+In Amixr, issues from Sentry get stored as well as alerts from other sources like Grafana or Alertmanager. The Amixr integration synchronizes issue statuses between Amixr and Sentry. Issues get posted to your Slack, and users can change the statuses of those issues by clicking on buttons within the message.
 
 #### Install and Configure Amixr
 
