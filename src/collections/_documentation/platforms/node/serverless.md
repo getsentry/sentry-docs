@@ -23,13 +23,7 @@ function sentryHandler(lambdaHandler) {
     } catch (error) {
       Sentry.captureException(error);
       await Sentry.flush(2000);
-      return {
-        body: JSON.stringify({
-          err: error.message,
-          msg: "An error has occured. Our developers have been informed."
-        }),
-        statusCode: 500
-      };
+      return error;
     }
   };
 }
