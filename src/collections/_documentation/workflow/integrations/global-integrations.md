@@ -927,7 +927,7 @@ After installing Rookout in Sentry, you can go straight to the line of code in y
 
 The Split integration quickly processes and displays Sentry exception data in the Split platform as track events for analysis. You can control what environments and traffic types you're capturing exceptions for in the Split dashboard without having to touch any code.
 
-The Split integration is only available for organizations on the Busines and Enterprise plans.
+The Split integration is only available for organizations on the Business and Enterprise plans.
 
 #### Install and Configure Split
 
