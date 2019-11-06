@@ -149,7 +149,7 @@ Client.shared?.snapshotStacktrace {
 
 ## Event Sampling
 
-If you are sending to many events and want to not send all events you can set the `sampleRate` parameter. It’s a number between 0 and 1 where when you set it to 1, all events will be sent. Notice that `shouldSendEvent` will set for this.
+If you are sending too many events and want to not send all events you can set the `sampleRate` parameter. It’s a number between 0 and 1 where when you set it to 1, all events will be sent. Notice that `shouldSendEvent` will set for this.
 
 ```swift
 Client.shared?.sampleRate = 0.75 // 75% of all events will be sent
