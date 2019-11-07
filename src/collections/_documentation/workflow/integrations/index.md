@@ -9,8 +9,10 @@ Sentry integrates seamlessly with your favorite apps and services.
 
 These integrations are set up once per organization, and are then usable in all projects.
 
+-   [_Amixr_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#amixr)
 -   [_Azure DevOps_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#azure-devops)
 -   [_Bitbucket_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#bitbucket)
+-   [_ClickUp_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#clickup)
 -   [_Clubhouse_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#clubhouse)
 -   [_GitHub_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github)
 -   [_GitHub Enterprise_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github-enterprise)
@@ -19,6 +21,7 @@ These integrations are set up once per organization, and are then usable in all 
 -   [_JIRA Server_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#jira-server)
 -   [_Rookout_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#rookout)
 -   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
+-   [_Split_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#split)
 
 
 ### Per-Project Integrations
