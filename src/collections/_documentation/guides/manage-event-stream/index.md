@@ -14,7 +14,7 @@ To cope with these challenges, Sentry provides several mechanisms that allow you
 
 ## 1. Filtering
 
-Filtering is the optimal way to manage your event stream and quota. It ensures that only actionable errors related to your source code make it to your event stream.  If it's redundant, filter it - clear your event stream from undesired "noise", and keep your alert notifications for the errors that matter.
+Filtering is the optimal way to manage your event stream and quota. It ensures that only actionable errors related to your source code make it to your event stream.  If it's redundant, filter it --- clear your event stream from undesired "noise," and keep your alert notifications for the errors that matter.
 
 ### Outbound Filters
 
