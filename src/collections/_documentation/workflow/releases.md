@@ -40,16 +40,6 @@ Releases are global per organization, so make sure to prefix them with something
 
 How you make the version available to your code is up to you. For example, you could use an environment variable that is set during the build process.
 
-{% capture __alert_content -%}
-A common way to do this with JavaScript would be to use the [`process.env.npm_package_version`](https://docs.npmjs.com/misc/scripts#packagejson-vars) like so:
-{% include components/platform_content.html content_dir='release-examples' %}
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Example"
-    content=__alert_content
-    level="info"
-%}
-
 This tags each event with the release value. We recommend that you tell Sentry about a new release before deploying it, as this will unlock a few more features (explained in Step 2). But if you don’t, Sentry will automatically create a release entity in the system the first time it sees an event with that release ID.
 
 After this, you should see information about the release, such as new issues and regressions introduced in the release.
