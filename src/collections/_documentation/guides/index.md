@@ -3,13 +3,15 @@ title: Guides
 sidebar_order: 0
 ---
 
+Step-by-step guides to getting started with monitoring errors in:
 
-* [Monitor Errors in Frontend Applications]({%- link _documentation/guides/integrate-frontend/index.md -%})
+* [Frontend Applications]({%- link _documentation/guides/integrate-frontend/index.md -%})
 
-* Monitor Errors in Backend Applications
+* Backend Applications
 
-* Monitor Errors in Native Applications
+* Mobile Apps
 
+* Desktop Applications (Native)
 
 ## Best Practices
 

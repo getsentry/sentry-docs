@@ -145,9 +145,15 @@ Clicking on a project name will open the project settings view where you can man
 
 ### > **What are my busiest projects?**
 
-The [Discover](https://docs.sentry.io/workflow/discover/) view provides a flexible query builder to query event data cross-project. Queries are executed against a subset of events defined in the **top-level filter bar** based on selected _projects_ and _date range_.
+The [Discover](https://docs.sentry.io/workflow/discover/) view provides a flexible query builder to query event data cross-project.
 
-> NOTE: The Projects drop-down allows you to search for events across
+- Open the Discover view from the left-side navigation bar
+- From the top-level filter bar select `View All Projects` from the project drop-down and apply the desired date range
+- Build, Run, and Save the following query
+
+    ![Busiest Projects]({% asset guides/manage-event-stream/16.png @path %})
+
+> NOTE: Queries in Discover are executed against a subset of events defined in the **top-level filter bar** based on selected _projects_ and _date range_. The Projects drop-down allows you to search for events across
 >
 > - **My Projects:** all projects that you are assigned to via team-membership within the organization
 > - **All Projects:** all projects within the organization (requires owner permission role)
@@ -155,11 +161,18 @@ The [Discover](https://docs.sentry.io/workflow/discover/) view provides a flexib
 >
 >   ![Project Filter]({% asset guides/manage-event-stream/17.png @path %})
 
+### > **What issues are consuming my quota?**
+
 - Navigate to the Discover view
 - From the top-level filter bar select `View All Projects` from the project drop-down and apply the desired date range
 - Build, Run, and Save the following query
+- Notice that you can open an issue details page by clicking on the `issue id` link
 
-    ![Busiest Projects]({% asset guides/manage-event-stream/16.png @path %})
+    ![Busiest Issues]({% asset guides/manage-event-stream/10.png @path %})
+
+- Alternatively, you can sort the `Issues` table by issue `Frequency`
+
+    ![Issue Frequency]({% asset guides/manage-event-stream/13.png @path %})
 
 ### > **How to set proper rate limits?**
 
@@ -181,21 +194,20 @@ You received an email notifying you that Spike Protection was triggered and appl
 
 ![Spike Protection Email]({% asset guides/manage-event-stream/spike-email.jpg @path %})
 
-Consider doing the following:
+Many times an unexpected spike is caused by a new error (or errors) introduced into your code with a new release version. You can search for these errors by:
 
-- Setting better rate limits on that project's DSN key.
-- If a specific error was blowing up - resolve or discard it.
-- If it's a specific Release version that's gone bad - add the version Id to the project's Inbound filters to avoid additional errors from that release.
+- Open the Events view from the left side navigation bar.
+- Select `View All Projects` from the Project drop-down to see events from all projects in your org.
+- Find the spike in the events timeline graph and mark the range with your cursor. Notice the events timeline and date filter (on the top filter bar) zooms into the selected date range.
+   ![Event Spike Range]({% asset guides/manage-event-stream/08.png @path %})
 
-### > **What issues are consuming my quota?**
+- Now, you can use Discover to query the set of events that happened during the spike.
+- Run the query as below to see the busiest issues that contributed to the spike.
+   ![Issues in Spike Range]({% asset guides/manage-event-stream/09.png @path %})
 
-- Navigate to the Discover view
-- From the top-level filter bar select `View All Projects` from the project drop-down and apply the desired date range
-- Build, Run, and Save the following query
-- Notice that you can open an issue details page by clicking on the `issue id` link
+- Open an issue details page by clicking on the `issue id` link, if it's a real issue - assign it to a project team member to resolve it, otherwise - discard it.
 
-    ![Busiest Issues]({% asset guides/manage-event-stream/10.png @path %})
+Also, consider doing the following:
 
-- Alternatively, you can sort the `Issues` table by issue `Frequency`
-
-    ![Issue Frequency]({% asset guides/manage-event-stream/13.png @path %})
+- Set better rate limits on the DSN keys associated with the spike related projects.
+- If it's a specific release version that's gone bad - add the version Id to the project's Inbound filters to avoid additional errors from that release.
