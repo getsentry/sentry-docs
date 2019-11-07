@@ -181,13 +181,11 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 ClickUp’s core focus is about removing frustrations, inefficiencies, and disconnect caused by current project management solutions. You can create an issue in ClickUp from a Sentry issue or link it to an existing issue.
 
-
 {% include components/alert.html
   title="Note"
   content="This integration **won't** work with self-hosted Sentry."
   level="warning"
 %}
-
 
 #### Install and Configure ClickUp
 
@@ -871,30 +869,38 @@ Now your Slack integration is available to all projects in your Sentry organizat
 
 Once you configure the global Slack integration and Alert Rules, you can disable the old Slack integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy integration after setting up the global integration.
 
+## Incident Management
 
-
-## Other
-
-
-{% include components/alert.html
-  title="Note"
-  content="The following integrations **won't** work with self-hosted Sentry."
-  level="warning"
-%}
+These integrations will connect your Sentry to incident management platforms to increase your visibility into incidents.
 
 ### Amixr
 
 In Amixr, issues from Sentry get stored as well as alerts from other sources like Grafana or Alertmanager. The Amixr integration synchronizes issue statuses between Amixr and Sentry. Issues get posted to your Slack, and users can change the statuses of those issues by clicking on buttons within the message.
+
+{% include components/alert.html
+  title="Note"
+  content="This integration **won't** work with self-hosted Sentry."
+  level="warning"
+%}
 
 #### Install and Configure Amixr
 
 Follow the instructions in the link below:  
 <https://docs.amixr.io/#/integrations/sentry>
 
+## Code Linking
+
+These integrations will allow seamlessly connect a Sentry error to the underlying code behind the error in a separate platform.
+
 ### Rookout
 
 Rookout's new integration adds a layer of depth to Sentry Issues by allowing you to jump right from an Issue to a non-breaking breakpoint on the line that caused the error. 
 
+{% include components/alert.html
+  title="Note"
+  content="This integration **won't** work with self-hosted Sentry."
+  level="warning"
+%}
 
 #### Installation
 
@@ -923,11 +929,21 @@ After installing Rookout in Sentry, you can go straight to the line of code in y
     [{% asset rookout/rookout_screen_1.png alt="Sentry modal indicating that permissions need installation." %}]({% asset rookout/rookout_screen_1.png @path %})
 
 
+## A/B Testing
+
+These integrations will connect your Sentry to A/B testing platforms to give you better insight when users in one of your test groups are encountering errors.
+
 ### Split
 
 The Split integration quickly processes and displays Sentry exception data in the Split platform as track events for analysis. You can control what environments and traffic types you're capturing exceptions for in the Split dashboard without having to touch any code.
 
 The Split integration is only available for organizations on the Business and Enterprise plans.
+
+{% include components/alert.html
+  title="Note"
+  content="This integration **won't** work with self-hosted Sentry."
+  level="warning"
+%}
 
 #### Install and Configure Split
 
