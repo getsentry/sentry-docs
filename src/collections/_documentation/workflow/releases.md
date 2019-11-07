@@ -110,7 +110,7 @@ You need to make sure you’re using [Auth Tokens]({%- link _documentation/api/a
   level="warning"
 %}
 
-In the above example, we’re using the `propose-version` sub-command to determine a release ID automatically. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally, we’re using the `--auto` flag to determine the repository name automatically, and associate commits between the previous release’s commit and the current head commit with the release. If you have never associated commits before, we’ll use the latest 20 commits.
+In the above example, we’re using the `propose-version` sub-command to determine a release ID automatically. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally, we’re using the `--auto` flag to determine the repository name automatically, and associate commits between the previous release’s commit and the current head commit with the release. If the previous release doesn't have any commits associated with it, we’ll use the latest 20 commits.
 
 If you want more control over which commits to associate, or are unable to execute the command inside the repository, you can manually specify a repository and range:
 
