@@ -3,7 +3,7 @@ title: Manage your Event Stream
 sidebar_order: 2
 ---
 
-Getting started with Sentry error monitoring is pretty straightforward - create a Sentry project, install and initialize the Sentry SDK in your code and you're ready to go. Once completed, **any** Exception, Runtime Error or Crash that occurs **wherever** and **whenever** your code is running, will be aggregated in your `Event Stream`. Depending on your portfolio, your stream might be aggregating millions of events in no time. Sending all your errors to Sentry is generally a good practice. This ensures greater visibility into the health and performance of your application code. However, with just this basic setup in place, you might risk:
+Getting started with Sentry error monitoring is pretty straightforward --- create a Sentry project, install and initialize the Sentry SDK in your code and you're ready to go. Once completed, **any** Exception, Runtime Error or Crash that occurs **wherever** and **whenever** your code is running, will be aggregated in your `Event Stream`. Depending on your portfolio, your stream might be aggregating millions of events in no time. Sending all your errors to Sentry is generally a good practice. This ensures greater visibility into the health and performance of your application code. However, with just this basic setup in place, you might risk:
 
 1. Flooding your event stream with redundant noise such as errors from 3rd party libraries, errors from unstable versions of your code, etc.
 2. Getting spammed with alert notifications about things you don't care about or worst - lose track of the important issues that are hiding in your code.
