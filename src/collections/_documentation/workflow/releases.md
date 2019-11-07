@@ -1,7 +1,8 @@
 ---
 title: Releases
 sidebar_order: 0
-release_identifier: "my-project-name@2.3.12"
+release_identifier: "my-project-name"
+release_version: "2.3.12"
 ---
 
 A release is a version of your code that is deployed to an environment. When you give Sentry information about your releases, you unlock a number of new features:
@@ -41,7 +42,7 @@ How you make the version available to your code is up to you. For example, you c
 
 {% capture __alert_content -%}
 A common way to do this with JavaScript would be to use the [`process.env.npm_package_version`](https://docs.npmjs.com/misc/scripts#packagejson-vars) like so:
-{% include components/platform_content.html content_dir='set-release' %}
+{% include components/platform_content.html content_dir='release-examples' %}
 {%- endcapture -%}
 {%- include components/alert.html
     title="Example"
