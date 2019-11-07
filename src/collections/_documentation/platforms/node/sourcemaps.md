@@ -5,6 +5,11 @@ sidebar_order: 12
 
 Sentry supports un-minifying JavaScript via [Source Maps](http://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps.html). This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (e.g. UglifyJS), or transpiled code from a higher-level language (e.g. TypeScript, ES6).
 
+Source maps can be either:
+
+1.  Uploaded directly to Sentry (**recommended**).
+2.  Served publicly over HTTP alongside your source files.
+
 ## Generating a Source Map
 
 Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
@@ -34,7 +39,7 @@ module.exports = {
 
 ## Making Source Maps Available to Sentry
 
-Source maps for Node.js projects should be uploaded directly to Sentry.
+Source maps for Node.js projects should be **uploaded directly** to Sentry.
 
 ### Uploading Source Maps to Sentry
 
