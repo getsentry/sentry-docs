@@ -8,7 +8,7 @@ Getting started with Sentry error monitoring is pretty straightforward --- creat
 1. Flooding your event stream with excessive noise such as errors from 3rd party libraries, errors from unstable versions of your code, etc.
 2. Getting spammed with alert notifications about things you don't care about or worse --- lose track of the critical issues that are hiding in your code.
 
-Filtering this noise will help ensure that you only see the relevant errors that you want or need to fix. Also, if you're on an event-quota based plan, redundant noise might end up draining your quota and leaving you blind when and where it matters.
+Filtering this noise will help ensure that you only see the relevant errors that you want or need to fix. Also, if you're on an event-quota based plan, unnecessary noise might end up draining your quota and leaving you blind when and where it matters.
 
 To cope with these challenges, Sentry provides several mechanisms that allow you to control the _type_ and _amount_ of events that make it to your event stream.
 
