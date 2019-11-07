@@ -5,18 +5,20 @@ sidebar_order: 5
 
 Now that you created a release, the next step is to integrate your GitHub repository. Sentry uses the repository metadata to help you resolve your issues faster. 
 
-
 ## Description & Objectives
-You can tell Sentry which commits are associated with your release --- this is called **Commit Tracking**. 
+
+You can tell Sentry which commits are associated with your release --- this is called **Commit Tracking**.
 This allows Sentry to display:
+
 - **Suspect Commits** - commits which likely caused the issue, with a link to the commit itself.
 - **Suggested Assignees** - lists the authors of those commits and suggests their assignment to resolve the issue.
 
 In this part, you will:
+
 - Integrate your Sentry organization with your GitHub account and repository --- this gives Sentry access to your commit metadata.
 - Set up commit tracking. In your release process, after creating the release object in Sentry, associate it with commits from your linked repository.
 
-## Step 1: Integrate your GitHub Account & Repositories 
+## Step 1: Integrate your GitHub Account & Repositories
 
 1. To integrate GitHub with your Sentry org, follow the instructions in the [Global Integrations documentation](https://docs.sentry.io/workflow/integrations/global-integrations/#github)
 
@@ -25,7 +27,6 @@ In this part, you will:
     ![Add project repository]({% asset guides/integrate-frontend/configure-scms-01.png @path %})
 
 GitHub should now be enabled and available for all projects in your Sentry organization.
-
 
 ## Step 2: Set Up Commit Tracking
 
@@ -40,6 +41,7 @@ In the demo project, we use a Makefile to handle our build-related tasks.
     associate_commits:
         sentry-cli releases -o $(SENTRY_ORG) -p $(SENTRY_PROJECT) set-commits --auto $(REACT_APP_RELEASE_VERSION)
     ```
+
     > The command associates commits with the release. The **--auto** flag automatically determines the repository name, and associates commits between the previous release’s commit and the current head commit with the release.
 
 3. The new target `associate_commits` will be invoked as part of the `setup_release` target, add it at the end:
@@ -54,14 +56,15 @@ In the demo project, we use a Makefile to handle our build-related tasks.
 
 4. If your terminal is still serving the demo app on localhost, press `^C` to shut it down
 
-5.  Build, deploy, and rerun the project by running:
-     ```
+5. Build, serve, and restart the project on your localhost by running:
+
+    ``` Shell
     $ npm run deploy
     ```
+
     In the terminal log, notice that the sentry-cli identified the GitHub repository. 
 
     ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-03.png @path %})
-
 
 ## Step 3: Suspect Commits and Suggested Assignees
 
@@ -84,7 +87,6 @@ Now suspect commits and suggested assignees should start appearing on the issue 
 
     ![Suspect Commit]({% asset guides/integrate-frontend/configure-scms-05.png @path %})
 
-
 6. From the main panel, find the `release` tag and **hover over** the `i` icon
 
 7. In the release popup, notice the release now contains the commit data
@@ -97,8 +99,7 @@ Now suspect commits and suggested assignees should start appearing on the issue 
 
     ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-07.png @path %})
 
+## More Information
 
-
-## More Information 
 - [Create Release and Associate Commits](https://docs.sentry.io/workflow/releases/?platform=javascript#create-release)
 - [Global Integrations](https://docs.sentry.io/workflow/integrations/global-integrations/)
