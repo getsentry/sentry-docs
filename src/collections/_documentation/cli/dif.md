@@ -104,20 +104,47 @@ to [Working with Projects]({%- link _documentation/cli/configuration.md
 A basic debug file upload can be started with:
 
 ```bash
-$ sentry-cli upload-dif -o <org> -p <project> /path/to/files
+$ sentry-cli upload-dif -o <org> -p <project> /path/to/files...
 
 > Found 2 debug information files
 > Prepared debug information files for upload
 > Uploaded 2 missing debug information files
 > File processing complete:
 
-     OK 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 executable)
-     OK 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 debug companion)
+  PENDING 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 executable)
+  PENDING 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 debug companion)
+```
+
+After the upload, Sentry analyzes the files to symbolicate future events. If you
+want to send a native crash to Sentry to verify correct operation, ensure that
+the debug files are listed in _Project Settings > Debug Files_. Alternatively,
+specify `--wait` in the CLI, which will block until server-side analysis is
+complete:
+
+```bash
+$ sentry-cli upload-dif -o <org> -p <project> --wait /path/to/files...
+
+> Found 2 debug information files
+> Prepared debug information files for upload
+> Uploaded 2 missing debug information files
+> File processing complete:
+
+       OK 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 executable)
+       OK 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 debug companion)
 ```
 
 ### Upload Options
 
 There are a few options you can supply to the upload command:
+
+`--wait`
+
+: Wait for server-side processing of uploaded files. By default, `upload-dif`
+  completes once the debug files have been uploaded to Sentry. After this,
+  Sentry analyzes the files and makes them available for symbolication. It makes
+  sense to specify `--wait` to ensure that debug files are ready before sending
+  crashes to Sentry. This may slow down the command and is not recommended for
+  CI builds.
 
 `--no-unwind`
 
