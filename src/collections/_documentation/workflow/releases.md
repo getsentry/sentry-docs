@@ -39,6 +39,16 @@ Releases are global per organization, so make sure to prefix them with something
 
 How you make the version available to your code is up to you. For example, you could use an environment variable that is set during the build process.
 
+{% capture __alert_content -%}
+A common way to do this with JavaScript would be to use the [`process.env.npm_package_version`](https://docs.npmjs.com/misc/scripts#packagejson-vars) like so:
+{% include components/platform_content.html content_dir='set-release' %}
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Example"
+    content=__alert_content
+    level="info"
+%}
+
 This tags each event with the release value. We recommend that you tell Sentry about a new release before deploying it, as this will unlock a few more features (explained in Step 2). But if you don’t, Sentry will automatically create a release entity in the system the first time it sees an event with that release ID.
 
 After this, you should see information about the release, such as new issues and regressions introduced in the release.
@@ -48,7 +58,7 @@ After this, you should see information about the release, such as new issues and
 ### Install Repository Integration {#install-repo-integration}
 
 This step is optional - you can manually supply Sentry with your own commit metadata if you wish. Skip ahead to [this section](#alternatively-without-a-repository-integration) to learn how to do this.
-  
+
 Using one of Sentry's repository integrations (e.g. GitHub, GitLab, Bitbucket, etc.) is the easiest way to connect your commit metadata to Sentry. For a list of available integrations, go to Organization Settings > Integrations.
 
 {% capture __alert_content -%}
@@ -218,17 +228,17 @@ In order for Sentry to use your commits, you must format your commits to match t
     "commits": [
         {
         "patch_set": [
-            {"path": "path/to/added-file.html", "type": "A"}, 
+            {"path": "path/to/added-file.html", "type": "A"},
             {"path": "path/to/modified-file.html", "type": "M"},
             {"path": "path/to/deleted-file.html", "type": "D"}
-        ], 
-        "repository": "owner-name/repo-name", 
-        "author_name": "Author Name", 
-        "author_email": "author_email@example.com", 
-        "timestamp": "2018-09-20T11:50:22+03:00", 
-        "message": "This is the commit message.", 
+        ],
+        "repository": "owner-name/repo-name",
+        "author_name": "Author Name",
+        "author_email": "author_email@example.com",
+        "timestamp": "2018-09-20T11:50:22+03:00",
+        "message": "This is the commit message.",
         "id": "8371445ab8a9facd271df17038ff295a48accae7"
-        } 
+        }
     ]
 }
 ```
@@ -239,30 +249,30 @@ In order for Sentry to use your commits, you must format your commits to match t
 
     `path`
     : The path to the file. Both forward and backward slashes (`'/' '\\'`) are supported.
-    
+
     `type`
-    : The types of changes that happend in that commit. The options are: 
+    : The types of changes that happend in that commit. The options are:
         - `Add (A)`
         - `Modify (M)`
         - `Delete (D)`
 
-`repository` 
+`repository`
 : The full name of the repository the commit belongs to. If this field is not given Sentry will generate a name in the form: `u'organization-<organization_id>'` (i.e. if the organization id is `123`, then the generated repository name will be `u'organization-123`).
 
-`author_email` 
-: The commit author's email is required to enable the suggested assignee feature. 
+`author_email`
+: The commit author's email is required to enable the suggested assignee feature.
 
 `author_name`
 : The commit author's name may also be included.
 
-`timestamp` 
+`timestamp`
 : The commit timestamp is used to sort the commits given. If a timestamp is not included, the commits will remain sorted in the order given.
 
 `message`
-: The commit message. 
+: The commit message.
 
 `id`
-: The commit id. 
+: The commit id.
 
 ##### Create the Release with Patch Data
 
@@ -280,15 +290,15 @@ curl https://sentry.io/api/0/organizations/your-organization-name/releases/ \
  "commits":[
      {
         "patch_set": [
-            {"path": "path/to/added-file.html", "type": "A"}, 
+            {"path": "path/to/added-file.html", "type": "A"},
             {"path": "path/to/modified-file.html", "type": "M"},
             {"path": "path/to/deleted-file.html", "type": "D"}
-        ], 
-        "repository": "owner-name/repo-name", 
-        "author_name": "Author Name", 
-        "author_email": "author_email@example.com", 
-        "timestamp": "2018-09-20T11:50:22+03:00", 
-        "message": "This is the commit message.", 
+        ],
+        "repository": "owner-name/repo-name",
+        "author_name": "Author Name",
+        "author_email": "author_email@example.com",
+        "timestamp": "2018-09-20T11:50:22+03:00",
+        "message": "This is the commit message.",
         "id": "8371445ab8a9facd271df17038ff295a48accae7"
     }
  ]
