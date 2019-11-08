@@ -19,9 +19,3 @@ sidebar_order: 0
 * Manage your Event Stream
 
 * [Issue Grouping and Setting the Fingerprint]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
-
-//TODO
-- note on importance of sourcemaps/symbols for js/native
-- groupin by stacktrace vs grouping by exception <--- mention?
-- internal, record what this GUide offers, compared to docs.sentry.io
-- images, scrub customer data / use my own data, it's less of an eyesore. more pertient, less noisy.

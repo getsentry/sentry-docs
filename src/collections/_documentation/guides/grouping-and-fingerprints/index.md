@@ -3,41 +3,48 @@ title: Issue Grouping Rules
 sidebar_order: 0
 ---
 
-
-## What makes events merge together into an Issue? 
-(setting the context here...)
+# Understand
+### What makes events merge together into an Issue? 
 Have you ever had something like the image below?
-
-First understand/review how events group into an issue, like the testTypeIssue15 which has 4 Events. These all had something same called the [fingerprint](https://docs.sentry.io/data-management/event-grouping/) and the issues need to share the same fingerprint in order to group together
-
-What is a fingerprint? A way to uniquely identify. Was is the default way? This is called a grouping, and the default grouping algorithm/technique is the stack trace. So if they have the same stack trace (and default algo used), then group together, like in testTypeIssue15.
-
-The ones that look similar but are not getting grouped together, we can deduce, do not have the same fingerprint. If the same default algorithm was used, then this means different stacktrace.
-
-Use the default grouping algorithm, or set the fingerprint yourself. You can see on an issue by clicking 'JSON' link, and search for the 'fingerprint'. If the default grouping is in place, the value should read as `{{ default }}`  
-
-
 ![Issues Dashboard]({% asset guides/grouping-and-fingerprints/issues-dashboard.png @path %})
-## Why are some Issues ^^ not merging together?
-While they look similar (event type, event value), the stacktrace on each is still not the same. It might vary by as few as 1 frame (link to Grouping Enhancements). To alter the frames (includes, excludes) that are used by grouping algorithm, different tutorial, this is more advanced, see Custom Grouping Enhancements. We have other techniques/solutions to consider first:
 
+Let's first understand why testTypeIssue15 has 4 Events which grouped into the issue. These all shared something the same called the [fingerprint](https://docs.sentry.io/data-management/event-grouping/)
 
-Fortunately, we can change the default grouping behavior to make them match on something other than stacktrace, from both the SDK and the Server side. This will be covered under Solutions
+**What is a fingerprint?** It's a way to uniquely identify an event + issue. Ok, so what is the default way to do this? That woudl be by the stacktrace. So we can say that the stacktrace is the default grouping algorithm (technique). Recap - So if 2 events have the same stack trace (which means also the same default grouping algorithm was used), then they will group together into an issue, like we see in testTypeIssue15.
 
-## INFO  
+The ones that look similar but are not getting grouped together, we can deduce, do not have the same fingerprint. If the same default algorithm was used, then this means they have different stacktraces.
+
+Use the default grouping algorithm, or set the fingerprint yourself. You can see on an issue by clicking 'JSON' link, and search for the 'fingerprint'. If the default grouping was used, you'll see the value 'default' written there. **If different groupingalg was used, you'll see the actual fingerprint**
+
 {% capture __alert_content -%}
-By this point you have existing (similar looking) issues in your dashboard that you've decided you want grouped together (PartI...). Or, you want to set some rules for that next incoming issues will get grouped together. Let's divide these problems into their own Part in Solutions in next section.
+Events need to share the same fingerprint in order to be grouped together into an issue.
 {%- endcapture -%}
 {%- include components/alert.html
-    title="Note"
+    title="Note / Summary"
     content=__alert_content
     level="warning"
 %}
 
----
+### Why did some Issues not merging together?
+While everything that meets the eye in this view looks similar (EVent Type, Event Value) there is something non-visible that was different - the stacktrace. You can see this by clicking into the issue and noting the difference. The stacktrace on each is still not the same:
 
+IMG1-left-column _ IG2-right-column.
 
-## Solutions
+In this case / It might vary by as few as 1 frame (link to Grouping Enhancements). To alter the frames (includes, excludes) that are used by grouping algorithm, different tutorial, this is more advanced, see [Custom Grouping Enhancements](https://docs.sentry.io/data-management/event-grouping/grouping-enhancements/). We have other (more common/easier-to-implement/useable) techniques/solutions to consider first:
+
+Fortunately, we can change the default grouping behavior to make them match on something other than stacktrace, from both the SDK and the Server side. This will be covered under Solutions
+
+**INFO**    
+{% capture __alert_content -%}
+By this point you have existing (similar looking) issues in your dashboard that you've decided you want grouped together (PartI...). Or, you want to set some rules for that next incoming issues will get grouped together. Let's divide these problems into their own Part in Solutions in next section.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note / Summary"
+    content=__alert_content
+    level="warning"
+%}
+
+# Solutions
 Let's divide the way you can group into issues into 2 parts. (mention grouping, is different than merging)?
 
 In **Part I** we'll see how historical issues that you want to merge together. This might apply to the future new incoming issues, more on that in Part I. No settings or configuration required ("no typing")
@@ -105,3 +112,10 @@ You could also do this based on the path or the function
 
 ### Client-Side Fingerprinting (SDK)
 Lastly, you can update the fingerprint on the Client-Side using [SDK Fingerprinting](https://docs.sentry.io/data-management/event-grouping/sdk-fingerprinting/?platform=javascript) which involves updating code on your end. I can work with you on this.
+
+
+# Extra Mentions
+- note on importance of sourcemaps/symbols for js/native
+- groupin by stacktrace vs grouping by exception DATA
+- internal, record what this GUide offers, compared to docs.sentry.io
+- images, scrub customer data / use my own data, it's less of an eyesore. more pertient, less noisy.
