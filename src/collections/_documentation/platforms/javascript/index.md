@@ -852,6 +852,7 @@ This integration deduplicates certain events. It can be helpful if you are recei
 _Import name: `Integrations.Debug`_
 
 This integration allows you to inspect the content of the processed event, that will be passed to `beforeSend` and effectively send to the Sentry SDK.
+It will _always_ run as the last integration, no matter when it was registered.
 
 Available options:
 
