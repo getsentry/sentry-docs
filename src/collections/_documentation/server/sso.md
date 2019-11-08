@@ -34,6 +34,19 @@ You should see an **Auth** subheading under your organization’s dashboard when
 
 ## Installing a Provider
 
+### Sentry >= 9.1
+
+- **Google Auth** is bundled with Sentry. Add the following lines to `sentry.conf.py`
+
+```python
+SENTRY_OPTIONS['auth-google.client-id'] = '<client id>'
+SENTRY_OPTIONS['auth-google.client-secret']  = '<client secret>'
+```
+
+- **GitHub** is bundled with Sentry. Set the following environment variables: `GITHUB_APP_ID` and `GITHUB_API_SECRET`
+
+### Sentry < 9.1
+
 Providers are installed the same way as extensions. Simply install them via the Python package manager (pip) and restart the Sentry services. Once done you’ll see them show up in the auth settings.
 
 The following providers are published and maintained by the Sentry team:
