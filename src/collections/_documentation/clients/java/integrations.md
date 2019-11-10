@@ -198,6 +198,7 @@ First, you need to add the following to your ProGuard rules file:
 -dontwarn org.slf4j.**
 -dontwarn javax.**
 -keep class io.sentry.event.Event { *; }
+-keep class * extends java.lang.Exception
 ```
 
 ##### ProGuard UUIDs
