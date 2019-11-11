@@ -14,7 +14,7 @@ To cope with these challenges, Sentry provides several mechanisms that allow you
 
 ## 1. Filtering
 
-Filtering is the optimal way to manage your event stream and quota. It ensures that only actionable errors related to your source code make it to your event stream.  If it's redundant, filter it --- clear your event stream from undesired "noise," and keep your alert notifications for the errors that matter.
+Filtering is the optimal way to manage your event stream and quota. It ensures that only actionable errors related to your source code make it to your event stream. If it's redundant, filter it --- clear your event stream from undesired "noise" and keep your alert notifications for the errors that matter.
 
 ### Outbound Filters
 
@@ -24,9 +24,9 @@ Sentry SDK has several configuration options that can be used to filter unwanted
 
 For JavaScript SDKs:
 
-- `whitelistUrls`:  Domains that might raise acceptable exceptions represented in a regex pattern format.
-- `blacklistUrls`:  A list of strings or regex patterns that match error URLs which should be blocked from sending events.
-    > **Note**: Configuring both options on the SDK can be used to blacklist **subdomains** of the domains listed in `whitelistUrls`.
+- `whitelistUrls`: Domains that might raise acceptable exceptions represented in a regex pattern format.
+- `blacklistUrls`: A list of strings or regex patterns that match error URLs which should be blocked from sending events.
+ > **Note**: Configuring both options on the SDK can be used to blacklist **subdomains** of the domains listed in `whitelistUrls`.
 - `ignoreErrors`: Instruct the SDK to never send an error to Sentry if it matches any of the listed error **messages**. If no message is available, the SDK will try to compare against an underlying **exception type and value**.
 
 For more information and code samples checkout:
@@ -67,7 +67,7 @@ Once applied, you can track the number of filtered errors using the graph provid
 
 ## 2. Event Grouping
 
-Any event that makes it from your source code runtime though the outbound and inbound filters will be persisted and available in your Event Stream. **Similar _Events_ are grouped into unique _Issues_ based on the event's _Fingerprint_**. An event's fingerprint (and proper grouping) relies on its **stack trace**. If a stack trace is not available, the fingerprint will be determined by the type and value of the **Exception** associated with this event. If all else fails, fingerprint will default to the **Event Message**.
+Any event that makes it from your source code runtime though the outbound and inbound filters will be persisted and available in your Event Stream. **Similar _Events_ are grouped into unique _Issues_ based on the event's _Fingerprint_**. An event's fingerprint (and proper grouping) relies on its **stack trace**. If a stack trace is not available, the fingerprint will be determined by the type and value of the **Exception** associated with this event. If all else fails, the fingerprint will default to the **Event Message**.
 
 Sentry provides various configuration options to modify and fine-tune event grouping. For more information, take a look at our docs on [Grouping & Fingerprints](https://docs.sentry.io/data-management/event-grouping/).
 
@@ -77,10 +77,10 @@ Proper grouping of events into issues is essential for maintaining a meaningful 
 
 1. With **JavaScript SDKs**, a minimized source code will result in a nondeterministic stack trace that will mess up associated event grouping. Make sure Sentry has access to your Source Maps and minimized artifacts. For more information, take a look at our documentation on [Uploading Source Maps](https://docs.sentry.io/platforms/javascript/#source-maps).
 
-    ![JavaScript stack trace without source maps]({% asset guides/manage-event-stream/04.png @path %})
-    ![JavaScript stack trace with source maps]({% asset guides/manage-event-stream/05.png @path %})
+ ![JavaScript stack trace without source maps]({% asset guides/manage-event-stream/04.png @path %})
+ ![JavaScript stack trace with source maps]({% asset guides/manage-event-stream/05.png @path %})
 
-2. Similarly, projects using the Sentry **Native SDK** should provide debug information, which allows Sentry to extract stack traces and symbolicate stack frames into function names and line numbers. For more information, take a look at the following resources:
+2. For native errors, debug information files (also known as symbols) should be uploaded so Sentry can extract stack traces and symbolicate stack frames into function names and line numbers. For more information, take a look at the following resources:
 
 - [Fixing Native Apps with Sentry](https://blog.sentry.io/2019/09/26/fixing-native-apps-with-sentry/)
 - [Sentry Native SDK](https://docs.sentry.io/platforms/native/)
@@ -88,7 +88,7 @@ Proper grouping of events into issues is essential for maintaining a meaningful 
 
 ## 3. Applying Workflows
 
-Now that your event stream is fine-tuned to reflect real problems in your code, it's a good practice to react to errors as they happen. If an issue reflects a real problem in your code, resolve it, otherwise --- discard.
+Now that your event stream is fine-tuned to reflect real problems in your code, it's an excellent practice to react to errors as they happen. If an issue reflects a real problem in your code, resolve it; otherwise--- discard.
 
 ### Resolve Issue
 
@@ -98,7 +98,7 @@ For more information take a look at [The Sentry Workflow — Resolve](https://bl
 
 ### Delete & Discard
 
-If there is an irrelevant reoccurring issue that you are unable or unwilling to resolve, you can delete and discard it from the issue details page by clicking `Delete and discard future events`. This will delete the issue and event data from Sentry and filter out matching events before they reach your stream.
+If there is an irrelevant reoccurring issue that you are unable or unwilling to resolve, you can delete and discard it from the issue details page by clicking `Delete and discard future events`. This will remove the issue and event data from Sentry and filter out matching events before they reach your stream.
 
 ![Delete and Discard]({% asset guides/manage-event-stream/06.png @path %})
 
@@ -133,10 +133,10 @@ Applying the proper filters, SDK configuration, and rate limits is an iterative 
 
 ### > **How can I see a breakdown of incoming events?**
 
-Opening the `Stats` view from the left side navigation bar displays details about the total number of events Sentry has received across your entire organization.  The numerical weekly report breaks down the events by project into three categories:
+Opening the `Stats` view from the left side navigation bar displays details about the total number of events Sentry has received across your entire organization. The weekly numerical report breaks down the events by project into three categories:
 
 - **Accepted**: events processed and persisted displayed in your event and issue streams.
-- **Rate Limited**: events that Sentry threw away due to quotas being hit
+- **Rate Limited**: events that Sentry threw away due to limit being hit
 - **Filtered**: events that were blocked based on your inbound filter rules.
 
 ![STATS View]({% asset guides/manage-event-stream/12.png @path %})
@@ -151,7 +151,7 @@ The [Discover](https://docs.sentry.io/workflow/discover/) view provides a flexib
 - From the top-level filter bar, select `View All Projects` from the project drop-down and apply the desired date range
 - Build, Run, and Save the following query:
 
-    ![Busiest Projects]({% asset guides/manage-event-stream/16.png @path %})
+ ![Busiest Projects]({% asset guides/manage-event-stream/16.png @path %})
 
 > NOTE: Queries in Discover are executed against a subset of events defined in the **top-level filter bar** based on selected _projects_ and _date range_. The Projects drop-down allows you to search for events across:
 >
@@ -159,7 +159,7 @@ The [Discover](https://docs.sentry.io/workflow/discover/) view provides a flexib
 > - **All Projects:** all projects within the organization (requires owner permission role)
 > - **Subset** of selected projects
 >
->   ![Project Filter]({% asset guides/manage-event-stream/17.png @path %})
+> ![Project Filter]({% asset guides/manage-event-stream/17.png @path %})
 
 ### > **What issues are consuming my quota?**
 
@@ -168,11 +168,11 @@ The [Discover](https://docs.sentry.io/workflow/discover/) view provides a flexib
 - Build, Run, and Save the following query
 - Notice that you can open an issue details page by clicking on the `issue id` link
 
-    ![Busiest Issues]({% asset guides/manage-event-stream/10.png @path %})
+ ![Busiest Issues]({% asset guides/manage-event-stream/10.png @path %})
 
 - Alternatively, you can sort the `Issues` table by issue `Frequency`
 
-    ![Issue Frequency]({% asset guides/manage-event-stream/13.png @path %})
+ ![Issue Frequency]({% asset guides/manage-event-stream/13.png @path %})
 
 ### > **How to set proper rate limits?**
 
@@ -183,10 +183,10 @@ A good way to set a project rate limit is by figuring out the expected event vol
 - Open the project DSN key configuration under `[Project Settings] > Client Keys > [Configure]`
 - Take a look at the `KEY USAGE IN THE LAST 30 DAYS` graph. Max daily rate in the last month is < 326K
 - Based on that, we can define a ceiling **daily** max value of ~330K, which is ~13,750 events an **hour**.
-- Notice that you can set a daily, hourly, or minute-based rate limit. We'd recommend using an hourly rate to avoid situations where a random event spike might exhaust your daily set quota and leave you blind for the rest of the day.
-- You can always go back, check the graph to see the number of events dropped due to rate limiting and revisit your settings.
+- Notice that you can set a daily, hourly, or minute-based rate limit. We'd recommend using an per minute rate limit to avoid situations where a random event spike might exhaust your daily set quota and leave you blind for an extended period of time.
+- You can always go back, check the graph to see the number of events dropped due to rate limiting, and revisit your settings.
 
-    ![Revisit rate limits]({% asset guides/manage-event-stream/15.png @path %})
+ ![Revisit rate limits]({% asset guides/manage-event-stream/15.png @path %})
 
 ### > **Spike Protection was activated --- what should I do?**
 
@@ -199,15 +199,15 @@ Many times an unexpected spike is caused by a new error (or errors) introduced i
 - Open the Events view from the left side navigation bar.
 - Select `View All Projects` from the Project drop-down to see events from all projects in your org.
 - Find the spike in the events timeline graph and mark the range with your cursor. Notice the events timeline and date filter (on the top filter bar) zooms into the selected date range.
-   ![Event Spike Range]({% asset guides/manage-event-stream/08.png @path %})
+ ![Event Spike Range]({% asset guides/manage-event-stream/08.png @path %})
 
 - Now, you can use Discover to query the set of events that happened during the spike.
 - Run the query below to see the busiest issues that contributed to the spike.
-   ![Issues in Spike Range]({% asset guides/manage-event-stream/09.png @path %})
+ ![Issues in Spike Range]({% asset guides/manage-event-stream/09.png @path %})
 
-- Open an issue details page by clicking on the `issue id` link. If it's a real issue - assign it to a project team member to resolve it, otherwise - discard it.
+- Open an issue details page by clicking on the `issue id` link. If it's a real issue - assign it to a project team member to resolve it; otherwise - discard it.
 
 Also, consider doing the following:
 
 - Set better rate limits on the DSN keys associated with the spike related projects.
-- If it's a specific release version that has gone bad, add the version Id to the project's Inbound filters to avoid additional errors from that release.
+- If it's a specific release version that has gone bad, add the version identifier to the project's Inbound filters to avoid accepting events from that release.
