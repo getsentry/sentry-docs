@@ -69,7 +69,7 @@ public class MyClass {
         Sentry.init();
 
         // You can also manually provide the DSN to the ``init`` method.
-        Sentry.init("___PUBLIC_DSN___");
+        // Sentry.init("___PUBLIC_DSN___");
 
         /*
          It is possible to go around the static ``Sentry`` API, which means
