@@ -45,7 +45,7 @@ For example, at Sentry, we send a notification every single time an error happen
 
 Actions are located in Project Settings > Alerts > Rules > "New Alert Rules" or "Edit Rule.
 
-[{% asset notifications/new_alert_rule.png alt="Dropdown of alert conditions." %}]({% asset notifications/new_alert_rule.png @path %})
+[{% asset notifications/new_alert_rule.png alt="Buttons to create a New Alert Rule or to Edit an existing rule." %}]({% asset notifications/new_alert_rule.png @path %})
 
 An example use-case might be that you want a specific kind of error to send via Slack, but you want everything to send via Mail.
 
@@ -60,7 +60,7 @@ Currently, there are three types of actions you can take:
 - Send a notification to the {workspace} Slack workspace to {channel} and show tags {tags} in notification
     - to clarify this relates to the global Slack integration, *not* the per-project legacy integration
 
-[{% asset notifications/alert_actions.png alt="Dropdown of alert conditions." %}]({% asset notifications/alert_actions.png @path %})
+[{% asset notifications/alert_actions.png alt="Dropdown of notification actions." %}]({% asset notifications/alert_actions.png @path %})
 
 An example use-case might be that you want a specific kind of error to send via Slack, but you want everything to send via Mail.
 
@@ -70,14 +70,14 @@ An example use-case might be that you want a specific kind of error to send via 
     - interval: 5 minutes, 10 minutes, 30 minutes, 60 minutes, 3 hours, 12 hours, 24 hours, one week, or 30 days
     - Frequency configuration can get complicated. For example, if an issue changes state from resolved to unresolved, and then this issue is resolved, unresolved, and resolved again within 5 minutes, but your frequency threshold is 30 minutes, you'll only get one notification
 
-[{% asset notifications/alert_frequency.png alt="Dropdown of alert conditions." %}]({% asset notifications/alert_frequency.png @path %})
+[{% asset notifications/alert_frequency.png alt="Dropdown of minute and hour options for frequency of notifications." %}]({% asset notifications/alert_frequency.png @path %})
 
 ## Environment
 
 - All Environments
 - any one of your defined (and not hidden) environments
 
-[{% asset notifications/alert_environment.png alt="Dropdown of alert conditions." %}]({% asset notifications/alert_environment.png @path %})
+[{% asset notifications/alert_environment.png alt="Dropdown of environments. Currently, only All Environments is an option." %}]({% asset notifications/alert_environment.png @path %})
 
 ## Digests
 
@@ -86,7 +86,7 @@ Sentry will automatically digest alerts sent by some services to avoid flooding 
 - Minimum delivery interval
 - Maximum delivery interval
 
-[{% asset notifications/alert_digest.png alt="Dropdown of alert conditions." %}]({% asset notifications/alert_digest.png @path %})
+[{% asset notifications/alert_digest.png alt="Sliding time scale for intervals of notifications." %}]({% asset notifications/alert_digest.png @path %})
 
 ## Notification Management
 
@@ -98,13 +98,13 @@ If you have set any specific project alert to default, that means you've configu
 
 You can find the Default Project Alerts switch in User Settings > Account > Notifications > Fine tune alerts by project.
 
-[{% asset notifications/default_project_alerts.png alt="Dropdown of alert conditions." %}]({% asset notifications/default_project_alerts.png @path %})
+[{% asset notifications/default_project_alerts.png alt="Toggle for turning defaul project alerts on and off." %}]({% asset notifications/default_project_alerts.png @path %})
 
 ### Per-Project Alerts
 
 Your per-project alerts have the fine-tuning options of Default, On, or Off. 
 
-[{% asset notifications/specific_project_alert.png alt="Dropdown of alert conditions." %}]({% asset notifications/specific_project_alert.png @path %})
+[{% asset notifications/specific_project_alert.png alt="Dropdown for per-project alerts. Options include default, on, or off." %}]({% asset notifications/specific_project_alert.png @path %})
 
 ## Issue Owners
 
@@ -112,7 +112,7 @@ The Issue Owners page is located in Project Settings > Issue Owners.
 
 If an issue owner is specified, the email notification will go to the issue owner. If no issue owner is specified, all project members are notified.
 
-[{% asset notifications/issue_owners.png alt="Dropdown of alert conditions." %}]({% asset notifications/issue_owners.png @path %})
+[{% asset notifications/issue_owners.png alt="Toggles for turning issue owner notifications on and off." %}]({% asset notifications/issue_owners.png @path %})
 
 For more details, see full documentation on [Issue Owners]({%- link _documentation/workflow/issue-owners.md -%}).
 
