@@ -7,7 +7,7 @@ Each time you create a new project, or a new issue occurs, Sentry creates a defa
 
 Alerts can also be configured per-project and are based on the rules defined for that project. To modify the rules visit your Project Settings > Alerts > Rules > "New Alert Rules" or "Edit Rule. In Rules, you’ll see a list of all active rules and can add alert rules or modify existing rules.
 
-You can also configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications).
+You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page.
 
 ## **Conditions**
 
@@ -90,7 +90,7 @@ Sentry will automatically digest alerts sent by some services to avoid flooding 
 
 ## Notification Management
 
-You can configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications).
+You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page.
 
 ### Default Project Alerts
 

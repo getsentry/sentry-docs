@@ -3,7 +3,7 @@ title: 'Workflow'
 sidebar_order: 2
 ---
 
-Most activity within Sentry will generate a workflow notification. You can configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications/).
+Most activity within Sentry will generate a workflow notification. You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page.
 
 By default, these notifications are sent to anyone who is a member of the project the issue occurs in. Still, each member may choose their participation state, as well as opt-in or opt-out of notifications for specific issues. See [Unsubscribe](#unsubscribe) below for more details.
 
@@ -57,7 +57,7 @@ Sentry will automatically digest alerts sent by some services to avoid flooding 
 
 ## Notification Management
 
-You can configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications/).
+You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page.
 
 ### Workflow Notifications
 

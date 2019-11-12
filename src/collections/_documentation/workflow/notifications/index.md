@@ -9,13 +9,13 @@ Notifications in Sentry can be routed to many supported integrations, but by def
 
 Each time you create a new project, or a new issue occurs, Sentry creates a default alert rule. Alerts are generated based upon a project’s alert rules. You can customize alerts to the needs of an individual or team.
 
-Alerts have a set of configuration and subscription options. By default, Sentry subscribes you to everything, but you can change this via account settings. You can configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications). For more details, see the [full documentation on Alerts]({%- link _documentation/workflow/notifications/alerts.md -%}).
+Alerts have a set of configuration and subscription options. By default, Sentry subscribes you to everything, but you can change this via account settings. You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page. For more details, see the [full documentation on Alerts]({%- link _documentation/workflow/notifications/alerts.md -%}).
 
 ## Workflow
 
 Workflow relates to all activity involving user actions such as resolution, comments, and automatic regressions.
 
-Workflow has a set of configuration and subscription options. By default, Sentry subscribes you to everything, but you can change this via your account settings. You can configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications). For more details, see the [full documentation on Workflow]({%- link _documentation/workflow/notifications/workflow.md -%}).
+Workflow has a set of configuration and subscription options. By default, Sentry subscribes you to everything, but you can change this via your account settings. You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page. For more details, see the [full documentation on Workflow]({%- link _documentation/workflow/notifications/workflow.md -%}).
 
 ## Issue States
 
@@ -77,7 +77,7 @@ Legacy Integrations (via "Service" as any individual integration) that can send 
 
 ## Notification Management
 
-You can configure various notifications from your [personal notifications](https://sentry.io/settings/account/notifications/) settings.
+You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page.
 
 ### Issue Owners
 
