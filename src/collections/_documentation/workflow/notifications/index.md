@@ -9,13 +9,13 @@ Notifications in Sentry can be routed to many supported integrations, but by def
 
 Each time you create a new project, or a new issue occurs, Sentry creates a default alert rule. Alerts are generated based upon a project’s alert rules. You can customize alerts to the needs of an individual or team.
 
-Alerts have a set of configuration and subscription options. By default, Sentry subscribes you to everything, but you can change this via account settings. You can configure various notifications from your [personal notifications settings](link to: [https://sentry.io/settings/account/notifications/](https://sentry.io/settings/account/notifications/)). For more details, see the [full documentation on Alerts] (link to Alerts page).
+Alerts have a set of configuration and subscription options. By default, Sentry subscribes you to everything, but you can change this via account settings. You can configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications). For more details, see the [full documentation on Alerts]({%- link _documentation/workflow/notifications/alerts.md -%}).
 
 ## Workflow
 
 Workflow relates to all activity involving user actions such as resolution, comments, and automatic regressions.
 
-Workflow has a set of configuration and subscription options. By default, Sentry subscribes you to everything, but you can change this via your account settings. You can configure various notifications from your [personal notifications settings](link to: [https://sentry.io/settings/account/notifications/](https://sentry.io/settings/account/notifications/)). For more details, see the [full documentation on Workflow] (link to Workflow page).
+Workflow has a set of configuration and subscription options. By default, Sentry subscribes you to everything, but you can change this via your account settings. You can configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications). For more details, see the [full documentation on Workflow]({%- link _documentation/workflow/notifications/workflow.md -%}).
 
 ## Issue States
 
@@ -64,18 +64,24 @@ Sentry provides a few states for each issue, which significantly impacts how not
 
 Legacy Integrations (via "Service" as any individual integration) that can send Notifications:
 
-- [Campfire](link to Integration)
-- [OpsGenie](link to integration)
-- [PagerDuty](link to integration)
-- [Pushover](link to integration)
-- [Twilio](link to integration)
-- [VictorOps](link to integration)
-- [IRC](link to integration)
-- [Slack](link to integration)
+{% include components/alert.html
+  title="* Community Integrations"
+  content="These integrations are [maintained and supported](https://forum.sentry.io) by the Sentry community."
+  level="info"
+%}
+
+- Campfire*
+- IRC
+- OpsGenie
+- PagerDuty
+- Pushover
+- [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
+- Twilio
+- VictorOps
 
 ## Notification Management
 
-You can configure various notifications from your [personal notifications](link: [https://sentry.io/settings/account/notifications/](https://sentry.io/settings/account/notifications/)) settings.
+You can configure various notifications from your [personal notifications](https://sentry.io/settings/account/notifications/) settings.
 
 ### Unsubscribe
 
