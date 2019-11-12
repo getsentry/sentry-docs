@@ -321,7 +321,7 @@ Sentry Integration apps are similar to OAuth apps, except Sentry Integration app
 
 #### How is the Sentry Integration different from personal Auth Tokens?
 
-Personal Auth Tokens are tokens a user can use to invoke APIs directly and have access to all the resources tied to that user. Sentry Integration Apps do not represent a single user, but rather make requests as “itself."
+Personal Auth Tokens are tokens a user can use to invoke APIs directly and have access to all the resources tied to that user. Sentry Integration Apps do not represent a single user, but rather make requests as "itself."
 
 #### We use the Sentry API internally at our company. Should we switch to the Sentry Integration Platform?
 
