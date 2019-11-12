@@ -27,13 +27,11 @@ Sentry provides a few states for each issue, which significantly impacts how not
 
 ### Resolved
 
-- An issue is marked as resolved when an individual resolves it by manually changing the state in the UI, submitting a fix, or when the project’s auto-resolve feature is configured. Team members are notified via email.
+- An issue is marked as resolved when an individual resolves it by manually changing the state on the issue page UI, submitting a fix, or when the project’s auto-resolve feature is configured. Team members are notified via email. Auto-resolve is located in Project Settings > General Settings.
 
-![](Screenshot_2019-11-08_15-335f4354-46ad-40f8-a995-b9e0b2d76baa.51.34.png)
+[{% asset notifications_index_pg/auto-resolve.png alt="Event settings sliding toggle for disabling auto resolve." %}]({% asset notifications_index_pg/auto-resolve.png @path %})
 
 - Resolved means the issue has stopped firing events. If another event occurs, the issue reverts to unresolved.
-
-    ![](resolve_button-4f66f881-61ac-43d9-8265-351efacde774.png)
 
 ### Regressions
 
@@ -50,11 +48,9 @@ Sentry provides a few states for each issue, which significantly impacts how not
 
 - A team member is assigned the issue, and they're notified via email, even if the issue is resolved.
 
-    ![](assignee_button-8b8c2a2a-e940-4f98-a756-0feda33ac46f.png)
-
 - Assignment auto subscribes you to workflow notifications.
 
-    ![](workflow_notifications-33d91e41-c949-46e3-9991-2091208ad2ab.png)
+[{% asset notifications_index_pg/workflow_notifications_subscription.png alt="Workflow notifications subscription buttons. Options include always, only on issues I subscribe to, and never." %}]({% asset notifications_index_pg/workflow_notifications_subscription.png @path %})
 
 ### Unassigned
 
@@ -87,7 +83,7 @@ You can configure various notifications from your [personal notifications](https
 
 To opt-out of a specific issue’s notifications, click Unsubscribe at the bottom right of the issue’s page.
 
-![](Unsubscribe-89c729a1-f10f-4f33-a8b2-bb9c59370401.png)
+[{% asset notifications_index_pg/unsubscribe.png alt="Unsubscribe button for Notifications." %}]({% asset notifications_index_pg/unsubscribe.png @path %})
 
 ### Issue Owners
 
@@ -95,6 +91,6 @@ The Issue Owners page is located in Project Settings > Issue Owners.
 
 If an issue owner is specified, the email notification will go to the issue owner. If no issue owner is specified, all project members are notified.
 
-![](Untitled-4aac3a0d-0ef5-4c4e-b1c7-5d916f4cba30.png)
+[{% asset notifications_index_pg/issue_owners.png alt="Toggles for changing issue owner notifications." %}]({% asset notifications_index_pg/issue_owners.png @path %})
 
 For more details, see full documentation on [Issue Owners] ([https://docs.sentry.io/workflow/issue-owners/](https://docs.sentry.io/workflow/issue-owners/)).
