@@ -3,9 +3,9 @@ title: 'Workflow'
 sidebar_order: 2
 ---
 
-Most activity within Sentry will generate a workflow notification. You can configure various notifications from your [personal notifications settings](link to: [https://sentry.io/settings/account/notifications/](https://sentry.io/settings/account/notifications/)). 
+Most activity within Sentry will generate a workflow notification. You can configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications/).
 
-By default, these notifications are sent to anyone who is a member of the project the issue occurs in. Still, each member may choose their participation state, as well as opt-in or opt-out of notifications for specific issues. See [Unsubscribe] (link to the bottom of page ) below for more details.
+By default, these notifications are sent to anyone who is a member of the project the issue occurs in. Still, each member may choose their participation state, as well as opt-in or opt-out of notifications for specific issues. See [Unsubscribe](#unsubscribe) below for more details.
 
 ## Issue States
 
@@ -61,7 +61,7 @@ Sentry will automatically digest alerts sent by some services to avoid flooding 
 
 ## Notification Management
 
-You can configure various notifications from your [personal notifications](link: [https://sentry.io/settings/account/notifications/](https://sentry.io/settings/account/notifications/)) settings.
+You can configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications/).
 
 ### Workflow Notifications
 
@@ -95,7 +95,7 @@ If an issue owner is specified, the email notification will go to the issue owne
 
 ![](Untitled-4aac3a0d-0ef5-4c4e-b1c7-5d916f4cba30.png)
 
-For more details, see full documentation on [Issue Owners] ([https://docs.sentry.io/workflow/issue-owners/](https://docs.sentry.io/workflow/issue-owners/)).
+For more details, see full documentation on [Issue Owners]({%- link _documentation/workflow/issue-owners.md -%}).
 
 ### Unsubscribe
 
