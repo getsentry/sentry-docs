@@ -136,7 +136,7 @@ Applying the proper filters, SDK configuration, and rate limits is an iterative 
 Opening the `Stats` view from the left side navigation bar displays details about the total number of events Sentry has received across your entire organization. The weekly numerical report breaks down the events by project into three categories:
 
 - **Accepted**: events processed and persisted displayed in your event and issue streams.
-- **Rate Limited**: events that Sentry threw away due to limit being hit
+- **Rate Limited**: events that Sentry threw away due to the limit being hit
 - **Filtered**: events that were blocked based on your inbound filter rules.
 
 ![STATS View]({% asset guides/manage-event-stream/12.png @path %})
