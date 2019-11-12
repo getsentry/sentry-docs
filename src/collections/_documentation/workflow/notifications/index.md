@@ -3,7 +3,7 @@ title: Notifications
 sidebar_order: 2
 ---
 
-Notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. Notifications fall into two categories:
+Notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. Notifications fall into two categories: Alerts and Workflow.
 
 ## Alerts
 
