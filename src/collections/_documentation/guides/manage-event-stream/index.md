@@ -136,7 +136,7 @@ Applying the proper filters, SDK configuration, and rate limits is an iterative 
 Opening the `Stats` view from the left side navigation bar displays details about the total number of events Sentry has received across your entire organization over the last week. The report breaks down the events by project into three categories:
 
 - **Accepted**: events processed and persisted displayed in your event and issue streams.
-- **Rate Limited**: events that Sentry threw away due to limit being hit
+- **Rate Limited**: events that Sentry threw away due to the limit being hit
 - **Filtered**: events that were blocked based on your inbound filter rules.
 
 ![STATS View]({% asset guides/manage-event-stream/12.png @path %})
@@ -183,7 +183,7 @@ A good way to set a project rate limit is by figuring out the expected event vol
 - Open the project DSN key configuration under `[Project Settings] > Client Keys > [Configure]`
 - Take a look at the `KEY USAGE IN THE LAST 30 DAYS` graph. Max daily rate in the last month is < 326K
 - Based on that, we can define a ceiling **daily** max value of ~330K, which is ~13,750 events an **hour**.
-- Notice that you can set a daily, hourly, or minute-based rate limit. We'd recommend using an per minute rate limit to avoid situations where a random event spike might exhaust your daily set quota and leave you blind for an extended period of time.
+- Notice that you can set a daily, hourly, or minute-based rate limit. We'd recommend using a per minute rate limit to avoid situations where a random event spike might exhaust your daily set quota and leave you blind for an extended period of time.
 - You can always go back, check the graph to see the number of events dropped due to rate limiting, and revisit your settings.
 
  ![Revisit rate limits]({% asset guides/manage-event-stream/15.png @path %})
