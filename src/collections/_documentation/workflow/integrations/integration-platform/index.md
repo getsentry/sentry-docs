@@ -44,7 +44,7 @@ After installation, if your user has approved of all permissions, Sentry will ge
 
 However, if your integration has a Redirect URL configured, the integration redirects the user’s browser to the configured URL with the grant code and installation ID in the query params.
 
-Start your build by implementing the Redirect URL endpoint, /setup — typically where you exchange the grant code for an access token that allows you to make API calls to Sentry.
+Start your build by implementing the Redirect URL endpoint, /setup — typically where you exchange the grant code for a token that allows you to make API calls to Sentry.
 
 ```python
     import requests
@@ -68,16 +68,16 @@ Start your build by implementing the Redirect URL endpoint, /setup — typically
         resp = requests.post(url, json=payload)
         data = resp.json()
         
-        access_token = data['token']
+        token = data['token']
         refresh_token = data['refreshToken']
-        # ... Securely store the install_id, access_token and refresh_token in DB ...
+        # ... Securely store the install_id, token and refresh_token in DB ...
         
         return redirect('https://sentry.io/settings/')
 ```
 
 #### Auth Tokens
 
-Auth Tokens are what the Integration Platform calls tokens. Access Tokens are the generalized name used when describing OAuth systems, but they are the same thing (opposed to similar concepts). Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API.
+Auth Tokens are what the Integration Platform calls tokens. Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API. In the case of the Integration Platform, these tokens are used to authenticate as an application (with access to a specific organization) instead of a user. 
 
 **Token Exchange**
 
@@ -127,7 +127,7 @@ The data you can expect back for both the initial grant code exchange and subseq
 
 **How to use for requests**
 
-When making requests to the Sentry API, you use the access token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration. 
+When making requests to the Sentry API, you use the token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration. 
 
 **Expiration**
 
@@ -147,7 +147,7 @@ Typically if you have the Redirect URL configured, there is work happening on yo
 
 #### Refreshing Tokens
 
-The Access Tokens you receive from Sentry expire after eight hours. To retrieve a new token, you’ll make a request to the same Authorization endpoint used in the /setup endpoint above, but with a slightly different request body.
+The Tokens you receive from Sentry expire after eight hours. To retrieve a new token, you’ll make a request to the same Authorization endpoint used in the /setup endpoint above, but with a slightly different request body.
 
 ```python
     def refresh_token(install_id):
@@ -166,11 +166,11 @@ The Access Tokens you receive from Sentry expire after eight hours. To retrieve 
         resp = requests.post(url, json=payload)
         data = resp.json()
         
-        new_access_token = data['token']
+        new_token = data['token']
         new_refresh_token = data['refreshToken']
-        # ... Securely update the access_token and refresh_token in DB...
+        # ... Securely update the token and refresh_token in DB...
         
-        return new_access_token
+        return new_token
 ```
 
 Instead of keeping track of times and passively refreshing at the time a token expires, one painless way you can handle refreshing tokens is to actively capture exceptions raised by requests that receive a 401 Unauthorized response from Sentry, refresh the token, and remake the request.
@@ -215,10 +215,10 @@ Continuing from our example, here we're implementing the Webhook URL endpoint, /
         requests.post('https://api.pushover.net/1/messages.json', data=payload)
 
     def get_sentry_issue(install_id, issue_id):
-        access_token = retrieve_from_db(install_id)
+        token = retrieve_from_db(install_id)
         
         url = u'https://sentry.io/api/0/issues/{}/'.format(issue_id)
-        headers = {'Authorization': u'Bearer {}'.format(access_token)}
+        headers = {'Authorization': u'Bearer {}'.format(token)}
         
         resp = requests.get(url, headers=headers)
         return resp.json()
@@ -254,15 +254,15 @@ Creating an internal integration will automatically install it on your organizat
 
 #### Auth Tokens
 
-Auth Tokens are what the Integration Platform calls tokens. Access Tokens are the generalized name used when describing OAuth systems, but they are the same thing (opposed to similar concepts). Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API.
+Auth Tokens are what the Integration Platform calls tokens. Auth Tokens are passed using an auth header and are used to authenticate as a user account with the API. In the case of the Integration Platform, these tokens are used to authenticate as an application (with access to a specific organization) instead of a user.
 
-When you create an Internal Integration, an access token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your Developer Settings > Your Internal Integration and do so.
+When you create an Internal Integration, a token is automatically generated. Should you need multiple, or you need to swap it out, you can go into your Developer Settings > Your Internal Integration and do so.
 
 You can have up to 20 tokens at a time for any given internal integration.
 
 **How to use for requests**
 
-When making requests to the Sentry API, you use the access token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed). 
+When making requests to the Sentry API, you use the token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed). 
 
 **Expiration**
 
@@ -319,9 +319,9 @@ OAuth Applications allow an external developer to create an application which ca
 
 Sentry Integration apps are similar to OAuth apps, except Sentry Integration apps act as an independent entity. There is currently no way for Sentry Integration apps to act on behalf of a user.
 
-#### How is the Sentry Integration different from Auth Tokens?
+#### How is the Sentry Integration different from personal Auth Tokens?
 
-Auth Tokens are personal access tokens a user can use to invoke APIs directly. Sentry Integration Apps do not represent a single user, but rather make requests as “itself."
+Personal Auth Tokens are tokens a user can use to invoke APIs directly and have access to all the resources tied to that user. Sentry Integration Apps do not represent a single user, but rather make requests as "itself."
 
 #### We use the Sentry API internally at our company. Should we switch to the Sentry Integration Platform?
 
