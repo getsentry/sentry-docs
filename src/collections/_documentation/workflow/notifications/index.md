@@ -79,12 +79,6 @@ Legacy Integrations (via "Service" as any individual integration) that can send 
 
 You can configure various notifications from your [personal notifications](https://sentry.io/settings/account/notifications/) settings.
 
-### Unsubscribe
-
-To opt-out of a specific issue’s notifications, click Unsubscribe at the bottom right of the issue’s page.
-
-[{% asset notifications/unsubscribe.png alt="Unsubscribe button for Notifications." %}]({% asset notifications/unsubscribe.png @path %})
-
 ### Issue Owners
 
 The Issue Owners page is located in Project Settings > Issue Owners.
@@ -93,4 +87,10 @@ If an issue owner is specified, the email notification will go to the issue owne
 
 [{% asset notifications/issue_owners.png alt="Toggles for changing issue owner notifications." %}]({% asset notifications/issue_owners.png @path %})
 
-For more details, see full documentation on [Issue Owners] ([https://docs.sentry.io/workflow/issue-owners/](https://docs.sentry.io/workflow/issue-owners/)).
+For more details, see full documentation on [Issue Owners]({%- link _documentation/workflow/issue-owners.md -%}).
+
+### Unsubscribe
+
+To opt-out of a specific issue’s notifications, click Unsubscribe at the bottom right of the issue’s page.
+
+[{% asset notifications/unsubscribe.png alt="Unsubscribe button for Notifications." %}]({% asset notifications/unsubscribe.png @path %})

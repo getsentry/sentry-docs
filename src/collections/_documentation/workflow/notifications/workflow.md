@@ -53,7 +53,7 @@ Sentry will automatically digest alerts sent by some services to avoid flooding 
 - Minimum delivery interval
 - Maximum delivery interval
 
-![](Untitled-dfaf7516-1747-4cbc-a1a4-03eee10c9c04.png)
+[{% asset notifications/digest_intervals.png alt="Intervals that manipulate timing of digests." %}]({% asset notifications/digest_intervals.png @path %})
 
 ## Notification Management
 
@@ -61,13 +61,9 @@ You can configure various notifications from your [personal notifications settin
 
 ### Workflow Notifications
 
-These notifications are triggered based on issue activity.
+These notifications are triggered based on issue activity. You can set these for all projects, or you can click “Fine-tune workflow notifications by project” to configure this with more granularity.
 
-![](Untitled-623782a4-57dd-449e-a91d-2ddb7b099819.png)
-
-You can set these for all projects, or you can click “Fine-tune workflow notifications by project” to configure this with more granularity.
-
-![](Untitled-07dd96df-34eb-4bb0-9733-b1ea184eac30.png)
+[{% asset notifications/fine_tune_workflow.png alt="Intervals that manipulate timing of digests." %}]({% asset notifications/fine_tune_workflow.png @path %})
 
 ### Default Project Alerts
 
@@ -75,13 +71,13 @@ If you have set any specific project alert to default, that means you've configu
 
 You can find the Default Project Alerts switch in User Settings > Account > Notifications > Fine tune alerts by project.
 
-![](default_project_alerts-e36e4184-d9e5-42d7-9b5c-fded69222ae6.png)
+[{% asset notifications/default_project_alerts.png alt="Intervals that manipulate timing of digests." %}]({% asset notifications/default_project_alerts.png @path %})
 
 ### Per-Project Alerts
 
 Your per-project alerts have the fine-tuning options of Default, On, or Off. 
 
-![](specific_project_alert-7cd17334-1d3e-4c63-99eb-66bc005f4df4.png)
+[{% asset notifications/specific_project_alert.png alt="Intervals that manipulate timing of digests." %}]({% asset notifications/specific_project_alert.png @path %})
 
 ### Issue Owners
 
@@ -89,7 +85,7 @@ Issue Owners are located in Project Settings > Issue Owners.
 
 If an issue owner is specified, the email notification will go to the issue owner. If no issue owner is specified, all project members are notified.
 
-![](Untitled-4aac3a0d-0ef5-4c4e-b1c7-5d916f4cba30.png)
+[{% asset notifications/issue_owners.png alt="Toggles for changing issue owner notifications." %}]({% asset notifications/issue_owners.png @path %})
 
 For more details, see full documentation on [Issue Owners]({%- link _documentation/workflow/issue-owners.md -%}).
 
@@ -97,7 +93,7 @@ For more details, see full documentation on [Issue Owners]({%- link _documentati
 
 To opt-out of a specific issue’s notifications, click Unsubscribe at the bottom right of the issue’s page.
 
-![](Unsubscribe-0202991b-92a8-458a-9752-28b5f4102025.png)
+[{% asset notifications/unsubscribe.png alt="Unsubscribe button for Notifications." %}]({% asset notifications/unsubscribe.png @path %})
 
 ## FAQ
 
