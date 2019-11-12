@@ -19,11 +19,9 @@ Sentry provides a few states for each issue, which significantly impacts how not
 
 - An issue is marked as resolved when an individual resolves it by manually changing the state on the issue page UI, submitting a fix, or when the project’s auto-resolve feature is configured. Team members are notified via email. Auto-resolve is located in Project Settings > General Settings.
 
-[{% asset notifications_index_pg/auto-resolve.png alt="Event settings sliding toggle for disabling auto resolve." %}]({% asset notifications_index_pg/auto-resolve.png @path %})
+[{% asset notifications/auto-resolve.png alt="Event settings sliding toggle for disabling auto resolve." %}]({% asset notifications/auto-resolve.png @path %})
 
 - Resolved means the issue has stopped firing events. If another event occurs, the issue reverts to unresolved.
-
-    ![](resolve_button-4f66f881-61ac-43d9-8265-351efacde774.png)
 
 ### Regressions
 
@@ -36,11 +34,9 @@ Sentry provides a few states for each issue, which significantly impacts how not
 
 - A team member is assigned the issue, and they're notified via email, even if the issue is resolved.
 
-    ![](assignee_button-8b4a776c-5b31-4280-8b20-cc64661bf971.png)
-
 - Assignment auto subscribes you to workflow notifications.
 
-    ![](workflow_notifications-3f395da0-a7c3-49ac-a8ec-0de5ef18ebc2.png)
+[{% asset notifications/workflow_notifications_subscription.png alt="Workflow notifications subscription buttons. Options include always, only on issues I subscribe to, and never." %}]({% asset notifications/workflow_notifications_subscription.png @path %})
 
 ### Unassigned
 
