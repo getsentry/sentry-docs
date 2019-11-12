@@ -63,7 +63,7 @@ You can also configure various personal notifications from your [personal notifi
 
 These notifications are triggered based on issue activity. You can set these for all projects, or you can click “Fine-tune workflow notifications by project” to configure this with more granularity.
 
-[{% asset notifications/fine_tune_workflow.png alt="Intervals that manipulate timing of digests." %}]({% asset notifications/fine_tune_workflow.png @path %})
+[{% asset notifications/fine_tune_workflow.png alt="Dropdown of options for workflow notifications. Options are Default, Always, Only on issues I subscribe to, and Never." %}]({% asset notifications/fine_tune_workflow.png @path %})
 
 ### Default Project Alerts
 
@@ -71,13 +71,13 @@ If you have set any specific project alert to default, that means you've configu
 
 You can find the Default Project Alerts switch in User Settings > Account > Notifications > Fine tune alerts by project.
 
-[{% asset notifications/default_project_alerts.png alt="Intervals that manipulate timing of digests." %}]({% asset notifications/default_project_alerts.png @path %})
+[{% asset notifications/default_project_alerts.png alt="Toggle for turning defaul project alerts on and off." %}]({% asset notifications/default_project_alerts.png @path %})
 
 ### Per-Project Alerts
 
 Your per-project alerts have the fine-tuning options of Default, On, or Off. 
 
-[{% asset notifications/specific_project_alert.png alt="Intervals that manipulate timing of digests." %}]({% asset notifications/specific_project_alert.png @path %})
+[{% asset notifications/specific_project_alert.png alt="Dropdown providing options for per-project alerts. Options include Default, On, and Off." %}]({% asset notifications/specific_project_alert.png @path %})
 
 ### Issue Owners
 
