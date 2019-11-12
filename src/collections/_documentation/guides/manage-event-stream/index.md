@@ -133,7 +133,7 @@ Applying the proper filters, SDK configuration, and rate limits is an iterative 
 
 ### > **How can I see a breakdown of incoming events?**
 
-Opening the `Stats` view from the left side navigation bar displays details about the total number of events Sentry has received across your entire organization. The weekly numerical report breaks down the events by project into three categories:
+Opening the `Stats` view from the left side navigation bar displays details about the total number of events Sentry has received across your entire organization over the last week. The report breaks down the events by project into three categories:
 
 - **Accepted**: events processed and persisted displayed in your event and issue streams.
 - **Rate Limited**: events that Sentry threw away due to limit being hit
