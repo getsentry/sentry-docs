@@ -3,11 +3,11 @@ title: 'Alerts'
 sidebar_order: 1
 ---
 
-Each time you create a new project, or a new issue occurs, Sentry creates a default alert rule. Alerts are generated based upon a project’s alert rules. By default, all project members receive alert notifications via email, and all integrations specified in [actions](link to Actions section) receive alert notifications.
+Each time you create a new project, or a new issue occurs, Sentry creates a default alert rule. Alerts are generated based upon a project’s alert rules. By default, all project members receive alert notifications via email, and all integrations specified in [actions](#actions) receive alert notifications.
 
 Alerts can also be configured per-project and are based on the rules defined for that project. To modify the rules visit your Project Settings > Alerts > Rules > "New Alert Rules" or "Edit Rule. In Rules, you’ll see a list of all active rules and can add alert rules or modify existing rules.
 
-You can also configure various notifications from your [personal notifications settings](link to: [https://sentry.io/settings/account/notifications/](https://sentry.io/settings/account/notifications/)). 
+You can also configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications).
 
 ## **Conditions**
 
@@ -90,7 +90,7 @@ Sentry will automatically digest alerts sent by some services to avoid flooding 
 
 ## Notification Management
 
-You can configure various notifications from your [personal notifications](link: [https://sentry.io/settings/account/notifications/](https://sentry.io/settings/account/notifications/)) settings.
+You can configure various notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications).
 
 ### Default Project Alerts
 
@@ -114,7 +114,7 @@ If an issue owner is specified, the email notification will go to the issue owne
 
 ![](Untitled-4aac3a0d-0ef5-4c4e-b1c7-5d916f4cba30.png)
 
-For more details, see full documentation on [Issue Owners] ([https://docs.sentry.io/workflow/issue-owners/](https://docs.sentry.io/workflow/issue-owners/)).
+For more details, see full documentation on [Issue Owners]({%- link _documentation/workflow/issue-owners.md -%}).
 
 ## FAQs
 
