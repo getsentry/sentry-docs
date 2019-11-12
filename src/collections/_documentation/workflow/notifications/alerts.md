@@ -5,7 +5,7 @@ sidebar_order: 1
 
 Each time you create a new project, or a new issue occurs, Sentry creates a default alert rule. Alerts are generated based upon a project’s alert rules. By default, all project members receive alert notifications via email, and all integrations specified in [actions](#actions) receive alert notifications.
 
-Alerts can also be configured per-project and are based on the rules defined for that project. To modify the rules visit your Project Settings > Alerts > Rules > "New Alert Rules" or "Edit Rule. In Rules, you’ll see a list of all active rules and can add alert rules or modify existing rules.
+Alerts can also be configured per-project and are based on the rules defined for that project. To modify the rules visit your **Project Settings > Alerts > Rules > "New Alert Rules" or "Edit Rule"**. In Rules, you’ll see a list of all active rules and can add alert rules or modify existing rules.
 
 You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page.
 
@@ -43,7 +43,7 @@ For example, at Sentry, we send a notification every single time an error happen
 
 ## Actions
 
-Actions are located in Project Settings > Alerts > Rules > "New Alert Rules" or "Edit Rule.
+Actions are located in **Project Settings > Alerts > Rules > "New Alert Rules" or "Edit Rule"**.
 
 [{% asset notifications/new_alert_rule.png alt="Buttons to create a New Alert Rule or to Edit an existing rule." %}]({% asset notifications/new_alert_rule.png @path %})
 
@@ -96,7 +96,7 @@ You can also configure various personal notifications from your [personal notifi
 
 If you have set any specific project alert to default, that means you've configured the notification to the Default Project Alert, which is a switch you can toggle on or off. This toggle switch controls all project alerts set to default. 
 
-You can find the Default Project Alerts switch in User Settings > Account > Notifications > Fine tune alerts by project.
+You can find the Default Project Alerts switch in **User Settings > Account > Notifications > Fine tune alerts by project**.
 
 [{% asset notifications/default_project_alerts.png alt="Toggle for turning defaul project alerts on and off." %}]({% asset notifications/default_project_alerts.png @path %})
 
@@ -108,7 +108,7 @@ Your per-project alerts have the fine-tuning options of Default, On, or Off.
 
 ## Issue Owners
 
-The Issue Owners page is located in Project Settings > Issue Owners.
+The Issue Owners page is located in **Project Settings > Issue Owners**.
 
 If an issue owner is specified, the email notification will go to the issue owner. If no issue owner is specified, all project members are notified.
 

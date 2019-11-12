@@ -17,7 +17,7 @@ Sentry provides a few states for each issue, which significantly impacts how not
 
 ### Resolved
 
-- An issue is marked as resolved when an individual resolves it by manually changing the state on the issue page UI, submitting a fix, or when the project’s auto-resolve feature is configured. Team members are notified via email. Auto-resolve is located in Project Settings > General Settings.
+- An issue is marked as resolved when an individual resolves it by manually changing the state on the issue page UI, submitting a fix, or when the project’s auto-resolve feature is configured. Team members are notified via email. Auto-resolve is located in **Project Settings > General Settings**.
 
 [{% asset notifications/auto-resolve.png alt="Event settings sliding toggle for disabling auto resolve." %}]({% asset notifications/auto-resolve.png @path %})
 
@@ -69,7 +69,7 @@ These notifications are triggered based on issue activity. You can set these for
 
 If you have set any specific project alert to default, that means you've configured the notification to the Default Project Alert, which is a switch you can toggle on or off. This toggle switch controls all project alerts set to default. 
 
-You can find the Default Project Alerts switch in User Settings > Account > Notifications > Fine tune alerts by project.
+You can find the Default Project Alerts switch in **User Settings > Account > Notifications > Fine tune alerts by project**.
 
 [{% asset notifications/default_project_alerts.png alt="Toggle for turning defaul project alerts on and off." %}]({% asset notifications/default_project_alerts.png @path %})
 
@@ -81,7 +81,7 @@ Your per-project alerts have the fine-tuning options of Default, On, or Off.
 
 ### Issue Owners
 
-Issue Owners are located in Project Settings > Issue Owners.
+Issue Owners are located in **Project Settings > Issue Owners**.
 
 If an issue owner is specified, the email notification will go to the issue owner. If no issue owner is specified, all project members are notified.
 
