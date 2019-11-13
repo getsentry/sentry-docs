@@ -120,6 +120,21 @@ Here we are associating commits (or refs) between `from` and `to` with the curre
 
 For more information, see the [CLI docs]({%- link _documentation/cli/releases.md -%}).
 
+###### Finalizing Releases
+
+By default a release is created “unreleased”. Finalizing a release means that we fill in a second timestamp on the release record, which is prioritized over `date_created` when sorting releases in the UI. This also affects things like what counts as "the next release" for resolving issues, what release is used as the base for associating commits if you use `--auto`, etc.
+
+This can be changed by passing either `--finalize` to the `new` command which will immediately finalize the release or you can separately call `sentry-cli releases finalize VERSION` later on. The latter is useful if you are managing releases as part of a build process e.g.
+
+```bash
+#!/bin/sh
+sentry-cli releases new "$VERSION"
+# do your build steps here
+# once you are done, finalize
+sentry-cli releases finalize "$VERSION"
+```
+You can also choose to finalize the release when you've made the release live (when you've deployed to your machines, enabled in the App store, etc.).
+
 ##### Using the API
 
 ```bash
@@ -182,6 +197,8 @@ For more information, see the [API reference]({%- link _documentation/api/releas
   content='If you receive an "Unable to Fetch Commits" email, take a look at our [Help Center Article](https://help.sentry.io/hc/en-us/articles/360019866834-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits-).'
   level='warning'
 %}
+
+
 
 #### After Associating Commits
 
