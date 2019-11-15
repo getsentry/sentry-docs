@@ -19,7 +19,7 @@ Workflow has a set of configuration and subscription options. By default, Sentry
 
 ## Issue States
 
-Sentry provides a few states for each issue, which significantly impacts how notifications work.
+Sentry provides a few states for each issue, which significantly impacts how notifications work. Workflow notifications are _all_ sent via email.
 
 ### Unresolved
 
