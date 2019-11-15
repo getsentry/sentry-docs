@@ -3,7 +3,7 @@ title: 'Alerts'
 sidebar_order: 1
 ---
 
-Each time you create a new project, or a new issue occurs, Sentry creates a default alert rule. Alerts are generated based upon a project’s alert rules. By default, all project members receive alert notifications via email, and all integrations specified in [actions](#actions) receive alert notifications.
+Each time you create a new project, Sentry creates a default alert rule. Alerts are generated based upon a project’s alert rules. By default, all project members receive alert notifications via email, and all integrations specified in [actions](#actions) receive alert notifications.
 
 Alerts can also be configured per-project and are based on the rules defined for that project. To modify the rules visit your **Project Settings > Alerts > Rules > "New Alert Rules" or "Edit Rule"**. In Rules, you’ll see a list of all active rules and can add alert rules or modify existing rules.
 
