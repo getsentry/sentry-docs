@@ -53,7 +53,7 @@ You can also do this from inside a single issue. Click the Similar Issues tab
 ![Similar Issues]({% asset guides/grouping-and-fingerprints/similar-issues.png @path %})
 
 {% capture __alert_content -%}
-Future issues will get added to the merged set only if they match one of the stacktraces in the merged set??
+Future issues will get added to the merged set only if they match one of the stacktraces in the merged set
 {%- endcapture -%}
 {%- include components/alert.html
     title="INFO"
