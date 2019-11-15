@@ -18,4 +18,4 @@ sidebar_order: 0
 
 * Manage your Event Stream
 
-* [Issue Grouping and Setting the Fingerprint]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
+* [Event Grouping and Setting the Fingerprint]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
