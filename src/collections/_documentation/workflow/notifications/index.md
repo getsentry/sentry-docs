@@ -40,7 +40,7 @@ Sentry provides a few states for each issue, which significantly impacts how not
 
 ### Ignored
 
-- Regardless of alert rules, new events in ignored issues will not send alerts. Also, by default, ignored events are hidden in your project’s issue stream. Search the issue stream for is:ignored to find them.
+- Regardless of alert rules, new events in ignored issues will not send alerts. Also, by default, ignored events are hidden in your project’s issue stream. Search the issue stream for `is:ignored` to find them.
 
 ## Core Notifications
 
