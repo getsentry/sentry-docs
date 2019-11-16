@@ -34,7 +34,7 @@ For example, at Sentry, we send a notification every single time an error happen
     - value: a positive integer
     - interval: one minute, one hour, one day, one week, or 30 days
 - An event's {attribute} value {match} {value}
-    - attribute: message, platform, environment, type, exception.type, exception.value, user.id, user.email, user.username, user.ip_address, http.method, http.url, stacktrace.code, stacktrace.module, or stacktrace.filename
+    - attribute: `message`, `platform`, `environment`, `type`, `exception.type`, `exception.value`, `user.id`, `user.email`, `user.username`, `user.ip_address`, `http.method`, `http.url`, `stacktrace.code`, `stacktrace.module`, or `stacktrace.filename`
     - match: equals, does not equal, starts with, ends with, contains, does not contain, is set, or is not set
     - value: any attribute's value
 - An event's level is {match} {level}
