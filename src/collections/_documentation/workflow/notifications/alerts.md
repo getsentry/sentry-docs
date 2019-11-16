@@ -7,13 +7,13 @@ Each time you create a new project, Sentry creates a default alert rule. Alerts 
 
 Alerts can also be configured per-project and are based on the rules defined for that project. To modify the rules visit your **Project Settings > Alerts > Rules > "New Alert Rules" or "Edit Rule"**. In Rules, you’ll see a list of all active rules and can add alert rules or modify existing rules.
 
-You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page.
+You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the [project alerts page](https://sentry.io/settings/account/notifications/alerts/).
 
 ## **Conditions**
 
 Rules provide several conditions that you’re able to configure. These are relatively self-explanatory and range from simple state changes to more complex filters on attributes. Every time an event is received, Sentry evaluates the alert conditions.
 
-For example, at Sentry, we send a notification every single time an error happens, and the affected user’s email address ends with `@sentry.io`.
+For example, you can send a notification every single time an error happens, and the affected user’s email address ends with `@sentry.io`.
 
 [{% asset notifications/alert_conditions.png alt="Dropdown of alert conditions." %}]({% asset notifications/alert_conditions.png @path %})
 
@@ -47,8 +47,6 @@ Actions are located in **Project Settings > Alerts > Rules > "New Alert Rules" o
 
 [{% asset notifications/new_alert_rule.png alt="Buttons to create a New Alert Rule or to Edit an existing rule." %}]({% asset notifications/new_alert_rule.png @path %})
 
-An example use-case might be that you want a specific kind of error to send via Slack, but you want everything to send via Mail.
-
 ### Action Types
 
 Currently, there are three types of actions you can take:
@@ -58,11 +56,9 @@ Currently, there are three types of actions you can take:
 - Send a notification via {service}
     - service is one of mail and any configured per-project integration
 - Send a notification to the {workspace} Slack workspace to {channel} and show tags {tags} in notification
-    - to clarify this relates to the global Slack integration, *not* the per-project legacy integration
+    - this relates to the global Slack integration, *not* the per-project legacy integration
 
 [{% asset notifications/alert_actions.png alt="Dropdown of notification actions." %}]({% asset notifications/alert_actions.png @path %})
-
-An example use-case might be that you want a specific kind of error to send via Slack, but you want everything to send via Mail.
 
 ### Frequency
 
@@ -83,14 +79,11 @@ An example use-case might be that you want a specific kind of error to send via 
 
 Sentry will automatically digest alerts sent by some services to avoid flooding your inbox with individual issue notifications. To control how frequently notifications are delivered, use the sliders.
 
-- Minimum delivery interval
-- Maximum delivery interval
-
 [{% asset notifications/alert_digest.png alt="Sliding time scale for intervals of notifications." %}]({% asset notifications/alert_digest.png @path %})
 
 ## Notification Management
 
-You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page.
+You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the [project alerts page](https://sentry.io/settings/account/notifications/alerts/).
 
 ### Default Project Alerts
 
@@ -124,8 +117,8 @@ For more details, see full documentation on [Issue Owners]({%- link _documentati
     - Unfortunately, this is not an option.
 - Are there issue-level filters?
     - No, all filters are event-based. For example, there aren't configurations for alerting only if an issue is X days old, or assigned to Y, or alerted-on-before, etc.
-- What is the difference between Delete, Delete & Discard, and Ignore
+- What is the difference between Delete, Delete & Discard, and Ignore?
     - Delete - when you delete an issue with notifications, notifications will continue if the issue is triggered again
-    - Delete & Discard - when you delete and discard, all notifications will stop
+    - [Delete & Discard]({%- link _documentation/accounts/quotas.md -%}#filter-by-issue) - when you delete and discard, all notifications will stop
     - Ignore - while an issue is ignored, all notifications will stop. If it becomes unignored, notifications will continue. For example, if you have chosen "ignore for 30 minutes," you won't be notified for 30 minutes. Keep in mind; an ignored issue will still count towards your quota.
     
