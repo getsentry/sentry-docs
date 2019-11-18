@@ -99,7 +99,7 @@ Your per-project alerts have the fine-tuning options of Default, On, or Off.
 
 [{% asset notifications/specific_project_alert.png alt="Dropdown for per-project alerts. Options include default, on, or off." %}]({% asset notifications/specific_project_alert.png @path %})
 
-## Issue Owners
+### Issue Owners
 
 The Issue Owners page is located in **Project Settings > Issue Owners**.
 
