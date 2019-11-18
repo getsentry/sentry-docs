@@ -59,7 +59,7 @@ Available options:
 
 _Import name: `Sentry.Integrations.OnUnhandledRejection`_
 
-This integration attaches global unhandled rejection handlers. By default all unhandled rejections trigger a warning and log the error. You can change this behavior using `mode` option, which is in line with Node's CLI options: https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode
+This integration attaches global unhandled rejection handlers. By default, all unhandled rejections trigger a warning and log the error. You can change this behavior using the `mode` option, which is in line with Node's CLI options: https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode
 
 Available options:
 
