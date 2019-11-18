@@ -3,9 +3,13 @@ title: Context
 sidebar_order: 0
 example_tag_name: page_locale
 example_tag_value: de-at
+example_tag_name2: experiment_group
+example_tag_value2: control
 example_user_email: 'john.doe@example.com'
 example_extra_key: character_name
 example_extra_value: 'Mighty Fighter'
+example_extra_key2: sidekick
+example_extra_value2: 'Awesome Possum'
 ---
 
 {% include platforms/event-contexts.md %}

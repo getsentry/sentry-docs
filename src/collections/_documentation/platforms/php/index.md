@@ -68,11 +68,28 @@ Sentry\init([
 ### Extra Context
 In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening.
 
+You can add extra data to all events:
+
 ```php
 Sentry\configureScope(function (Sentry\State\Scope $scope): void {
   $scope->setExtra('character_name', 'Mighty Fighter');
+  
+  // to set multiple key-value pairs at once:
+  $scope->setExtras([
+    'character_name' => 'Mighty Fighter',
+    'sidekick' => 'Awesome Possum'
+  ]);
 });
 ```
+
+or per event:
+
+```php
+Sentry\withScope(function (Sentry\State\Scope $scope): void {
+  $scope->setExtra('character_name', 'Mighty Fighter');
+  // or $scope->setExtras([ ... ])
+  Sentry\captureException(new \Throwable('my error'))
+});
 
 ### Capturing the User
 
@@ -91,13 +108,28 @@ Sentry\configureScope(function (Sentry\State\Scope $scope): void {
 Tags are key/value pairs assigned to events that can be used for breaking down
 issues or quick access to finding related events.
 
-Most SDKs generally support configuring tags by configuring the scope:
+You can set tags to be added to all events:
 
 ```php
 Sentry\configureScope(function (Sentry\State\Scope $scope): void {
   $scope->setTag('page_locale', 'de-at');
+  
+  // to set multiple key-value pairs at once:
+  $scope->setTags([
+    'page_locale' => 'de-at',
+    'experiment_group' => 'control'
+  ]);
 });
 ```
+
+or per event:
+
+```php
+Sentry\withScope(function (Sentry\State\Scope $scope): void {
+  $scope->setTag('my-tag', 'my value');
+  // or $scope->setTags([ ... ])
+  Sentry\captureException(new \Throwable('my error'))
+});
 
 Several common uses for tags include:
 

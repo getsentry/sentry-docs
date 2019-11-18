@@ -325,10 +325,34 @@ You can also set context when manually triggering events.
 {% include platforms/event-contexts.md %}
 
 ### Extra Context {#extra-context}
-In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
+In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening.
+
+You can add extra data to all events:
 
 ```javascript
 Sentry.setExtra("character_name", "Mighty Fighter");
+
+// to set multiple key-value pairs at once:
+Sentry.setExtras({
+  character_name: "Mighty Fighter",
+  sidekick: "Awesome Possum",
+});
+
+// alternate form
+Sentry.configureScope(function(scope) {
+  scope.setExtra("character_name", "Mighty Fighter");
+  // or scope.setExtras({ ... })
+});
+```
+
+or per event:
+
+```javascript
+Sentry.withScope(function(scope) {
+  scope.setExtra("character_name", "Mighty Fighter");
+  // or scope.setExtras({ ... })
+  Sentry.captureException(error);
+});
 ```
 
 {% capture __alert_content -%}
@@ -382,10 +406,32 @@ Sentry.setUser({"email": "john.doe@example.com"});
 Tags are key/value pairs assigned to events that can be used for breaking down
 issues or quick access to finding related events.
 
-Most SDKs generally support configuring tags by configuring the scope:
+You can set tags to be added to all events:
 
 ```javascript
 Sentry.setTag("page_locale", "de-at");
+
+// to set multiple key-value pairs at once:
+Sentry.setTags({
+  page_locale: "de-at",
+  experiment_group: "control",
+});
+
+// alternate form
+Sentry.configureScope(function(scope) {
+  scope.setTag("page_locale", "de-at");
+  // or scope.setTags({ ... })
+});
+```
+
+or per event:
+
+```javascript
+Sentry.withScope(function(scope) {
+  scope.setTag("my-tag", "my-value");
+  // or scope.setTags({ ... })
+  Sentry.captureException(error);
+});
 ```
 
 Several common uses for tags include:
