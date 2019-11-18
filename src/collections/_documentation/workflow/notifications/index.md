@@ -77,7 +77,7 @@ Legacy Integrations (via "Service" as any individual integration) that can send 
 
 ## Notification Management
 
-You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the Project Settings page.
+You can also configure various personal notifications from your [personal notifications settings](https://sentry.io/settings/account/notifications) and any specific project's settings in the [project alerts page](https://sentry.io/settings/account/notifications/alerts/).
 
 ### Issue Owners
 
