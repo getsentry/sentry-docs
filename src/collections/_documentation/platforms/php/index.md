@@ -87,8 +87,8 @@ or per event:
 ```php
 Sentry\withScope(function (Sentry\State\Scope $scope): void {
   $scope->setExtra('character_name', 'Mighty Fighter');
-  // or $scope->setExtras([ ... ])
-  Sentry\captureException(new \Throwable('my error'))
+  // or $scope->setExtras([ ... ]);
+  Sentry\captureException(new \Exception('my error'));
 });
 
 ### Capturing the User
@@ -127,8 +127,8 @@ or per event:
 ```php
 Sentry\withScope(function (Sentry\State\Scope $scope): void {
   $scope->setTag('my-tag', 'my value');
-  // or $scope->setTags([ ... ])
-  Sentry\captureException(new \Throwable('my error'))
+  // or $scope->setTags([ ... ]);
+  Sentry\captureException(new \Exception('my error'));
 });
 
 Several common uses for tags include:
