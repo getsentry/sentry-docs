@@ -1,10 +1,14 @@
 ---
 title: Android
 ---
-
-[ Note: regarding the stability of this version and point to the older/more stable version
-
-This version of the Android SDK is in alpha. Sentry has been offering an official SDK for Android for years now. If you are looking for the stable, LTS support of Sentry, please refer to the 1.x and its [docs](LINK). ]
+{% capture __alert_content -%}
+This version of the Android SDK is in alpha. Sentry has been offering an official SDK for Android for years now. If you are looking for the stable LTS support of Sentry, please refer to the 1.x and its [docs]({%- link _documentation/clients/java/integrations.md -%}#android).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 ## Integrating the SDK
 
