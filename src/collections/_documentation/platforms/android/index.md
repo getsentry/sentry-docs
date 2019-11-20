@@ -16,22 +16,29 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 
 To install the Android SDK, please update your build.gradle file as follows:
 
-    // ADD COMPATIBILITY OPTIONS TO BE COMPATIBLE WITH JAVA 1.8
-    compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_1_8
-            targetCompatibility = JavaVersion.VERSION_1_8
-        }
-    
-    // ADD SENTRY ANDROID AS A DEPENDENCY
-    dependencies {
-            implementation 'io.sentry:sentry-android:{version}'
+```groovy
+// ADD COMPATIBILITY OPTIONS TO BE COMPATIBLE WITH JAVA 1.8
+compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
+
+// ADD SENTRY ANDROID AS A DEPENDENCY
+dependencies {
+        implementation 'io.sentry:sentry-android:{version}'
+}
+```
 
 For other dependency managers, see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-android/1.7.28/jar).
 
-[Mimi, create an alert box 
-
-For the minimal required API level please check the Requirement section.
+{% capture __alert_content -%}
+For the minimal required API level, see [Requirements](#requirements).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="info"
+%}
 
 ### Connecting the SDK to Sentry
 
