@@ -73,11 +73,9 @@ public class MyActivity extends AppCompatActivity {
 
 Then, you can see the error in your dashboard:
 
-![](Untitled-9b78e9a8-87d9-4939-8272-f95c00e13e3a.png)
+[{% asset android/android_error.png alt="Example of a caught exception in the Sentry dashboard" %}]({% asset android/android_error.png @path %})
 
-If you prefer learning with examples, you can download our sample application. [Mimi, link to module: [https://github.com/getsentry/sentry-android/tree/master/sentry-sample](https://github.com/getsentry/sentry-android/tree/master/sentry-sample)]
-
- 
+If you prefer learning with examples, you can download our [sample application](https://github.com/getsentry/sentry-android/tree/master/sentry-sample).
 
 ## Manual Initialization
 
@@ -85,42 +83,46 @@ Initialize the SDK manually when you need to provide additional configuration to
 
 To initialize the SDK manually, disable the auto initialization. You can do so by adding the following line into your manifest:
 
-    <meta-data android:name="io.sentry.auto-init" android:value="false" />
+```xml
+<meta-data android:name="io.sentry.auto-init" android:value="false" />
+```
 
 The next step is to initialize the SDK directly in your code.
 
-The SDK can catch errors and crashes only after you've initialized it. So, we recommend calling `SentryAndroid.init` in the instance of the Application class right after the application is created. Configuration options will be loaded from the manifest so that you don't need to have the static properties in your code. In the `init` method, you can provide a callback that will modify the configuration and also register new options.
+The SDK can catch errors and crashes only after you've initialized it. So, we recommend calling `SentryAndroid.init` in the instance of the Application class right after the application is created. 
 
-    import android.app.Application;
-    import io.sentry.android.core.SentryAndroid;
-    import io.sentry.core.SentryLevel;
-    
-    public class SentryApplication extends Application {
-    
-        public void onCreate() {
-            super.onCreate();
-            /**
-             * Manual Initialisation of the Sentry Android SDK
-             * @Context - Instance of the Android Context
-             * @Options - Call back function that you need to provide to be able to modify the options.
-             *            The call back function is provided with the options loaded from the manifest.
-             *
-             */
-            SentryAndroid.init(this,options -> {
-    
-                // Add a callback that will be used before the event is about to be send to the Sentry.
-                // With this callback you can modify the event or when returning null also discard the event.
-                options.setBeforeSend((event, hint) -> {
-                    if (event.getLevel().equals(SentryLevel.DEBUG))
-                        return null;
-                    else
-                        return event;
-                });
+Configuration options will be loaded from the manifest so that you don't need to have the static properties in your code. In the `init` method, you can provide a callback that will modify the configuration and also register new options.
+
+```java
+import android.app.Application;
+import io.sentry.android.core.SentryAndroid;
+import io.sentry.core.SentryLevel;
+
+public class SentryApplication extends Application {
+    public void onCreate() {
+        super.onCreate();
+        /**
+            * Manual Initialisation of the Sentry Android SDK
+            * @Context - Instance of the Android Context
+            * @Options - Call back function that you need to provide to be able to modify the options.
+            * The call back function is provided with the options loaded from the manifest.
+            *
+            */
+        SentryAndroid.init(this, options -> {
+            // Add a callback that will be used before the event is about to be send to the Sentry.
+            // With this callback you can modify the event or when returning null also discard the event.
+            options.setBeforeSend((event, hint) -> {
+                if (event.getLevel().equals(SentryLevel.DEBUG))
+                    return null;
+                else
+                    return event;
             });
-        }
+        });
     }
+}
+```
 
-For more details about the available configuration options, see [Configuration](#configuration). [ Mimi, link to Configuration section]
+For more details about the available configurations, see [Configuration options](#configuration-options).
 
 ## Capturing Errors
 
@@ -132,52 +134,54 @@ If there is a fatal error in your native code, the process is the same. The diff
 
 The NDK is not only catching the unhandled exceptions but is also set as a signal handler to be able to react to the signals from OS. When the application is about to crash, an error report is created and saved to disk. The SDK will try to send the report right after the crash, but since the environment may be unstable at the crash time, the report is guaranteed to send once the application is started again.
 
-### **Capturing Errors manually**
+### Capturing Errors manually
 
 Insight into the health of your application doesn't require crashes. You can report exceptions and messages manually using our API.
 
-    public class DemoClass {
-        /**
-         * An example method that throws an exception.
-         */
-        public void unsafeMethod() {
-          throw new RuntimeException();
-        }
-    
-        /**
-         * An Example of how to report an error and how to enrich the error context.
-         */
-        void logWithStaticAPI() {
-        /*
-        Record a breadcrumb in the current context which will be sent
-        with the next event(s). By default the last 100 breadcrumbs are kept.
+```java
+public class DemoClass {
+    /**
+        * An example method that throws an exception.
         */
-          Breadcrumb breadcrumb = new Breadcrumb();
-          breadcrumb.setMessage("User made an action.");
-          Sentry.addBreadcrumb(breadcrumb);
-    
-          // Set the user in the current context.
-          Sentry.configureScope(
-            scope -> {
-              User user = new User();
-              user.setEmail("hello@sentry.io");
-    				  scope.setUser(user);
-            });
-    
-        /*
-        This sends a simple event to Sentry, with a simple String message.
+    public void unsafeMethod() {
+        throw new RuntimeException();
+    }
+
+    /**
+        * An Example of how to report an error and how to enrich the error context.
         */
-    
-          Sentry.captureMessage("This is a test");
-    
-          try {
-            unsafeMethod();
-          } catch (Exception e) {
-            // This sends an error report to the  Sentry
-            Sentry.captureException(e);
-          }
+    void logWithStaticAPI() {
+    /*
+    Record a breadcrumb in the current context which will be sent
+    with the next event(s). By default the last 100 breadcrumbs are kept.
+    */
+        Breadcrumb breadcrumb = new Breadcrumb();
+        breadcrumb.setMessage("User made an action.");
+        Sentry.addBreadcrumb(breadcrumb);
+
+        // Set the user in the current context.
+        Sentry.configureScope(
+        scope -> {
+            User user = new User();
+            user.setEmail("hello@sentry.io");
+                    scope.setUser(user);
+        });
+
+    /*
+    This sends a simple event to Sentry, with a simple String message.
+    */
+
+        Sentry.captureMessage("This is a test");
+
+        try {
+        unsafeMethod();
+        } catch (Exception e) {
+        // This sends an error report to the  Sentry
+        Sentry.captureException(e);
         }
-      }
+    }
+}
+```
 
 ## ProGuard
 
