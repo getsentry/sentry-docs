@@ -19,13 +19,13 @@ To install the Android SDK, please update your build.gradle file as follows:
 ```groovy
 // ADD COMPATIBILITY OPTIONS TO BE COMPATIBLE WITH JAVA 1.8
 compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
 
 // ADD SENTRY ANDROID AS A DEPENDENCY
 dependencies {
-        implementation 'io.sentry:sentry-android:{version}'
+    implementation 'io.sentry:sentry-android:{version}'
 }
 ```
 
@@ -46,26 +46,30 @@ After you’ve completed setting up a project in Sentry, Sentry will give you a 
 
 Add your DSN to the manifest file.
 
-    <meta-data android:name="io.sentry.dsn" android:value="https://key@sentry.io/123" />
+```xml
+<meta-data android:name="io.sentry.dsn" android:value="https://key@sentry.io/123" />
+```
 
 ### Verifying Your Setup
 
 Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
-    import android.os.Bundle;
-    import androidx.appcompat.app.AppCompatActivity;
-    import io.sentry.core.Sentry;
-    
-    public class MyActivity extends AppCompatActivity {
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            try{
-                throw new Exception("This is a test.");
-            }catch(Exception e){
-                Sentry.captureException(e);
-            }
+```java
+import android.os.Bundle;
+import androidx.appcompat.app.AppCompatActivity;
+import io.sentry.core.Sentry;
+
+public class MyActivity extends AppCompatActivity {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        try{
+            throw new Exception("This is a test.");
+        }catch(Exception e){
+            Sentry.captureException(e);
         }
     }
+}
+```
 
 Then, you can see the error in your dashboard:
 
