@@ -185,7 +185,7 @@ public class DemoClass {
 
 ## ProGuard
 
-To use ProGuard with Sentry, upload the ProGuard mapping files by using our Gradle integration (recommended) or manually by using *[sentry-cli](https://docs.sentry.io/cli/dif/#proguard-mapping-upload).*
+To use ProGuard with Sentry, upload the ProGuard mapping files by using our Gradle integration (**recommended**) or manually by using [sentry-cli]({%- link _documentation/cli/dif.md -%}#proguard-mapping-upload).
 
 ### **Gradle Integration**
 
