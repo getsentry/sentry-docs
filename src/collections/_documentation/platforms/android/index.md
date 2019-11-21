@@ -582,7 +582,7 @@ SentryAndroid.init(this,options -> {
         // With this callback, you can modify the event or, when returning null, also discard the event.
         options.setBeforeSend((event, hint) -> {
             String environment = event.getEnvironment();
-            if (environment == null | environment.equals("TEST"))
+            if (environment == null || environment.equals("TEST"))
                 return null;
             else
                 return event;
