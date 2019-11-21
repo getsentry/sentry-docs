@@ -211,7 +211,7 @@ For more information, see the [full sentry-cli documentation]({%- link _document
 
 At the very minimum you will need something like this:
 
-```
+```bash
 defaults.project=your-project
 defaults.org=your-org
 auth.token=YOUR_AUTH_TOKEN
@@ -241,19 +241,21 @@ sentry {
 
 If you choose not to use the Gradle integration, you may handle the processing and upload steps manually. However, we highly recommend that you use the Gradle integration, if at all possible.
 
-### **ProGuard UUIDs**
+### ProGuard UUIDs
 
 After ProGuard files generate, you will need to embed the UUIDs of the ProGuard mapping files in a properties file named `sentry-debug-meta.properties` in the assets folder. The Java SDK will look for the UUIDs there to link events to the correct mapping files on the server-side.
 
-Sentry calculates UUIDs for ProGuard files. For more information about how this works, see [ProGuard UUIDs](https://docs.sentry.io/workflow/debug-files/#proguard-uuids).
+Sentry calculates UUIDs for ProGuard files. For more information about how this works, see [ProGuard UUIDs]({%- link _documentation/workflow/debug-files.md -%}#proguard-uuids).
 
 `sentry-cli` can write the `sentry-debug-meta.properties` file for you:
 
-    sentry-cli upload-proguard \
-        --android-manifest app/build/intermediates/manifests/full/release/AndroidManifest.xml \
-        --write-properties app/build/intermediates/assets/release/sentry-debug-meta.properties \
-        --no-upload \
-        app/build/outputs/mapping/{buildVariant}/mapping.txt
+```bash
+sentry-cli upload-proguard \
+    --android-manifest app/build/intermediates/manifests/full/release/AndroidManifest.xml \
+    --write-properties app/build/intermediates/assets/release/sentry-debug-meta.properties \
+    --no-upload \
+    app/build/outputs/mapping/{buildVariant}/mapping.txt
+```
 
 This file needs to be in your APK, so **run the script before the APK is packaged**. You can do that by creating a Gradle task that runs before the dex packaging.
 
