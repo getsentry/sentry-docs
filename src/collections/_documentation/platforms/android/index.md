@@ -12,7 +12,7 @@ This version of the Android SDK is in alpha. Sentry has been offering an officia
 
 ## Integrating the SDK
 
-Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works. 
+Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your app works.
 
 To install the Android SDK, please update your build.gradle file as follows:
 
@@ -109,8 +109,8 @@ public class SentryApplication extends Application {
             *
             */
         SentryAndroid.init(this, options -> {
-            // Add a callback that will be used before the event is about to be send to the Sentry.
-            // With this callback you can modify the event or when returning null also discard the event.
+            // Add a callback that will be used before the event is sent to Sentry.
+            // With this callback, you can modify the event or, when returning null, also discard the event.
             options.setBeforeSend((event, hint) -> {
                 if (event.getLevel().equals(SentryLevel.DEBUG))
                     return null;
@@ -152,8 +152,8 @@ public class DemoClass {
         */
     void logWithStaticAPI() {
     /*
-    Record a breadcrumb in the current context which will be sent
-    with the next event(s). By default the last 100 breadcrumbs are kept.
+    Record a breadcrumb in the current context, which will be sent
+    with the next event(s). By default, the last 100 breadcrumbs are kept.
     */
         Breadcrumb breadcrumb = new Breadcrumb();
         breadcrumb.setMessage("User made an action.");
@@ -225,13 +225,13 @@ Additionally, we expose a few configuration values directly in Gradle:
 
 ```groovy
 sentry {
-    // Disables or enables the automatic configuration of proguard
-    // for Sentry.  This injects a default config for proguard so
+    // Disables or enables the automatic configuration of ProGuard
+    // for Sentry.  This injects a default config for ProGuard so
     // you don't need to do it manually.
     autoProguardConfig true
 
     // Enables or disables the automatic upload of mapping files
-    // during a build.  If you disable this you'll need to manually
+    // during a build.  If you disable this, you'll need to manually
     // upload the mapping files with sentry-cli when you do a release.
     autoUpload true
 }
@@ -502,7 +502,7 @@ With these changes, the NDK is going to be used only on the devices with the API
 
 ### Breadcrumbs
 
-Sentry will automatically record certain events, to provide context to an error.
+Sentry will automatically record specific events, to provide context to an error.
 
 You can manually add breadcrumbs on other events or disable breadcrumbs.
 
@@ -555,10 +555,10 @@ If you want to specify how long the thread should be blocked before the ANR is r
 
 Sentry differentiates stack frames that are directly related to your application (“in application”) from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The difference is visible in the Sentry web interface, where only the “in application” frames are displayed by default.
 
-You can configure which packages prefixes belongs into your application and which doesn't.
+You can configure which package prefixes belong in your application and which don't.
 
 ```java
-// This can be set only during the initialisation of the SDK.
+// This can be set only during the initialization of the SDK.
 SentryAndroid.init(this,options -> {
         //set all sub packages of java. as packages that do not belong to your application
         options.addInAppExclude("java.");
@@ -578,8 +578,8 @@ The callback can be registered during the initialization of the SDK.
 ```java
 SentryAndroid.init(this,options -> {
 
-        // Add a callback that will be used before the event is about to be send to the Sentry.
-        // With this callback you can modify the event or when returning null also discard the event.
+        // Add a callback that will be used before the event is sent to Sentry.
+        // With this callback, you can modify the event or, when returning null, also discard the event.
         options.setBeforeSend((event, hint) -> {
             String environment = event.getEnvironment();
             if (environment == null | environment.equals("TEST"))
