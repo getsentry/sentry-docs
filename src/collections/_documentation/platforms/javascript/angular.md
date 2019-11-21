@@ -51,7 +51,17 @@ export class AppModule {}
 
 If you're using `AngularJS 1.x`, you can use Sentry's AngularJS integration.
 
-First, install `@sentry/integrations`:
+First, install `@sentry/browser`:
+
+```bash
+# Using yarn
+yarn add @sentry/browser
+
+# Using npm
+npm install @sentry/browser
+```
+
+Next, install `@sentry/integrations`:
 
 ```bash
 # Using yarn
