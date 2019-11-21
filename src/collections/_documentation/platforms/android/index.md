@@ -197,13 +197,17 @@ And declare a dependency in your top-level `build.gradle`:
 
 ```groovy
 buildscript {
+    repositories {
+        jcenter()
+    }
+    
     dependencies {
         classpath 'io.sentry:sentry-android-gradle-plugin:1.7.28'
     }
 }
 ```
 
-The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle` `assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard. The credentials for the upload step are loaded via environment variables.
+The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard. The credentials for the upload step are loaded via environment variables.
 
 For more information, see the [full sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values).
 
