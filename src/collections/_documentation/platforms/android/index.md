@@ -112,7 +112,7 @@ public class SentryApplication extends Application {
             // Add a callback that will be used before the event is sent to Sentry.
             // With this callback, you can modify the event or, when returning null, also discard the event.
             options.setBeforeSend((event, hint) -> {
-                if (event.getLevel().equals(SentryLevel.DEBUG))
+                if (SentryLevel.DEBUG.equals(event.getLevel()))
                     return null;
                 else
                     return event;
