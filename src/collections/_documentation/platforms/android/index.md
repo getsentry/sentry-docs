@@ -102,7 +102,7 @@ public class SentryApplication extends Application {
     public void onCreate() {
         super.onCreate();
         /**
-            * Manual Initialisation of the Sentry Android SDK
+            * Manual Initialization of the Sentry Android SDK
             * @Context - Instance of the Android Context
             * @Options - Call back function that you need to provide to be able to modify the options.
             * The call back function is provided with the options loaded from the manifest.
