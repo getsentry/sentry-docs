@@ -14,7 +14,7 @@ You will want to make sure you have already created a `sentry.properties` file a
 
 You must link the native Sentry project with your project.  This can be done by following the [Linking Libraries](https://facebook.github.io/react-native/docs/linking-libraries-ios.html) steps described in React Native documentation.
 
-The library you need to link is `node_modules/react-native-sentry/ios/RNSentry.xcodeproj`.
+The library you need to link is `node_modules/@sentry/react-native/ios/RNSentry.xcodeproj`.
 
 ### AppDelegate
 
@@ -165,7 +165,7 @@ For Android we hook into gradle for the source map build process. When you run `
 We enable the gradle integration in your `android/app/build.gradle` file by adding the following line after the `react.gradle` one:
 
 ```gradle
-apply from: "../../node_modules/react-native-sentry/sentry.gradle"
+apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
 ```
 
 You can also enable logging for `sentry-cli` by adding this config before the above `apply from:` line:
@@ -220,5 +220,5 @@ public class MainApplication extends Application implements ReactApplication {
 Add the following to your `settings.gradle` file:
 ```java
 include ':react-native-sentry'
-project(':react-native-sentry').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-sentry/android')
+project(':react-native-sentry').projectDir = new File(rootProject.projectDir, '../node_modules/@sentry/react-native/android')
 ```
