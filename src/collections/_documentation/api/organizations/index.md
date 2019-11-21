@@ -13,6 +13,7 @@ title: Organizations
 - [Resolve a Short ID]({%- link _documentation/api/organizations/get-short-id-lookup.md -%})
 - [Resolve a Event ID]({%- link _documentation/api/organizations/get-event-id-lookup.md -%})
 - [List an Organization&#39;s Projects]({%- link _documentation/api/organizations/get-organization-projects.md -%})
+- [List an Organization&#39;s Users]({%- link _documentation/api/organizations/get-organization-users.md -%})
 - [List an Organization&#39;s Repositories]({%- link _documentation/api/organizations/get-organization-repositories.md -%})
 - [List a Repository&#39;s Commits]({%- link _documentation/api/organizations/get-organization-repository-commits.md -%})
 - [Retrieve Event Counts for an Organization]({%- link _documentation/api/organizations/get-organization-stats.md -%})
