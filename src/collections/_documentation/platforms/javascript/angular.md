@@ -4,9 +4,17 @@ sidebar_order: 35
 ---
 
 <!-- WIZARD -->
-To use Sentry with your Angular application, you will need to install Sentry’s browser JavaScript SDK: `@sentry/browser`.
-
 On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application. Additionally, `@sentry/browser` can be configured to catch any Angular-specific (2.x) exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component. This is also a great opportunity to collect user feedback by using `Sentry.showReportDialog`.
+
+First, install `@sentry/browser`:
+
+```bash
+# Using yarn
+yarn add @sentry/browser
+
+# Using npm
+npm install @sentry/browser
+```
 
 ```typescript
 import { BrowserModule } from "@angular/platform-browser";
@@ -41,14 +49,16 @@ export class AppModule {}
 
 ## AngularJS 1.x
 
-If you are using `AngularJS` `1.x` you should be able to use our AngularJS integration.
+If you're using `AngularJS 1.x`, you can use our AngularJS integration.
 
-You need to install `@sentry/integrations` with `npm` / `yarn` like:
+First, install `@sentry/integrations`:
 
 ```bash
-npm install @sentry/integrations
-# or
+# Using yarn
 yarn add @sentry/integrations
+
+# Using npm
+npm install @sentry/integrations
 ```
 
 ```javascript
@@ -70,8 +80,7 @@ angular.module('yourApplicationModule', ['ngSentry']);
 
 ```
 
-In case you are using the CDN version or the Loader, we provide a standalone file for every integration, you can use it
-like this:
+In case you are using the CDN version or the Loader, we provide a standalone file for every integration:
 
 ```html
 <!-- Note that we now also provide a es6 build only -->
