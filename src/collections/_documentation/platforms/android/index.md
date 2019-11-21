@@ -174,7 +174,7 @@ public class DemoClass {
         Sentry.captureMessage("This is a test");
 
         try {
-        unsafeMethod();
+            unsafeMethod();
         } catch (Exception e) {
         // This sends an error report to the  Sentry
         Sentry.captureException(e);
@@ -205,7 +205,7 @@ buildscript {
 }
 ```
 
-The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle` `assembleSomething`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard. The credentials for the upload step are loaded via environment variables or from a `sentry.properties` file in your project root. The `sentry.properties` in your project root that configures `sentry-cli` is different than the one you include in your application resources to configure the Sentry SDK at runtime — as seen in the [Configuration documentation]({%- link _documentation/clients/java/config.md -%}).
+The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle` `assembleSomething`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard. The credentials for the upload step are loaded via environment variables.
 
 For more information, see the [full sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values).
 
