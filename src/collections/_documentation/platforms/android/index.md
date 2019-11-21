@@ -187,51 +187,57 @@ public class DemoClass {
 
 To use ProGuard with Sentry, upload the ProGuard mapping files by using our Gradle integration (**recommended**) or manually by using [sentry-cli]({%- link _documentation/cli/dif.md -%}#proguard-mapping-upload).
 
-### **Gradle Integration**
+### Gradle Integration
 
 Using Gradle (Android Studio) in your `app/build.gradle` add:
 
-    apply plugin: 'io.sentry.android.gradle'
+```groovy
+apply plugin: 'io.sentry.android.gradle'
+```
 
 And declare a dependency in your top-level `build.gradle`:
 
-    buildscript {
-        dependencies {
-            classpath 'io.sentry:sentry-android-gradle-plugin:1.7.28'
-        }
+```groovy
+buildscript {
+    dependencies {
+        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.28'
     }
+}
+```
 
-The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle` `assembleSomething`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard. The credentials for the upload step are loaded via environment variables or from a `sentry.properties` file in your project root. The `sentry.properties` in your project root that configures `sentry-cli` is different than the one you include in your application resources to configure the Sentry SDK at runtime — as seen in the [Configuration documentation]([https://docs.sentry.io/clients/java/config/](https://docs.sentry.io/clients/java/config/)).
+The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle` `assembleSomething`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard. The credentials for the upload step are loaded via environment variables or from a `sentry.properties` file in your project root. The `sentry.properties` in your project root that configures `sentry-cli` is different than the one you include in your application resources to configure the Sentry SDK at runtime — as seen in the [Configuration documentation]({%- link _documentation/clients/java/config.md -%}).
 
-For more information, see the [full sentry-cli documentation](Mimi, link: [https://docs.sentry.io/cli/configuration/#configuration-values](https://docs.sentry.io/cli/configuration/#configuration-values)).
+For more information, see the [full sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values).
 
 At the very minimum you will need something like this:
 
-    defaults.project=your-project
-    defaults.org=your-org
-    auth.token=YOUR_AUTH_TOKEN
+```
+defaults.project=your-project
+defaults.org=your-org
+auth.token=YOUR_AUTH_TOKEN
+```
 
-You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options, see the [full sentry-cli documentation](Mimi, link: [https://docs.sentry.io/cli/configuration/#configuration-values](https://docs.sentry.io/cli/configuration/#configuration-values)).
+You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options, see the [full sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values).
 
-### **Gradle Configuration**
-
-[MIMI NOTE: Android version will be different but Gradle version will stay the same ]
+### Gradle Configuration
 
 Additionally, we expose a few configuration values directly in Gradle:
 
-    sentry {
-        // Disables or enables the automatic configuration of proguard
-        // for Sentry.  This injects a default config for proguard so
-        // you don't need to do it manually.
-        autoProguardConfig true
-    
-        // Enables or disables the automatic upload of mapping files
-        // during a build.  If you disable this you'll need to manually
-        // upload the mapping files with sentry-cli when you do a release.
-        autoUpload true
-    }
+```groovy
+sentry {
+    // Disables or enables the automatic configuration of proguard
+    // for Sentry.  This injects a default config for proguard so
+    // you don't need to do it manually.
+    autoProguardConfig true
 
-### **Manual Integration**
+    // Enables or disables the automatic upload of mapping files
+    // during a build.  If you disable this you'll need to manually
+    // upload the mapping files with sentry-cli when you do a release.
+    autoUpload true
+}
+```
+
+### Manual Integration
 
 If you choose not to use the Gradle integration, you may handle the processing and upload steps manually. However, we highly recommend that you use the Gradle integration, if at all possible.
 
