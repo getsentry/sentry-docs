@@ -498,7 +498,7 @@ If you want to use the SDK with the NDK but you still want to support the device
             tools:overrideLibrary="io.sentry.android, io.sentry.android.ndk"/>
 ```
 
-With these changes, the NDK is going to be used only on the devices with the API level ≥ 21 and the rest of the devices with API level ≥14, but ≤21 will use just the SDK.
+With these changes, the NDK integration is going to be used only on the devices with the API level ≥ 21 and the rest of the devices with API level ≥14, but ≤21 will use just the SDK.
 
 ### Breadcrumbs
 
@@ -535,7 +535,7 @@ Alternatively, you can disable the NDK by adding the following line into your ma
 <meta-data android:name="io.sentry.ndk.enable" android:value="false" />
 ```
 
-**ANR** 
+**Application Not Responding (ANR)** 
 
 Whenever the main UI thread of the application is blocked for more than four seconds, the SDK will report the problem to the server.  (Sentry does not report the ANR if the application is in debug mode.)
 
