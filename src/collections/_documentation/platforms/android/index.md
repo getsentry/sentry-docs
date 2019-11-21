@@ -525,9 +525,9 @@ For more information, see:
 
 **NDK Integration**
 
-NDK is packed with the SDK and enabled by default with each start of the SDK. 
+The NDK integration is packed with the SDK and enabled out by default with each start of the SDK.
 
-Alternatively, you can disable the NDK by adding the following line into your manifest.
+Alternatively, you can disable the NDK integration by adding the following line into your manifest.
 
 ```xml
 <meta-data android:name="io.sentry.ndk.enable" android:value="false" />
