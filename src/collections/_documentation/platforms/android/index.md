@@ -335,11 +335,11 @@ Sentry supports additional context with events. Often this context is shared amo
 
 **Unstructured Extra Data** - Arbitrary unstructured data that the Sentry SDK stores with an event sample.
 
-### **Context Size Limits**
+### Context Size Limits
 
 Sentry will try its best to accommodate the data you send it, but large context payloads will be trimmed or may be truncated entirely. For more details, see the [data handling SDK documentation]({%- link _documentation/development/sdk-dev/data-handling.md -%}).
 
-### **Capturing the User**
+### Capturing the User
 
 Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense of the quality of the application.
 
