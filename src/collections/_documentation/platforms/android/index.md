@@ -161,11 +161,11 @@ public class DemoClass {
 
         // Set the user in the current context.
         Sentry.configureScope(
-        scope -> {
-            User user = new User();
-            user.setEmail("hello@sentry.io");
-                    scope.setUser(user);
-        });
+            scope -> {
+                User user = new User();
+                user.setEmail("hello@sentry.io");
+                scope.setUser(user);
+            });
 
     /*
     This sends a simple event to Sentry, with a simple String message.
