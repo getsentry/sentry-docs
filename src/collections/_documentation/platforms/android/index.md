@@ -64,7 +64,7 @@ public class MyActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         try{
             throw new Exception("This is a test.");
-        }catch(Exception e){
+        } catch (Exception e) {
             Sentry.captureException(e);
         }
     }
