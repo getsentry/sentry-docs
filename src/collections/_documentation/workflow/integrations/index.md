@@ -5,6 +5,10 @@ sidebar_order: 6
 
 Sentry integrates seamlessly with your favorite apps and services.
 
+### Integration Platform
+
+Sentry’s [Integration Platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}) provides a way for external services to interact with the Sentry SaaS service using the REST API and webhooks. Integrations utilizing this platform are first-class actors within Sentry, and you can build them for [public]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}#public-integrations) as well as [internal]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}#internal-integrations) use cases.
+
 ### Global Integrations
 
 These integrations are set up once per organization, and are then usable in all projects.
