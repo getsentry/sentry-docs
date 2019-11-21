@@ -244,6 +244,8 @@ When you are ready for the publication process, you can click the 'publish' butt
 
 Internal integrations are meant for custom integrations unique to your organization. They can also be as simple as an organization-wide token. Whether you are using just the API or all the Integration Platform features combined, internal integrations are for use within a single Sentry organization. 
 
+For an example of how to build an internal integration, see [our Round Robin Issue Assignment integration](https://blog.sentry.io/2019/11/21/customize-your-sentry-workflow-a-sample-internal-integration) (or jump straight to [the code on GitHub](https://github.com/getsentry/sentry-round-robin)).
+
 Internal integrations don't require an OAuth flow. You receive an org-wide Auth Token immediately after creation.
 
 [{% asset integration-platform-index/authentication-flow.png alt="Buttons providing the options to publish or delete." %}]({% asset integration-platform-index/authentication-flow.png @path %})
