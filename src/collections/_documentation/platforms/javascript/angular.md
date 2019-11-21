@@ -4,9 +4,9 @@ sidebar_order: 35
 ---
 
 <!-- WIZARD -->
-On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
+To use Sentry with your Angular application, you will need to install Sentry’s browser JavaScript SDK: `@sentry/browser`.
 
-Additionally, `@sentry/browser` can be configured to catch any Angular-specific (2.x) exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component. This is also a great opportunity to collect user feedback by using `Sentry.showReportDialog`.
+On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application. Additionally, `@sentry/browser` can be configured to catch any Angular-specific (2.x) exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component. This is also a great opportunity to collect user feedback by using `Sentry.showReportDialog`.
 
 ```typescript
 import { BrowserModule } from "@angular/platform-browser";
