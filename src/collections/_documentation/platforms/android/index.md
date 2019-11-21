@@ -370,29 +370,33 @@ Tags are key/value pairs assigned to events that can be used for breaking down i
 
 Most SDKs generally support configuring tags by configuring the scope:
 
-    Sentry.configureScope(
-          scope -> {
-            scope.setTag("tagKey", "tagValue");
-          });
+```java
+Sentry.configureScope(
+    scope -> {
+    scope.setTag("tagKey", "tagValue");
+    });
+```
 
-For more information, see the [Tagging Events section](https://docs.sentry.io/enriching-error-data/context/#tagging-events) in Context.
+For more information, see [Tagging Events]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events) in Context.
 
-### **Setting the Level**
+### Setting the Level
 
 You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe, and `debug` is the least severe.
 
-    Sentry.configureScope(
-          scope -> {
-            scope.setLevel(SentryLevel.WARNING);
-          });
+```java
+Sentry.configureScope(
+    scope -> {
+    scope.setLevel(SentryLevel.WARNING);
+    });
+```
 
-### **Setting the Fingerprint**
+### Setting the Fingerprint
 
 Sentry uses a fingerprint to decide how to group errors into issues.
 
 For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be a list of strings.
 
-For code samples, see the [Grouping & Fingerprints](https://docs.sentry.io/data-management/event-grouping/?platform=python#use-cases) page.
+For code samples, see [Grouping & Fingerprints]({%- link _documentation/data-management/event-grouping/index.md -%}#use-cases).
 
 For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
@@ -400,9 +404,7 @@ For more information, see [Aggregate Errors with Custom Fingerprints](https://b
 
 To make your life easier, the Android SDK automatically enriches the context with additional information about the device, about the system, and about the release version of your application.
 
-Default Android context should help you correlate the errors with the specific device types, releases, etc. so that you can find the root cause of the problem faster. 
-
-  
+Default Android context should help you correlate the errors with the specific device types, releases, etc. so that you can find the root cause of the problem faster.
 
 Used SDK 
 
@@ -475,40 +477,46 @@ If you want to use the SDK without the NDK, you can:
 
 To add the sentry-android-core library, you need to provide the following dependency in your build.gradle file.
 
-    // ADD COMPATIBILITY OPTIONS TO BE COMPATIBLE WITH JAVA 1.8
-    compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_1_8
-            targetCompatibility = JavaVersion.VERSION_1_8
-        }
-    
-    // ADD SENTRY ANDROID AS A DEPENDENCY
-    dependencies {
-            implementation 'io.sentry:sentry-android-core::2.0.+'
+```groovy
+// ADD COMPATIBILITY OPTIONS TO BE COMPATIBLE WITH JAVA 1.8
+compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
+
+// ADD SENTRY ANDROID AS A DEPENDENCY
+dependencies {
+        implementation 'io.sentry:sentry-android-core::2.0.+'
+}
+```
 
 If you want to use the SDK with the NDK but you still want to support the devices on the API level lower than 21 you can update your manifest as follows:
 
+```xml
     <!-- Merging strategy for the imported manifests -->
       <uses-sdk
             tools:overrideLibrary="io.sentry.android, io.sentry.android.ndk"/>
+```
 
 With these changes, the NDK is going to be used only on the devices with the API level ≥ 21 and the rest of the devices with API level ≥14, but ≤21 will use just the SDK.
 
-### **Breadcrumbs**
+### Breadcrumbs
 
 Sentry will automatically record certain events, to provide context to an error.
 
 You can manually add breadcrumbs on other events or disable breadcrumbs.
 
-    Breadcrumb breadcrumb = new Breadcrumb();
-    breadcrumb.setMessage("Https Call to Sentry");
-    
-    Map<String,String> data = new HashMap();
-    data.put("url","https:\\sentry.io");
-    
-    breadcrumb.setData(data);
-    
-    Sentry.addBreadcrumb(breadcrumb);
+```java
+Breadcrumb breadcrumb = new Breadcrumb();
+breadcrumb.setMessage("Https Call to Sentry");
+
+Map<String,String> data = new HashMap();
+data.put("url","https:\\sentry.io");
+
+breadcrumb.setData(data);
+
+Sentry.addBreadcrumb(breadcrumb);
+```
 
 For more information, see:
 
@@ -523,7 +531,9 @@ NDK is packed with the SDK and enabled by default with each start of the SDK.
 
 Alternatively, you can disable the NDK by adding the following line into your manifest.
 
-    <meta-data android:name="io.sentry.ndk.enable" android:value="false" />
+```xml
+<meta-data android:name="io.sentry.ndk.enable" android:value="false" />
+```
 
 **ANR** 
 
@@ -531,11 +541,15 @@ Whenever the main UI thread of the application is blocked for more than four sec
 
 If you do not want to monitor the ANR, please add the following line into your manifest.
 
-    <meta-data android:name="io.sentry.anr.enable" android:value="false" />
+```xml
+<meta-data android:name="io.sentry.anr.enable" android:value="false" />
+```
 
 If you want to specify how long the thread should be blocked before the ANR is reported, provide the duration in the attribute `io.sentry.anr.timeout-interval-mills` in your manifest.
 
-    <meta-data android:name="io.sentry.anr.timeout-interval-mills" android:value="2000" />
+```xml
+<meta-data android:name="io.sentry.anr.timeout-interval-mills" android:value="2000" />
+```
 
 **“In Application” Stack Frames**
 
@@ -543,15 +557,17 @@ Sentry differentiates stack frames that are directly related to your application
 
 You can configure which packages prefixes belongs into your application and which doesn't.
 
-    // This can be set only during the initialisation of the SDK.
-    SentryAndroid.init(this,options -> {
-                //set all sub packages of java. as packages that do not belong to your application
-                options.addInAppExclude("java.");
-    
-                // set all sub packages of io.sentry as packages that belong to your application
-                options.addInAppInclude("io.sentry");
-    
-            });
+```java
+// This can be set only during the initialisation of the SDK.
+SentryAndroid.init(this,options -> {
+        //set all sub packages of java. as packages that do not belong to your application
+        options.addInAppExclude("java.");
+
+        // set all sub packages of io.sentry as packages that belong to your application
+        options.addInAppInclude("io.sentry");
+
+    });
+```
 
 **Filter and modify Events**
 
@@ -559,18 +575,20 @@ Sentry exposes a `beforeSend` callback, which can be used to filter out informat
 
 The callback can be registered during the initialization of the SDK. 
 
-    SentryAndroid.init(this,options -> {
-    
-                // Add a callback that will be used before the event is about to be send to the Sentry.
-                // With this callback you can modify the event or when returning null also discard the event.
-                options.setBeforeSend((event, hint) -> {
-                    String environment = event.getEnvironment();
-                    if (environment == null | environment.equals("TEST"))
-                        return null;
-                    else
-                        return event;
-                });
-            });
+```java
+SentryAndroid.init(this,options -> {
+
+        // Add a callback that will be used before the event is about to be send to the Sentry.
+        // With this callback you can modify the event or when returning null also discard the event.
+        options.setBeforeSend((event, hint) -> {
+            String environment = event.getEnvironment();
+            if (environment == null | environment.equals("TEST"))
+                return null;
+            else
+                return event;
+        });
+    });
+```
 
 **Filter and modify Breadcrumbs**
 
