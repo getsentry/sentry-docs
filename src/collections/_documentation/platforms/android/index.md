@@ -29,8 +29,6 @@ dependencies {
 }
 ```
 
-For other dependency managers, see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-android/1.7.28/jar).
-
 {% capture __alert_content -%}
 For the minimal required API level, see [Requirements](#requirements).
 {%- endcapture -%}
