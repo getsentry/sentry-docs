@@ -1,5 +1,5 @@
 ---
-title: 'Migration Guide'
+title: Migration Guide
 sidebar_order: 1
 ---
 

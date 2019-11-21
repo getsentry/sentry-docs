@@ -39,14 +39,8 @@ More on this in [Configuration]({%- link _documentation/platforms/go/config.md -
 
 ## Usage {#usage}
 
-{% capture __alert_content -%}
-  By default, Sentry Go SDK uses asynchronous transport, which in the code example below requires an explicit awaiting for event delivery to be finished using `sentry.Flush` method. It is necessary, because otherwise the program would not wait for the async HTTP calls to return a response, and exit the process immediately when it reached the end of the `main` function. It would not be required inside a running goroutine or if you would use `HTTPSyncTransport`, which you can read about in `Transports` section.
-{%- endcapture -%}
-{%- include components/alert.html
-	level="info"
-	title="Awaiting Event Delivery"
-	content=__alert_content
-%}
+The example below shows a sample usage of one of the three primary methods, the `CaptureException` method that allows for sending `error` data to Sentry.
+The other two being `CaptureMessage` and `Recover` which you can read more about in [Error Reporting]({%- link _documentation/error-reporting/quickstart.md -%}?platform={{ include.platform }}) and [Capturing Panics]({%- link _documentation/platforms/go/panics.md -%}).
 
 ```go
 package main
@@ -76,6 +70,15 @@ func main() {
 }
 ```
 
+{% capture __alert_content -%}
+  By default, Sentry Go SDK uses an asynchronous transport, which in the code example below requires an explicit awaiting for event delivery to be finished using the `sentry.Flush` method. It is necessary, because otherwise the program would not wait for the async HTTP calls to return a response, and exit the process immediately when it reached the end of the `main` function. It would not be required inside a running goroutine or if you would use `HTTPSyncTransport`, which you can read about in the `Transports` section.
+{%- endcapture -%}
+{%- include components/alert.html
+	level="info"
+	title="Awaiting Event Delivery"
+	content=__alert_content
+%}
+
 <!-- ENDWIZARD -->
 
 ## Next Steps
@@ -84,6 +87,7 @@ For more detailed information about how to get the most out of `sentry-go` there
 
 - [Configuration]({%- link _documentation/platforms/go/config.md -%})
 - [Error Reporting]({%- link _documentation/error-reporting/quickstart.md -%}?platform={{ include.platform }})
+- [Capturing Panics]({%- link _documentation/platforms/go/panics.md -%})
 - [Enriching Error Data]({%- link _documentation/enriching-error-data/context.md -%}?platform={{ include.platform }})
 - [Transports]({%- link _documentation/platforms/go/transports.md -%})
 - [Goroutines]({%- link _documentation/platforms/go/goroutines.md -%})
