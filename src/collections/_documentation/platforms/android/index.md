@@ -128,7 +128,7 @@ For more details about the available configurations, see [Configuration options]
 
 Your application will crash whenever a thrown exception goes uncaught. The Sentry SDK catches the exception right before the crash and builds a crash report that will persist to the disk. The SDK will try to send the report right after the crash, but since the environment may be unstable at the crash time, the report is guaranteed to send once the application is started again.
 
-If there is a fatal error in your native code, the process is the same. The difference is, a restart is always needed, as a hard crash immediately stops the app.
+If there is a fatal error in your native code, the process is similar. The crash report might send before the app crashes, but will for sure send on restart.
 
 The NDK is not only catching the unhandled exceptions but is also set as a signal handler to be able to react to the signals from OS. When the application is about to crash, an error report is created and saved to disk. The SDK will try to send the report right after the crash, but since the environment may be unstable at the crash time, the report is guaranteed to send once the application is started again.
 
