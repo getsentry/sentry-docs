@@ -261,41 +261,45 @@ This file needs to be in your APK, so **run the script before the APK is package
 
 You can, for example, add a Gradle task after the ProGuard step and before the dex packaging. The dex packaging executes `sentry-cli` to validate, process the mapping files, and write the UUIDs into the properties file:
 
-    gradle.projectsEvaluated {
-        android.applicationVariants.each { variant ->
-            def variantName = variant.name.capitalize();
-            def proguardTask = project.tasks.findByName(
-                "transformClassesAndResourcesWithProguardFor${variantName}")
-            def dexTask = project.tasks.findByName(
-                "transformClassesWithDexFor${variantName}")
-            def task = project.tasks.create(
-                    name: "processSentryProguardFor${variantName}",
-                    type: Exec) {
-                workingDir project.rootDir
-                commandLine *[
-                    "sentry-cli",
-                    "upload-proguard",
-                    "--write-properties",
-                    "${project.rootDir.toPath()}/app/build/intermediates/assets" +
-                        "/${variant.dirName}/sentry-debug-meta.properties",
-                    variant.getMappingFile(),
-                    "--no-upload"
-                ]
-            }
-            dexTask.dependsOn task
-            task.dependsOn proguardTask
+```groovy
+gradle.projectsEvaluated {
+    android.applicationVariants.each { variant ->
+        def variantName = variant.name.capitalize();
+        def proguardTask = project.tasks.findByName(
+            "transformClassesAndResourcesWithProguardFor${variantName}")
+        def dexTask = project.tasks.findByName(
+            "transformClassesWithDexFor${variantName}")
+        def task = project.tasks.create(
+                name: "processSentryProguardFor${variantName}",
+                type: Exec) {
+            workingDir project.rootDir
+            commandLine *[
+                "sentry-cli",
+                "upload-proguard",
+                "--write-properties",
+                "${project.rootDir.toPath()}/app/build/intermediates/assets" +
+                    "/${variant.dirName}/sentry-debug-meta.properties",
+                variant.getMappingFile(),
+                "--no-upload"
+            ]
         }
+        dexTask.dependsOn task
+        task.dependsOn proguardTask
     }
+}
+```
 
-Alternatively you can generate a UUID upfront yourself and then force Sentry to honor that UUID after upload. However this is strongly discouraged!
+Alternatively, you can generate a UUID upfront yourself and then force Sentry to honor that UUID after upload. However, this is **strongly discouraged**.
 
-### **Uploading ProGuard Files**
+### Uploading ProGuard Files
 
 Finally, manually upload the ProGuard files with `sentry-cli` as follows:
 
-    sentry-cli upload-proguard \
-        --android-manifest app/build/intermediates/manifests/full/release/AndroidManifest.xml \
-        app/build/outputs/mapping/{buildVariant}/mapping.txt
+```bash
+sentry-cli upload-proguard \
+    --android-manifest app/build/intermediates/manifests/full/release/AndroidManifest.xml \
+    app/build/outputs/mapping/{buildVariant}/mapping.txt
+```
 
 ## Releases
 
@@ -321,7 +325,7 @@ Sentry supports additional context with events. Often this context is shared amo
 
 **Structured Contexts**
 
-**User** - ****Information about the current actor.
+**User** - Information about the current actor.
 
 **Tags** - Key/value pairs which generate breakdown charts and search filters.
 
@@ -333,22 +337,24 @@ Sentry supports additional context with events. Often this context is shared amo
 
 ### **Context Size Limits**
 
-Sentry will try its best to accommodate the data you send it, but large context payloads will be trimmed or may be truncated entirely. For more details, see the [data handling SDK documentation](https://docs.sentry.io/development/sdk-dev/data-handling/).
+Sentry will try its best to accommodate the data you send it, but large context payloads will be trimmed or may be truncated entirely. For more details, see the [data handling SDK documentation]({%- link _documentation/development/sdk-dev/data-handling.md -%}).
 
 ### **Capturing the User**
 
 Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense of the quality of the application.
 
-    Sentry.configureScope(
-                    scope -> {
-                        User user = new User();
-                        user.setUsername("username");
-                        scope.setUser(user);
-                    });
+```java
+Sentry.configureScope(
+    scope -> {
+        User user = new User();
+        user.setUsername("username");
+        scope.setUser(user);
+    });
+```
 
 Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
 
-**`id`-** Your internal identifier for the user.
+**`id` -** Your internal identifier for the user.
 
 **`username` -** The user’s username. Generally used as a better label than the internal ID.
 
@@ -358,7 +364,7 @@ Users consist of a few critical pieces of information which are used to construc
 
 Additionally, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
 
-### **Tagging Events**
+### Tagging Events
 
 Tags are key/value pairs assigned to events that can be used for breaking down issues or quick access to finding related events.
 
