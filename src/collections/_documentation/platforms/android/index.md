@@ -174,8 +174,8 @@ public class DemoClass {
         try {
             unsafeMethod();
         } catch (Exception e) {
-        // This sends an error report to the  Sentry
-        Sentry.captureException(e);
+            // This sends an error report to the  Sentry
+            Sentry.captureException(e);
         }
     }
 }
@@ -203,7 +203,7 @@ buildscript {
 }
 ```
 
-The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle` `assembleSomething`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard. The credentials for the upload step are loaded via environment variables.
+The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle` `assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard. The credentials for the upload step are loaded via environment variables.
 
 For more information, see the [full sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values).
 
@@ -371,7 +371,7 @@ Most SDKs generally support configuring tags by configuring the scope:
 ```java
 Sentry.configureScope(
     scope -> {
-    scope.setTag("tagKey", "tagValue");
+        scope.setTag("tagKey", "tagValue");
     });
 ```
 
@@ -384,7 +384,7 @@ You can set the severity of an event to one of five values: `fatal`, `error`, `w
 ```java
 Sentry.configureScope(
     scope -> {
-    scope.setLevel(SentryLevel.WARNING);
+        scope.setLevel(SentryLevel.WARNING);
     });
 ```
 
@@ -493,7 +493,7 @@ If you want to use the SDK with the NDK but you still want to support the device
 ```xml
     <!-- Merging strategy for the imported manifests -->
       <uses-sdk
-            tools:overrideLibrary="io.sentry.android, io.sentry.android.ndk"/>
+            tools:overrideLibrary="io.sentry.android"/>
 ```
 
 With these changes, the NDK integration is going to be used only on the devices with the API level ≥ 21 and the rest of the devices with API level ≥14, but ≤21 will use just the SDK.
