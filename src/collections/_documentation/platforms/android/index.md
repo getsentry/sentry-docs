@@ -553,7 +553,7 @@ If you want to specify how long the thread should be blocked before the ANR is r
 
 **“In Application” Stack Frames**
 
-Sentry differentiates stack frames that are directly related to your application (“in application”) from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The difference is visible in the Sentry web interface, where only the “in application” frames are displayed by default.
+Sentry differentiates stack frames that are directly related to your application (“in application”) from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as inApp. The difference is visible in the Sentry web interface, where only the “in application” frames are displayed by default.
 
 You can configure which package prefixes belong in your application and which don't.
 
