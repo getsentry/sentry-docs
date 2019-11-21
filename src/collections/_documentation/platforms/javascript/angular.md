@@ -49,7 +49,7 @@ export class AppModule {}
 
 ## AngularJS 1.x
 
-If you're using `AngularJS 1.x`, you can use our AngularJS integration.
+If you're using `AngularJS 1.x`, you can use Sentry's AngularJS integration.
 
 First, install `@sentry/integrations`:
 
@@ -80,7 +80,7 @@ angular.module('yourApplicationModule', ['ngSentry']);
 
 ```
 
-In case you are using the CDN version or the Loader, we provide a standalone file for every integration:
+In case you're using the CDN version or the Loader, Sentry provides a standalone file for every integration:
 
 ```html
 <!-- Note that we now also provide a es6 build only -->
