@@ -155,7 +155,7 @@ public class DemoClass {
     */
         Breadcrumb breadcrumb = new Breadcrumb();
         breadcrumb.setMessage("User made an action.");
-        Sentry.addBreadcrumb("the user performed an action");
+        Sentry.addBreadcrumb(breadcrumb);
 
         // Set the user in the current context.
         Sentry.configureScope(
