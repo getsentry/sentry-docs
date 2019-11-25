@@ -8,7 +8,7 @@ permalink: /
   {% asset on-fire.png %}
 </div>
 
-Welcome to the Sentry documentation.  Sentry is an open-source application monitoring platform that helps you identify issues in real-time.  Here we cover everything about the product, the platform integrations, and open source Sentry.
+Welcome to the Sentry documentation.  Sentry is an open-source company, providing an application monitoring platform that helps you identify issues in real-time.  Here we cover everything about the product, the platform integrations, and self-hosted Sentry.
 
 ## Getting Started
 

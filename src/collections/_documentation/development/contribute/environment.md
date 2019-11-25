@@ -7,7 +7,7 @@ sidebar_order: 1
 
 ### Linux
 
-Follow the [_official installation from source instructions_]({%- link _documentation/server/installation/python/index.md -%}).
+Follow [the Docker file in the repository](https://github.com/getsentry/sentry/blob/master/docker/Dockerfile) but instead of creating and installing a wheel, install the package in editable mode (`pip install . -e`).
 
 ### Macintosh OS X
 
