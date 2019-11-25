@@ -200,7 +200,7 @@ Why not just have a `get_current_scope()` function instead of this indirection? 
 
 A Client is the part of the SDK that is responsible for event creation. To give an example, the Client should convert an exception to a Sentry event.  The Client should be stateless, it gets the Scope injected and delegates the work of sending the event to the Transport.
 
-- `Client::from_config(config)`: (alternatively normal ctor) This takes typically an object with options + dsn.
+- `Client::from_config(config)`: (alternatively normal constructor) This takes typically an object with options + dsn.
 
 - `Client::capture_event(event, scope)`: Captures the event by merging it with other data with defaults from the client. In addition, if a scope is passed to this system, the data from the scope passes it to the internal transport.
 
