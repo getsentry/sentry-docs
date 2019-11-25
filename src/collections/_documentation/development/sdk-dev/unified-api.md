@@ -137,7 +137,7 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
   - The argument supported should be:
     - function that creates a breadcrumb
     - an already created breadcrumb object
-    - a list of breadcrumbs optionally
+    - a list of breadcrumbs (optional)
   - In languages where we do not have a basic form of overloading only a raw breadcrumb object should be accepted.
 
   For the hint parameter see [hints](#hints).
