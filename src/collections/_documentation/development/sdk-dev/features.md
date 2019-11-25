@@ -4,7 +4,7 @@ sidebar_order: 2
 ---
 
 The following is a description of features that are commonly expected in Sentry SDKs.  Make sure to also
-have consulated the [unified API design]({% link _documentation/development/sdk-dev/unified-api.md %}) documentation
+have read the [unified API design]({% link _documentation/development/sdk-dev/unified-api.md %}) documentation
 which explains the common API design.
 
 ## Background Sending
