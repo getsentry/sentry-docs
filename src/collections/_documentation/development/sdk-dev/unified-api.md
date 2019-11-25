@@ -100,11 +100,11 @@ This is implemented as a thread local stack in most languages, but in some (such
 
 Here are some common concurrency patterns:
 
-* **Thread bound hub**: In that pattern each thread gets its own "hub" which internally manages a stack of scopes.  If that pattern is followed one thread (the one that calls `init()`) becomes the "main" hub which is used as the based for newly spawned threads which will get a hub that is based on the main hub (but otherwise independent).
+* **Thread bound hub**: In that pattern each thread gets its own "hub" which internally manages a stack of scopes.  If that pattern is followed one thread (the one that calls `init()`) becomes the "main" hub which is used as the base for newly spawned threads which will get a hub that is based on the main hub (but otherwise independent).
 
 * **Internally scoped hub**: On some platforms such as .NET ambient data is available in which case the Hub can internally manage the scopes.
 
-* **Dummy hub**: On some platforms concurrency just doesn't inherently exists.  In that case the hub might be entirely absent or just be a singleton without concurrenty management.
+* **Dummy hub**: On some platforms concurrency just doesn't inherently exist.  In that case the hub might be entirely absent or just be a singleton without concurrency management.
 
 ## Hub
 
@@ -116,7 +116,7 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
 
 - `Hub::new_from_top(hub)` / alternatively native constructor overloads: Creates a new hub by cloning the top stack of another hub.
 
-- `get_current_hub()` / `Hub::current()` / `Hub::get_current()`: Global function or static function to return the current (threads) hub
+- `get_current_hub()` / `Hub::current()` / `Hub::get_current()`: Global function or static function to return the current (thread's) hub
 
 - `get_main_hub()` / `Hub::main()` / `Hub::get_main()`: In languages where the main thread is special ("Thread bound hub" model) this returns the main thread’s hub instead of the current thread’s hub. This might not exist in all languages.
 
@@ -130,7 +130,7 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
 
 - `Hub::pop_scope()` (optional): Only exists in languages without better resource management. Better to have this function on a return value of `push_scope` or to use `with_scope`.  This is also sometimes called `pop_scope_unsafe` to indicate that this method should not be used directly.
 
-- `Hub::configure_scope(callback)`: Invokes the callback with a mutable reference to the scope for modifiations  This can also be a `with` statement in languages that have it (Python).
+- `Hub::configure_scope(callback)`: Invokes the callback with a mutable reference to the scope for modifications. This can also be a `with` statement in languages that have it (Python).
 
 - `Hub::add_breadcrumb(crumb, hint)`: Adds a breadcrumb to the current scope.
 
@@ -198,7 +198,7 @@ Why not just have a `get_current_scope()` function instead of this indirection? 
 
 ## Client
 
-A Client is the part of the SDK that is responsible for event creation. To give an example, the Client should convert an exception to an Sentry event.  The Client should be stateless, it gets the Scope injected and delegates the work of sending the event to the Transport.
+A Client is the part of the SDK that is responsible for event creation. To give an example, the Client should convert an exception to a Sentry event.  The Client should be stateless, it gets the Scope injected and delegates the work of sending the event to the Transport.
 
 - `Client::from_config(config)`: (alternatively normal ctor) This takes typically an object with options + dsn.
 

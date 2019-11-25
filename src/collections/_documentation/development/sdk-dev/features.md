@@ -83,7 +83,7 @@ Hook called with the event (and on some platforms the hint) that allow the user 
 
 ## Before-Breadcrumb Hook
 
-Hook called with the breadcrumb (and on some platforms the hint) that allow the user to decide whether and how an breadcrumb should be sent.
+Hook called with the breadcrumb (and on some platforms the hint) that allow the user to decide whether and how a breadcrumb should be sent.
 
 ## List Loaded Libraries
 
@@ -97,4 +97,4 @@ This is mostly useful on mobile clients where connectivity is often not availabl
 
 ## HTTP Proxy
 
-Ability to use an HTTP proxy. Often easy to implement using the existing HTTP client.  This should be picked up from the system config if possible or exlicit config in the client options.
+Ability to use an HTTP proxy. Often easy to implement using the existing HTTP client.  This should be picked up from the system config if possible or explicit config in the client options.
