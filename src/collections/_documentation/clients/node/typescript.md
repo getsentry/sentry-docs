@@ -93,7 +93,7 @@ Raven.config('your-dsn', {
 
     return data;
   }
-).install();
+}).install();
 ```
 
 This config should be enough to make everything work and use TypeScript with Node and still being able to digest all original sources by Sentry.
