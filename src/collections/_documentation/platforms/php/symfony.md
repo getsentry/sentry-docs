@@ -80,6 +80,12 @@ This is an example of the bundle configuration with all the possible options and
 ```yaml
 sentry:
     dsn: '___PUBLIC_DSN___'
+    register_error_listener: true
+    monolog:
+        error_handler:
+            enabled: false
+            level: DEBUG
+            bubble: true
     options:
         attach_stacktrace: true 
         before_breadcrumb: '@sentry.callback.before_breadcrumb'
