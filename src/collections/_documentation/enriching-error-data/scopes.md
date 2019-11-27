@@ -89,11 +89,11 @@ attach any context information at all by calling `clear` on the scope, while the
 
 `Sentry.setTags`
 
-[{% _assets/img/setTags/Screenshot 2019-11-25 14.13.45.png alt="Sentry.setTags Example Error Message" %}]({% _assets/img/setTags/Screenshot 2019-11-25 14.13.45.png %})
+[{% _assets/img/setTags/sentrysetTags.png alt="Sentry.setTags Example Error Message" %}]({% _assets/img/setTags/sentrysetTags.png %})
 
 `scope.setTags`
 
-[{% _assets/img/setTags/Screenshot 2019-11-25 14.13.24.png alt="scope.setTags Example Error Message" %}]({% _assets/img/setTags/Screenshot 2019-11-25 14.13.24.png%})
+[{% _assets/img/setTags/scopesetTags.png alt="scope.setTags Example Error Message" %}]({% _assets/img/setTags/scopesetTags.png%})
 
 
 Everything that is called directly on `Sentry` object, will always reference `getCurrentHub()`. Depending on the environment, it will either go global scope, or per-request.
