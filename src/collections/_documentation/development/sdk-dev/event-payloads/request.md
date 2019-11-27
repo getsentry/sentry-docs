@@ -83,8 +83,6 @@ Example of the same headers as list of tuples:
   HTTP headers.
   
   Sentry will explicitly look for `REMOTE_ADDR` to extract an IP address.
-  
-## 
 
 ## Examples
 
