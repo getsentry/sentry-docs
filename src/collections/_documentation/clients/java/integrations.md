@@ -811,6 +811,7 @@ Example configuration using the `logback.xml` format:
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>WARN</level>
         </filter>
+        <!-- Optionally add an encoder -->
         <encoder>
            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
