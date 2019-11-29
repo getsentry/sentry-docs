@@ -5,7 +5,9 @@ sidebar_order: 50
 
 Laravel is supported via a native package, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
-## Laravel 5.x
+## Installation
+
+### Laravel 5.x & 6.x
 
 {% wizard %}
 Install the `sentry/sentry-laravel` package:
@@ -65,7 +67,50 @@ Route::get('/debug-sentry', function () {
 Visiting this route will trigger an exception that will be captured by Sentry.
 {% endwizard %}
 
-## Laravel 4.x
+### Lumen 5.x & 6.x
+
+Install the `sentry/sentry-laravel` package:
+
+```bash
+$ composer require sentry/sentry-laravel:{% sdk_version sentry.php.laravel %}
+```
+
+Register Sentry in `bootstrap/app.php`:
+
+```php
+$app->register('Sentry\Laravel\ServiceProvider');
+
+# Sentry must be registered before routes are included
+require __DIR__ . '/../app/Http/routes.php';
+```
+
+Add Sentry reporting to `app/Exceptions/Handler.php`:
+
+```php
+public function report(Exception $exception)
+{
+    if (app()->bound('sentry') && $this->shouldReport($exception)) {
+        app('sentry')->captureException($exception);
+    }
+
+    parent::report($exception);
+}
+```
+
+Create the Sentry configuration file (`config/sentry.php`):
+
+```php
+<?php
+
+return array(
+    'dsn' => '___PUBLIC_DSN___',
+
+    // capture release as git sha
+    // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
+);
+```
+
+### Laravel 4.x
 
 Install the `sentry/sentry-laravel` package:
 
@@ -115,47 +160,28 @@ through `$app`:
 $app['sentry']->setRelease(Git::sha());
 ```
 
-## Lumen 5.x
+## Configuration
 
-Install the `sentry/sentry-laravel` package:
+The configuration file should be placed in `config/sentry.php` here you can configure all the [options]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php) the PHP SDK supports and a few Laravel specific options documented below.
 
-```bash
-$ composer require sentry/sentry-laravel:{% sdk_version sentry.php.laravel %}
-```
+### Laravel specific options
 
-Register Sentry in `bootstrap/app.php`:
+The Laravel integration will create [breadcrumbs]({%- link _documentation/platforms/php/index.md -%}#breadcrumbs) for certain events occuring in the framework, the capture of this information can be configured using the following options:
 
 ```php
-$app->register('Sentry\Laravel\ServiceProvider');
+'breadcrumbs' => [
+    // Capture Laravel logs. Defaults to `true`.
+    'logs' => true,
 
-# Sentry must be registered before routes are included
-require __DIR__ . '/../app/Http/routes.php';
-```
+    // Capture queue job information. Defaults to `true`.
+    'queue_info' => true,
 
-Add Sentry reporting to `app/Exceptions/Handler.php`:
+    // Capture SQL queries. Defaults to `true`.
+    'sql_queries' => true,
 
-```php
-public function report(Exception $exception)
-{
-    if (app()->bound('sentry') && $this->shouldReport($exception)) {
-        app('sentry')->captureException($exception);
-    }
-
-    parent::report($exception);
-}
-```
-
-Create the Sentry configuration file (`config/sentry.php`):
-
-```php
-<?php
-
-return array(
-    'dsn' => '___PUBLIC_DSN___',
-
-    // capture release as git sha
-    // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
-);
+    // Capture bindings (parameters) on SQL queries. Defaults to `false`.
+    'sql_bindings' => false,
+],
 ```
 
 ## Testing with Artisan
@@ -178,47 +204,9 @@ If you don't want errors to be sent to Sentry when you are developing set the DS
 
 You can do this by not defining `SENTRY_LARAVEL_DSN` in your `.env` or define it as `SENTRY_LARAVEL_DSN=null`.
 
-## Laravel specific options
-
-#### breadcrumbs.sql_queries
-
-Capture SQL queries.
-Defaults to `true`.
-
-```php
-'breadcrumbs.sql_queries' => true,
-```
-
-#### breadcrumbs.sql_bindings
-
-Capture bindings on SQL queries.
-Defaults to `true`.
-
-```php
-'breadcrumbs.sql_bindings' => false,
-```
-
-#### breadcrumbs.logs
-
-Capture Laravel logs.
-Defaults to `true`.
-
-```php
-'breadcrumbs.logs' => true,
-```
-
-#### breadcrumbs.queue_info
-
-Capture queue job information.
-Defaults to `true`.
-
-```php
-'breadcrumbs.queue_info' => true,
-```
-
 ## User Feedback
 
-To see how to show user feedback dialog see: [User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}?platform=laravel)
+To see how to show user feedback dialog see: [User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}?platform=laravel).
 
 ## User Context
 
@@ -260,7 +248,7 @@ class SentryContext
 }
 ```
 
-## Using Laravel 5.6 log channels
+## Using log channels
 
 {% capture __alert_content -%}
 If you're using log channels to log your exceptions and are also logging exceptions to Sentry in your exception handler (as you would have configured above) exceptions might end up twice in Sentry.
@@ -270,6 +258,8 @@ If you're using log channels to log your exceptions and are also logging excepti
     content=__alert_content
     level="info"
 %}
+
+Starting with Laravel & Lumen 5.6 we can setup Sentry using log channels.
 
 To configure Sentry as a log channel, add the following config to the `channels` section in `config/logging.php`: 
 
