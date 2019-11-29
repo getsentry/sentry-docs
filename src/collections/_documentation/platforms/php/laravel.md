@@ -184,6 +184,29 @@ The Laravel integration will create [breadcrumbs]({%- link _documentation/platfo
 ],
 ```
 
+## Customization
+
+### Decorating the client builder
+
+Starting with version [`1.5.0`](https://github.com/getsentry/sentry-laravel/releases/tag/1.5.0) of [sentry-laravel](https://github.com/getsentry/sentry-laravel) you can customize how the PHP SDK client is built by modifying the client builder.
+
+You might want to do this to for example replace the transport or change the serializer options used which can only be changed when building the client.
+
+The snippet below must be placed in the `register` method of a service provider (for example your `AppServiceProvider`).
+
+In this example we increase `maxDepth` to 5 in for the default serializer.
+
+```php
+use Sentry\Serializer\Serializer;
+use Sentry\ClientBuilderInterface;
+
+$this->app->extend(ClientBuilderInterface::class, function (ClientBuilderInterface $clientBuilder) {
+    $clientBuilder->setSerializer(new Serializer($clientBuilder->getOptions(), 5));
+    
+    return $clientBuilder;
+});
+```
+
 ## Testing with Artisan
 
 You can test your configuration using the provided `artisan` command:
