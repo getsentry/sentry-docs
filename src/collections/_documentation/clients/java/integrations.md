@@ -860,7 +860,7 @@ Tags are distinguished by the existing mdcTags configuration property detailed a
   context.putProperty("global", "value");
 ```
 
-Global log entries can also be added via third party encoders  
+Global log entries can also be added via third-party encoders  
 (*whether such entries can be distinguished as tags or entries however is encoder implementation specific*).
 The `net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder` for example has a `customFields` option:
 
