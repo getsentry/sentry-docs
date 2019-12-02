@@ -3,7 +3,7 @@ title: Installation
 sidebar_order: 0
 ---
 
-Sentry relies on multiple services to work, which are all orchestrated by [Dockes Compose](https://docs.docker.com/compose/) in [our on-premise repository](https://github.com/getsentry/onpremise).
+Sentry relies on multiple services to work, which are all orchestrated by [Docker Compose](https://docs.docker.com/compose/) in [our on-premise repository](https://github.com/getsentry/onpremise).
 
 ## Requirements
 
