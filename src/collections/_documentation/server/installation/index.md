@@ -30,7 +30,7 @@ To start, run the install script:
 ./install.sh
 ```
 
-If you've set the `CI` environment variable to a non-empty value, the script will assume unintended installation and skip some steps. You can look at [its source code](https://github.com/getsentry/onpremise/blob/master/install.sh) to figure out what those steps are, which will also be logged to standard output.
+If the `CI` environment variable is set to a non-empty value, the script will assume unattended installation and will skip some steps. You can look at [its source code](https://github.com/getsentry/onpremise/blob/master/install.sh) to figure out what those steps are, which will also be logged to standard output.
 
 If you are upgrading from an earlier version of the on-premise repository, keep in mind that it will keep your existing configuration files, which you may need to adjust based on [the examples provided in the repository](https://github.com/getsentry/onpremise/tree/master/sentry).
 
