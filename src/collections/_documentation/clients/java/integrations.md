@@ -852,7 +852,7 @@ void logWithExtras() {
 #### Global Tags
 
 Sometimes it's useful to add tags and extra data to all log events.  
-Tags and extras can be added to logs globally (not threadbound) by adding entries to the LoggerContext.  
+You can add tags and extras to logs globally (not thread-bound) by adding entries to the LoggerContext.  
 Tags are distinguished by the existing mdcTags configuration property detailed above.
 
 ```java
