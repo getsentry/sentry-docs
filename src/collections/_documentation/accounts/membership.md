@@ -50,7 +50,7 @@ To restrict Team access, go to Organization Settings and flip the “Open Member
 
 {% asset membership-toggle.png %}
 
-## Transfering a project
+## Transferring a project
 
 To transfer a project go to the target project's Project Settings >> General
 Settings >> Transfer Project. Enter the email of the organization's owner you
