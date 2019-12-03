@@ -248,6 +248,8 @@ Internal integrations don't require an OAuth flow. You receive an org-wide Auth 
 
 [{% asset integration-platform-index/authentication-flow.png alt="Buttons providing the options to publish or delete." %}]({% asset integration-platform-index/authentication-flow.png @path %})
 
+For an example of how to build an internal integration, see [our Round Robin Issue Assignment integration](https://blog.sentry.io/2019/11/21/customize-your-sentry-workflow-a-sample-internal-integration) (or jump straight to [the code on GitHub](https://github.com/getsentry/sentry-round-robin)).
+
 ### Installation
 
 Creating an internal integration will automatically install it on your organization. 
