@@ -34,7 +34,6 @@ other hand are more user facing.  You can at any point in time call
 `configure-scope` to modify data stored on the scope.  This is for instance
 used to [modify the context]({% link _documentation/enriching-error-data/context.md %}).
 
-{% capture __alert_content -%}
 If you are very curious about how this thread locality thing works here are the
 nitty gritty details.  On platforms such as .NET or on Python 3.7 and later we will
 use "ambient data" to have either the hub flow with your code or the hub is already
@@ -43,10 +42,6 @@ a singleton that internally manages the scope.
 Effectively this means that when you spawn a task in .NET and the execution flow is
 not suppressed all the context you have bound to the scope in Sentry will flow along.
 However, if you suppress the flow, you get new scope data.
-{% endcapture %}
-{%- include components/alert.html
-  content=__alert_content
-%}
 
 When you call a global function such as `capture_event` internally Sentry
 discovers the current hub and asks it to capture an event.  Internally the hub will
