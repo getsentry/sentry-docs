@@ -55,7 +55,7 @@ To restrict Team access, go to Organization Settings and flip the “Open Member
 To transfer a project go to the target project's Project Settings >> General
 Settings >> Transfer Project. Enter the email of the organization's owner you
 wish to transfer it to, and they'll receive an email to approve the transfer.
-When the project is transferred to the new organization, it's reccomended to
+When the project is transferred to the new organization, it's recommended to
 add it to a team for better visibility.
 
 ## Removing an Organization
