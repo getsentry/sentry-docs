@@ -96,4 +96,4 @@ attach any context information at all by calling `clear` on the scope, while the
 [{% _assets/img/setTags/scopesetTags.png alt="scope.setTags Example Error Message" %}]({% _assets/img/setTags/scopesetTags.png%})
 
 
-Everything that is called directly on `Sentry` object, will always reference `getCurrentHub()`. Depending on the environment, it will either go global scope, or per-request.
+Everything that is called directly on `Sentry` object, will always reference `getCurrentHub()`. Depending on the environment, it will either go to global scope, or per-request.
