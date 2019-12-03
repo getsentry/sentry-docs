@@ -8,7 +8,7 @@ sidebar_order: 1
 User membership in Sentry is handled at the organizational level. The system is
 designed so each user has a singular account which can be reused across
 multiple organizations (even those using SSO). Each user of Sentry should have
-their own account, and will then be able to set their own personal preferences
+their own account, and will then be able to set their personal preferences
 in addition to receiving notifications for events.
 
 ### Roles
