@@ -61,7 +61,7 @@ add it to a team for better visibility.
 ## Removing an Organization
 
 It is possible to remove an organization and all associated
-organization data. Doing so will *not* remove user accounts, but will remove
+organization data completely. Doing so will *not* remove user accounts, but will remove
 their membership in the organization.
 
 To remove an organization visit the Organizations General Settings and locate
