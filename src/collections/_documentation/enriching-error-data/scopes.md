@@ -41,8 +41,8 @@ use "ambient data" to have either the hub flow with your code or the hub is alre
 a singleton that internally manages the scope.
 
 Effectively this means that when you spawn a task in .NET and the execution flow is
-not supressed all the context you have bound to the scope in Sentry will flow along.
-If however you suppress the flow, you get new scope data.
+not suppressed all the context you have bound to the scope in Sentry will flow along.
+However, if you suppress the flow, you get new scope data.
 {% endcapture %}
 {%- include components/alert.html
   content=__alert_content
@@ -72,8 +72,8 @@ that function to attach a `level` and a `tag` to only one specific error:
 
 {% include components/platform_content.html content_dir='with-scope' %}
 
-While this example looks similar to `configure-scope` it's very different, in the sense that
-`configure-scope` actually changes the current active scope, all successive calls to `configure-scope`
+While this example looks similar to `configure-scope`, it's very different, in the sense that
+`configure-scope` actually changes the currently active scope, all successive calls to `configure-scope`
 will keep the changes.
 
 While on the other hand using `with-scope` creates a clone of the current scope
