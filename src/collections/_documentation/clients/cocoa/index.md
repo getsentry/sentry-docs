@@ -19,7 +19,7 @@ The SDK can be installed using [CocoaPods](http://cocoapods.org), [Carthage](htt
 
 We recommend installing Sentry with CocoaPods.
 
-### CocoPods
+### CocoaPods
 
 To integrate Sentry into your Xcode project using CocoaPods, specify it in your _Podfile_:
 
