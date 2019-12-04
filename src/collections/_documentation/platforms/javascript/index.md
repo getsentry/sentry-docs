@@ -91,17 +91,6 @@ When you're using the Sentry JavaScript SDK, the SDK automatically fetches the s
 ### Generating Source Maps
 Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
 
-#### UglifyJS
-UglifyJS is a popular tool for minifying your source code for production. It can dramatically reduce the size of your files by eliminating whitespace, rewriting variable names, removing dead code branches, and more.
-
-If you are using UglifyJS to minify your source code, the following command will additionally generate a source map that maps the minified code back to the original source:
-
-```bash
-uglifyjs app.js \
-  -o app.min.js.map \
-  --source-map url=app.min.js.map,includeSources
-```
-
 #### Webpack
 Webpack is a powerful build tool that resolves and bundles your JavaScript modules into files fit for running in the browser. It also supports various _loaders_ to transpile higher-level languages, reference stylesheets, or include static assets.
 
