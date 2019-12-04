@@ -34,14 +34,19 @@ other hand are more user facing.  You can at any point in time call
 `configure-scope` to modify data stored on the scope.  This is for instance
 used to [modify the context]({% link _documentation/enriching-error-data/context.md %}).
 
+{% capture __alert_content -%}
 If you are very curious about how this thread locality thing works here are the
 nitty gritty details.  On platforms such as .NET or on Python 3.7 and later we will
 use "ambient data" to have either the hub flow with your code or the hub is already
 a singleton that internally manages the scope.
 
-Effectively this means that when you spawn a task in .NET and the execution flow is
-not suppressed all the context you have bound to the scope in Sentry will flow along.
-However, if you suppress the flow, you get new scope data.
+Effectively this means that when you spawn a task in .NET and the execution flow is 
+not supressed all the context you have bound to the scope in Sentry will flow along.
+If however you suppress the flow, you get new scope data.
+{% endcapture %}
+{%- include components/alert.html
+  content=__alert_content
+%}
 
 When you call a global function such as `capture_event` internally Sentry
 discovers the current hub and asks it to capture an event.  Internally the hub will
@@ -61,14 +66,14 @@ To learn what useful information can be associated with scopes see
 ## Local Scopes
 
 We also have support for pushing and configuring a scope in one go.  This is
-typically called `with-scope` or `push-scope` which is also very helpful
+typically called `with-scope` or `push-scope` which is also very helpful 
 if you only want to send data with one specific event.  In the following example we are using
 that function to attach a `level` and a `tag` to only one specific error:
 
 {% include components/platform_content.html content_dir='with-scope' %}
 
-While this example looks similar to `configure-scope`, it's very different, in the sense that
-`configure-scope` actually changes the currently active scope, all successive calls to `configure-scope`
+While this example looks similar to `configure-scope` it's very different, in the sense that 
+`configure-scope` actually changes the current active scope, all successive calls to `configure-scope` 
 will keep the changes.
 
 While on the other hand using `with-scope` creates a clone of the current scope
@@ -76,19 +81,3 @@ and will stay isolated until the function call is completed.  So you can either
 set context information in there that you don't want to be somewhere else or not
 attach any context information at all by calling `clear` on the scope, while the
 "global" scope remains unchanged.
-
-
-## Sentry.setTags vs. scope.setTags
-
-`Sentry.setTags` or `scope.setTags` can be used interchangeably to set tags. The option of using either allows for easier migration with tools such as Codemod.
-
-`Sentry.setTags`
-
-[{% _assets/img/setTags/sentrysetTags.png alt="Sentry.setTags Example Error Message" %}]({% _assets/img/setTags/sentrysetTags.png %})
-
-`scope.setTags`
-
-[{% _assets/img/setTags/scopesetTags.png alt="scope.setTags Example Error Message" %}]({% _assets/img/setTags/scopesetTags.png%})
-
-
-Everything that is called directly on `Sentry` object, will always reference `getCurrentHub()`. Depending on the environment, it will either go to global scope, or per-request.
