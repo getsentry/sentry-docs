@@ -15,7 +15,7 @@ Getting started with Sentry is a three step process:
 <!-- WIZARD -->
 ## Installation {#install}
 
-The SDK can be installed using [CocoaPods](http://cocoapods.org), [Carthage](https://github.com/Carthage/Carthage), or [Swift Packager](https://swift.org/package-manager/). This is the recommended client for both Swift and Objective-C.
+The SDK can be installed using [CocoaPods](http://cocoapods.org), [Carthage](https://github.com/Carthage/Carthage), or [Swift Package Manager](https://swift.org/package-manager/). This is the recommended client for both Swift and Objective-C.
 
 We recommend installing Sentry with CocoaPods.
 
