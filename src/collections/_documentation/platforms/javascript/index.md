@@ -289,8 +289,6 @@ If you want to keep your source maps secret and choose not to upload your source
 ## Adding Context
 You can also set context when manually triggering events.
 
-### Setting Context {#context}
-
 {% include platforms/event-contexts.md %}
 
 ### Extra Context {#extra-context}
