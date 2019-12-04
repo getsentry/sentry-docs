@@ -49,7 +49,7 @@ We also provide a pre-built version for every release which can be downloaded at
 
 ### SPM | Swift Package Manage
 
-Starting with sentry-cocoa version 4.4.3, we support Swift Package Manager.
+Starting with sentry-cocoa version `4.4.3`, we support Swift Package Manager.
 
 To integrate Sentry into your Xcode project using SPM, open your App in xCode and open File -> Swift Packages -> Add Package Dependency. Then add sentry-cocoa by entering the git repo url, and select a version (or brach) on the next page.
 
