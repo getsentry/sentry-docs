@@ -183,14 +183,6 @@ This command will upload all files ending in _.js_ and _.map_ to the specified r
 $ sentry-cli releases files <release_name> upload-sourcemaps --ext ts --ext map /path/to/files
 ```
 
-{% capture __alert_content -%}
-Unfortunately, it can be quite challenging to ensure that source maps are actually valid and uploaded correctly. To ensure that everything is working as intended, you can add the `--validate` flag when uploading source maps. It attempts to parse the source maps and verify source references locally. This flag might produce false positives if you have references to external source maps.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Validating source maps with Sentry CLI"
-  content=__alert_content
-%}
-
 Until now, the release is in a draft state (“_unreleased_”). Once all source maps have been uploaded, and your app has been published successfully, finalize the release with the following command:
 
 ```sh
