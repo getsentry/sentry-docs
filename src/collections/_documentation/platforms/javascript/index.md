@@ -404,6 +404,43 @@ If you wish to append information, thus making the grouping slightly less aggres
 
 For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
+#### Minimal Example
+This minimal example will put all exceptions of the current scope into the same issue/group:
+
+```javascript
+Sentry.configureScope(function(scope) {
+  scope.setFingerprint(['my-view-function']);
+});
+```
+
+The two common real-world use cases for the `fingerprint` attribute are demonstrated below:
+
+#### Example: Split up a group into more groups (groups are too big)
+Your application queries an external API service, so the stack trace is generally the same (even if the outgoing request is very different).
+
+The following example will split up the default group Sentry would create (represented by `{{ "{{default"}}}}`) further, while also splitting up the group based on the API URL.
+
+```javascript
+function makeRequest(path, options) {
+    return fetch(path, options).catch(function(err) {
+        Sentry.withScope(function(scope) {
+          scope.setFingerprint(['{{default}}', path]);
+          Sentry.captureException(err);
+        });
+    });
+}
+```
+
+#### Example: Merge a lot of groups into one group (groups are too small)
+If you have an error that has many different stack traces and never groups together, you can merge them together by omitting `{{ "{{default"}}}}` from the fingerprint array.
+
+```javascript
+Sentry.withScope(function(scope) {
+  scope.setFingerprint(['Database Connection Error']);
+  Sentry.captureException(err);
+});
+```
+
 ## Supported Browsers {#browser-table}
 
 ![Sauce Test Status]({%- asset browser-support.svg @path -%})
