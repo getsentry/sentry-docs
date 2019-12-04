@@ -15,7 +15,7 @@ Getting started with Sentry is a three step process:
 <!-- WIZARD -->
 ## Installation {#install}
 
-The SDK can be installed using [CocoaPods](http://cocoapods.org), [Carthage](https://github.com/Carthage/Carthage) or [Swift Package Manager](https://swift.org/package-manager/). This is the recommended client for both Swift and Objective-C.
+The SDK can be installed using [CocoaPods](http://cocoapods.org), [Carthage](https://github.com/Carthage/Carthage), or [Swift Package Manager](https://swift.org/package-manager/). This is the recommended client for both Swift and Objective-C.
 
 We recommend installing Sentry with CocoaPods.
 
@@ -47,13 +47,13 @@ Run `carthage update` to download the framework and drag the built _Sentry.frame
 
 We also provide a pre-built version for every release which can be downloaded at [releases on GitHub](https://github.com/getsentry/sentry-cocoa/releases).
 
-### SPM | Swift Package Manage
+### Swift Package Manage
 
 Starting with sentry-cocoa version `4.4.3`, we support Swift Package Manager.
 
-To integrate Sentry into your xCode project using SPM, open your App in xCode and open File -> Swift Packages -> Add Package Dependency. Then add sentry-cocoa by entering the git repo url `https://github.com/getsentry/sentry-cocoa.git`, and select a version (or brach) on the next page.
+To integrate Sentry into your Xcode project using SPM, open your App in Xcode and open File -> Swift Packages -> Add Package Dependency. Then add sentry-cocoa by entering the git repo url `https://github.com/getsentry/sentry-cocoa.git`, and select a version (or branch) on the next page.
 
-NOTE: Version tags or branches need to have the Package.swift file in it or xCode won't be able to install the package. Thus versions previous to `4.4.3` can't be installed via SPM!
+NOTE: Version tags or branches need to have the Package.swift file in it or Xcode won't be able to install the package. Thus versions previous to `4.4.3` can't be installed via SPM!
 
 ## Configuration {#configure}
 
