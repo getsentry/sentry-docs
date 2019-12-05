@@ -42,7 +42,7 @@ The following **matchers** exist. Multiple matchers can be defined in a line:
 - `package`: matches on a package. The package is the container that contains a function or module.
   This is a `.jar`, a `.dylib` or similar. The same matching rules as for `path` apply (For example, this is typically an absolute path).
 - `app`: matches on the current state of the in-app flag. `yes` means the frame is in app, `no` means it's not.
-- An expression can be quoted if necessary, for example, when spaces are included.
+- An expression can be quoted if necessary (when spaces are included, for example).
 
 There are two types of **actions**: flag setting and setting variables.
 
