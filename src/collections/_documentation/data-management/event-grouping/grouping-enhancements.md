@@ -46,7 +46,7 @@ The following **matchers** exist. Multiple matchers can be defined in a line:
 
 There are two types of **actions**: flag setting and setting variables.
 
-- **flag**: flags are what is to be done if all matchers match. A flag needs to be prefixed with `+` to set it or `-` to unset it. If this expression is prefixed with a `^`, it applies to frames above the frame -- towards the crash. If prefixed with `v` it applies to frames below the frame -- away from the crash. For instance, `-group ^-group` removes from the grouping the matching frame and all frames above that frame.
+- **flag**: flags are what is to be done if all matchers match. A flag needs to be prefixed with `+` to set it or `-` to unset it. If this expression is prefixed with a `^`, it applies to frames above the frame -- towards the crash. If prefixed with `v` it applies to frames below the frame -- away from the crash. For instance, `-group ^-group` removes the matching frame and all frames above it from the grouping.
   - `app`: marks or unmarks a frame in-app
   - `group`: adds or removes a frame from grouping
 - **variables**: additionally variables can be set (`variable=value`). Currently, there is just one:
@@ -79,7 +79,7 @@ There are some general recommendations we have to greatly improve the out of the
 
 **Mark in-app Frames**
 
-To proactively improve your experience, help Sentry determine which frames in your stack trace are "in-app" (part of your own application) and which ones are not. The default rules are defined by the SDK, but in many cases, this can be improved on the server as well. In particular, for languages where server-side processing is necessary (For example, Native C, C++, or JavaScript) it's better to override this on the server.
+To proactively improve your experience, help Sentry determine which frames in your stack trace are "in-app" (part of your own application) and which ones are not. The default rules are defined by the SDK, but in many cases, this can be improved on the server as well. In particular, for languages where server-side processing is necessary (for example, Native C, C++, or JavaScript), it's better to override this on the server.
 
 For instance, the following marks as in-app all frames that are below a specific C++ namespace:
 
