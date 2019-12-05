@@ -469,25 +469,6 @@ Additionally, keep in mind to define a valid HTML doctype on top of your HTML pa
 
 ## Advanced Usage
 
-### Advanced Configuration
-The Sentry SDK sets the options when you first initialize the SDK.
-
-```javascript
-Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  release: "28d497fb8af6cc3efbe160e28c1c08f08bd688fc",
-  environment: 'staging',
-  beforeSend: customPiiScrub(event),
-  maxBreadcrumbs: 50,
-  debug: true,
-});
-```
-
-For more information, see:
-- [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
-- [Command Line Interface: Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
-- [Full documentation on Environments]({%- link _documentation/enriching-error-data/environments.md -%}).
-
 ### Breadcrumbs
 Sentry will automatically record certain events, such as changes to the URL and XHR requests to provide context to an error.
 
