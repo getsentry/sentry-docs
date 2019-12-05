@@ -38,6 +38,9 @@ import * as Sentry from '@sentry/browser';
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
 ```
 
+For more configuration options, see:
+- [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
+
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
