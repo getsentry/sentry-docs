@@ -17,7 +17,7 @@ The syntax for grouping enhancements is roughly like this:
 matcher-name:expression other-matcher:expression ... action1 action2 ...
 ```
 
-Here is a practical example to see how this looks like:
+Here is a practical example to see how this looks:
 
 ```
 family:native function:std::*   -app
@@ -37,16 +37,16 @@ The following **matchers** exist. Multiple matchers can be defined in a line:
   - `path:**/*.c`: matches on `foo.c` as well as `foo/bar.c`.
 - `module`: is similar to `path` but matches on the module. This is not used for Native, but it is used for JavaScript, Python, and similar platforms. Matches are case sensitive, and normal globbing is available.
 - `function`: matches on a function, and is case sensitive with normal globbing.
-- `function:myproject_*` matches all functions starting with `myproject_`
-- `function:malloc` matches on the malloc function
+  - `function:myproject_*` matches all functions starting with `myproject_`
+  - `function:malloc` matches on the malloc function
 - `package`: matches on a package. The package is the container that contains a function or module.
   This is a `.jar`, a `.dylib` or similar. The same matching rules as for `path` apply (For example, this is typically an absolute path).
 - `app`: matches on the current state of the in-app flag. `yes` means the frame is in app, `no` means it's not.
-- An expression can be quoted if necessary. For example, when spaces are included.
+- An expression can be quoted if necessary (when spaces are included, for example).
 
 There are two types of **actions**: flag setting and setting variables.
 
-- **flag**: flags are what is to be done if all matchers match. A flag needs to be prefixed with `+` to set it or `-` to unset it. If this expression is prefixed with a `^`, it applies to frames above the frame -- towards the crash. If prefixed with `v` it applies to frames below the frame -- away from the crash. For instance, `-group ^-group` removes the matching frame and all frames above that came from the grouping.
+- **flag**: flags are what is to be done if all matchers match. A flag needs to be prefixed with `+` to set it or `-` to unset it. If this expression is prefixed with a `^`, it applies to frames above the frame -- towards the crash. If prefixed with `v` it applies to frames below the frame -- away from the crash. For instance, `-group ^-group` removes the matching frame and all frames above it from the grouping.
   - `app`: marks or unmarks a frame in-app
   - `group`: adds or removes a frame from grouping
 - **variables**: additionally variables can be set (`variable=value`). Currently, there is just one:
@@ -79,15 +79,15 @@ There are some general recommendations we have to greatly improve the out of the
 
 **Mark in-app Frames**
 
-To proactively improve your experience, help Sentry determine which frames in your stack trace are "in-app" (part of your own application) and which ones are not. The default rules are defined by the SDK, but in many cases, this can be improved on the server as well. In particular, for languages where server-side processing is necessary (For example, Native C, C++, or JavaScript.) it's better to override this on the server.
+To proactively improve your experience, help Sentry determine which frames in your stack trace are "in-app" (part of your own application) and which ones are not. The default rules are defined by the SDK, but in many cases, this can be improved on the server as well. In particular, for languages where server-side processing is necessary (for example, Native C, C++, or JavaScript), it's better to override this on the server.
 
-For instance, the following marks all frames in-app that are below a specific C++ namespace:
+For instance, the following marks as in-app all frames that are below a specific C++ namespace:
 
 ```
 function:myapplication::* +app
 ```
 
-You can also achieve the inverse by just marking all frames "not in-app." However, if that's the case, you should ensure that first all frames are set to "in-app" to override the defaults:
+You can also achieve the same result by marking other frames "not in-app." However, if that's the case, you should ensure that first all frames are set to "in-app" to override the defaults:
 
 ```
 app:no             +app
@@ -95,7 +95,7 @@ function:std::*    -app
 function:boost::*  -app
 ```
 
-Forcing all frames to be in-app first might be necessary as there might already have
+Forcing all frames to be in-app first is necessary because there might already have
 been some defaults set by the client SDK or earlier processing.
 
 **Cut Stack Traces**
@@ -107,7 +107,7 @@ function:std::panicking::begin_panic       ^-app -app ^-group
 function:core::panicking::begin_panic      ^-app -app ^-group
 ```
 
-Here we tell the system that all frames, from begin-panic to the crash location, are not part of the application (including the panic frame itself). All frames above are also in all cases irrelevant for grouping.
+Here we tell the system that all frames from begin-panic to the crash location are not part of the application (including the panic frame itself). All frames above are also in all cases irrelevant for grouping.
 
 Likewise, you can also chop off the base of a stack trace. This is particularly useful if you have different main loops that drive an application:
 
@@ -121,7 +121,7 @@ function:myapp::WinMainLoop           v-group -group
 
 This isn't useful for *all* projects, but it can work well for large applications with many crashes. The default strategy is to consider most of the stack trace relevant for grouping. This means that every different stack trace that leads to a crashing function will cause a different group to be created. If you do not want that, you can alternatively force the groups to be much larger by limiting how many frames should be considered.
 
-For instance, you could tell the system only to consider the top N frames, if any of the frames in the stack trace refer to a common external library:
+For instance, if any of the frames in the stack trace refer to a common external library, you could tell the system to only  consider the top N frames, :
 
 ```
 # always only consider the top 1 frame for all native events
