@@ -1,6 +1,7 @@
 ---
 title: CoffeeScript
 sidebar_order: 4
+robots: noindex
 ---
 
 In order to use raven-node with coffee-script or another library which overwrites Error.prepareStackTrace you might run into the exception “Traceback does not support Error.prepareStackTrace being defined already.”

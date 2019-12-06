@@ -1,5 +1,6 @@
 ---
 title: 'Using Sentry with CodePush'
+robots: noindex
 ---
 
 If you want to use sentry together with CodePush you have to send us the CodePush version:

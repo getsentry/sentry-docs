@@ -1,6 +1,7 @@
 ---
 title: Python
 sidebar_order: 12
+robots: noindex
 ---
 
 For pairing Sentry up with Python you can use the Raven for Python (raven-python) library. It is the official standalone Python client for Sentry. It can be used with any modern Python interpreter be it CPython 2.x or 3.x, PyPy or Jython. It’s an Open Source project and available under a very liberal BSD license.

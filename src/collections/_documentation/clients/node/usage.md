@@ -1,6 +1,7 @@
 ---
 title: Usage
 sidebar_order: 1
+robots: noindex
 ---
 
 ## Capturing Errors
