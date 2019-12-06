@@ -1,6 +1,7 @@
 ---
 title: 'Logging Breadcrumbs'
 sidebar_order: 2
+robots: noindex
 ---
 
 Newer Sentry versions support logging of breadcrumbs in addition of errors. This means that whenever an error or other Sentry event is submitted to the system, breadcrumbs that were logged before are sent along to make it easier to reproduce what lead up to an error.

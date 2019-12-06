@@ -1,6 +1,7 @@
 ---
 title: Node.js
 sidebar_order: 9
+robots: noindex
 ---
 
 raven-node is the official Node.js client for Sentry.

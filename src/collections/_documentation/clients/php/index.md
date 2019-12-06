@@ -1,6 +1,7 @@
 ---
 title: PHP
 sidebar_order: 11
+robots: noindex
 ---
 
 The PHP SDK for Sentry supports PHP 5.3 and higher. It’s available as a BSD licensed Open Source library.

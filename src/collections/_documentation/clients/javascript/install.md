@@ -1,5 +1,6 @@
 ---
 title: Installation
+robots: noindex
 ---
 
 Raven is distributed in a few different methods, and should get included after any other libraries are included, but before your own scripts.

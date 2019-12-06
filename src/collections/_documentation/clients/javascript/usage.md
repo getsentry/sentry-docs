@@ -1,6 +1,7 @@
 ---
 title: Usage
 sidebar_order: 2
+robots: noindex
 ---
 
 By default, Raven makes a few efforts to try its best to capture meaningful stack traces, but browsers make it pretty difficult.

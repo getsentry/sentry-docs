@@ -1,5 +1,6 @@
 ---
 title: 'Supported Platforms'
+robots: noindex
 ---
 
 -   Python 2.6

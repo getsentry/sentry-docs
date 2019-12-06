@@ -1,5 +1,6 @@
 ---
 title: 'Source Maps for Other Platforms'
+robots: noindex
 ---
 
 Currently automatic source map handling is only implemented for iOS with Xcode and Android with gradle. If you manually invoke the [react-native packager](https://github.com/facebook/metro) you can however get source maps anyways by passing _–sourcemap-output_ to it.
