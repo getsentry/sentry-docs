@@ -76,7 +76,7 @@ be sent.  Events are picked randomly.
 ### `max-breadcrumbs`
 
 This variable controls the total amount of breadcrumbs that should be captured.  This defaults
-to `100`.
+to `30`.
 
 {:.config-key}
 ### `attach-stacktrace`
