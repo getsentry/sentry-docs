@@ -59,7 +59,8 @@ class ExampleBoundary extends Component {
     }
 
     render() {
-        if (this.state.hasError) {
+        const { state: { hasError } } = this;
+        if (hasError) {
             //render fallback UI
             return (
               <button onClick={() => Sentry.showReportDialog({ eventId: this.state.eventId })}>Report feedback</button>
