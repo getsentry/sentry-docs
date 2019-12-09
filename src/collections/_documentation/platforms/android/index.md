@@ -608,7 +608,6 @@ First, we need to declare the dependency in the project build.gradle file:
 
 ```groovy
 dependencies {
-    classpath 'com.android.tools.build:gradle:3.5.2'
     // Plugin that copied the binaries
     classpath 'com.ydq.android.gradle.build.tool:nativeBundle:1.0.3'
 }
