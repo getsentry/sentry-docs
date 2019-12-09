@@ -600,11 +600,11 @@ That allows the user to decide whether and how a breadcrumb should be sent.
 
 ## Integrating the NDK
 
-To use the Android NDK in your native code you need to include the Sentry NDK libraries into your project so that the compiler can link the libraries during the build.
+To use the Android NDK in your native code, include the Sentry NDK libraries into your project so that the compiler can link the libraries during the build.
 
-To do so we use AndroidNativeBundle gradle plugin that copy the native libraries from the Sentry NDK into the location that we can provide to the linker via the CmakeLists.txt configuration file.
+To do so, use the AndroidNativeBundle Gradle plugin that copies the native libraries from the Sentry NDK into the location that can provide links via the CmakeLists.txt configuration file.
 
-At first we need to declare the dependency in the project build.gradle file:
+First, we need to declare the dependency in the project build.gradle file:
 
 ```groovy
 dependencies {
