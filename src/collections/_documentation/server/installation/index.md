@@ -20,7 +20,7 @@ We strongly recommend using Docker, and specifically, [our on-premise repository
 To install Sentry from the on-premise repository, clone the repository locally:
 
 ```bash
-git clone git@github.com:getsentry/onpremise.git
+git clone https://github.com/getsentry/onpremise.git
 ```
 
 Before starting the installation, we strongly recommend you to check out [how to configure your Sentry instance]({%- link _documentation/server/config.md -%}) as you'd need to rebuild your images (`docker-compose build`) if you ever want to change your configuration settings. You may copy and edit the example configs provided in the repository. If none exists, the install script will use these examples as the actual configurations.
