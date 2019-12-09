@@ -38,6 +38,9 @@ import * as Sentry from '@sentry/browser';
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
 ```
 
+For more configuration options, see:
+- [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
+
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
@@ -72,18 +75,6 @@ Configuration may be required if you are using a third-party library to implemen
 
 Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by changing `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
-For example, the [RSVP.js library](https://github.com/tildeio/rsvp.js/) (used by Ember.js) allows you to bind an event handler to a [global error event](https://github.com/tildeio/rsvp.js#error-handling).
-
-```javascript
-RSVP.on('error', function(reason) {
-  Sentry.captureException(reason);
-});
-```
-
-[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections to a global DOM event, `unhandledRejection`. In this case, you don't need to do anything; we've already got you covered with the default [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and its `onunhandledrejection: true` setting.
-
-Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
-
 ## Releases
 
 {% include platforms/configure-releases.md %}
@@ -102,17 +93,6 @@ When you're using the Sentry JavaScript SDK, the SDK automatically fetches the s
 
 ### Generating Source Maps
 Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
-
-#### UglifyJS
-UglifyJS is a popular tool for minifying your source code for production. It can dramatically reduce the size of your files by eliminating whitespace, rewriting variable names, removing dead code branches, and more.
-
-If you are using UglifyJS to minify your source code, the following command will additionally generate a source map that maps the minified code back to the original source:
-
-```bash
-uglifyjs app.js \
-  -o app.min.js.map \
-  --source-map url=app.min.js.map,includeSources
-```
 
 #### Webpack
 Webpack is a powerful build tool that resolves and bundles your JavaScript modules into files fit for running in the browser. It also supports various _loaders_ to transpile higher-level languages, reference stylesheets, or include static assets.
@@ -205,14 +185,6 @@ This command will upload all files ending in _.js_ and _.map_ to the specified r
 ```sh
 $ sentry-cli releases files <release_name> upload-sourcemaps --ext ts --ext map /path/to/files
 ```
-
-{% capture __alert_content -%}
-Unfortunately, it can be quite challenging to ensure that source maps are actually valid and uploaded correctly. To ensure that everything is working as intended, you can add the `--validate` flag when uploading source maps. It attempts to parse the source maps and verify source references locally. This flag might produce false positives if you have references to external source maps.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Validating source maps with Sentry CLI"
-  content=__alert_content
-%}
 
 Until now, the release is in a draft state (“_unreleased_”). Once all source maps have been uploaded, and your app has been published successfully, finalize the release with the following command:
 
@@ -319,8 +291,6 @@ If you want to keep your source maps secret and choose not to upload your source
 
 ## Adding Context
 You can also set context when manually triggering events.
-
-### Setting Context {#context}
 
 {% include platforms/event-contexts.md %}
 
@@ -498,25 +468,6 @@ Additionally, keep in mind to define a valid HTML doctype on top of your HTML pa
 %}
 
 ## Advanced Usage
-
-### Advanced Configuration
-The Sentry SDK sets the options when you first initialize the SDK.
-
-```javascript
-Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  release: "28d497fb8af6cc3efbe160e28c1c08f08bd688fc",
-  environment: 'staging',
-  beforeSend: customPiiScrub(event),
-  maxBreadcrumbs: 50,
-  debug: true,
-});
-```
-
-For more information, see:
-- [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
-- [Command Line Interface: Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
-- [Full documentation on Environments]({%- link _documentation/enriching-error-data/environments.md -%}).
 
 ### Breadcrumbs
 Sentry will automatically record certain events, such as changes to the URL and XHR requests to provide context to an error.
@@ -976,19 +927,6 @@ Sentry.init({
     return integrations.filter(function(integration) {
       return integration.name !== 'Breadcrumbs';
     });
-  }
-});
-```
-
-### Alternative way of setting an Integration
-```javascript
-import * as Sentry from '@sentry/browser';
-
-Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: function(integrations) {
-    // integrations will be all default integrations
-    return integrations.concat(new MyCustomIntegrations());
   }
 });
 ```
