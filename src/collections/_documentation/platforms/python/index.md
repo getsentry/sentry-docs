@@ -237,6 +237,7 @@ For more information, see:
 - [AIOHTTP]({%- link _documentation/platforms/python/aiohttp.md -%})
 - [Tornado]({%- link _documentation/platforms/python/tornado.md -%})
 - [Bottle]({%- link _documentation/platforms/python/bottle.md -%})
+- [Tryton]({%- link _documentation/platforms/python/tryton.md -%})
 - [Falcon]({%- link _documentation/platforms/python/falcon.md -%})
 - [Generic WSGI]({%- link _documentation/platforms/python/wsgi.md -%})
 - [Generic ASGI]({%- link _documentation/platforms/python/asgi.md -%})
