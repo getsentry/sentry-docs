@@ -635,7 +635,6 @@ Now you can use the Sentry NDK API just by including the sentry.h in your code:
 #include <android/log.h>
 #include <sentry.h>
 
-
 #define TAG "sentry-android-demo"
 extern "C" JNIEXPORT jstring JNICALL
 
