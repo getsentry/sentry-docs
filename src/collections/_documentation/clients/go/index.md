@@ -1,5 +1,6 @@
 ---
 title: Go
+robots: noindex
 ---
 
 {% capture __alert_content -%}

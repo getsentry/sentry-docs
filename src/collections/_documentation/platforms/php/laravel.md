@@ -180,6 +180,15 @@ You can do this by not defining `SENTRY_LARAVEL_DSN` in your `.env` or define it
 
 ## Laravel specific options
 
+#### breadcrumbs.sql_queries
+
+Capture SQL queries.
+Defaults to `true`.
+
+```php
+'breadcrumbs.sql_queries' => true,
+```
+
 #### breadcrumbs.sql_bindings
 
 Capture bindings on SQL queries.
@@ -187,6 +196,24 @@ Defaults to `true`.
 
 ```php
 'breadcrumbs.sql_bindings' => false,
+```
+
+#### breadcrumbs.logs
+
+Capture Laravel logs.
+Defaults to `true`.
+
+```php
+'breadcrumbs.logs' => true,
+```
+
+#### breadcrumbs.queue_info
+
+Capture queue job information.
+Defaults to `true`.
+
+```php
+'breadcrumbs.queue_info' => true,
 ```
 
 ## User Feedback

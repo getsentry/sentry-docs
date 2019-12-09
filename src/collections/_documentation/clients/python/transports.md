@@ -1,5 +1,6 @@
 ---
 title: Transports
+robots: noindex
 ---
 
 A transport is the mechanism in which Raven sends the HTTP request to the Sentry server. By default, Raven uses a threaded asynchronous transport, but you can easily adjust this by passing your own transport class.

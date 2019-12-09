@@ -1,6 +1,7 @@
 ---
 title: JavaScript
 sidebar_order: 7
+robots: noindex
 ---
 
 Raven.js is the official browser JavaScript client for Sentry. It automatically reports uncaught JavaScript exceptions triggered from a browser environment, and provides a rich API for reporting your own errors.

@@ -1,11 +1,17 @@
 ---
-title: Membership
+title: Organization Management
 sidebar_order: 1
 ---
 
-Membership in Sentry is handled at the organizational level. The system is designed so each user has a singular account which can be reused across multiple organizations (even those using SSO). Each user of Sentry should have their own account, and will then be able to set their own personal preferences in addition to receiving notifications for events.
+## Membership
 
-## Roles
+User membership in Sentry is handled at the organizational level. The system is
+designed so each user has a singular account which can be reused across
+multiple organizations (even those using SSO). Each user of Sentry should have
+their own account, and will then be able to set their personal preferences
+in addition to receiving notifications for events.
+
+### Roles
 
 Access to organizations is dictated by roles. Your role is scoped to an entire organization.
 
@@ -34,7 +40,7 @@ Roles include:
 
 \* Admins can only remove teams and projects they're a member of (or all teams, if open membership is on).
 
-## Restricting Access
+### Restricting Access
 
 -   Access to Organizations is dictated by Roles, which is scoped to an entire Organization.
 -   Access to a Project is limited to the Team that owns the project. However, any Member, Admin, Manager or Owner can join a Team.
@@ -43,3 +49,22 @@ Roles include:
 To restrict Team access, go to Organization Settings and flip the “Open Membership” toggle.
 
 {% asset membership-toggle.png %}
+
+## Transferring a project
+
+To transfer a project go to the target project's Project Settings >> General
+Settings >> Transfer Project. Enter the email of the organization's owner you
+wish to transfer it to, and they'll receive an email to approve the transfer.
+When the project is transferred to the new organization, it's recommended to
+add it to a team for better visibility.
+
+## Removing an Organization
+
+It is possible to remove an organization and all associated
+organization data completely. Doing so will *not* remove user accounts, but will remove
+their membership in the organization.
+
+To remove an organization visit the Organizations General Settings and locate
+the "Remove Organization" panel. Clicking the "Remove Organization" button will
+prompt you for confirmation. After removing an organization, it will be queued
+for deletion.

@@ -3,38 +3,35 @@ title: Installation
 sidebar_order: 0
 ---
 
-Before running Sentry itself, there are a few minimum services that are required for Sentry to communicate with.
+Sentry relies on multiple services to work, which are all orchestrated by [Docker Compose](https://docs.docker.com/compose/) in [our on-premise repository](https://github.com/getsentry/onpremise).
 
-## Services
+## Requirements
 
--   [PostgreSQL](http://www.postgresql.org/) (current tested versions are 9.5, 9.6)
-    -   Docker image [postgres:9.6](https://hub.docker.com/_/postgres/)
--   [Redis](http://redis.io) (the minimum version requirement is 2.8.9, but 2.8.18, 3.0, or newer are recommended)
-    -   If running Ubuntu < 15.04, you’ll need to install from a different PPA. We recommend [chris-lea/redis-server](https://launchpad.net/~chris-lea/+archive/ubuntu/redis-server)
-    -   Docker image [redis:3.2-alpine](https://hub.docker.com/_/redis/).
--   A dedicated (sub)domain to host Sentry on (i.e. _sentry.yourcompany.com_).
-
-## Hardware
-
-Sentry provides a number of mechanisms to scale its capacity out horizontally, however there is still a primary SPOF at the database level. In an HA setup, the database is only utilized for event indexing and basic data storage, and becomes much less of a capacity concern (see also [_Node Storage_]({%- link _documentation/server/nodestore.md -%})).
-
-We don’t have any real numbers to tell you what kind of hardware you’re going to need, but we’ll help you make your decision based on existing usage from real customers.
-
-If you’re looking for an HA, and high throughput setup, you’re going to need to setup a fairly complex cluster of machines, and utilize all of Sentry’s advanced configuration options. This means you’ll need Postgres, Riak, Redis, Memcached, and RabbitMQ. It’s very rare you’d need this complex of a cluster, and the primary usecase for this is for the Hosted Sentry on [sentry.io](https://sentry.io/).
-
-For more typical, but still fairly high throughput setups, you can run off of a single machine as long as it has reasonable IO (ideally SSDs), and a good amount of memory.
-
-The main things you need to consider are:
-
--   TTL on events (how long do you need to keep historical data around)
--   Average event throughput
--   How many events get grouped together (which means they get sampled)
-
-At a point, sentry.io was processing approximately 4 million events a day. A majority of this data is stored for 90 days, which accounted for around 1.5TB of SSDs. Web and worker nodes were commodity (8GB-12GB RAM, cheap SATA drives, 8 cores), the only two additional nodes were a dedicated RabbitMQ and Postgres instance (both on SSDs, 12GB-24GB of memory). In theory, given a single high-memory machine, with 16+ cores, and SSDs, you could handle the entirety of the given data set.
+-   [Docker](https://www.docker.com/) 17.05.0+
+-   [Docker Compose](https://docs.docker.com/compose/) 1.19.0+
+-   A dedicated (sub)domain to host Sentry on (for example, _sentry.yourcompany.com_).
+-   At least 2400MB memory
+-   2 CPU Cores
 
 ## Installing Sentry Server
 
-We support two methods of installing and running your own Sentry server. Our recommended approach is to [_use Docker_]({%- link _documentation/server/installation/docker/index.md -%}), but if that’s not a supported environment, you may also setup a traditional [_Python environment_]({%- link _documentation/server/installation/python/index.md -%}).
+We strongly recommend using Docker, and specifically, [our on-premise repository](https://github.com/getsentry/onpremise) for installing Sentry and all its services. If you need to do something custom, you can use this repository as the basis of your setup. If you do not wish to use the Docker images we provide, you can still find [Sentry on PyPI](https://pypi.org/project/sentry/). However, we don't recommend that method. You'll need to work your way back from [the main Sentry image](https://github.com/getsentry/sentry/blob/master/docker/Dockerfile) and [the service composition](https://github.com/getsentry/onpremise/blob/master/docker-compose.yml). It is not too hard, but you are likely to spend a lot more time and hit some bumps.
 
--   [Via Docker]({%- link _documentation/server/installation/docker/index.md -%})
--   [Via Python]({%- link _documentation/server/installation/python/index.md -%})
+To install Sentry from the on-premise repository, clone the repository locally:
+
+```bash
+git clone https://github.com/getsentry/onpremise.git
+```
+
+Before starting the installation, we strongly recommend you to check out [how to configure your Sentry instance]({%- link _documentation/server/config.md -%}) as you'd need to rebuild your images (`docker-compose build`) if you ever want to change your configuration settings. You may copy and edit the example configs provided in the repository. If none exists, the install script will use these examples as the actual configurations.
+
+To start, run the install script:
+```bash
+./install.sh
+```
+
+If the `CI` environment variable is set to a non-empty value, the script will assume unattended installation and will skip some steps. You can look at [its source code](https://github.com/getsentry/onpremise/blob/master/install.sh) to figure out what those steps are, which will also be logged to standard output.
+
+If you are upgrading from an earlier version of the on-premise repository, keep in mind that it will keep your existing configuration files, which you may need to adjust based on [the examples provided in the repository](https://github.com/getsentry/onpremise/tree/master/sentry).
+
+If you have any issues or questions, our [community forums](https://forum.sentry.io/c/on-premise/onprem-official) and [Discord #sentry-server channel](https://discord.gg/mg5V76F) are always open!

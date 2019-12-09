@@ -1,6 +1,6 @@
 ---
 title: Transports
-sidebar_order: 3
+sidebar_order: 4
 ---
 
 Transports let you change the way, in which events are delivered to Sentry.

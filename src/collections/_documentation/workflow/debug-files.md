@@ -340,8 +340,8 @@ $ sentry-cli upload-dif -o <org> -p <project> /path/to/files
 > Uploaded 2 missing debug information files
 > File processing complete:
 
-     OK 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 executable)
-     OK 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 debug companion)
+  PENDING 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 executable)
+  PENDING 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 debug companion)
 ```
 
 For all available options and more information refer to [_Uploading Debug
@@ -349,7 +349,9 @@ Information_]({%- link _documentation/cli/dif.md -%}#uploading-files).
 
 {% capture __alert_content -%}
 Always ensure that debug files are uploaded before deploying or releasing your
-application so that crash reports can be processed.
+application so that crash reports can be processed. For manual testing, use the
+`sentry-cli upload-dif --wait` before sending the first native crash or error
+event.
 
 If you upload a file that was priorly reported as missing by Sentry in a crash
 report, it may take up to one hour until Sentry starts using this file for new

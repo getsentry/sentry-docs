@@ -1,5 +1,6 @@
 ---
 title: Integrations
+robots: noindex
 ---
 
 Integrations extend the functionality of Raven.js to cover common libraries and environments automatically using simple plugins.

@@ -1,6 +1,7 @@
 ---
 title: Configuration
 sidebar_order: 1
+robots: noindex
 ---
 
 To get started, you need to configure Raven.js to use your Sentry DSN:

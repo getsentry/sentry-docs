@@ -1,5 +1,6 @@
 ---
 title: 'C#'
+robots: noindex
 ---
 
 Raven is the C# client for Sentry. Raven relies on the most popular logging libraries to capture and convert logs before sending details to a Sentry instance.

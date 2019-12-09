@@ -110,7 +110,7 @@ You need to make sure you’re using [Auth Tokens]({%- link _documentation/api/a
   level="warning"
 %}
 
-In the above example, we’re using the `propose-version` sub-command to determine a release ID automatically. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally, we’re using the `--auto` flag to determine the repository name automatically, and associate commits between the previous release’s commit and the current head commit with the release. If you have never associated commits before, we’ll use the latest 20 commits.
+In the above example, we’re using the `propose-version` sub-command to determine a release ID automatically. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally, we’re using the `--auto` flag to determine the repository name automatically, and associate commits between the previous release’s commit and the current head commit with the release. If the previous release doesn't have any commits associated with it, we’ll use the latest 20 commits.
 
 If you want more control over which commits to associate, or are unable to execute the command inside the repository, you can manually specify a repository and range:
 
@@ -119,6 +119,21 @@ If you want more control over which commits to associate, or are unable to execu
 Here we are associating commits (or refs) between `from` and `to` with the current release, `from` being the previous release’s commit. The repository name `my-repo` should match the name you entered when linking the repo in the previous step, and is of the form `owner-name/repo-name`. The `from` commit is optional and we’ll use the previous release’s commit as the baseline if it is excluded.
 
 For more information, see the [CLI docs]({%- link _documentation/cli/releases.md -%}).
+
+###### Finalizing Releases
+
+By default a release is created “unreleased”. Finalizing a release means that we fill in a second timestamp on the release record, which is prioritized over `date_created` when sorting releases in the UI. This also affects what counts as "the next release" for resolving issues, what release is used as the base for associating commits if you use `--auto`, and creates an entry in the Activity stream.
+
+This can be changed by passing either `--finalize` to the `new` command which will immediately finalize the release or you can separately call `sentry-cli releases finalize VERSION` later on. The latter is useful if you are managing releases as part of a build process e.g.
+
+```bash
+#!/bin/sh
+sentry-cli releases new "$VERSION"
+# do your build steps here
+# once you are done, finalize
+sentry-cli releases finalize "$VERSION"
+```
+You can also choose to finalize the release when you've made the release live (when you've deployed to your machines, enabled in the App store, etc.).
 
 ##### Using the API
 
