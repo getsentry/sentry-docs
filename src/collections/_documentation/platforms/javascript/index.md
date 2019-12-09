@@ -733,6 +733,7 @@ to `integrations` option. For example, to turn off browser capturing console cal
 #### Default Integrations
 
 ##### InboundFilters
+
 _Import name: `Sentry.Integrations.InboundFilters`_
 
 This integration allows developers to ignore specific errors based on the type or message, as well as blacklist/whitelist URLs that originate from the exception.
@@ -741,6 +742,7 @@ It ignores errors, which message starts with `Script error` or `Javascript error
 To configure it, use `ignoreErrors`, `blacklistUrls`, and `whitelistUrls` SDK options directly.
 
 ##### FunctionToString
+
 _Import name: `Sentry.Integrations.FunctionToString`_
 
 This integration allows the SDK to provide original functions and method names, even when our error or breadcrumbs handlers wrap them.
@@ -748,12 +750,14 @@ This integration allows the SDK to provide original functions and method names, 
 #### Browser specific
 
 ##### TryCatch
+
 _Import name: `Sentry.Integrations.TryCatch`_
 
 This integration wraps native time and events APIs (`setTimeout`, `setInterval`, `requestAnimationFrame`,
 `addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions.
 
 ##### Breadcrumbs
+
 _Import name: `Sentry.Integrations.Breadcrumbs`_
 
 This integration wraps native APIs to capture breadcrumbs. By default, the Sentry SDK wraps all APIs.
@@ -773,6 +777,7 @@ Available options:
 ```
 
 ##### GlobalHandlers
+
 _Import name: `Sentry.Integrations.GlobalHandlers`_
 
 This integration attaches global handlers to capture uncaught exceptions and unhandled rejections.
@@ -787,6 +792,7 @@ Available options:
 ```
 
 ##### LinkedErrors
+
 _Import name: `Sentry.Integrations.LinkedErrors`_
 
 This integration allows you to configure linked errors. They'll be recursively read up to a specified limit and lookup will be performed by a specific key. By default, the Sentry SDK sets the limit to 5 and the key used is `cause`.
@@ -801,6 +807,7 @@ Available options:
 ```
 
 ##### UserAgent
+
 _Import name: `Sentry.Integrations.UserAgent`_
 
 This integration attaches user-agent information to the event, which allows us to correctly catalog and tag them with specific OS, Browser and version information.
@@ -818,7 +825,8 @@ Sentry.init({
 ```
 
 #### ExtraErrorData
-_Import name: `Integrations.ExtraErrorData`_
+
+_Import name: `Sentry.Integrations.ExtraErrorData`_
 
 This integration extracts all non-native attributes from the Error object and attaches them to the event as the `extra` data.
 
@@ -832,7 +840,7 @@ Available options:
 
 #### CaptureConsole
 
-_Import name: `Integrations.CaptureConsole`_
+_Import name: `Sentry.Integrations.CaptureConsole`_
 
 This integration captures all `Console API` calls and redirects them to Sentry using `captureMessage` call.
 It then retriggers to preserve default native behaviour.
@@ -844,12 +852,14 @@ It then retriggers to preserve default native behaviour.
 ```
 
 #### Dedupe
-_Import name: `Integrations.Dedupe`_
+
+_Import name: `Sentry.Integrations.Dedupe`_
 
 This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only compare stack traces and fingerprints.
 
 #### Debug
-_Import name: `Integrations.Debug`_
+
+_Import name: `Sentry.Integrations.Debug`_
 
 This integration allows you to inspect the content of the processed event, that will be passed to `beforeSend` and effectively send to the Sentry SDK.
 It will _always_ run as the last integration, no matter when it was registered.
@@ -864,23 +874,28 @@ Available options:
 ```
 
 #### RewriteFrames
-_Import name: `Integrations.RewriteFrames`_
 
-This integration allows you to apply a transformation to each frame of the stack trace. In the simple scenario, it can be used to change the name of the file the frame originates from or can be fed with an iterated function, to apply any arbitrary transformation.
+_Import name: `Sentry.Integrations.RewriteFrames`_
+
+This integration allows you to apply a transformation to each frame of the stack trace. In the streamlined scenario, it can be used to change the name of the file frame it originates from, or it can be fed with an iterated function to apply any arbitrary transformation.
+
+On Windows machines, you have to use Unix paths and skip the volume letter in `root` option in order to make it work.
+For example `C:\\Program Files\\Apache\\www` won't work, however, `/Program Files/Apache/www` will.
 
 Available options:
 
-```javascript
+```js
 {
   root: string; // root path that will be appended to the basename of the current frame's url
-  iteratee: (frame) => frame); // function that take the frame, apply any transformation on it and returns it back
+  iteratee: (frame) => frame); // function that takes the frame, applies any transformation on it and returns it back
 }
 ```
 
 #### Browser specific
 
 ##### ReportingObserver
-_Import name: `Integrations.ReportingObserver`_
+
+_Import name: `Sentry.Integrations.ReportingObserver`_
 
 This integration hooks into the ReportingObserver API and sends captured events through to Sentry. It can be configured to handle only specific issue types.
 
