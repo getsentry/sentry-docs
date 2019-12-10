@@ -6,16 +6,16 @@ sidebar_order: 0
 Have you ever had a set of similar looking issues like this?
 ![Issues Dashboard]({% asset guides/grouping-and-fingerprints/issues-dashboard.png @path %})
 
-Let's first understand what makes Sentry Events group together into a single Sentry Issue before we compare multiple issues side by side. Let's take testTypeIssue15 as an example which has 4 Events that grouped into 1 Issue. These events shared the same value for something called the *fingerprint*
+Let's first understand what makes events group into an issue. testTypeIssue15 is an issue that had 4 events. These events grouped into the issue because they shared the same *fingerprint*
 
-**What is a fingerprint?** It is a way to uniquely identify an event in Sentry. It is set by default using a hash of the stack trace. This is also referred to as the default grouping algorithm. If 2 events have the same stack trace and the default grouping is left in place, then they group together into 1 issue.
+**What is a fingerprint?** All events have a fingerprint and events with the same fingerprint are grouped together. By default, Sentry will run one of our built-in grouping algorithms to generate a fingerprint based on information available within the event such as stacktrace, exception, and message.
 
-**Do I need to do anything?** No. Only if you have separate issues that you'd like to group together, which is what the rest of this Guide will cover. Otherwise, the default grouping behavior (stack trace) is used.
+**Do I need to do anything?** No. Stack trace is used by default if it's available. So if 2 events have the same stack trace, then they will group into 1 issue. If you have separate issues that you'd like to group together, then this guide will show you how.
 
-**How do I see the fingerprint?** If you're curious then open an issue, click the JSON link, and find the *fingerprint* property. If the default grouping was used, you'll see 'default' written there. If a different grouping was used, you'll see the actual fingerprint value itself.
+**How do I see the fingerprint?** If you're curious then open an issue, click the JSON link, and find the *fingerprint* property. If the default grouping was used, you'll see default written there. If a different grouping was used, you'll see the actual fingerprint value itself.
 
 ## Why are similar looking Issues not grouping together?
-While everything that meets the eye in the Issues Stream looks similar, there is something that still differs: the stack trace, and therefore the fingerprint. Let's compare two similar looking issues side-by-side:
+If a set of issues in the Issues Stream looks similar, there is something that still differs: the stack trace, and therefore the fingerprint. Let's compare two similar looking issues side-by-side:
 
 ![Issues Dashboard]({% asset guides/grouping-and-fingerprints/issue-stacktraces-comparison.png @path %})
 
@@ -33,11 +33,13 @@ Fortunately you can change the default grouping behavior to make certain issue t
 %}
 
 # Solutions
-There are three different approaches you can take for similar looking issues in your dashboard. The first approach is for merging together the issues already created. We'll call this **Merging Similar Issues**. The second is for setting rules so next incoming issues will get grouped together. We'll call this **Server-side Fingerprinting**. The third is **SDK Side Fingerprinting**. More on that [here](https://docs.sentry.io/data-management/event-grouping/sdk-fingerprinting/?platform=javascript). The difference between SDK side and Server side is the data elements on the exception and stack traces which you can use for matching issues.
+There are three different approaches for updating how events group into issues. The first approach is for merging together historical issues already created. We'll call this **Merging Similar Issues**. The second is for setting rules so next incoming issues will get grouped together. We'll call this **Server-side Fingerprinting**. The third is **SDK Side Fingerprinting**. The difference between SDK side and Server side is the data elements on the exception and stack traces which you can use for matching issues.
 
 In **Merging Similar Issues** we'll see how historical issues can be merged together. No settings or configuration are required to do this.
 
 In **Server-side Fingerprinting** we'll see how to set rules for new incoming issues of our choice to get grouped together by. This will not affect historical issues.
+
+More on **SDK Side Fingerprinting** [here](https://docs.sentry.io/data-management/event-grouping/sdk-fingerprinting/?platform=javascript).
 
 ## Merging Similar Issues
 This is for merging similar issues and will not auto merge the next occurance of this issue coming in.
@@ -76,7 +78,7 @@ You can do it based on the **type** as in:
 
 ![ConnectionTimeoutType]({% asset guides/grouping-and-fingerprints/connection-timeout-type.png @path %})
 
-Or you can do it based on the **message** as in any value after the word 'host':
+Or you can do it based on the **message** as in any value after the word host:
 
 ![ConnectionTimeoutMessage]({% asset guides/grouping-and-fingerprints/connection-timeout-message.png @path %})
 
@@ -88,7 +90,7 @@ Here's how to set the match based on the error **type**
 
 Now, all events coming in with ConnectionTimeout will get a fingerprint of connection-timeout-type and will get grouped into a single issue. This only applies to future events coming in. Each event for this issue could have a different stack trace, but stack trace is no longer used as the default grouping rule.
 
-Here's how to set the match based on the error **message**
+Here's how to set the match based on the error **message** where you want to include all hosts.
 
 ![ConnectionTimeoutMessageExample]({% asset guides/grouping-and-fingerprints/connection-timeout-message-example.png @path %})
 
