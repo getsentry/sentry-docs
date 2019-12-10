@@ -23,12 +23,11 @@ If you're on Laravel 5.5 or later the package will be auto-discovered. Otherwise
 'providers' => array(
     // ...
     Sentry\Laravel\ServiceProvider::class,
-)
-
+),
 'aliases' => array(
     // ...
     'Sentry' => Sentry\Laravel\Facade::class,
-)
+),
 ```
 {% endwizard %}
 
@@ -37,7 +36,7 @@ Add Sentry reporting to `App/Exceptions/Handler.php`:
 ```php
 public function report(Exception $exception)
 {
-    if (app()->bound('sentry') && $this->shouldReport($exception)){
+    if (app()->bound('sentry') && $this->shouldReport($exception)) {
         app('sentry')->captureException($exception);
     }
 
@@ -126,8 +125,7 @@ Add the Sentry service provider and facade in `config/app.php`:
 'providers' => array(
     // ...
     'Sentry\SentryLaravel\SentryLaravelServiceProvider',
-)
-
+),
 'aliases' => array(
     // ...
     'Sentry' => 'Sentry\SentryLaravel\SentryFacade',
@@ -184,6 +182,26 @@ The Laravel integration will create [breadcrumbs]({%- link _documentation/platfo
 ],
 ```
 
+### Testing with Artisan
+
+You can test your configuration using the provided `artisan` command:
+
+```sh
+$ php artisan sentry:test
+[sentry] Client DSN discovered!
+[sentry] Generating test event
+[sentry] Sending test event
+[sentry] Event sent: e6442bd7806444fc8b2710abce3599ac
+```
+
+### Local development
+
+When Sentry is installed in your application it will also be active when you are developing.
+
+If you don't want errors to be sent to Sentry when you are developing set the DSN value to `null`.
+
+You can do this by not defining `SENTRY_LARAVEL_DSN` in your `.env` or define it as `SENTRY_LARAVEL_DSN=null`.
+
 ## Customization
 
 ### Decorating the client builder
@@ -207,31 +225,13 @@ $this->app->extend(ClientBuilderInterface::class, function (ClientBuilderInterfa
 });
 ```
 
-## Testing with Artisan
+## Integration
 
-You can test your configuration using the provided `artisan` command:
-
-```sh
-$ php artisan sentry:test
-[sentry] Client DSN discovered!
-[sentry] Generating test event
-[sentry] Sending test event
-[sentry] Event sent: e6442bd7806444fc8b2710abce3599ac
-```
-
-## Local development
-
-When Sentry is installed in your application it will also be active when you are developing.
-
-If you don't want errors to be sent to Sentry when you are developing set the DSN value to `null`.
-
-You can do this by not defining `SENTRY_LARAVEL_DSN` in your `.env` or define it as `SENTRY_LARAVEL_DSN=null`.
-
-## User Feedback
+### User Feedback
 
 To see how to show user feedback dialog see: [User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}?platform=laravel).
 
-## User Context
+### User Context
 
 Starting with Laravel 5.3 we can automatically add the authenticated user id to the scope if [`send_default_pii`]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php#send-default-pii) option is set to `true` in your `config/sentry.php`.
 
@@ -271,7 +271,7 @@ class SentryContext
 }
 ```
 
-## Using log channels
+### Log channels
 
 {% capture __alert_content -%}
 If you're using log channels to log your exceptions and are also logging exceptions to Sentry in your exception handler (as you would have configured above) exceptions might end up twice in Sentry.
@@ -322,7 +322,6 @@ Optionally, you can set the logging level and if events should bubble on the dri
 ],
 ```
 
-### Naming your log channels
 ### Queue jobs
 
 When you have defined a `failed` method on your job class ([documentation](https://laravel.com/docs/6.x/queues#cleaning-up-after-failed-jobs)) that failed method acts as if your job runs inside a `try {} catch (\Exception $e) {}` and this will prevent reporting exception causing the job to have failed to be reported to Sentry.
@@ -347,6 +346,7 @@ public function failed(\Exception $exception)
 }
 ``` 
 
+#### Naming your log channels
 
 If you have multiple log channels you would like to filter on inside the Sentry interface, you can add the `name` attribute to the log channel. 
 It will show up in Sentry as the `logger` tag, which is filterable.
@@ -372,7 +372,7 @@ You're now able to log errors to your channel:
 
 And Sentry's `logger` tag now has the channel's `name`. You can filter on the "my-channel" value.
 
-## Resolve name conflicts with packages also called Sentry
+### Resolve name conflicts with packages also called Sentry
 
 To resolve this, you'll need to create your own service provider extending ours so we can prevent naming conflicts.
 
