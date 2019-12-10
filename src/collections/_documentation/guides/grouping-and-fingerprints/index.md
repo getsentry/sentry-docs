@@ -6,20 +6,20 @@ sidebar_order: 0
 Have you ever had a set of similar looking issues like this?
 ![Issues Dashboard]({% asset guides/grouping-and-fingerprints/issues-dashboard.png @path %})
 
-Let's first understand what makes Sentry Events group together into a single Sentry Issue before we compare multiple issues side by side. Let's take *testTypeIssue15* as an example which has 4 Events that grouped into 1 Issue. These events shared the same value for something called the `fingerprint`
+Let's first understand what makes Sentry Events group together into a single Sentry Issue before we compare multiple issues side by side. Let's take testTypeIssue15 as an example which has 4 Events that grouped into 1 Issue. These events shared the same value for something called the *fingerprint*
 
 **What is a fingerprint?** It is a way to uniquely identify an event in Sentry. It is set by default using a hash of the stack trace. This is also referred to as the default grouping algorithm. If 2 events have the same stack trace and the default grouping is left in place, then they group together into 1 issue.
 
 **Do I need to do anything?** No. Only if you have separate issues that you'd like to group together, which is what the rest of this Guide will cover. Otherwise, the default grouping behavior (stack trace) is used.
 
-**How do I see the fingerprint?** If you're curious then open an issue, click the JSON link, and find the `fingerprint` property. If the default grouping was used, you'll see 'default' written there. If a different grouping was used, you'll see the actual fingerprint value itself.
+**How do I see the fingerprint?** If you're curious then open an issue, click the JSON link, and find the *fingerprint* property. If the default grouping was used, you'll see 'default' written there. If a different grouping was used, you'll see the actual fingerprint value itself.
 
 ## Why are similar looking Issues not grouping together?
 While everything that meets the eye in the Issues Stream looks similar, there is something that still differs: the stack trace, and therefore the fingerprint. Let's compare two similar looking issues side-by-side:
 
 ![Issues Dashboard]({% asset guides/grouping-and-fingerprints/issue-stacktraces-comparison.png @path %})
 
-Notice the only difference is one had function *testTypeIssue15* and the other had *testTypeIssue14*. This means the stack traces are not identical.
+Notice the only difference is one had function testTypeIssue15 and the other had testTypeIssue14. This means the stack traces are not identical.
 
 Sometimes two stack traces are the same function execution path but differ by 1 frame. This can be due to a number of things like middleware you've configured, node_modules, the framework itself, or library imports. To have greater control over which stack frames are included or excluded, see [Custom Grouping Enhancements](https://docs.sentry.io/data-management/event-grouping/grouping-enhancements/).
 
@@ -45,7 +45,7 @@ This is for merging similar issues and will not auto merge the next occurance of
 Before merge  
 ![Before Merge]({% asset guides/grouping-and-fingerprints/before-merge.png @path %})
 
-After merge, we see that *testTypeIssue7* and *testTypeIssue8* were merged together.
+After merge, we see that testTypeIssue7 and testTypeIssue8 were merged together.
 ![After Merge]({% asset guides/grouping-and-fingerprints/after-merge.png @path %})
 
 You can also do this from inside a single issue. Click the Similar Issues tab  
