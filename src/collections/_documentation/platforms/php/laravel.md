@@ -323,6 +323,30 @@ Optionally, you can set the logging level and if events should bubble on the dri
 ```
 
 ### Naming your log channels
+### Queue jobs
+
+When you have defined a `failed` method on your job class ([documentation](https://laravel.com/docs/6.x/queues#cleaning-up-after-failed-jobs)) that failed method acts as if your job runs inside a `try {} catch (\Exception $e) {}` and this will prevent reporting exception causing the job to have failed to be reported to Sentry.
+
+This could be what you want since your job sometimes fails because of an API that is not reachable or other expected failures. If you still want the exception to be reported to Sentry you can do the following in your `failed` method:
+
+```php
+/**
+ * The job failed to process.
+ *
+ * @param \Exception $exception
+ *
+ * @return void
+ */
+public function failed(\Exception $exception)
+{
+    // Send user notification of failure, etc...
+    
+    if (app()->bound('sentry')) {
+        app('sentry')->captureException($exception);
+    }
+}
+``` 
+
 
 If you have multiple log channels you would like to filter on inside the Sentry interface, you can add the `name` attribute to the log channel. 
 It will show up in Sentry as the `logger` tag, which is filterable.
