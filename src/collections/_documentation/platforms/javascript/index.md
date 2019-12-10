@@ -14,6 +14,15 @@ The quickest way to get started is to use the CDN hosted version of the JavaScri
   crossorigin="anonymous"></script>
 ```
 
+{% capture __alert_content -%}
+It's possible to include `defer` in your script tag, but keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). We strongly recommend that if you use `defer`, you a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), thereby guaranteeing that it’s executed before any of the others.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Use of `defer`"
+  content=__alert_content
+  level="warning"
+%}
+
 You can also add the Sentry SDK as a dependency using npm:
 
 ``` bash
@@ -598,9 +607,9 @@ Sentry.withScope(function(scope) {
 For more information, see [Setting the Level](#level).
 
 ### Lazy Loading Sentry
-We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration).
+We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration). As noted there, if you want to use `defer`, you can, though keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). Therefore, if you do this, you'll need to a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), which will guarantee that it’s executed before any of the others.
 
-But we also offer an alternative we call the _Loader_. You install by just adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
+We also offer an alternative we call the _Loader_. You install by just adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
 
 ```html
 <script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
