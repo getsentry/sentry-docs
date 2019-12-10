@@ -69,30 +69,27 @@ Here's an overview of what we'll do using **Server-Side Fingerprinting**
 
 ### 1. Identify Match Logic
 
-Let's say you want all issues with error **type** of "OperationalError to group together. In this case your match syntax will be based on:
+Let's say you want the following 2 issues to group together:
+![ConnectionTimeouts]({% asset guides/grouping-and-fingerprints/connection-timeouts-2.png @path %})
 
-[screenshot w red highlight around error.type]
+You can do it based on the **type** as in:
 
-Let's say you only want OperationalErrors to group together if their **message** has "environment" but it doesn't matter whether it's the "...company-shared" or "...company-production" environment. In this case your matcher is:
+![ConnectionTimeoutType]({% asset guides/grouping-and-fingerprints/connection-timeout-type.png @path %})
 
-[screenshot w red highlight around error.message]
+Or you can do it based on the **message** as in any value after the word 'host':
+
+![ConnectionTimeoutMessage]({% asset guides/grouping-and-fingerprints/connection-timeout-message.png @path %})
+
 
 ### 2. Implement
-Here's how to set the match based on the error **type**
+Here's how to set the match based on the error **type** 
 
-[screenshot for type]
-```
-type:OperationalError -> operational-error-type
-```
+![ConnectionTimeoutTypeExample]({% asset guides/grouping-and-fingerprints/connection-timeout-type-example.png @path %})
 
-Now, all events coming in with OperationalError will get a fingerprint of operational-error-type and will get grouped under a single issue. This only applies to future events coming in. Each event for this issue might have a different stack trace, but stack trace is no longer used as the default grouping rule.
+Now, all events coming in with ConnectionTimeout will get a fingerprint of connection-timeout-type and will get grouped into a single issue. This only applies to future events coming in. Each event for this issue could have a different stack trace, but stack trace is no longer used as the default grouping rule.
 
 Here's how to set the match based on the error **message**
 
-[screenshot for message]
-```
-message: "could not translate host name*" -> operational-error-type
-```
+![ConnectionTimeoutMessageExample]({% asset guides/grouping-and-fingerprints/connection-timeout-message-example.png @path %})
 
-You could also do this based on the file path of the erroring funciton, or the function name itself. See [additional examples](https://docs.sentry.io/data-management/event-grouping/server-side-fingerprinting/#examples)
-[SCREENSHOT?]
+You could also do this based on the file path of the erroring funciton, or on the function name itself. See [Additional Examples](https://docs.sentry.io/data-management/event-grouping/server-side-fingerprinting/#examples)
