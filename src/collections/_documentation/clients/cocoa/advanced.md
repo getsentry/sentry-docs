@@ -152,9 +152,20 @@ Client.shared?.snapshotStacktrace {
 If you want to filter certain events, you can use `shouldSendEvent` which takes the event, returns a boolean, and decides whether or not to send the event.
 
 ```swift
-    self.shouldSendEvent = ^BOOL(SentryEvent *_Nonnull event) {
-        return (sampleRate >= ((double)arc4random() / 0x100000000));
-    };
+Client.shared?.shouldSendEvent = { (event) in
+            if (event.environment == "staging") {
+                return false
+            }
+            return true
+        }
+```
+
+Here's an example in Objective C too:
+
+```objc
+self.shouldSendEvent = ^BOOL(SentryEvent *_Nonnull event) {
+    return (sampleRate >= ((double)arc4random() / 0x100000000));
+};
 ```
 
 ## Event Sampling
