@@ -163,7 +163,7 @@ Client.shared?.shouldSendEvent = { (event) in
 Here's an example in Objective C too:
 
 ```objc
-self.shouldSendEvent = ^BOOL(SentryEvent *_Nonnull event) {
+client.shouldSendEvent = ^BOOL(SentryEvent *_Nonnull event) {
     return (sampleRate >= ((double)arc4random() / 0x100000000));
 };
 ```
