@@ -894,7 +894,7 @@ The global PagerDuty integration allows you to connect your Sentry organization 
 
     [{% asset pagerduty/pd_add_services.png %}]({% asset pagerduty/pd_add_services.png @path %})
 
-6. The PagerDuty integration should now be installed, you'll be able to see the services connected by going to the **configure** page for your installation. 
+6. The PagerDuty integration should now be installed. You'll be able to see the services connected by going to the **configure** page for your installation. 
 
     [{% asset pagerduty/pd_installed.png %}]({% asset pagerduty/pd_installed.png @path %})
 
@@ -902,7 +902,7 @@ The global PagerDuty integration allows you to connect your Sentry organization 
 
     [{% asset pagerduty/pd_org_configuration.png %}]({% asset pagerduty/pd_org_configuration.png @path %})
 
-If you re-generate an integration key for one of your services in PagerDuty you can manually update that value in configuration page for your PagerDuty installation. Additionally, you can add services by clicking the **Add Services** button in the top right. This will take you to same page as shown in step 5. 
+If you re-generate an integration key for one of your services in PagerDuty you can manually update that value in configuration page for your PagerDuty installation. Additionally, you can add services by clicking the **Add Services** button in the top right. This will take you to the same page, as shown in step 5. 
 
 8. Click **Add Alert Rule** in the integration configuration page or go to the **Project Settings** > **Alerts** to set up a **New Alert Rule** for the PagerDuty Integration.
 
