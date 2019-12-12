@@ -140,7 +140,7 @@ This option can be overridden using `in-app-include`.
 {% endsupported %}
 
 {:.config-key}
-### `request-bodies`
+### `max_request_body_size`
 
 {% supported python php %}
 This parameter controls if integrations should capture HTTP request bodies.  It can be set to one
