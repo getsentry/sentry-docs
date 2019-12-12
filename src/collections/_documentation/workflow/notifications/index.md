@@ -69,7 +69,7 @@ Legacy Integrations (via "Service" as any individual integration) that can send 
 - Campfire*
 - IRC
 - OpsGenie
-- PagerDuty
+- [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
 - Pushover
 - [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
 - Twilio
