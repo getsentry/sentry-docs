@@ -886,11 +886,11 @@ The global PagerDuty integration allows you to connect your Sentry organization 
 
     [{% asset pagerduty/pd_learn_more.png %}]({% asset pagerduty/pd_learn_more.png @path %})
 
-4. You'll then be redirected to sign into PagerDuty and choose the PD account you'd like to connect to the current Sentry organization you are in.
+4. You'll then be redirected to sign into PagerDuty and choose the account you'd like to connect to the current Sentry organization you are in.
 
     [{% asset pagerduty/pd_account_picker.png %}]({% asset pagerduty/pd_account_picker.png @path %})
 
-5. After picking the account you'll be prompted to add the PagerDuty services you want Sentry to have access to. Click **Connect** once you've added your services.  
+5. After picking the account, you'll be prompted to add the PagerDuty services you want Sentry to send incidents to. Click **Connect** once you've added your services.  
 
     [{% asset pagerduty/pd_add_services.png %}]({% asset pagerduty/pd_add_services.png @path %})
 
