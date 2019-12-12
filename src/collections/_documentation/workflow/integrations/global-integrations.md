@@ -886,7 +886,7 @@ The global PagerDuty integration allows you to connect your Sentry organization 
 
     [{% asset pagerduty/pd_learn_more.png %}]({% asset pagerduty/pd_learn_more.png @path %})
 
-4. You'll then be redirected to sign into PagerDuty and choose the PD account you'd like to connect to the current Sentry organization you are in.
+4. You'll then be redirected to sign into PagerDuty and choose the account you'd like to connect to the current Sentry organization you are in.
 
     [{% asset pagerduty/pd_account_picker.png %}]({% asset pagerduty/pd_account_picker.png @path %})
 
