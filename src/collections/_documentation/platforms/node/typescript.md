@@ -94,12 +94,12 @@ This config should be enough to make everything work and use TypeScript with Nod
 
 ### Dealing with TSLib
 
-During compilation, if needed, TypeScript will inject some of it's runtime dependencies into the output files it produces. It can include things like polyfills for function generators or some APIs not available in all the environments.
+During compilation, if needed, TypeScript will inject some of its runtime dependencies into the output files it produces. It can include things like polyfills for function generators or some APIs not available in all the environments.
 
-This however, makes it impossible to map frames from compiled code to the original sources, as well, there are no original sources.
+However, this makes it impossible to map frames from compiled code to the original sources, as there are no original sources.
 
-We can still make it work though. In order to do this, we need to tell TypeScript compiler to not inject those code snippets and use it's own 3rd party package called `tslib`, which is internally the part of a compiler.
+We can still make it work, though. To do this, we need to tell the TypeScript compiler not to inject those code snippets and use its own 3rd party package called `tslib`, which is internally the part of a compiler.
 
-The only thing that have to change is inside TypeScript config file, not your source code.
+The only things that have to change are inside the TypeScript config file, not your source code.
 
-First make sure that `tslib` is listed as the dependency in your `package.json` file. Once it's done, add two entries in `compilerOptions` section of your `tsconfig.json`. `"noEmitHelpers": true` and `"importHelpers": true`. That's it. Now, we will be correctly able to map the source maps for all your stack trace frames, including internal TypeScript compiler code snippets.
+First, make sure that `tslib` is listed as the dependency in your `package.json` file. Once that's done, add two entries in `compilerOptions` section of your `tsconfig.json`. `"noEmitHelpers": true` and `"importHelpers": true`. That's it. Now, we can correctly map the source maps for all your stack trace frames, including internal TypeScript compiler code snippets.
