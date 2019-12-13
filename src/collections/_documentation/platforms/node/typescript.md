@@ -16,7 +16,7 @@ There are two main reasons for this:
 
 We can still make it work with two additional steps, so let’s do this.
 
-### 1. Configuring TypeScript Compiler
+### Configuring TypeScript Compiler
 
 The first one is configuring TypeScript compiler in a way, in which we’ll override _sourceRoot_ and merge original sources with corresponding maps. The former is not required, but it’ll help Sentry display correct file paths, e.g. _/lib/utils/helper.ts_ instead of a full one like _/Users/Sentry/Projects/TSExample/lib/utils/helper.ts_. You can skip this option if you’re fine with long names.
 
@@ -52,7 +52,7 @@ Create a new one called _tsconfig.production.json_ and paste the snippet below:
 
 From now on, when you want to run the production build, which will then upload, you specify this specific config, e.g., _tsc -p tsconfig.production.json_. This will create necessary source maps and attach original sources to them instead of making us upload them and modify source paths in our maps by hand.
 
-### 2. Changing Events Frames
+### Changing Events Frames
 
 The second step is changing events frames so that Sentry can link stack traces with correct source files.
 
@@ -91,3 +91,15 @@ Sentry.init({
 ```
 
 This config should be enough to make everything work and use TypeScript with Node. And, still be able to digest all original sources by Sentry.
+
+### Dealing with TSLib
+
+During compilation, if needed, TypeScript will inject some of its runtime dependencies into the output files it produces. It can include things like polyfills for function generators or some APIs not available in all the environments.
+
+However, this makes it impossible to map frames from compiled code to the original sources, as there are no original sources.
+
+We can still make it work, though. To do this, we need to tell the TypeScript compiler not to inject those code snippets and use its own 3rd party package called `tslib`, which is internally the part of a compiler.
+
+The only things that have to change are inside the TypeScript config file, not your source code.
+
+First, make sure that `tslib` is listed as the dependency in your `package.json` file. Once that's done, add two entries in `compilerOptions` section of your `tsconfig.json`. `"noEmitHelpers": true` and `"importHelpers": true`. That's it. Now, we can correctly map the source maps for all your stack trace frames, including internal TypeScript compiler code snippets.
