@@ -39,9 +39,12 @@ steps:
   - '-e'
   - '-c'
   - |
+    docker push us.gcr.io/$PROJECT_ID/$REPO_NAME:builder
+    docker push us.gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA 
     # Only tag latest from master
     [ "$BRANCH_NAME" != "master" ] && exit 0
     docker tag us.gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA us.gcr.io/$PROJECT_ID/$REPO_NAME:latest
+    docker push us.gcr.io/$PROJECT_ID/$REPO_NAME:latest
   # Deploy container image to Cloud Run for PR previews
 - name: 'gcr.io/cloud-builders/gcloud'
   entrypoint: 'bash'
@@ -53,9 +56,4 @@ steps:
     [ -z "${_PR_NUMBER}" ] && exit 0
     gcloud beta run deploy $REPO_NAME --image us.gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA --platform managed --region us-central1 --quiet
 
-images: [
-  'us.gcr.io/$PROJECT_ID/$REPO_NAME:builder',
-  'us.gcr.io/$PROJECT_ID/$REPO_NAME:latest',
-  'us.gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA',
-]
 timeout: 1200s
