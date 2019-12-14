@@ -25,7 +25,6 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
-    '-t', 'us.gcr.io/$PROJECT_ID/$REPO_NAME:latest',
     '-t', 'us.gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA',
     '--build-arg', 'COMMIT_SHA=$COMMIT_SHA',
     '--build-arg', 'BRANCH_NAME=$BRANCH_NAME',
@@ -34,6 +33,26 @@ steps:
     '--cache-from', 'us.gcr.io/$PROJECT_ID/$REPO_NAME:latest',
     '.'
 ]
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - '-e'
+  - '-c'
+  - |
+    # Only tag latest from master
+    [ "$BRANCH_NAME" != "master" ] && exit 0
+    docker tag us.gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA us.gcr.io/$PROJECT_ID/$REPO_NAME:latest
+  # Deploy container image to Cloud Run for PR previews
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+  - '-e'
+  - '-c'
+  - |
+    # Only deploy from pull requests
+    [ -z "${_PR_NUMBER}" ] && exit 0
+    gcloud run deploy $REPO_NAME --image us.gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA --platform managed --quiet
+
 images: [
   'us.gcr.io/$PROJECT_ID/$REPO_NAME:builder',
   'us.gcr.io/$PROJECT_ID/$REPO_NAME:latest',
