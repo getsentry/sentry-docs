@@ -19,7 +19,7 @@ Turning this option on is required for certain features in Sentry to work, but a
 
 ## Custom Event Processing in the SDK
 
-In the SDKs, you can configure a `before-send` function which is invoked before an event is sent and can be used to modify the event data and remove sensitive data. Using `before-send` in SDKs to **scrub any data before it is attached** as a payload request to [sentry.io](http://sentry.io/) is the recommended scrubbing approach, as SD is not attached to the event and therefore never makes it to Sentry.
+In the SDKs, you can configure a `before-send` function which is invoked before an event is sent and can be used to modify the event data and remove sensitive data. Using `before-send` in the SDKs to **scrub any data before it is attached** as a payload request to [sentry.io](http://sentry.io/) is the recommended scrubbing approach, as SD is not attached to the event and therefore never makes it to Sentry.
 
 ```javascript
 Sentry.init({
@@ -35,10 +35,9 @@ Sentry.init({
 });
 ```
 
-- **Use `beforeSend` upon integration/introduction** of the Sentry SDK to see what is being sent and implement proper scrubbing in `beforeSend`
-- Look out for SD **in event information** (stacktrace, breadcrumbs, and other values the SDK is picking up such as headers/etc). Some things to look out for:
-    - Stack-locals → some SDKs (Python + PHP) will pick up variable values. This can be scrubbed or disabled altogether if necessary
-    - Breadcrumbs → some SDKs (e.g. JavaScript, Java logging integrations) will pick up previously executed log statements. Do not log PII if using this feature and including log statements as breadcrumbs in the event. Some backend SDKs will surface DB queries which may need to be scrubbed
+- Look out for SD **in event information** (stack trace, breadcrumbs, and other values the SDK is picking up such as headers/etc.) Some things to look out for:
+    - Stack-locals → some SDKs (Python + PHP), will pick up variable values. This can be scrubbed or disabled altogether, if necessary
+    - Breadcrumbs → some SDKs (for example, JavaScript, Java logging integrations) will pick up previously executed log statements. **Do not log PII** if using this feature and including log statements as breadcrumbs in the event. Some backend SDKs will surface DB queries which may need to be scrubbed
 - Be **aware** of what is being attached to the event and **code review SDK changes,** including context carefully
     - Context → Tags (including User-context) + extra-info + breadcrumbs
 
