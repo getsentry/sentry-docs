@@ -87,7 +87,7 @@ For more details, see [_Filtering Events_]({%- link _documentation/error-reporti
     });
      ```
 
-- Logging PII/SD (if breadcrumbs include console/log statements)
+- Logging PII/SD (if using breadcrumbs, include console/log statements)
 
     Don't do:
     
@@ -95,7 +95,7 @@ For more details, see [_Filtering Events_]({%- link _documentation/error-reporti
     console.log("user's name is: " + user.name);
     ```
     
-    instead:
+    Instead:
     
     ```
     // 1. don't log SD/PII
