@@ -19,7 +19,7 @@ Turning this option on is required for certain features in Sentry to work, but a
 
 ## Custom Event Processing in the SDK
 
-In the SDKs you can configure a `before-send` function which is invoked before an event is sent and can be used to modify the event data and remove sensitive data. Using `before-send` in SDKs to **scrub any data before it is attached** as a payload request to [sentry.io](http://sentry.io/) is the recommended scrubbing approach, as SD is not attached to the event and therefore never makes to Sentry.
+In the SDKs, you can configure a `before-send` function which is invoked before an event is sent and can be used to modify the event data and remove sensitive data. Using `before-send` in SDKs to **scrub any data before it is attached** as a payload request to [sentry.io](http://sentry.io/) is the recommended scrubbing approach, as SD is not attached to the event and therefore never makes it to Sentry.
 
 ```javascript
 Sentry.init({
@@ -80,23 +80,29 @@ See [_Filtering Events_]({%- link _documentation/error-reporting/configuration/f
     Sentry.configureScope((scope) => {
       scope.setUser({id: user.id});
     });
+    
     // or
+    
     Sentry.configureScope((scope) => {
       scope.setUser({username: user.username});
     });
-     ```   
+     ```
 
 - Logging PII/SD (if breadcrumbs include console/log statements)
 
     Don't do:
-
-        console.log("user's name is: " + user.name);
-
+    
+    ```javascript
+    console.log("user's name is: " + user.name);
+    ```
+    
     instead:
-
-        // 1. don't log SD/PII
-        // 2. use `beforeBreadcrumb` to filter it out from breadcrumbs before it is attached
-        // 3. Disable logging breadcrumb integration (e.g. <https://docs.sentry.io/platforms/javascript/?platform=browser#alternative-way-of-setting-an-integration>)
+    
+    ```
+    // 1. don't log SD/PII
+    // 2. use `beforeBreadcrumb` to filter it out from breadcrumbs before it is attached
+    // 3. Disable logging breadcrumb integration (e.g. <https://docs.sentry.io/platforms/javascript/?platform=browser#alternative-way-of-setting-an-integration>)
+    ```
 
 ## Server-Side Scrubbing
 
