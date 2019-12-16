@@ -41,7 +41,7 @@ Sentry.init({
 - Be **aware** of what is being attached to the event and **code review SDK changes,** including context carefully
     - Context → Tags (including User-context) + extra-info + breadcrumbs
 
-See [_Filtering Events_]({%- link _documentation/error-reporting/configuration/filtering.md -%}) for more information.
+For more details, see [_Filtering Events_]({%- link _documentation/error-reporting/configuration/filtering.md -%}).
 
 ### Examples
 
@@ -55,7 +55,7 @@ See [_Filtering Events_]({%- link _documentation/error-reporting/configuration/f
     });
     ```
     
-    instead anonymize (by using checksum, hash, etc.):
+    Instead, anonymize (by using `checksum`, `hash`, etc.):
     
     ```javascript
     Sentry.configureScope((scope) => {
@@ -63,7 +63,7 @@ See [_Filtering Events_]({%- link _documentation/error-reporting/configuration/f
     });
     ```
     
-- Attaching user/email information (if that is considered SD or not permitted)
+- Attaching user/email information (if it is considered SD or not permitted)
 
     Don't do:
     
@@ -73,7 +73,7 @@ See [_Filtering Events_]({%- link _documentation/error-reporting/configuration/f
     });
     ```    
 
-    instead anonymize (use id, username, etc.)
+    Instead, anonymize (use `id`, `username`, etc.):
     
     ```javascript
     Sentry.configureScope((scope) => {
