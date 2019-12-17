@@ -33,7 +33,7 @@ Fortunately, you can change the default grouping behavior to make certain issue 
 %}
 
 # Solutions
-There are three different approaches for updating how events group into issues. The first approach is for merging together historical issues already created. We'll call this **Merging Similar Issues**. The second is for setting rules so next incoming issues will get grouped together. We'll call this **Server-side Fingerprinting**. The third is **SDK Side Fingerprinting**. The difference between SDK side and Server side is the data elements on the exception and stack traces which you can use for matching issues.
+There are three different approaches for updating how events group into issues. The first approach is for merging historical issues already created. We'll call this **Merging Similar Issues**. The second is for setting rules, so that the next incoming issues will get grouped together. We'll call this **Server-side Fingerprinting**. The third is **SDK-side Fingerprinting**. The difference between SDK-side and Server-side is the data elements on the exception and stack traces which you can use for matching issues.
 
 In **Merging Similar Issues** we'll see how historical issues can be merged together. No settings or configuration are required to do this.
 
