@@ -24,7 +24,7 @@ Notice the only difference is one had function testTypeIssue15 and the other had
 Sometimes two stack traces are the same function execution path but differ by one frame. This can be due to several things like middleware you've configured, node_modules, the framework itself, or library imports. To have greater control over which stack frames are included or excluded, see [Custom Grouping Enhancements](https://docs.sentry.io/data-management/event-grouping/grouping-enhancements/).
 
 {% capture __alert_content -%}
-Fortunately you can change the default grouping behavior to make certain issue types match on something other than stack trace. You can do this from both the **Server side** and the **SDK side**
+Fortunately, you can change the default grouping behavior to make certain issue types match on something other than a stack trace. You can do this from both the **Server-side** and the **SDK-side**.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
