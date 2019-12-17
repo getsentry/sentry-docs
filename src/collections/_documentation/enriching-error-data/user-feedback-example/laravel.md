@@ -39,11 +39,11 @@ Next, create ``resources/views/errors/500.blade.php``, and embed the feedback co
     <div class="title">Something went wrong.</div>
 
     @if(app()->bound('sentry') && app('sentry')->getLastEventId())
-        <div class="subtitle">Error ID: {{ app('sentry')->getLastEventId() }}</div>
+        <div class="subtitle">Error ID: {% raw %}{{ app('sentry')->getLastEventId() }}{% endraw %}</div>
         <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.min.js %}" crossorigin="anonymous"></script>
         <script>
             Sentry.init({ dsn: '___PUBLIC_DSN___' });
-            Sentry.showReportDialog({ eventId: '{{ app('sentry')->getLastEventId() }}' });
+            Sentry.showReportDialog({ eventId: {% raw %}'{{ app('sentry')->getLastEventId() }}'{% endraw %} });
         </script>
     @endif
 </div>
