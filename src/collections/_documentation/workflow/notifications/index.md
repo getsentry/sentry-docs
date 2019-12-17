@@ -58,6 +58,11 @@ Sentry provides a few states for each issue, which significantly impacts how not
 
 ## Integrations with Notifications
 
+Global Integrations that can send Notifications:
+- [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
+- [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
+
+
 Legacy Integrations (via "Service" as any individual integration) that can send Notifications:
 
 {% include components/alert.html
@@ -69,9 +74,7 @@ Legacy Integrations (via "Service" as any individual integration) that can send 
 - Campfire*
 - IRC
 - OpsGenie
-- [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
 - Pushover
-- [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
 - Twilio
 - VictorOps
 
