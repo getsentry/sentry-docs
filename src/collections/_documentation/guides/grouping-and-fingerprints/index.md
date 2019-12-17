@@ -94,4 +94,4 @@ Here's how to set the match based on the error **message** where you want to inc
 
 ![ConnectionTimeoutMessageExample]({% asset guides/grouping-and-fingerprints/connection-timeout-message-example.png @path %})
 
-You could also do this based on the file path of the erroring funciton, or on the function name itself. See [Additional Examples](https://docs.sentry.io/data-management/event-grouping/server-side-fingerprinting/#examples)
+You could also do this based on the file path of the erroring function, or on the function name itself. For more details, see additional examples in the full [fingerprinting documentation](https://docs.sentry.io/data-management/event-grouping/server-side-fingerprinting/#examples).
