@@ -8,7 +8,7 @@ Have you ever had a set of similar-looking issues like this?
 
 Let's first understand what makes events group into an issue. testTypeIssue15 is an issue that had 4 events. These events grouped into the issue because they shared the same *fingerprint*
 
-**What is a fingerprint?** All events have a fingerprint and events with the same fingerprint are grouped together. By default, Sentry will run one of our built-in grouping algorithms to generate a fingerprint based on information available within the event such as stacktrace, exception, and message.
+**What is a fingerprint?** All events have a fingerprint, and events with the same fingerprint are grouped together. By default, Sentry will run one of our built-in grouping algorithms to generate a fingerprint based on information available within the event such as a stack trace, exception, and message.
 
 **Do I need to do anything?** No. Stack trace is used by default if it's available. So if 2 events have the same stack trace, then they will group into 1 issue. If you have separate issues that you'd like to group together, then this guide will show you how.
 
