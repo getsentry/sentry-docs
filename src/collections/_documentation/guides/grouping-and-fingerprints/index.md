@@ -12,7 +12,7 @@ Let's first understand what makes events group into an issue. testTypeIssue15 is
 
 **Do I need to do anything?** No. A stack trace is used by default if it's available. So if two events have the same stack trace, then they will group into one issue. If you have separate issues that you'd like to group together, then this guide will show you how.
 
-**How do I see the fingerprint?** If you're curious then open an issue, click the JSON link, and find the *fingerprint* property. If the default grouping was used, you'll see default written there. If a different grouping was used, you'll see the actual fingerprint value itself.
+**How do I see the fingerprint?** Open an issue, click the JSON link, and find the *fingerprint* property. If the default grouping was used, you'll see default written there. If a different grouping was used, you'll see the actual fingerprint value itself.
 
 ## Why are similar looking Issues not grouping together?
 If a set of issues in the Issues Stream looks similar, there is something that still differs: the stack trace, and therefore the fingerprint. Let's compare two similar looking issues side-by-side:
