@@ -60,6 +60,11 @@ add custom tags or to inform sentry about the currently authenticated user.
 
 {% include components/platform_content.html content_dir='configure-scope' %}
 
+This can also be applied when unsetting a user at logout:
+
+```javascript
+Sentry.configureScope(scope => scope.setUser({}));
+```
 To learn what useful information can be associated with scopes see
 [the context documentation]({% link _documentation/enriching-error-data/context.md %}).
 
