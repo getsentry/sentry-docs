@@ -44,7 +44,7 @@ More on **SDK-side Fingerprinting** [here](https://docs.sentry.io/data-managemen
 ## Merging Similar Issues
 This is for merging similar issues and will not auto-merge the next occurrence of this issue coming in.
 
-Before merge  
+Before merge: 
 ![Before Merge]({% asset guides/grouping-and-fingerprints/before-merge.png @path %})
 
 After merge, we see that testTypeIssue7 and testTypeIssue8 were merged together.
