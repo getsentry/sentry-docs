@@ -37,7 +37,7 @@ There are three different approaches for updating how events group into issues. 
 
 In **Merging Similar Issues**, we'll see how historical issues can be merged together. No settings or configuration are required to do this.
 
-In **Server-side Fingerprinting** we'll see how to set rules for new incoming issues of our choice to get grouped together by. This will not affect historical issues.
+In **Server-side Fingerprinting**, we'll see how to set rules for new incoming issues of our choice to get grouped together. This will not affect historical issues.
 
 More on **SDK-side Fingerprinting** [here](https://docs.sentry.io/data-management/event-grouping/sdk-fingerprinting/?platform=javascript).
 
