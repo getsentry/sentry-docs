@@ -71,7 +71,7 @@ Here's an overview of what we'll do using **Server-Side Fingerprinting**
 
 ### 1. Identify Match Logic
 
-Let's say you want the following 2 issues to group together:
+Let's say you want the following two issues to group together:
 ![ConnectionTimeouts]({% asset guides/grouping-and-fingerprints/connection-timeouts-2.png @path %})
 
 You can do it based on the **type**:
