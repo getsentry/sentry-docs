@@ -90,7 +90,7 @@ Here's how to set the match based on the error **type**:
 
 Now, all events coming in with ConnectionTimeout will get a fingerprint of connection-timeout-type and will get grouped into a single issue. This only applies to future events coming in. Each event for this issue could have a different stack trace, but the stack trace is no longer used as the default grouping rule.
 
-Here's how to set the match based on the error **message** where you want to include all hosts.
+Here's how to set the match based on the error **message** where you want to include all hosts:
 
 ![ConnectionTimeoutMessageExample]({% asset guides/grouping-and-fingerprints/connection-timeout-message-example.png @path %})
 
