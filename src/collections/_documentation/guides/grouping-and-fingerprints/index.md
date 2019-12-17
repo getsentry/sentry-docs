@@ -39,7 +39,7 @@ In **Merging Similar Issues** we'll see how historical issues can be merged toge
 
 In **Server-side Fingerprinting** we'll see how to set rules for new incoming issues of our choice to get grouped together by. This will not affect historical issues.
 
-More on **SDK Side Fingerprinting** [here](https://docs.sentry.io/data-management/event-grouping/sdk-fingerprinting/?platform=javascript).
+More on **SDK-side Fingerprinting** [here](https://docs.sentry.io/data-management/event-grouping/sdk-fingerprinting/?platform=javascript).
 
 ## Merging Similar Issues
 This is for merging similar issues and will not auto merge the next occurance of this issue coming in.
