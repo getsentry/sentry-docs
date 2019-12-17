@@ -10,7 +10,7 @@ Let's first understand what makes events group into an issue. testTypeIssue15 is
 
 **What is a fingerprint?** All events have a fingerprint, and events with the same fingerprint are grouped together. By default, Sentry will run one of our built-in grouping algorithms to generate a fingerprint based on information available within the event such as a stack trace, exception, and message.
 
-**Do I need to do anything?** No. Stack trace is used by default if it's available. So if 2 events have the same stack trace, then they will group into 1 issue. If you have separate issues that you'd like to group together, then this guide will show you how.
+**Do I need to do anything?** No. A stack trace is used by default if it's available. So if two events have the same stack trace, then they will group into one issue. If you have separate issues that you'd like to group together, then this guide will show you how.
 
 **How do I see the fingerprint?** If you're curious then open an issue, click the JSON link, and find the *fingerprint* property. If the default grouping was used, you'll see default written there. If a different grouping was used, you'll see the actual fingerprint value itself.
 
