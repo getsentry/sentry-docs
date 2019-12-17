@@ -50,7 +50,7 @@ Before merge:
 After merge, we see that testTypeIssue7 and testTypeIssue8 were merged together.
 ![After Merge]({% asset guides/grouping-and-fingerprints/after-merge.png @path %})
 
-You can also do this from inside a single issue. Click the Similar Issues tab  
+You can also do this from inside a single issue. Click the Similar Issues tab. 
 ![Similar Issues]({% asset guides/grouping-and-fingerprints/similar-issues.png @path %})
 
 {% capture __alert_content -%}
