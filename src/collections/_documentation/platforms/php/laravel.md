@@ -5,7 +5,9 @@ sidebar_order: 50
 
 Laravel is supported via a native package, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
-## Laravel 5.x
+## Installation
+
+### Laravel 5.x & 6.x
 
 {% wizard %}
 Install the `sentry/sentry-laravel` package:
@@ -21,12 +23,11 @@ If you're on Laravel 5.5 or later the package will be auto-discovered. Otherwise
 'providers' => array(
     // ...
     Sentry\Laravel\ServiceProvider::class,
-)
-
+),
 'aliases' => array(
     // ...
     'Sentry' => Sentry\Laravel\Facade::class,
-)
+),
 ```
 {% endwizard %}
 
@@ -35,7 +36,7 @@ Add Sentry reporting to `App/Exceptions/Handler.php`:
 ```php
 public function report(Exception $exception)
 {
-    if (app()->bound('sentry') && $this->shouldReport($exception)){
+    if (app()->bound('sentry') && $this->shouldReport($exception)) {
         app('sentry')->captureException($exception);
     }
 
@@ -65,57 +66,7 @@ Route::get('/debug-sentry', function () {
 Visiting this route will trigger an exception that will be captured by Sentry.
 {% endwizard %}
 
-## Laravel 4.x
-
-Install the `sentry/sentry-laravel` package:
-
-Laravel 4.x is supported until version 0.8.x.
-
-```sh
-$ composer require "sentry/sentry-laravel:0.8.*"
-```
-
-Add the Sentry service provider and facade in `config/app.php`:
-
-```php
-'providers' => array(
-    // ...
-    'Sentry\SentryLaravel\SentryLaravelServiceProvider',
-)
-
-'aliases' => array(
-    // ...
-    'Sentry' => 'Sentry\SentryLaravel\SentryFacade',
-)
-```
-
-Create the Sentry configuration file (`config/sentry.php`):
-
-```bash
-$ php artisan config:publish sentry/sentry-laravel
-```
-
-Add your DSN to ``config/sentry.php``:
-
-```php
-<?php
-
-return array(
-    'dsn' => '___PUBLIC_DSN___',
-
-    // ...
-);
-```
-
-If you wish to wire up Sentry anywhere outside of the standard error handlers, or
-if you need to configure additional settings, you can access the Sentry instance
-through `$app`:
-
-```php
-$app['sentry']->setRelease(Git::sha());
-```
-
-## Lumen 5.x
+### Lumen 5.x & 6.x
 
 Install the `sentry/sentry-laravel` package:
 
@@ -158,7 +109,80 @@ return array(
 );
 ```
 
-## Testing with Artisan
+### Laravel 4.x
+
+Install the `sentry/sentry-laravel` package:
+
+Laravel 4.x is supported until version 0.8.x.
+
+```sh
+$ composer require "sentry/sentry-laravel:0.8.*"
+```
+
+Add the Sentry service provider and facade in `config/app.php`:
+
+```php
+'providers' => array(
+    // ...
+    'Sentry\SentryLaravel\SentryLaravelServiceProvider',
+),
+'aliases' => array(
+    // ...
+    'Sentry' => 'Sentry\SentryLaravel\SentryFacade',
+)
+```
+
+Create the Sentry configuration file (`config/sentry.php`):
+
+```bash
+$ php artisan config:publish sentry/sentry-laravel
+```
+
+Add your DSN to ``config/sentry.php``:
+
+```php
+<?php
+
+return array(
+    'dsn' => '___PUBLIC_DSN___',
+
+    // ...
+);
+```
+
+If you wish to wire up Sentry anywhere outside of the standard error handlers, or
+if you need to configure additional settings, you can access the Sentry instance
+through `$app`:
+
+```php
+$app['sentry']->setRelease(Git::sha());
+```
+
+## Configuration
+
+The configuration file should be placed in `config/sentry.php` here you can configure all the [options]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php) the PHP SDK supports and a few Laravel specific options documented below.
+
+### Laravel specific options
+
+The Laravel integration will create [breadcrumbs]({%- link _documentation/platforms/php/index.md -%}#breadcrumbs) for certain events occuring in the framework, the capture of this information can be configured using the following options:
+
+```php
+'breadcrumbs' => [
+    // Capture Laravel logs. Defaults to `true`.
+    'logs' => true,
+
+    // Capture queue job information. Defaults to `true`.
+    'queue_info' => true,
+
+    // Capture SQL queries. Defaults to `true`.
+    'sql_queries' => true,
+
+    // Capture bindings (parameters) on SQL queries. Defaults to `false`.
+    'sql_bindings' => false,
+],
+```
+
+### Testing with Artisan
 
 You can test your configuration using the provided `artisan` command:
 
@@ -170,7 +194,7 @@ $ php artisan sentry:test
 [sentry] Event sent: e6442bd7806444fc8b2710abce3599ac
 ```
 
-## Local development
+### Local development
 
 When Sentry is installed in your application it will also be active when you are developing.
 
@@ -178,49 +202,36 @@ If you don't want errors to be sent to Sentry when you are developing set the DS
 
 You can do this by not defining `SENTRY_LARAVEL_DSN` in your `.env` or define it as `SENTRY_LARAVEL_DSN=null`.
 
-## Laravel specific options
+## Customization
 
-#### breadcrumbs.sql_queries
+### Decorating the client builder
 
-Capture SQL queries.
-Defaults to `true`.
+Starting with version [`1.5.0`](https://github.com/getsentry/sentry-laravel/releases/tag/1.5.0) of [sentry-laravel](https://github.com/getsentry/sentry-laravel) you can customize how the PHP SDK client is built by modifying the client builder.
 
-```php
-'breadcrumbs.sql_queries' => true,
-```
+You might want to do this to for example replace the transport or change the serializer options used which can only be changed when building the client.
 
-#### breadcrumbs.sql_bindings
+The snippet below must be placed in the `register` method of a service provider (for example your `AppServiceProvider`).
 
-Capture bindings on SQL queries.
-Defaults to `true`.
+In this example we increase `maxDepth` to 5 in for the default serializer.
 
 ```php
-'breadcrumbs.sql_bindings' => false,
+use Sentry\Serializer\Serializer;
+use Sentry\ClientBuilderInterface;
+
+$this->app->extend(ClientBuilderInterface::class, function (ClientBuilderInterface $clientBuilder) {
+    $clientBuilder->setSerializer(new Serializer($clientBuilder->getOptions(), 5));
+    
+    return $clientBuilder;
+});
 ```
 
-#### breadcrumbs.logs
+## Integration
 
-Capture Laravel logs.
-Defaults to `true`.
+### User Feedback
 
-```php
-'breadcrumbs.logs' => true,
-```
+To see how to show user feedback dialog see: [User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}?platform=laravel).
 
-#### breadcrumbs.queue_info
-
-Capture queue job information.
-Defaults to `true`.
-
-```php
-'breadcrumbs.queue_info' => true,
-```
-
-## User Feedback
-
-To see how to show user feedback dialog see: [User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}?platform=laravel)
-
-## User Context
+### User Context
 
 Starting with Laravel 5.3 we can automatically add the authenticated user id to the scope if [`send_default_pii`]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php#send-default-pii) option is set to `true` in your `config/sentry.php`.
 
@@ -260,7 +271,7 @@ class SentryContext
 }
 ```
 
-## Using Laravel 5.6 log channels
+### Log channels
 
 {% capture __alert_content -%}
 If you're using log channels to log your exceptions and are also logging exceptions to Sentry in your exception handler (as you would have configured above) exceptions might end up twice in Sentry.
@@ -270,6 +281,8 @@ If you're using log channels to log your exceptions and are also logging excepti
     content=__alert_content
     level="info"
 %}
+
+Starting with Laravel & Lumen 5.6 we can setup Sentry using log channels.
 
 To configure Sentry as a log channel, add the following config to the `channels` section in `config/logging.php`: 
 
@@ -309,7 +322,31 @@ Optionally, you can set the logging level and if events should bubble on the dri
 ],
 ```
 
-### Naming your log channels
+### Queue jobs
+
+When you have defined a `failed` method on your job class ([documentation](https://laravel.com/docs/6.x/queues#cleaning-up-after-failed-jobs)) that failed method acts as if your job runs inside a `try {} catch (\Exception $e) {}` and this will prevent reporting exception causing the job to have failed to be reported to Sentry.
+
+This could be what you want since your job sometimes fails because of an API that is not reachable or other expected failures. If you still want the exception to be reported to Sentry you can do the following in your `failed` method:
+
+```php
+/**
+ * The job failed to process.
+ *
+ * @param \Exception $exception
+ *
+ * @return void
+ */
+public function failed(\Exception $exception)
+{
+    // Send user notification of failure, etc...
+    
+    if (app()->bound('sentry')) {
+        app('sentry')->captureException($exception);
+    }
+}
+``` 
+
+#### Naming your log channels
 
 If you have multiple log channels you would like to filter on inside the Sentry interface, you can add the `name` attribute to the log channel. 
 It will show up in Sentry as the `logger` tag, which is filterable.
@@ -335,7 +372,7 @@ You're now able to log errors to your channel:
 
 And Sentry's `logger` tag now has the channel's `name`. You can filter on the "my-channel" value.
 
-## Resolve name conflicts with packages also called Sentry
+### Resolve name conflicts with packages also called Sentry
 
 To resolve this, you'll need to create your own service provider extending ours so we can prevent naming conflicts.
 
