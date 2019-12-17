@@ -88,6 +88,8 @@ Most promise libraries have a global hook for capturing unhandled errors. You ma
 
 {% include platforms/configure-releases.md %}
 
+If you are using the [Webpack Plugin](#webpack) releases will be automatically configured for you using the plugin's release-lookup logic.
+
 ## Source Maps
 
 {% include components/alert.html
@@ -105,6 +107,8 @@ Most modern JavaScript transpilers support source maps. Below are instructions f
 
 #### Webpack
 Webpack is a powerful build tool that resolves and bundles your JavaScript modules into files fit for running in the browser. It also supports various _loaders_ to transpile higher-level languages, reference stylesheets, or include static assets.
+
+##### Webpack Plugin
 
 We have created a convenient [Webpack plugin](https://github.com/getsentry/sentry-webpack-plugin) that configures source maps and uploads them to Sentry during the build. This is the recommended way for uploading sources to Sentry. First, install the plugin via:
 
@@ -145,6 +149,8 @@ module.exports = {
 ```
 
 In case you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, leave `noSources` turned off, so Sentry can display proper source code context in event stack traces.
+
+Additionally, the webpack plugin will automatically set `window.SENTRY_RELEASE`, meaning your `Sentry.init` call will not need to be configured with the `release` key.
 
 #### TypeScript
 The TypeScript compiler can output source maps. Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
