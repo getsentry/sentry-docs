@@ -78,7 +78,7 @@ You can do it based on the **type** as in:
 
 ![ConnectionTimeoutType]({% asset guides/grouping-and-fingerprints/connection-timeout-type.png @path %})
 
-Or you can do it based on the **message** as in any value after the word host:
+Or, you can do it based on the **message** (any value after the word "host"):
 
 ![ConnectionTimeoutMessage]({% asset guides/grouping-and-fingerprints/connection-timeout-message.png @path %})
 
