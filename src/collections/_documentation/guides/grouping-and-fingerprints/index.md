@@ -42,7 +42,7 @@ In **Server-side Fingerprinting**, we'll see how to set rules for new incoming i
 More on **SDK-side Fingerprinting** [here](https://docs.sentry.io/data-management/event-grouping/sdk-fingerprinting/?platform=javascript).
 
 ## Merging Similar Issues
-This is for merging similar issues and will not auto merge the next occurance of this issue coming in.
+This is for merging similar issues and will not auto-merge the next occurrence of this issue coming in.
 
 Before merge  
 ![Before Merge]({% asset guides/grouping-and-fingerprints/before-merge.png @path %})
