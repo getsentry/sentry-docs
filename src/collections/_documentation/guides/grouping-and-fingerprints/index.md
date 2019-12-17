@@ -84,7 +84,7 @@ Or, you can do it based on the **message** (any value after the word "host"):
 
 
 ### 2. Implement
-Here's how to set the match based on the error **type** 
+Here's how to set the match based on the error **type**: 
 
 ![ConnectionTimeoutTypeExample]({% asset guides/grouping-and-fingerprints/connection-timeout-type-example.png @path %})
 
