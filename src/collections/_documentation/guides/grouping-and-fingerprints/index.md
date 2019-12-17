@@ -3,7 +3,7 @@ title: Grouping & Fingerprints
 sidebar_order: 0
 ---
 
-Have you ever had a set of similar looking issues like this?
+Have you ever had a set of similar-looking issues like this?
 ![Issues Dashboard]({% asset guides/grouping-and-fingerprints/issues-dashboard.png @path %})
 
 Let's first understand what makes events group into an issue. testTypeIssue15 is an issue that had 4 events. These events grouped into the issue because they shared the same *fingerprint*
