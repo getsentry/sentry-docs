@@ -74,7 +74,7 @@ Here's an overview of what we'll do using **Server-Side Fingerprinting**
 Let's say you want the following 2 issues to group together:
 ![ConnectionTimeouts]({% asset guides/grouping-and-fingerprints/connection-timeouts-2.png @path %})
 
-You can do it based on the **type** as in:
+You can do it based on the **type**:
 
 ![ConnectionTimeoutType]({% asset guides/grouping-and-fingerprints/connection-timeout-type.png @path %})
 
