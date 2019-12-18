@@ -6,15 +6,16 @@ If you want to use Sentry together with CodePush you have to send us the CodePus
 
 ```javascript
 import codePush from "react-native-code-push";
+import DeviceInfo from "react-native-device-info";
 
 codePush.getUpdateMetadata().then((update) => {
   if (update) {
-    Sentry.setRelease(update.appVersion + '-codepush:' + update.label);
+    Sentry.setRelease(DeviceInfo.getBundleId() + '-' + update.appVersion + '-codepush:' + update.label);
   }
 });
 ```
 
-Put this somewhere in your code where you already use CodePush. This makes sure that we can associate crashes with the right source maps. `Sentry.setRelease` sets the release to `version`. This works for iOS as well as Android. Make sure that you call this function otherwise Sentry is not able to symbolicate your crashes correctly.
+Put this somewhere in your code where you already use CodePush. This makes sure that we can associate crashes with the right source maps. This works for iOS as well as Android. Make sure that you call this function otherwise Sentry is not able to symbolicate your crashes correctly.
 
 After updating your CodePush release, you have to upload the new assets to Sentry:
 
