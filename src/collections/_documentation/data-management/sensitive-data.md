@@ -59,7 +59,7 @@ For more details, see [_Filtering Events_]({%- link _documentation/error-reporti
     
     ```javascript
     Sentry.configureScope((scope) => {
-      scope.setTag('birthday', checksum_or_hash('08/12/1990'));
+      Sentry.setTag('birthday', checksum_or_hash('08/12/1990'));
     });
     ```
     
