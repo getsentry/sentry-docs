@@ -1,5 +1,6 @@
 ---
 title: 'Setup With CocoaPods'
+robots: noindex
 ---
 
 In order to use Sentry with CocoaPods you have to install the packages with `npm` or `yarn` and link them locally in your `Podfile`.

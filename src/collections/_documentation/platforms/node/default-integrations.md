@@ -59,20 +59,16 @@ Available options:
 
 _Import name: `Sentry.Integrations.OnUnhandledRejection`_
 
-This integration attaches global unhandled rejection handlers.
+This integration attaches global unhandled rejection handlers. By default, all unhandled rejections trigger a warning and log the error. You can change this behavior using the `mode` option, which is in line with Node's CLI options: https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode
 
-{% capture __alert_content -%}
-This integration suppresses the default Node warning about unhandled promise rejection. If you want to restore this behavior, use the `--unhandled-rejections=warn` flag to run your code.
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Note"
-    content=__alert_content
-    level="info"
-%}
+Available options:
 
-```bash
-$ node --unhandled-rejections=warn app.js
+```js
+{
+  mode: 'none' | 'warn' | 'strict';
+}
 ```
+
 
 ### LinkedErrors
 

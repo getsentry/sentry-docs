@@ -1,6 +1,7 @@
 ---
 title: Configuration
 sidebar_order: 1
+robots: noindex
 ---
 
 The Sentry Go SDK has some configurable options, which can enhance your user experience,

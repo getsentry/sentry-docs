@@ -1,6 +1,7 @@
 ---
 title: Configuration
 sidebar_order: 1
+robots: noindex
 ---
 
 To get started, you need to configure Raven.js to use your Sentry DSN:
@@ -83,7 +84,7 @@ Those configuration options are documented below:
 
   ```javascript
   {
-    whitelistUrls: [/getsentry\.com/, /cdn\.getsentry\.com/]
+    whitelistUrls: [/getsentry\.com/]
   }
   ```
 

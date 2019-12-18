@@ -1,5 +1,6 @@
 ---
 title: 'Using RAM Bundles'
+robots: noindex
 ---
 
 The [RAM bundle](https://facebook.github.io/react-native/docs/performance#ram-bundles-inline-requires) format is a new approach to packaging React Native apps that optimizes your app's startup time. With RAM bundles, it is possible to load to memory only those modules that are needed for specific functionality, and only when needed.

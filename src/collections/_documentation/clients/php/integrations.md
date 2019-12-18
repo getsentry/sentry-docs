@@ -1,5 +1,6 @@
 ---
 title: Integrations
+robots: noindex
 ---
 
 ## Laravel

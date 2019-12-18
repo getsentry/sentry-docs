@@ -10,4 +10,4 @@ There are various services that the Sentry Open Source project uses which aid th
 -   [Code](https://github.com/getsentry/sentry) on GitHub for the Open Source project.
 -   [The GitHub Organization](https://github.com/getsentry) for the entire list of Open Source projects which also includes many of the Sentry SDKs.
 -   [Mailing List](https://groups.google.com/group/getsentry) on Google Groups.
--   [#sentry IRC Channel](irc://irc.freenode.net/sentry) on irc.freenode.net for project discussions.
+-   [Discord](https://discord.gg/ez5KZN7) server for project discussions.

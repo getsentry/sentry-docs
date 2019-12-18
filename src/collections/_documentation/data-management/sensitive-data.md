@@ -26,7 +26,7 @@ In the SDKs you can configure a `before-send` function which is invoked before a
 Within your project settings you’ll find a **Data Scrubber** option. By default this is enabled, and we highly recommend you keep it that way. With it enabled, Sentry will scrub the following:
 
 -   Values that look like they contain credit cards (using a basic regular expression)
--   Keys that contain any of the following values:
+-   Values that themselves contain, or whose keynames contain, any of the following strings: 
     -   password
     -   secret
     -   passwd
@@ -39,6 +39,20 @@ Within your project settings you’ll find a **Data Scrubber** option. By defaul
     -   stripetoken
     -   card[number]
 -   Any keys which match values that you’ve added to the list of additional fields in your Project Settings.
+
+Sentry will redact arrays and literal values, but not entire objects. For example:
+
+```bash
+credentials = {
+  username: 'jane',
+  cats: ['pancake', 'maple', 'hellboy']
+  password: 'p4ssw0rd!',
+  lastLogin: 'yesterday',
+  ...
+}
+```
+
+using the default options would not cause the _object_ `credentials` to be redacted in its entirety; rather, all of its entries would be subject to scrubbing. So `password` would be redacted by default, and adding `cats`, `username`, and/or `lastLogin` to the list of additional fields would cause those values to be redacted as well. 
 
 You can choose to expand the keys which are scrubbed by the server, as well as prevent IP addresses from being stored. The latter is particularly important if you’re concerned about PII and using our Browser JavaScript SDK.
 

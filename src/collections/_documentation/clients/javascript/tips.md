@@ -1,6 +1,7 @@
 ---
 title: 'Tips and Tricks'
 sidebar_order: 4
+robots: noindex
 ---
 
 These are some general recommendations and tips for how to get the most out of Raven.js and Sentry.

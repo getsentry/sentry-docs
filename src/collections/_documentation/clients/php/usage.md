@@ -1,6 +1,7 @@
 ---
 title: Usage
 sidebar_order: 1
+robots: noindex
 ---
 
 Using Sentry with PHP is straightforward. After installation of the library you can directly interface with the client and start submitting data.

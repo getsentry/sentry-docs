@@ -268,7 +268,7 @@ SDKs are heavily encouraged to gzip or deflate encode the request body before se
 
 ## Reading the Response
 
-If you’re using HTTP, you’ll receive a response from the server. The response looks something like this:
+You will receive an HTTP response from the server that looks something like this:
 
 ```http
 HTTP/1.1 200 OK

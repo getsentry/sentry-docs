@@ -1,6 +1,7 @@
 ---
 title: Usage
 sidebar_order: 2
+robots: noindex
 ---
 
 <!-- WIZARD -->

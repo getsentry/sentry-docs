@@ -3,11 +3,11 @@ title: Monitor Errors in Frontend Applications
 sidebar_order: 0
 ---
 
-This step-by-step guide walks you through the flow of setting up and configuring your Sentry account to monitor errors in a frontend application. After completing this guide, your Sentry account will:
+This step-by-step guide walks you through the flow of setting up and configuring your Sentry account to monitor errors in a frontend application. After completing this guide, you should:
 
-- Notify you when errors happen in your code
-- Display a readable stack trace with source code context in the stack frame for debugging
-- Suggest suspected commits and suitable developers to quickly resolve issues
+- be alerted when errors occur in your code
+- have a readable stack trace with source code context
+- see suspect commits and suggested assignees based on commit information and stack trace.
 
 > **Note:**  We provided the source code for a sample React application to use along with this guide. This allows us to streamline the steps required to getting the maximum value out of integrating Sentry into your development workflow.
 >

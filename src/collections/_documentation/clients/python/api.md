@@ -1,5 +1,6 @@
 ---
 title: 'API Reference'
+robots: noindex
 ---
 
 This gives you an overview of the public API that raven-python exposes.

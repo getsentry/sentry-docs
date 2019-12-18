@@ -177,6 +177,21 @@ Fixes MYAPP-317
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit, and, later, when that commit is part of a release, we’ll mark the issue as resolved.
 
+### ClickUp
+
+ClickUp’s core focus is about removing frustrations, inefficiencies, and disconnect caused by current project management solutions. You can create an issue in ClickUp from a Sentry issue or link it to an existing issue.
+
+{% include components/alert.html
+  title="Note"
+  content="This integration **won't** work with self-hosted Sentry."
+  level="warning"
+%}
+
+#### Install and Configure ClickUp
+
+Follow the instructions in the link below:  
+<https://docs.clickup.com/en/articles/3420285-sentry-io>
+
 ### Clubhouse
 
 Create a more efficient workflow by linking your Sentry Issues with your Clubhouse Stories. Errors, features, and anything else you track in Clubhouse can now live side by side. The new Clubhouse integration has feature parity with the Clubhouse plugin. If you're choosing between the two, we recommend installing the Clubhouse integration.
@@ -770,42 +785,6 @@ If you hit a 4xx or 5xx error during or after setting up the Jira Server integra
   level="warning"
 %}
 
-### Rookout
-
-Rookout's new integration adds a layer of depth to Sentry Issues by allowing you to jump right from an Issue to a non-breaking breakpoint on the line that caused the error. 
-
-{% include components/alert.html
-  title="Note"
-  content="This integration **won't** work with self-hosted Sentry."
-  level="warning"
-%}
-
-#### Installation
-
-1. In Sentry, navigate to Organization Settings > **Integrations**.
-2. Find the Rookout Integration and click **Install**.
-
-    [{% asset rookout/rookout_install.png alt="Sentry's integrations page with Rookout at the top." %}]({% asset rookout/rookout_install.png @path %})
-
-3. In the resulting modal, approve the permissions by clicking **Install**.
-
-    [{% asset rookout/rookout_modal.png alt="Sentry modal indicating that permissions need installation." %}]({% asset rookout/rookout_modal.png @path %})
-
-4. Your Rookout Integration is ready to use!
-
-#### Use Integration in Stack Trace
-
-After installing Rookout in Sentry, you can go straight to the line of code in your stack trace, and click the Rookout icon. That will take you directly to the same line of code in the same file inside Rookout.
-
-1. In Sentry, navigate to the specific **Issue** you want to link and navigate to the **Stack Trace**.
-2. In the Stack Trace, you'll see the option to open the line in Rookout by clicking on the Rookout icon.
-
-    [{% asset rookout/rookout_line_in_stack_trace.png alt="Sentry stack trace showing the Rookout icon on a specific line." %}]({% asset rookout/rookout_line_in_stack_trace.png @path %})
-
-3. Clicking on the Rookout icon takes you to Rookout's web UI where you can continue the debugging process. Rookout makes the best guess for the corresponding project and file in its web UI and will take you to the correct line of code in the file.
-
-    [{% asset rookout/rookout_screen_1.png alt="Sentry modal indicating that permissions need installation." %}]({% asset rookout/rookout_screen_1.png @path %})
-
 ## Issue Notifications
 
 Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/notifications/alerts.md -%}) to properly route notifications to a specific integration.
@@ -889,3 +868,124 @@ Now your Slack integration is available to all projects in your Sentry organizat
 #### Deleting the legacy Slack integration
 
 Once you configure the global Slack integration and Alert Rules, you can disable the old Slack integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy integration after setting up the global integration.
+
+## Incident Management
+
+These integrations will connect your Sentry to incident management platforms to increase your visibility into incidents.
+
+### PagerDuty
+The global PagerDuty integration allows you to connect your Sentry organization with one or more PagerDuty accounts, and start getting incidents triggered from Sentry alerts.
+
+1. In Sentry, navigate to **Organization Settings** > **Integrations**
+
+2. Find PagerDuty in the list of the available Global Integrations list and click **Install.**
+    
+    [{% asset pagerduty/pd_not_installed.png %}]({% asset pagerduty/pd_not_installed.png @path %})
+
+3. Click **Add Installation.**
+
+    [{% asset pagerduty/pd_learn_more.png %}]({% asset pagerduty/pd_learn_more.png @path %})
+
+4. You'll then be redirected to sign into PagerDuty and choose the account you'd like to connect to the current Sentry organization you are in.
+
+    [{% asset pagerduty/pd_account_picker.png %}]({% asset pagerduty/pd_account_picker.png @path %})
+
+5. After picking the account, you'll be prompted to add the PagerDuty services you want Sentry to send incidents to. Click **Connect** once you've added your services.  
+
+    [{% asset pagerduty/pd_add_services.png %}]({% asset pagerduty/pd_add_services.png @path %})
+
+6. The PagerDuty integration should now be installed. You'll be able to see the services connected by going to the **configure** page for your installation. 
+
+    [{% asset pagerduty/pd_installed.png %}]({% asset pagerduty/pd_installed.png @path %})
+
+7. You can now set up rules to use the new integration under **Project Configuration** in the configure section of your installation. 
+
+    [{% asset pagerduty/pd_org_configuration.png %}]({% asset pagerduty/pd_org_configuration.png @path %})
+
+If you re-generate an integration key for one of your services in PagerDuty you can manually update that value in configuration page for your PagerDuty installation. Additionally, you can add services by clicking the **Add Services** button in the top right. This will take you to the same page, as shown in step 5. 
+
+8. Click **Add Alert Rule** in the integration configuration page or go to the **Project Settings** > **Alerts** to set up a **New Alert Rule** for the PagerDuty Integration.
+
+    [{% asset pagerduty/pd_alert_rule.png %}]({% asset pagerduty/pd_alert_rule.png @path %})
+    
+
+#### Deleting the legacy PagerDuty integration
+
+Once you configure the global PagerDuty integration and Alert Rules, you can disable the old PagerDuty integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy integration after setting up the global integration.
+
+### Amixr
+
+In Amixr, issues from Sentry get stored as well as alerts from other sources like Grafana or Alertmanager. The Amixr integration synchronizes issue statuses between Amixr and Sentry. Issues get posted to your Slack, and users can change the statuses of those issues by clicking on buttons within the message.
+
+{% include components/alert.html
+  title="Note"
+  content="This integration **won't** work with self-hosted Sentry."
+  level="warning"
+%}
+
+#### Install and Configure Amixr
+
+Follow the instructions in the link below:  
+<https://docs.amixr.io/#/integrations/sentry>
+
+## Code Linking
+
+These integrations will allow seamlessly connect a Sentry error to the underlying code behind the error in a separate platform.
+
+### Rookout
+
+Rookout's new integration adds a layer of depth to Sentry Issues by allowing you to jump right from an Issue to a non-breaking breakpoint on the line that caused the error. 
+
+{% include components/alert.html
+  title="Note"
+  content="This integration **won't** work with self-hosted Sentry."
+  level="warning"
+%}
+
+#### Installation
+
+1. In Sentry, navigate to Organization Settings > **Integrations**.
+2. Find the Rookout Integration and click **Install**.
+
+    [{% asset rookout/rookout_install.png alt="Sentry's integrations page with Rookout at the top." %}]({% asset rookout/rookout_install.png @path %})
+
+3. In the resulting modal, approve the permissions by clicking **Install**.
+
+    [{% asset rookout/rookout_modal.png alt="Sentry modal indicating that permissions need installation." %}]({% asset rookout/rookout_modal.png @path %})
+
+4. Your Rookout Integration is ready to use!
+
+#### Use Integration in Stack Trace
+
+After installing Rookout in Sentry, you can go straight to the line of code in your stack trace, and click the Rookout icon. That will take you directly to the same line of code in the same file inside Rookout.
+
+1. In Sentry, navigate to the specific **Issue** you want to link and navigate to the **Stack Trace**.
+2. In the Stack Trace, you'll see the option to open the line in Rookout by clicking on the Rookout icon.
+
+    [{% asset rookout/rookout_line_in_stack_trace.png alt="Sentry stack trace showing the Rookout icon on a specific line." %}]({% asset rookout/rookout_line_in_stack_trace.png @path %})
+
+3. Clicking on the Rookout icon takes you to Rookout's web UI where you can continue the debugging process. Rookout makes the best guess for the corresponding project and file in its web UI and will take you to the correct line of code in the file.
+
+    [{% asset rookout/rookout_screen_1.png alt="Sentry modal indicating that permissions need installation." %}]({% asset rookout/rookout_screen_1.png @path %})
+
+
+## A/B Testing
+
+These integrations will connect your Sentry to A/B testing platforms to give you better insight when users in one of your test groups are encountering errors.
+
+### Split
+
+The Split integration quickly processes and displays Sentry exception data in the Split platform as track events for analysis. You can control what environments and traffic types you're capturing exceptions for in the Split dashboard without having to touch any code.
+
+The Split integration is only available for organizations on the Business and Enterprise plans.
+
+{% include components/alert.html
+  title="Note"
+  content="This integration **won't** work with self-hosted Sentry."
+  level="warning"
+%}
+
+#### Install and Configure Split
+
+Follow the instructions in the link below:  
+<https://help.split.io/hc/en-us/articles/360029879431>

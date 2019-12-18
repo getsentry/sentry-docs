@@ -61,12 +61,15 @@ public class MyClass {
          in your classpath. This makes it easier to provide and adjust
          your DSN without needing to change your code. See the configuration
          page for more information.
+
+         For example, using an environment variable
+
+         export SENTRY_DSN="___PUBLIC_DSN___"
          */
         Sentry.init();
 
         // You can also manually provide the DSN to the ``init`` method.
-        String dsn = args[0];
-        Sentry.init(dsn);
+        // Sentry.init("___PUBLIC_DSN___");
 
         /*
          It is possible to go around the static ``Sentry`` API, which means

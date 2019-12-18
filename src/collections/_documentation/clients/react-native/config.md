@@ -1,5 +1,6 @@
 ---
 title: 'Additional Configuration'
+robots: noindex
 ---
 
 These are functions you can call in your JavaScript code:

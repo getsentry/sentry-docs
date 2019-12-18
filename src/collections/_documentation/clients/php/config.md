@@ -1,5 +1,6 @@
 ---
 title: Configuration
+robots: noindex
 ---
 
 Several options exist that allow you to configure the behavior of the `Raven_Client`. These are passed as the second parameter of the constructor, and is expected to be an array of key value pairs:

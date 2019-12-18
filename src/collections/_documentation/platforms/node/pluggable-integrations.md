@@ -5,7 +5,6 @@ sidebar_order: 11
 
 Pluggable integrations are integrations that can be additionally enabled, to provide specific features. They're documented so you can see what they do and that they can be enabled. To enable pluggable integrations, provide a new instance with your config to the `integrations` option. For example: `integrations: [new Sentry.Integrations.Modules()]`.
 
-
 ## Core
 
 ### CaptureConsole
@@ -65,6 +64,9 @@ _Import name: `Sentry.Integrations.RewriteFrames`_
 
 This integration allows you to apply a transformation to each frame of the stack trace. In the streamlined scenario, it can be used to change the name of the file frame it originates from, or it can be fed with an iterated function to apply any arbitrary transformation.
 
+On Windows machines, you have to use Unix paths and skip the volume letter in `root` option in order to make it work.
+For example `C:\\Program Files\\Apache\\www` won't work, however, `/Program Files/Apache/www` will.
+
 Available options:
 
 ```js
@@ -73,7 +75,6 @@ Available options:
   iteratee: (frame) => frame); // function that takes the frame, applies any transformation on it and returns it back
 }
 ```
-
 
 ## Node specific
 

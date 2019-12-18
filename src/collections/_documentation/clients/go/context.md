@@ -1,6 +1,7 @@
 ---
 title: Context
 sidebar_order: 3
+robots: noindex
 ---
 
 All of the `Capture*` functions accept an additional argument for passing a `map` of tags as the second argument and context data as remaining ones.
