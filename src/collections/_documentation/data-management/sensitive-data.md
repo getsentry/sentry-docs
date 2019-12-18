@@ -69,7 +69,7 @@ For more details, see [_Filtering Events_]({%- link _documentation/error-reporti
     
     ```javascript
     Sentry.configureScope((scope) => {
-      scope.setUser({username: user.email});
+      scope.setUser({email: user.email});
     });
     ```    
 
