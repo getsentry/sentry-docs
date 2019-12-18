@@ -50,17 +50,13 @@ For more details, see [_Filtering Events_]({%- link _documentation/error-reporti
     Don't do:
     
     ```javascript
-    Sentry.configureScope((scope) => {
-      Sentry.setTag('birthday', '08/03/1990');
-    });
+    Sentry.setTag('birthday', '08/03/1990');
     ```
     
     Instead, anonymize (by using `checksum`, `hash`, etc.):
     
     ```javascript
-    Sentry.configureScope((scope) => {
-      Sentry.setTag('birthday', checksum_or_hash('08/12/1990'));
-    });
+    Sentry.setTag('birthday', checksum_or_hash('08/12/1990'));
     ```
     
 - Attaching user/email information (if it is considered SD or not permitted)
@@ -68,24 +64,18 @@ For more details, see [_Filtering Events_]({%- link _documentation/error-reporti
     Don't do:
     
     ```javascript
-    Sentry.configureScope((scope) => {
-      scope.setUser({email: user.email});
-    });
+    Sentry.setUser({email: user.email});
     ```    
 
     Instead, anonymize (use `id`, `username`, etc.):
     
     ```javascript
-    Sentry.configureScope((scope) => {
-      Sentry.setUser({id: user.id});
-    });
+    Sentry.setUser({id: user.id});
     
     // or
     
-    Sentry.configureScope((scope) => {
-      Sentry.setUser({username: user.username});
-    });
-     ```
+    Sentry.setUser({username: user.username});
+    ```
 
 - Logging PII/SD (if using breadcrumbs, include console/log statements)
 
