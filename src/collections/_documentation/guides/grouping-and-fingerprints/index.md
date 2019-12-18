@@ -1,6 +1,6 @@
 ---
 title: Grouping & Fingerprints
-sidebar_order: 0
+sidebar_order: 6
 ---
 
 Have you ever had a set of similar-looking issues like this?
