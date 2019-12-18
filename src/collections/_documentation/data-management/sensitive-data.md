@@ -19,7 +19,7 @@ Turning this option on is required for certain features in Sentry to work, but a
 
 ## Custom Event Processing in the SDK
 
-In the SDKs, you can configure a `before-send` function which is invoked before an event is sent and can be used to modify the event data and remove sensitive data. Using `before-send` in the SDKs to **scrub any data before it is attached** as a payload request to [sentry.io](http://sentry.io/) is the recommended scrubbing approach, as SD is not attached to the event and therefore never makes it to Sentry.
+In the SDKs, you can configure a `before-send` function, which is invoked before an event is sent and can be used to modify the event data and remove sensitive information. Using `before-send` in the SDKs to **scrub any data before it is sent** is the recommended scrubbing approach, as SD never leaves the local environment.
 
 ```javascript
 Sentry.init({
