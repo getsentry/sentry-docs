@@ -77,13 +77,13 @@ For more details, see [_Filtering Events_]({%- link _documentation/error-reporti
     
     ```javascript
     Sentry.configureScope((scope) => {
-      scope.setUser({id: user.id});
+      Sentry.setUser({id: user.id});
     });
     
     // or
     
     Sentry.configureScope((scope) => {
-      scope.setUser({username: user.username});
+      Sentry.setUser({username: user.username});
     });
      ```
 
@@ -100,7 +100,7 @@ For more details, see [_Filtering Events_]({%- link _documentation/error-reporti
     ```
     // 1. don't log SD/PII
     // 2. use `beforeBreadcrumb` to filter it out from breadcrumbs before it is attached
-    // 3. Disable logging breadcrumb integration (e.g. <https://docs.sentry.io/platforms/javascript/?platform=browser#alternative-way-of-setting-an-integration>)
+    // 3. Disable logging breadcrumb integration (e.g. <https://docs.sentry.io/platforms/javascript/?platform=browser#breadcrumbs-1>)
     ```
 
 ## Server-Side Scrubbing
