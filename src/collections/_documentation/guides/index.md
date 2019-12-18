@@ -11,8 +11,6 @@ Step-by-step guides to getting started with monitoring errors in:
 
 * Mobile Apps
 
-* Desktop Applications (Native)
-
 ## Best Practices
 
 * Setting up your Sentry Account
@@ -20,3 +18,6 @@ Step-by-step guides to getting started with monitoring errors in:
 * [Manage your Event Stream]({%- link _documentation/guides/manage-event-stream/index.md -%})
 
 * [Alert Notifications]({%- link _documentation/guides/alert-notifications/index.md -%})
+
+* [Grouping and Fingerprints]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
+
