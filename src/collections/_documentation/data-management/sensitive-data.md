@@ -51,7 +51,7 @@ For more details, see [_Filtering Events_]({%- link _documentation/error-reporti
     
     ```javascript
     Sentry.configureScope((scope) => {
-      scope.setTag('birthday', '08/03/1990');
+      Sentry.setTag('birthday', '08/03/1990');
     });
     ```
     
