@@ -19,7 +19,79 @@ Turning this option on is required for certain features in Sentry to work, but a
 
 ## Custom Event Processing in the SDK
 
-In the SDKs you can configure a `before-send` function which is invoked before an event is sent and can be used to modify the event data and remove sensitive data. See [_Filtering Events_]({%- link _documentation/error-reporting/configuration/filtering.md -%}) for more information.
+In the SDKs, you can configure a `before-send` function, which is invoked before an event is sent and can be used to modify the event data and remove sensitive information. Using `before-send` in the SDKs to **scrub any data before it is sent** is the recommended scrubbing approach, as SD never leaves the local environment.
+
+```javascript
+Sentry.init({
+  dsn: 'https://XXXX@sentry.io/1234',
+  beforeSend(event) {
+    // Modify the event here
+    if (event.user) {
+      // Don't send user's email address
+      delete event.user.email;
+    }
+    return event;
+  }
+});
+```
+
+- Look out for SD **in event information** (stack trace, breadcrumbs, and other values the SDK is picking up such as headers/etc.) Some things to look out for:
+    - Stack-locals → some SDKs (Python + PHP), will pick up variable values. This can be scrubbed or disabled altogether, if necessary
+    - Breadcrumbs → some SDKs (for example, JavaScript, Java logging integrations) will pick up previously executed log statements. **Do not log PII** if using this feature and including log statements as breadcrumbs in the event. Some backend SDKs will surface DB queries which may need to be scrubbed
+- Be **aware** of what is being attached to the event and **code review SDK changes,** including context carefully
+    - Context → Tags (including User-context) + extra-info + breadcrumbs
+
+For more details, see [_Filtering Events_]({%- link _documentation/error-reporting/configuration/filtering.md -%}).
+
+### Examples
+
+- Attaching PII/SD
+
+    Don't do:
+    
+    ```javascript
+    Sentry.setTag('birthday', '08/03/1990');
+    ```
+    
+    Instead, anonymize (by using `checksum`, `hash`, etc.):
+    
+    ```javascript
+    Sentry.setTag('birthday', checksum_or_hash('08/12/1990'));
+    ```
+    
+- Attaching user/email information (if it is considered SD or not permitted)
+
+    Don't do:
+    
+    ```javascript
+    Sentry.setUser({email: user.email});
+    ```    
+
+    Instead, anonymize (use `id`, `username`, etc.):
+    
+    ```javascript
+    Sentry.setUser({id: user.id});
+    
+    // or
+    
+    Sentry.setUser({username: user.username});
+    ```
+
+- Logging PII/SD (if using breadcrumbs, include console/log statements)
+
+    Don't do:
+    
+    ```javascript
+    console.log("user's name is: " + user.name);
+    ```
+    
+    Instead:
+    
+    ```
+    // 1. don't log SD/PII
+    // 2. use `beforeBreadcrumb` to filter it out from breadcrumbs before it is attached
+    // 3. Disable logging breadcrumb integration (e.g. <https://docs.sentry.io/platforms/javascript/?platform=browser#breadcrumbs-1>)
+    ```
 
 ## Server-Side Scrubbing
 
