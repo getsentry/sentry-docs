@@ -873,6 +873,46 @@ Once you configure the global Slack integration and Alert Rules, you can disable
 
 These integrations will connect your Sentry to incident management platforms to increase your visibility into incidents.
 
+### PagerDuty
+The global PagerDuty integration allows you to connect your Sentry organization with one or more PagerDuty accounts, and start getting incidents triggered from Sentry alerts.
+
+1. In Sentry, navigate to **Organization Settings** > **Integrations**
+
+2. Find PagerDuty in the list of the available Global Integrations list and click **Install.**
+    
+    [{% asset pagerduty/pd_not_installed.png %}]({% asset pagerduty/pd_not_installed.png @path %})
+
+3. Click **Add Installation.**
+
+    [{% asset pagerduty/pd_learn_more.png %}]({% asset pagerduty/pd_learn_more.png @path %})
+
+4. You'll then be redirected to sign into PagerDuty and choose the account you'd like to connect to the current Sentry organization you are in.
+
+    [{% asset pagerduty/pd_account_picker.png %}]({% asset pagerduty/pd_account_picker.png @path %})
+
+5. After picking the account, you'll be prompted to add the PagerDuty services you want Sentry to send incidents to. Click **Connect** once you've added your services.  
+
+    [{% asset pagerduty/pd_add_services.png %}]({% asset pagerduty/pd_add_services.png @path %})
+
+6. The PagerDuty integration should now be installed. You'll be able to see the services connected by going to the **configure** page for your installation. 
+
+    [{% asset pagerduty/pd_installed.png %}]({% asset pagerduty/pd_installed.png @path %})
+
+7. You can now set up rules to use the new integration under **Project Configuration** in the configure section of your installation. 
+
+    [{% asset pagerduty/pd_org_configuration.png %}]({% asset pagerduty/pd_org_configuration.png @path %})
+
+If you re-generate an integration key for one of your services in PagerDuty you can manually update that value in configuration page for your PagerDuty installation. Additionally, you can add services by clicking the **Add Services** button in the top right. This will take you to the same page, as shown in step 5. 
+
+8. Click **Add Alert Rule** in the integration configuration page or go to the **Project Settings** > **Alerts** to set up a **New Alert Rule** for the PagerDuty Integration.
+
+    [{% asset pagerduty/pd_alert_rule.png %}]({% asset pagerduty/pd_alert_rule.png @path %})
+    
+
+#### Deleting the legacy PagerDuty integration
+
+Once you configure the global PagerDuty integration and Alert Rules, you can disable the old PagerDuty integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy integration after setting up the global integration.
+
 ### Amixr
 
 In Amixr, issues from Sentry get stored as well as alerts from other sources like Grafana or Alertmanager. The Amixr integration synchronizes issue statuses between Amixr and Sentry. Issues get posted to your Slack, and users can change the statuses of those issues by clicking on buttons within the message.

@@ -45,7 +45,8 @@ Release names are just strings but some formats are detected by Sentry and might
 differently.  For more information have a look at [the releases documentation]({% link _documentation/workflow/releases.md %}).
 
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment
-variable (except for the browser SDK where this is not applicable).
+variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE` if
+available).
 
 {:.config-key}
 ### `environment`

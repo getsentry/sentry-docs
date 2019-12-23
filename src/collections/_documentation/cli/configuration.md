@@ -194,12 +194,12 @@ sentry-cli ...
 
 ### Explicit Options
 
-Lastly you can provide these values also explicitly with the command you are executing. The parameters are always called `--org` or `-o` for the organization and `--project` or `-p` for the project.
+Lastly you can also provide these values explicitly to the command you are executing. The parameters are always called `--org` or `-o` for the organization and `--project` or `-p` for the project.
 
-Note that they do not always go to the same command. For instance if you are managing releases (which are shared across the organization) you usuallys supply the organiation to the `releases` command but the projects to the subcommand on it:
+Note that they do not always go to the same command. For instance if you are managing releases (which are shared across the organization) you usually supply the organization to the `releases` command but the projects to the subcommand on it:
 
 ```bash
 $ sentry-cli releases -o my-org new -p my-project 1.0
 ```
 
-For more information use the `help` command which will give you a documentation of all parameters.
+For more information use the `help` command which will display documentation for all parameters.
