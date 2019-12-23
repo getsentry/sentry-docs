@@ -26,12 +26,15 @@ Sentry integrates seamlessly into your existing workflows by providing out of th
 
 ### 2.1. Alert Notifications
 
-By default, Sentry will notify you about errors in your apps via email. To receive real-time notifications about your errors where you work, enable Sentry integrations with:
+By default, Sentry will notify you about errors in your apps via **email**. To receive real-time notifications about your errors where you work, enable Sentry integrations with: [Slack](https://docs.sentry.io/workflow/integrations/global-integrations/#slack), [PagerDuty](https://www.pagerduty.com/docs/guides/sentry-integration-guide/).
 
-- [Slack](https://docs.sentry.io/workflow/integrations/global-integrations/#slack) to send notifications and assign, ignore, or resolve issues right in chat
-- [PagerDuty](https://www.pagerduty.com/docs/guides/sentry-integration-guide/) to alert your team and triage in real-time to avoid incidents.
+> ![PagerDuty Integration]({% asset guides/getting-started/PagerDuty_Integration.gif @path %})
+>
+> Enabling alert notifications through the PagerDuty integration.
 
-Sentry supports various other issue notification solutions on a project level. After creating a project, solutions like - **Hipchat**, **Twilio**, **OpsGenie**, and others can be configured and used to channel notifications through alert rules. For more information check out:
+Sentry supports additional solutions on a project level. After creating a project - **Hipchat**, **Twilio**, **OpsGenie**, and other solutions can be configured and used to channel notifications through alert rules.
+
+For more information check out:
 
 - [Per-Project Integrations: Issue Notifications](https://docs.sentry.io/workflow/integrations/legacy-integrations/#issue-notifications)
 - [Routing Alerts to 3rd Party Integrations](https://docs.sentry.io/guides/alert-notifications/routing-alerts/#routing-alerts-to-3rd-party-integrations)
@@ -40,22 +43,16 @@ Sentry supports various other issue notification solutions on a project level. A
 
 By enabling Sentry's integration with your Source Code Management (SCM) provider, Sentry will:
 
-1. Identify **suspect commits** that likely introduced the error.
-2. **Suggest assignees** who can best resolve it.
-3. Mark the issue as **resolved via Commit or PR** to stop notifications about similar errors in past releases and notify you upon regression.
-4. Link a Sentry issue to a new or existing issue in your SCM provider
+1. Identify **suspect commits** that likely introduced an error.
+2. **Suggest assignees** who can best resolve an error.
+3. Mark an issue as **Resolved via Commit or PR** to stop notifications about similar errors in past releases and notify you upon regression.
+4. Link a Sentry issue to a new or existing issue in your integrated [Issue Tracking](#23-issue-tracking) solution
 
     ![Integrate SCMs]({% asset guides/getting-started/07.png @path %})
 
-Sentry has built-in integrations with:
+Sentry has built-in integrations with: [GitHub](https://docs.sentry.io/workflow/integrations/global-integrations/#github), [GitHub Enterprise](https://docs.sentry.io/workflow/integrations/global-integrations/#github-enterprise), [GitLab](https://docs.sentry.io/workflow/integrations/global-integrations/#gitlab), and [Bitbucket](https://docs.sentry.io/workflow/integrations/global-integrations/#bitbucket). If you're using a different SCM provider or don't want Sentry to connect to your repository, checkout our [docs]((https://docs.sentry.io/workflow/releases/?platform=browser#alternatively-without-a-repository-integration)) to learn how you can still enable most of these features (#1 - #3) by telling Sentry about your commit metadata.
 
-- [GitHub](https://docs.sentry.io/workflow/integrations/global-integrations/#github) & [GitHub Enterprise](https://docs.sentry.io/workflow/integrations/global-integrations/#github-enterprise)
-- [GitLab Cloud & On-premise](https://docs.sentry.io/workflow/integrations/global-integrations/#gitlab)
-- [Bitbucket](https://docs.sentry.io/workflow/integrations/global-integrations/#bitbucket)
-
-If you're using a different SCM provider or don't want Sentry to connect to your repository, you can still enable most of these features (#1 - #3) by telling Sentry about your commit metadata. For more information check out: [Alternatively: Without a Repository Integration](https://docs.sentry.io/workflow/releases/?platform=browser#alternatively-without-a-repository-integration)
-
-### 2.3. Issue Management
+### 2.3. Issue Tracking
 
 Enabling the integration with your Issue Tracking solution allows you to create a new issue from within the Sentry issue page, or link it to an existing one. In addition to GitHub, GitLab, and Bitbucket Issues that are enabled with the respective SCM integration, Sentry also integrates with: [Azure DevOps](https://docs.sentry.io/workflow/integrations/global-integrations/#azure-devops), [Clubhouse](https://docs.sentry.io/workflow/integrations/global-integrations/#clubhouse), [JIRA](https://docs.sentry.io/workflow/integrations/global-integrations/#jira), and others.
 
@@ -63,7 +60,7 @@ For a full list of all supported integrations, go to our documentation on [Integ
 
 ## 3. Set-up Teams
 
-Now that SSO is configured and members have created their accounts, add them to their Sentry Teams. Teams are associated with your [Sentry Projects](#4-create-projects) and their members are on the receiving end of issue notifications and issue ownership. We recommend creating teams that align with your internal team structure. For instance: #Frontend, #Ops, #SDK, etc. To create a new team, go to `Settings > Teams > Create Team`.
+Now that SSO is configured and members have created their accounts, add them to their Sentry Teams. Teams are associated with your [Sentry Projects](#4-create-projects) and their members are on the receiving end of issue notifications and issue ownership. We recommend creating teams that align with your internal team structure (e.g. _#Frontend_, _#Ops_, _#SDK_, etc ). To create a new team, go to `Settings > Teams > Create Team`.
 
 ![Create New Team]({% asset guides/getting-started/03.png @path %})
 
@@ -86,7 +83,7 @@ To start monitoring errors in your app with Sentry you'll need to initialize the
 
 ### > **What's in a Project?**
 
-A Project is a logical entity that connects between the errors in your application (or a part of it) to the team members assigned to it. The **Project Settings** configuration determines
+A Project is a logical entity that connects between the errors in your application (or a part of it) to the team members assigned to that project. The **Project Settings** configuration determines
 
 - Which errors should be ingested into your Sentry account and which should be dropped, through [Inbound Filters](https://docs.sentry.io/accounts/quotas/#inbound-data-filters)
 - Who to notify, about what error, and how, using [Alert Rules](https://docs.sentry.io/workflow/notifications/alerts/)
@@ -118,7 +115,7 @@ Having the environment defined in your SDK will allow you to:
 
 - Create environment-specific alert rules
 - Filter your Issue and Events Streams based on the environment
-- Gain comparative insights through queries in Discovery
+- Gain comparative insights based on the environment through queries in Discovery
 
 <!-- ## 6. Embed Sentry CLI in your CI/CD Process
 - Create Release
