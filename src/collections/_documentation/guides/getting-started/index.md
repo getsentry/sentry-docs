@@ -54,7 +54,12 @@ Sentry has built-in integrations with: [GitHub](https://docs.sentry.io/workflow/
 
 ### 2.3. Issue Tracking
 
-Enabling the integration with your Issue Tracking solution allows you to create a new issue from within the Sentry issue page, or link it to an existing one. In addition to GitHub, GitLab, and Bitbucket Issues that are enabled with the respective SCM integration, Sentry also integrates with: [Azure DevOps](https://docs.sentry.io/workflow/integrations/global-integrations/#azure-devops), [Clubhouse](https://docs.sentry.io/workflow/integrations/global-integrations/#clubhouse), [JIRA](https://docs.sentry.io/workflow/integrations/global-integrations/#jira), and others.
+Enabling the 2-way integration with your Issue Tracking solution allows you to create a new issue from within the Sentry issue page, or link it to an existing one. In addition to **GitHub**, **GitLab**, and **Bitbucket** Issues that are enabled with the respective SCM integration, Sentry also integrates with: [Azure DevOps](https://docs.sentry.io/workflow/integrations/global-integrations/#azure-devops), [Clubhouse](https://docs.sentry.io/workflow/integrations/global-integrations/#clubhouse), [JIRA](https://docs.sentry.io/workflow/integrations/global-integrations/#jira), and others.
+
+
+> ![JIRA 2-Way Integration]({% asset guides/getting-started/jira-2way-binding.gif @path %})
+>
+> 2-Way integration with JIRA issue tracking.
 
 For a full list of all supported integrations, go to our documentation on [Integrations](https://docs.sentry.io/workflow/integrations/)
 
