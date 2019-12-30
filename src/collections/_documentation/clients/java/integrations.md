@@ -19,7 +19,7 @@ The `AndroidEventBuilderHelper` is enabled by default, which will automatically 
 
 `Application Not Responding` (or ANR) can also be automatically detected and reported to Sentry.
 For that, you must configure the SDK with the option `anr.enable=true`
-By default the UI thread needs to be blocked for at least 5 seconds for an event to be raised. If you wish to change this value, you can do that via the option `anr.timeoutIntervalMills`. For example, to detect if the UI thread is blocked for longer than 3 seconds, set it to: `anr.timeoutIntervalMills=3000`.
+By default the UI thread needs to be blocked for at least 5 seconds for an event to be raised. If you wish to change this value, you can do that via the option `anr.timeoutIntervalMs`. For example, to detect if the UI thread is blocked for longer than 3 seconds, set it to: `anr.timeoutIntervalMs=3000`.
 
 <!-- WIZARD android -->
 ### Installation
