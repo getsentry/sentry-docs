@@ -93,7 +93,7 @@ A Project is a logical entity that connects between the errors in your applicati
 - Which errors should be ingested into your Sentry account and which should be dropped, through [Inbound Filters](https://docs.sentry.io/accounts/quotas/#inbound-data-filters)
 - Who to notify, about what error, and how, using [Alert Rules](https://docs.sentry.io/workflow/notifications/alerts/)
 - Which errors should be automatically assigned to which member or team through [Issue Owners](https://docs.sentry.io/workflow/issue-owners/)
-- [Grouping](https://docs.sentry.io/data-management/event-grouping/)
+- Custom rules to fine-tune [Event Grouping](https://docs.sentry.io/data-management/event-grouping/) into issues.
 
 Also, when displaying the **Issue Stream** and **Discover** views, the top-level filter bar considers the projects you are a member of by default. This way, developers are looking at information that is relevant to their work, and see the errors that they might need to jump on.
 
