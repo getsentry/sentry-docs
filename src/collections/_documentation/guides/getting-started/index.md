@@ -30,11 +30,9 @@ By default, Sentry will notify you about errors in your apps via **email**. To r
 
 > ![PagerDuty Integration]({% asset guides/getting-started/PagerDuty_Integration.gif @path %})
 >
-> Enabling alert notifications through the PagerDuty integration.
+> _Enabling alert notifications through the __PagerDuty__ integration._
 
-Sentry supports additional solutions on a project level. After creating a project - **Hipchat**, **Twilio**, **OpsGenie**, and other solutions can be configured and used to channel notifications through alert rules.
-
-For more information check out:
+Sentry supports additional solutions on a project level. After creating a project - **Hipchat**, **Twilio**, **OpsGenie**, and other solutions can be configured and used to channel notifications through alert rules. For more information check out:
 
 - [Per-Project Integrations: Issue Notifications](https://docs.sentry.io/workflow/integrations/legacy-integrations/#issue-notifications)
 - [Routing Alerts to 3rd Party Integrations](https://docs.sentry.io/guides/alert-notifications/routing-alerts/#routing-alerts-to-3rd-party-integrations)
