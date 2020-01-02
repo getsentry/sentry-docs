@@ -3,7 +3,7 @@ title: Introduce Sentry SDK to your Frontend Code
 sidebar_order: 2
 ---
 
-In this tutorial, you will import the demo frontend app source code into your local development environment, add the Sentry SDK, and initialize it.
+In this tutorial, you import the React demo code into your local development environment, add the Sentry SDK, and initialize it.
 
 > **Note:** If you're using your own source code you can skip this tutorial and instead
 >
@@ -65,7 +65,7 @@ To build and run the Demo application on your localhost:
 
 1. Open a shell terminal and change directory to the `sentry-react-demo` project folder
 
-2. Use the `.nvmrc` file to set the Node version compatible with this project. Run: 
+2. Use the `.nvmrc` file to set the Node version compatible with this project. Run:
      ```bash
     > nvm use
     ```

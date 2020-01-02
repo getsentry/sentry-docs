@@ -2,6 +2,6 @@
 use sentry;
 
 sentry::init(sentry::ClientOptions {
-    release: "{{ page.release_identifier }}"
+    release: "{{ page.release_identifier }}@{{ page.release_version }}"
 });
 ```

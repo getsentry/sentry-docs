@@ -1,5 +1,5 @@
 ---
-title: 'Migration Guide'
+title: Migration Guide
 sidebar_order: 1
 ---
 
@@ -181,7 +181,7 @@ raven.Capture(packet)
 sentry-go
 
 ```go
-event := &sentry.NewEvent()
+event := sentry.NewEvent()
 event.Message = "Hand-crafted event"
 event.Extra["runtime.Version"] = runtime.Version()
 event.Extra["runtime.NumCPU"] = runtime.NumCPU()

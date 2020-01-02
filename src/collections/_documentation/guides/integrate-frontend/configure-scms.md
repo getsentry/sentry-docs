@@ -15,7 +15,7 @@ This allows Sentry to display:
 
 In this part, you will:
 
-- Integrate your Sentry organization with your GitHub account and repository --- this will give Sentry access to your commit metadata.
+- Integrate your Sentry organization with your GitHub account and repository --- this gives Sentry access to your commit metadata.
 - Set up commit tracking. In your release process, after creating the release object in Sentry, associate it with commits from your linked repository.
 
 ## Step 1: Integrate your GitHub Account & Repositories

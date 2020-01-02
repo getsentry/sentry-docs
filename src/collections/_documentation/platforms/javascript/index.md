@@ -14,6 +14,15 @@ The quickest way to get started is to use the CDN hosted version of the JavaScri
   crossorigin="anonymous"></script>
 ```
 
+{% capture __alert_content -%}
+It's possible to include `defer` in your script tag, but keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). We strongly recommend that if you use `defer`, you a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), thereby guaranteeing that it’s executed before any of the others.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Use of `defer`"
+  content=__alert_content
+  level="warning"
+%}
+
 You can also add the Sentry SDK as a dependency using npm:
 
 ``` bash
@@ -37,6 +46,9 @@ import * as Sentry from '@sentry/browser';
 
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
 ```
+
+For more configuration options, see:
+- [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
 
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
@@ -72,21 +84,11 @@ Configuration may be required if you are using a third-party library to implemen
 
 Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by changing `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
-For example, the [RSVP.js library](https://github.com/tildeio/rsvp.js/) (used by Ember.js) allows you to bind an event handler to a [global error event](https://github.com/tildeio/rsvp.js#error-handling).
-
-```javascript
-RSVP.on('error', function(reason) {
-  Sentry.captureException(reason);
-});
-```
-
-[Bluebird](http://bluebirdjs.com/docs/getting-started.html) and other promise libraries report unhandled rejections to a global DOM event, `unhandledRejection`. In this case, you don't need to do anything; we've already got you covered with the default [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and its `onunhandledrejection: true` setting.
-
-Please consult your promise library documentation on how to hook into its global unhandled rejection handler, if it exposes one.
-
 ## Releases
 
 {% include platforms/configure-releases.md %}
+
+If you are using the [Webpack Plugin](#webpack) releases will be automatically configured for you using the plugin's release-lookup logic.
 
 ## Source Maps
 
@@ -103,19 +105,10 @@ When you're using the Sentry JavaScript SDK, the SDK automatically fetches the s
 ### Generating Source Maps
 Most modern JavaScript transpilers support source maps. Below are instructions for some common tools.
 
-#### UglifyJS
-UglifyJS is a popular tool for minifying your source code for production. It can dramatically reduce the size of your files by eliminating whitespace, rewriting variable names, removing dead code branches, and more.
-
-If you are using UglifyJS to minify your source code, the following command will additionally generate a source map that maps the minified code back to the original source:
-
-```bash
-uglifyjs app.js \
-  -o app.min.js.map \
-  --source-map url=app.min.js.map,includeSources
-```
-
 #### Webpack
 Webpack is a powerful build tool that resolves and bundles your JavaScript modules into files fit for running in the browser. It also supports various _loaders_ to transpile higher-level languages, reference stylesheets, or include static assets.
+
+##### Webpack Plugin
 
 We have created a convenient [Webpack plugin](https://github.com/getsentry/sentry-webpack-plugin) that configures source maps and uploads them to Sentry during the build. This is the recommended way for uploading sources to Sentry. First, install the plugin via:
 
@@ -156,6 +149,8 @@ module.exports = {
 ```
 
 In case you use [SourceMapDevToolPlugin](https://webpack.js.org/plugins/source-map-dev-tool-plugin) for more fine-grained control of source map generation, leave `noSources` turned off, so Sentry can display proper source code context in event stack traces.
+
+Additionally, the webpack plugin will automatically set `window.SENTRY_RELEASE`, meaning your `Sentry.init` call will not need to be configured with the `release` key.
 
 #### TypeScript
 The TypeScript compiler can output source maps. Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
@@ -205,14 +200,6 @@ This command will upload all files ending in _.js_ and _.map_ to the specified r
 ```sh
 $ sentry-cli releases files <release_name> upload-sourcemaps --ext ts --ext map /path/to/files
 ```
-
-{% capture __alert_content -%}
-Unfortunately, it can be quite challenging to ensure that source maps are actually valid and uploaded correctly. To ensure that everything is working as intended, you can add the `--validate` flag when uploading source maps. It attempts to parse the source maps and verify source references locally. This flag might produce false positives if you have references to external source maps.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Validating source maps with Sentry CLI"
-  content=__alert_content
-%}
 
 Until now, the release is in a draft state (“_unreleased_”). Once all source maps have been uploaded, and your app has been published successfully, finalize the release with the following command:
 
@@ -319,8 +306,6 @@ If you want to keep your source maps secret and choose not to upload your source
 
 ## Adding Context
 You can also set context when manually triggering events.
-
-### Setting Context {#context}
 
 {% include platforms/event-contexts.md %}
 
@@ -499,25 +484,6 @@ Additionally, keep in mind to define a valid HTML doctype on top of your HTML pa
 
 ## Advanced Usage
 
-### Advanced Configuration
-The Sentry SDK sets the options when you first initialize the SDK.
-
-```javascript
-Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  release: "28d497fb8af6cc3efbe160e28c1c08f08bd688fc",
-  environment: 'staging',
-  beforeSend: customPiiScrub(event),
-  maxBreadcrumbs: 50,
-  debug: true,
-});
-```
-
-For more information, see:
-- [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
-- [Command Line Interface: Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
-- [Full documentation on Environments]({%- link _documentation/enriching-error-data/environments.md -%}).
-
 ### Breadcrumbs
 Sentry will automatically record certain events, such as changes to the URL and XHR requests to provide context to an error.
 
@@ -647,9 +613,9 @@ Sentry.withScope(function(scope) {
 For more information, see [Setting the Level](#level).
 
 ### Lazy Loading Sentry
-We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration).
+We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration). As noted there, if you want to use `defer`, you can, though keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). Therefore, if you do this, you'll need to a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), which will guarantee that it’s executed before any of the others.
 
-But we also offer an alternative we call the _Loader_. You install by just adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
+We also offer an alternative we call the _Loader_. You install by just adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
 
 ```html
 <script src="https://js.sentry-cdn.com/___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
@@ -733,6 +699,7 @@ to `integrations` option. For example, to turn off browser capturing console cal
 #### Default Integrations
 
 ##### InboundFilters
+
 _Import name: `Sentry.Integrations.InboundFilters`_
 
 This integration allows developers to ignore specific errors based on the type or message, as well as blacklist/whitelist URLs that originate from the exception.
@@ -741,6 +708,7 @@ It ignores errors, which message starts with `Script error` or `Javascript error
 To configure it, use `ignoreErrors`, `blacklistUrls`, and `whitelistUrls` SDK options directly.
 
 ##### FunctionToString
+
 _Import name: `Sentry.Integrations.FunctionToString`_
 
 This integration allows the SDK to provide original functions and method names, even when our error or breadcrumbs handlers wrap them.
@@ -748,12 +716,14 @@ This integration allows the SDK to provide original functions and method names, 
 #### Browser specific
 
 ##### TryCatch
+
 _Import name: `Sentry.Integrations.TryCatch`_
 
 This integration wraps native time and events APIs (`setTimeout`, `setInterval`, `requestAnimationFrame`,
 `addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions.
 
 ##### Breadcrumbs
+
 _Import name: `Sentry.Integrations.Breadcrumbs`_
 
 This integration wraps native APIs to capture breadcrumbs. By default, the Sentry SDK wraps all APIs.
@@ -773,6 +743,7 @@ Available options:
 ```
 
 ##### GlobalHandlers
+
 _Import name: `Sentry.Integrations.GlobalHandlers`_
 
 This integration attaches global handlers to capture uncaught exceptions and unhandled rejections.
@@ -787,6 +758,7 @@ Available options:
 ```
 
 ##### LinkedErrors
+
 _Import name: `Sentry.Integrations.LinkedErrors`_
 
 This integration allows you to configure linked errors. They'll be recursively read up to a specified limit and lookup will be performed by a specific key. By default, the Sentry SDK sets the limit to 5 and the key used is `cause`.
@@ -801,6 +773,7 @@ Available options:
 ```
 
 ##### UserAgent
+
 _Import name: `Sentry.Integrations.UserAgent`_
 
 This integration attaches user-agent information to the event, which allows us to correctly catalog and tag them with specific OS, Browser and version information.
@@ -818,7 +791,8 @@ Sentry.init({
 ```
 
 #### ExtraErrorData
-_Import name: `Integrations.ExtraErrorData`_
+
+_Import name: `Sentry.Integrations.ExtraErrorData`_
 
 This integration extracts all non-native attributes from the Error object and attaches them to the event as the `extra` data.
 
@@ -832,7 +806,7 @@ Available options:
 
 #### CaptureConsole
 
-_Import name: `Integrations.CaptureConsole`_
+_Import name: `Sentry.Integrations.CaptureConsole`_
 
 This integration captures all `Console API` calls and redirects them to Sentry using `captureMessage` call.
 It then retriggers to preserve default native behaviour.
@@ -844,14 +818,17 @@ It then retriggers to preserve default native behaviour.
 ```
 
 #### Dedupe
-_Import name: `Integrations.Dedupe`_
+
+_Import name: `Sentry.Integrations.Dedupe`_
 
 This integration deduplicates certain events. It can be helpful if you are receiving many duplicate errors. Be aware that we will only compare stack traces and fingerprints.
 
 #### Debug
-_Import name: `Integrations.Debug`_
+
+_Import name: `Sentry.Integrations.Debug`_
 
 This integration allows you to inspect the content of the processed event, that will be passed to `beforeSend` and effectively send to the Sentry SDK.
+It will _always_ run as the last integration, no matter when it was registered.
 
 Available options:
 
@@ -863,23 +840,28 @@ Available options:
 ```
 
 #### RewriteFrames
-_Import name: `Integrations.RewriteFrames`_
 
-This integration allows you to apply a transformation to each frame of the stack trace. In the simple scenario, it can be used to change the name of the file the frame originates from or can be fed with an iterated function, to apply any arbitrary transformation.
+_Import name: `Sentry.Integrations.RewriteFrames`_
+
+This integration allows you to apply a transformation to each frame of the stack trace. In the streamlined scenario, it can be used to change the name of the file frame it originates from, or it can be fed with an iterated function to apply any arbitrary transformation.
+
+On Windows machines, you have to use Unix paths and skip the volume letter in `root` option in order to make it work.
+For example `C:\\Program Files\\Apache\\www` won't work, however, `/Program Files/Apache/www` will.
 
 Available options:
 
-```javascript
+```js
 {
   root: string; // root path that will be appended to the basename of the current frame's url
-  iteratee: (frame) => frame); // function that take the frame, apply any transformation on it and returns it back
+  iteratee: (frame) => frame); // function that takes the frame, applies any transformation on it and returns it back
 }
 ```
 
 #### Browser specific
 
 ##### ReportingObserver
-_Import name: `Integrations.ReportingObserver`_
+
+_Import name: `Sentry.Integrations.ReportingObserver`_
 
 This integration hooks into the ReportingObserver API and sends captured events through to Sentry. It can be configured to handle only specific issue types.
 
@@ -960,19 +942,6 @@ Sentry.init({
     return integrations.filter(function(integration) {
       return integration.name !== 'Breadcrumbs';
     });
-  }
-});
-```
-
-### Alternative way of setting an Integration
-```javascript
-import * as Sentry from '@sentry/browser';
-
-Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: function(integrations) {
-    // integrations will be all default integrations
-    return integrations.concat(new MyCustomIntegrations());
   }
 });
 ```

@@ -26,24 +26,25 @@ Releases can also be auto created by different systems. For instance upon upload
 
 ## Finalizing Releases
 
-By default a release is created “unreleased”. This can be changed by passing either `--finalize` to the `new` command which will immediately finalize the release or you can separately later call `sentry-cli releases finalize VERSION`. The latter is useful if you are managing releases as part of a build process:
+By default a release is created “unreleased”. Finalizing a release means that we fill in a second timestamp on the release record, which is prioritized over `date_created` when sorting releases in the UI. This also affects what counts as "the next release" for resolving issues, what release is used as the base for associating commits if you use `--auto`, and creates an entry in the Activity stream.
+
+This can be changed by passing either `--finalize` to the `new` command which will immediately finalize the release or you can separately call `sentry-cli releases finalize VERSION` later on. The latter is useful if you are managing releases as part of a build process e.g.
 
 ```bash
 #!/bin/sh
 sentry-cli releases new "$VERSION"
-# do you build steps here
+# do your build steps here
 # once you are done, finalize
 sentry-cli releases finalize "$VERSION"
 ```
+You can also choose to finalize the release when you've made the release live (when you've deployed to your machines, enabled in the App store, etc.).
 
-If you are using git you can ask sentry to determine `$VERSION`:
+If you are using git you can ask Sentry to determine `$VERSION`:
 
 ```bash
 #!/bin/sh
 VERSION=`sentry-cli releases propose-version`
 ```
-
-Then the UI will reflect the time it took for the release to be created. You can also finalize it later when you pushed the release live (eg: deployed to your machines, enabled in the app store etc.).
 
 ## Commit Integration {#sentry-cli-commit-integration}
 

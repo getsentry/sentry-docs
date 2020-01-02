@@ -1,5 +1,6 @@
 ---
 title: 'Manual Setup'
+robots: noindex
 ---
 
 If you can’t (or don’t want) to run the linking step you can see here what is happening on each platform.

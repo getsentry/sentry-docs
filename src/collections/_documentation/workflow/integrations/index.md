@@ -9,16 +9,20 @@ Sentry integrates seamlessly with your favorite apps and services.
 
 These integrations are set up once per organization, and are then usable in all projects.
 
+-   [_Amixr_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#amixr)
 -   [_Azure DevOps_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#azure-devops)
 -   [_Bitbucket_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#bitbucket)
+-   [_ClickUp_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#clickup)
 -   [_Clubhouse_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#clubhouse)
 -   [_GitHub_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github)
 -   [_GitHub Enterprise_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github-enterprise)
 -   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#gitlab)
 -   [_JIRA_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#jira)
 -   [_JIRA Server_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#jira-server)
+-   [_PagerDuty_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
 -   [_Rookout_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#rookout)
 -   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
+-   [_Split_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#split)
 
 
 ### Per-Project Integrations
@@ -50,3 +54,8 @@ These integrations are set up once per project, and are only usable in projects 
 -   Teamwork
 -   Trello*
 -   Twilio
+
+
+### Integration Platform
+
+Sentry’s [Integration Platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}) provides a way for external services to interact with the Sentry SaaS service using the REST API and webhooks. Integrations utilizing this platform are first-class actors within Sentry, and you can build them for [public]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}#public-integrations) as well as [internal]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}#internal-integrations) use cases.

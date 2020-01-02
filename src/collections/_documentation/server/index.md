@@ -3,7 +3,7 @@ title: 'Self-Hosted Sentry'
 sidebar_order: 5
 ---
 
-Sentry is a set of open source services that power the cloud-hosted offering and can be run on your own infrastructure (on-premises). While these docs will not be exhaustive -- its expected you are familiar with the required technology -- they contain the core configuration and documentation for running Sentry.
+Sentry is a set of services that power the cloud-hosted offering and can be run on your own infrastructure (on-premises). While these docs will not be exhaustive -- its expected you are familiar with the required technology -- they contain the core configuration and documentation for running Sentry.
 
 -   [Installation]({%- link _documentation/server/installation/index.md -%})
 -   [Upgrading]({%- link _documentation/server/upgrading.md -%})

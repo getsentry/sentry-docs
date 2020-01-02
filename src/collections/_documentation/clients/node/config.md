@@ -1,5 +1,6 @@
 ---
 title: Configuration
+robots: noindex
 ---
 
 To get started, you need to configure Raven to use your Sentry DSN:

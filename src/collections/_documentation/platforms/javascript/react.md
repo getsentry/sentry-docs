@@ -46,7 +46,7 @@ class ExampleBoundary extends Component {
         this.state = { eventId: null };
     }
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError() {
       return { hasError: true };
     }
 

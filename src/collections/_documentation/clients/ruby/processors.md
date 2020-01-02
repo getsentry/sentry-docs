@@ -100,7 +100,7 @@ Once you have your processor written, you simply need to add it to the processor
 
 ```ruby
 Raven.configure do |config|
-  config.processors += MyJobProcessor
+  config.processors += [MyJobProcessor]
 end
 ```
 

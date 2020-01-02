@@ -254,7 +254,7 @@ any point in the future.
 
 The core data interfaces are:
 
- - [Exeception Interface]({%- link
+ - [Exception Interface]({%- link
    _documentation/development/sdk-dev/event-payloads/exception.md -%})
  - [Message Interface]({%- link
    _documentation/development/sdk-dev/event-payloads/message.md -%})

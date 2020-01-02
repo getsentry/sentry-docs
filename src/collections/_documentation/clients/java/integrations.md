@@ -19,7 +19,7 @@ The `AndroidEventBuilderHelper` is enabled by default, which will automatically 
 
 `Application Not Responding` (or ANR) can also be automatically detected and reported to Sentry.
 For that, you must configure the SDK with the option `anr.enable=true`
-By default the UI thread needs to be blocked for at least 5 seconds for an event to be raised. If you wish to change this value, you can do that via the option `anr.timeoutIntervalMills`. For example, to detect if the UI thread is blocked for longer than 3 seconds, set it to: `anr.timeoutIntervalMills=3000`.
+By default the UI thread needs to be blocked for at least 5 seconds for an event to be raised. If you wish to change this value, you can do that via the option `anr.timeoutIntervalMs`. For example, to detect if the UI thread is blocked for longer than 3 seconds, set it to: `anr.timeoutIntervalMs=3000`.
 
 <!-- WIZARD android -->
 ### Installation
@@ -198,6 +198,7 @@ First, you need to add the following to your ProGuard rules file:
 -dontwarn org.slf4j.**
 -dontwarn javax.**
 -keep class io.sentry.event.Event { *; }
+-keep class * extends java.lang.Exception
 ```
 
 ##### ProGuard UUIDs
@@ -810,6 +811,10 @@ Example configuration using the `logback.xml` format:
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>WARN</level>
         </filter>
+        <!-- Optionally add an encoder -->
+        <encoder>
+           <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
     </appender>
 
     <!-- Enable the Console and Sentry appenders, Console is provided as an example
@@ -843,6 +848,29 @@ void logWithExtras() {
     logger.error("This is a test");
 }
 ```
+
+#### Global Tags
+
+Sometimes it's useful to add tags and extra data to all log events.  
+You can add tags and extras to logs globally (not thread-bound) by adding entries to the LoggerContext.  
+Tags are distinguished by the existing mdcTags configuration property detailed above.
+
+```java
+  LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
+  context.putProperty("global", "value");
+```
+
+Global log entries can also be added via third-party encoders  
+(*whether such entries can be distinguished as tags or entries, however, is encoder implementation-specific*).
+The `net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder` for example has a `customFields` option:
+
+```java
+  <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+    <customFields>{"appname":"myWebservice","roles":["customerorder","auth"]}</customFields>
+  </encoder>
+```
+
+In the event of naming clashes, the more specific MDC tags will take precedence.
 
 ### In Practice
 
@@ -882,6 +910,24 @@ public class MyClass {
         MDC.put("extra_key", "extra_value");
         // This sends an event with extra data to Sentry
         logger.error("This is a test");
+    }
+    
+    void logWithGlobalTag() {
+       LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
+       // This adds a tag named 'logback-Marker' to every subsequent Sentry event
+       context.putProperty(MARKER, "This is a test");
+       
+        // This sends an event to Sentry, and a tag named 'logback-Marker' will be added.
+        logger.info("This is a test");
+    }
+    
+    void addGlobalExtras() {
+       LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
+       // This adds extra data to every subsequent Sentry event
+       context.putProperty("extra_key", "extra_value");
+       
+       // This sends an event to Sentry, and extra data ("extra_key", "extra_value") will be added.
+        logger.info("This is a test");
     }
 
     void logException() {

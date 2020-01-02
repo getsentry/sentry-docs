@@ -1,7 +1,8 @@
 ---
 title: Releases
 sidebar_order: 0
-release_identifier: "my-project-name@2.3.12"
+release_identifier: "my-project-name"
+release_version: "2.3.12"
 ---
 
 A release is a version of your code that is deployed to an environment. When you give Sentry information about your releases, you unlock a number of new features:
@@ -48,7 +49,7 @@ After this, you should see information about the release, such as new issues and
 ### Install Repository Integration {#install-repo-integration}
 
 This step is optional - you can manually supply Sentry with your own commit metadata if you wish. Skip ahead to [this section](#alternatively-without-a-repository-integration) to learn how to do this.
-  
+
 Using one of Sentry's repository integrations (e.g. GitHub, GitLab, Bitbucket, etc.) is the easiest way to connect your commit metadata to Sentry. For a list of available integrations, go to Organization Settings > Integrations.
 
 {% capture __alert_content -%}
@@ -110,7 +111,7 @@ You need to make sure you’re using [Auth Tokens]({%- link _documentation/api/a
   level="warning"
 %}
 
-In the above example, we’re using the `propose-version` sub-command to determine a release ID automatically. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally, we’re using the `--auto` flag to determine the repository name automatically, and associate commits between the previous release’s commit and the current head commit with the release. If you have never associated commits before, we’ll use the latest 20 commits.
+In the above example, we’re using the `propose-version` sub-command to determine a release ID automatically. Then we’re creating a release tagged `VERSION` for the organization `my-org` for projects `project1` and `project2`. Finally, we’re using the `--auto` flag to determine the repository name automatically, and associate commits between the previous release’s commit and the current head commit with the release. If the previous release doesn't have any commits associated with it, we’ll use the latest 20 commits.
 
 If you want more control over which commits to associate, or are unable to execute the command inside the repository, you can manually specify a repository and range:
 
@@ -119,6 +120,21 @@ If you want more control over which commits to associate, or are unable to execu
 Here we are associating commits (or refs) between `from` and `to` with the current release, `from` being the previous release’s commit. The repository name `my-repo` should match the name you entered when linking the repo in the previous step, and is of the form `owner-name/repo-name`. The `from` commit is optional and we’ll use the previous release’s commit as the baseline if it is excluded.
 
 For more information, see the [CLI docs]({%- link _documentation/cli/releases.md -%}).
+
+###### Finalizing Releases
+
+By default a release is created “unreleased”. Finalizing a release means that we fill in a second timestamp on the release record, which is prioritized over `date_created` when sorting releases in the UI. This also affects what counts as "the next release" for resolving issues, what release is used as the base for associating commits if you use `--auto`, and creates an entry in the Activity stream.
+
+This can be changed by passing either `--finalize` to the `new` command which will immediately finalize the release or you can separately call `sentry-cli releases finalize VERSION` later on. The latter is useful if you are managing releases as part of a build process e.g.
+
+```bash
+#!/bin/sh
+sentry-cli releases new "$VERSION"
+# do your build steps here
+# once you are done, finalize
+sentry-cli releases finalize "$VERSION"
+```
+You can also choose to finalize the release when you've made the release live (when you've deployed to your machines, enabled in the App store, etc.).
 
 ##### Using the API
 
@@ -218,17 +234,17 @@ In order for Sentry to use your commits, you must format your commits to match t
     "commits": [
         {
         "patch_set": [
-            {"path": "path/to/added-file.html", "type": "A"}, 
+            {"path": "path/to/added-file.html", "type": "A"},
             {"path": "path/to/modified-file.html", "type": "M"},
             {"path": "path/to/deleted-file.html", "type": "D"}
-        ], 
-        "repository": "owner-name/repo-name", 
-        "author_name": "Author Name", 
-        "author_email": "author_email@example.com", 
-        "timestamp": "2018-09-20T11:50:22+03:00", 
-        "message": "This is the commit message.", 
+        ],
+        "repository": "owner-name/repo-name",
+        "author_name": "Author Name",
+        "author_email": "author_email@example.com",
+        "timestamp": "2018-09-20T11:50:22+03:00",
+        "message": "This is the commit message.",
         "id": "8371445ab8a9facd271df17038ff295a48accae7"
-        } 
+        }
     ]
 }
 ```
@@ -239,30 +255,30 @@ In order for Sentry to use your commits, you must format your commits to match t
 
     `path`
     : The path to the file. Both forward and backward slashes (`'/' '\\'`) are supported.
-    
+
     `type`
-    : The types of changes that happend in that commit. The options are: 
+    : The types of changes that happend in that commit. The options are:
         - `Add (A)`
         - `Modify (M)`
         - `Delete (D)`
 
-`repository` 
+`repository`
 : The full name of the repository the commit belongs to. If this field is not given Sentry will generate a name in the form: `u'organization-<organization_id>'` (i.e. if the organization id is `123`, then the generated repository name will be `u'organization-123`).
 
-`author_email` 
-: The commit author's email is required to enable the suggested assignee feature. 
+`author_email`
+: The commit author's email is required to enable the suggested assignee feature.
 
 `author_name`
 : The commit author's name may also be included.
 
-`timestamp` 
+`timestamp`
 : The commit timestamp is used to sort the commits given. If a timestamp is not included, the commits will remain sorted in the order given.
 
 `message`
-: The commit message. 
+: The commit message.
 
 `id`
-: The commit id. 
+: The commit id.
 
 ##### Create the Release with Patch Data
 
@@ -280,15 +296,15 @@ curl https://sentry.io/api/0/organizations/your-organization-name/releases/ \
  "commits":[
      {
         "patch_set": [
-            {"path": "path/to/added-file.html", "type": "A"}, 
+            {"path": "path/to/added-file.html", "type": "A"},
             {"path": "path/to/modified-file.html", "type": "M"},
             {"path": "path/to/deleted-file.html", "type": "D"}
-        ], 
-        "repository": "owner-name/repo-name", 
-        "author_name": "Author Name", 
-        "author_email": "author_email@example.com", 
-        "timestamp": "2018-09-20T11:50:22+03:00", 
-        "message": "This is the commit message.", 
+        ],
+        "repository": "owner-name/repo-name",
+        "author_name": "Author Name",
+        "author_email": "author_email@example.com",
+        "timestamp": "2018-09-20T11:50:22+03:00",
+        "message": "This is the commit message.",
         "id": "8371445ab8a9facd271df17038ff295a48accae7"
     }
  ]

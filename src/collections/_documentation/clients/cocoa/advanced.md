@@ -147,9 +147,30 @@ Client.shared?.snapshotStacktrace {
 }
 ```
 
+## Determining whether to send events
+
+If you want to filter certain events, you can use `shouldSendEvent` which takes the event, returns a boolean, and decides whether or not to send the event.
+
+```swift
+Client.shared?.shouldSendEvent = { (event) in
+            if (event.environment == "staging") {
+                return false
+            }
+            return true
+        }
+```
+
+Here's an example in Objective C too:
+
+```objc
+client.shouldSendEvent = ^BOOL(SentryEvent *_Nonnull event) {
+    return (sampleRate >= ((double)arc4random() / 0x100000000));
+};
+```
+
 ## Event Sampling
 
-If you are sending to many events and want to not send all events you can set the `sampleRate` parameter. It’s a number between 0 and 1 where when you set it to 1, all events will be sent. Notice that `shouldSendEvent` will set for this.
+If you are sending too many events and want to not send all events you can set the `sampleRate` parameter. It’s a number between 0 and 1 where when you set it to 1, all events will be sent. Notice that `shouldSendEvent` will set for this.
 
 ```swift
 Client.shared?.sampleRate = 0.75 // 75% of all events will be sent

@@ -7,8 +7,6 @@ sidebar_order: 4
 
 ## Description & Objectives
 
- Releases are used for applying `source maps` to minified JavaScript to view original, untransformed source code in the stack traces of errors associated with the respective release. This is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (for example, TypeScript, ES6).
-
  In this tutorial, we will:
 
  1. Utilize the `Sentry Command Line Interface` (CLI) **during the build process** to update your Sentry account by:
@@ -21,7 +19,7 @@ sidebar_order: 4
 
 ## Step 1: Prepare the Build Environment
 
-We will use the `Makefile` in the `sentry-react-demo` project to handle Sentry related tasks utilizing the `sentry-cli`. The CLI is already available through the project dependencies (see `package.json`) and requires several parameters to be available to run.
+We use the `Makefile` in the `sentry-react-demo` project to handle Sentry related tasks utilizing the `sentry-cli`. The CLI is already available through the project dependencies (see `package.json`) and requires several parameters to be available to run.
 
 1. Open the `Makefile`
 
@@ -59,7 +57,7 @@ We will use the `Makefile` in the `sentry-react-demo` project to handle Sentry r
 
 Now we can invoke the `sentry-cli` to let Sentry know we have a new release and upload the project's source maps to it.
 
-- You can set a custom release version to suit your own delivery processes or let the Sentry CLI calculate and generate a version. 
+- You can set a custom release version to suit your delivery processes or let the Sentry CLI propose a version.
 - To build the `sentry-react-demo` project, we use the `react-scripts` package that also generates source maps under _./build/static/js/_
 
 1. In the Makefile, add a new environment variable for the release version, utilizing Sentry CLI to propose the version value
