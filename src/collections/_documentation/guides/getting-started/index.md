@@ -69,7 +69,6 @@ Sentry has built-in integrations with: [GitHub](https://docs.sentry.io/workflow/
 
 Enabling the 2-way integration with your Issue Tracking solution allows you to create a new issue from within the Sentry issue page, or link it to an existing one. In addition to **GitHub**, **GitLab**, and **Bitbucket** Issues that are enabled with the respective SCM integration, Sentry also integrates with: [Azure DevOps](https://docs.sentry.io/workflow/integrations/global-integrations/#azure-devops), [Clubhouse](https://docs.sentry.io/workflow/integrations/global-integrations/#clubhouse), [JIRA](https://docs.sentry.io/workflow/integrations/global-integrations/#jira), and others.
 
-
 > ![JIRA 2-Way Integration]({% asset guides/getting-started/jira-2way-binding.gif @path %})
 >
 > 2-Way integration with JIRA issue tracking.
@@ -117,7 +116,3 @@ Having the environment defined in your SDK will allow you to:
 - Create environment-specific alert rules
 - Filter your Issue and Events Streams based on the environment
 - Gain comparative insights based on the environment through queries in Discovery
-
-<!-- ## 6. Embed Sentry CLI in your CI/CD Process
-- Create Release
-- Upload Source maps / debug symbols -->
