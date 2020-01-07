@@ -116,7 +116,7 @@ When creating a new alert rule, select the environment in which you want the rul
 
 ![Ignore Issues]({% asset guides/alert-notifications/alerts_notifications_22.png @path %})
 
-This will allow you to refine your rules based on the environment the errors in your project originate from. This is quite useful, as the urgency and workflows you apply to **Production** alerts might differ from the ones you apply to **Development** alerts.
+This will allow you to refine your rules based on the environment the errors in your project originate from. This is quite useful, as the urgency and workflows you apply to **Production** alerts might differ from the ones you apply to alerts originating from your **QA** environment.
 
 ## Next
 
