@@ -37,7 +37,7 @@ For more information see: [Organization Management](https://docs.sentry.io/accou
 
 ## 3. Configure Integrations
 
-Sentry integrates seamlessly into your existing workflows by providing out of the box integrations with your favorite apps and services. To enable and configure integrations navigate to `Organization Settings > Integrations`.
+Sentry integrates seamlessly into your existing workflows by providing out of the box integrations with your favorite apps and services. To enable and configure integrations, navigate to `Organization Settings > Integrations`.
 
 ### 3.1. Alert Notifications
 
@@ -47,7 +47,7 @@ By default, Sentry will notify you about errors in your apps via **email**. To r
 >
 > _Enabling alert notifications through the __Slack__ integration._
 
-Sentry supports additional solutions on a project level. After creating a project - **Hipchat**, **Twilio**, **OpsGenie**, and other solutions can be configured and used to channel notifications through alert rules. For more information check out:
+Sentry supports additional solutions on a project level. After creating a project, **Hipchat**, **Twilio**, **OpsGenie**, and other solutions can be configured and used to channel notifications through alert rules. For more information, check out:
 
 - [Per-Project Integrations: Issue Notifications](https://docs.sentry.io/workflow/integrations/legacy-integrations/#issue-notifications)
 - [Routing Alerts to 3rd Party Integrations](https://docs.sentry.io/guides/alert-notifications/routing-alerts/#routing-alerts-to-3rd-party-integrations)
@@ -63,7 +63,14 @@ By enabling Sentry's integration with your Source Code Management (SCM) provider
 
     ![Integrate SCMs]({% asset guides/getting-started/07.png @path %})
 
-Sentry has built-in integrations with: [GitHub](https://docs.sentry.io/workflow/integrations/global-integrations/#github), [GitHub Enterprise](https://docs.sentry.io/workflow/integrations/global-integrations/#github-enterprise), [GitLab](https://docs.sentry.io/workflow/integrations/global-integrations/#gitlab), and [Bitbucket](https://docs.sentry.io/workflow/integrations/global-integrations/#bitbucket). If you're using a different SCM provider or don't want Sentry to connect to your repository, checkout our [docs]((https://docs.sentry.io/workflow/releases/?platform=browser#alternatively-without-a-repository-integration)) to learn how you can still enable most of these features (#1 - #3) by telling Sentry about your commit metadata.
+Sentry has built-in integrations with:
+
+- [GitHub](https://docs.sentry.io/workflow/integrations/global-integrations/#github)
+- [GitHub Enterprise](https://docs.sentry.io/workflow/integrations/global-integrations/#github-enterprise)
+- [GitLab](https://docs.sentry.io/workflow/integrations/global-integrations/#gitlab)
+- [Bitbucket](https://docs.sentry.io/workflow/integrations/global-integrations/#bitbucket)
+
+If you're using a different SCM provider or don't want Sentry to connect to your repository, checkout our [docs]((https://docs.sentry.io/workflow/releases/?platform=browser#alternatively-without-a-repository-integration)) to learn how you can still enable most of these features (#1 - #3) by telling Sentry about your commit metadata.
 
 ### 3.3. Issue Tracking
 
@@ -77,13 +84,13 @@ For a full list of all supported integrations, go to our documentation on [Integ
 
 ## 4. Create Projects
 
-To start monitoring errors in your app with Sentry you'll need to initialize the SDK with a DSN key. To obtain a key, simply create a new Sentry project by going to `Settings > Projects > + Create Project`. Give the project a name and assign the responsible [Team/s](#3-set-up-teams). Now, any error that occurs in your code (wherever it may be deployed and running) will be associated with that specific project.
+To start monitoring errors in your app with Sentry, you'll need to initialize the SDK with a DSN key. To obtain a key, create a new Sentry project by going to `Settings > Projects > + Create Project`. Give the project a name and assign the responsible [Team/s](#2-set-up-teams). Now, any error that occurs in your code (wherever it may be deployed and running) will be associated with that specific project.
 
 ![Create a Project]({% asset guides/getting-started/08.png @path %})
 
 ### > **What's in a Project?**
 
-A Project is a logical entity that connects between the errors in your application (or a part of it) to the team members assigned to that project. The **Project Settings** configuration determines
+A Project is a logical entity that connects between the errors in your application (or a part of it) to the team members assigned to that project. The **Project Settings** configuration determines:
 
 - Which errors should be ingested into your Sentry account and which should be dropped, through [Inbound Filters](https://docs.sentry.io/accounts/quotas/#inbound-data-filters)
 - Who to notify, about what error, and how, using [Alert Rules](https://docs.sentry.io/workflow/notifications/alerts/)
@@ -100,14 +107,14 @@ You could theoretically pour all your errors into a single project. The Sentry U
 
 Here are some points to consider:
 
-- In case your application's source code is managed in **multiple repositories** - create a **separate project for each repo**.
-- In case your app is made up of **several micro-services** - **split them into projects** accordingly.
-- If you have a **monolithic codebase** - set up **separate projects for the backend and frontend**.
-- Give **each language its own project** (e.g. your backend code contains NodeJS and Java components, separate those into two different projects).  
+- In case your application's source code is managed in **multiple repositories**, create a **separate project for each repo**.
+- In case your app is made up of **several micro-services**, **split them into projects** accordingly.
+- If you have a **monolithic codebase**, set up **separate projects for the backend and frontend**.
+- Give **each language its own project** (for example, your backend code contains NodeJS and Java components, separate those into two different projects).  
 
 ## 5. Define Environments
 
-Depending on your development life cycle, your applications are probably deployed and running in multiple environments -  _QA_, _Staging_, _Production_, etc. Configuring the environment in your Sentry SDK, will add the tag to every error event and will help you associate events to the environment in which they occurred. You can do that by creating a `SENTRY_ENVIRONMENT` environment variable or by explicitly defining it in the SDK configuration. For more information see our documentation on [Environments](https://docs.sentry.io/enriching-error-data/environments/?platform=browser).
+Depending on your development life cycle, your applications are probably deployed and running in multiple environments --  _QA_, _Staging_, _Production_, etc. Configuring the environment in your Sentry SDK, will add the tag to every error event and will help you associate events to the environment in which they occurred. You can do that by creating a `SENTRY_ENVIRONMENT` environment variable or by explicitly defining it in the SDK configuration. For more information, see our documentation on [Environments](https://docs.sentry.io/enriching-error-data/environments/?platform=browser).
 
 ![Create a Project]({% asset guides/getting-started/10.png @path %})
 

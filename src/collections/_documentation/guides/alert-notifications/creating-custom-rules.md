@@ -13,7 +13,7 @@ Alert rules consist of:
 
 - A set of self-explanatory `Conditions` connected in an _ALL_, _ANY_, or _NONE_ relation.
 - The `Environment` where your code is deployed and running in which you'd like the alert rule applied.
-- The `Actions` that should be taken when the associated conditions are met. Mainly - where you'd like to channel this alert to.
+- The `Actions` that should be taken when the associated conditions are met. Mainly -- where you'd like to channel this alert.
 
 #### **Creating a good set of alert rules means:**
 
@@ -110,13 +110,13 @@ An issue changes state from ignored to unresolved
 
 ## Selecting an Environment
 
-`Environment` is a Sentry supported tag that you can (and should) add to your SDK. Generally, the tag accepts any value but is targeted to refer to the naming convention of your code deployments such as - _Development_, _Testing_, _Staging_, _Production_, etc. This enables various features and filtering capabilities within your Sentry account. Go to our documentation for more information about [Creating and Using Environments](https://docs.sentry.io/enriching-error-data/environments/).
+`Environment` is a Sentry supported tag that you can (and should) add to your SDK. Generally, the tag accepts any value but is targeted to refer to the naming convention of your code deployments such as -- _Development_, _Testing_, _Staging_, _Production_, etc. This enables various features and filtering capabilities within your Sentry account. Go to our documentation for more information about [Creating and Using Environments](https://docs.sentry.io/enriching-error-data/environments/).
 
-When creating a new alert rule, select the environment in which you want the rule applied in. The environment drop-down list is populated with the 'environment' tag values available in your Event Stream.
+When creating a new alert rule, select the environment in which you want the rule applied. The environment drop-down list is populated with the 'environment' tag values available in your Event Stream.
 
 ![Ignore Issues]({% asset guides/alert-notifications/alerts_notifications_22.png @path %})
 
-This will allow you to refine your rules based on the environment the errors in your project originate from. This is quite useful, as the urgency and workflows you apply to **Production** alerts might differ from the ones you apply to alerts originating from your **QA** environment.
+This will allow you to refine your rules based on the environment where your project errors originated. This is quite useful, as the urgency and workflows you apply to **Production** alerts might differ from the ones you apply to alerts originating from your **QA** environment.
 
 ## Next
 
