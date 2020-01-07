@@ -3,6 +3,8 @@ title: Tryton
 sidebar_order: 4
 ---
 
+{% version_added 0.13.2 %}
+
 <!-- WIZARD -->
 The Tryton integration adds support for the [Tryton Framework Server](https://www.tryton.org/).
 
