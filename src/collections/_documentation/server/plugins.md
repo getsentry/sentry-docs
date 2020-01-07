@@ -103,7 +103,7 @@ The following plugins are available and were created by members of the Sentry co
 
 ## Setup
 
-Many of these plugins require configuration to work. The instruction on how to configure your environment for these plugins are contianed below.
+Many of these plugins require configuration to work. The instructions on how to configure your environment for these plugins are below.
 
 ### Asana
 
