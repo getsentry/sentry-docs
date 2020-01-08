@@ -4,7 +4,7 @@ title: 'Webhook Plugin'
 
 ### Webhook Plugin
 
-When the webhook plugin is enabled and configured with one or more urls, it can be used in the [action section]({%- link _documentation/workflow/notifications/alerts.md -%}#actions) of the alert rules. When an event triggers a rule that has the Webhook Plugin as one of the actions, the following attributes and payload will be sent to the url(s) specified in the plugin configuration.
+When the webhook plugin is enabled and configured with one or more URLs, you can use it in the [action section]({%- link _documentation/workflow/notifications/alerts.md -%}#actions) of the alert rules. When an event triggers a rule that has the Webhook Plugin as one of the actions, the following attributes and payload will be sent to the URL(s) specified in the plugin configuration.
  
 **Attributes**
 
@@ -270,4 +270,3 @@ When the webhook plugin is enabled and configured with one or more urls, it can 
 }
 
 ```
-
