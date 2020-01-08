@@ -75,7 +75,7 @@ The following plugins are deprecated and have been replaced with Sentry's built 
 
 ## 3rd Party Plugins {#rd-party-plugins}
 
-The following plugins are available and were created by members of the Sentry community. Please note that many of these plugins have not been maintained may not work with the latest versions of Sentry.
+The following plugins are available and were created by members of the Sentry community. Please note that many of these plugins have not been maintained and may not work with the latest versions of Sentry.
 
 -   [sentry-campfire](https://github.com/mkhattab/sentry-campfire)
 -   [sentry-flowdock](https://github.com/glasslion/sentry-flowdock)
