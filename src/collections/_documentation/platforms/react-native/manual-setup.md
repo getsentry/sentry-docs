@@ -64,7 +64,7 @@ symbols for all build variants.
 
 By default, uploading of debug simulator builds is disabled for speed reasons. If you want to generate debug symbols for debug builds, you can pass `--allow-fetch` as a parameter to `react-native-xcode` in the above mentioned build phase.
 
-### Using node with nvm or notion
+### Using node with nvm or volta
 
 If you are using nvm or notion, Xcode seems to have problems locating the default node binary. In this case, you should change the scripts:
 
@@ -76,73 +76,7 @@ dyld: Library not loaded: /usr/local/opt/icu4c/lib/libicui18n.62.dylib
   Reason: image not found
 ```
 
-Change the run scripts in Xcode to:
-
-#### Bundle React Native code and images
-
-```bash
-# First set the path to sentry.properties
-export SENTRY_PROPERTIES=sentry.properties
-
-# Setup nvm and set node
-[ -z "$NVM_DIR" ] && export NVM_DIR="$HOME/.nvm"
-
-if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
-. "$HOME/.nvm/nvm.sh"
-elif [[ -x "$(command -v brew)" && -s "$(brew --prefix nvm)/nvm.sh" ]]; then
-. "$(brew --prefix nvm)/nvm.sh"
-fi
-
-# Set up the nodenv node version manager if present
-if [[ -x "$HOME/.nodenv/bin/nodenv" ]]; then
-eval "$("$HOME/.nodenv/bin/nodenv" init -)"
-fi
-
-# Trying notion
-if [ -z "$NODE_BINARY" ]; then
-if [[ -s "$HOME/.notion/bin/node" ]]; then
-export NODE_BINARY="$HOME/.notion/bin/node"
-fi
-fi
-
-[ -z "$NODE_BINARY" ] && export NODE_BINARY="node"
-
-$NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \
-  ../node_modules/react-native/scripts/react-native-xcode.sh
-```
-
-#### Upload Debug Symbols to Sentry
-
-```bash
-# First set the path to sentry.properties
-export SENTRY_PROPERTIES=sentry.properties
-
-# Setup nvm and set node
-[ -z "$NVM_DIR" ] && export NVM_DIR="$HOME/.nvm"
-
-if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
-. "$HOME/.nvm/nvm.sh"
-elif [[ -x "$(command -v brew)" && -s "$(brew --prefix nvm)/nvm.sh" ]]; then
-. "$(brew --prefix nvm)/nvm.sh"
-fi
-
-# Set up the nodenv node version manager if present
-if [[ -x "$HOME/.nodenv/bin/nodenv" ]]; then
-eval "$("$HOME/.nodenv/bin/nodenv" init -)"
-fi
-
-# Trying notion
-if [ -z "$NODE_BINARY" ]; then
-if [[ -s "$HOME/.notion/bin/node" ]]; then
-export NODE_BINARY="$HOME/.notion/bin/node"
-fi
-fi
-
-[ -z "$NODE_BINARY" ] && export NODE_BINARY="node"
-
-# Run sentry cli script to upload debug symbols
-$NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli upload-dif "$DWARF_DSYM_FOLDER_PATH"
-```
+You can simply run `ln -s $(which node) /usr/local/bin/node` which tells your env to use your node binary.
 
 ## Android
 
