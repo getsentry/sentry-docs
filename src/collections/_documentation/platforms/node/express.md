@@ -72,7 +72,7 @@ user?: boolean | string[]; // default: true = ['id', 'username', 'email']
 // node version
 version?: boolean; // default: true
 // timeout for fatal route errors to be delivered
-flushTimeout?: number; // default: 2000
+flushTimeout?: number; // default: undefined
 ```
 
 For example, if you want to skip the server name and add just user, you would use `requestHandler` like this:

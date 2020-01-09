@@ -61,6 +61,7 @@ Sentry provides a few states for each issue, which significantly impacts how not
 Global Integrations that can send Notifications:
 - [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
 - [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
+- Custom integrations built using the [Integration Platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%})
 
 
 Legacy Integrations (via "Service" as any individual integration) that can send Notifications:
@@ -77,6 +78,7 @@ Legacy Integrations (via "Service" as any individual integration) that can send 
 - Pushover
 - Twilio
 - VictorOps
+- [Webhooks]({%- link webhook-plugin.md -%})
 
 ## Notification Management
 

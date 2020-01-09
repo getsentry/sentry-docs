@@ -1,7 +1,16 @@
 ---
-title: 'Agent (Beta)'
+title: 'Agent (Discontinued)'
 sidebar_order: 9
 ---
+
+{% capture __alert_content -%}
+The Java Agent has been discontinued and won't be supported.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Deprecated"
+    content=__alert_content
+    level="danger"
+%}
 
 As of version 1.5.0 there is a new **experimental (beta)** Java Agent available that enhances the existing Sentry Java SDK. The agent will enhance your application stack traces on Sentry by adding the names and values of local variables to each frame.
 
