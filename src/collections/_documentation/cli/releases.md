@@ -10,7 +10,7 @@ Because releases work on projects you will need to specify the organization and 
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
-  content=__alert_con	tent
+  content=__alert_content
   level="warning"
 %}
 
