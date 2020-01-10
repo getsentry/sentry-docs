@@ -18,14 +18,7 @@ These integrations are set up once per organization, and are then usable in all 
 -   [_JIRA Server_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#jira-server)
 -   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
 
-{% capture __alert_content -%}
 These integrations are maintained and supported by the companies that created them. See [integration platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}).
-{%- endcapture -%}
-{%- include components/alert.html
-  content=__alert_content
-  title="Integration Platform Integrations"
-  level="info"
-%}
 
 -   [_Amixr_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#amixr)
 -   [_ClickUp_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#clickup)
