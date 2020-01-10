@@ -9,21 +9,23 @@ Sentry integrates seamlessly with your favorite apps and services.
 
 These integrations are set up once per organization, and are then usable in all projects.
 
--   [_Amixr_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#amixr)
 -   [_Azure DevOps_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#azure-devops)
 -   [_Bitbucket_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#bitbucket)
--   [_ClickUp_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#clickup)
--   [_Clubhouse_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#clubhouse)
 -   [_GitHub_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github)
 -   [_GitHub Enterprise_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github-enterprise)
 -   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#gitlab)
 -   [_JIRA_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#jira)
 -   [_JIRA Server_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#jira-server)
 -   [_PagerDuty_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
--   [_Rookout_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#rookout)
 -   [_Slack_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
--   [_Split_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#split)
 
+These integrations are maintained and supported by the companies that created them. See [integration platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}).
+
+-   [_Amixr_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#amixr)
+-   [_ClickUp_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#clickup)
+-   [_Clubhouse_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#clubhouse)
+-   [_Rookout_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#rookout)
+-   [_Split_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#split)
 
 ### Per-Project Integrations
 
