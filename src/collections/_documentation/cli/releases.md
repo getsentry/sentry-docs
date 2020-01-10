@@ -3,7 +3,7 @@ title: 'Release Management'
 sidebar_order: 2
 ---
 
-The `sentry-cli` tool can be used for release management on Sentry. It allows you to create, edit and delete releases as well as upload release artifacts for them.
+The `sentry-cli` tool can be used for release management on Sentry. It allows you to create, edit and delete releases as well as upload release artifacts for them. Note that releases are global per organization, so make sure to prefix them with something project-specific if multiple projects' version numbers overlap.
 
 {% capture __alert_content -%}
 Because releases work on projects you will need to specify the organization and project you are working with. For more information about this refer to [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects).
