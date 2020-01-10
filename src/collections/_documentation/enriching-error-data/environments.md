@@ -31,3 +31,5 @@ If you want to change the name of a given environment, you will have to modify y
 Environment data is sent to Sentry by tagging issues via your SDK:
 
 {% include components/platform_content.html content_dir='set-environment' %}
+
+There are a few restrictions - the environment name cannot contain newlines or spaces, cannot be the string "None", or exceed 64 characters.
