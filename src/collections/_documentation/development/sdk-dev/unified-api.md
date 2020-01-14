@@ -4,7 +4,7 @@ sidebar_order: 1
 ---
 
 New Sentry SDKs should follow the unified API, use consistent terms to refer to concepts.  This
-documentation explains what the unified API is and why it exits.
+documentation explains what the unified API is and why it exists.
 
 ## Motivation
 
