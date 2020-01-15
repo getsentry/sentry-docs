@@ -22,3 +22,5 @@ Step-by-step guides to getting started with error monitoring for your apps on:
 * [Alert Notifications]({%- link _documentation/guides/alert-notifications/index.md -%})
 
 * [Grouping and Fingerprints]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
+
+* [Moving on Up - Migrating Sentry to Cloud]({%- link _documentation/guides/migration/index.md -%})
