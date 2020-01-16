@@ -3,13 +3,13 @@ title: Moving on Up - Switch to Hosted Sentry
 sidebar_order: 6
 ---
 
-Sentry offers a hosted cloud solution in addition to an open-source one, both are functionally the same. Despite open-source being a core value for us at Sentry, it isn't necessarily recommend for everyone. As Sentry evolves, many customers are finding out that hosting Sentry on-premise can quickly become expensive to maintain, scale, and support, making our SaaS product, the better and less costly option. 
+Sentry offers a hosted cloud solution in addition to an open-source one, both are functionally the same. Despite open-source being a core value for us at Sentry, it isn't necessarily recommended for everyone. As Sentry evolves, many customers are finding out that hosting Sentry on-premise can quickly become expensive to maintain, scale, and support, making our SaaS product, the better and less costly option.
 
 For more information take a look at our post on [Self Hosted or Cloud Sentry?](https://sentry.io/_/resources/about-sentry/self-hosted-vs-cloud/)
 
 ## Migrating to Cloud
 
-Many organizations start off with hosting Sentry on-premise, investing time and effort in configuring and customizing their Sentry Org to suite their needs. Once they decide to move to a SaaS account, its important for them to know that they can migrate a lot of that investment in to their new account instead of starting from scratch.
+ Organizations that start with hosting Sentry on-premise, invest time and effort in configuring and customizing their Sentry Org. Once they decide to move to a SaaS account, it's important for them to know that they can migrate a lot of that investment into their new account instead of starting from scratch.
 
 To make this migration as seamless as possible, Sentry has a migration workflow that allows you to migrate most of your account's settings and configurations including project settings, alert rules, enabled data scrubbers, team settings, saved search queries, integration platform metadata (Sentry 10), etc.
 
@@ -31,13 +31,13 @@ Once you complete the onboarding steps, grab your **org slug** from the browser 
 
 ### 2. Choose a plan
 
-Take a look at our [plans](https://sentry.io/pricing/) and select one that suites your needs based on the different features and capabilities. Notice that plan pricing varies based on the type of _Contract_ and _Monthly Event Volume_, so make sure you are familiar with your current/expected monthly usage (number of events per month).
+Take a look at our [plans](https://sentry.io/pricing/) and select one that suits your needs based on the different features and capabilities. Notice that plan pricing varies based on the type of _Contract_ and _Monthly Event Volume_, so make sure you are familiar with your current/expected monthly usage (number of events per month).
 
-If you're expecting higher volumes or interested in our Enterprise capabilities (priority support and SLAs, single tenant options, etc.), please [contact us](https://sentry.io/contact/enterprise/) regarding our **Enterprise Plan**.
+If you're expecting higher volumes or interested in our Enterprise capabilities (priority support and SLAs, single-tenant options, etc.), please [contact us](https://sentry.io/contact/enterprise/) regarding our **Enterprise Plan**.
 
 ### 3. Export your data
 
-Sentry open-source installs a [Command Line](https://docs.sentry.io/server/cli/) script that allows you to perform various operations that are unachievable within the web UI. One of those is `export`, exporting your data into a transport JSON.
+Sentry open-source installs a [Command-Line](https://docs.sentry.io/server/cli/) script that allows you to perform various operations that are unachievable within the web UI. One of those is `export`, exporting your data into a transport JSON.
 
 Run the following command in your terminal to start the export script and redirect the output (_containing_ the transport JSON) to a file:
 
@@ -47,13 +47,13 @@ Run the following command in your terminal to start the export script and redire
 
 ### 4. Contact us
 
-To kick-off the migration process shoot us an email with the following details at: <support@sentry.io>:
+To kick-off the migration process shoot us an email with the following details at <support@sentry.io>:
 
 - Email Subject: `Self-Hosted Migration Application`
 - Your **organization slug**
-- Your **selected plan**. If you're unsure, let us know. We'll be happy to help you make the right decision. In addition, if you think you'll need an Enterprise plan we can connect you with the right person to discuss that plan.
+- Your **selected plan**. If you're unsure, let us know. We'll be happy to help you make the right decision. Also, if you think you'll need an Enterprise plan we can connect you with the right person to discuss that plan.
 - Attach the **export output** containing the transport JSON.
 
-Alternatively, you can also reach out to us through: [Switch to Hosted Sentry](https://sentry.io/from/self-hosted/)
+Alternatively, you can also reach out to us through [Switch to Hosted Sentry](https://sentry.io/from/self-hosted/)
 
 Once we have your organization set up on sentry.io, we'll apply a **$100 credit** to your account for migrating from self-hosted Sentry.
