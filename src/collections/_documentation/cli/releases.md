@@ -3,7 +3,7 @@ title: 'Release Management'
 sidebar_order: 2
 ---
 
-The `sentry-cli` tool can be used for release management on Sentry. It allows you to create, edit and delete releases as well as upload release artifacts for them.
+The `sentry-cli` tool can be used for release management on Sentry. It allows you to create, edit and delete releases as well as upload release artifacts for them. Note that releases are global per organization. If you want the releases in different projects to be treated as separate entities, make the version name unique across the organization. For example, if you have projectA and projectB that share version numbers, you can name the releases `projectA-1.0` and `projectB-1.0` respectively.
 
 {% capture __alert_content -%}
 Because releases work on projects you will need to specify the organization and project you are working with. For more information about this refer to [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects).
@@ -16,7 +16,7 @@ Because releases work on projects you will need to specify the organization and 
 
 ## Creating Releases
 
-Releases are created with the `sentry-cli releases new` command. It takes at the very least a version identifier that uniquely identifies the relases. It can be arbitrary but for certain platforms recommendations exist:
+Releases are created with the `sentry-cli releases new` command. It takes at the very least a version identifier that uniquely identifies the releases. There are a few restrictions -- the release name cannot contain newlines, spaces, or "\", be ".", "..", or exceed 200 characters. The value can be arbitrary, but for certain platforms, recommendations exist:
 
 - for mobile devices use `VERSION_NUMBER` or `VERSION_NUMBER (BUILD_NUMBER)`. So for instance `1.0.0` or `1.0.0 (1234)`.
 - if you use a DVCS we recommed using the identifying hash (eg: the commit SHA, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). You can let sentry-cli automatically determine this hash for supported version control systems with `sentry-cli releases propose-version`.
