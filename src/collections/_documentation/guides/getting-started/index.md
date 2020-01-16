@@ -1,5 +1,5 @@
 ---
-title: Setting up your Sentry Account
+title: Set up your Sentry Account
 sidebar_order: 1
 ---
 
