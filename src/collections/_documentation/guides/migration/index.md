@@ -5,7 +5,10 @@ sidebar_order: 6
 
 Sentry offers a hosted cloud solution in addition to an open-source one, both are functionally the same. Despite open-source being a core value for us at Sentry, it isn't necessarily recommended for everyone. As Sentry evolves, many customers are finding out that hosting Sentry on-premise can quickly become expensive to maintain, scale, and support, making our SaaS product, the better and less costly option.
 
-For more information take a look at our post on [Self Hosted or Cloud Sentry?](https://sentry.io/_/resources/about-sentry/self-hosted-vs-cloud/)
+For additional reading on considering SaaS, take a look at:
+
+- [Self Hosted or Cloud Sentry?](https://sentry.io/_/resources/about-sentry/self-hosted-vs-cloud/)
+- [XS:Code > Open Source is Free - But Expensive](https://xscode.com/686/open-source-is-free-but-expensive/)
 
 ## Migrating to Cloud
 
@@ -37,23 +40,22 @@ If you're expecting higher volumes or interested in our Enterprise capabilities 
 
 ### 3. Export your data
 
-Sentry open-source installs a [Command-Line](https://docs.sentry.io/server/cli/) script that allows you to perform various operations that are unachievable within the web UI. One of those is `export`, exporting your data into a transport JSON.
+Sentry open-source provides a [command line interface](https://docs.sentry.io/server/cli/) that allows you to perform various operations that are unachievable within the web UI. One of those is `export`, exporting your data into a transport JSON.
 
 Run the following command in your terminal to start the export script and redirect the output (_containing_ the transport JSON) to a file:
 
-    $ docker-compose run --rm web export > sentry_export.txt
+    $ docker-compose run --rm web export > sentry_export.json
     
 > This invokes the sentry CLI `export` command on a new isolated instance of our Docker web container.
 
-### 4. Contact us
+### 4. Ship it to us
 
-To kick-off the migration process shoot us an email with the following details at <support@sentry.io>:
+To kick-off the migration process contact to us through [Switch to Hosted Sentry](https://sentry.io/from/self-hosted/). Once we get your request, one of our support reps will reach out though a support ticket to get the following details:
 
-- Email Subject: `Self-Hosted Migration Application`
-- Your **organization slug**
-- Your **selected plan**. If you're unsure, let us know. We'll be happy to help you make the right decision. Also, if you think you'll need an Enterprise plan we can connect you with the right person to discuss that plan.
-- Attach the **export output** containing the transport JSON.
+- Your **Organization slug**.
+- **Selected plan**. If you're unsure, let us know. We'll be happy to help you make the right decision. Also, if you think you'll need an Enterprise plan we can connect you with the right person to discuss that plan.
+- The **sentry_export.json** file.
 
-Alternatively, you can also reach out to us through [Switch to Hosted Sentry](https://sentry.io/from/self-hosted/)
+Alternatively, you can also shoot us an email at <support@sentry.io> with the subject: `Self-Hosted Migration Application`.
 
 Once we have your organization set up on sentry.io, we'll apply a **$100 credit** to your account for migrating from self-hosted Sentry.
