@@ -50,7 +50,7 @@ Run the following command in your terminal to start the export script and redire
 
 ### 4. Ship it to us
 
-To kick-off the migration process contact to us through [Switch to Hosted Sentry](https://sentry.io/from/self-hosted/). Once we get your request, one of our support reps will reach out though a support ticket to get the following details:
+To kick-off the migration process contact us using the form available in - [Switch to Hosted Sentry](https://sentry.io/from/self-hosted/). Once we get your request, one of our support reps will reach out through a support ticket to get the following details:
 
 - Your **Organization slug**.
 - **Selected plan**. If you're unsure, let us know. We'll be happy to help you make the right decision. Also, if you think you'll need an Enterprise plan we can connect you with the right person to discuss that plan.
