@@ -85,6 +85,14 @@ If you are on OS X, you can install `sentry-cli` via homebrew:
 $ brew install getsentry/tools/sentry-cli
 ```
 
+## Installation via Scoop
+
+If you are on Windows, you can install `sentry-cli` via [Scoop](https://scoop.sh):
+
+```powershell
+> scoop install sentry-cli
+```
+
 ## Docker Image
 
 For unsupported distributions and CI systems, we offer a Docker image that comes with `sentry-cli` preinstalled. It is recommended to use the `latest` tag, but you can also pin to a specific version. By default, the command runs inside the `/work` directory. Mount relevant project folders and build outputs there to allow `sentry-cli` to scan for resources:
