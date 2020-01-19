@@ -9,6 +9,7 @@ For certain actions, you can use the `sentry-cli` command line executable. It ca
     -   [Automatic Installation]({%- link _documentation/cli/installation.md -%}#automatic-installation)
     -   [Installation via NPM]({%- link _documentation/cli/installation.md -%}#installation-via-npm)
     -   [Installation via Homebrew]({%- link _documentation/cli/installation.md -%}#installation-via-homebrew)
+    -   [Installation via Scoop]({%- link _documentation/cli/installation.md -%}#installation-via-scoop)
     -   [Docker Image]({%- link _documentation/cli/installation.md -%}#docker-image)
     -   [Updating and Uninstalling]({%- link _documentation/cli/installation.md -%}#updating-and-uninstalling)
 -   [Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
