@@ -13,7 +13,7 @@ sidebar_order: 4
     - Creating a new release version
     - Uploading the project's latest source maps (and associate them with the new release version)
 
-2. Add the release version to the Sentry SDK configuration --- this will associate any error captured by the SDK in our app to this specific release. Sentry will use the release's source maps we uploaded to unminify the error's stack trace.
+2. Add the release version to the Sentry SDK configuration --- this will associate any error captured by the SDK in our app to this specific release. Sentry will use the release's uploaded source maps to unminify the error's stack trace.
 
 **Note:** As part of the **Continuous Integration workflow** for this app demo, we're using a `Makefile` to handle the `sentry-cli` related tasks through `make` targets. If you're using a different code base, you can still apply the settings and commands described below to your specific setup or run them directly in a command-line shell as part of your build process. For more information, see [Command Line Interface](https://docs.sentry.io/cli/).
 
