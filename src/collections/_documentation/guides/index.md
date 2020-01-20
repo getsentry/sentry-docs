@@ -12,7 +12,7 @@ sidebar_order: 0
 
 * [Alert Notifications]({%- link _documentation/guides/alert-notifications/index.md -%})
 
-* [Customize Event Grouping]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
+* [Grouping & Fingerprints]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
 
 * [Moving on Up - Switch to Hosted Sentry]({%- link _documentation/guides/migration/index.md -%})
 

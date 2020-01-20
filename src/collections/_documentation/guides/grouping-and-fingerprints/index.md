@@ -1,5 +1,5 @@
 ---
-title: Customize Event Grouping
+title: Grouping & Fingerprints
 sidebar_order: 6
 ---
 
