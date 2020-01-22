@@ -13,7 +13,7 @@ including notification and security settings.
 
 ## Roles
 
-Access within an organization is dictated by member roles.
+Member roles dictate access within an organization.
 
 ### Owner
  - Unrestricted access to the organization, its data, and settings.
@@ -36,15 +36,14 @@ Access within an organization is dictated by member roles.
 
 ## Open Membership
 
-Open membership is enabled by default, which allows members to freely join,
-leave and add other members to teams.
+Open membership is enabled by default, which allows members to join, leave, and add other members to teams.
 
 ## Restricting Access
 
 - Access to a Project is limited to the Team that owns the project. However, with open membership,
-members can freely join and add members to teams.
+members can join and add members to teams.
 - To further restrict access to a Project, you can control access to Teams by making them accessible
-only through invitation by a Manager, Owner or Team Admin.
+only through invitation by a Manager, Owner, or Team Admin.
 
 To restrict Team access, go to Organization Settings and flip the “Open Membership” toggle.
 
