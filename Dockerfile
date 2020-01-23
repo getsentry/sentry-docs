@@ -1,3 +1,3 @@
-ARG VERSION=2019.05.08
+ARG VERSION=2020.01.23
 FROM getsentry/jekyll-base:builder-${VERSION} AS builder
 FROM getsentry/jekyll-base:runtime-${VERSION} AS runtime
