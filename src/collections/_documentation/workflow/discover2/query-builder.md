@@ -138,7 +138,7 @@ Seeing these aggregations will indicate where to focus your attention. You can c
 
 Each query result is displayed in tandem with a facet map that represents a distribution of tags that corresponds with the query result.
 
-![DON%20T%20Add%20content%20to%20this%20Draft%20Discover%20V2/Untitled.png](DON%20T%20Add%20content%20to%20this%20Draft%20Discover%20V2/Untitled.png)
+[{% asset discover/discover-facet-map.png alt="Facet map for transaction and handled tags. Map looks like a bar with gradient colors." %}]({% asset discover/discover-facet-map.png @path %})
 
 The top 10 tag keys and their values are shown by occurrence and dynamically update when you change any of your conditions. For example, if you choose a different project or date range, the facet map will automatically update based on the new results. 
 
