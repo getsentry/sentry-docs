@@ -3,9 +3,16 @@ title: 'Discover V2'
 sidebar_order: 4
 ---
 
-[ alert box saying it's new ]
+{% capture __alert_content -%}
+This version of Discover is in beta. Discover V1 will deprecate at the end of February 2020.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
-Our new Discover tool combines the best parts of our Events and existing Discover features, providing visibility into your data across environments and building upon and enriching your error data. This new feature will allow you to query and unlock deeper insights into the health of your entire system and answer critical business questions -- all in one place.
+Our Discover tool combines the best parts of our Events and existing Discover features, providing visibility into your data across environments and building upon and enriching your error data. This new feature will allow you to query and unlock deeper insights into the health of your entire system and answer critical business questions -- all in one place.
 
 ![DON%20T%20Add%20content%20to%20this%20Draft%20Discover%20V2/Screen_Shot_2020-01-24_at_1.20.51_PM.png](DON%20T%20Add%20content%20to%20this%20Draft%20Discover%20V2/Screen_Shot_2020-01-24_at_1.20.51_PM.png)
 
