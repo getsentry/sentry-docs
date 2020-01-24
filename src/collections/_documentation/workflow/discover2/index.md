@@ -61,7 +61,7 @@ Share your queries as often as you want. You can share URLs to other users who a
 
 Although search queries are shareable, you can save them as Saved Queries. Saved Queries are visible to the entire organization. In other words, Saved Queries **are not** scoped to the user's account. Saved Queries have a yellow star icon on the Discover landing page. You can use either a pre-built query or another saved query to create a new Saved Query.
 
-For more details, see [full documentation on the Query Builder](LINK).
+For more details, see [full documentation on the Query Builder]({%- link _documentation/workflow/discover2/query-builder.md -%}).
 
 
 ## Event Details

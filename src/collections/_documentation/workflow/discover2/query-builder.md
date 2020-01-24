@@ -59,7 +59,7 @@ Source of the list of fields:
 
 [Fields](https://www.notion.so/847a31ec71da4a889593859534891e44)
 
-The Query Builder syntax is identical to [LINK: Sentry's Search syntax]( [https://docs.sentry.io/workflow/search/](https://docs.sentry.io/workflow/search/)). To add a search condition, click on the search input box above the graph, add a search condition, and press "Enter."
+The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _documentation/workflow/search.md -%}). To add a search condition, click on the search input box above the graph, add a search condition, and press "Enter."
 
 ### Results Table
 
