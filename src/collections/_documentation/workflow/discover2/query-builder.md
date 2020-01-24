@@ -60,11 +60,11 @@ From an existing Saved Query, click on the garbage bin icon on the top right-han
 
 You can use conditions to filter events from results by fields or tags.
 
-Source of the list of fields: 
+### Available Fields
 
-- [TODO: Alberto to generate this list. [https://github.com/getsentry/sentry/blob/07019b6c85af15d046978176a8ae1f3ec38f193f/src/sentry/snuba/events.py#L9](https://github.com/getsentry/sentry/blob/07019b6c85af15d046978176a8ae1f3ec38f193f/src/sentry/snuba/events.py#L9)]
+[ Mimi will add list]
 
-[Fields](https://www.notion.so/847a31ec71da4a889593859534891e44)
+### Syntax
 
 The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _documentation/workflow/search.md -%}). To add a search condition, click on the search input box above the graph, add a search condition, and press "Enter."
 
