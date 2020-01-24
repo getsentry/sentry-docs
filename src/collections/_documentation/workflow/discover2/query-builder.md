@@ -45,7 +45,14 @@ Making changes to a Saved Query **will not** automatically be saved. An exceptio
 
 ### Deleting a Saved Query
 
-[ Mimi note: this will go in an Alert Box ] WARNING: Deleting a Saved Query is irreversible.
+{% capture __alert_content -%}
+Deleting a Saved Query is irreversible.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Warning"
+    content=__alert_content
+    level="warning"
+%}
 
 From an existing Saved Query, click on the garbage bin icon on the top right-hand corner. After deleting a Saved Query, you'll be redirected back to the landing page.
 
