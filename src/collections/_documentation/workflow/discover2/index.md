@@ -39,7 +39,23 @@ Saved queries will be viewable by anyone in your Sentry organization. You can us
 
 ## Query Builder
 
-[ something here ]
+Navigate to any query page from the Discover Homepage in these ways:
+
+- Clicking on "Build a new query"
+- Clicking on any Pre-built or Saved Queries
+
+On the Query results page, you'll find the graph, table, and facet maps. The Query Builder enables the user to create custom views of the events sent to Sentry.io. You can add any tags/fields as columns, aggregate with columns, and sort with columns.
+
+### Sharing Query Views
+
+Share your queries as often as you want. You can share URLs to other users who also have access to the same organization. As each part of the query is built, the results update, and the URL is updated so that in-progress searches can be shared in email/chat.
+
+### Saved Query
+
+Although search queries are shareable, you can save them as Saved Queries. Saved Queries are visible to the entire organization. In other words, Saved Queries **are not** scoped to the user's account. Saved Queries have a yellow star icon on the Discover landing page. You can use either a pre-built query or another saved query to create a new Saved Query.
+
+For more details, see [full documentation on the Query Builder](LINK).
+
 
 ## Event Details
 

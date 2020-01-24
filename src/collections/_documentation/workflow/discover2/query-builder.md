@@ -1,15 +1,11 @@
 ---
-title: 'Discover V2'
+title: 'Query Builder'
 sidebar_order: 4
 ---
 
-## Query Builder
-
-[ Do we need navigation instructions for the reader? ]
-
 Navigate to any query page from the Discover Homepage in these ways:
 
-- Clicking on `Build a new query`
+- Clicking on "Build a new query"
 - Clicking on any Pre-built or Saved Queries
 
 On the Query results page, you'll find the graph, table, and facet maps. The Query Builder enables the user to create custom views of the events sent to Sentry.io. You can add any tags/fields as columns, aggregate with columns, and sort with columns.
