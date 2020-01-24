@@ -70,6 +70,14 @@ browser:"Safari 11*"
 
 In the example above, the search query will match on `browser` values like `"Safari 11.0.2"`, `"Safari 11.0.3"`, etc.
 
+You may also combine operators like so:
+
+```
+!message:"*Timeout"
+```
+
+In the above example, the search query returns results which do not have message values like `ConnectionTimeout`, `ReadTimeout`, etc.
+
 #### Tag Syntax
 
 Search supports an implicit and explicit tag search. We can automatically recognize most tags implicitly, but if you wish to use an explicit tag syntax, you can wrap the tag using our `tags[]` syntax like so: 
@@ -229,6 +237,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 : Restrict results to events tagged with a specific device attribute.
 
+`message`
 `os.build`
 `os.kernel_version`
 
