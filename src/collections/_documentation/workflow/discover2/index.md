@@ -66,7 +66,7 @@ For more details, see [full documentation on the Query Builder]({%- link _docume
 
 ## Event Details
 
-![DON%20T%20Add%20content%20to%20this%20Draft%20Discover%20V2/Untitled%201.png](DON%20T%20Add%20content%20to%20this%20Draft%20Discover%20V2/Untitled%201.png)
+[{% asset discover/discover-event-details.png alt="Event detail page displaying a graph with spikes, the event details, and different metrics for tags." %}]({% asset discover/discover-event-details.png @path %})
 
 Navigate to the Event Details page from **Discover > Query > Event Detail**. On the event details view, you can find all of the details about a single event. 
 
