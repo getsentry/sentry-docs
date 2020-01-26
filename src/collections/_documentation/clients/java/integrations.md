@@ -1012,6 +1012,8 @@ public HandlerExceptionResolver sentryExceptionResolver() {
 }
 ```
 
+
+
 Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#setting-the-dsn) for ways you can do this.
 
 #### Spring Boot HTTP Data
@@ -1034,3 +1036,31 @@ public ServletContextInitializer sentryServletContextInitializer() {
 ```
 
 After that, your Sentry events should contain information such as HTTP request headers.
+
+#### Spring @Scheduled Tasks
+
+If you want to capture errors from tasks you need also add this configuration:
+
+```java
+@EnableScheduling
+@Configuration
+internal class SchedulingConfiguration : SchedulingConfigurer {
+    private val taskScheduler: ThreadPoolTaskScheduler = ThreadPoolTaskScheduler()
+
+    init {
+        val standardHandler = TaskUtils.LOG_AND_SUPPRESS_ERROR_HANDLER
+        taskScheduler.setErrorHandler { t ->
+            Sentry.capture(t)
+            standardHandler.handleError(t)
+        }
+        taskScheduler.setThreadNamePrefix("@scheduled-")
+        taskScheduler.initialize()
+    }
+
+    override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
+        taskRegistrar.setScheduler(taskScheduler)
+    }
+}
+```
+
+TODO Configuration via `web.xml`
