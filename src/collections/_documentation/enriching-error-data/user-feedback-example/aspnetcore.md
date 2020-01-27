@@ -16,7 +16,7 @@ With ASP.NET Core MVC, the `Error.cshtml` razor page:
 }
 ```
 
-If you configured Sentry without Dependency Injection (e.g. without `UseSentry()`) you can also configure the SDK using a hard-coded DSN in the template:
+If you configured Sentry without the Dependency Injection (for example, without `UseSentry()`) you can also configure the SDK using a hard-coded DSN in the template:
 
 ```js
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
