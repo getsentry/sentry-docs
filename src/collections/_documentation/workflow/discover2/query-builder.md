@@ -2,6 +2,84 @@
 title: 'Query Builder'
 sidebar_order: 4
 standard_fields:
+ General:
+  -
+   type: string
+   name: id
+  -
+   type: number
+   name: "issue.id"
+  -
+   type: string
+   name: message
+  -
+   type: number
+   name: "project.id"
+  -
+   type: string
+   name: release
+  -
+   type: datetime
+   name: timestamp
+  -
+   type: string
+   name: title
+  -
+   type: string
+   name: "platform.name"
+  -
+   type: string
+   name: environment
+  -
+   type: string
+   name: "event.type"
+  -
+   type: string
+   name: location
+  -
+   type: string
+   name: time
+ Device:
+  -
+   type: string
+   name: "device.arch"
+  -
+   type: number
+   name: "device.battery_level"
+  -
+   type: string
+   name: "device.brand"
+  -
+   type: string
+   name: "device.charging"
+  -
+   type: string
+   name: "device.locale"
+  -
+   type: string
+   name: "device.name"
+  -
+   type: string
+   name: "device.online"
+  -
+   type: string
+   name: "device.orientation"
+  -
+   type: string
+   name: "device.simulator"
+  -
+   type: string
+   name: "device.uuid"
+ Geo:
+  -
+   type: string
+   name: "geo.city"
+  -
+   type: string
+   name: "geo.country_code"
+  -
+   type: string
+   name: "geo.region"
  HTTP:
   -
    type: string
@@ -16,6 +94,13 @@ standard_fields:
   -
    type: string
    name: "os.kernel_version"
+ SDK:
+  -
+   type: string
+   name: "sdk.name"
+  -
+   type: string
+   name: "sdk.version"
  "Stack traces":
   -
    type: string
@@ -56,121 +141,10 @@ standard_fields:
   -
    type: number
    name: "stack.stack_level"
- General:
-  -
-   type: string
-   name: id
-  -
-   type: number
-   name: "issue.id"
-  -
-   type: string
-   name: message
-  -
-   type: number
-   name: "project.id"
-  -
-   type: string
-   name: release
-  -
-   type: datetime
-   name: timestamp
- unsorted:
-  -
-   type: string
-   name: "contexts.key"
-  -
-   type: string
-   name: "contexts.value"
-  -
-   type: string
-   name: culprit
-  -
-   type: string
-   name: environment
-  -
-   type: string
-   name: "event.type"
-  -
-   type: string
-   name: location
-  -
-   type: string
-   name: "platform.name"
-  -
-   type: string
-   name: "tags.key"
-  -
-   type: string
-   name: "tags.value"
-  -
-   type: string
-   name: tags_key
-  -
-   type: string
-   name: tags_value
-  -
-   type: string
-   name: time
-  -
-   type: string
-   name: title
-  -
-   type: string
-   name: trace
-  -
-   type: string
-   name: "trace.parent_span"
-  -
-   type: string
-   name: "trace.span"
-  -
-   type: string
-   name: transaction
-  -
-   type: string
-   name: "transaction.duration"
-  -
-   type: string
-   name: "transaction.op"
-  -
-   type: string
-   name: "transaction.status"
+ "User attributes":
   -
    type: string
    name: user
- Device:
-  -
-   type: string
-   name: "device.arch"
-  -
-   type: number
-   name: "device.battery_level"
-  -
-   type: string
-   name: "device.brand"
-  -
-   type: string
-   name: "device.charging"
-  -
-   type: string
-   name: "device.locale"
-  -
-   type: string
-   name: "device.name"
-  -
-   type: string
-   name: "device.online"
-  -
-   type: string
-   name: "device.orientation"
-  -
-   type: string
-   name: "device.simulator"
-  -
-   type: string
-   name: "device.uuid"
- "User attributes":
   -
    type: string
    name: "user.email"
@@ -183,23 +157,6 @@ standard_fields:
   -
    type: string
    name: "user.username"
- Geo:
-  -
-   type: string
-   name: "geo.city"
-  -
-   type: string
-   name: "geo.country_code"
-  -
-   type: string
-   name: "geo.region"
- SDK:
-  -
-   type: string
-   name: "sdk.name"
-  -
-   type: string
-   name: "sdk.version"
 ---
 
 Navigate to any query page from the Discover Homepage in these ways:
