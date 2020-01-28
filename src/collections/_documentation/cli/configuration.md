@@ -80,6 +80,10 @@ The following settings are available (first is the environment variable, the val
 
 : The legacy API key for authentication if you have one.
 
+`SENTRY_DSN` (_auth.dsn_):
+
+: The DSN to use to connect to sentry.
+
 `SENTRY_URL` (_defaults.url_):
 
 : The URL to use to connect to sentry. This defaults to `https://sentry.io/`.
