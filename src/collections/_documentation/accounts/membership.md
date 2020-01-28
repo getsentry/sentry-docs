@@ -11,6 +11,21 @@ which can then join one or more organizations. Each user should have
 their own account, where they can manage their personal preferences,
 including notification and security settings.
 
+| Action | Billing | Member | Admin | Manager | Owner |
+| --- | --- | --- | --- | --- | --- |
+| Can see/edit billing information and subscription details | X |   |   |   | X |
+| Can view and act on issues, such as assigning/resolving/etc. |   | X | X | X | X |
+| Can join and leave teams. |   | X | X | X | X |
+| Can change Project Settings |   |   | X | X | X |
+| Can add/remove projects* |   |   | X | X | X |
+| Can edit Global Integrations |   |   | X | X | X |
+| Can add/remove/change members |   |   |   | X | X |
+| Can add/remove teams* |   |   | X | X | X |
+| Can add Repositories |   |   | X | X | X |
+| Can delete Repositories |   |   |   |   | X |
+| Can change Organization Settings |   |   |   | X | X |
+| Can remove an Organization |   |   |   |   | X |
+
 ## Roles
 
 Member roles dictate access within an organization.
