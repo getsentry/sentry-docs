@@ -121,7 +121,7 @@ By default, the y-axis shows the count of events over time. However, you can dis
 
 ### Resize Columns
 
-You can resize columns by hovering over the column boundary, and click & drag them to resize the column to the desired width.
+You can resize columns by hovering over the column boundary, and clicking & dragging the boundary to resize the column to the desired width.
 
 ### Sorting Columns
 
