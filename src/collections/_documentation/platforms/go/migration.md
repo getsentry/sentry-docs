@@ -357,7 +357,7 @@ path := "filename.ext"
 f, err := os.Open(path)
 if err != nil {
 	sentry.WithScope(func(scope *sentry.Scope) {
-		sentry.SetExtras(map[string]interface{}{"path": path, "cwd": os.Getwd()})
+		scope.SetExtras(map[string]interface{}{"path": path, "cwd": os.Getwd()})
 		sentry.CaptureException(err)
 	})
 }
