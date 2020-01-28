@@ -5,15 +5,6 @@ sidebar_order: 2000
 
 `@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the main process and renderers, as well as collect native crash reports (Minidumps).
 
-{% capture __alert_content -%}
-This SDK is still in beta and undergoing active development. It is part of an early access preview for the [next generation JavaScript SDKs](https://github.com/getsentry/sentry-javascript/blob/master/README.md). Until the _1.x_ stable release, APIs are still subject to change.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Support"
-  content=__alert_content
-  level="info"
-%}
-
 ## Wizard
 
 Our Sentry Wizard can help with the setup process. Make sure you have installed the `@sentry/wizard` npm package globally, then run:
