@@ -32,35 +32,3 @@ Distill needs by choosing explicit environments.
 Define distinct time periods for a more clear-cut glimpse.
 
 [{% asset visibility/date-filter.png alt="Drop-down that allows filtering based on calendar dates." %}]({% asset visibility/date-filter.png @path %})
-
-## Use-Case: Tracing
-Modern applications have many components that can produce errors, making it harder to identify the root cause. Tracing allows you to link systems together while following the error's path to its root. By tagging some form of a tracing ID (for example: span ID, request ID, UUID, or transaction ID), you can correlate errors coming from different parts of your application and see them in the Events View.
-
-```javascript
-// generate unique transactionId and set as Sentry tag
-const transactionId = getUniqueId();
-Sentry.configureScope(function(scope) {
-    scope.setTag("transaction_id", transactionId);
-});
-
-// perform request (set transctionID as header and throw error appropriately)
-request.post({
-    url: "http://localhost:3001/checkout",
-    json: order,
-    headers: {
-        "X-Session-ID": this.sessionId,
-        "X-Transaction-ID": transactionId
-    }
-}, (error, response) => {
-    if (error) {
-        throw error;
-    }
-    if (response.statusCode === 200) {
-        this.setState({ success: true });
-    } else {
-        throw new Error(response.statusCode + " - " + response.statusMessage);
-    }
-}
-```
-
-For more information, see how you can use [Sentry and NGINX to trace errors to logs](https://blog.sentry.io/2019/01/31/using-nginx-sentry-trace-errors-logs).
