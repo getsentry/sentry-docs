@@ -7,7 +7,7 @@ Create a new user.
 ## Options
 
 -   `--help`: print this help page.
--   `--force`: overwrite user when it already exists.
+-   `--force-update`: overwrite user when it already exists.
 
 ## Exit codes
 
