@@ -41,6 +41,6 @@ For uploading source maps you have to add this to your `exp.json` or `app.json`
 }
 ```
 
-Note that `sentry-expo` only catches JavaScript exceptions (as opposed to native crashes). You can learn more [here](https://docs.expo.io/versions/latest/guides/errors/#what-about-native-errors) and [here](https://github.com/expo/sentry-expo/issues/87).
+Note that `sentry-expo` only catches JavaScript exceptions (as opposed to native crashes). For more details, take a look at the [Expo documentation about native errors](https://docs.expo.io/versions/latest/guides/errors/#what-about-native-errors) and [this discussion](https://github.com/expo/sentry-expo/issues/87) in the `sentry-expo` repo.
 
 If you still need more help, you can out the docs directly on [Expo’s docs page](https://docs.expo.io/versions/latest/guides/using-sentry/)
