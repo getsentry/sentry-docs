@@ -35,7 +35,10 @@ Since our SDK also supports native crashes, we need to link the SDK to your nati
 Above `react-native >= 0.60` you need to do:
 
 ```bash
+npx sentry-wizard -i reactNative -p ios android
+# or
 yarn sentry-wizard -i reactNative -p ios android
+
 cd ios
 pod install
 ```
