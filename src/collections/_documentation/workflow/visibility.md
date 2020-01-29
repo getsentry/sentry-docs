@@ -1,9 +1,9 @@
 ---
-title: Visibility
+title: Dashboards
 sidebar_order: 4
 ---
 
-Sentry's new Visibility features --- Discover, Dashboards, and Events --- help you gain detailed perspectives of your application's health by providing filtering tools to navigate your issues across multiple projects in a single view.
+Sentry's Dashboards help you gain detailed perspectives of your application's health by providing filtering tools to navigate your issues across multiple projects in a single view.
 
 ## Discover
 {% include components/alert.html
