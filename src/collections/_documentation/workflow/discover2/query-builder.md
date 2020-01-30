@@ -242,7 +242,7 @@ The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _docu
 
 ### Searching on aggregated fields/tags
 
-You can add search conditions on aggregated fields/tags (e.g. `count(id)`) in one of the following ways:
+You can add search conditions on aggregated fields/tags (for example, `count(id)`) in one of the following ways:
 
 - Exact match: `count(id):99`
 - Upper bounds: `count(id):<99` or `count(id):<=99`
