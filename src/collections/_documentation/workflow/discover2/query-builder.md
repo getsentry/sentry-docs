@@ -240,6 +240,15 @@ Events have a number of built in fields as well as custom tags.
 
 The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _documentation/workflow/search.md -%}). To add a search condition, click on the search input box above the graph, add a search condition, and press "Enter."
 
+### Searching on aggregated fields/tags
+
+You can add search conditions on aggregated fields/tags (e.g. `count(id)`) in one of the following ways:
+
+- Exact match: `count(id):99`
+- Upper bounds: `count(id):<99` or `count(id):<=99`
+- Lower bounds: `count(id):>99` or `count(id):>=99`
+- Combination of upper and lower bounds: `count(id):>10 count(id):<20`
+
 ## Results Table
 
 The results of the table are generated based on the following components:
