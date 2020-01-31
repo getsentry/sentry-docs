@@ -330,4 +330,4 @@ Each query result is displayed in tandem with a facet map that represents a dist
 
 The top 10 tag keys and their values are shown by occurrence and dynamically update when you change any of your conditions. For example, if you choose a different project or date range, the facet map will automatically update based on the new results. 
 
-You can also hover over each value to see the exact distribution for a given tag and click on them to add to your filter conditions and see a new query result.  
+You can also hover over each value to see the exact distribution for a given tag and click on them to add to your [filter conditions](#search-conditions) and see a new query result.  
