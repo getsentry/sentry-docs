@@ -20,9 +20,9 @@ Our Discover tool combines the best parts of our Events and existing Discover fe
 
 The Discover homepage offers views of all your saved queries and Sentry's pre-built queries so you can quickly dive into areas that need immediate attention.
 
-### Minigraphs
+### Query Cards
 
-Minigraphs are the individual cards on the homepage that display a summarized view of the data in a specific query. Users can get a high-level view of the information in each minigraph to see what they want to investigate first. For example, if a spike occurred in the past 24 hours, a user may view that query first.
+Query cards are the individual cards on the homepage that display a summarized view of the data in a specific query. Users can get a high-level view of the information in each query card to see what they want to investigate first. For example, if a spike occurred in the past 24 hours, a user may view that query first.
 
 ### Pre-built Queries
 
@@ -37,7 +37,7 @@ Saved queries have a yellow star icon and sort from most recently updated to lea
 
 **Deleting or Duplicating Saved Queries**
 
-Delete or duplicate a saved query in the Context Menu — looks like ellipses — located in the lower right corner of a minigraph.
+Delete or duplicate a saved query in the Context Menu -- looks like ellipses -- located in the lower right corner of each query card.
 
 **Searching Saved Queries**
 
