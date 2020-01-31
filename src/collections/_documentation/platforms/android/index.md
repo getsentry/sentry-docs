@@ -60,7 +60,7 @@ import io.sentry.core.Sentry;
 public class MyActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        try{
+        try {
             throw new Exception("This is a test.");
         } catch (Exception e) {
             Sentry.captureException(e);
@@ -153,17 +153,12 @@ public class DemoClass {
     Record a breadcrumb in the current context, which will be sent
     with the next event(s). By default, the last 100 breadcrumbs are kept.
     */
-        Breadcrumb breadcrumb = new Breadcrumb();
-        breadcrumb.setMessage("User made an action.");
-        Sentry.addBreadcrumb(breadcrumb);
+        Sentry.addBreadcrumb("User made an action.");
 
         // Set the user in the current context.
-        Sentry.configureScope(
-            scope -> {
-                User user = new User();
-                user.setEmail("hello@sentry.io");
-                scope.setUser(user);
-            });
+        User user = new User();
+        user.setEmail("hello@sentry.io");
+        Sentry.setUser(user);
 
     /*
     This sends a simple event to Sentry, with a simple String message.
@@ -202,7 +197,7 @@ buildscript {
     }
     
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.28'
+        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.29'
     }
 }
 ```
@@ -346,12 +341,9 @@ Sentry will try its best to accommodate the data you send it, but large context 
 Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense of the quality of the application.
 
 ```java
-Sentry.configureScope(
-    scope -> {
-        User user = new User();
-        user.setUsername("username");
-        scope.setUser(user);
-    });
+User user = new User();
+user.setUsername("username");
+Sentry.setUser(user);
 ```
 
 Users consist of a few critical pieces of information which are used to construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
@@ -373,10 +365,7 @@ Tags are key/value pairs assigned to events that can be used for breaking down i
 Most SDKs generally support configuring tags by configuring the scope:
 
 ```java
-Sentry.configureScope(
-    scope -> {
-        scope.setTag("tagKey", "tagValue");
-    });
+Sentry.setTag("tagKey", "tagValue");
 ```
 
 For more information, see [Tagging Events]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events) in Context.
@@ -386,10 +375,7 @@ For more information, see [Tagging Events]({%- link _documentation/enriching-err
 You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe, and `debug` is the least severe.
 
 ```java
-Sentry.configureScope(
-    scope -> {
-        scope.setLevel(SentryLevel.WARNING);
-    });
+Sentry.setLevel(SentryLevel.WARNING);
 ```
 
 ### Setting the Fingerprint
@@ -470,7 +456,7 @@ Emulator indicator
 
 ### Requirements
 
-For the use of the SDK with the NDK, the minimal required API level is 21. 
+For the use of the SDK with the NDK, the minimal required API level is 16. 
 
 If you want to use the SDK without the NDK, you can: 
 
@@ -484,7 +470,7 @@ To add the sentry-android-core library, you need to provide the following depend
 compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
-    }
+}
 
 // ADD SENTRY ANDROID AS A DEPENDENCY
 dependencies {
@@ -497,25 +483,19 @@ If you want to use the SDK with the NDK but you still want to support the device
 ```xml
     <!-- Merging strategy for the imported manifests -->
       <uses-sdk
-            tools:overrideLibrary="io.sentry.android"/>
+            tools:overrideLibrary="io.sentry.android" />
 ```
 
 With these changes, the NDK integration is going to be used only on the devices with the API level ≥ 21 and the rest of the devices with API level ≥14, but ≤21 will use just the SDK.
 
 ### Breadcrumbs
 
-Sentry will automatically record specific events, to provide context to an error.
-
 You can manually add breadcrumbs on other events or disable breadcrumbs.
 
 ```java
 Breadcrumb breadcrumb = new Breadcrumb();
 breadcrumb.setMessage("Https Call to Sentry");
-
-Map<String,String> data = new HashMap();
-data.put("url","https:\\sentry.io");
-
-breadcrumb.setData(data);
+breadcrumb.setData("url", "https://sentry.io");
 
 Sentry.addBreadcrumb(breadcrumb);
 ```
@@ -609,7 +589,7 @@ First, we need to declare the dependency in the project build.gradle file:
 ```groovy
 dependencies {
     // Add the line below, the plugin that copies the binaries
-    classpath 'com.ydq.android.gradle.build.tool:nativeBundle:1.0.3'
+    classpath 'com.ydq.android.gradle.build.tool:nativeBundle:1.0.4'
 }
 ```
 
