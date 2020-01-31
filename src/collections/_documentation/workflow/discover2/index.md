@@ -28,7 +28,7 @@ Query cards are the individual cards on the homepage that display a summarized v
 
 - Errors - Users can see their most frequent errors by total errors and unique errors. From the pre-built Error Query, users can also add additional columns and change the groupings to achieve their desired breakdown.
 - Project Summary - Users can see their most active projects, by total Issues and unique Issues, to see which projects need the most attention or further investigation.
-- Errors by URL - Users can see their most common errors broken down by specific URL
+- Errors by URL - Users can see their most common errors broken down by specific URL.
 - Errors by Release - users can query their errors by release to see if a change introduced in a particular release caused a spike in errors or to see if it fixed an issue.
 
 ### Saved Queries
