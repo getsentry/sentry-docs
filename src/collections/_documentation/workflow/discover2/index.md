@@ -26,10 +26,9 @@ Query cards are the individual cards on the Homepage that display a summarized v
 
 ### Pre-built Queries
 
-- Errors: Users can see their most frequent errors by total errors and unique errors. From the pre-built Error Query, users can also add additional columns and change the groupings to achieve their desired breakdown.
-- Project Summary: Users can see their most active projects --- by total Issues and unique Issues --- to see which projects need the most attention or further investigation.
-- Errors by URL: Users can see their most common errors broken down by specific URL.
-- Errors by Release: Users can query their errors by release to see if a change introduced in a particular release caused a spike in errors or to see if it fixed an issue.
+- All Events: Users can see the raw error stream for any group of projects. This replaces the Events feature and gives users the ability to add additional columns and change groupings to achieve their desired breakdown.
+- Errors by Title: Users can see their most frequently occurring errors by the total number of raw errors, as well as the total number of users affected.
+- Errors by URL: Users can see the pages that generated the most errors and different types of issues. As a reminder, issues are a group of fingerprinted Events. For more details, see the [full documentation on fingerprinting]({%- link _documentation/data-management/event-grouping/index.md -%}).
 
 ### Saved Queries
 
