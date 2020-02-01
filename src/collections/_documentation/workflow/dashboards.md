@@ -1,6 +1,6 @@
 ---
 title: Dashboards
-sidebar_order: 5
+sidebar_order: 6
 ---
 
 Sentry's Dashboards help you gain detailed perspectives of your application's health by providing filtering tools to navigate your issues across multiple projects in a single view.
