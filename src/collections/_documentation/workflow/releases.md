@@ -27,7 +27,7 @@ Setting up releases fully is a 4-step process:
 
 Include a release ID (a.k.a version) where you configure your client SDK. This is commonly a git SHA or a custom version number.
 
-There are a few restrictions -- the release name cannot contain newlines, spaces, or "\", be ".", "..", or exceed 200 characters.
+There are a few restrictions -- the release name cannot contain newlines, spaces, or "\\\", be ".", "..", or exceed 200 characters.
 
 {% capture __alert_content -%}
 Releases are global per organization, so make sure to prefix them with something project-specific.
