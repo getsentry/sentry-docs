@@ -159,12 +159,12 @@ standard_fields:
    name: "user.username"
 ---
 
-Navigate to any query page from the Discover Homepage in these ways:
+Navigate to any query page from the Discover homepage in these ways:
 
-- Clicking on "Build a new query"
-- Clicking on any Pre-built or Saved Queries
+- Click on "Build a new query"
+- Click on any pre-built or saved queries
 
-On the Query results page, you'll find the graph, table, and facet maps. The Query Builder enables the user to create custom views of the events sent to Sentry.io. You can add any tags/fields as columns, aggregate with columns, and sort with columns.
+On the query's results page, you'll find the graph, table, and facet maps. The Query Builder enables the user to create custom views of the events sent to Sentry.io. You can add any tags/fields as columns, aggregate with columns, and sort with columns.
 
 ## Sharing Query Views
 
@@ -172,31 +172,31 @@ Share your queries as often as you want. You can share URLs to other users who a
 
 ## Saved Query
 
-Although search queries are shareable, you can save them as Saved Queries. Saved Queries are visible to the entire organization. In other words, Saved Queries **are not** scoped to the user's account. Saved Queries have a yellow star icon on the Discover landing page. You can use either a pre-built query or another saved query to create a new Saved Query.
+Although search queries are shareable, you can save them as Saved Queries. Saved Queries are visible to the entire organization. In other words, Saved Queries **are not** scoped to the user's account. You can find Saved Queries on the Discover homepage with the yellow star icon. You can use either a pre-built query or an existing saved query to create a new Saved Query.
 
 ### Creating a new Saved Query
 
-You may create a new Saved Query from one of the following ways:
+You may create a new Saved Query in one of the following ways:
 
 - From a pre-built query:
-    1. Click on "Save as..." on the top right
+    1. Click on "Save as..." in the top right
     2. Enter the name of your Saved Query
     3. Click "Save"
 - From a Saved Query:
     1. Make changes to a Saved Query
-    2. Click on "Save as..." on the top right
+    2. Click on "Save as..." in the top right
     3. Enter the name of your Saved Query
     4. Click "Save"
 
 ### Saving Changes
 
-Making changes to a Saved Query **will not** automatically be saved. An exception to this rule is renaming a Saved Query. Note that the state is still reflected in the URL so that you can share the URLs even though they're not saved. If you've made any unsaved changes to a Saved Query, you can click on the "Update Query" button on the top right corner.
+Changes to a Saved Query **will not** automatically be saved. An exception to this rule is renaming a Saved Query. Note that the state is still reflected in the URL so that you can share the URLs even though they're not saved. If you've made any unsaved changes to a Saved Query, you can click on the "Update Query" button in the top right corner.
 
 ### Renaming a Saved Query
 
 1. Click on the Saved Query name with the pencil icon 
 2. Enter a new name
-3. Click enter or click outside to confirm changes
+3. Click "Enter" or click outside to confirm changes
 4. The name is automatically saved
 
 ### Deleting a Saved Query
@@ -210,7 +210,7 @@ Deleting a Saved Query is irreversible.
     level="warning"
 %}
 
-From an existing Saved Query, click on the garbage bin icon on the top right-hand corner. After deleting a Saved Query, you'll be redirected back to the landing page.
+From an existing Saved Query, click on the garbage bin icon in the top right-hand corner. After deleting a Saved Query, you'll be redirected back to the homepage.
 
 ## Search Conditions
 
@@ -218,7 +218,7 @@ You can use conditions to filter events from results by fields or tags.
 
 ### Available Fields
 
-Events have a number of built in fields as well as custom tags.
+Events have a number of built-in fields as well as custom tags.
 
 #### Standard fields
 
@@ -240,7 +240,7 @@ Events have a number of built in fields as well as custom tags.
 
 The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _documentation/workflow/search.md -%}). To add a search condition, click on the search input box above the graph, add a search condition, and press "Enter."
 
-### Searching on aggregated fields/tags
+### Searching on Aggregated Fields/Tags
 
 You can add search conditions on aggregated fields/tags (for example, `count(id)`) in one of the following ways:
 
@@ -280,25 +280,25 @@ By default, the y-axis shows the count of events over time. However, you can dis
 1. Click on "Add Column" to open the modal to add a new column
 2. Select and choose a field or a tag from the "Column Type" dropdown
 3. Optionally, add an aggregate function
-4. Click "Create column" button
-5. Your new column will be added to the right-most side of the table. You may need to scroll towards the right to be able to see it.
+4. Click the "Create column" button
+5. Your new column will be added to the right-most side of the table. You may need to scroll towards the right to see it.
 
 ### Edit Columns
 
-1. Click on "Edit Columns" on the top right-hand corner of the table to enter the edit state of the table
+1. Click on "Edit Columns" in the top right-hand corner of the table to enter the edit state of the table
 2. Hover your mouse cursor over the header of the desired column to edit
 3. Click on the pencil icon
 4. A modal will open for you to edit the column
 5. Click the "Update column" button
-6. Optionally, click on the "Save & Close" button on the top right-hand corner of the table to exit the edit state of the table
+6. Optionally, click on the "Save & Close" button in the top right-hand corner of the table to exit the edit state of the table
 
 ### Delete Columns
 
-1. Click on "Edit Columns" on the top right-hand corner of the table to enter the edit state of the table
+1. Click on "Edit Columns" in the top right-hand corner of the table to enter the edit state of the table
 2. Hover your mouse cursor over the header of the desired column to delete
 3. Click on the garbage bin icon
 4. The table may refresh
-5. Optionally click on the "Save & Close" button on the top right-hand corner of the table to exit the edit state of the table
+5. Optionally click on the "Save & Close" button in the top right-hand corner of the table to exit the edit state of the table
 
 ### Resize Columns
 
@@ -324,7 +324,7 @@ Seeing these aggregations will indicate where to focus your attention. You can c
 
 ### Facet Maps
 
-Each query result is displayed in tandem with a facet map that represents a distribution of tags that corresponds with the query result.
+Each query result is displayed in tandem with a facet map representing a distribution of tags corresponding with that query result.
 
 [{% asset discover/discover-facet-map.png alt="Facet map for transaction and handled tags. Map looks like a bar with gradient colors." %}]({% asset discover/discover-facet-map.png @path %})
 
