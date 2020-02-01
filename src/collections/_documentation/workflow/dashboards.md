@@ -11,7 +11,7 @@ Sentry's Dashboards help you gain detailed perspectives of your application's he
     level="info"
 %}
 
-Dashboards are various data visualizations of your errors across your organization -- including graphs of your errors, geographic mapping, and lists of browsers. Dashboards allow you to drill into data by selecting points of interest.
+Dashboards are various data visualizations of your errors across your organization --- including graphs of your errors, geographic mapping, and lists of browsers. Dashboards allow you to drill into data by selecting points of interest.
 
 ### Overall View of Application
 Each graph and visualization helps uncover crucial patterns and trends about where your customers are hitting errors.
