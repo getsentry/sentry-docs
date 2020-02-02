@@ -43,10 +43,24 @@ The example below shows a sample usage of one of the three primary methods, the 
 The other two being `CaptureMessage` and `Recover` which you can read more about in [Error Reporting]({%- link _documentation/error-reporting/quickstart.md -%}?platform={{ include.platform }}) and [Capturing Panics]({%- link _documentation/platforms/go/panics.md -%}).
 
 ```go
+// This is an example program that makes an HTTP request and prints response
+// headers. Whenever a request fails, the error is reported to Sentry.
+//
+// Try it by running:
+//
+// 	go run main.go
+// 	go run main.go https://sentry.io
+// 	go run main.go bad-url
+//
+// To actually report events to Sentry, set the DSN either by editing the
+// appropriate line below or setting the environment variable SENTRY_DSN to
+// match the DSN of your Sentry project.
 package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -54,24 +68,48 @@ import (
 )
 
 func main() {
-	err := sentry.Init(sentry.ClientOptions{
-		Dsn: "___PUBLIC_DSN___",
-	})
-
-	if err != nil {
-		fmt.Printf("Sentry initialization failed: %v\n", err)
+	if len(os.Args) < 2 {
+		log.Fatalf("usage: %s URL", os.Args[0])
 	}
-	
-	f, err := os.Open("filename.ext")
+
+	err := sentry.Init(sentry.ClientOptions{
+		// Either set your DSN here or set the SENTRY_DSN environment variable.
+		Dsn: "___PUBLIC_DSN___",
+		// Enable printing of SDK debug messages.
+		// Useful when getting started or trying to figure something out.
+		Debug: true,
+	})
+	if err != nil {
+		log.Fatalf("sentry.Init: %s", err)
+	}
+	// Flush buffered events before the program terminates.
+	// Set the timeout to the maximum duration the program can afford to wait.
+	defer sentry.Flush(2 * time.Second)
+
+	resp, err := http.Get(os.Args[1])
 	if err != nil {
 		sentry.CaptureException(err)
-		sentry.Flush(time.Second * 5)
+		log.Printf("reported to Sentry: %s", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	for header, values := range resp.Header {
+		for _, value := range values {
+			fmt.Printf("%s=%s\n", header, value)
+		}
 	}
 }
 ```
 
 {% capture __alert_content -%}
-  By default, Sentry Go SDK uses an asynchronous transport, which in the code example above requires an explicit awaiting for event delivery to be finished using the `sentry.Flush` method. It is necessary, because otherwise the program would not wait for the async HTTP calls to return a response, and exit the process immediately when it reached the end of the `main` function. It would not be required inside a running goroutine or if you would use `HTTPSyncTransport`, which you can read about in the `Transports` section.
+  By default, Sentry Go SDK uses an asynchronous transport. That means that
+  calls to `CaptureException`, `CaptureMessage` and `CaptureEvent` return
+  without waiting for network operations. Instead, events are buffered and sent
+  over the network in a background goroutine. Call `sentry.Flush` to wait for
+  event delivery before the program terminates. You can change the default
+  behavior by using a different transport, for example `HTTPSyncTransport`. More
+  details in the `Transports` section.
 {%- endcapture -%}
 {%- include components/alert.html
 	level="info"
