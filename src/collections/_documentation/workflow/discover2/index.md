@@ -4,7 +4,7 @@ sidebar_order: 4
 ---
 
 {% capture __alert_content -%}
-The following is documentation for our new query builder Discover v2. Discover v1 will deprecate at the end of February 2020.
+The following is documentation for our new query builder Discover v2. [Discover v1]({%- link _documentation/workflow/discover.md -%}) will deprecate at the end of February 2020.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
