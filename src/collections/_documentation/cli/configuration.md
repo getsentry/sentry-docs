@@ -96,6 +96,10 @@ The following settings are available (first is the environment variable, the val
 
 : The slug of the project to use for a command.
 
+`SENTRY_VCS_REMOTE` (_defaults.vcs_remote_):
+
+: The name of the _remote_ in the versioning control system. This defaults to `origin`.
+
 (_http.keepalive_):
 
 : This ini only setting is used to control the behavior of the SDK with regards to HTTP keepalives. The default is _true_ but it can be set to _false_ to disable keepalive support.
