@@ -37,9 +37,9 @@ The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search toke
 
 The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
-### Tag Syntax
+### Explicit Tag Syntax
 
-Search supports an implicit and explicit tag search. We can automatically recognize most tags implicitly, but if you use a reserved keyword (such as `project_id`) as a tag, you should explicitly search for the tag like so:
+We recommend you never use reserved keywords (such as `project_id`) as tags. But if you do, you must use the following syntax to search for it:
 
 ```
 tags[project_id]:tag_value
