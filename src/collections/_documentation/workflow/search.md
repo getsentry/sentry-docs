@@ -18,7 +18,7 @@ Discover is Sentry's powerful query builder for aggregating raw event data and h
 
 ## Syntax
 
-Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token` and the optional raw search is itself a `token`. The Sentry SDKs treat the `key:value` pair `token` as a search on an issue or event property. The SDKs treat the optional raw search `token` as a message separated by whitespace, which is used to search on event titles/messages.
+Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token` and the optional raw search is itself a single `token`. The `key:value` pair `tokens` are treated as issue or event properties. The optional raw search is treated as a single `token` and searches event titles/messages.
 
 For example:
 
@@ -36,6 +36,14 @@ In the example above, there are three keys (`is:`, `user.username:`, `server:`),
 The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search tokens because both use reserved keywords. See [Issue Properties](#issue-properties) and [Event Properties](#event-properties) for appropriate keyword usage. The token `server:web-8` is pointing to a custom tag sent by the Sentry SDK. See [Custom Tags](#custom-tags) for more information on how to set tags.
 
 The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
+
+### Explicit Tag Syntax
+
+We recommend you never use reserved keywords (such as `project_id`) as tags. But if you do, you must use the following syntax to search for it:
+
+```
+tags[project_id]:tag_value
+```
 
 ### Advanced
 
@@ -77,16 +85,6 @@ You may also combine operators like so:
 ```
 
 In the above example, the search query returns results which do not have message values like `ConnectionTimeout`, `ReadTimeout`, etc.
-
-#### Tag Syntax
-
-Search supports an implicit and explicit tag search. We can automatically recognize most tags implicitly, but if you wish to use an explicit tag syntax, you can wrap the tag using our `tags[]` syntax like so: 
-
-```
-tags[tag_name]:tag_value
-```
-
-Wrapping your tags is optional, and is usually only needed if you wish to use reserved keywords as tags (such as `project_id`). However, if you run into issues with your search while using custom tags, it could be a good idea to try explicitly wrapping them.
 
 ## Search Properties
 
@@ -307,7 +305,7 @@ You can pin a premade search the same way you pin any other search. When you've 
 
 Owners and managers can create a persistent view for their organization by creating custom saved searched. These saved searches will not be associated with a specific project, but with all projects (and users) across the org.
 
-1. Type a search into the search bar, then click the "add to Organization filter list" icon just to the right of it. Keeping in mind that you need to be an owner or manager within the org to use this feature.
+1. Type a search into the search bar, then click the "add to Organization saved searches" icon just to the right of it. Keep in mind that you need to be an owner or manager within the org to use this feature.
 
     ![{% asset search-add-org-filter-step-one.png @path %}]({% asset search-add-org-filter-step-one.png @path %})
 
