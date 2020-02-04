@@ -305,7 +305,7 @@ You can pin a premade search the same way you pin any other search. When you've 
 
 Owners and managers can create a persistent view for their organization by creating custom saved searched. These saved searches will not be associated with a specific project, but with all projects (and users) across the org.
 
-1. Type a search into the search bar, then click the "add to Organization saved searches" icon just to the right of it. Keeping in mind that you need to be an owner or manager within the org to use this feature.
+1. Type a search into the search bar, then click the "add to Organization saved searches" icon just to the right of it. Keep in mind that you need to be an owner or manager within the org to use this feature.
 
     ![{% asset search-add-org-filter-step-one.png @path %}]({% asset search-add-org-filter-step-one.png @path %})
 
