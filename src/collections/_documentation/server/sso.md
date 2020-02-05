@@ -30,3 +30,13 @@ auth-google.client-secret: '<client secret>'
 At this time, the API is considered unstable and subject to change. There won't be many changes, but a few areas need some cleanup.
 
 With that in mind, if you wish to build your own, take a look at the base [`Provider`](https://github.com/getsentry/sentry/blob/master/src/sentry/auth/provider.py) class as well as one of the reference implementations above.
+
+## Related feature flags and settings
+
+SSO and advanced SSO settings such as SAML2 and rippling are enabled by default when using the [on-premise repository](https://github.com/getsentry/onpremise). If you ever need to change these, here are the settings you can change in `sentry.conf.py`:
+
+```python
+SENTRY_FEATURES['organizations:sso'] = True
+SENTRY_FEATURES['organizations:sso-saml2'] = True
+SENTRY_FEATURES['organizations:sso-rippling'] = True
+```
