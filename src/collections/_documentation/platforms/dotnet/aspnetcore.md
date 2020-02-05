@@ -179,7 +179,7 @@ This option is part of the [Sentry]({%- link _documentation/platforms/dotnet/ind
 
 Methods that take precedence over `IHostingEnvironment` are:
 
-* Programatically: `options.Environment`
+* Programmatically: `options.Environment`
 * Environment variable _SENTRY_ENVIRONMENT_
 * Configuration system like `appsettings.json`
 
@@ -191,7 +191,7 @@ Opt-in to send the request body to Sentry. By enabling this flag, all requests w
 
 ### IncludeActivityData
 
-Opt-in to capture values from [System.Diagnostic.Activity](https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/ActivityUserGuide.md) if one exists.
+Opt-in to capture values from [System.Diagnostic.Activity](https://github.com/dotnet/runtime/blob/master/src/libraries/System.Diagnostics.DiagnosticSource/src/ActivityUserGuide.md) if one exists.
 
 ### Samples
 

@@ -2,9 +2,12 @@ module Jekyll
   module Algolia
     module Hooks
       def self.before_indexing_all(records, context)
-        platforms = Hash[context.data["platform_icons"].collect { |item| [item["link"].split('/', 4)[2], item["name"]] }]
+        platforms = Hash[]
+        context.data["platform_icons"].each do|item|
+          key = item["link"].split('/', 4)[2]
+          platforms[key] = item["name"] unless platforms.has_key?(key)
+        end
         doc_categories = Hash[context.data["documentation_categories"].collect { |item| [item["slug"], item["title"]] }]
-              
         records.each do |record|
           # Exclude certain frontmatter keys form indexing
           [

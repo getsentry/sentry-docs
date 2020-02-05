@@ -144,6 +144,6 @@ After you configure the variable in your SDK, the variable surfaces as a tag in 
 
 ### Searching Request IDs in Sentry
 
-If you also need several example cases to supplement a unique request ID, you can use Sentry's [Discover]({%- link _documentation/workflow/discover.md -%}) functionality to search for all request ids you've seen on a specific URL.
+If you also need several example cases to supplement a unique request ID, you can use Sentry's [Discover]({%- link _documentation/workflow/discover2/index.md -%}) functionality to search for all request ids you've seen on a specific URL.
 
 [{% asset tracing/tracing_with_discover.png alt="Image of the request_id grouped with other tags." %}]({% asset tracing/tracing_with_discover.png @path %})

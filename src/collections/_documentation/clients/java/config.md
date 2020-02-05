@@ -41,7 +41,7 @@ import io.sentry.Sentry;
 Sentry.init("https://public:private@host:port/1");
 ```
 
-## Configuration methods {#id2}
+## Configuration methods {#configuration-methods}
 
 There are multiple ways to configure the Java SDK, but all of them take the same options. See below for how to use each configuration method and how the option names might differ between them.
 

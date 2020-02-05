@@ -147,6 +147,15 @@ common_tags:
 
 ---
 
+{% capture __alert_content -%}
+This version of Discover will deprecate at the end of February 2020. For our new query builder, see the [full Discover v2 documentation]({%- link _documentation/workflow/discover2/index.md -%}).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 ## Introduction
 
 Discover lets you query raw event data in Sentry, across any number of projects within your organization.

@@ -77,7 +77,6 @@ There are multiple ways to configure the Java SDK, but all of them take the same
  
 -   [Context & Breadcrumbs]({%- link _documentation/clients/java/context.md -%})
 -   [Manual Usage]({%- link _documentation/clients/java/usage.md -%})
--   [Agent (Beta)]({%- link _documentation/clients/java/agent.md -%})
 -   [Migration from Raven Java]({%- link _documentation/clients/java/migration.md -%})
 
 ## Resources

@@ -9,7 +9,7 @@ which explains the common API design.
 
 ## Background Sending
 
-Events should be transmitted in the background thread or similar system.  This queue must be flushed when the
+Events should be transmitted in a background thread or similar system.  This queue must be flushed when the
 application shuts down with a specific timeout.  This feature is typically user facing and explained
 as part of [shutdown and draining]({% link _documentation/error-reporting/configuration/draining.md %}).
 

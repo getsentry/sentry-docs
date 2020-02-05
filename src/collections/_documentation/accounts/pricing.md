@@ -92,3 +92,9 @@ After the new spending cap is in effect, all additional events will be rejected 
 `If I want to cancel monthly billing, what happens?`
 
 Your plan will continue until the end of the current billing cycle. After this, you’ll revert to the base developer plan, which includes a limited number of events and team members.
+
+`Where can I find my previous invoices/receipts?`
+
+Users with the role of [Billing or Owner]({%- link _documentation/accounts/membership.md -%}) can find all previous invoices by going to the Organization dropdown (top-left) > Usage & Billing > Usage & Payments > Receipts.
+
+Note: You must have either `Billing` or `Owner` permissions to access and/or make changes to information on this page. If you don't have those permissions, or you are not a member of the organization in Sentry, please reach out to a Billing member or an Owner to obtain invoices.
