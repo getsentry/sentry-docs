@@ -8,7 +8,7 @@ SSO in Sentry is handled in one of two ways:
 -   Via a middleware which handles an upstream proxy dictating the authenticated user
 -   Via a third-party service which implements an authentication pipeline
 
-This documentation describes the latter, which would cover things like Google Apps and GitHub.
+This documentation describes the latter, which will cover topics like Google Apps and GitHub.
 
 ## Installing a Provider
 
@@ -27,6 +27,6 @@ auth-google.client-secret: '<client secret>'
 
 ## Custom Providers
 
-At this time the API is considered unstable and subject to change. Things likely won’t change a lot, but there’s a few areas that need some clean up.
+At this time, the API is considered unstable and subject to change. There won't be many changes, but a few areas need some cleanup.
 
 With that in mind, if you wish to build your own, take a look at the base [`Provider`](https://github.com/getsentry/sentry/blob/master/src/sentry/auth/provider.py) class as well as one of the reference implementations above.
