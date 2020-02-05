@@ -11,8 +11,8 @@ initialized.
 
 ## Common Options
 
-The list of common options across SDKs.  These work more or less the same in all SDKs but some
-subtle differences will exist to better support the platform.
+The list of common options across SDKs.  These work more or less the same in all SDKs, but some
+subtle differences will exist to better support the platform. Options which can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically. See [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects) for more information. 
 
 {:.config-key}
 ### `dsn`
