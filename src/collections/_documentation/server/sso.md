@@ -8,54 +8,35 @@ SSO in Sentry is handled in one of two ways:
 -   Via a middleware which handles an upstream proxy dictating the authenticated user
 -   Via a third-party service which implements an authentication pipeline
 
-This documentation describes the latter, which would cover things like Google Apps, GitHub, LDAP, and other similar services.
-
-## Enabling SSO
-
-As of version 8.0 the SSO feature is enabled by default in Sentry. That said it can be disabled with a feature switch in your `sentry.conf.py`:
-
-```python
-from sentry.conf.server import *
-
-# turn SSO on our off
-SENTRY_FEATURES['organizations:sso'] = False
-```
-
-Additionally you may enable advanced SSO features:
-
-```python
-from sentry.conf.server import *
-
-SENTRY_FEATURES['organizations:sso-saml2'] = True
-SENTRY_FEATURES['organizations:sso-rippling'] = True
-```
-
-You should see an **Auth** subheading under your organization’s dashboard when SSO is enabled.
+This documentation describes the latter, which will cover topics like Google Apps and GitHub.
 
 ## Installing a Provider
 
+### Sentry >= 10
+
+- **GitHub** is bundled with Sentry. Follow the [GitHub integration guide]({%- link _documentation/server/integrations/github/index.md -%}) and then install your GitHub app to your organization.
+
 ### Sentry >= 9.1
 
-- **Google Auth** is bundled with Sentry. Add the following lines to `sentry.conf.py`
+- **Google Auth** is bundled with Sentry. Set the following values in your `config.yml` file:
 
-```python
-SENTRY_OPTIONS['auth-google.client-id'] = '<client id>'
-SENTRY_OPTIONS['auth-google.client-secret']  = '<client secret>'
+```yaml
+auth-google.client-id: '<client id>'
+auth-google.client-secret: '<client secret>'
 ```
-
-- **GitHub** is bundled with Sentry. Set the following environment variables: `GITHUB_APP_ID` and `GITHUB_API_SECRET`
-
-### Sentry < 9.1
-
-Providers are installed the same way as extensions. Simply install them via the Python package manager (pip) and restart the Sentry services. Once done you’ll see them show up in the auth settings.
-
-The following providers are published and maintained by the Sentry team:
-
--   [Google Apps](https://github.com/getsentry/sentry-auth-google)
--   [GitHub](https://github.com/getsentry/sentry-auth-github)
 
 ## Custom Providers
 
-At this time the API is considered unstable and subject to change. Things likely won’t change a lot, but there’s a few areas that need cleaned up.
+At this time, the API is considered unstable and subject to change. There won't be many changes, but a few areas need some cleanup.
 
-With that in mind, if you wish to build your own, take a look at the base `Provider` class as well as one of the reference implementations above.
+With that in mind, if you wish to build your own, take a look at the base [`Provider`](https://github.com/getsentry/sentry/blob/master/src/sentry/auth/provider.py) class as well as one of the reference implementations above.
+
+## Related feature flags and settings
+
+SSO and advanced SSO settings such as SAML2 and rippling are enabled by default when using the [on-premise repository](https://github.com/getsentry/onpremise). If you ever need to change these, here are the settings you can change in `sentry.conf.py`:
+
+```python
+SENTRY_FEATURES['organizations:sso'] = True
+SENTRY_FEATURES['organizations:sso-saml2'] = True
+SENTRY_FEATURES['organizations:sso-rippling'] = True
+```
