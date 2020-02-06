@@ -334,7 +334,7 @@ $transportFactory = new class implements TransportFactoryInterface {
     }
 };
 
-$builder = ClientBuilder::create($['dsn' => '___PUBLIC_DSN___']);
+$builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
 $builder->setTransportFactory($transportFactory);
 
 Hub::getCurrent()->bindClient($builder->getClient());
