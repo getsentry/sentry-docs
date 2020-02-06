@@ -370,7 +370,7 @@ $httpClientFactory = new HttpClientFactory(
     UriFactoryDiscovery::find(),
     MessageFactoryDiscovery::find(),
     StreamFactoryDiscovery::find(),
-    null,
+    HttpAsyncClientDiscovery::find(),
     'sentry.php',
     '2.3'
 );
