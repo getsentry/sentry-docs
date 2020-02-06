@@ -326,8 +326,6 @@ use Sentry\Transport\NullTransport;
 use Sentry\State\Hub;
 use Sentry\Transport\TransportFactoryInterface;
 
-$options = ['dsn' => '___PUBLIC_DSN___'];
-
 $transportFactory = new class implements TransportFactoryInterface {
 
     public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
@@ -336,8 +334,7 @@ $transportFactory = new class implements TransportFactoryInterface {
     }
 };
 
-
-$builder = ClientBuilder::create($options);
+$builder = ClientBuilder::create($['dsn' => '___PUBLIC_DSN___']);
 $builder->setTransportFactory($transportFactory);
 
 Hub::getCurrent()->bindClient($builder->getClient());
@@ -369,8 +366,6 @@ use Sentry\Transport\HttpTransport;
 use Sentry\State\Hub;
 use Sentry\Transport\TransportFactoryInterface;
 
-$options = ['dsn' => '___PUBLIC_DSN___'];
-
 $httpClientFactory = new HttpClientFactory(
     UriFactoryDiscovery::find(),
     MessageFactoryDiscovery::find(),
@@ -398,7 +393,7 @@ $transportFactory = new class($httpClientFactory) implements TransportFactoryInt
 };
 
 
-$builder = ClientBuilder::create($options);
+$builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
 $builder->setTransportFactory($transportFactory);
 
 Hub::getCurrent()->bindClient($builder->getClient());
@@ -427,13 +422,13 @@ use Sentry\State\Hub;
 
 $options = ['dsn' => '___PUBLIC_DSN___'];
 
-
 $httpTransport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
+
+$spool = new MemorySpool();
 
 $transportFactory = new class implements TransportFactoryInterface {
     public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
     {
-        $spool = new MemorySpool();
         return new SpoolTransport($spool);
     }
 };
