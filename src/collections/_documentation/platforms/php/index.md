@@ -330,10 +330,18 @@ the events, but report them as sent.
 use Sentry\ClientBuilder;
 use Sentry\Transport\NullTransport;
 use Sentry\State\Hub;
+use Sentry\Transport\TransportFactoryInterface;
 
-$transport = new NullTransport();
+$transportFactory = new class implements TransportFactoryInterface {
+
+    public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
+    {
+        return new NullTransport();
+    }
+};
+
 $builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
-$builder->setTransport($transport);
+$builder->setTransportFactory($transportFactory);
 
 Hub::getCurrent()->bindClient($builder->getClient());
 ```
@@ -351,16 +359,48 @@ The best adapter available is automatically selected when creating a client inst
 through the client builder, but you can override it using the appropriate methods.
 
 ```php
+use Http\Discovery\HttpAsyncClientDiscovery;
+use Http\Discovery\MessageFactoryDiscovery;
+use Http\Discovery\StreamFactoryDiscovery;
+use Http\Discovery\UriFactoryDiscovery;
+use Http\Message\ResponseFactory;
+use Http\Message\UriFactory;
 use Sentry\ClientBuilder;
+use Sentry\HttpClient\HttpClientFactory;
+use Sentry\HttpClient\HttpClientFactoryInterface;
 use Sentry\Transport\HttpTransport;
 use Sentry\State\Hub;
+use Sentry\Transport\TransportFactoryInterface;
 
-$options = ['dsn' => '___PUBLIC_DSN___'];
+$httpClientFactory = new HttpClientFactory(
+    UriFactoryDiscovery::find(),
+    MessageFactoryDiscovery::find(),
+    StreamFactoryDiscovery::find(),
+    HttpAsyncClientDiscovery::find(),
+    'sentry.php',
+    '2.3'
+);
 
-$transport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
+$transportFactory = new class($httpClientFactory) implements TransportFactoryInterface  {
+    /**
+     * @var HttpClientFactoryInterface
+     */
+    private $clientFactory;
 
-$builder = ClientBuilder::create($options);
-$builder->setTransport($transport);
+    public function __construct(HttpClientFactoryInterface $clientFactory)
+    {
+        $this->clientFactory = $clientFactory;
+    }
+
+    public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
+    {
+        return new HttpTransport($options, $this->clientFactory->create($options), MessageFactoryDiscovery::find());
+    }
+};
+
+
+$builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
+$builder->setTransportFactory($transportFactory);
 
 Hub::getCurrent()->bindClient($builder->getClient());
 ```
@@ -388,12 +428,19 @@ use Sentry\State\Hub;
 
 $options = ['dsn' => '___PUBLIC_DSN___'];
 
-$spool = new MemorySpool();
-$transport = new SpoolTransport($spool);
 $httpTransport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
 
+$spool = new MemorySpool();
+
+$transportFactory = new class implements TransportFactoryInterface {
+    public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
+    {
+        return new SpoolTransport($spool);
+    }
+};
+
 $builder = ClientBuilder::create($options);
-$builder->setTransport($transport);
+$builder->setTransportFactory($transportFactory);
 
 Hub::getCurrent()->bindClient($builder->getClient());
 
