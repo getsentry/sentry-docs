@@ -43,6 +43,8 @@ logging.error("An exception happened", exc_info=True)
 {% version_added 0.6.0: `exc_info=True` now always attaches a stack trace %}
 
 ## Ignoring a logger
+### Important notice
+You must call `ignore_logger` before `sentry_sdk.init` otherwise the events will still be reported.
 
 Sometimes a logger is extremely noisy and spams you with pointless errors. You can completely ignore that logger by calling `ignore_logger`:
 
