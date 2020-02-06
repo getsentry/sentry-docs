@@ -17,7 +17,7 @@ Message
 
 Data
 
-: A mapping (str => str) of metadata around the event. This is often used
+: A key-value mapping of metadata around the event. This is often used
   instead of message, but may also be used in addition.  All keys here are
   rendered out as table in the breadcrumb on display but some crumb types
   might special case some keys.
