@@ -11,14 +11,44 @@ Follow [the Docker file in the repository](https://github.com/getsentry/sentry/b
 
 ### Macintosh OS X
 
-To get started, fork the repo at [https://github.com/getsentry/sentry](https://github.com/getsentry/sentry) and clone it:
+To get started, fork the repo at [https://github.com/getsentry/sentry](https://github.com/getsentry/sentry). Clone your forked repo and go into it:
 
 ```bash
 git clone https://github.com/<your github username>/sentry.git
 cd sentry
 ```
 
-Install [Homebrew](http://brew.sh), if you haven’t already. Run `brew bundle` to install the various system packages as listed in sentry's `Brewfile`. This will install, among other things, Python 2 and docker.
+It's important that you remain in the repo's root directory for the rest of the setup!
+
+Install [Homebrew](http://brew.sh), and then run `brew bundle` to install the various system packages as listed in sentry's `Brewfile`.
+
+Unfortunately, homebrew recently removed Python 2. While some versions of macOS ship with Python 2, it's recommended to not use the system's installation. Sentry also requires a specific version of Python, as shown in the file `.python-version`, and this may differ from the system's Python.
+
+We recommend using [pyenv](https://github.com/pyenv/pyenv) to install and manage python versions. It should have already been installed earlier when you ran `brew bundle`. But you'll need to make some manual changes to your shell initialization files.
+
+Make sure your `~/.bash_profile` contains the following:
+
+```bash
+source ~/.bashrc
+```
+
+And your `~/.bashrc`:
+
+```bash
+eval "$(pyenv init -)"
+```
+
+Now, if you try and run `pyenv`, you'll probably get a command not found. Your shell needs to be reloaded. You can either reload it in-place, or close your terminal and start it again and cd into sentry. To reload it, run:
+
+```bash
+PATH= exec /bin/bash -l
+```
+
+If it worked, you should be able to run `pyenv` and see some help output.
+
+Finally, to install python, run `pyenv install`. This will take a while, since your computer is actually compiling python! To verify everything worked, running `which python` should result in something like `/Users/you/.pyenv/shims/python`.
+
+------------------
 
 Setup and activate a python 2 virtual environment:
 
