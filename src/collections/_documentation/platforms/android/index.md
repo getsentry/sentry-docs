@@ -296,11 +296,9 @@ The Sentry Android SDK automatically attaches a release version to every event.
 
 Once Sentry receives an event with the updated release version, a new release object will be available on the releases page in-app. For more details about formatting your releases, see [Release Version Format](#release-version-format).
 
-[MIMI: To learn more about how is the release name build please check (link to the next section - Release Version Format)
-
 With the releases you can:
 
-- Build queries and reports in the [MIMI link: Discover] page to correlate bugs with releases
+- Build queries and reports in the [Discover]({%- link _documentation/workflow/discover2/index.md -%}) page to correlate bugs with releases
 - Filter events and issues by the release version directly in the tag search on the Issues and Events pages
 - Check what new issues were introduced with the new release
 
