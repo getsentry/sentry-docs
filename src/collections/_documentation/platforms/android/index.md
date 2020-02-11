@@ -292,21 +292,63 @@ sentry-cli upload-proguard \
 
 ## Releases
 
-To correlate the error reports and crash reports with specific releases of your application, we automatically attach the package name and the version code to every event from the SDK.
+The Sentry Android SDK automatically attaches a release version to every event.
 
-With the releases information, you unlock many new features:
+Once Sentry receives an event with the updated release version, a new release object will be available on the releases page in-app. [MIMI: To learn more about how is the release name build please check (link to the next section - Release Version Format)
 
-- Determine the issue and regressions introduced in a new release
-- Predict which commit caused an issue and who is likely responsible
+With the releases you can:
+
+- Build queries and reports in the [MIMI link: Discover] page to correlate bugs with releases
+- Filter events and issues by the release version directly in the tag search on the Issues and Events pages
+- Check what new issues were introduced with the new release
+
+With the releases and a GitHub/GitLab integration, you can:
+
+- Determine the issues and regressions introduced in a new release
+- Receive suggestions about which commit caused an issue and who is likely responsible
 - Resolve issues by including the issue number in your commit message
-- Receive email notifications when your code gets deployed
+- Receive email notifications when your code deploys
 
-After configuring your SDK, setting up releases is a 2-step process (recommended for the use of suspect commits):
+Even though releases are automatically created as events come in, to take advantage of the *suspected commits* feature, you need to create the release in Sentry as part of your build process.
+
+Sentry offers a command-line tool to aid with this task. After configuring your SDK, setting up releases is a 2-step process (recommended for the use of suspect commits):
 
 1. [Create Release and Associate Commits](https://docs.sentry.io/workflow/releases/#create-release)
 2. [Tell Sentry When You Deploy a Release](https://docs.sentry.io/workflow/releases/#create-deploy)
 
 For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
+
+### Release Version Format
+
+The default format of the release version that is sent with each event from the SDK is:
+
+```
+packageName@versionName+versionCode
+```
+
+Please note that if you are using multiple flavors in your application, the release version is going to be different for each flavor and different release objects will be created in-app for each flavor.
+
+If you want to change the release name you can do it in the AndroidManifest.xml or directly in the code. 
+
+The release version can be any random string but we recommend you use a similar format to the default one.
+
+To have the text identifier of your application as a first part connected with the version string using @ and with the last optional suffix dedicated to build or additional identifier. 
+
+With this format we will be able to show you the release name in the UI in an intuitive format. (1.1.0 instead of 'com.company.demo.app@1.1.1')    
+
+To change the release version in the AndroidManifest.xml
+
+```xml
+<meta-data android:name="io.sentry.release" android:value="io.example@1.1.0" />
+```
+
+Or you can set the release version in your code during the manual initialization of the SDK as described in the section [https://docs.sentry.io/platforms/android/#manual-initialization](https://docs.sentry.io/platforms/android/#manual-initialization).
+
+```java
+SentryAndroid.init(this, options -> {
+    options.setRelease("io.sentry@1.1.0");
+});
+```
 
 ## Context
 
