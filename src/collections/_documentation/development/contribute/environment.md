@@ -48,15 +48,22 @@ If it worked, you should be able to run `pyenv` and see some help output.
 
 Finally, to install python, run `pyenv install`. This will take a while, since your computer is actually compiling python! To verify everything worked, running `which python` should result in something like `/Users/you/.pyenv/shims/python`.
 
-------------------
-
-Setup and activate a python 2 virtual environment:
+You're now ready to create a virtual environment. Run:
 
 ```bash
-python2 -m pip install virtualenv
-python2 -m virtualenv .venv
+python -m pip install virtualenv
+python -m virtualenv .venv
+```
+
+And activate the virtual environment:
+
+```bash
 source .venv/bin/activate
 ```
+
+If everything worked, running `which python` should now result in something like `/Users/you/whereever-you-cloned-sentry/.venv/bin/python`.
+
+--------------
 
 Install `nvm` and use it to install the node version specified in sentry's `.nvmrc` file:
 
