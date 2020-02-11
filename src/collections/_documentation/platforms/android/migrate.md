@@ -160,7 +160,7 @@ Sentry.setExtra("extra", "thing");
 
 ### Multi-Dex support
 
-If you are using multi-dex and our SDK we would recommend you to update your multi dex configuration
+If you're using Multi-Dex and our SDK, we would recommend updating your Multi-Dex configuration:
 
 ```groovy
 release {
@@ -168,7 +168,7 @@ release {
 }
 ```
 
-and add to the [multidex-config.pro](http://multidex-config.pro) the following lines:
+And, add to the [multidex-config.pro](http://multidex-config.pro) to the following lines:
 
 ```
 -keep class io.sentry.android.core.SentryAndroidOptions
