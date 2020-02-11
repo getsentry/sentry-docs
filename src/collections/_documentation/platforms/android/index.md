@@ -302,7 +302,7 @@ With the releases you can:
 - Filter events and issues by the release version directly in the tag search on the Issues and Events pages
 - Check what new issues were introduced with the new release
 
-With the releases and a GitHub/GitLab integration, you can:
+With the releases and a [GitHub]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github)/[GitLab]({%- link _documentation/workflow/integrations/global-integrations.md -%}#gitlab) integration, you can:
 
 - Determine the issues and regressions introduced in a new release
 - Receive suggestions about which commit caused an issue and who is likely responsible
@@ -328,17 +328,17 @@ packageName@versionName+versionCode
 
 Please note that if you're using multiple flavors in your application, the release version will be different for each flavor, and different release objects will be created in-app for each flavor.
 
-If you want to change the release name, you can do it in the AndroidManifest.xml or directly in the code. 
+If you want to change the release name, you can do it in the `AndroidManifest.xml` or directly in the code. 
 
 The release version can be any random string, but we recommend using a similar format to the default. The default involves having the text identifier of your app connected with the version string using "@" and the last optional suffix dedicated to build or an additional identifier. With this format, the Sentry UI will display a more comprehensive release name. For example, company.demo.app@1.1.1 instead of 1.1.0.
 
-To change the release version in the AndroidManifest.xml
+To change the release version in the `AndroidManifest.xml`:
 
 ```xml
 <meta-data android:name="io.sentry.release" android:value="io.example@1.1.0" />
 ```
 
-Or you can set the release version in your code during the manual initialization of the SDK as described in the section [https://docs.sentry.io/platforms/android/#manual-initialization](https://docs.sentry.io/platforms/android/#manual-initialization).
+Or, you can set the release version in your code during the manual initialization of the SDK as described in [Manual Initialization](#manual-initialization).
 
 ```java
 SentryAndroid.init(this, options -> {
