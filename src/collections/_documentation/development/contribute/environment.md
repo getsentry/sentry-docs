@@ -22,6 +22,10 @@ It's important that you remain in the repo's root directory for the rest of the 
 
 Install [Homebrew](http://brew.sh), and then run `brew bundle` to install the various system packages as listed in sentry's `Brewfile`.
 
+One thing that requires manual attention is `docker`, which should have just been installed. Open up Spotlight, search for "Docker" and start it. You should soon see the docker icon in your macOS toolbar. Docker will automatically run on system restarts, so this should be the only time you do this.
+
+You can verify that docker is running by running `docker ps`. If it doesn't error with something like `Error response from daemon: dial unix docker.raw.sock: connect: connection refused`, you're good to continue.
+
 Unfortunately, homebrew recently removed Python 2. While some versions of macOS ship with Python 2, it's recommended to not use the system's installation. Sentry also requires a specific version of Python, as shown in the file `.python-version`, and this may differ from the system's Python.
 
 We recommend using [pyenv](https://github.com/pyenv/pyenv) to install and manage python versions. It should have already been installed earlier when you ran `brew bundle`. But you'll need to make some manual changes to your shell initialization files.
