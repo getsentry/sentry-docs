@@ -5,7 +5,7 @@ sidebar_order: 1
 
 ## Migrating from `sentry-android 1.x` to `sentry-android 2.0`
 
-With Sentry Android, we've updated the API to be closer to the unified API [https://docs.sentry.io/development/sdk-dev/unified-api/](https://docs.sentry.io/development/sdk-dev/unified-api/). And now that the SDK isn't built on top of `sentry-java`, Sentry Android has more Android-specific features.
+With Sentry Android, we've updated the API to resemble the [Unified API]({%- link _documentation/development/sdk-dev/unified-api.md -%}) more closely. And now that the SDK isn't built on top of `sentry-java`, Sentry Android has more Android-specific features.
 
 If you want to upgrade from the previous version of the SDK, please check the following sections of changes that may need updating in your code.
 
@@ -23,11 +23,11 @@ Example of the configuration in the Manifest:
 </application>
 ```
 
-If you want to set the configuration manually in the code, you need to initialize the SDK with `SentryAndroid.init()`  (described in the Installation [LINK: to installation sect]) in the same file as `SentryAndroidOptions`, which holds configuration items.
+If you want to set the configuration manually in the code, you need to initialize the SDK with `SentryAndroid.init()` --- described in [Installation](#installation) --- in the same file as `SentryAndroidOptions`, which holds configuration items.
 
 ### Installation
 
-The new SDK can initialize automatically; all you need to do is provide the DSN in your Manifest file, as shown on the previous example in the [LINK: configuration] section.
+The new SDK can initialize automatically; all you need to do is provide the DSN in your Manifest file, as shown in the previous example in [Configuration](#configuration).
 
 **Manual Installation**
 
@@ -53,11 +53,11 @@ To initialize the SDK manually:
 
 Please note that the new SDK will send with each event a release version in a different format than the previous SDK.
 
-If you are using the GitHub or GitLab integrations, you need to do one of the following:
+If you are using the [GitHub]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github) or [GitLab]({%- link _documentation/workflow/integrations/global-integrations.md -%}#gitlab) integrations, you need to do one of the following:
 
-- use the new format LINK: ([https://docs.sentry.io/platforms/android/#releases](https://docs.sentry.io/platforms/android/#releases))
-- set the release in your `AndroidManifest.xml`
-- change your code as described in the configuration section.
+- Use the new format LINK: ([https://docs.sentry.io/platforms/android/#releases](https://docs.sentry.io/platforms/android/#releases))
+- Set the release in your `AndroidManifest.xml`
+- Change your code as described in the configuration section
 
 ### API
 
