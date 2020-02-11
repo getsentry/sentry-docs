@@ -37,13 +37,17 @@ To initialize the SDK manually:
 
 - Disable the `auto-init` feature by providing the following line in the manifest:
 
-        <meta-data android:name="io.sentry.auto-init" android:value="false" />
+    ```xml
+    <meta-data android:name="io.sentry.auto-init" android:value="false" />
+    ```
 
 - Initialize the SDK directly in your application:
 
-        SentryAndroid.init(context, options -> {
-          options.setDsn("___PUBLIC_DSN___");    
-        });
+    ```java
+    SentryAndroid.init(context, options -> {
+        options.setDsn("___PUBLIC_DSN___");    
+    });
+    ```
 
 ### Releases
 
