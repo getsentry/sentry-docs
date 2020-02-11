@@ -294,7 +294,9 @@ sentry-cli upload-proguard \
 
 The Sentry Android SDK automatically attaches a release version to every event.
 
-Once Sentry receives an event with the updated release version, a new release object will be available on the releases page in-app. [MIMI: To learn more about how is the release name build please check (link to the next section - Release Version Format)
+Once Sentry receives an event with the updated release version, a new release object will be available on the releases page in-app. For more details about formatting your releases, see [Release Version Format](#release-version-format).
+
+[MIMI: To learn more about how is the release name build please check (link to the next section - Release Version Format)
 
 With the releases you can:
 
