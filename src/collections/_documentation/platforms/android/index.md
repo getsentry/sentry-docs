@@ -326,15 +326,11 @@ The default format of the release version that is sent with each event from the 
 packageName@versionName+versionCode
 ```
 
-Please note that if you are using multiple flavors in your application, the release version is going to be different for each flavor and different release objects will be created in-app for each flavor.
+Please note that if you're using multiple flavors in your application, the release version will be different for each flavor, and different release objects will be created in-app for each flavor.
 
-If you want to change the release name you can do it in the AndroidManifest.xml or directly in the code. 
+If you want to change the release name, you can do it in the AndroidManifest.xml or directly in the code. 
 
-The release version can be any random string but we recommend you use a similar format to the default one.
-
-To have the text identifier of your application as a first part connected with the version string using @ and with the last optional suffix dedicated to build or additional identifier. 
-
-With this format we will be able to show you the release name in the UI in an intuitive format. (1.1.0 instead of 'com.company.demo.app@1.1.1')    
+The release version can be any random string, but we recommend using a similar format to the default. The default involves having the text identifier of your app connected with the version string using "@" and the last optional suffix dedicated to build or an additional identifier. With this format, the Sentry UI will display a more comprehensive release name. For example, company.demo.app@1.1.1 instead of 1.1.0.
 
 To change the release version in the AndroidManifest.xml
 
