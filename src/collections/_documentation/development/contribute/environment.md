@@ -48,7 +48,36 @@ If it worked, you should be able to run `pyenv` and see some help output.
 
 Finally, to install python, run `pyenv install`. This will take a while, since your computer is actually compiling python! To verify everything worked, running `which python` should result in something like `/Users/you/.pyenv/shims/python`.
 
-You're now ready to create a virtual environment. Run:
+Sentry also requires a specific version of NodeJS. Like pyenv, we recommend using [volta](https://github.com/volta-cli/volta) to install and manage node versions. Unfortunately, brew doesn't provide volta yet, but installation is quite easy. Run:
+
+```bash
+curl https://get.volta.sh | bash
+```
+
+The volta installer will conveniently make changes to your shell installation files for you, but it's good to verify. Your `~/.bash_profile` should be the same, but make sure your `~/.bashrc` looks like this:
+
+```bash
+eval "$(pyenv init -)"
+
+export VOLTA_HOME="~/.volta"
+grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
+```
+
+Again, reload your shell (or restart your terminal, and cd into sentry):
+
+```bash
+PATH= exec /bin/bash -l
+```
+
+Now, if you try and run `volta`, you should see some help text. To install node, run:
+
+```bash
+volta install node@10.16.3
+```
+
+To verify that it worked, running `node -v` should result in `v10.6.3`.
+
+You're now ready to create a python virtual environment. Run:
 
 ```bash
 python -m pip install virtualenv
@@ -63,16 +92,7 @@ source .venv/bin/activate
 
 If everything worked, running `which python` should now result in something like `/Users/you/whereever-you-cloned-sentry/.venv/bin/python`.
 
---------------
-
-Install `nvm` and use it to install the node version specified in sentry's `.nvmrc` file:
-
-```bash
-brew install nvm
-echo "source /usr/local/opt/nvm/nvm.sh" >> ~/.bashrc
-exec bash
-nvm install
-```
+------
 
 Run the following to install the Python and JavaScript libraries and database services that Sentry depends on and some extra pieces that hold the development environment together:
 
