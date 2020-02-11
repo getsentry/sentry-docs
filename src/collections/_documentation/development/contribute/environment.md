@@ -92,13 +92,7 @@ source .venv/bin/activate
 
 If everything worked, running `which python` should now result in something like `/Users/you/whereever-you-cloned-sentry/.venv/bin/python`.
 
-------
-
-Run the following to install the Python and JavaScript libraries and database services that Sentry depends on and some extra pieces that hold the development environment together:
-
-```bash
-make bootstrap
-```
+The last step is to run `make bootstrap`. This will take a long time, as it basically installs sentry and all of its dependencies, starts up external services, and preps databases.
 
 {% capture __alert_content -%}
 `make bootstrap` will run `sentry upgrade`, which will prompt you to create a user. It is recommended to supply the prompts with a proper email address and password. It is also required to designate said user as a **superuser** because said user is responsible for the initial configurations.
@@ -108,18 +102,6 @@ make bootstrap
   level="warning"
 %}
 
-`make bootstrap` will generally run these sequence of commands (you can poke around through the `Makefile` file to see more details):
-
-```bash
-make install-system-pkgs
-make develop
-# creates a development configuration file at ~/.sentry/sentry.conf.py
-sentry init --dev
-# start up our development services
-sentry devservices up
-make create-db
-make apply-migrations
-```
 
 ## Running the Development Server
 
@@ -159,10 +141,6 @@ You’ve made your changes to the codebase, now it’s time to present them to t
 
 ### Running the Test Suite Locally
 
-There are no additional services required for running the Sentry test suite. To install dependent libraries, lint all source code, and run both the Python and JavaScript test suites, simply run:
+Run either `make test-js` or `make test-python` to run the test suite with the corresponding language. There are also other `test-` targets, refer to the `Makefile`.
 
-```bash
-make test
-```
-
-If you find yourself constantly running `make test` and wishing it was faster, running either `make test-js` or `make test-python` will only run the test suite with the corresponding language, skipping over linting and dependency checks. If you would like to see even more options, check out other entry points in the `Makefile`.
+Generally, testing is left to continuous integration (travis), or you may directly invoke testing utilities if you need finer granularity e.g. `pytest path/to/specific/test`.
