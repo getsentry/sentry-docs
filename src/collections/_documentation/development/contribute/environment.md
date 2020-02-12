@@ -47,9 +47,13 @@ You can verify that docker is running by running `docker ps`. If it doesn't erro
 
 ### Macintosh OS X - Python
 
-Unfortunately, homebrew recently removed Python 2. While some versions of macOS ship with Python 2, it's recommended to not use the system's installation. Sentry also requires a specific version of Python, as shown in the file `.python-version`, and this may differ from the system's Python.
+Unfortunately, homebrew recently removed Python 2. While some versions of macOS ship with Python 2, it's recommended to not use the system's installation. Sentry also requires a specific version of Python, as shown in the file `.python-version`, and this may differ from the system's python.
 
-We recommend using [pyenv](https://github.com/pyenv/pyenv) to install and manage python versions. It should have already been installed earlier when you ran `brew bundle`. But you'll need to make some manual changes to your shell initialization files.
+We recommend using [pyenv](https://github.com/pyenv/pyenv) to install and manage python versions. It should have already been installed earlier when you ran `brew bundle`.
+
+You should be able to install python by running `pyenv install`. This will take a while, since your computer is actually compiling python!
+
+After this, if you type `which python`, you should see something like `/usr/bin/python`... this means `python` will resolve to the system's python. You'll need to make some manual changes to your shell initialization files, if you want your shell to see pyenv's python.
 
 Make sure your `~/.bash_profile` contains the following:
 
@@ -63,15 +67,13 @@ And your `~/.bashrc`:
 eval "$(pyenv init -)"
 ```
 
-Now, if you try and run `pyenv`, you'll probably get a command not found. Your shell needs to be reloaded. You can either reload it in-place, or close your terminal and start it again and cd into sentry. To reload it, run:
+Once that's done, your shell needs to be reloaded. You can either reload it in-place, or close your terminal and start it again and cd into sentry. To reload it, run:
 
 ```bash
-PATH= exec /bin/bash -l
+PATH="" exec /bin/bash -l
 ```
 
-If it worked, you should be able to run `pyenv` and see some help output.
-
-Finally, to install python, run `pyenv install`. This will take a while, since your computer is actually compiling python! To verify everything worked, running `which python` should result in something like `/Users/you/.pyenv/shims/python`.
+If it worked, running `which python` should result in something like `/Users/you/.pyenv/shims/python`.
 
 
 ### Macintosh OS X - NodeJS
@@ -94,7 +96,7 @@ grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
 Again, reload your shell (or restart your terminal, and cd into sentry):
 
 ```bash
-PATH= exec /bin/bash -l
+PATH="" exec /bin/bash -l
 ```
 
 Now, if you try and run `volta`, you should see some help text. To install node, run:
