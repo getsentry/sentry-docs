@@ -342,7 +342,7 @@ Or, you can set the release version in your code during the manual initializatio
 
 ```java
 SentryAndroid.init(this, options -> {
-    options.setRelease("io.sentry@1.1.0");
+    options.setRelease("io.example@1.1.0");
 });
 ```
 
