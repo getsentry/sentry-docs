@@ -71,7 +71,9 @@ Sentry.getContext().addTag("tagName", "tagValue");
 
 *New*:
 
-    Sentry.setTag("tagName", "tagValue");
+```java
+Sentry.setTag("tagName", "tagValue");
+```
 
 **Capture custom exception**
 
