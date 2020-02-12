@@ -11,37 +11,124 @@ Follow [the Docker file in the repository](https://github.com/getsentry/sentry/b
 
 ### Macintosh OS X
 
-To get started, fork the repo at [https://github.com/getsentry/sentry](https://github.com/getsentry/sentry) and clone it:
+{% capture __alert_content -%}
+macOS Catalina will recommend that you use the zsh shell, instead of bash. While the differences are minimal, this guide only covers bash, so for best results please use bash. You can verify this by typing `echo $SHELL`, which should result in `/bin/bash`.
+
+{%- endcapture -%}{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+To get started, fork the repo at [https://github.com/getsentry/sentry](https://github.com/getsentry/sentry). Clone your forked repo and go into it:
 
 ```bash
 git clone https://github.com/<your github username>/sentry.git
 cd sentry
 ```
 
-Install [Homebrew](http://brew.sh), if you haven’t already. Run `brew bundle` to install the various system packages as listed in sentry's `Brewfile`. This will install, among other things, Python 2 and docker.
+{% capture __alert_content -%}
+It's important that you remain in the repo's root directory for the rest of the setup! Also, please do the following steps in the exact order they're shown.
+{%- endcapture -%}{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
 
-Setup and activate a python 2 virtual environment:
+
+### Macintosh OS X - System Dependencies
+
+Install [Homebrew](http://brew.sh), and then run `brew bundle` to install the various system packages as listed in sentry's `Brewfile`.
+
+One thing that requires manual attention is `docker`, which should have just been installed. Open up Spotlight, search for "Docker" and start it. You should soon see the docker icon in your macOS toolbar. Docker will automatically run on system restarts, so this should be the only time you do this.
+
+You can verify that docker is running by running `docker ps`. If it doesn't error with something like `Error response from daemon: dial unix docker.raw.sock: connect: connection refused`, you're good to continue.
+
+
+### Macintosh OS X - Python
+
+Unfortunately, homebrew recently removed Python 2. While some versions of macOS ship with Python 2, it's recommended to not use the system's installation. Sentry also requires a specific version of Python, as shown in the file `.python-version`, and this may differ from the system's python.
+
+We recommend using [pyenv](https://github.com/pyenv/pyenv) to install and manage python versions. It should have already been installed earlier when you ran `brew bundle`.
+
+You should be able to install python by running `pyenv install`. This will take a while, since your computer is actually compiling python!
+
+After this, if you type `which python`, you should see something like `/usr/bin/python`... this means `python` will resolve to the system's python. You'll need to make some manual changes to your shell initialization files, if you want your shell to see pyenv's python.
+
+Make sure your `~/.bash_profile` contains the following:
 
 ```bash
-python2 -m pip install virtualenv
-python2 -m virtualenv .venv
+source ~/.bashrc
+```
+
+And your `~/.bashrc`:
+
+```bash
+eval "$(pyenv init -)"
+```
+
+Once that's done, your shell needs to be reloaded. You can either reload it in-place, or close your terminal and start it again and cd into sentry. To reload it, run:
+
+```bash
+PATH="" exec /bin/bash -l
+```
+
+If it worked, running `which python` should result in something like `/Users/you/.pyenv/shims/python`.
+
+
+### Macintosh OS X - NodeJS
+
+Sentry also requires a specific version of NodeJS. Like pyenv, we recommend using [volta](https://github.com/volta-cli/volta) to install and manage node versions. Unfortunately, brew doesn't provide volta yet, but installation is quite easy. Run:
+
+```bash
+curl https://get.volta.sh | bash
+```
+
+The volta installer will tell you to "open a new terminal to start using Volta", but you don't have to! You can just reload your shell like before:
+
+```bash
+PATH="" exec /bin/bash -l
+```
+
+This works because the volta installer conveniently made changes to your shell installation files for you, but it's good to verify. Your `~/.bash_profile` should be the same, but make sure your `~/.bashrc` looks like this:
+
+```bash
+eval "$(pyenv init -)"
+
+export VOLTA_HOME="~/.volta"
+grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
+```
+
+Now, if you try and run `volta`, you should see some help text, meaning volta is installed correctly. To install node, simply run:
+
+```bash
+node -v
+```
+
+Volta intercepts this and automatically downloads and installs the node version in sentry's `package.json`.
+
+
+### Macintosh OS X - Python (virtual environment)
+
+You're now ready to create a python virtual environment. Run:
+
+```bash
+python -m pip install virtualenv
+python -m virtualenv .venv
+```
+
+And activate the virtual environment:
+
+```bash
 source .venv/bin/activate
 ```
 
-Install `nvm` and use it to install the node version specified in sentry's `.nvmrc` file:
+If everything worked, running `which python` should now result in something like `/Users/you/whereever-you-cloned-sentry/.venv/bin/python`.
 
-```bash
-brew install nvm
-echo "source /usr/local/opt/nvm/nvm.sh" >> ~/.bashrc
-exec bash
-nvm install
-```
 
-Run the following to install the Python and JavaScript libraries and database services that Sentry depends on and some extra pieces that hold the development environment together:
+### Macintosh OS X - Final Bootstrap
 
-```bash
-make bootstrap
-```
+The last step is to run `make bootstrap`. This will take a long time, as it basically installs sentry and all of its dependencies, starts up external services, and preps databases.
 
 {% capture __alert_content -%}
 `make bootstrap` will run `sentry upgrade`, which will prompt you to create a user. It is recommended to supply the prompts with a proper email address and password. It is also required to designate said user as a **superuser** because said user is responsible for the initial configurations.
@@ -51,18 +138,6 @@ make bootstrap
   level="warning"
 %}
 
-`make bootstrap` will generally run these sequence of commands (you can poke around through the `Makefile` file to see more details):
-
-```bash
-make install-system-pkgs
-make develop
-# creates a development configuration file at ~/.sentry/sentry.conf.py
-sentry init --dev
-# start up our development services
-sentry devservices up
-make create-db
-make apply-migrations
-```
 
 ## Running the Development Server
 
@@ -70,7 +145,7 @@ make apply-migrations
 If you would like to import an example dataset, running `./bin/load-mocks` will add a few example projects and teams to the main organization.
 {%- endcapture -%}
 {%- include components/alert.html
-  title="Note"
+  title="Tip!"
   content=__alert_content
   level="info"
 %}
@@ -102,10 +177,6 @@ You’ve made your changes to the codebase, now it’s time to present them to t
 
 ### Running the Test Suite Locally
 
-There are no additional services required for running the Sentry test suite. To install dependent libraries, lint all source code, and run both the Python and JavaScript test suites, simply run:
+Run either `make test-js` or `make test-python` to run the test suite with the corresponding language. There are also other `test-` targets, refer to the `Makefile`.
 
-```bash
-make test
-```
-
-If you find yourself constantly running `make test` and wishing it was faster, running either `make test-js` or `make test-python` will only run the test suite with the corresponding language, skipping over linting and dependency checks. If you would like to see even more options, check out other entry points in the `Makefile`.
+Generally, testing is left to continuous integration (travis), or you may directly invoke testing utilities if you need finer granularity e.g. `pytest path/to/specific/test`.
