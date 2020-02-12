@@ -4,7 +4,7 @@ title: Flutter
 
 The [Flutter project maintains an SDK for Sentry](https://github.com/flutter/sentry).
 
-Flutter has an extensive documentation, which includes a
+Flutter has extensive documentation, which includes a
 [cookbook on how to integrate with Sentry](https://flutter.dev/docs/cookbook/maintenance/error-reporting).
 
 You can get the SDK from [pub.dev](https://pub.dev/packages/sentry):
