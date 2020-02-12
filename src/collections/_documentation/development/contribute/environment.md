@@ -11,6 +11,15 @@ Follow [the Docker file in the repository](https://github.com/getsentry/sentry/b
 
 ### Macintosh OS X
 
+{% capture __alert_content -%}
+macOS Catalina will recommend that you use the zsh shell, instead of bash. While the differences are minimal, this guide only covers bash, so for best results please use bash. You can verify this by typing `echo $SHELL`, which should result in `/bin/bash`.
+
+{%- endcapture -%}{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
 To get started, fork the repo at [https://github.com/getsentry/sentry](https://github.com/getsentry/sentry). Clone your forked repo and go into it:
 
 ```bash
