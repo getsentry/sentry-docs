@@ -99,13 +99,13 @@ export VOLTA_HOME="~/.volta"
 grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
 ```
 
-Now, if you try and run `volta`, you should see some help text. To install node, run:
+Now, if you try and run `volta`, you should see some help text, meaning volta is installed correctly. To install node, simply run:
 
 ```bash
-volta install node@10.16.3
+node -v
 ```
 
-To verify that it worked, running `node -v` should result in `v10.6.3`.
+Volta intercepts this and automatically downloads and installs the node version in sentry's `package.json`.
 
 
 ### Macintosh OS X - Python (virtual environment)
