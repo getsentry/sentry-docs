@@ -84,19 +84,19 @@ Sentry also requires a specific version of NodeJS. Like pyenv, we recommend usin
 curl https://get.volta.sh | bash
 ```
 
-The volta installer will conveniently make changes to your shell installation files for you, but it's good to verify. Your `~/.bash_profile` should be the same, but make sure your `~/.bashrc` looks like this:
+The volta installer will tell you to "open a new terminal to start using Volta", but you don't have to! You can just reload your shell like before:
+
+```bash
+PATH="" exec /bin/bash -l
+```
+
+This works because the volta installer conveniently made changes to your shell installation files for you, but it's good to verify. Your `~/.bash_profile` should be the same, but make sure your `~/.bashrc` looks like this:
 
 ```bash
 eval "$(pyenv init -)"
 
 export VOLTA_HOME="~/.volta"
 grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
-```
-
-Again, reload your shell (or restart your terminal, and cd into sentry):
-
-```bash
-PATH="" exec /bin/bash -l
 ```
 
 Now, if you try and run `volta`, you should see some help text. To install node, run:
