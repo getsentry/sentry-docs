@@ -170,7 +170,7 @@ release {
 }
 ```
 
-And, add to the [multidex-config.pro](http://multidex-config.pro) to the following lines:
+And, add to the `multidex-config.pro` to the following lines:
 
 ```
 -keep class io.sentry.android.core.SentryAndroidOptions
