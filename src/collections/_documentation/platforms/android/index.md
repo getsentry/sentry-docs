@@ -231,6 +231,18 @@ sentry {
     // during a build.  If you disable this, you'll need to manually
     // upload the mapping files with sentry-cli when you do a release.
     autoUpload true
+
+    // Disables or enables the automatic configuration of Native Symbols
+    // for Sentry. This executes sentry-cli automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    uploadNativeSymbols false
+
+    // Does or doesn't include the source code of native code for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    includeNativeSources false
 }
 ```
 
@@ -478,7 +490,7 @@ dependencies {
 }
 ```
 
-If you want to use the SDK with the NDK but you still want to support the devices on the API level lower than 21 you can update your manifest as follows:
+If you want to use the SDK with the NDK, but you still want to support the devices on the API level lower than 16, you can update your manifest as follows:
 
 ```xml
     <!-- Merging strategy for the imported manifests -->
@@ -486,7 +498,9 @@ If you want to use the SDK with the NDK but you still want to support the device
             tools:overrideLibrary="io.sentry.android" />
 ```
 
-With these changes, the NDK integration is going to be used only on the devices with the API level ≥ 21 and the rest of the devices with API level ≥14, but ≤21 will use just the SDK.
+With these changes:
+- SDK will be enabled on all devices with API level ≥ 14
+- SDK with NDK will be enabled on all devices with API level ≥ 16
 
 ### Breadcrumbs
 
@@ -635,7 +649,5 @@ Example of uploading all your .so files:
 
 ```bash
 sentry-cli login
-sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/cmake/
-sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/stripped_native_libs
-sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/merged_native_libs/
+sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/merged_native_libs/{variantFolder}
 ```
