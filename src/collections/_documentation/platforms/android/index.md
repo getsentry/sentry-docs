@@ -498,7 +498,9 @@ If you want to use the SDK with the NDK, but you still want to support the devic
             tools:overrideLibrary="io.sentry.android" />
 ```
 
-With these changes, the NDK integration is going to be used only on the devices with the API level ≥ 16 and the rest of the devices with API level ≥14, but ≤16 will use just the SDK.
+With these changes:
+- SDK will be enabled on all devices with API level ≥ 14
+- SDK with NDK will be enabled on all devices with API level ≥ 16
 
 ### Breadcrumbs
 
