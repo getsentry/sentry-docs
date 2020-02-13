@@ -238,7 +238,7 @@ sentry {
     // Default is disabled.
     uploadNativeSymbols false
 
-    // Includes or not the source code of native code for Sentry.
+    // Does or doesn't include the source code of native code for Sentry.
     // This executes sentry-cli with the --include-sources param. automatically so
     // you don't need to do it manually.
     // Default is disabled.
