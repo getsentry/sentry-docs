@@ -198,7 +198,7 @@ buildscript {
     }
     
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.29'
+        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.30'
     }
 }
 ```
