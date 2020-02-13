@@ -490,7 +490,7 @@ dependencies {
 }
 ```
 
-If you want to use the SDK with the NDK but you still want to support the devices on the API level lower than 16 you can update your manifest as follows:
+If you want to use the SDK with the NDK, but you still want to support the devices on the API level lower than 16, you can update your manifest as follows:
 
 ```xml
     <!-- Merging strategy for the imported manifests -->
