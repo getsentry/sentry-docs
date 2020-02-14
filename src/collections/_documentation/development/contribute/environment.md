@@ -139,6 +139,25 @@ The last step is to run `make bootstrap`. This will take a long time, as it basi
 %}
 
 
+### macOS - direnv (optional, but recommended)
+
+We have a [direnv](https://github.com/direnv/direnv) configuration for Sentry. It automatically sets some helpful environment variables for you, automatically activates your virtual environment, and does some simple state checking to guide you towards the expected development environment.
+
+To install it, run `brew install direnv`. You'll want to add this to the end of your `~/.bashrc` file:
+
+```bash
+eval "$(direnv hook bash)"
+```
+
+And after doing that, reload your shell:
+
+```bash
+PATH="" exec /bin/bash -l
+```
+
+Now, direnv should automatically execute (or you might need to type `direnv allow`). If you've followed this guide correctly, it should succeed.
+
+
 ## Running the Development Server
 
 {% capture __alert_content -%}
