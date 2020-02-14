@@ -17,7 +17,6 @@ Example of the configuration in the Manifest:
 
 ```xml
 <application>
-<!-- The configuration must be inside of the application tag -->
 <!-- Example of the Sentry DSN setting -->
     <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN__" />
 </application>
@@ -38,7 +37,7 @@ To initialize the SDK manually:
 - Disable the `auto-init` feature by providing the following line in the manifest:
 
     ```xml
-    <application
+    <application>
         <meta-data android:name="io.sentry.auto-init" android:value="false" />
     </application>
     ```

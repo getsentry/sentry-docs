@@ -46,7 +46,7 @@ After you’ve completed setting up a project in Sentry, Sentry will give you a 
 Add your DSN to the manifest file.
 
 ```xml
-<application
+<application>
     <meta-data android:name="io.sentry.dsn" android:value="https://key@sentry.io/123" />
 </application>
 ```
@@ -81,7 +81,7 @@ Initialize the SDK manually when you need to provide additional configuration to
 To initialize the SDK manually, disable the auto initialization. You can do so by adding the following line into your manifest:
 
 ```xml
-<application
+<application>
     <meta-data android:name="io.sentry.auto-init" android:value="false" />
 </application>
 ```
@@ -351,7 +351,7 @@ The release version can be any random string, but we recommend using a similar f
 To change the release version in the `AndroidManifest.xml`:
 
 ```xml
-<application
+<application>
     <meta-data android:name="io.sentry.release" android:value="io.example@1.1.0" />
 </application>
 ```
@@ -516,13 +516,13 @@ To add the sentry-android-core library, you need to provide the following depend
 ```groovy
 // ADD COMPATIBILITY OPTIONS TO BE COMPATIBLE WITH JAVA 1.8
 compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 // ADD SENTRY ANDROID AS A DEPENDENCY
 dependencies {
-        implementation 'io.sentry:sentry-android-core::2.0.+'
+    implementation 'io.sentry:sentry-android-core:{version}'
 }
 ```
 
@@ -531,8 +531,8 @@ If you want to use the SDK with the NDK, but you still want to support the devic
 ```xml
 <manifest>
     <!-- Merging strategy for the imported manifests -->
-      <uses-sdk
-            tools:overrideLibrary="io.sentry.android" />
+    <uses-sdk
+        tools:overrideLibrary="io.sentry.android" />
 </manifest>
 ```
 
@@ -566,7 +566,7 @@ The NDK integration is packed with the SDK and enabled out by default with each 
 Alternatively, you can disable the NDK integration by adding the following line into your manifest.
 
 ```xml
-<application
+<application>
     <meta-data android:name="io.sentry.ndk.enable" android:value="false" />
 </application>
 ```
@@ -578,7 +578,7 @@ Whenever the main UI thread of the application is blocked for more than four sec
 If you do not want to monitor the ANR, please add the following line into your manifest.
 
 ```xml
-<application
+<application>
     <meta-data android:name="io.sentry.anr.enable" android:value="false" />
 </application>
 ```
@@ -586,7 +586,7 @@ If you do not want to monitor the ANR, please add the following line into your m
 If you want to specify how long the thread should be blocked before the ANR is reported, provide the duration in the attribute `io.sentry.anr.timeout-interval-mills` in your manifest.
 
 ```xml
-<application
+<application>
     <meta-data android:name="io.sentry.anr.timeout-interval-mills" android:value="2000" />
 </application>
 ```
