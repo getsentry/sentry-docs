@@ -9,7 +9,7 @@ sidebar_order: 1
 
 Follow [the Docker file in the repository](https://github.com/getsentry/sentry/blob/master/docker/Dockerfile) but instead of creating and installing a wheel, install the package in editable mode (`pip install . -e`).
 
-### Macintosh OS X
+### macOS
 
 {% capture __alert_content -%}
 macOS Catalina will recommend that you use the zsh shell, instead of bash. While the differences are minimal, this guide only covers bash, so for best results please use bash. You can verify this by typing `echo $SHELL`, which should result in `/bin/bash`.
@@ -36,7 +36,7 @@ It's important that you remain in the repo's root directory for the rest of the 
 %}
 
 
-### Macintosh OS X - System Dependencies
+### macOS - System Dependencies
 
 Install [Homebrew](http://brew.sh), and then run `brew bundle` to install the various system packages as listed in sentry's `Brewfile`.
 
@@ -45,7 +45,7 @@ One thing that requires manual attention is `docker`, which should have just bee
 You can verify that docker is running by running `docker ps`. If it doesn't error with something like `Error response from daemon: dial unix docker.raw.sock: connect: connection refused`, you're good to continue.
 
 
-### Macintosh OS X - Python
+### macOS - Python
 
 Unfortunately, homebrew recently removed Python 2. While some versions of macOS ship with Python 2, it's recommended to not use the system's installation. Sentry also requires a specific version of Python, as shown in the file `.python-version`, and this may differ from the system's python.
 
@@ -76,7 +76,7 @@ PATH="" exec /bin/bash -l
 If it worked, running `which python` should result in something like `/Users/you/.pyenv/shims/python`.
 
 
-### Macintosh OS X - NodeJS
+### macOS - NodeJS
 
 Sentry also requires a specific version of NodeJS. Like pyenv, we recommend using [volta](https://github.com/volta-cli/volta) to install and manage node versions. Unfortunately, brew doesn't provide volta yet, but installation is quite easy. Run:
 
@@ -108,7 +108,7 @@ node -v
 Volta intercepts this and automatically downloads and installs the node version in sentry's `package.json`.
 
 
-### Macintosh OS X - Python (virtual environment)
+### macOS - Python (virtual environment)
 
 You're now ready to create a python virtual environment. Run:
 
@@ -126,7 +126,7 @@ source .venv/bin/activate
 If everything worked, running `which python` should now result in something like `/Users/you/whereever-you-cloned-sentry/.venv/bin/python`.
 
 
-### Macintosh OS X - Final Bootstrap
+### macOS - Final Bootstrap
 
 The last step is to run `make bootstrap`. This will take a long time, as it basically installs sentry and all of its dependencies, starts up external services, and preps databases.
 
