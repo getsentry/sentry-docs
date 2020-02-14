@@ -38,7 +38,9 @@ To initialize the SDK manually:
 - Disable the `auto-init` feature by providing the following line in the manifest:
 
     ```xml
-    <meta-data android:name="io.sentry.auto-init" android:value="false" />
+    <application
+        <meta-data android:name="io.sentry.auto-init" android:value="false" />
+    </application>
     ```
 
 - Initialize the SDK directly in your application:
