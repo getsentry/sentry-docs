@@ -113,7 +113,7 @@ Include the project by adding it to your dependency list in `app/build.gradle`:
 ```java	
 dependencies {	
     // ... other dependencies listed here //	
-    implementation project(':@sentry-react-native')	
+    implementation project(':@sentry_react-native')	
 }	
 ```
 
@@ -138,6 +138,6 @@ public class MainApplication extends Application implements ReactApplication {
 Add the following to your `settings.gradle` file:	
 
 ```java	
-include ':@sentry-react-native'
-project(':@sentry-react-native').projectDir = new File(rootProject.projectDir, '../node_modules/@sentry/react-native/android')
+include ':@sentry_react-native'
+project(':@sentry_react-native').projectDir = new File(rootProject.projectDir, '../node_modules/@sentry/react-native/android')
 ```
