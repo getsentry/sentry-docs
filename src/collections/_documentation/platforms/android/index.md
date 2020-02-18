@@ -243,7 +243,7 @@ sentry {
 ```
 
 And that's it! Now when you build your app, the plugin will upload the proguard/R8 mappings,
-source bundle and native symbols, as you configured, to Sentry.
+source bundle, and native symbols, as you configured them to Sentry.
 
 ## Releases
 
