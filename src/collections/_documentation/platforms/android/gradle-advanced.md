@@ -1,6 +1,6 @@
 # Advanced gradle plugin configuration
 
-If for some reason the gradle plugin isn't an option for you, here are other ways to get the tasks done:
+If for some reason the Gradle plugin isn't an option for you, here are other ways to get the tasks done:
 
 ### Manual Integration
 
