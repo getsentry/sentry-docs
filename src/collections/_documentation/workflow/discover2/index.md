@@ -45,6 +45,8 @@ Saved queries will be viewable by anyone in your Sentry organization. You can us
 
 ## Query Builder
 
+[{% asset discover/discover-results.png alt="Page displaying a graph of error spikes by URL, the event tag summary, and results of the query." %}]({% asset discover/discover-results.png @path %})
+
 Navigate to any query page from the Discover Homepage in these ways:
 
 - Click on "Build a new query"
