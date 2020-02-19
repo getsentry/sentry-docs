@@ -23,7 +23,7 @@ These SDKs are [maintained and supported](https://forum.sentry.io) by the Sentry
 * [_C++_](https://github.com/nlohmann/crow)
 * [_Clojure_](https://github.com/sethtrain/raven-clj#alternatives)
 * [_Crystal_](https://github.com/Sija/raven.cr)
-* [_Flutter_](https://flutter.dev/docs/cookbook/maintenance/error-reporting)
+* [_Flutter_]({% link _documentation/platforms/flutter/index.md %})
 * [_Grails_](https://github.com/agorapulse/grails-sentry)
 * [_Kubernetes_](https://github.com/getsentry/sentry-kubernetes)
 * [_Lua_](https://github.com/cloudflare/raven-lua)
