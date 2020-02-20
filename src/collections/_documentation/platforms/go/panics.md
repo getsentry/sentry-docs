@@ -54,7 +54,7 @@ func main() {
 	sentrySyncTransport.Timeout = time.Second * 3
 	
 	sentry.Init(sentry.ClientOptions{
-		Dsn: "https://363a337c11a64611be4845ad6e24f3ac@sentry.io/297378",
+		Dsn: "___PUBLIC_DSN___",
 		Transport: sentrySyncTransport,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			if hint.Context != nil {

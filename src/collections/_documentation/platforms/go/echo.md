@@ -27,7 +27,7 @@ import (
 
 // To initialize Sentry's handler, you need to initialize Sentry itself beforehand
 if err := sentry.Init(sentry.ClientOptions{
-	Dsn: "your-public-dsn",
+	Dsn: "___PUBLIC_DSN___",
 }); err != nil {
 	fmt.Printf("Sentry initialization failed: %v\n", err)
 }
@@ -118,7 +118,7 @@ app.Logger.Fatal(app.Start(":3000"))
 
 ```go
 sentry.Init(sentry.ClientOptions{
-	Dsn: "your-public-dsn",
+	Dsn: "___PUBLIC_DSN___",
 	BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 		if hint.Context != nil {
 			if req, ok := hint.Context.Value(sentry.RequestContextKey).(*http.Request); ok {

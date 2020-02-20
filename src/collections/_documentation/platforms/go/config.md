@@ -80,7 +80,7 @@ import (
 )
 
 sentryClientOptions := sentry.ClientOptions{
-	Dsn: "https://16427b2f210046b585ee51fd8a1ac54f@sentry.io/1",
+	Dsn: "___PUBLIC_DSN___",
 }
 
 rootCAs, err := gocertifi.CACerts()
