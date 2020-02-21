@@ -4,7 +4,7 @@ sidebar_order: 9
 ---
 
 The context interfaces provide additional context data. Typically, this is data
-related to the current user, the current HTTP request. Its canonical name is
+related to the current user and the environment. For example, the device or application version. Its canonical name is
 `contexts`.
 
 The `contexts` type can be used to define arbitrary contextual data on the
