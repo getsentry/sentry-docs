@@ -17,7 +17,7 @@ Example of the configuration in the Manifest:
 
 ```xml
 <application>
-<!-- Example of the Sentry DSN setting -->
+    <!-- Example of the Sentry DSN setting -->
     <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN__" />
 </application>
 ```
@@ -26,7 +26,7 @@ If you want to set the configuration manually in the code, you need to initializ
 
 ### Installation
 
-The new SDK can initialize automatically; all you need to do is provide the DSN in your Manifest file, as shown in the previous example in [Configuration](#configuration).
+The new SDK can initialize automatically, all you need to do is provide the DSN in your Manifest file, as shown in the previous example in [Configuration](#configuration).
 
 **Manual Installation**
 
@@ -171,7 +171,7 @@ release {
 }
 ```
 
-And, add to the `multidex-config.pro` to the following lines:
+And, add to `multidex-config.pro` the following lines:
 
 ```
 -keep class io.sentry.android.core.SentryAndroidOptions

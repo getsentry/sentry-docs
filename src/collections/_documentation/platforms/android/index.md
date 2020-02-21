@@ -145,7 +145,7 @@ public class DemoClass {
     /**
     * An Example of how to report an error and how to enrich the error context.
     */
-    void logWithStaticAPI() {
+    public void logWithStaticAPI() {
         /*
         Record a breadcrumb in the current context, which will be sent
         with the next event(s). By default, the last 100 breadcrumbs are kept.
@@ -193,12 +193,12 @@ buildscript {
     }
     
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.30'
+        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.31'
     }
 }
 ```
 
-The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard. The credentials for the upload step are loaded via environment variables.
+The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard/R8. The credentials for the upload step are loaded via environment variables.
 
 For more information, see the [full sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values).
 
@@ -242,7 +242,7 @@ sentry {
 }
 ```
 
-And that's it! Now when you build your app, the plugin will upload the proguard/R8 mappings,
+And that's it! Now when you build your app, the plugin will upload the ProGuard/R8 mappings,
 source bundle, and native symbols, as you configured them to Sentry.
 
 ## Releases
@@ -359,7 +359,8 @@ For more information, see [Tagging Events]({%- link _documentation/enriching-err
 
 ### Setting the Level
 
-You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe, and `debug` is the least severe.
+You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`.
+`error` is the default, `fatal` is the most severe, and `debug` is the least severe.
 
 ```java
 Sentry.setLevel(SentryLevel.WARNING);
@@ -538,8 +539,8 @@ You can configure which package prefixes belong in your application and which do
 
 ```java
 // This can be set only during the initialization of the SDK.
-SentryAndroid.init(this,options -> {
-        //set all sub packages of java. as packages that do not belong to your application
+SentryAndroid.init(this, options -> {
+        // set all sub packages of java. as packages that do not belong to your application
         options.addInAppExclude("java.");
 
         // set all sub packages of io.sentry as packages that belong to your application
@@ -555,7 +556,7 @@ Sentry exposes a `beforeSend` callback, which can be used to filter out informat
 The callback can be registered during the initialization of the SDK. 
 
 ```java
-SentryAndroid.init(this,options -> {
+SentryAndroid.init(this, options -> {
 
         // Add a callback that will be used before the event is sent to Sentry.
         // With this callback, you can modify the event or, when returning null, also discard the event.
@@ -622,7 +623,7 @@ Now you can use the Sentry NDK API just by including the sentry.h in your code:
 extern "C" JNIEXPORT jstring JNICALL
 
 Java_io_sentry_demo_NativeDemo_crash(JNIEnv *env, jclass cls) {
-    __android_log_print(ANDROID_LOG_WARN, "", "About to crash.");
+    __android_log_print(ANDROID_LOG_WARN, "", "Capture a message.");
     sentry_value_t event = sentry_value_new_message_event(
             /*   level */ SENTRY_LEVEL_INFO,
             /*  logger */ "custom",
@@ -638,5 +639,5 @@ Example of uploading all your .so files:
 
 ```bash
 sentry-cli login
-sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/merged_native_libs/{variantFolder}
+sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/merged_native_libs/{buildVariant}
 ```
