@@ -17,7 +17,7 @@ Example of the configuration in the Manifest:
 
 ```xml
 <application>
-	 <!-- Example of the Sentry DSN setting -->
+    <!-- Example of the Sentry DSN setting -->
     <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN__" />
 </application>
 ```
