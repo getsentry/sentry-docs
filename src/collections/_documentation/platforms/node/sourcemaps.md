@@ -37,6 +37,15 @@ module.exports = {
 };
 ```
 
+{% capture __alert_content -%}
+If you want to rely on Sentry's source map resolution, make sure that your code is not using the [source-map-support](https://www.npmjs.com/package/source-map-support) package, as it overwrites the captured stack trace in a way that makes it impossible for our processors to correctly parse it.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="source-map-support"
+  content=__alert_content
+  level="warning"
+%}
+
 ## Making Source Maps Available to Sentry
 
 Source maps for Node.js projects should be **uploaded directly** to Sentry.
