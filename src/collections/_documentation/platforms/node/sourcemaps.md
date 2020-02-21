@@ -38,7 +38,7 @@ module.exports = {
 ```
 
 {% capture __alert_content -%}
-Make sure that your code is not using [source-map-support](https://www.npmjs.com/package/source-map-support) package if you want to rely on Sentry source maps resolution.
+If you want to rely on Sentry's source map resolution, make sure that your code is not using the [source-map-support](https://www.npmjs.com/package/source-map-support) package, as it overwrites the captured stacktrace in a way that makes it impossible for our processors to correctly parse it.
 The package is overwriting `stack` property and `Error` object, and we need the original stace traces in order to make source maps work correctly.
 {%- endcapture -%}
 {%- include components/alert.html
