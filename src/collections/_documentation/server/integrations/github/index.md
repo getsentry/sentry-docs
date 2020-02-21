@@ -11,7 +11,7 @@ sidebar_order: 1
     | Setting | Value |
     | ---- | ---- |
     | Homepage URL | ${urlPrefix} |
-    | User authorization callback URL | ${urlPrefix}/extensions/github/setup/ |
+    | User authorization callback URL | ${urlPrefix}/auth/sso/ |
     | Setup URL (optional) | ${urlPrefix}/extensions/github/setup/ |
     | Webhook URL | ${urlPrefix}/extensions/github/webhook/ |
 
