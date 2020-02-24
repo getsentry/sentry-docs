@@ -1,5 +1,5 @@
 ---
-title: 'User Settings'
+title: User Settings
 sidebar_order: 8
 ---
 Manage your personal account details from the User Settings page, available in the dropdown menu under your organization’s name.
