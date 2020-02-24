@@ -16,11 +16,11 @@ Change the name displayed next to your avatar by editing the Name field.
 
 ## Preferences
 
-### Stacktrace Order
+### Stack trace Order
 
-Choose the default ordering of frames in stacktraces. By default, this order is set to let Sentry decide. 
+Choose the default ordering of frames in stack traces. By default, this order is set to let Sentry decide. 
 
-[{% asset user-settings/us-sto.png alt="Stactrace order section in User Settings" %}]({% asset user-settings/us-sto.png @path %})
+[{% asset user-settings/us-sto.png alt="Stack trace order section in User Settings" %}]({% asset user-settings/us-sto.png @path %})
 
 ### Language
 
