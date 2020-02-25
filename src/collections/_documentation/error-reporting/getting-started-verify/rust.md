@@ -1,3 +1,5 @@
+What better way to send your first event than to break your application!
+
 The quickest way to verify Sentry in your Rust application is to cause a panic:
 
 ```rust

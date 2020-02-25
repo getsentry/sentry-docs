@@ -41,7 +41,7 @@ After you completed setting up a project in Sentry, you’ll be given a value wh
 
 ## Capturing your first event
 
-Once you have Sentry integrated into your project, you probably want to verify that everything is working as expected before deploying it, and what better way to do that than to break your application!
+Once you have Sentry integrated into your project, you probably want to verify that everything is working as expected before deploying it.
 
 {% wizard %}
 {% include components/platform_content.html content_dir='getting-started-verify' %}
