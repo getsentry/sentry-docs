@@ -38,7 +38,7 @@ Issues' timestamps will be displayed in the timezone specified by this dropdown.
 
 Choose fbetween displaying your Initials, an Image or a Gravatar next to your name. To save your selection, click Save Avatar.
 
-[{% asset user-settings/us-av.png alt="Avatar section in User Settings" %}]({% asset user-settings/us-av.png @path %})
+[{% asset user-settings/us-avatar.png alt="Avatar section in User Settings" %}]({% asset user-settings/us-av.png @path %})
 
 # Security
 
