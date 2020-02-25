@@ -2,7 +2,7 @@ When the Rust SDK initializes a guard is returned from the `init` function.  The
 will automatically wait `shutdown_timeout` seconds.  This means you just need to hold on to
 the guard and make sure it disposes on shutdown.  Alternatively the client can be closed:
 
-```javascript
+```rust
 use std::time::Duration;
 use sentry::Hub;
 
@@ -10,3 +10,6 @@ if let Some(client) = Hub.current().client() {
     client.close(Some(Duration::from_secs(2)));
 }
 ```
+
+After a call to `close`, the client cannot be used anymore. It's important to
+only call `close` immediately before shutting down the application.

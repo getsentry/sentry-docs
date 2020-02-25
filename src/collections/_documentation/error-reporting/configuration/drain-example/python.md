@@ -8,3 +8,9 @@ client = Hub.current.client
 if client is not None:
     client.close(timeout=2.0)
 ```
+
+After a call to `close`, the client cannot be used anymore. It's important to
+only call `close` immediately before shutting down the application.
+
+Alternatively, the `flush` method drains the event queue while keeping the
+client enabled for continued use.
