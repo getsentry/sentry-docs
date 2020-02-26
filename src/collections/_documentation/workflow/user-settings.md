@@ -12,7 +12,7 @@ All changes in this section are saved automatically.
 
 Change the name displayed next to your avatar by editing the Name field.
 
-{% asset user-settings/us-name.png alt="Name section in User Settings" %} {:width="100"}
+{% asset user-settings/us-name.png alt="Name section in User Settings" {:width="100"} %} 
 
 ## Preferences
 
