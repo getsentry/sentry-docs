@@ -88,6 +88,7 @@ Currently we only support mixed stack traces on iOS. By default this feature is 
 -   [Source maps for Other Platforms]({%- link _documentation/clients/react-native/sourcemaps.md -%})
 -   [Setup With CocoaPods]({%- link _documentation/clients/react-native/cocoapods.md -%})
 -   [Using RAM Bundles]({%- link _documentation/clients/react-native/ram-bundles.md -%})
+-   [Hermes]({%- link _documentation/clients/react-native/hermes.md -%})
 -   [Manual Setup]({%- link _documentation/clients/react-native/manual-setup.md -%})
     -   [iOS]({%- link _documentation/clients/react-native/manual-setup.md -%}#ios)
     -   [Android]({%- link _documentation/clients/react-native/manual-setup.md -%}#android)
