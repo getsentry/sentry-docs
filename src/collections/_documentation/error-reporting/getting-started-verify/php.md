@@ -1,4 +1,4 @@
-What better way to send your first event than to break your application!
+One way to verify your setup is by intentionally sending an event that breaks your application. 
 
 You can throw an exception in your PHP application:
 
