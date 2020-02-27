@@ -146,6 +146,7 @@ Since this SDK is unified, all function that are available for JavaScript are al
 -   [Source Maps for Other Platforms]({%- link _documentation/platforms/react-native/sourcemaps.md -%})
 -   [Setup With CocoaPods]({%- link _documentation/platforms/react-native/cocoapods.md -%})
 -   [Using RAM Bundles]({%- link _documentation/platforms/react-native/ram-bundles.md -%})
+-   [Hermes]({%- link _documentation/platforms/react-native/hermes.md -%})
 -   [Manual Setup]({%- link _documentation/platforms/react-native/manual-setup.md -%})
     -   [iOS]({%- link _documentation/platforms/react-native/manual-setup.md -%}#ios)
     -   [Android]({%- link _documentation/platforms/react-native/manual-setup.md -%}#android)

@@ -1,6 +1,5 @@
 ---
 title: 'Hermes'
-robots: noindex
 ---
 
 Sentry added support to `hermes` which required changes to the SDK as well as Sentry itself.
