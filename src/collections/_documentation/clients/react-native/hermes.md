@@ -5,7 +5,7 @@ robots: noindex
 
 Sentry added support to `hermes` which required changes to the SDK as well as Sentry itself.
 
-Sentry customers, using the SaaS offer (sentry.io), only need to update the SDK.
+Sentry customers using the SaaS product (sentry.io) will only need to update the SDK.
 The minimum required version for the SDK is `sentry-react-native` [SDK version `1.3.3`](https://github.com/getsentry/sentry-react-native/releases/tag/1.3.3).
 
 For Sentry open source, self hosted users, the minimum version required is [f07352b](https://hub.docker.com/r/getsentry/sentry/tags?page=1&name=f07352b).
