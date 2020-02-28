@@ -11,6 +11,7 @@ These integrations are set up once per organization, and are then usable in all 
 
 -   [_Azure DevOps_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#azure-devops)
 -   [_Bitbucket_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#bitbucket)
+-   [_Bitbucket Server_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#bitbucket-server)
 -   [_GitHub_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github)
 -   [_GitHub Enterprise_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github-enterprise)
 -   [_GitLab_]({%- link _documentation/workflow/integrations/global-integrations.md -%}#gitlab)
