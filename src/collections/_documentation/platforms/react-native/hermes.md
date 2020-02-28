@@ -2,7 +2,7 @@
 title: 'Hermes'
 ---
 
-Sentry added support to `hermes` which required changes to the SDK as well as Sentry itself.
+Sentry added support for `react-native` builds that use the `hermes` engine, which required changes to the sentry SDK, `sentry-cli` as well as Sentry itself.
 
 Sentry customers using the SaaS product (sentry.io) will only need to update the SDK.
 The minimum required version for the SDK is `@sentry/react-native` [SDK version `1.3.3`](https://github.com/getsentry/sentry-react-native/releases/tag/1.3.3).
