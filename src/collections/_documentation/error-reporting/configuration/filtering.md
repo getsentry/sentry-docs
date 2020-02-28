@@ -29,6 +29,8 @@ been caught:
 
 {% include components/platform_content.html content_dir='before-send-hint' %}
 
+This is useful to stop error spam. If you are getting thousands of errors that should really just be one error, you can set a custom fingerprint for that error to group them together. Then you can snooze/ignore that one issue.
+
 ### Before Breadcrumb
 
 Similar to `before-send` hints are also supported in `before-breadcrumb`.  This is particularly useful when
