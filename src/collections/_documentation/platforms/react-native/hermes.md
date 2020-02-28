@@ -9,4 +9,4 @@ The minimum required version for the SDK is `@sentry/react-native` [SDK version 
 
 For Sentry open source, self-hosted users, the minimum version required is [f07352b](https://hub.docker.com/r/getsentry/sentry/tags?page=1&name=f07352b).
 
-Other than making sure you have the minimum version of the SDK and Sentry itself is all you need besides the standard integration described in the main [React Native Sentry documentation]({%- link _documentation/clients/react-native/index.md -%}).
+Other than making sure you have the minimum version of the SDK, Sentry itself is all you need besides the standard integration described in the [React Native Sentry documentation]({%- link _documentation/clients/react-native/index.md -%}).
