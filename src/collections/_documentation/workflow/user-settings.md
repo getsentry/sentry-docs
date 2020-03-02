@@ -44,21 +44,28 @@ Choose fbetween displaying your Initials, an Image or a Gravatar next to your na
 
 The Security section is divided in two tabs: Settings and Session History.
 
-[{% asset user-settings/us-pass.png alt="Avatar section in User Settings" width="516.5" %}]({% asset user-settings/us-pass.png @path %})
-
 ## Settings
 ### Password
 
 We recommend changing your password frequently. However, keep in mind that changing your password will invalidate all logged in sessions.
 
+[{% asset user-settings/us-pass.png alt="Password section in User Settings" width="516.5" %}]({% asset user-settings/us-pass.png @path %})
+
 ### Sessions
 
 To sign out of all devices, click the Sign out of all devices button.
+
+[{% asset user-settings/us-sess.png alt="Sessions section in User Settings" width="653" %}]({% asset user-settings/us-sess.png @path %})
 
 ### Two-Factor Authentication
 
 Keep your account information secure by enabling a two-factor authentication method. Choose between an Authenticator App, Text Message or an U2F hardware device.
 
+[{% asset user-settings/us-2fact.png alt="Sessions section in User Settings" width="930" %}]({% asset user-settings/us-2fact.png @path %})
+
 ### Recover Codes
 
 Use recovery codes to access your account if you lose your device and cannot receive two factor authentication codes. Click the View Codes button to download, print or copy your codes to a secure location.
+
+[{% asset user-settings/us-rec.png alt="Sessions section in User Settings" width="927" %}]({% asset user-settings/us-rec.png @path %})
+
