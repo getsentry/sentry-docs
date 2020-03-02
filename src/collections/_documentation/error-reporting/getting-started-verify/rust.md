@@ -1,4 +1,4 @@
-One way to verify your setup is by intentionally sending an event that breaks your application. 
+One way to verify your setup is by intentionally sending an event that breaks your application.
 
 The quickest way to verify Sentry in your Rust application is to cause a panic:
 
