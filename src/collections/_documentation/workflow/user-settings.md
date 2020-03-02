@@ -44,6 +44,8 @@ Choose fbetween displaying your Initials, an Image or a Gravatar next to your na
 
 The Security section is divided in two tabs: Settings and Session History.
 
+[{% asset user-settings/us-pass.png alt="Avatar section in User Settings" width="516.5" %}]({% asset user-settings/us-pass.png @path %})
+
 ## Settings
 ### Password
 
