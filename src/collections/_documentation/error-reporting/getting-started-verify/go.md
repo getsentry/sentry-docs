@@ -1,20 +1,25 @@
-The quickest way to verify Sentry in your Go application is to capture an error:
+The quickest way to verify Sentry in your Go program is to capture a message:
 
 ```go
+package main
+
 import (
-	"errors"
+	"log"
 	"time"
+
 	"github.com/getsentry/sentry-go"
 )
 
 func main() {
-	sentry.Init(sentry.ClientOptions{
+	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "___PUBLIC_DSN___",
 	})
+	if err != nil {
+		log.Fatalf("sentry.Init: %s", err)
+	}
+	// Flush buffered events before the program terminates.
+	defer sentry.Flush(2 * time.Second)
 
-	sentry.CaptureException(errors.New("my error"))
-	// Since sentry emits events in the background we need to make sure
-	// they are sent before we shut down
-	sentry.Flush(time.Second * 5)
+	sentry.CaptureMessage("It works!")
 }
 ```
