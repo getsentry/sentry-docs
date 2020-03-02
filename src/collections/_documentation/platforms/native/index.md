@@ -2,6 +2,19 @@
 title: Native
 ---
 
+{% capture __alert_content -%}
+Support for `sentry-native` is currently limited to the hosted version on
+[`sentry.io`](https://sentry.io). The latest on-premise version of Sentry
+(*10.0*) does not provide server-side support for events sent by
+`sentry-native`. Full support for `sentry-native` will be made available to all
+on-premise customers with the next release.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Sentry On-Premise"
+  content=__alert_content
+  level="warning"
+%}
+
 The Sentry Native SDK is intended for C and C++. However, since it builds as a
 dynamic library and exposes C-bindings, it can be used by any language that
 supports interoperability with C, such as the Foreign Function Interface (FFI).
@@ -379,7 +392,11 @@ The transport is invoked in the same thread as the call to
 `sentry_capture_event`. Consider to offload network communication to a
 background thread or thread pool to avoid blocking execution.
 
-## Backends
+## Integrations
+
+*Integrations* extend the functionality of the SDK for some common frameworks
+and libraries. Similar to plugins, they extend the functionality of the Sentry
+SDK.
 
 The Native SDK can use different backends that are responsible to capture
 crashes. The backend is configured at build-time, using the `SENTRY_BACKEND`
@@ -399,9 +416,14 @@ To use the Crashpad backend with the Native SDK, configure the CMake build
 with the `SENTRY_BACKEND=crashpad` option. This will automatically create a
 `crashpad_handler` executable alongside the `sentry` library.
 
+```sh
+$ cmake -B build -D SENTRY_BACKEND=crashpad
+```
+
 The SDK will automatically look for a `crashpad_handler` executable in the same
 directory as the running application. It will also use the `.sentry-native`
-directory as its database by default.
+directory as its database by default, relative to the current working directory
+of your application.
 This location temporarily hosts Minidumps before they are uploaded to Sentry.
 
 Both of these paths can be customized like this:
