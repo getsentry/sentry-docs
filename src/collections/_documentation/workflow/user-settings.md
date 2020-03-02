@@ -20,25 +20,25 @@ Change the name displayed next to your avatar by editing the Name field.
 
 Choose the default ordering of frames in stack traces. By default, this order is set to let Sentry decide. 
 
-[{% asset user-settings/us-sto.png alt="Stack trace order section in User Settings" %}]({% asset user-settings/us-sto.png @path %})
+[{% asset user-settings/us-sto.png alt="Stack trace order section in User Settings" width="745" %}]({% asset user-settings/us-sto.png @path %})
 
 ### Language
 
 Choose the default language used in your Dashboard from the dropdown.
 
-[{% asset user-settings/us-lang.png alt="Language section in User Settings" %}]({% asset user-settings/us-lang.png @path %})
+[{% asset user-settings/us-lang.png alt="Language section in User Settings" width="221.5" %}]({% asset user-settings/us-lang.png @path %})
 
 ### Timezone
 
 Issues' timestamps will be displayed in the timezone specified by this dropdown. For a 24-hour clock, click on the switch.
 
-[{% asset user-settings/us-time.png alt="Timezone section in User Settings" %}]({% asset user-settings/us-time.png @path %})
+[{% asset user-settings/us-time.png alt="Timezone section in User Settings" width="392" %}]({% asset user-settings/us-time.png @path %})
 
 ### Avatar
 
 Choose fbetween displaying your Initials, an Image or a Gravatar next to your name. To save your selection, click Save Avatar.
 
-[{% asset user-settings/us-avatar.png alt="Avatar section in User Settings" %}]({% asset user-settings/us-avatar.png @path %})
+[{% asset user-settings/us-avatar.png alt="Avatar section in User Settings" width="227.5" %}]({% asset user-settings/us-avatar.png @path %})
 
 # Security
 
