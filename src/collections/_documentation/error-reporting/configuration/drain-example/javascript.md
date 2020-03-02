@@ -1,12 +1,15 @@
-The client provides a close method that optionally takes the time in milliseconds for how long it
-waits and will return a promise that resolves when everything was flushed or the timeout kicked
+The `close` method optionally takes a timeout in milliseconds and returns a
+promise that resolves when all pending events are flushed, or the timeout kicks
 in.
 
 ```javascript
-const client = Sentry.getCurrentHub().getClient();
-if (client) {
-  client.close(2000).then(function() {
-    process.exit();
-  });
-}
+Sentry.close(2000).then(function() {
+  process.exit();
+});
 ```
+
+After a call to `close`, the current client cannot be used anymore. It's
+important to only call `close` immediately before shutting down the application.
+
+Alternatively, the `flush` method drains the event queue while keeping the
+client enabled for continued use.

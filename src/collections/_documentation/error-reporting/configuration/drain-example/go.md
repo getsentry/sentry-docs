@@ -1,11 +1,18 @@
-The client provides a `Flush` method that takes the time in `time.Duration` for how long it waits and will return a boolean that indicates whether everything was flushed or the timeout kicked in.
+To avoid unintentionally dropping events when the program terminates, arrange
+for `sentry.Flush` to be called, typically using `defer`.
+
+If you use multiple clients, arrange for each of them to be flushed as
+appropriate.
+
+`Flush` waits until any buffered events are sent to the Sentry server, blocking
+for at most the given timeout. It returns `false` if the timeout was reached. In
+that case, some events may not have been sent.
 
 ```go
-sentry.CaptureMessage("my message")
+func main() {
+	// err := sentry.Init(...)
+	defer sentry.Flush(2 * time.Second)
 
-if sentry.Flush(time.Second * 2) {
-	fmt.Println("All queued events delivered!")
-} else {
-	fmt.Println("Flush timeout reached")
+	sentry.CaptureMessage("my message")
 }
 ```
