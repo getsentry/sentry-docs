@@ -2,6 +2,19 @@
 title: Native
 ---
 
+{% capture __alert_content -%}
+Support for `sentry-native` is currently limited to the hosted version on
+[`sentry.io`](https://sentry.io). The latest on-premise version of Sentry
+(*10.0*) does not provide server-side support for events sent by
+`sentry-native`. Full support for `sentry-native` will be made available to all
+on-premise customers with the next release.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Sentry On-Premise"
+  content=__alert_content
+  level="warning"
+%}
+
 The Sentry Native SDK is intended for C and C++. However, since it builds as a
 dynamic library and exposes C-bindings, it can be used by any language that
 supports interoperability with C, such as the Foreign Function Interface (FFI).
@@ -21,57 +34,37 @@ without using the Native SDK, see the following resources:
 
 ## Integrating the SDK
 
-The Native SDK currently supports **Windows, macOS and Linux**. There are three
-distribution to choose from:
-
-|     Standalone     |  With Breakpad  |  With Crashpad  |
-| :----------------: | :-------------: | :-------------: |
-|  Custom Messages   | Custom Messages | Custom Messages |
-|   Custom Errors    |  Custom Errors  |  Custom Errors  |
-|    Breadcrumbs     |   Breadcrumbs   |   Breadcrumbs   |
-|  _Stack Traces*_   |  Stack Traces   |  Stack Traces   |
-| _Capture Crashes*_ | Capture Crashes | Capture Crashes |
-|        ---         |    Minidumps    |    Minidumps    |
-|        ---         |   Attachments   |   Attachments   |
-
-\* _Adding stack traces and capturing application crashes requires you to add an
-unwind library and hook into signal handlers of your process. The Standalone
-distribution currently does not contain integrations that perform this
-automatically._
+The Native SDK currently supports **Windows, macOS, Linux and Android**.
 
 ### Building the SDK
 
 To build the SDK, download the latest release of the SDK from the [Releases
-page](https://github.com/getsentry/sentry-native/releases). For each supported
-platform, there is a `gen_*` subfolder that contains build files:
+page](https://github.com/getsentry/sentry-native/releases).
+The SDK is managed as a [CMake] project, which additionally supports a number
+of configuration options, such as the backend to use.
 
-**Windows**
+`CMake` can be used for example like this (on macOS):
 
-: `gen_windows` contains a Microsoft Visual Studio 2017 solution. Open the
-  solution and add your projects or copy the projects to an existing solution.
-  Each project supports a debug and release configuration and includes all
-  sources required for building.
+```sh
+# configure the cmake build into the `build` directory, with crashpad (on macOS)
+$ cmake -B build -D SENTRY_BACKEND=crashpad
+# build the project
+$ cmake --build build --parallel
+# install the resulting artifacts into a specific prefix
+$ cmake --install build --prefix install
+# which will result in the following (on macOS):
+$ exa --tree install
+install
+├── bin
+│  └── crashpad_handler
+├── include
+│  └── sentry.h
+└── lib
+   ├── libsentry.dylib
+   └── libsentry.dylib.dSYM
+```
 
-**Linux and macOS**
-
-: `gen_linux` and `gen_macos` contain Makefiles that can be used to produce
-  dynamic libraries. Run `make help` to see an overview of the available
-  configurations and target. There are debug and release configurations, that
-  can be toggled when building:
-
-  ```bash
-  make config=release sentry
-  ```
-
-There are multiple available targets to build:
-
- - `sentry`: Builds the Native SDK built as a dynamic library.
- - `sentry_breakpad`: Builds the Native SDK with Google Breakpad as a dynamic
-   library.
- - `sentry_crashpad`: Builds the Native SDK with Google Crashpad as a dynamic
-   library.
- - `crashpad_*`: Builds crashpad utilities. To run the Crashpad distribution of
-   the SDK, you must build `crashpad_handler` and ship it with your application.
+[cmake]: https://cmake.org/cmake/help/latest/
 
 ### Connecting the SDK to Sentry
 
@@ -365,11 +358,11 @@ transport depends on the target platform:
 
  - **Linux**: Curl
  - **macOS**: Curl
- - **Windows**: WinHTTP
 
 To specify a custom transport, use the `sentry_options_set_transport` function
-and supply a transport that conforms to the `sentry_transport_function_t`
-signature:
+and supply a transport that implements the `sentry_transport_t` interface.
+To simplify using a single function, one might use the
+`sentry_new_function_transport` function:
 
 ```c
 #include <sentry.h>
@@ -387,7 +380,8 @@ int main(void) {
   void *transport_data = 0;
 
   sentry_options_t *options = sentry_options_new();
-  sentry_options_set_transport(options, custom_transport, transport_data);
+  sentry_options_set_transport(options,
+    sentry_new_function_transport(custom_transport, transport_data));
   sentry_init(options);
 
   /* ... */
@@ -402,38 +396,14 @@ background thread or thread pool to avoid blocking execution.
 
 *Integrations* extend the functionality of the SDK for some common frameworks
 and libraries. Similar to plugins, they extend the functionality of the Sentry
-SDK. The Native SDK comes in two additional distributions that include
-integrations into the Breakpad and Crashpad libraries, respectively.
+SDK.
 
-### Google Breakpad
+The Native SDK can use different backends that are responsible to capture
+crashes. The backend is configured at build-time, using the `SENTRY_BACKEND`
+CMake option.
 
-[Breakpad](https://chromium.googlesource.com/breakpad/breakpad/) is an
-open-source multiplatform crash reporting system written in C++ by Google and
-the predecessor of Crashpad. It supports macOS, Windows, and Linux, and features
-an uploader to submit minidumps to a configured URL right when the process
-crashes.
-
-To use the Breakpad integration with the Native SDK, build and link the
-`sentry_breakpad` dynamic library. Then, configure a path at which Breakpad can
-store its database. This location temporarily hosts Minidumps before they are
-uploaded to Sentry.
-
-```c
-sentry_options_t *options = sentry_options_new();
-sentry_options_set_database_path(options, "sentry-db");
-sentry_init(options);
-```
-
-{% capture __alert_content -%}
-Breakpad on macOS has been deprecated. If you are setting up a new project,
-consider to use the [Crashpad distribution](#google-crashpad) instead. The
-Sentry SDK is subject to limitations of Breakpad.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Warning"
-  content=__alert_content
-  level="warning"
-%}
+The `crashpad` backend is used by default on Windows and macOS, whereas Linux
+and Android use the `inproc` in-process backend by default.
 
 ### Google Crashpad
 
@@ -442,16 +412,26 @@ is an open-source multiplatform crash reporting system written in C++ by Google.
 It supports macOS, Windows, and Linux (limited), and features an uploader to
 submit minidumps to a configured URL right when the process crashes.
 
-To use the Crashpad integration with the Native SDK, build and link the
-`sentry_crashpad` dynamic library. Additonally, build the standalone
-`crashpad_handler` application. Then, configure a path at which Crashpad can
-store its database. This location temporarily hosts Minidumps before they are
-uploaded to Sentry.
+To use the Crashpad backend with the Native SDK, configure the CMake build
+with the `SENTRY_BACKEND=crashpad` option. This will automatically create a
+`crashpad_handler` executable alongside the `sentry` library.
+
+```sh
+$ cmake -B build -D SENTRY_BACKEND=crashpad
+```
+
+The SDK will automatically look for a `crashpad_handler` executable in the same
+directory as the running application. It will also use the `.sentry-native`
+directory as its database by default, relative to the current working directory
+of your application.
+This location temporarily hosts Minidumps before they are uploaded to Sentry.
+
+Both of these paths can be customized like this:
 
 ```c
 sentry_options_t *options = sentry_options_new();
 sentry_options_set_handler_path(options, "path/to/crashpad_handler");
-sentry_options_set_database_path(options, "sentry-db");
+sentry_options_set_database_path(options, "sentry-db-directory");
 sentry_init(options);
 ```
 
@@ -459,34 +439,16 @@ The crashpad handler executable must be shipped alongside your application so
 that it can be launched when initializing the SDK. The path is evaluated
 relative to the current working directory at runtime.
 
-{% capture __alert_content -%}
-We do not recommend to run Crashpad on Linux as development of the Crashpad
-library for Linux has not been completed. The Sentry SDK is subject to
-limitations of Crashpad, which on Linux include:
-
- - No support for HTTPs uploads. Crash reports can only be uploaded to Sentry
-   using insecure HTTP connections.
- - Limited crash handler support. In some cases, the crash handler may be
-   unstable or not capture the process state correctly.
-
-Consider to use the [Breakpad distribution](#google-breakpad) instead.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Warning"
-  content=__alert_content
-  level="warning"
-%}
-
-### Event Attachments (Preview)
+## Event Attachments (Preview)
 
 Besides the Minidump file, Sentry can optionally store additional files uploaded
 in the same request, such as log files.
 
 {% include platforms/event-attachments.md %}
 
-Attachments require the _Crashpad_ distribution of the SDK. To add an
-attachment, the path to the file has to be configured when initializing the SDK.
-It will monitor the file and add it to any Minidump that is sent to Sentry:
+To add an attachment, the path to the file has to be configured when
+initializing the SDK. It will monitor the file and upload it along any event
+or crash that is sent to Sentry:
 
 ```c
 sentry_options_add_attachment(options, "log", "/var/server.log");
