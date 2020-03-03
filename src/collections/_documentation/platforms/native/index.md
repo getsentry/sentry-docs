@@ -446,7 +446,7 @@ in the same request, such as log files.
 {% include platforms/event-attachments.md %}
 
 To add an attachment, the path to the file has to be configured when
-initializing the SDK. It will monitor the file and upload it along any event
+initializing the SDK. It will monitor the file and upload it along with any event
 or crash that is sent to Sentry:
 
 ```c
