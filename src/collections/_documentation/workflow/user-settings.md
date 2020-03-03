@@ -70,6 +70,11 @@ Use recovery codes to access your account if you lose your device and cannot rec
 
 [{% asset user-settings/us-rec.png alt="Recover codes field in Security under User Settings" width="927" %}]({% asset user-settings/us-rec.png @path %})
 
+### Session History
+
+A historical list of sessions, including First Seen and Last Seen timestamps, can be found under the Session History tab.
+
+[{% asset user-settings/us-shistory.png alt="Session History tab in Security under User Settings" width="927" %}]({% asset user-settings/us-shistory.png @path %})
 
 # Notifications
 
