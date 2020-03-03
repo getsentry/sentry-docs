@@ -97,7 +97,7 @@ Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit, and, later, when that commit is part of a release, we’ll mark the issue as resolved.
+When Sentry sees this, we’ll automatically annotate the matching issue with reference to the commit, and later, when that commit is part of a release, we’ll mark the issue as resolved.
 
 #### Troubleshooting
 
@@ -112,7 +112,7 @@ If you reach the account selection page during the Azure Devops installation pro
 
 ### Bitbucket
 
-You can now use the data from your Bitbucket commits to help you find and fix bugs faster.
+You can use the data from your Bitbucket commits to help find and fix bugs faster.
 
 #### Configure Bitbucket
 
@@ -175,12 +175,12 @@ Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit, and, later, when that commit is part of a release, we’ll mark the issue as resolved.
+When Sentry sees this, we’ll automatically annotate the matching issue with reference to the commit, and later, when that commit is part of a release, we’ll mark the issue as resolved.
 
 
 ### Bitbucket Server
 
-You can now use the data from your Bitbucket Server commits to help you find and fix bugs faster.
+You can use the data from your Bitbucket Server commits to help find and fix bugs faster.
 
 #### Installing Bitbucket Server with Sentry
 
@@ -206,7 +206,7 @@ openssl x509 -pubkey -noout -in bitbucket_publickey.cer  > bitbucket_publickey.p
 1. In Bitbucket, click the **gear icon** > **Applications** > **Application Links**.
 1. Enter the following as the application URL: 
 `https://sentry.io/extensions/bitbucket_server/setup/`
-1. Click **Create New Link**. If you see a warning that “No response was received from the URL you entered”, ignore and click **Continue**.
+1. Click **Create New Link**. If you see a warning that “No response was received from the URL you entered,” ignore and click **Continue**.
 1. In the resulting dialog, fill out the form as follows:
 
     | Application Name                 | Sentry        |
@@ -218,9 +218,9 @@ openssl x509 -pubkey -noout -in bitbucket_publickey.cer  > bitbucket_publickey.p
     | Access Token URL | https://sentry.io    |
     | Authorize URL           | https://sentry.io    |
     | Create Incoming Link               | No    |
-1. Click **Continue**. You should be returned to the **Configure Application Links** page, where you should see an application called **Sentry**.
+1. Click **Continue**. This will return you to the **Configure Application Links** page, where you'll see an application called **Sentry**.
 1. Click the pencil icon next to the **Sentry** application.
-1. On the lefthand side of the resulting modal, click **Incoming Authentication**. Fill our the form as follows, and press **Save**:
+1. On the lefthand side of the resulting modal, click **Incoming Authentication**. Fill out the form as follows, and press **Save**:
 
     | Consumer Key                 | (the consumer key from Step II.4)        |
     | Consumer Name                   | Sentry |
@@ -267,7 +267,7 @@ Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit, and, later, when that commit is part of a release, we’ll mark the issue as resolved.
+When Sentry sees this, we’ll automatically annotate the matching issue with reference to the commit, and later, when that commit is part of a release, we’ll mark the issue as resolved.
 
 ### ClickUp
 
@@ -369,7 +369,7 @@ You can take a Sentry Issue, create a Clubhouse Story, and link the two.
 
 ### GitHub
 
-You can now use the data from your GitHub commits to help you find and fix bugs faster.
+You can use the data from your GitHub commits to help find and fix bugs faster.
 
 #### Configure GitHub
 
@@ -443,7 +443,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 ### GitHub Enterprise
 
-You can now use the data from your GitHub Enterprise commits to help you find and fix bugs faster.
+You can use the data from your GitHub Enterprise commits to help find and fix bugs faster.
 
 #### Configure GitHub Enterprise
 
@@ -791,7 +791,7 @@ openssl x509 -pubkey -noout -in jira_publickey.cer  > jira_publickey.pem
 1. In Jira, click the **gear icon** > **Applications** > **Application Links**.
 1. Enter the following as the application URL: 
 `https://sentry.io/extensions/jira_server/setup/`
-1. Click **Create New Link**. If you see a warning that “No response was received from the URL you entered”, ignore and click **Continue**.
+1. Click **Create New Link**. If you see a warning that “No response was received from the URL you entered,” ignore and click **Continue**.
 1. In the resulting dialog, fill out the form as follows:
 
     | Application Name                 | Sentry        |
@@ -803,9 +803,9 @@ openssl x509 -pubkey -noout -in jira_publickey.cer  > jira_publickey.pem
     | Access Token URL | https://sentry.io    |
     | Authorize URL           | https://sentry.io    |
     | Create Incoming Link               | No    |
-1. Click **Continue**. You should be returned to the **Configure Application Links** page, where you should see an application called **Sentry**.
+1. Click **Continue**. This will return you to the **Configure Application Links** page, where you'll see an application called **Sentry**.
 1. Click the pencil icon next to the **Sentry** application.
-1. On the lefthand side of the resulting modal, click **Incoming Authentication**. Fill our the form as follows, and press **Save**:
+1. On the lefthand side of the resulting modal, click **Incoming Authentication**. Fill out the form as follows, and press **Save**:
 
     | Consumer Key                 | (the consumer key from Step II.4)        |
     | Consumer Name                   | Sentry |
