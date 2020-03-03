@@ -40,8 +40,7 @@ The Native SDK currently supports **Windows**, **macOS**, **Linux** and **Androi
 
 To build the SDK, download the latest release of the SDK from the [Releases
 page](https://github.com/getsentry/sentry-native/releases).
-The SDK is managed as a [CMake] project, which additionally supports a number
-of configuration options, such as the backend to use.
+The SDK is managed as a [CMake] project, which additionally supports several configuration options, such as the backend to use.
 
 `CMake` can be used for example like this (on macOS):
 
