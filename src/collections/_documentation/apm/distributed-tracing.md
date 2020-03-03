@@ -106,20 +106,24 @@ Getting started with Sentry's APM features is a three step process. If you've al
 2. [Install your SDK](https://docs.sentry.io/error-reporting/quickstart/?platform=browser#pick-a-client-integration)
 
     2a. Add APM integration
-
-        code snippet for customers to get started with APM
+      
+      ```
+      code snippet for customers to get started with APM
+      ```
 
     2b. Configure instrumentation, etc.
 
-3. [Configure](https://docs.sentry.io/error-reporting/quickstart/?platform=browser#configure-the-sdk) SDK
+3. [Configure SDK](https://docs.sentry.io/error-reporting/quickstart/?platform=browser#configure-the-sdk)
 
 ### Python
 
 To send any traces, set the `traces_sample_rate`to a nonzero value. The following configuration will capture 10% of all your transactions:
 
-    import sentry_sdk
-        
-    sentry_sdk.init("___PUBLIC_DSN___", traces_sample_rate=0.1)
+```python
+import sentry_sdk
+    
+sentry_sdk.init("___PUBLIC_DSN___", traces_sample_rate=0.1)
+```
 
 **Automating Traces**
 
@@ -141,14 +145,16 @@ Spans are available for the following operations within a transaction:
 
 Let’s say you want to create a transaction for an expensive operation (for example, `process_item`) and send the result to Sentry:
 
-    import sentry_sdk
-    
-    while True:
-         item = get_from_queue()
-    
-         with sentry_sdk.start_span(op="task", transaction=item.get_transaction()):
-             # process_item may create more spans internally (see next examples)
-             process_item(item)
+```python
+import sentry_sdk
+
+while True:
+  item = get_from_queue()
+
+  with sentry_sdk.start_span(op="task", transaction=item.get_transaction()):
+      # process_item may create more spans internally (see next examples)
+      process_item(item)
+```
 
 **Adding additional Spans to the Transaction**
 
@@ -156,33 +162,39 @@ The next example is called in the `process_item` function from the code snippe
 
 You can choose the value of `op` and `description`.
 
-    import sentry_sdk
-    
-    with sentry_sdk.start_span(op="http", description="GET /") as span:
-        response = my_custom_http_library.request("GET", "/")
-        span.set_tag("http.status_code", response.status_code)
-        span.set_data("http.foobarsessionid", get_foobar_sessionid())
+```python
+import sentry_sdk
+
+with sentry_sdk.start_span(op="http", description="GET /") as span:
+    response = my_custom_http_library.request("GET", "/")
+    span.set_tag("http.status_code", response.status_code)
+    span.set_data("http.foobarsessionid", get_foobar_sessionid())
+```
 
 ### JavaScript
 
 To use our APM features, you need to use a beta release.
 
-    $ npm install @sentry/browser@5.10.0-rc.0
-    $ npm install @sentry/apm@5.10.0-rc.0
+```bash
+$ npm install @sentry/browser@5.10.0-rc.0
+$ npm install @sentry/apm@5.10.0-rc.0
+```
 
 **Sending Traces**
 
 Tracing resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
 
-    import * as Sentry from '@sentry/browser';
-    import { Integrations as ApmIntegrations } from '@sentry/apm';
-    
-    Sentry.init({
-      dsn: '___PUBLIC_DSN___',
-      integrations: [
-        new ApmIntegrations.Tracing(),
-      ],
-    });
+```javascript
+import * as Sentry from '@sentry/browser';
+import { Integrations as ApmIntegrations } from '@sentry/apm';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    new ApmIntegrations.Tracing(),
+  ],
+});
+```
 
 You can pass a lot of different options to tracing, but it comes with reasonable defaults out of the box. You will receive:
 
@@ -193,18 +205,20 @@ You can pass a lot of different options to tracing, but it comes with reasonable
 
 Tracing will create a transaction on page load by default; all spans that are started will be attached to it. Also, tracing will finish the transaction after the default timeout of 500ms of inactivity. Inactivity is if there are no pending XHR/fetch requests. If you want to extend it by adding spans to the transaction, here is an example of how you could profile a React component:
 
-    // This line starts an activity (and creates a span).
-    // As long as you don't pop the activity, the transaction will not be finished and therefore not sent to Sentry.
-    // If you do not want to create a span out of an activity, just don't provide the second arg.
-    const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
-            data: {},
-            op: 'react',
-            description: `<${displayName}>`,
-    });
-    
-    // Sometime later ...
-    // When we pop the activity, the Integration will finish the span and after the timeout finish the transaction and send it to Sentry
-    Integrations.ApmIntegrations.popActivity(activity);
+```javascript
+// This line starts an activity (and creates a span).
+// As long as you don't pop the activity, the transaction will not be finished and therefore not sent to Sentry.
+// If you do not want to create a span out of an activity, just don't provide the second arg.
+const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
+        data: {},
+        op: 'react',
+        description: `<${displayName}>`,
+});
+
+// Sometime later ...
+// When we pop the activity, the Integration will finish the span and after the timeout finish the transaction and send it to Sentry
+Integrations.ApmIntegrations.popActivity(activity);
+```
 
 **Manual Tracing**
 
@@ -212,68 +226,78 @@ Tracing will create a transaction on page load by default; all spans that are st
 
 Let’s say you want to create a transaction for an expensive operation (for example, `processItem`) and send the result to Sentry:
 
-    const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction: item.getTransaction() })
-      # processItem may create more spans internally (see next examples)
-      processItem(item).then(() => {
-        transaction.finish()
-      })
+```javascript
+const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction: item.getTransaction() })
+  // processItem may create more spans internally (see next example)
+  processItem(item).then(() => {
+    transaction.finish()
+  })
+```
 
 **Adding additional Spans to the transaction**
 
 The next example is called in the `processItem` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created spans as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
 
-    function processItem(item, transaction) {
-      const span = transaction.child({ op: "http", description: "GET /" })
-    
-      return new Promise((resolve, reject) => {
-        http.get(`/items/${item.id}`, (response) => {
-          response.on('data', () => {});
-          response.on('end', () => {
-            span.setTag("http.status_code", response.statusCode);
-            span.setData("http.foobarsessionid", getFoobarSessionid(response));
-            span.finish();
-            resolve(response);
-          });
-        });
+```javascript
+function processItem(item, transaction) {
+  const span = transaction.child({ op: "http", description: "GET /" })
+
+  return new Promise((resolve, reject) => {
+    http.get(`/items/${item.id}`, (response) => {
+      response.on('data', () => {});
+      response.on('end', () => {
+        span.setTag("http.status_code", response.statusCode);
+        span.setData("http.foobarsessionid", getFoobarSessionid(response));
+        span.finish();
+        resolve(response);
       });
-    }
+    });
+  });
+}
+```
 
 ### Node.js
 
 To use our APM features, you need to use a beta release.
 
-    $ npm install @sentry/node@5.10.0-rc.0
-    $ npm install @sentry/apm@5.10.0-rc.0
+```bash
+$ npm install @sentry/node@5.10.0-rc.0
+$ npm install @sentry/apm@5.10.0-rc.0
+```
 
 **Sending Traces**
 
 To send any traces, set the `tracesSampleRate`to a nonzero value. The following configuration will capture 10% of all your transactions:
 
-    const Sentry = require("@sentry/node");
-    const Apm = require("@sentry/apm"); // This is required since it patches functions on the hub
-    
-    Sentry.init({
-      dsn: "___PUBLIC_DSN___",
-      tracesSampleRate: 0.1
-    });
+```javascript
+const Sentry = require("@sentry/node");
+const Apm = require("@sentry/apm"); // This is required since it patches functions on the hub
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 0.1
+});
+```
 
 **Automating Traces**
 
 It’s possible to add tracing to all popular frameworks; however, we provide pre-written handlers only for Express.js.
 
-    const Sentry = require("@sentry/node");
-    const express = require("express");
-    const app = express();
-    
-    // RequestHandler creates a separate execution-context using domains, so that every transaction/span/breadcrumb has it's own Hub to be attached to
-    app.use(Sentry.Handlers.requestHandler());
-    // TracingHandler creates a tracing for every incoming request
-    app.use(Sentry.Handlers.tracingHandler());
-    
-    // the rest of your app
-    
-    app.use(Sentry.Handlers.errorHandler());
-    app.listen(3000);
+```javascript
+const Sentry = require("@sentry/node");
+const express = require("express");
+const app = express();
+
+// RequestHandler creates a separate execution-context using domains, so that every transaction/span/breadcrumb has it's own Hub to be attached to
+app.use(Sentry.Handlers.requestHandler());
+// TracingHandler creates a tracing for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
+
+// the rest of your app
+
+app.use(Sentry.Handlers.errorHandler());
+app.listen(3000);
+```
 
 The following operations have span capabilities within a transaction:
 
@@ -282,23 +306,27 @@ The following operations have span capabilities within a transaction:
 
 To enable them:
 
-    $ npm install @sentry/integrations@5.8.0-beta.0
+```bash
+$ npm install @sentry/integrations@5.8.0-beta.0
+```
 
-    const Sentry = require("@sentry/node");
-    const Integrations = require("@sentry/integrations");
-    const express = require("express");
-    const app = express();
-    
-    Sentry.init({
-      dsn: "___PUBLIC_DSN___",
-      tracesSampleRate: 0.1,
-      integrations: [
-        // enable HTTP calls tracing
-        new Sentry.Integrations.Http({ tracing: true }),
-        // enable Express.js middleware tracing
-        new Integrations.Express({ app })
-      ],
-    });
+```javascript
+const Sentry = require("@sentry/node");
+const Integrations = require("@sentry/integrations");
+const express = require("express");
+const app = express();
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 0.1,
+  integrations: [
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+    // enable Express.js middleware tracing
+    new Integrations.Express({ app })
+  ],
+});
+```
 
 **Manual Tracing**
 
@@ -306,16 +334,18 @@ To enable them:
 
 Let’s say you want to create a transaction for an expensive operation (for example,  `processItem`) and send the result to Sentry:
 
-    app.use(function processItems(req, res, next) {
-      const item = getFromQueue();
-      const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction: item.getTransaction() })
-      
-      # processItem may create more spans internally (see next examples)
-      processItem(item, transaction).then(() => {
-        transaction.finish();
-        next();
-      })
-    });
+```javascript
+app.use(function processItems(req, res, next) {
+  const item = getFromQueue();
+  const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction: item.getTransaction() })
+  
+  // processItem may create more spans internally (see next examples)
+  processItem(item, transaction).then(() => {
+    transaction.finish();
+    next();
+  })
+});
+```
 
 **Adding additional Spans to the transaction**
 
@@ -323,18 +353,20 @@ The next example is called in the `processItem` function from the code snippet
 
 You can choose the value of `op` and `description`.
 
-    function processItem(item, transaction) {
-      const span = transaction.child({ op: "http", description: "GET /" })
-    
-      return new Promise((resolve, reject) => {
-        http.get(`/items/${item.id}`, (response) => {
-          response.on('data', () => {});
-          response.on('end', () => {
-            span.setTag("http.status_code", response.statusCode);
-            span.setData("http.foobarsessionid", getFoobarSessionid(response));
-            span.finish();
-            resolve(response);
-          });
-        });
+```javascript
+function processItem(item, transaction) {
+  const span = transaction.child({ op: "http", description: "GET /" })
+
+  return new Promise((resolve, reject) => {
+    http.get(`/items/${item.id}`, (response) => {
+      response.on('data', () => {});
+      response.on('end', () => {
+        span.setTag("http.status_code", response.statusCode);
+        span.setData("http.foobarsessionid", getFoobarSessionid(response));
+        span.finish();
+        resolve(response);
       });
-    }
+    });
+  });
+}
+```
