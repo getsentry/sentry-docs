@@ -261,8 +261,8 @@ function processItem(item, transaction) {
 To use our APM features, you need to use a beta release.
 
 ```bash
-$ npm install @sentry/node@5.10.0-rc.0
-$ npm install @sentry/apm@5.10.0-rc.0
+$ npm install @sentry/node
+$ npm install @sentry/apm
 ```
 
 **Sending Traces**
