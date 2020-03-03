@@ -97,7 +97,7 @@ Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit, and, later, when that commit is part of a release, we’ll mark the issue as resolved.
+When Sentry sees this, we’ll automatically annotate the matching issue with reference to the commit, and later, when that commit is part of a release, we’ll mark the issue as resolved.
 
 #### Troubleshooting
 
@@ -112,7 +112,7 @@ If you reach the account selection page during the Azure Devops installation pro
 
 ### Bitbucket
 
-You can now use the data from your Bitbucket commits to help you find and fix bugs faster.
+You can use the data from your Bitbucket commits to help find and fix bugs faster.
 
 #### Configure Bitbucket
 
@@ -175,7 +175,99 @@ Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit, and, later, when that commit is part of a release, we’ll mark the issue as resolved.
+When Sentry sees this, we’ll automatically annotate the matching issue with reference to the commit, and later, when that commit is part of a release, we’ll mark the issue as resolved.
+
+
+### Bitbucket Server
+
+You can use the data from your Bitbucket Server commits to help find and fix bugs faster.
+
+#### Installing Bitbucket Server with Sentry
+
+{% capture __alert_content -%}
+Sentry owner or manager permissions, and Bitbucket administrator permissions are required to install this integration.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+##### I. Generate an RSA public/private key pair
+To generate an RSA public/private key pair, run the following commands in your terminal window one by one.
+```
+openssl genrsa -out bitbucket_privatekey.pem 1024
+openssl req -newkey rsa:1024 -x509 -key bitbucket_privatekey.pem -out bitbucket_publickey.cer -days 365
+openssl pkcs8 -topk8 -nocrypt -in bitbucket_privatekey.pem -out bitbucket_privatekey.pcks8
+openssl x509 -pubkey -noout -in bitbucket_publickey.cer  > bitbucket_publickey.pem
+```
+
+##### II. Create a new application link in Bitbucket
+1. In Bitbucket, click the **gear icon** > **Applications** > **Application Links**.
+1. Enter the following as the application URL: 
+`https://sentry.io/extensions/bitbucket_server/setup/`
+1. Click **Create New Link**. If you see a warning that “No response was received from the URL you entered,” ignore and click **Continue**.
+1. In the resulting dialog, fill out the form as follows:
+
+    | Application Name                 | Sentry        |
+    | Application Type                   | Generic Application |
+    | Service Provider Name | Sentry |
+    | Consumer Key                       | (your choice, but keep this handy for the next step) |
+    | Shared Secret                     | sentry |
+    | Request Token URL                  | https://sentry.io |
+    | Access Token URL | https://sentry.io    |
+    | Authorize URL           | https://sentry.io    |
+    | Create Incoming Link               | No    |
+1. Click **Continue**. This will return you to the **Configure Application Links** page, where you'll see an application called **Sentry**.
+1. Click the pencil icon next to the **Sentry** application.
+1. On the lefthand side of the resulting modal, click **Incoming Authentication**. Fill out the form as follows, and press **Save**:
+
+    | Consumer Key                 | (the consumer key from Step II.4)        |
+    | Consumer Name                   | Sentry |
+    | Public Key | (the public key you created in Section I) |
+    | Consumer Callback URL                       | https://sentry.io/extensions/bitbucket_server/setup/ |
+    | Allow 2-Legged OAuth                     | no |
+
+##### III. Connect your Bitbucket Server application with Sentry
+{% capture __alert_content -%}
+Make sure you have whitelisted [Sentry's IP ranges.](https://docs.sentry.io/ip-ranges/)
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+1. In Sentry, navigate to **Organization Settings** > **Integrations**.
+2. Next to Bitbucket Server, click **Install**.
+3. In the resulting modal, click **Add Installation**.
+4. In the resulting window, enter the base URL for your Bitbucket Server instance, your consumer key, and your private key. Click **Submit**. Then, complete the OAuth process as prompted.
+5. In Sentry, you’ll see a new Bitbucket Server instance appear on the Integrations page.
+
+Bitbucket should now be authorized for all projects under your Sentry organization.
+
+#### Commit Tracking
+
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+
+#### Suspect Commits and Suggested Assignees
+
+Once you set up commit tracking, you’ll be able to see the most recent changes to files found in the issue’s stack trace with suspect commits.
+
+For issues where the files in the stack trace match files included in commits sent to Sentry, you’ll see the suspect commit, with a link to the commit itself.
+
+You’ll also see that the author of the suspect commit will be listed as a suggested assignee for this issue. To assign the issue to the suggested assignee, click on their icon.
+
+#### Resolving in Commit
+
+Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+
+```
+Prevent empty queries on users
+
+Fixes MYAPP-317
+```
+
+When Sentry sees this, we’ll automatically annotate the matching issue with reference to the commit, and later, when that commit is part of a release, we’ll mark the issue as resolved.
 
 ### ClickUp
 
@@ -277,7 +369,7 @@ You can take a Sentry Issue, create a Clubhouse Story, and link the two.
 
 ### GitHub
 
-You can now use the data from your GitHub commits to help you find and fix bugs faster.
+You can use the data from your GitHub commits to help find and fix bugs faster.
 
 #### Configure GitHub
 
@@ -351,7 +443,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 ### GitHub Enterprise
 
-You can now use the data from your GitHub Enterprise commits to help you find and fix bugs faster.
+You can use the data from your GitHub Enterprise commits to help find and fix bugs faster.
 
 #### Configure GitHub Enterprise
 
@@ -699,7 +791,7 @@ openssl x509 -pubkey -noout -in jira_publickey.cer  > jira_publickey.pem
 1. In Jira, click the **gear icon** > **Applications** > **Application Links**.
 1. Enter the following as the application URL: 
 `https://sentry.io/extensions/jira_server/setup/`
-1. Click **Create New Link**. If you see a warning that “No response was received from the URL you entered”, ignore and click **Continue**.
+1. Click **Create New Link**. If you see a warning that “No response was received from the URL you entered,” ignore and click **Continue**.
 1. In the resulting dialog, fill out the form as follows:
 
     | Application Name                 | Sentry        |
@@ -711,9 +803,9 @@ openssl x509 -pubkey -noout -in jira_publickey.cer  > jira_publickey.pem
     | Access Token URL | https://sentry.io    |
     | Authorize URL           | https://sentry.io    |
     | Create Incoming Link               | No    |
-1. Click **Continue**. You should be returned to the **Configure Application Links** page, where you should see an application called **Sentry**.
+1. Click **Continue**. This will return you to the **Configure Application Links** page, where you'll see an application called **Sentry**.
 1. Click the pencil icon next to the **Sentry** application.
-1. On the lefthand side of the resulting modal, click **Incoming Authentication**. Fill our the form as follows, and press **Save**:
+1. On the lefthand side of the resulting modal, click **Incoming Authentication**. Fill out the form as follows, and press **Save**:
 
     | Consumer Key                 | (the consumer key from Step II.4)        |
     | Consumer Name                   | Sentry |
