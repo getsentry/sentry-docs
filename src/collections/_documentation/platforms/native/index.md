@@ -34,7 +34,7 @@ without using the Native SDK, see the following resources:
 
 ## Integrating the SDK
 
-The Native SDK currently supports **Windows, macOS, Linux and Android**.
+The Native SDK currently supports **Windows**, **macOS**, **Linux** and **Android**.
 
 ### Building the SDK
 
