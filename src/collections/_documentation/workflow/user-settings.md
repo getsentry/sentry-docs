@@ -24,7 +24,7 @@ Choose the default ordering of frames in stack traces. By default, this order is
 
 ### Language
 
-Choose the default language used in your Dashboard from the dropdown.
+Choose the default language used by Sentry from the dropdown.
 
 [{% asset user-settings/us-lang.png alt="Language field in Account Details under User Settings" width="221.5" %}]({% asset user-settings/us-lang.png @path %})
 
@@ -36,7 +36,7 @@ Issues' timestamps will be displayed in the timezone specified by this dropdown.
 
 ### Avatar
 
-Choose fbetween displaying your Initials, an Image or a Gravatar next to your name. To save your selection, click *Save Avatar*.
+Choose between displaying your Initials, an Image or a Gravatar next to your name. To save your selection, click *Save Avatar*.
 
 [{% asset user-settings/us-avatar.png alt="Avatar field in Account Details under User Settings" width="227.5" %}]({% asset user-settings/us-avatar.png @path %})
 
