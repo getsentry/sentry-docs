@@ -169,7 +169,7 @@ We integrate with several identity providers, like Okta, OneLogin, Auth0, and Yu
 
 Closing your Sentry account automatically removes all data associated with your account. If your account is the sole owner of an organization, this organization will be deleted. Organizations with multiple owners will remain unchanged.
 
-[{% asset user-settings/us-close.png alt="Close Account button in Close Account section under User Settings" width="" %}]({% asset user-settings/us-close.png @path %})
+[{% asset user-settings/us-close.png alt="Close Account button in Close Account section under User Settings" width="709" %}]({% asset user-settings/us-close.png @path %})
 
 {% capture __alert_content -%}
 
