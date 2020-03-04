@@ -3,6 +3,12 @@ title: APM Glossary
 sidebar_order: 5
 ---
 
+## Clock Skew
+
+If you are collecting transactions from more than a single machine, you will likely encounter **clock skew**. When collecting and comparing transaction events that are gathered from different devices, you may observe timestamps that do not align or events in a trace that don't share a time history. Sentry does not attempt to correct the timestamps in your events. The timestamps displayed in Sentry for transactions and each span retain the original values reported by your application/hosting environment.
+
+While you can reduce clock skew by utilizing Network Time Protocol (NTP) or your cloud provider's clock synchronization services, you may still notice small drifts in your data, as synchronizing clocks on small intervals is challenging.
+
 ## Performance Metric Definitions
 
 As part of APM and transaction data, we’re exposing a few new aggregate metrics to help customers better understand the performance of their applications.

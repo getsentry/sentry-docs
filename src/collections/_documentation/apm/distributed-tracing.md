@@ -30,7 +30,7 @@ By collecting traces of your users as they use your applications, you can begin 
 - What conditions are causing bottlenecks or latency issues in the application
 - Which endpoints or operations consume the most time.
 
-### Trace propagation model
+### Trace Propagation Model
 
 Referring back to our earlier example of the web application consisting of these high-level components:
 
@@ -47,11 +47,7 @@ A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation
 
 Traces in Sentry are segmented into pieces of [**spans**]({%- link _documentation/apm/apm-glossary.md -%}#span) called **transactions**. When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
 
-## Clock Skew
-
-If you are collecting transactions from more than a single machine, you will likely encounter **clock skew**. When collecting and comparing transaction events that are gathered from different devices, you may observe timestamps that do not align or events in a trace that don't share a time history. Sentry does not attempt to correct the timestamps in your events. The timestamps displayed in Sentry for transactions and each span retain the original values reported by your application/hosting environment.
-
-While you can reduce clock skew by utilizing Network Time Protocol (NTP) or your cloud provider's clock synchronization services, you may still notice small drifts in your data, as synchronizing clocks on small intervals is challenging.
+If you are collecting transactions from more than a single machine, you will likely encounter [**clock skew**]({%- link _documentation/apm/apm-glossary.md -%}#clock-skew).
 
 ## Sampling Transactions
 
