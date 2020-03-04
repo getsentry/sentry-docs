@@ -18,11 +18,9 @@ Applications (for example, web applications) typically consist of interconnected
 
 Each of these components may be written in different languages on different platforms. Today, all of these components can be instrumented with the Sentry SDKs to capture error data or crash reports whenever an event occurs in any one of these components.
 
-With tracing, we can follow the journey of the API endpoint requests from their source (for example, from the frontend), and instrument code paths as these requests traverse each component of the application. This journey is called a **trace**. Traces that cross between components, as in our web application example, are typically called **distributed traces**.
+With tracing, we can follow the journey of the API endpoint requests from their source (for example, from the frontend), and instrument code paths as these requests traverse each component of the application. This journey is called a [**trace**]({%- link _documentation/apm/apm-glossary.md -%}#trace). Traces that cross between components, as in our web application example, are typically called **distributed traces**.
 
 [{% asset apm/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset apm/tracing-diagram.png @path %})
-
-Traces that start with the same set of API endpoint calls can potentially differ in terms of what code paths were executed. For example, an initial trace may result in a cache miss at the Cache Service, and a subsequent trace may include more information instrumented at the Cache Service. Although these two traces are similar, they are not identical.
 
 Each trace has a marker called a `trace_id` . Trace IDs are pseudorandom fixed length of alphanumeric character sequences.
 
@@ -41,7 +39,7 @@ Referring back to our earlier example of the web application consisting of these
 - Search Service
 - Cache Service
 
-A trace propagates first from the frontend, then the backend, and later to the search or caching service. Collected spans from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component are not forwarded to the next component.
+A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the search or caching service. Collected spans from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component are not forwarded to the next component.
 
 ## Span
 
