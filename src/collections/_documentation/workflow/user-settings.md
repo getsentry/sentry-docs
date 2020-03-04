@@ -123,10 +123,54 @@ Updates regarding your user account actions, such as claiming unassigned issues 
 {% capture __alert_content -%}
 A shortcut to the Emails panel can be found at the bottom of this section.
 
-{% asset user-settings/us-epanellink.png alt="A link to the Email panel in Notifications under My Activity" width="563" %}
+{% asset user-settings/us-npanellink.png alt="A link to the Email panel in Notifications under My Activity" width="290.5" %}
 
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
     content=__alert_content
 %}
+
+## Emails
+
+The email address used to login to your Sentry account is by default your primary email address. An additional email address can be added under the *Add Secondary Emails* section.
+
+[screenshot of the section]
+
+{% capture __alert_content -%}
+
+A shortcut to the *Notifications* panel can be found at the bottom of this section. 
+
+{% asset user-settings/us-epanellink.png alt="A link to the Notifications panel in Emails under Additional Email" width="308" %}
+
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+%}
+
+[Alert box: A shortcut to the *Notifications* panel can be found at the bottom of this section. [screenshot of link box]]
+
+## **Subscriptions**
+
+As part of our compliance with the EU’s General Data Protection Regulation (GDPR), you would only receive marketing campaign emails after explicitly opting-in to any of the listed categories. 
+
+[screenshot of the section]
+
+## **Authorized Applications**
+
+All authorized third-party applications are listed in this section. Authentication tokens are required for authorization and can be found in the [link: *Auth Tokens*] section. 
+
+## **Identities**
+
+We integrate with several identity providers, like Okta, OneLogin, Auth0, and Yubico. To disconnect any previously configured provider, click the *Disconnect* button.
+
+[screenshot of the section]
+
+## **Close Account**
+
+Closing your Sentry account automatically removes all data associated with your account. If your account is the sole owner of an organization, this organization will be deleted. Organizations with multiple owners will remain unchanged.
+
+[screenshot of the section]
+
+[Alert box: Deleting your account can not be undone.]
