@@ -123,7 +123,7 @@ Updates regarding your user account actions, such as claiming unassigned issues 
 {% capture __alert_content -%}
 A shortcut to the Emails panel can be found at the bottom of this section.
 
-[{% asset user-settings/us-epanellink.png alt="A link to the Email panel in Notifications under My Activity" width="563" %}]({% asset user-settings/us-epanellink.png @path %})
+{% asset user-settings/us-epanellink.png alt="A link to the Email panel in Notifications under My Activity" width="563" %}
 
 {%- endcapture -%}
 {%- include components/alert.html
