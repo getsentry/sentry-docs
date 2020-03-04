@@ -194,4 +194,4 @@ Integrating your application with Sentry allows you to automatically send events
 
 Authentication tokens allow you to perform actions against the Sentry API on behalf of your account. To create one, click the *Create New Token* button.
 
-[{% asset user-settings/us-token.png alt="Create New Token button in the Auth Tokens section under User Settings" %}]({% asset user-settings/us-token.png @path %})
+[{% asset user-settings/us-token.png alt="Create New Token button in the Auth Tokens section under User Settings" width="745" %}]({% asset user-settings/us-token.png @path %})
