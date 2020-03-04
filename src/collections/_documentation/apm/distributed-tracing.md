@@ -13,8 +13,8 @@ Applications (for example, web applications) typically consist of interconnected
 
 - Frontend (Single-Page Application)
 - Backend
-- Search Service
-- Cache Service
+- Background Queue
+- Notification Job
 
 Each of these components may be written in different languages on different platforms. Today, all of these components can be instrumented with the Sentry SDKs to capture error data or crash reports whenever an event occurs in any one of these components.
 
