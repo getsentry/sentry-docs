@@ -188,7 +188,7 @@ Deleting your account can not be undone.
 
 Integrating your application with Sentry allows you to automatically send events to your Sentry instance. To create an application, click the *Create New Application* button.
 
-[{% asset user-settings/us-apps.png alt="Create New Application button in the Applications section under User Settings" widh="237" %}]({% asset user-settings/us-apps.png @path %})
+[{% asset user-settings/us-apps.png alt="Create New Application button in the Applications section under User Settings" widh="189" %}]({% asset user-settings/us-apps.png @path %})
 
 ### Auth Tokens
 
