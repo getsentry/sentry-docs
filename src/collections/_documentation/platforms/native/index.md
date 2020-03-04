@@ -34,16 +34,15 @@ without using the Native SDK, see the following resources:
 
 ## Integrating the SDK
 
-The Native SDK currently supports **Windows, macOS, Linux and Android**.
+The Native SDK currently supports **Windows**, **macOS**, **Linux**, and **Android**.
 
 ### Building the SDK
 
 To build the SDK, download the latest release of the SDK from the [Releases
 page](https://github.com/getsentry/sentry-native/releases).
-The SDK is managed as a [CMake] project, which additionally supports a number
-of configuration options, such as the backend to use.
+The SDK is managed as a [CMake] project, which additionally supports several configuration options, such as the backend to use.
 
-`CMake` can be used for example like this (on macOS):
+For example, `CMake` can be used like this (on macOS):
 
 ```sh
 # configure the cmake build into the `build` directory, with crashpad (on macOS)
@@ -398,7 +397,7 @@ background thread or thread pool to avoid blocking execution.
 and libraries. Similar to plugins, they extend the functionality of the Sentry
 SDK.
 
-The Native SDK can use different backends that are responsible to capture
+The Native SDK can use different backends that are responsible for capturing
 crashes. The backend is configured at build-time, using the `SENTRY_BACKEND`
 CMake option.
 
@@ -447,7 +446,7 @@ in the same request, such as log files.
 {% include platforms/event-attachments.md %}
 
 To add an attachment, the path to the file has to be configured when
-initializing the SDK. It will monitor the file and upload it along any event
+initializing the SDK. It will monitor the file and upload it along with any event
 or crash that is sent to Sentry:
 
 ```c
