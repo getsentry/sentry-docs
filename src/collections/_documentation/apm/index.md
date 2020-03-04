@@ -1,5 +1,5 @@
 ---
-title: Application Performance Monitoring
+title: Application Performance Monitoring (Beta)
 sidebar_order: 0
 ---
 
