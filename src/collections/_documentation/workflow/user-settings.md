@@ -20,7 +20,7 @@ Change the name displayed next to your avatar by editing the *Name* field.
 
 Choose the default ordering of frames in stack traces. By default, this order is set to let Sentry decide. 
 
-[{% asset user-settings/us-sto.png alt="Stack trace order field in Account Details under User Settings" width="745" %}]({% asset user-settings/us-sto.png @path %})
+[{% asset user-settings/us-sto.png alt="Stack trace order field in Account Details under User Settings" width="617.5" %}]({% asset user-settings/us-sto.png @path %})
 
 ### Language
 
@@ -74,7 +74,7 @@ Use recovery codes to access your account if you lose your device and cannot rec
 
 A historical list of sessions, including First Seen and Last Seen timestamps, can be found under the Session History tab.
 
-[{% asset user-settings/us-shistory.png alt="Session History tab in Security under User Settings" width="927" %}]({% asset user-settings/us-shistory.png @path %})
+[{% asset user-settings/us-shistory.png alt="Session History tab in Security under User Settings" width="483" %}]({% asset user-settings/us-shistory.png @path %})
 
 # Notifications
 
@@ -84,38 +84,38 @@ The Notifications section includes options to customize alerts, email routing, w
 
 While Project Alerts are defined in *Project Settings*, you can enable *Send Me Alerts* to receive alerts sent to your teams and fine-tuning the ones you receive per project. 
 
-[{% asset user-settings/us-alert.png alt="Alerts field in Notifications under User Settings" width="" %}]({% asset user-settings/us-alert.png @path %})
+[{% asset user-settings/us-alert.png alt="Alerts field in Notifications under User Settings" width="570" %}]({% asset user-settings/us-alert.png @path %})
 
 ## Workflow Notifications
 
 Control workflow notifications like changes in issue assignment, resolution status, and comments by enabling *Send Me Workflow Notifications* and fine-tuning them per project. 
 
-[{% asset user-settings/us-work.png alt="Workflow selection in Notifications under User Settings" width="" %}]({% asset user-settings/us-work.png @path %})
+[{% asset user-settings/us-work.png alt="Workflow selection in Notifications under User Settings" width="776" %}]({% asset user-settings/us-work.png @path %})
 
 ## Email Routing
 
 Route email notifications to an alternative email address and keep your project notifications organized. 
 
-[{% asset user-settings/us-eroute.png alt="Email Routing field in Notifications under User Settings" width="" %}]({% asset user-settings/us-eroute.png @path %})
+[{% asset user-settings/us-eroute.png alt="Email Routing field in Notifications under User Settings" width="509.5" %}]({% asset user-settings/us-eroute.png @path %})
 
 ## Weekly Reports
 
 Reports are generated per project and sent once a week.  
 
-[{% asset user-settings/us-wrfield.png alt="Weekly Reports field in Notifications under User Settings" width="" %}]({% asset user-settings/us-wrfield.png @path %})
+[{% asset user-settings/us-wrfield.png alt="Weekly Reports field in Notifications under User Settings" width="552.5" %}]({% asset user-settings/us-wrfield.png @path %})
 
 The following report sample shows details on *Events Seen This Week*, *Events by Issue Type*, *Events by Project* and activity over time.
 
-[{% asset user-settings/us-ereport.png alt="Weekly Report email sample" width="" %}]({% asset user-settings/us-ereport.png @path %})
+[{% asset user-settings/us-ereport.png alt="Weekly Report email sample" width="631.5" %}]({% asset user-settings/us-ereport.png @path %})
 
 ## Deploy Notifications
 
 To keep track of deployment details like release version, environments and commit reviews, select *On* and choose an option from the dropdown next to each organization.
 
-[{% asset user-settings/us-deploy.png alt="Deploy Notifications selection in Notifications under User Settings" width="" %}]({% asset user-settings/us-deploy.png @path %})
+[{% asset user-settings/us-deploy.png alt="Deploy Notifications selection in Notifications under User Settings" width="841" %}]({% asset user-settings/us-deploy.png @path %})
 
 ## My Activity
 
 Updates regarding your user account actions, such as claiming unassigned issues previously resolved, can be turned into an email notification in this section.
 
-[{% asset user-settings/us-myact.png alt="My Activity selection in Notifications under User Settings" width="" %}]({% asset user-settings/us-myact.png @path %})
+[{% asset user-settings/us-myact.png alt="My Activity selection in Notifications under User Settings" width="563" %}]({% asset user-settings/us-myact.png @path %})
