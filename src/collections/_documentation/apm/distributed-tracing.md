@@ -20,7 +20,7 @@ Each of these components may be written in different languages on different plat
 
 With tracing, we can follow the journey of the API endpoint requests from their source (for example, from the frontend), and instrument code paths as these requests traverse each component of the application. This journey is called a **trace**. Traces that cross between components, as in our web application example, are typically called **distributed traces**.
 
-![DON%20T%20Add%20content%20to%20this%20FINAL%20Draft%20Tracing%20for%20/Tracing-diagram.png](DON%20T%20Add%20content%20to%20this%20FINAL%20Draft%20Tracing%20for%20/Tracing-diagram.png)
+[{% asset apm/Tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset apm/Tracing-diagram.png @path %})
 
 Traces that start with the same set of API endpoint calls can potentially differ in terms of what code paths were executed. For example, an initial trace may result in a cache miss at the Cache Service, and a subsequent trace may include more information instrumented at the Cache Service. Although these two traces are similar, they are not identical.
 
