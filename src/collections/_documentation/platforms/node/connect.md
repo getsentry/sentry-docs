@@ -64,6 +64,8 @@ serverName?: boolean; // default: true
 transaction?: boolean | 'path' | 'methodPath' | 'handler'; // default: true = 'methodPath'
 // keys to be extracted from req.user
 user?: boolean | string[]; // default: true = ['id', 'username', 'email']
+// client ip address
+ip?: boolean; // default: false
 // node version
 version?: boolean; // default: true
 // timeout for fatal route errors to be delivered
