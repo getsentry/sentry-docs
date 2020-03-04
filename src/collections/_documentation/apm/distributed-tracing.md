@@ -41,38 +41,11 @@ Referring back to our earlier example of the web application consisting of these
 
 A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the search or caching service. Collected spans from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component are not forwarded to the next component.
 
-## Span
-
-When you initialize and load a Sentry SDK that supports tracing, it will automatically instrument parts of your running application, such as function calls and network operations. Instrumenting a database call could entail these three steps or subroutines:
-
-1. Calling a function to compose a database query
-2. Sending a query to a database
-3. Receiving and transforming results
-
-Each of these subroutines take some time to perform (no matter how fast they could run). Sentry records these subroutines as a unit of work in the form of **spans**. Sentry can also attach useful information to spans, such as tags, additional contextual data, and a status to indicate if the subroutine failed or not.
-
-Spans can have descendant spans (or child spans). In our earlier example, the three subroutines can be spans within a larger encompassing span (the database call).
-
-Any instrumented span is part of a trace (identified by its trace id, `trace_id`), and each span has its own marker called the `span_id`; a fixed length of alphanumeric characters.
-
-### Orphan Spans
-
-Orphan spans refer to spans that exist or are visible, but their parent spans are not visible or are not within Sentry's database. This could imply a bug in the Sentry application. If you're confident about this, please contact support: [support@sentry.io](mailto:support@sentry.io)
-
-Another reason could include that instrumented spans may not make it back to Sentry for processing. As an example, let us refer back to our earlier example of the web application consisting of:
-
-- Frontend (Single-Page Application)
-- Backend
-- Background Queue
-- Notification Job
-
-Instrumented spans in each component are sent back to Sentry for processing. However, a server in the backend component could suffer from network connectivity loss, and the spans may not have made it back to Sentry. This would indicate a "hole" within this specific trace. The collected spans within the Search Service would be descendants of a span (for example, a search service call) within the Backend component, and thus the top-level span of the collective Search Service spans is referred to as an orphan span.
-
 ## Transactions
 
 [{% asset apm/anatomy-of-transaction.png alt="Diagram illustrating how a transaction is composed of many spans." %}]({% asset apm/anatomy-of-transaction.png @path %})
 
-Traces in Sentry are segmented into pieces of **spans** called **transactions**. When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
+Traces in Sentry are segmented into pieces of [**spans**]({%- link _documentation/apm/apm-glossary.md -%}#span) called **transactions**. When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
 
 ## Clock Skew
 
