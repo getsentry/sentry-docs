@@ -119,3 +119,14 @@ To keep track of deployment details like release version, environments and commi
 Updates regarding your user account actions, such as claiming unassigned issues previously resolved, can be turned into an email notification in this section.
 
 [{% asset user-settings/us-myact.png alt="My Activity selection in Notifications under User Settings" width="563" %}]({% asset user-settings/us-myact.png @path %})
+
+{% capture __alert_content -%}
+A shortcut to the Emails panel can be found at the bottom of this section.
+
+[{% asset user-settings/us-epanellink.png alt="A link to the Email panel in Notifications under My Activity" width="563" %}]({% asset user-settings/us-epanellink.png @path %})
+
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+%}
