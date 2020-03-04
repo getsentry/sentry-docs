@@ -51,7 +51,7 @@ When you initialize and load a Sentry SDK that supports tracing, it will automat
 2. Sending a query to a database
 3. Receiving and transforming results
 
-Each of these subroutines take some time to perform (no matter how fast they could run). Sentry records these subroutines as a unit of work in the form of **spans.** Sentry can also attach useful information to spans, such as tags, additional contextual data, and a status to indicate if the subroutine failed or not.
+Each of these subroutines take some time to perform (no matter how fast they could run). Sentry records these subroutines as a unit of work in the form of **spans**. Sentry can also attach useful information to spans, such as tags, additional contextual data, and a status to indicate if the subroutine failed or not.
 
 Spans can have descendant spans (or child spans). In our earlier example, the three subroutines can be spans within a larger encompassing span (the database call).
 
@@ -96,7 +96,7 @@ If you enable APM collection for a large portion of your traffic, you may exceed
 
 [ALERT BOX: Supported SDKs:
 
-- JavaScript Browser
+- JavaScript Browser ≥ 5.13.0
 - Node.js
 - Python version ≥ 0.11.2 ]
 
@@ -139,6 +139,14 @@ Spans are available for the following operations within a transaction:
 - HTTP requests made with `requests` or the stdlib
 - Spawned subprocesses
 
+If you want to enable all relevant transactions automatically, you can use this alternative (currently in alpha):
+
+```python
+import sentry_sdk
+
+sentry_sdk.init("___PUBLIC_DSN___", _experiments={"auto_enabling_integrations": True})
+```
+
 **Manual Tracing**
 
 **Managing Transactions**
@@ -176,8 +184,8 @@ with sentry_sdk.start_span(op="http", description="GET /") as span:
 To use our APM features, you need to use a beta release.
 
 ```bash
-$ npm install @sentry/browser@5.10.0-rc.0
-$ npm install @sentry/apm@5.10.0-rc.0
+$ npm install @sentry/browser
+$ npm install @sentry/apm
 ```
 
 **Sending Traces**
