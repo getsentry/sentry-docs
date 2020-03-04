@@ -175,8 +175,6 @@ Closing your Sentry account automatically removes all data associated with your 
 
 Deleting your account can not be undone. 
 
-{% asset user-settings/us-epanellink.png alt="A link to the Notifications panel in Emails under Additional Email" %}
-
 {%- endcapture -%}
 {%- include components/alert.html
     title="Warning"
