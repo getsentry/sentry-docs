@@ -155,15 +155,15 @@ As part of our compliance with the EU’s General Data Protection Regulation (GD
 
 [{% asset user-settings/us-subs.png alt="Subscriptions section under User Settings" %}]({% asset user-settings/us-subs.png @path %})
 
-## **Authorized Applications**
+## Authorized Applications
 
-All authorized third-party applications are listed in this section. Authentication tokens are required for authorization and can be found in the [link: *Auth Tokens*] section. 
+All authorized third-party applications are listed in this section. Authentication tokens are required for authorization and can be found in the [*Auth Tokens*](https://sentry.io/api/) section. 
 
-## **Identities**
+## Identities
 
 We integrate with several identity providers, like Okta, OneLogin, Auth0, and Yubico. To disconnect any previously configured provider, click the *Disconnect* button.
 
-[screenshot of the section]
+[{% asset user-settings/us-id.png alt="Disconnect button in Identities section under User Settings" %}]({% asset user-settings/us-id.png @path %})
 
 ## **Close Account**
 
