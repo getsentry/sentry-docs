@@ -123,7 +123,7 @@ Updates regarding your user account actions, such as claiming unassigned issues 
 {% capture __alert_content -%}
 A shortcut to the Emails panel can be found at the bottom of this section.
 
-{% asset user-settings/us-npanellink.png alt="A link to the Email panel in Notifications under My Activity" %}
+{% asset user-settings/us-npanellink.png alt="A link to the Email panel in Notifications under My Activity" width="465" %}
 
 {%- endcapture -%}
 {%- include components/alert.html
@@ -135,13 +135,13 @@ A shortcut to the Emails panel can be found at the bottom of this section.
 
 The email address used to login to your Sentry account is by default your primary email address. An additional email address can be added under the *Add Secondary Emails* section.
 
-[{% asset user-settings/us-eprime.png alt="Primary email field in Emails under User Settings" width="" %}]({% asset user-settings/us-eprime.png @path %})
+[{% asset user-settings/us-eprime.png alt="Primary email field in Emails under User Settings" width="494" %}]({% asset user-settings/us-eprime.png @path %})
 
 {% capture __alert_content -%}
 
 A shortcut to the *Notifications* panel can be found at the bottom of this section. 
 
-{% asset user-settings/us-epanellink.png alt="A link to the Notifications panel in Emails under Additional Email" %}
+{% asset user-settings/us-epanellink.png alt="A link to the Notifications panel in Emails under Additional Email" width="493" %}
 
 {%- endcapture -%}
 {%- include components/alert.html
@@ -153,7 +153,7 @@ A shortcut to the *Notifications* panel can be found at the bottom of this secti
 
 As part of our compliance with the EU’s General Data Protection Regulation (GDPR), you would only receive marketing campaign emails after explicitly opting-in to any of the listed categories. 
 
-[{% asset user-settings/us-subs.png alt="Subscriptions section under User Settings" width="" %}]({% asset user-settings/us-subs.png @path %})
+[{% asset user-settings/us-subs.png alt="Subscriptions section under User Settings" width="447" %}]({% asset user-settings/us-subs.png @path %})
 
 ## Authorized Applications
 
