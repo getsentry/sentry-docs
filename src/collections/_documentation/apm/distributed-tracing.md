@@ -51,6 +51,8 @@ If you are collecting transactions from more than a single machine, you will lik
 
 ## Sampling Transactions
 
+**We strongly recommend sampling your transactions.**
+
 When you enable sampling for APM events in Sentry, you choose a percentage of collected transactions to send to sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of 0.25 would result in 250 transactions (25%) being sent to Sentry.
 
 Sampling enables you to collect traces on a subset of your traffic and extrapolate to the total volume. Furthermore, enabling sampling allows you to control the volume of data you send to Sentry and lets you better manage your costs. If you don't have a good understanding of what sampling rate to choose, we recommend you start low and gradually increase the sampling rate as you learn more about your traffic patterns and volume.
