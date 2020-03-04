@@ -56,7 +56,7 @@ We recommend changing your password frequently. However, keep in mind that chang
 
 To sign out of all devices, click the *Sign out of all devices* button.
 
-[{% asset user-settings/us-sess.png alt="Sessions field in Security under User Settings" width="450" %}]({% asset user-settings/us-sess.png @path %})
+[{% asset user-settings/us-sess.png alt="Sessions field in Security under User Settings" width="550" %}]({% asset user-settings/us-sess.png @path %})
 
 ### Two-Factor Authentication
 
@@ -68,13 +68,13 @@ Keep your account information secure by enabling a two-factor authentication met
 
 Use recovery codes to access your account if you lose your device and cannot receive two-factor authentication codes. Click the *View Codes* button to download, print or copy your codes to a secure location.
 
-[{% asset user-settings/us-rec.png alt="Recover codes field in Security under User Settings" width="745" %}]({% asset user-settings/us-rec.png @path %})
+[{% asset user-settings/us-rec.png alt="Recover codes field in Security under User Settings" width="673" %}]({% asset user-settings/us-rec.png @path %})
 
 ### Session History
 
 A historical list of sessions, including First Seen and Last Seen timestamps, can be found under the Session History tab.
 
-[{% asset user-settings/us-shistory.png alt="Session History tab in Security under User Settings" width="450" %}]({% asset user-settings/us-shistory.png @path %})
+[{% asset user-settings/us-shistory.png alt="Session History tab in Security under User Settings" width="380" %}]({% asset user-settings/us-shistory.png @path %})
 
 # Notifications
 
@@ -90,7 +90,7 @@ While Project Alerts are defined in *Project Settings*, you can enable *Send Me 
 
 Control workflow notifications like changes in issue assignment, resolution status, and comments by enabling *Send Me Workflow Notifications* and fine-tuning them per project. 
 
-[{% asset user-settings/us-work.png alt="Workflow selection in Notifications under User Settings" width="745" %}]({% asset user-settings/us-work.png @path %})
+[{% asset user-settings/us-work.png alt="Workflow selection in Notifications under User Settings" width="673" %}]({% asset user-settings/us-work.png @path %})
 
 ## Email Routing
 
@@ -188,7 +188,7 @@ Deleting your account can not be undone.
 
 Integrating your application with Sentry allows you to automatically send events to your Sentry instance. To create an application, click the *Create New Application* button.
 
-[{% asset user-settings/us-apps.png alt="Create New Application button in the Applications section under User Settings" width="450" %}]({% asset user-settings/us-apps.png @path %})
+[{% asset user-settings/us-apps.png alt="Create New Application button in the Applications section under User Settings" width="380" %}]({% asset user-settings/us-apps.png @path %})
 
 ### Auth Tokens
 
