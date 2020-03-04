@@ -36,8 +36,8 @@ Referring back to our earlier example of the web application consisting of these
 
 - Frontend (Single-Page Application)
 - Backend
-- Search Service
-- Cache Service
+- Background Queue
+- Notification Job
 
 A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the search or caching service. Collected spans from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component are not forwarded to the next component.
 
@@ -63,8 +63,8 @@ Another reason could include that instrumented spans may not make it back to Sen
 
 - Frontend (Single-Page Application)
 - Backend
-- Search Service
-- Cache Service
+- Background Queue
+- Notification Job
 
 Instrumented spans in each component are sent back to Sentry for processing. However, a server in the backend component could suffer from network connectivity loss, and the spans may not have made it back to Sentry. This would indicate a "hole" within this specific trace. The collected spans within the Search Service would be descendants of a span (for example, a search service call) within the Backend component, and thus the top-level span of the collective Search Service spans is referred to as an orphan span.
 
