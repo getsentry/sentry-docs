@@ -3,7 +3,16 @@ title: Distributed Tracing
 sidebar_order: 1
 ---
 
-[Alert Box: What plan APM is available on? ]
+{% capture __alert_content -%}
+Distributed tracing capabilities are available for these plans:
+
+For more details about APM access, please reach out to [ email ].
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 Enabling tracing data collection can augment your existing errors to answer any question or unknowns about your systems. Tracing also allows you to track critical metrics and service-level objectives (SLO) like throughput, latency, or apdex to build a complete monitoring solution to diagnose and measure your application health.
 
