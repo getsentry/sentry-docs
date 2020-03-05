@@ -29,7 +29,7 @@ With tracing, we can follow the journey of the API endpoint requests from their 
 
 [{% asset apm/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset apm/tracing-diagram.png @path %})
 
-Each trace has a marker called a `trace_id` . Trace IDs are pseudorandom fixed length of alphanumeric character sequences.
+Each [trace]({%- link _documentation/apm/apm-glossary.md -%}#trace) has a marker called a `trace_id` . Trace IDs are pseudorandom fixed length of alphanumeric character sequences.
 
 By collecting traces of your users as they use your applications, you can begin to reveal some insights such as:
 
@@ -52,7 +52,7 @@ A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation
 
 [{% asset apm/anatomy-of-transaction.png alt="Diagram illustrating how a transaction is composed of many spans." %}]({% asset apm/anatomy-of-transaction.png @path %})
 
-Traces in Sentry are segmented into pieces of [**spans**]({%- link _documentation/apm/apm-glossary.md -%}#span) called **transactions**. When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
+Traces in Sentry are segmented into pieces of [**spans**]({%- link _documentation/apm/apm-glossary.md -%}#span) called [**transactions**]({%- link _documentation/apm/apm-glossary.md -%}#transaction). When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
 
 If you are collecting transactions from more than a single machine, you will likely encounter [**clock skew**]({%- link _documentation/apm/apm-glossary.md -%}#clock-skew).
 
@@ -64,7 +64,7 @@ When you enable sampling for APM events in Sentry, you choose a percentage of co
 
 Sampling enables you to collect traces on a subset of your traffic and extrapolate to the total volume. Furthermore, enabling sampling allows you to control the volume of data you send to Sentry and lets you better manage your costs. If you don't have a good understanding of what sampling rate to choose, we recommend you start low and gradually increase the sampling rate as you learn more about your traffic patterns and volume.
 
-When you have multiple projects collecting APM data, Sentry utilizes 'head-based' sampling to ensure that once a sampling decision has been made, that decision is propagated to each application or project involved in the transaction. If your applications have multiple entry points, you should aim to choose consistent sampling rates. Choosing different sampling rates can bias your results. Sentry does not support 'tail-based' sampling at this time.
+When you have multiple projects collecting APM data, Sentry utilizes 'head-based' sampling to ensure that once a sampling decision has been made, that decision is propagated to each application or project involved in the [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction). If your applications have multiple entry points, you should aim to choose consistent sampling rates. Choosing different sampling rates can bias your results. Sentry does not support 'tail-based' sampling at this time.
 
 If you enable APM collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits](https://docs.sentry.io/accounts/quotas/).
 
@@ -103,7 +103,7 @@ Many integrations for popular frameworks automatically capture traces. If you al
 - Celery
 - Redis Queue (RQ)
 
-[Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are available for the following operations within a transaction:
+[Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are available for the following operations within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
 
 - Database that uses SQLAlchemy or the Django ORM
 - HTTP requests made with `requests` or the stdlib
@@ -119,7 +119,7 @@ sentry_sdk.init("___PUBLIC_DSN___", _experiments={"auto_enabling_integrations": 
 
 **Managing Transactions**
 
-Let’s say you want to create a transaction for an expensive operation (for example, `process_item`) and send the result to Sentry:
+Let’s say you want to create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for an expensive operation (for example, `process_item`) and send the result to Sentry:
 
 ```python
 import sentry_sdk
@@ -174,12 +174,12 @@ Sentry.init({
 
 You can pass a lot of different options to tracing, but it comes with reasonable defaults out of the box. You will receive:
 
-- a transaction for every page load
+- a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for every page load
 - all XHR/fetch requests as spans
 
 **Using Tracing Integration for Manual Tracing**
 
-Tracing will create a transaction on page load by default; all [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) that are started will be attached to it. Also, tracing will finish the transaction after the default timeout of 500ms of inactivity. Inactivity is if there are no pending XHR/fetch requests. If you want to extend it by adding spans to the transaction, here is an example of how you could profile a React component:
+Tracing will create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) on page load by default; all [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) that are started will be attached to it. Also, tracing will finish the transaction after the default timeout of 500ms of inactivity. Inactivity is if there are no pending XHR/fetch requests. If you want to extend it by adding spans to the transaction, here is an example of how you could profile a React component:
 
 ```javascript
 // This line starts an activity (and creates a span).
@@ -198,7 +198,7 @@ Integrations.ApmIntegrations.popActivity(activity);
 
 **Managing Transactions**
 
-Let’s say you want to create a transaction for an expensive operation (for example, `processItem`) and send the result to Sentry:
+Let’s say you want to create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for an expensive operation (for example, `processItem`) and send the result to Sentry:
 
 ```javascript
 const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction: item.getTransaction() })
@@ -273,7 +273,7 @@ app.use(Sentry.Handlers.errorHandler());
 app.listen(3000);
 ```
 
-The following operations have [span]({%- link _documentation/apm/apm-glossary.md -%}#span) capabilities within a transaction:
+The following operations have [span]({%- link _documentation/apm/apm-glossary.md -%}#span) capabilities within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
 
 - HTTP requests made with `request` or `get` calls using native `http` and `https` modules
 - Middlewares (Express.js only)
@@ -304,7 +304,7 @@ Sentry.init({
 
 **Managing Transactions**
 
-Let’s say you want to create a transaction for an expensive operation (for example,  `processItem`) and send the result to Sentry:
+Let’s say you want to create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for an expensive operation (for example,  `processItem`) and send the result to Sentry:
 
 ```javascript
 app.use(function processItems(req, res, next) {
