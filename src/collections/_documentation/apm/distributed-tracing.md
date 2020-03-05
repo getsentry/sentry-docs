@@ -46,7 +46,7 @@ Referring back to our earlier example of the web application consisting of these
 - Background Queue
 - Notification Job
 
-A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the search or caching service. Collected spans from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component are not forwarded to the next component.
+A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the search or caching service. Collected [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component are not forwarded to the next component.
 
 ## Transactions
 
@@ -103,7 +103,7 @@ Many integrations for popular frameworks automatically capture traces. If you al
 - Celery
 - Redis Queue (RQ)
 
-Spans are available for the following operations within a transaction:
+[Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are available for the following operations within a transaction:
 
 - Database that uses SQLAlchemy or the Django ORM
 - HTTP requests made with `requests` or the stdlib
@@ -134,7 +134,7 @@ while True:
 
 **Adding additional Spans to the Transaction**
 
-The next example is called in the `process_item` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created spans as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
+The next example is called in the `process_item` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
 
 You can choose the value of `op` and `description`.
 
@@ -179,7 +179,7 @@ You can pass a lot of different options to tracing, but it comes with reasonable
 
 **Using Tracing Integration for Manual Tracing**
 
-Tracing will create a transaction on page load by default; all spans that are started will be attached to it. Also, tracing will finish the transaction after the default timeout of 500ms of inactivity. Inactivity is if there are no pending XHR/fetch requests. If you want to extend it by adding spans to the transaction, here is an example of how you could profile a React component:
+Tracing will create a transaction on page load by default; all [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) that are started will be attached to it. Also, tracing will finish the transaction after the default timeout of 500ms of inactivity. Inactivity is if there are no pending XHR/fetch requests. If you want to extend it by adding spans to the transaction, here is an example of how you could profile a React component:
 
 ```javascript
 // This line starts an activity (and creates a span).
@@ -210,7 +210,7 @@ const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction:
 
 **Adding Additional Spans to the Transaction**
 
-The next example is called in the `processItem` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created spans as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
+The next example is called in the `processItem` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
 
 ```javascript
 function processItem(item, transaction) {
@@ -273,7 +273,7 @@ app.use(Sentry.Handlers.errorHandler());
 app.listen(3000);
 ```
 
-The following operations have span capabilities within a transaction:
+The following operations have [span]({%- link _documentation/apm/apm-glossary.md -%}#span) capabilities within a transaction:
 
 - HTTP requests made with `request` or `get` calls using native `http` and `https` modules
 - Middlewares (Express.js only)
@@ -321,7 +321,7 @@ app.use(function processItems(req, res, next) {
 
 **Adding Additional Spans to the Transaction**
 
-The next example is called in the `processItem` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created spans as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
+The next example is called in the `processItem` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
 
 You can choose the value of `op` and `description`.
 
