@@ -6,7 +6,11 @@ sidebar_order: 1
 {% capture __alert_content -%}
 Distributed tracing capabilities are available for these plans:
 
+- Business??
+- Enterprise??
+
 For more details about APM access, please reach out to [ email ].
+
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
