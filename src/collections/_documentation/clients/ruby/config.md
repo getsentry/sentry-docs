@@ -119,7 +119,7 @@ end
   You can also provide regex-like strings to the sanitizer:
 
   ```ruby
-  config.sanitize_fields = ["my_field", "foo(.*)?bar]
+  config.sanitize_fields = ["my_field", "foo(.*)?bar"]
   ```
 
   It’s also possible to remove HTTP header values which match a list:
