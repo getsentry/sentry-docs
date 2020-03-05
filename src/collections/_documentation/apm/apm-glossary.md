@@ -9,7 +9,7 @@ If you are collecting transactions from more than a single machine, you will lik
 
 While you can reduce clock skew by utilizing Network Time Protocol (NTP) or your cloud provider's clock synchronization services, you may still notice small drifts in your data, as synchronizing clocks on small intervals is challenging.
 
-## Performance Metric Definitions
+## Performance Metrics
 
 As part of APM and transaction data, we’re exposing a few new aggregate metrics to help customers better understand the performance of their applications.
 
@@ -28,16 +28,6 @@ This column shows the % of the entire query that this row represents, so you fil
 ### Requests Per Minute (RPM)
 
 Requests Per Minute is a way to measure throughput. It is the average of all requests bucketed by the minute for the current time window and query string.
-
-## Properties
-
-Each span has a unique identifier kept in the `span_id` attribute.
-
-Start time and end time are stored in the `start_timestamp` and `timestamp` attributes, respectively. The format is an RFC 3339 / ISO 8601-compatible string or a numeric value with the number of seconds since the UNIX Epoch.
-
-The name of the operation is stored in the “op” parameter. Examples are `http`, `sql.query`, `redis.command`.
-
-Additional data about the operation can be stored in the `data` and `tags` attributes.
 
 ## Span
 
@@ -97,6 +87,16 @@ Another reason could include that instrumented spans may not make it back to Sen
 - Notification Job
 
 Instrumented spans in each component are sent back to Sentry for processing. However, a server in the backend component could suffer from network connectivity loss, and the spans may not have made it back to Sentry. This would indicate a "hole" within this specific trace. The collected spans within the Search Service would be descendants of a span (for example, a search service call) within the Backend component, and thus the top-level span of the collective Search Service spans is referred to as an orphan span.
+
+### Properties
+
+Each span has a unique identifier kept in the `span_id` attribute.
+
+Start time and end time are stored in the `start_timestamp` and `timestamp` attributes, respectively. The format is an RFC 3339 / ISO 8601-compatible string or a numeric value with the number of seconds since the UNIX Epoch.
+
+The name of the operation is stored in the “op” parameter. Examples are `http`, `sql.query`, `redis.command`.
+
+Additional data about the operation can be stored in the `data` and `tags` attributes.
 
 ## Trace
 

@@ -4,13 +4,7 @@ sidebar_order: 1
 ---
 
 {% capture __alert_content -%}
-Distributed tracing capabilities are available for these plans:
-
-- Business??
-- Enterprise??
-
-For more details about APM access, please reach out to [ email ].
-
+Sentry's Application Performance Monitoring (APM) features are currently in beta. For more details about APM access, feel free to reach out at [https://sentry.io/for/apm/](https://sentry.io/for/apm/).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -77,8 +71,9 @@ If you enable APM collection for a large portion of your traffic, you may exceed
 ## Setting Up Tracing
 
 {% capture __alert_content -%}
-Supported SDKs for Tracing:
+Sentry's Application Performance Monitoring (APM) features are currently in beta. For more details about APM access, feel free to reach out at [https://sentry.io/for/apm/](https://sentry.io/for/apm/).
 
+Supported SDKs for Tracing:
 - JavaScript Browser ≥ 5.13.0
 - Node.js
 - Python version ≥ 0.11.2
@@ -89,21 +84,6 @@ Supported SDKs for Tracing:
     content=__alert_content
     level="warning"
 %}
-
-Getting started with Sentry's APM features is a three step process. If you've already created a Sentry account and installed an SDK, skip to step 2a:
-
-1. [Sign up for an account](https://sentry.io/signup/)
-2. [Install your SDK](https://docs.sentry.io/error-reporting/quickstart/?platform=browser#pick-a-client-integration)
-
-    2a. Add APM integration
-      
-      ```
-      code snippet for customers to get started with APM
-      ```
-
-    2b. Configure instrumentation, etc.
-
-3. [Configure SDK](https://docs.sentry.io/error-reporting/quickstart/?platform=browser#configure-the-sdk)
 
 ### Python
 
