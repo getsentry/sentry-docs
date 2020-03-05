@@ -86,7 +86,7 @@ Getting started with Sentry's APM features is a three step process. If you've al
 
 ### Python
 
-To send any traces, set the `traces_sample_rate`to a nonzero value. The following configuration will capture 10% of all your transactions:
+To send any traces, set the `traces_sample_rate` to a nonzero value. The following configuration will capture 10% of all your transactions:
 
 ```python
 import sentry_sdk
@@ -115,8 +115,6 @@ import sentry_sdk
 
 sentry_sdk.init("___PUBLIC_DSN___", _experiments={"auto_enabling_integrations": True})
 ```
-
-**Manual Tracing**
 
 **Managing Transactions**
 
@@ -178,7 +176,7 @@ You can pass a lot of different options to tracing, but it comes with reasonable
 - a transaction for every page load
 - all XHR/fetch requests as spans
 
-**Using Tracing integration for manual Tracing**
+**Using Tracing Integration for Manual Tracing**
 
 Tracing will create a transaction on page load by default; all spans that are started will be attached to it. Also, tracing will finish the transaction after the default timeout of 500ms of inactivity. Inactivity is if there are no pending XHR/fetch requests. If you want to extend it by adding spans to the transaction, here is an example of how you could profile a React component:
 
@@ -197,8 +195,6 @@ const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
 Integrations.ApmIntegrations.popActivity(activity);
 ```
 
-**Manual Tracing**
-
 **Managing Transactions**
 
 Let’s say you want to create a transaction for an expensive operation (for example, `processItem`) and send the result to Sentry:
@@ -211,7 +207,7 @@ const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction:
   })
 ```
 
-**Adding additional Spans to the transaction**
+**Adding Additional Spans to the Transaction**
 
 The next example is called in the `processItem` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created spans as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
 
@@ -305,8 +301,6 @@ Sentry.init({
 });
 ```
 
-**Manual Tracing**
-
 **Managing Transactions**
 
 Let’s say you want to create a transaction for an expensive operation (for example,  `processItem`) and send the result to Sentry:
@@ -324,7 +318,7 @@ app.use(function processItems(req, res, next) {
 });
 ```
 
-**Adding additional Spans to the transaction**
+**Adding Additional Spans to the Transaction**
 
 The next example is called in the `processItem` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created spans as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
 
