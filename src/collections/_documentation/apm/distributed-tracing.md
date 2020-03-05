@@ -72,11 +72,19 @@ If you enable APM collection for a large portion of your traffic, you may exceed
 
 ## Setting Up Tracing
 
-[ALERT BOX: Supported SDKs:
+{% capture __alert_content -%}
+Supported SDKs for Tracing:
 
 - JavaScript Browser ≥ 5.13.0
 - Node.js
-- Python version ≥ 0.11.2 ]
+- Python version ≥ 0.11.2
+
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 Getting started with Sentry's APM features is a three step process. If you've already created a Sentry account and installed an SDK, skip to step 2a:
 
