@@ -29,13 +29,13 @@ With tracing, we can follow the journey of the API endpoint requests from their 
 
 [{% asset apm/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset apm/tracing-diagram.png @path %})
 
-Each [trace]({%- link _documentation/apm/apm-glossary.md -%}#trace) has a marker called a `trace_id` . Trace IDs are pseudorandom fixed length of alphanumeric character sequences.
+Each [trace]({%- link _documentation/apm/apm-glossary.md -%}#trace) has a marker called a `trace_id`. Trace IDs are pseudorandom fixed length of alphanumeric character sequences.
 
 By collecting traces of your users as they use your applications, you can begin to reveal some insights such as:
 
 - Investigate and debug what occurred for a specific error event, or issue
 - What conditions are causing bottlenecks or latency issues in the application
-- Which endpoints or operations consume the most time.
+- Which endpoints or operations consume the most time
 
 ### Trace Propagation Model
 
@@ -46,7 +46,7 @@ Referring back to our earlier example of the web application consisting of these
 - Background Queue
 - Notification Job
 
-A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the search or caching service. Collected [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component are not forwarded to the next component.
+A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the background queue or notification job. Collected [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component aren't forwarded to the next component.
 
 ## Transactions
 
@@ -60,13 +60,13 @@ If you are collecting transactions from more than a single machine, you will lik
 
 **We strongly recommend sampling your transactions.**
 
-When you enable sampling for APM events in Sentry, you choose a percentage of collected transactions to send to sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of 0.25 would result in 250 transactions (25%) being sent to Sentry.
+When you enable sampling for APM events in Sentry, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of 0.25 would result in 250 transactions (25%) being sent to Sentry.
 
 Sampling enables you to collect traces on a subset of your traffic and extrapolate to the total volume. Furthermore, enabling sampling allows you to control the volume of data you send to Sentry and lets you better manage your costs. If you don't have a good understanding of what sampling rate to choose, we recommend you start low and gradually increase the sampling rate as you learn more about your traffic patterns and volume.
 
-When you have multiple projects collecting APM data, Sentry utilizes 'head-based' sampling to ensure that once a sampling decision has been made, that decision is propagated to each application or project involved in the [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction). If your applications have multiple entry points, you should aim to choose consistent sampling rates. Choosing different sampling rates can bias your results. Sentry does not support 'tail-based' sampling at this time.
+When you have multiple projects collecting APM data, Sentry utilizes "head-based" sampling to ensure that once a sampling decision has been made, that decision is propagated to each application or project involved in the [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction). If your applications have multiple entry points, you should aim to choose consistent sampling rates. Choosing different sampling rates can bias your results. Sentry does not support "tail-based" sampling at this time.
 
-If you enable APM collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits](https://docs.sentry.io/accounts/quotas/).
+If you enable APM collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits]({%- link _documentation/accounts/quotas.md -%}).
 
 ## Setting Up Tracing
 
@@ -97,7 +97,7 @@ sentry_sdk.init("___PUBLIC_DSN___", traces_sample_rate=0.1)
 
 **Automating Traces**
 
-Many integrations for popular frameworks automatically capture traces. If you already have any of the following frameworks set up for error reporting, you will start to see traces immediately:
+Many integrations for popular frameworks automatically capture traces. If you already have any of the following frameworks set up for Sentry error reporting, you will start to see traces immediately:
 
 - All WSGI-based frameworks (Django, Flask, Pyramid, Falcon, Bottle)
 - Celery
@@ -106,7 +106,7 @@ Many integrations for popular frameworks automatically capture traces. If you al
 [Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are available for the following operations within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
 
 - Database that uses SQLAlchemy or the Django ORM
-- HTTP requests made with `requests` or the stdlib
+- HTTP requests made with `requests` or the `stdlib`
 - Spawned subprocesses
 
 If you want to enable all relevant transactions automatically, you can use this alternative (currently in alpha):
@@ -132,7 +132,7 @@ while True:
       process_item(item)
 ```
 
-**Adding additional Spans to the Transaction**
+**Adding More Spans to the Transaction**
 
 The next example is called in the `process_item` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
 
@@ -149,7 +149,7 @@ with sentry_sdk.start_span(op="http", description="GET /") as span:
 
 ### JavaScript
 
-To use our APM features, you need to use a beta release.
+To access our APM features, you need to use a beta release.
 
 ```bash
 $ npm install @sentry/browser
@@ -172,10 +172,10 @@ Sentry.init({
 });
 ```
 
-You can pass a lot of different options to tracing, but it comes with reasonable defaults out of the box. You will receive:
+You can pass a lot of different options to tracing, but it comes with reasonable defaults out of the box. You'll receive:
 
-- a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for every page load
-- all XHR/fetch requests as spans
+- A [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for every page load
+- All XHR/fetch requests as spans
 
 **Using Tracing Integration for Manual Tracing**
 
@@ -232,7 +232,7 @@ function processItem(item, transaction) {
 
 ### Node.js
 
-To use our APM features, you need to use a beta release.
+To access our APM features, you need to use a beta release.
 
 ```bash
 $ npm install @sentry/node
@@ -241,7 +241,7 @@ $ npm install @sentry/apm
 
 **Sending Traces**
 
-To send any traces, set the `tracesSampleRate`to a nonzero value. The following configuration will capture 10% of all your transactions:
+To send any traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 10% of all your transactions:
 
 ```javascript
 const Sentry = require("@sentry/node");
