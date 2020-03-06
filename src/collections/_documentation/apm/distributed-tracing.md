@@ -27,7 +27,7 @@ Each of these components may be written in different languages on different plat
 
 With tracing, we can follow the journey of the API endpoint requests from their source (for example, from the frontend), and instrument code paths as these requests traverse each component of the application. This journey is called a [**trace**]({%- link _documentation/apm/apm-glossary.md -%}#trace). Traces that cross between components, as in our web application example, are typically called **distributed traces**.
 
-[tracing diagram here]
+[{% asset apm/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset apm/tracing-diagram.png @path %})
 
 Each [trace]({%- link _documentation/apm/apm-glossary.md -%}#trace) has a marker called a `trace_id`. Trace IDs are pseudorandom fixed length of alphanumeric character sequences.
 
