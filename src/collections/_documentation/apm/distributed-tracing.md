@@ -27,7 +27,7 @@ Each of these components may be written in different languages on different plat
 
 With tracing, we can follow the journey of the API endpoint requests from their source (for example, from the frontend), and instrument code paths as these requests traverse each component of the application. This journey is called a [**trace**]({%- link _documentation/apm/apm-glossary.md -%}#trace). Traces that cross between components, as in our web application example, are typically called **distributed traces**.
 
-[{% asset apm/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset apm/tracing-diagram.png @path %})
+[tracing diagram here]
 
 Each [trace]({%- link _documentation/apm/apm-glossary.md -%}#trace) has a marker called a `trace_id`. Trace IDs are pseudorandom fixed length of alphanumeric character sequences.
 
@@ -50,7 +50,7 @@ A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation
 
 ## Transactions
 
-[{% asset apm/anatomy-of-transaction.png alt="Diagram illustrating how a transaction is composed of many spans." %}]({% asset apm/anatomy-of-transaction.png @path %})
+[ anatomy of a transaction diagram here ]
 
 Traces in Sentry are segmented into pieces of [**spans**]({%- link _documentation/apm/apm-glossary.md -%}#span) called [**transactions**]({%- link _documentation/apm/apm-glossary.md -%}#transaction). When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
 
