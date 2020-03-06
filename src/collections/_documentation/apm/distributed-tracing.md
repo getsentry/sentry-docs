@@ -50,7 +50,7 @@ A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation
 
 ## Transactions
 
-[ anatomy of a transaction diagram here ]
+[{% asset apm/anatomy-of-transaction.png alt="Diagram illustrating how a transaction is composed of many spans." %}]({% asset apm/anatomy-of-transaction.png @path %})
 
 Traces in Sentry are segmented into pieces of [**spans**]({%- link _documentation/apm/apm-glossary.md -%}#span) called [**transactions**]({%- link _documentation/apm/apm-glossary.md -%}#transaction). When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
 
