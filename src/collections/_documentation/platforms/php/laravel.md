@@ -31,7 +31,22 @@ If you're on Laravel 5.5 or later the package will be auto-discovered. Otherwise
 ```
 {% endwizard %}
 
-Add Sentry reporting to `App/Exceptions/Handler.php`:
+Add Sentry reporting to `App/Exceptions/Handler.php`.
+
+**For Laravel 7.x and later:**
+
+```php
+public function report(Throwable $exception)
+{
+    if (app()->bound('sentry') && $this->shouldReport($exception)) {
+        app('sentry')->captureException($exception);
+    }
+
+    parent::report($exception);
+}
+```
+
+**For Laravel 5.x and 6.x:**
 
 ```php
 public function report(Exception $exception)
@@ -86,7 +101,7 @@ require __DIR__ . '/../app/Http/routes.php';
 Add Sentry reporting to `app/Exceptions/Handler.php`:
 
 ```php
-public function report(Exception $exception)
+public function report(Throwable $exception)
 {
     if (app()->bound('sentry') && $this->shouldReport($exception)) {
         app('sentry')->captureException($exception);
