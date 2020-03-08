@@ -9,14 +9,7 @@ cd_branch="sentry-meredith-test-fixing-apidoc-generator"
 # su postgres -c 'createdb -U postgres -E utf8 --template template0 sentry_api_docs'
 # su postgres -c 'psql -U postgres -h 127.0.0.1 -c "CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;"'
 
-echo "--> Docker changes"
-apt update
-apt-get install systemd
-apt install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common
-curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-apt update
-apt install -y docker-ce
+echo "--> Starting docker daemon"
 dockerd &
 
 echo "--> Fetching sentry source"
@@ -29,9 +22,6 @@ cd ${cd_branch}
 export SENTRY_LIGHT_BUILD=1
 pip install -U setuptools
 pip install -e '.[dev]'
-
-# echo "--> Starting Redis"
-# redis-server &
 
 echo "--> Building API docs"
 python api-docs/apidocs.py --output-path=/usr/src/output --output-format=both

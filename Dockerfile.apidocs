@@ -10,7 +10,7 @@
 # The container will dump the generated documentation in markdown and JSON
 # formats into the /usr/src/output directory which you should mount as a volume
 #
-FROM python:2.7.15
+FROM python:2.7.15-slim-stretch
 
 RUN mkdir -p /usr/share/man/man1 \
   /usr/share/man/man2 \
@@ -28,7 +28,11 @@ RUN groupadd -r redis --gid=998 \
 ENV PG_MAJOR 9.6
 ENV PATH /usr/lib/postgresql/$PG_MAJOR/bin:$PATH
 
+# TODO(manu): alphabetically order stuff here
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-transport-https \
+    gnupg2 \
+    software-properties-common \
     ca-certificates \
     clang \
     curl \
@@ -49,8 +53,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-contrib-$PG_MAJOR \
     redis-server \
     unzip \
-    docker \
   && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - \
+    && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
+    && apt update \
+    && apt install -y docker-ce
 
 # Sane defaults for pip
 ENV PIP_NO_CACHE_DIR off
