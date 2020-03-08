@@ -7,7 +7,7 @@ Laravel is supported via a native package, [sentry-laravel](https://github.com/g
 
 ## Installation
 
-### Laravel 5.x & 6.x
+### Laravel 5.x, 6.x & 7.x
 
 {% wizard %}
 Install the `sentry/sentry-laravel` package:
@@ -101,7 +101,7 @@ require __DIR__ . '/../app/Http/routes.php';
 Add Sentry reporting to `app/Exceptions/Handler.php`:
 
 ```php
-public function report(Throwable $exception)
+public function report(Exception $exception)
 {
     if (app()->bound('sentry') && $this->shouldReport($exception)) {
         app('sentry')->captureException($exception);
