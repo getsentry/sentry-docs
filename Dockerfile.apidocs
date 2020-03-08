@@ -20,14 +20,6 @@ RUN mkdir -p /usr/share/man/man1 \
   /usr/share/man/man6 \
   /usr/share/man/man7
 
-RUN groupadd -r redis --gid=998 \
-  && useradd -r -g redis --uid=998 redis \
-  && groupadd -r postgres --gid=999 \
-  && useradd -r -g postgres --uid=999 postgres
-
-ENV PG_MAJOR 9.6
-ENV PATH /usr/lib/postgresql/$PG_MAJOR/bin:$PATH
-
 # TODO(manu): alphabetically order stuff here
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-transport-https \
@@ -49,9 +41,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     llvm \
     bzip2 \
     make \
-    postgresql-$PG_MAJOR \
-    postgresql-contrib-$PG_MAJOR \
-    redis-server \
     unzip \
   && rm -rf /var/lib/apt/lists/*
 
@@ -67,13 +56,6 @@ ENV PYTHONUNBUFFERED 1
 
 # Disable yarn installation
 ENV SENTRY_LIGHT_BUILD=1
-
-# Update postgres configuration to allow local access
-RUN rm "/etc/postgresql/$PG_MAJOR/main/pg_hba.conf" \
-  && touch "/etc/postgresql/$PG_MAJOR/main/pg_hba.conf" \
-  && chown -R postgres "/etc/postgresql/$PG_MAJOR/main/pg_hba.conf" \
-  && { echo; echo "host all all 0.0.0.0/0 trust"; } >> "/etc/postgresql/$PG_MAJOR/main/pg_hba.conf" \
-  && { echo; echo "local all all trust"; } >> "/etc/postgresql/$PG_MAJOR/main/pg_hba.conf"
 
 RUN mkdir -p /usr/src/bin
 COPY scripts/build-api-docs /usr/bin
