@@ -118,8 +118,6 @@ Trace metadata is propagated through http headers that are included in the http 
 
 ## Transaction
 
-There already was a concept of transaction in the Sentry SDKs before we started with APM.
-
 Transaction is an event attribute that provides initial context to the error report. This makes it possible for the error to be linked to a specific part of the system. An example of the transaction name can be “/users/” which is the name for the endpoint that received the request that failed during the processing.
 
 With tracing, the transaction is a parent span to all spans created during the processing of the request in the single server.
