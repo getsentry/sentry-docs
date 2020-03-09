@@ -118,7 +118,7 @@ There already was a concept of transaction in the Sentry SDKs before we started 
 
 Transaction is an event attribute that provides initial context to the error report. This makes it possible for the error to be linked to a specific part of the system. An example of the transaction name can be “/users/” which is the name for the endpoint that received the request that failed during the processing.
 
-With APM, the transaction is a parent span to all spans created during the processing of the request in the single server.
+With tracing, the transaction is a parent span to all spans created during the processing of the request in the single server.
 
 Once the request is processed, the transaction is sent together with all child spans to Sentry.
 

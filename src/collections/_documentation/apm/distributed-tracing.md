@@ -46,7 +46,7 @@ Referring back to our earlier example of the web application consisting of these
 - Background Queue
 - Notification Job
 
-A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the background queue or notification job. Collected [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component aren't forwarded to the next component.
+A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the background queue or notification job. Collected [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component aren't forwarded to the next component. If a span appears to be missing a parent span, it could be an [**orphan span**]({%- link _documentation/apm/apm-glossary.md -%}#orphan-span).
 
 ## Transactions
 
@@ -60,11 +60,11 @@ If you are collecting transactions from more than a single machine, you will lik
 
 **We strongly recommend sampling your transactions.**
 
-When you enable sampling for APM events in Sentry, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of 0.25 would result in 250 transactions (25%) being sent to Sentry.
+When you enable sampling for transaction events in Sentry, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of 0.25 would result in 250 transactions (25%) being sent to Sentry.
 
-Sampling enables you to collect traces on a subset of your traffic and extrapolate to the total volume. Furthermore, enabling sampling allows you to control the volume of data you send to Sentry and lets you better manage your costs. If you don't have a good understanding of what sampling rate to choose, we recommend you start low and gradually increase the sampling rate as you learn more about your traffic patterns and volume.
+Sampling enables you to collect traces on a subset of your traffic and extrapolate to the total volume. Furthermore, **enabling sampling allows you to control the volume of data you send to Sentry and lets you better manage your costs**. If you don't have a good understanding of what sampling rate to choose, we recommend you start with a low value and gradually increase the sampling rate as you learn more about your traffic patterns and volume.
 
-When you have multiple projects collecting APM data, Sentry utilizes "head-based" sampling to ensure that once a sampling decision has been made, that decision is propagated to each application or project involved in the [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction). If your applications have multiple entry points, you should aim to choose consistent sampling rates. Choosing different sampling rates can bias your results. Sentry does not support "tail-based" sampling at this time.
+When you have multiple projects collecting transaction events, Sentry utilizes "head-based" sampling to ensure that once a sampling decision has been made at the beginning of the trace (typically the initial transaction), that decision is propagated to each application or project involved in the [trace]({%- link _documentation/apm/apm-glossary.md -%}#trace). If your applications have multiple entry points, you should aim to choose consistent sampling rates. Choosing different sampling rates can bias your results. Sentry does not support "tail-based" sampling at this time.
 
 If you enable APM collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits]({%- link _documentation/accounts/quotas.md -%}).
 
@@ -95,7 +95,7 @@ import sentry_sdk
 sentry_sdk.init("___PUBLIC_DSN___", traces_sample_rate=0.1)
 ```
 
-**Automating Traces**
+**Automatic Instrumentation**
 
 Many integrations for popular frameworks automatically capture traces. If you already have any of the following frameworks set up for Sentry error reporting, you will start to see traces immediately:
 
@@ -103,13 +103,13 @@ Many integrations for popular frameworks automatically capture traces. If you al
 - Celery
 - Redis Queue (RQ)
 
-[Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are available for the following operations within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
+[Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
 
 - Database that uses SQLAlchemy or the Django ORM
 - HTTP requests made with `requests` or the `stdlib`
 - Spawned subprocesses
 
-If you want to enable all relevant transactions automatically, you can use this alternative (currently in alpha):
+If you want to enable all relevant transactions automatically, you can use this alternative configuration (currently in alpha):
 
 ```python
 import sentry_sdk
@@ -117,9 +117,11 @@ import sentry_sdk
 sentry_sdk.init("___PUBLIC_DSN___", _experiments={"auto_enabling_integrations": True})
 ```
 
-**Managing Transactions**
+**Manual Instrumentation**
 
-Let’s say you want to create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for an expensive operation (for example, `process_item`) and send the result to Sentry:
+To manually instrument certain regions of your code, you can create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) to capture them. 
+
+The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
 
 ```python
 import sentry_sdk
@@ -141,10 +143,13 @@ You can choose the value of `op` and `description`.
 ```python
 import sentry_sdk
 
-with sentry_sdk.start_span(op="http", description="GET /") as span:
-    response = my_custom_http_library.request("GET", "/")
-    span.set_tag("http.status_code", response.status_code)
-    span.set_data("http.foobarsessionid", get_foobar_sessionid())
+def process_item(item):
+    
+  # omitted code...
+  with sentry_sdk.start_span(op="http", description="GET /") as span:
+      response = my_custom_http_library.request("GET", "/")
+      span.set_tag("http.status_code", response.status_code)
+      span.set_data("http.foobarsessionid", get_foobar_sessionid())
 ```
 
 ### JavaScript
@@ -172,12 +177,13 @@ Sentry.init({
 });
 ```
 
-You can pass a lot of different options to tracing, but it comes with reasonable defaults out of the box. You'll receive:
+You can pass a lot of different options to tracing, but it comes with reasonable defaults out of the box.
+[Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
 
 - A [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for every page load
 - All XHR/fetch requests as spans
 
-**Using Tracing Integration for Manual Tracing**
+**Using Tracing Integration for Manual Instrumentation**
 
 Tracing will create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) on page load by default; all [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) that are started will be attached to it. Also, tracing will finish the transaction after the default timeout of 500ms of inactivity. Inactivity is if there are no pending XHR/fetch requests. If you want to extend it by adding spans to the transaction, here is an example of how you could profile a React component:
 
@@ -196,9 +202,11 @@ const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
 Integrations.ApmIntegrations.popActivity(activity);
 ```
 
-**Managing Transactions**
+**Manual Transactions**
 
-Let’s say you want to create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for an expensive operation (for example, `processItem`) and send the result to Sentry:
+To manually instrument certain regions of your code, you can create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) to capture them.
+
+The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
 
 ```javascript
 const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction: item.getTransaction() })
@@ -210,7 +218,7 @@ const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction:
 
 **Adding Additional Spans to the Transaction**
 
-The next example is called in the `processItem` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
+The next example contains the implementation of the hypothetical `processItem ` function called from the code snippet in the previous section. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the `transaction`.
 
 ```javascript
 function processItem(item, transaction) {
@@ -232,7 +240,7 @@ function processItem(item, transaction) {
 
 ### Node.js
 
-To access our APM features, you need to use a beta release.
+To access our tracing features, you will need to install our APM integration:
 
 ```bash
 $ npm install @sentry/node
@@ -253,7 +261,7 @@ Sentry.init({
 });
 ```
 
-**Automating Traces**
+**Automatic Instrumentation**
 
 It’s possible to add tracing to all popular frameworks; however, we provide pre-written handlers only for Express.js.
 
@@ -273,7 +281,7 @@ app.use(Sentry.Handlers.errorHandler());
 app.listen(3000);
 ```
 
-The following operations have [span]({%- link _documentation/apm/apm-glossary.md -%}#span) capabilities within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
+[Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
 
 - HTTP requests made with `request` or `get` calls using native `http` and `https` modules
 - Middlewares (Express.js only)
