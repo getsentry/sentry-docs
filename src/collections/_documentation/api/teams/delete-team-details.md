@@ -11,7 +11,7 @@
   "parameters": null, 
   "path_parameters": null, 
   "query_parameters": null, 
-  "sidebar_order": 3, 
+  "sidebar_order": 6, 
   "title": "Delete a Team", 
   "warning": null
 }
