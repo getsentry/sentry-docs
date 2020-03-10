@@ -60,7 +60,7 @@ An example of a span that describes a call to an external service:
       "same_process_as_parent": true,
       "description": "http://httpbin.org/base64/aGVsbG8gd29ybGQK GET",
       "tags": { "http.status_code": 200, "status": "ok" },
-      "timestamp": "1563890702.934",
+      "timestamp": 1563890702.934,
       "op": "http",
       "data": {
         "url": "http://httpbin.org/base64/aGVsbG8gd29ybGQK",
