@@ -12,7 +12,7 @@ In addition to using [`beforeSend`]({% link _documentation/data-management/sensi
 
 ## Overview
 
-**Advanced Data Scrubbing is currently only available if your organization is an Early Adopter.** To become one, go to your organization settings and enable the "Early Adopter" option to get access to new features before they're fully released. This option can be as easily disabled as it can be enabled.
+**Advanced Data Scrubbing is available only if your organization is enabled as an Early Adopter.** To enable this option, navigate to your organization's settings and enable the "Early Adopter" option. Turning on this option allows access to features prior to full release, and can be disabled at any time.
 
 Early adopters have access to a new option ("Advanced datascrubber configuration") in both organization settings as well as the setting of each project, which accepts JSON-based configuration as described in the next section.
 
