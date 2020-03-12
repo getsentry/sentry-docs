@@ -46,13 +46,13 @@ Referring back to our earlier example of the web application consisting of these
 - Background Queue
 - Notification Job
 
-A trace [propagates]({%- link _documentation/performance/performance-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the background queue or notification job. Collected [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component aren't forwarded to the next component. If a span appears to be missing a parent span, it could be an [**orphan span**]({%- link _documentation/performance/performance-glossary.md -%}#orphan-span).
+A trace [propagates]({%- link _documentation/performance/performance-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the background queue or notification job. Collected [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component aren't forwarded to the next component. If a span appears to be missing a parent span, it could be an [**orphan span**]({%- link _documentation/performance/performance-glossary.md -%}#orphan-spans).
 
 ## Transactions
 
 [{% asset performance/anatomy-of-transaction.png alt="Diagram illustrating how a transaction is composed of many spans." %}]({% asset performance/anatomy-of-transaction.png @path %})
 
-Traces in Sentry are segmented into pieces of [**spans**]({%- link _documentation/performance/performance-glossary.md -%}#span) called [**transactions**]({%- link _documentation/performance/performance-glossary.md -%}#transaction). When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
+Traces in Sentry are segmented into pieces of [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) called [**transactions**]({%- link _documentation/performance/performance-glossary.md -%}#transaction). When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
 
 If you are collecting transactions from more than a single machine, you will likely encounter [**clock skew**]({%- link _documentation/performance/performance-glossary.md -%}#clock-skew).
 

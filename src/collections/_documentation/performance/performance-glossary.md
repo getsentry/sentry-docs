@@ -47,7 +47,7 @@ Any instrumented span is part of a trace (identified by its trace id, `trace_id`
 
 An example of a span that describes a call to an external service:
 
-```json
+```javascript
 // updateJiraTask
 {
   "trace_id": "a8233eb845154a2cae4712b28375d08d",
