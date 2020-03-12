@@ -136,7 +136,7 @@ while True:
 
 **Adding More Spans to the Transaction**
 
-The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the `transaction`.
+The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open `transaction` and add all newly created [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the `transaction`.
 
 You can choose the value of `op` and `description`.
 
@@ -185,7 +185,7 @@ You can pass many different options to tracing, but it comes with reasonable def
 
 **Using Tracing Integration for Manual Instrumentation**
 
-Tracing will create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) on page load by default; all [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) that are created will be attached to it. Also, tracing will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests. If you want to extend the transaction's lifetime beyond 500ms, you can do so by adding more spans to the transaction. The following is an example of how you could profile a React component:
+The tracing integration will create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) on page load by default; all [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) that are created will be attached to it. Also, the integration will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests. If you want to extend the transaction's lifetime beyond 500ms, you can do so by adding more spans to the transaction. The following is an example of how you could profile a React component:
 
 ```javascript
 // This line starts an activity (and creates a span).
@@ -218,7 +218,7 @@ const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction:
 
 **Adding Additional Spans to the Transaction**
 
-The next example contains the implementation of the hypothetical `processItem ` function called from the code snippet in the previous section. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the `transaction`.
+The next example contains the implementation of the hypothetical `processItem ` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open `transaction` and add all newly created [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the `transaction`.
 
 ```javascript
 function processItem(item, transaction) {
