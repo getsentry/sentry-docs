@@ -8,7 +8,7 @@ In addition to using [`beforeSend`]({% link _documentation/data-management/sensi
 
 * Define custom regular expressions to match on sensitive data
 * Detailed tuning on which parts of an event to scrub
-* Partial removal or hashing of sensitive data instead of just deletion
+* Partial removal or hashing of sensitive data instead of deletion
 
 ## Overview
 
