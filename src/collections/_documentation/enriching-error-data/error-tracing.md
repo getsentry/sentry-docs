@@ -1,11 +1,11 @@
 ---
-title: Tracing
+title: Error Tracing
 sidebar_order: 5
 ---
 
-With tracing, you can correlate errors from multiple services and uncover a significant story surrounding a break. Using a unique identifier allows you to trace an error and pinpoint the service and code behaving unexpectedly. 
+With error tracing, you can correlate errors from multiple services and uncover a significant story surrounding a break. Using a unique identifier allows you to trace an error and pinpoint the service and code behaving unexpectedly. 
 
-## Tracing and Sentry Configuration
+## Error Tracing and Sentry Configuration
 The following steps demonstrate a potential use-case that involves an example web application with a JavaScript front-end and a Node.js server. The examples assume that both services are already configured with Sentry's [JavaScript SDK]({% link _documentation/platforms/javascript/index.md %}).
 
 #### Step 1: Generate a unique transaction ID
@@ -54,7 +54,7 @@ if (transactionId) {
 }
 ```
 
-## Use-Case: Tracing with NGINX
+## Use-Case: Error Tracing with NGINX
 
 A look at how to trace a file upload issue through NGINX and Sentry with the help of a `$request_id` --- a randomly generated string that Sentry automatically assigns to each request.
 
