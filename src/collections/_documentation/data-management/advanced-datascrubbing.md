@@ -1,28 +1,28 @@
 ---
-title: 'Advanced Data Scrubbing (Preview)'
-sidebar_order: 1
+title: 'Advanced Data Scrubbing (Beta)'
+sidebar_order: 4
 keywords: ["pii", "gdpr", "personally identifiable data", "compliance"]
 ---
 
 In addition to using [`beforeSend`]({% link _documentation/data-management/sensitive-data.md %}#custom-event-processing-in-the-sdk) in your SDK or our [server-side data scrubbing features]({% link _documentation/data-management/sensitive-data.md %}#server-side-scrubbing) to redact sensitive data, we are currently beta-testing ways to give you more granular control over what exactly our server-side data scrubbing does to your events. Additional functionality includes:
 
-* Ability to define custom regular expressions to match on sensitive data
-* More fine-grained tuning on which parts of an event to scrub
+* Define custom regular expressions to match on sensitive data
+* Detailed tuning on which parts of an event to scrub
 * Partial removal or hashing of sensitive data instead of just deletion
 
 ## Overview
 
-**Advanced Data Scrubbing is currently only available if your organization is an Early Adopter.** To become one, go to your organization settings and enable the "Early Adopter" option to get access to new features before they're fully released. This option can be just as easily disabled as it can be enabled.
+**Advanced Data Scrubbing is currently only available if your organization is an Early Adopter.** To become one, go to your organization settings and enable the "Early Adopter" option to get access to new features before they're fully released. This option can be as easily disabled as it can be enabled.
 
-You will then get access to one new option in both organization settings and the settings of each project called "Advanced datascrubber configuration". Its content is a piece of JSON-based configuration in the format described in the next section.
+Early adopters have access to a new option ("Advanced datascrubber configuration") in both organization settings as well as the setting of each project, which accepts JSON-based configuration as described in the next section.
 
 Note that everything you configure there will have direct impact on all new events, just as all the other data privacy-related settings do. However, it is not possible to break or undo any other data privacy settings that you may have configured. In other words, it is only possible to accidentally remove too much data, not too little.
 
 If you have any questions related to this feature, feel free to contact us at `markus@sentry.io`.
 
-## A basic example
+## A Basic Example
 
-Say you have an exception message which, unfortunately, contains IP addresses which are not supposed to be there. You'd write:
+One example is an exception message that includes an IP address that needs to be removed. In this example, you'd write:
 
 ```json
 {
@@ -36,20 +36,20 @@ It reads as "replace all IP addresses in all strings", or "apply `@ip:replace` t
 
 `@ip:replace` is called a rule, and `$string` is a [_selector_](#selectors).
 
-## Built-in rules
+## Built-In Rules
 
-The following rules exist by default:
+The following rules can be used by default:
 
 - `@ip:replace` and `@ip:hash` for replacing IP addresses.
 - `@imei:replace` and `@imei:hash` for replacing IMEIs
 - `@mac:replace`, `@mac:mask` and `@mac:hash` for matching MAC addresses
 - `@email:mask`, `@email:replace` and `@email:hash` for matching email addresses
-- `@creditcard:mask`, `@creditcard:replace` and `@creditcard:hash` for matching creditcard numbers
+- `@creditcard:mask`, `@creditcard:replace` and `@creditcard:hash` for matching credit card numbers
 - `@userpath:replace` and `@userpath:hash` for matching local paths (e.g. `C:/Users/foo/`)
 - `@password:remove` for removing passwords. In this case we're pattern matching against the field's key, whether it contains `password`, `credentials` or similar strings.
 - `@anything:remove`, `@anything:replace` and `@anything:hash` for removing, replacing or hashing any value. It is essentially equivalent to a wildcard-regex, but it will also match much more than strings.
 
-## Writing your own rules
+## Writing Your Own Rules
 
 Rules generally consist of two parts:
 
@@ -60,7 +60,7 @@ Each page comes with examples. Try those examples out by pasting them into the "
 
 ## Selectors
 
-You have the possibility to select a region of the event using JSON-path-like syntax. To delete a specific key in "Additional Data", you could for example use:
+You can select a region of the event using JSON-path-like syntax. As an example, to delete a specific key in "Additional Data":
 
 ```json
 {
@@ -70,7 +70,7 @@ You have the possibility to select a region of the event using JSON-path-like sy
 }
 ```
 
-### Boolean logic
+### Boolean Logic
 
 You can combine selectors using boolean logic.
 
@@ -83,9 +83,9 @@ You can combine selectors using boolean logic.
 * `**` matches all subpaths, so that `foo.**` matches all JSON keys within `foo`.
 * `*` matches a single path item, so that `foo.*` matches all JSON keys one level below `foo`.
 
-### Value types
+### Value Types
 
-The following can be used to select subsections by JSON-type or semantic meaning.
+Select subsections by JSON-type or semantic meaning using the following:
 
 * `$string`
 * `$number`
@@ -127,7 +127,7 @@ Examples:
   }
   ```
 
-### Escaping specal characters
+### Escaping Specal Characters
 
 If the object key you want to match contains whitespace or special characters, you can use quotes to escape it:
 
@@ -143,7 +143,7 @@ To escape `'` within the quotes, replace it with `''`.
 
 ## Rule Types
 
-### pattern
+### `pattern`
 
 Custom Perl-style regex (PCRE).
 
@@ -164,7 +164,7 @@ Custom Perl-style regex (PCRE).
 }
 ```
 
-### imei
+### `imei`
 
 Matches an IMEI or IMEISV.
 
@@ -184,7 +184,7 @@ Matches an IMEI or IMEISV.
 }
 ```
 
-### mac
+### `mac`
 
 Matches a MAC address.
 
@@ -204,7 +204,7 @@ Matches a MAC address.
 }
 ```
 
-### ip
+### `ip`
 
 Matches any IP address.
 
@@ -224,9 +224,9 @@ Matches any IP address.
 }
 ```
 
-### creditcard
+### `creditcard`
 
-Matches a creditcard number.
+Matches a credit card number.
 
 ```json
 {
@@ -244,7 +244,7 @@ Matches a creditcard number.
 }
 ```
 
-### userpath
+### `userpath`
 
 Matches a local path (e.g. `C:/Users/foo/`).
 
@@ -264,7 +264,7 @@ Matches a local path (e.g. `C:/Users/foo/`).
 }
 ```
 
-### anything
+### `anything`
 
 Matches any value. This is basically equivalent to a wildcard regex.
 
@@ -286,7 +286,7 @@ For example, to remove all strings:
 }
 ```
 
-### multiple
+### `multiple`
 
 Combine multiple rules into one. This is a disjunction (OR): The field in question has to match only one of the rules to match the combined rule, not all of them.
 
@@ -311,7 +311,7 @@ Combine multiple rules into one. This is a disjunction (OR): The field in questi
 }
 ```
 
-### alias
+### `alias`
 
 Alias one rule to the other. This is the same as `multiple` except that you can only wrap one rule.
 
@@ -335,7 +335,7 @@ Alias one rule to the other. This is the same as `multiple` except that you can 
 
 ## Redaction Methods
 
-### remove
+### `remove`
 
 Remove the entire field. Relay may choose to either set it to `null` or to remove it entirely.
   
@@ -355,7 +355,7 @@ Remove the entire field. Relay may choose to either set it to `null` or to remov
 }
 ```
 
-### replace
+### `replace`
 
 Replace the key with a static string.
 
@@ -376,7 +376,7 @@ Replace the key with a static string.
 }
 ```
 
-### mask
+### `mask`
 
 Replace every character of the matched string with a "masking" char. Compared to `replace` this preserves the length of the original string.
 
@@ -399,7 +399,7 @@ Replace every character of the matched string with a "masking" char. Compared to
 }
 ```
 
-### hash
+### `hash`
 
 Replace the string with a hashed version of itself. Equal strings will produce the same hash, so if you, for example, decide to hash the user ID instead of replacing or removing it, you will still have an accurate count of users affected.
 
