@@ -4,7 +4,7 @@ sidebar_order: 0
 ---
 
 {% capture __alert_content -%}
-Sentry's Application Performance Monitoring (APM) features are currently in beta. For more details about APM access, feel free to reach out at [https://sentry.io/for/apm/](https://sentry.io/for/apm/).
+Sentry's Performance features are currently in beta. For more details about Performance access, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -71,7 +71,7 @@ If you enable APM collection for a large portion of your traffic, you may exceed
 ## Setting Up Tracing
 
 {% capture __alert_content -%}
-Sentry's Application Performance Monitoring (APM) features are currently in beta. For more details about APM access, feel free to reach out at [https://sentry.io/for/apm/](https://sentry.io/for/apm/).
+Sentry's Performance features are currently in beta. For more details about Performance access, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
 
 Supported SDKs for Tracing:
 - JavaScript Browser ≥ 5.13.0
