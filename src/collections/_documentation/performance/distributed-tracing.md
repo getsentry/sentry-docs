@@ -154,7 +154,7 @@ def process_item(item):
 
 ### JavaScript
 
-To access our tracing features, you will need to install our Performance integration:
+To access our tracing features, you will need to install our Tracing integration:
 
 ```bash
 $ npm install @sentry/browser
