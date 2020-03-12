@@ -52,23 +52,33 @@ Any instrumented span is part of a trace (identified by its trace id, `trace_id`
 An example of a span that describes a call to an external service:
 
 ```json
-    {
-      "trace_id": "a0fa8803753e40fd8124b21eeb2986b5",
-      "parent_span_id": "9c2a6db8c79068a2",
-      "span_id": "8c931f4740435fb8",
-      "start_timestamp": 1563890702.134,
-      "same_process_as_parent": true,
-      "description": "http://httpbin.org/base64/aGVsbG8gd29ybGQK GET",
-      "tags": { "http.status_code": 200, "status": "ok" },
-      "timestamp": 1563890702.934,
-      "op": "http",
-      "data": {
-        "url": "http://httpbin.org/base64/aGVsbG8gd29ybGQK",
-        "status_code": 200,
-        "reason": "OK",
-        "method": "GET"
-      }
-    }
+// updateJiraTask
+{
+  "trace_id": "a8233eb845154a2cae4712b28375d08d",
+  "parent_span_id": "ba99c37bfb30f860",
+  "span_id": "92ce7ea47d5b8a45",
+  "start_timestamp": 1583868931.940406,
+  "same_process_as_parent": true,
+  "description": "updateJiraTask",
+  "tags": { "status": "ok" },
+  "timestamp": 1583868932.060615,
+  "op": "jira",
+  "data": {}
+}
+
+// sql.update - a child span of updateJiraTask
+{
+  "trace_id": "a8233eb845154a2cae4712b28375d08d",
+  "parent_span_id": "92ce7ea47d5b8a45",
+  "span_id": "a88e33dab5b745b9",
+  "start_timestamp": 1583868931.953386,
+  "same_process_as_parent": true,
+  "description": "sql.update - SELECT * FROM jira_table",
+  "tags": { "status": "ok" },
+  "timestamp": 1583868932.03692,
+  "op": "db",
+  "data": {}
+}
 ```
 
 ### Hierarchy
