@@ -1,5 +1,5 @@
 ---
-title: APM Glossary
+title: Performance Glossary
 sidebar_order: 5
 ---
 
