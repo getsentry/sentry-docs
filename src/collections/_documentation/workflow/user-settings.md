@@ -135,11 +135,13 @@ A shortcut to the Emails panel can be found at the bottom of this section.
 
 The email address used to login to your Sentry account is by default your primary email address. An additional email address can be added under the *Add Secondary Emails* section.
 
-
+{% asset user-settings/us-eprime.png alt="Primary email field in Emails under User Settings" width="494" %}
 
 {% capture __alert_content -%}
 
-A shortcut to the *Notifications* panel can be found at the bottom of this section. 
+A shortcut to the *Notifications* panel can be found at the bottom of this section.
+
+{% asset user-settings/us-epanellink.png alt="A link to the Notifications panel in Emails under Additional Email" width="450" %} 
 
 {%- endcapture -%}
 {%- include components/alert.html
@@ -151,7 +153,7 @@ A shortcut to the *Notifications* panel can be found at the bottom of this secti
 
 As part of our compliance with the EU’s General Data Protection Regulation (GDPR), you would only receive marketing campaign emails after explicitly opting-in to any of the listed categories. 
 
-
+{% asset user-settings/us-subs.png alt="Subscriptions section under User Settings" width="450" %}
 
 ## Authorized Applications
 
@@ -161,13 +163,13 @@ All authorized third-party applications are listed in this section. Authenticati
 
 We integrate with several identity providers, like Okta, OneLogin, Auth0, and Yubico. To disconnect any previously configured provider, click the *Disconnect* button.
 
-
+{% asset user-settings/us-id.png alt="Disconnect button in Identities section under User Settings" %}
 
 ## Close Account
 
 Closing your Sentry account automatically removes all data associated with your account. If your account is the sole owner of an organization, this organization will be deleted. Organizations with multiple owners will remain unchanged.
 
-
+{% asset user-settings/us-close.png alt="Close Account button in Close Account section under User Settings" width="745" %}
 
 {% capture __alert_content -%}
 
@@ -186,9 +188,10 @@ Deleting your account can not be undone.
 
 Integrating your application with Sentry allows you to automatically send events to your Sentry instance. To create an application, click the *Create New Application* button.
 
-
+{% asset user-settings/us-apps.png alt="Create New Application button in the Applications section under User Settings" width="380" %}
 
 ### Auth Tokens
 
 Authentication tokens allow you to perform actions against the Sentry API on behalf of your account. To create one, click the *Create New Token* button.
 
+{% asset user-settings/us-token.png alt="Create New Token button in the Auth Tokens section under User Settings" width="745" %}
