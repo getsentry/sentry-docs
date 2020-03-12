@@ -25,11 +25,11 @@ Applications (for example, web applications) typically consist of interconnected
 
 Each of these components may be written in different languages on different platforms. Today, all of these components can be instrumented with the Sentry SDKs to capture error data or crash reports whenever an event occurs in any one of these components.
 
-With tracing, we can follow the journey of the API endpoint requests from their source (for example, from the frontend), and instrument code paths as these requests traverse each component of the application. This journey is called a [**trace**]({%- link _documentation/apm/apm-glossary.md -%}#trace). Traces that cross between components, as in our web application example, are typically called **distributed traces**.
+With tracing, we can follow the journey of the API endpoint requests from their source (for example, from the frontend), and instrument code paths as these requests traverse each component of the application. This journey is called a [**trace**]({%- link _documentation/performance/performance-glossary.md -%}#trace). Traces that cross between components, as in our web application example, are typically called **distributed traces**.
 
-[{% asset apm/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset apm/tracing-diagram.png @path %})
+[{% asset performance/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset performance/tracing-diagram.png @path %})
 
-Each [trace]({%- link _documentation/apm/apm-glossary.md -%}#trace) has a marker called a `trace_id`. Trace IDs are pseudorandom fixed length of alphanumeric character sequences.
+Each [trace]({%- link _documentation/performance/performance-glossary.md -%}#trace) has a marker called a `trace_id`. Trace IDs are pseudorandom fixed length of alphanumeric character sequences.
 
 By collecting traces of your users as they use your applications, you can begin to reveal some insights such as:
 
@@ -46,15 +46,15 @@ Referring back to our earlier example of the web application consisting of these
 - Background Queue
 - Notification Job
 
-A trace [propagates]({%- link _documentation/apm/apm-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the background queue or notification job. Collected [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component aren't forwarded to the next component. If a span appears to be missing a parent span, it could be an [**orphan span**]({%- link _documentation/apm/apm-glossary.md -%}#orphan-span).
+A trace [propagates]({%- link _documentation/performance/performance-glossary.md -%}#propagation) first from the frontend, then the backend, and later to the background queue or notification job. Collected [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) from each component are sent back to Sentry asynchronously and independently. Instrumented spans received from one component aren't forwarded to the next component. If a span appears to be missing a parent span, it could be an [**orphan span**]({%- link _documentation/performance/performance-glossary.md -%}#orphan-span).
 
 ## Transactions
 
-[{% asset apm/anatomy-of-transaction.png alt="Diagram illustrating how a transaction is composed of many spans." %}]({% asset apm/anatomy-of-transaction.png @path %})
+[{% asset performance/anatomy-of-transaction.png alt="Diagram illustrating how a transaction is composed of many spans." %}]({% asset performance/anatomy-of-transaction.png @path %})
 
-Traces in Sentry are segmented into pieces of [**spans**]({%- link _documentation/apm/apm-glossary.md -%}#span) called [**transactions**]({%- link _documentation/apm/apm-glossary.md -%}#transaction). When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
+Traces in Sentry are segmented into pieces of [**spans**]({%- link _documentation/performance/performance-glossary.md -%}#span) called [**transactions**]({%- link _documentation/performance/performance-glossary.md -%}#transaction). When instrumenting the application with tracing, collected spans are grouped within an encompassing top-level span called the **transaction span**. This notion of a transaction is specific to Sentry.
 
-If you are collecting transactions from more than a single machine, you will likely encounter [**clock skew**]({%- link _documentation/apm/apm-glossary.md -%}#clock-skew).
+If you are collecting transactions from more than a single machine, you will likely encounter [**clock skew**]({%- link _documentation/performance/performance-glossary.md -%}#clock-skew).
 
 ## Sampling Transactions
 
@@ -64,9 +64,9 @@ When you enable sampling for transaction events in Sentry, you choose a percenta
 
 Sampling enables you to collect traces on a subset of your traffic and extrapolate to the total volume. Furthermore, **enabling sampling allows you to control the volume of data you send to Sentry and lets you better manage your costs**. If you don't have a good understanding of what sampling rate to choose, we recommend you start with a low value and gradually increase the sampling rate as you learn more about your traffic patterns and volume.
 
-When you have multiple projects collecting transaction events, Sentry utilizes "head-based" sampling to ensure that once a sampling decision has been made at the beginning of the trace (typically the initial transaction), that decision is propagated to each application or project involved in the [trace]({%- link _documentation/apm/apm-glossary.md -%}#trace). If your applications have multiple entry points, you should aim to choose consistent sampling rates. Choosing different sampling rates can bias your results. Sentry does not support "tail-based" sampling at this time.
+When you have multiple projects collecting transaction events, Sentry utilizes "head-based" sampling to ensure that once a sampling decision has been made at the beginning of the trace (typically the initial transaction), that decision is propagated to each application or project involved in the [trace]({%- link _documentation/performance/performance-glossary.md -%}#trace). If your applications have multiple entry points, you should aim to choose consistent sampling rates. Choosing different sampling rates can bias your results. Sentry does not support "tail-based" sampling at this time.
 
-If you enable APM collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits]({%- link _documentation/accounts/quotas.md -%}).
+If you enable Performance collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits]({%- link _documentation/accounts/quotas.md -%}).
 
 ## Setting Up Tracing
 
@@ -103,7 +103,7 @@ Many integrations for popular frameworks automatically capture traces. If you al
 - Celery
 - Redis Queue (RQ)
 
-[Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
+[Spans]({%- link _documentation/performance/performance-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction):
 
 - Database that uses SQLAlchemy or the Django ORM
 - HTTP requests made with `requests` or the `stdlib`
@@ -119,7 +119,7 @@ sentry_sdk.init("___PUBLIC_DSN___", _experiments={"auto_enabling_integrations": 
 
 **Manual Instrumentation**
 
-To manually instrument certain regions of your code, you can create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) to capture them. 
+To manually instrument certain regions of your code, you can create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) to capture them. 
 
 The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
 
@@ -136,7 +136,7 @@ while True:
 
 **Adding More Spans to the Transaction**
 
-The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the `transaction`.
+The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the `transaction`.
 
 You can choose the value of `op` and `description`.
 
@@ -154,7 +154,7 @@ def process_item(item):
 
 ### JavaScript
 
-To access our tracing features, you will need to install our APM integration:
+To access our tracing features, you will need to install our Performance integration:
 
 ```bash
 $ npm install @sentry/browser
@@ -178,14 +178,14 @@ Sentry.init({
 ```
 
 You can pass a lot of different options to tracing, but it comes with reasonable defaults out of the box.
-[Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
+[Spans]({%- link _documentation/performance/performance-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction):
 
-- A [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for every page load
+- A [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) for every page load
 - All XHR/fetch requests as spans
 
 **Using Tracing Integration for Manual Instrumentation**
 
-Tracing will create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) on page load by default; all [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) that are created will be attached to it. Also, tracing will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests. If you want to extend the transaction's lifetime beyond 500ms, you can do so by adding more spans to the transaction. The following is an example of how you could profile a React component:
+Tracing will create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) on page load by default; all [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) that are created will be attached to it. Also, tracing will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests. If you want to extend the transaction's lifetime beyond 500ms, you can do so by adding more spans to the transaction. The following is an example of how you could profile a React component:
 
 ```javascript
 // This line starts an activity (and creates a span).
@@ -204,7 +204,7 @@ Integrations.ApmIntegrations.popActivity(activity);
 
 **Manual Transactions**
 
-To manually instrument certain regions of your code, you can create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) to capture them.
+To manually instrument certain regions of your code, you can create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) to capture them.
 
 The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
 
@@ -218,7 +218,7 @@ const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction:
 
 **Adding Additional Spans to the Transaction**
 
-The next example contains the implementation of the hypothetical `processItem ` function called from the code snippet in the previous section. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the `transaction`.
+The next example contains the implementation of the hypothetical `processItem ` function called from the code snippet in the previous section. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the `transaction`.
 
 ```javascript
 function processItem(item, transaction) {
@@ -240,7 +240,7 @@ function processItem(item, transaction) {
 
 ### Node.js
 
-To access our tracing features, you will need to install our APM integration:
+To access our tracing features, you will need to install our Performance integration:
 
 ```bash
 $ npm install @sentry/node
@@ -281,7 +281,7 @@ app.use(Sentry.Handlers.errorHandler());
 app.listen(3000);
 ```
 
-[Spans]({%- link _documentation/apm/apm-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction):
+[Spans]({%- link _documentation/performance/performance-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction):
 
 - HTTP requests made with `request` or `get` calls using native `http` and `https` modules
 - Middlewares (Express.js only)
@@ -312,7 +312,7 @@ Sentry.init({
 
 **Managing Transactions**
 
-Let’s say you want to create a [transaction]({%- link _documentation/apm/apm-glossary.md -%}#transaction) for an expensive operation (for example,  `processItem`) and send the result to Sentry:
+Let’s say you want to create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) for an expensive operation (for example,  `processItem`) and send the result to Sentry:
 
 ```javascript
 app.use(function processItems(req, res, next) {
@@ -329,7 +329,7 @@ app.use(function processItems(req, res, next) {
 
 **Adding Additional Spans to the Transaction**
 
-The next example is called in the `processItem` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/apm/apm-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
+The next example is called in the `processItem` function from the code snippet above. Our SDK can determine if there is a current open `transaction` and add all newly created [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) as child operations to the `transaction`. Keep in mind; each individual span also needs to be finished; otherwise, it will not show up in the `transaction`.
 
 You can choose the value of `op` and `description`.
 
