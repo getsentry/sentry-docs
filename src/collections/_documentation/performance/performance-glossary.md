@@ -21,7 +21,7 @@ You can aggregate transaction durations using the following aggregate functions:
 
 One use-case for using these statistics is to help you identify transactions that are slower than your organization's target SLAs.
 
-Transaction events are sampled, so the percentiles we present within Sentry only represents the data we have. Because of sampling, data ranges, filters, or low volume of transactions, we will often have a case where data is directionally correct, but not accurate. For example, the average of one number is that number, but that’s not usually what you may expect to see.
+Transaction events are sampled. As a result, the percentiles presented within Sentry represent only the data received. Because of sampling, data ranges, filters, or low volume of transactions, we will often have a case where data is directionally correct, but not accurate. For example, the average of one number is that number, but that’s not usually what you may expect to see.
 
 This inability to be usefully accurate will happen more often in some columns than others. We can calculate an average with less data than a 95th percentile, but it’ll also vary by row. An index page will always get more traffic than `/settings/country/belgium/tax`.
 
@@ -120,7 +120,7 @@ Processing of the input data in the distributed environment means that an arbitr
 
 To connect all the spans that were created during the processing of the input data, we need to be able to propagate the basic identifier. By forwarding `trace_id` and `parent_span_id` as data travels through various applications in a microservice ecosystem, we can reconstruct data flows later.
 
-Trace metadata is propagated through http headers that are included in the http request to the external system.
+Trace metadata is propagated through HTTP headers that are included in the HTTP request to the external system.
 
 ## Transaction
 
@@ -129,42 +129,3 @@ Transaction is an event attribute that provides initial context to the error rep
 With tracing, the transaction is a parent span to all spans created during the processing of the request in the single server.
 
 Once the request is processed, the transaction is sent together with all child spans to Sentry.
-
-### Event Types
-
-The SDKs already collect a lot of information about the processing of the request. In the case of an error, the SDK attaches the info to the error report to provide rich context of what happened before the error appeared -- information like tags and breadcrumbs.
-
-If the error doesn’t appear during the processing of the request, we discard the context data once processing is complete.
-
-We want to leverage this context collection to build spans, and once a request is finished, we want to send the data to Sentry.
-
-Example of the transaction event type:
-
-```json
-{     
-  "transaction": "tracing.decode_base64",      
-  "type": "transaction",                       
-  "event_id": "2975518984734ef49d2f75db4e928ddc",
-  "contexts": {
-  "trace": {                   
-    "parent_span_id": "946edde6ee421874",      
-    "trace_id": "a0fa8803753e40fd8124b21eeb2986b5", 
-    "span_id": "9c2a6db8c79068a2"   
-  }
-  },
-  "start_timestamp": 1582555570.879015, 
-  "timestamp": 1582555570.905113,    
-  "spans": [
-    {
-      "op": "db",
-      "description": "SELECT * from countries where id = ?",
-      "start_timestamp": 1562681591,
-      "timestamp": 1562681591,
-      "parent_span_id": "9c2a6db8c79068a2",
-      "trace_id": "a0fa8803753e40fd8124b21eeb2986b5",
-      "data": {},
-      "tags": {}
-    }
-  ],
-}
-```

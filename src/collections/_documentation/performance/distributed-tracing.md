@@ -4,7 +4,7 @@ sidebar_order: 0
 ---
 
 {% capture __alert_content -%}
-Sentry's Performance features are currently in beta. For more details about Performance access, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
+Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -71,7 +71,7 @@ If you enable Performance collection for a large portion of your traffic, you ma
 ## Setting Up Tracing
 
 {% capture __alert_content -%}
-Sentry's Performance features are currently in beta. For more details about Performance access, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
+Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
 
 Supported SDKs for Tracing:
 - JavaScript Browser ≥ 5.13.0
@@ -177,7 +177,7 @@ Sentry.init({
 });
 ```
 
-You can pass a lot of different options to tracing, but it comes with reasonable defaults out of the box.
+You can pass many different options to tracing, but it comes with reasonable defaults out of the box.
 [Spans]({%- link _documentation/performance/performance-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction):
 
 - A [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) for every page load
