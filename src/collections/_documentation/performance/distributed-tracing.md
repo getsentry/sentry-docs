@@ -209,12 +209,15 @@ To manually instrument certain regions of your code, you can create a [transacti
 The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
 
 ```javascript
-const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction: item.getTransaction() })
+const transaction = Sentry.getCurrentHub().startSpan({ 
+    op: "task",  
+    transaction: item.getTransaction() 
+})
 
-  // processItem may create more spans internally (see next example)
-  processItem(item).then(() => {
-      transaction.finish()
-  })
+// processItem may create more spans internally (see next example)
+processItem(item).then(() => {
+    transaction.finish()
+})
 ```
 
 **Adding Additional Spans to the Transaction**
@@ -223,7 +226,10 @@ The next example contains the implementation of the hypothetical `processItem ` 
 
 ```javascript
 function processItem(item, transaction) {
-  const span = transaction.child({ op: "http", description: "GET /" })
+  const span = transaction.child({ 
+      op: "http", 
+      description: "GET /" 
+  })
 
   return new Promise((resolve, reject) => {
       http.get(`/items/${item.id}`, (response) => {
