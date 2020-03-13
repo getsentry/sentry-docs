@@ -12,7 +12,7 @@ Sentry's Performance features are currently in beta. For more details about acce
     level="warning"
 %}
 
-Enabling tracing data collection can augment your existing errors to answer any question or unknowns about your systems. Tracing also allows you to track critical metrics and service-level objectives (SLO) like throughput, latency, or apdex to build a complete monitoring solution to diagnose and measure your application health.
+Enabling tracing data collection augments your existing error data to capture interactions between your software systems. This lets Sentry tell you valuable metrics about your software health like throughput and latency, as well as expose the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution to diagnose and measure your application health.
 
 ## Tracing & Distributed Tracing
 
