@@ -74,8 +74,8 @@ If you enable Performance collection for a large portion of your traffic, you ma
 Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
 
 Supported SDKs for Tracing:
-- JavaScript Browser ≥ 5.13.0
-- Node.js
+- JavaScript Browser SDK ≥ 5.14.0
+- JavaScript Node SDK ≥ 5.14.0
 - Python version ≥ 0.11.2
 
 {%- endcapture -%}
@@ -274,8 +274,14 @@ It’s possible to add tracing to all popular frameworks; however, we provide pr
 
 ```javascript
 const Sentry = require("@sentry/node");
+const Apm = require("@sentry/apm");
 const express = require("express");
 const app = express();
+
+Sentry.init({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1
+});
 
 // RequestHandler creates a separate execution-context using domains, so that every transaction/span/breadcrumb has it's own Hub to be attached to
 app.use(Sentry.Handlers.requestHandler());
@@ -295,24 +301,20 @@ app.listen(3000);
 
 To enable them:
 
-```bash
-$ npm install @sentry/integrations@{% sdk_version sentry.javascript.browser %}
-```
-
 ```javascript
 const Sentry = require("@sentry/node");
-const Integrations = require("@sentry/integrations");
+const Apm = require("@sentry/apm");
 const express = require("express");
 const app = express();
 
 Sentry.init({
     dsn: "___PUBLIC_DSN___",
-    tracesSampleRate: 0.1,
+    tracesSampleRate: 1,
     integrations: [
         // enable HTTP calls tracing
         new Sentry.Integrations.Http({ tracing: true }),
         // enable Express.js middleware tracing
-        new Integrations.Express({ app })
+        new Apm.Integrations.Express({ app })
     ],
 });
 ```
