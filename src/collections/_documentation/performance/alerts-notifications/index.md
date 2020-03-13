@@ -3,7 +3,14 @@ title: Alerts & Notifications
 sidebar_order: 0
 ---
 
-[ALERT BOX: Sentry's Application Performance Monitoring (APM) features are currently in beta. For more details about APM access, feel free to reach out at [https://sentry.io/for/apm/](https://sentry.io/for/apm/). ]
+{% capture __alert_content -%}
+Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 Sentry notifications are broadly categorized into alerts and non-alert notifications. Alerts can be sent to many supported [LINK: integrations]. Non-alert notifications only go to email.
 
