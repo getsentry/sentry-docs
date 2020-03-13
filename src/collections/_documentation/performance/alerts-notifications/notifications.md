@@ -1,6 +1,6 @@
 ---
 title: Other Notifications
-sidebar_order: 1
+sidebar_order: 2
 ---
 
 Aside from Alerts, Sentry has other types of notifications, such as Workflow, Deploy, and Quota notifications. All these notifications are sent via email.
