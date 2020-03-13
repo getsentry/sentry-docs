@@ -263,8 +263,8 @@ const Sentry = require("@sentry/node");
 const Apm = require("@sentry/apm"); // This is required since it patches functions on the hub
 
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 0.1
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 0.1
 });
 ```
 
@@ -306,14 +306,14 @@ const express = require("express");
 const app = express();
 
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 0.1,
-  integrations: [
-    // enable HTTP calls tracing
-    new Sentry.Integrations.Http({ tracing: true }),
-    // enable Express.js middleware tracing
-    new Integrations.Express({ app })
-  ],
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 0.1,
+    integrations: [
+        // enable HTTP calls tracing
+        new Sentry.Integrations.Http({ tracing: true }),
+        // enable Express.js middleware tracing
+        new Integrations.Express({ app })
+    ],
 });
 ```
 
@@ -323,14 +323,17 @@ Let’s say you want to create a [transaction]({%- link _documentation/performan
 
 ```javascript
 app.use(function processItems(req, res, next) {
-  const item = getFromQueue();
-  const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction: item.getTransaction() })
-  
-  // processItem may create more spans internally (see next examples)
-  processItem(item, transaction).then(() => {
-    transaction.finish();
-    next();
-  })
+    const item = getFromQueue();
+    const transaction = Sentry.getCurrentHub().startSpan({ 
+        op: "task",  
+        transaction: item.getTransaction() 
+    })
+    
+    // processItem may create more spans internally (see next examples)
+    processItem(item, transaction).then(() => {
+        transaction.finish();
+        next();
+    })
 });
 ```
 
@@ -342,18 +345,18 @@ You can choose the value of `op` and `description`.
 
 ```javascript
 function processItem(item, transaction) {
-  const span = transaction.child({ op: "http", description: "GET /" })
+    const span = transaction.child({ op: "http", description: "GET /" })
 
-  return new Promise((resolve, reject) => {
-    http.get(`/items/${item.id}`, (response) => {
-      response.on('data', () => {});
-      response.on('end', () => {
-        span.setTag("http.status_code", response.statusCode);
-        span.setData("http.foobarsessionid", getFoobarSessionid(response));
-        span.finish();
-        resolve(response);
-      });
+    return new Promise((resolve, reject) => {
+        http.get(`/items/${item.id}`, (response) => {
+            response.on('data', () => {});
+            response.on('end', () => {
+                span.setTag("http.status_code", response.statusCode);
+                span.setData("http.foobarsessionid", getFoobarSessionid(response));
+                span.finish();
+                resolve(response);
+              });
+        });
     });
-  });
 }
 ```
