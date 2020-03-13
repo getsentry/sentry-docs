@@ -12,7 +12,7 @@ Sentry's Performance features are currently in beta. For more details about acce
     level="warning"
 %}
 
-Enabling tracing data collection augments your existing error data to capture interactions between your software systems. This lets Sentry tell you valuable metrics about your software health like throughput and latency, as well as expose the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution to diagnose and measure your application health.
+Enabling tracing data collection augments your existing error data to capture interactions among your software systems. This lets Sentry tell you valuable metrics about your software health like throughput and latency, as well as expose the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution to diagnose and measure your application health.
 
 ## Tracing & Distributed Tracing
 
