@@ -172,7 +172,7 @@ import { Integrations as ApmIntegrations } from '@sentry/apm';
 Sentry.init({
     dsn: '___PUBLIC_DSN___',
     integrations: [
-      new ApmIntegrations.Tracing(),
+        new ApmIntegrations.Tracing(),
     ],
 });
 ```
