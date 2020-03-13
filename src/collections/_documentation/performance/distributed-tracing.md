@@ -170,10 +170,10 @@ import * as Sentry from '@sentry/browser';
 import { Integrations as ApmIntegrations } from '@sentry/apm';
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [
-    new ApmIntegrations.Tracing(),
-  ],
+    dsn: '___PUBLIC_DSN___',
+    integrations: [
+      new ApmIntegrations.Tracing(),
+    ],
 });
 ```
 
@@ -192,9 +192,9 @@ The tracing integration will create a [transaction]({%- link _documentation/perf
 // As long as you don't pop the activity, the transaction will not be finished and therefore not sent to Sentry.
 // If you do not want to create a span out of an activity, just don't provide the second arg.
 const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
-        data: {},
-        op: 'react',
-        description: `<${displayName}>`,
+    data: {},
+    op: 'react',
+    description: `<${displayName}>`,
 });
 
 // Sometime later ...
@@ -210,9 +210,10 @@ The following example creates a transaction for a scope that contains an expensi
 
 ```javascript
 const transaction = Sentry.getCurrentHub().startSpan({ op: "task",  transaction: item.getTransaction() })
+
   // processItem may create more spans internally (see next example)
   processItem(item).then(() => {
-    transaction.finish()
+      transaction.finish()
   })
 ```
 
@@ -225,15 +226,15 @@ function processItem(item, transaction) {
   const span = transaction.child({ op: "http", description: "GET /" })
 
   return new Promise((resolve, reject) => {
-    http.get(`/items/${item.id}`, (response) => {
-      response.on('data', () => {});
-      response.on('end', () => {
-        span.setTag("http.status_code", response.statusCode);
-        span.setData("http.foobarsessionid", getFoobarSessionid(response));
-        span.finish();
-        resolve(response);
+      http.get(`/items/${item.id}`, (response) => {
+          response.on('data', () => {});
+          response.on('end', () => {
+              span.setTag("http.status_code", response.statusCode);
+              span.setData("http.foobarsessionid", getFoobarSessionid(response));
+              span.finish();
+              resolve(response);
+          });
       });
-    });
   });
 }
 ```
