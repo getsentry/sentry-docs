@@ -345,7 +345,10 @@ You can choose the value of `op` and `description`.
 
 ```javascript
 function processItem(item, transaction) {
-    const span = transaction.child({ op: "http", description: "GET /" })
+    const span = transaction.child({ 
+        op: "http", 
+        description: "GET /" 
+    })
 
     return new Promise((resolve, reject) => {
         http.get(`/items/${item.id}`, (response) => {
