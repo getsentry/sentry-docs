@@ -226,22 +226,22 @@ The next example contains the implementation of the hypothetical `processItem ` 
 
 ```javascript
 function processItem(item, transaction) {
-  const span = transaction.child({ 
-      op: "http", 
-      description: "GET /" 
-  })
+    const span = transaction.child({ 
+        op: "http", 
+        description: "GET /" 
+    })
 
-  return new Promise((resolve, reject) => {
-      http.get(`/items/${item.id}`, (response) => {
-          response.on('data', () => {});
-          response.on('end', () => {
-              span.setTag("http.status_code", response.statusCode);
-              span.setData("http.foobarsessionid", getFoobarSessionid(response));
-              span.finish();
-              resolve(response);
-          });
-      });
-  });
+    return new Promise((resolve, reject) => {
+        http.get(`/items/${item.id}`, (response) => {
+            response.on('data', () => {});
+            response.on('end', () => {
+                span.setTag("http.status_code", response.statusCode);
+                span.setData("http.foobarsessionid", getFoobarSessionid(response));
+                span.finish();
+                resolve(response);
+            });
+        });
+    });
 }
 ```
 
