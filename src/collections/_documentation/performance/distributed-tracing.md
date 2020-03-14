@@ -12,7 +12,7 @@ Sentry's Performance features are currently in beta. For more details about acce
     level="warning"
 %}
 
-Enabling tracing data collection augments your existing error data to capture interactions between your software systems. This lets Sentry tell you valuable metrics about your software health like throughput and latency, as well as expose the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution to diagnose and measure your application health.
+Enabling tracing data collection augments your existing error data to capture interactions among your software systems. This lets Sentry tell you valuable metrics about your software health like throughput and latency, as well as expose the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution to diagnose and measure your application health.
 
 ## Tracing & Distributed Tracing
 
@@ -173,6 +173,22 @@ Sentry.init({
     dsn: '___PUBLIC_DSN___',
     integrations: [
         new ApmIntegrations.Tracing(),
+    ],
+});
+```
+
+To send any traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 10% of all your transactions:
+
+```javascript
+import * as Sentry from '@sentry/browser';
+import { Integrations as ApmIntegrations } from '@sentry/apm';
+
+Sentry.init({
+    dsn: '___PUBLIC_DSN___',
+    integrations: [
+        new Integrations.Tracing({
+            tracesSampleRate: 0.1,
+        }),
     ],
 });
 ```
