@@ -3,15 +3,6 @@ title: 'Discover v2'
 sidebar_order: 4
 ---
 
-{% capture __alert_content -%}
-The following is documentation for our new query builder Discover v2. [Discover v1]({%- link _documentation/workflow/discover.md -%}) will deprecate at the end of February 2020.
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Note"
-    content=__alert_content
-    level="warning"
-%}
-
 Our Discover tool combines the best parts of our Events and existing Discover features, providing visibility into your data across environments and building upon and enriching your error data. This new feature will allow you to query and unlock deeper insights into the health of your entire system and answer critical business questions --- all in one place.
 
 [{% asset discover/discover-homepage.png alt="Full view of the Discover Homepage with query cards and button to build new queries." %}]({% asset discover/discover-homepage.png @path %})
