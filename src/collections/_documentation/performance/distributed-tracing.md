@@ -180,18 +180,17 @@ Sentry.init({
 To send any traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 10% of all your transactions:
 
 ```javascript
-const tracesSampleRate = config ? config.apmSampling : 0.1;
-	 
-const integrations = [
-    new ExtraErrorData({
-        // 6 is arbitrary, seems like a nice number
-        depth: 6,
-    }),
-    new Integrations.Tracing({
-        tracingOrigins: ['localhost', 'sentry.io', /^\//],
-        tracesSampleRate,
-    }),
-];
+import * as Sentry from '@sentry/browser';
+import { Integrations as ApmIntegrations } from '@sentry/apm';
+
+Sentry.init({
+    dsn: '___PUBLIC_DSN___',
+    integrations: [
+        new Integrations.Tracing({
+            tracesSampleRate: 0.1,
+        }),
+    ],
+});
 ```
 
 You can pass many different options to tracing, but it comes with reasonable defaults out of the box.
