@@ -1,5 +1,5 @@
 ---
-title: 'Discover v2'
+title: 'Discover'
 sidebar_order: 4
 ---
 
@@ -53,7 +53,7 @@ Share your queries as often as you want. You can share URLs with other users who
 
 Although search queries are shareable, you can save them as Saved Queries. Saved Queries are visible to the entire organization. In other words, Saved Queries **are not** scoped to the user's account. You can find Saved Queries on the Discover Homepage with the yellow star icon. You can use either a pre-built query or an existing saved query to create a new Saved Query.
 
-For more details, see [full documentation on the Query Builder]({%- link _documentation/performance/discover2/query-builder.md -%}).
+For more details, see [full documentation on the Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}).
 
 
 ## Event Details
