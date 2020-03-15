@@ -4,9 +4,9 @@ Sentry\withScope(function (Sentry\State\Scope $scope): void {
   $scope->setTag('my-tag', 'my value');
   $scope->setLevel(Sentry\Severity::warning());
   // will be tagged with my-tag="my value"
-  Sentry\captureException(new \Throwable('my error'))
+  Sentry\captureException(new \Exception('my error'))
 });
 
 // will not be tagged with my-tag
-Sentry\captureException(new \Throwable('my other error'));
+Sentry\captureException(new \Exception('my other error'));
 ```
