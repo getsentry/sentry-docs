@@ -1,16 +1,7 @@
 ---
-title: 'Discover v2'
+title: 'Discover'
 sidebar_order: 4
 ---
-
-{% capture __alert_content -%}
-The following is documentation for our new query builder Discover v2. [Discover v1]({%- link _documentation/workflow/discover.md -%}) will deprecate at the end of February 2020.
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Note"
-    content=__alert_content
-    level="warning"
-%}
 
 Our Discover tool combines the best parts of our Events and existing Discover features, providing visibility into your data across environments and building upon and enriching your error data. This new feature will allow you to query and unlock deeper insights into the health of your entire system and answer critical business questions --- all in one place.
 
@@ -62,7 +53,7 @@ Share your queries as often as you want. You can share URLs with other users who
 
 Although search queries are shareable, you can save them as Saved Queries. Saved Queries are visible to the entire organization. In other words, Saved Queries **are not** scoped to the user's account. You can find Saved Queries on the Discover Homepage with the yellow star icon. You can use either a pre-built query or an existing saved query to create a new Saved Query.
 
-For more details, see [full documentation on the Query Builder]({%- link _documentation/workflow/discover2/query-builder.md -%}).
+For more details, see [full documentation on the Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}).
 
 
 ## Event Details
