@@ -4,7 +4,7 @@ sidebar_order: 0
 ---
 
 {% capture __alert_content -%}
-Sentry's Performance features are currently in beta. For more details about access to Metric Alerts, feel free to reach out at alerting-feedback@sentry.io.
+Metric Alerts are currently in beta. For more information about access to Metric Alerts, feel free to reach out at alerting-feedback@sentry.io.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"

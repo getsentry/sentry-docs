@@ -45,11 +45,6 @@ An issue can be in one of the following three states:
 
 Workflow emails are sent for issue state changes.
 
-### Other Workflow Notifications
-
-- When you or your team is **Assigned or Unassigned** an issue
-- When someone leaves a comment
-
 ## Deploy
 
 Deploy emails are sent to users who have committed to the release that was deployed. See [LINK: deploy documentation] for more details
@@ -66,13 +61,15 @@ Sentry sends all owners of the organization emails when
 
 ## **Notification Subscription**
 
-You can configure your personal workflow and deploy notifications [here](https://sentry.io/settings/account/notifications/).
+You can configure your personal workflow and deploy notifications [here](https://sentry.io/settings/account/notifications/). You **cannot configure** quota notifications.
 
-### **Workflow Notifications**
+### **Workflow Notification Settings**
 
 ![https://docs.sentry.io/assets/notifications/workflow_notifications_subscription-1f12011dbcd124436fb79f20b858eb338789fc530e4fa561f0535101a9d57e82.png](https://docs.sentry.io/assets/notifications/workflow_notifications_subscription-1f12011dbcd124436fb79f20b858eb338789fc530e4fa561f0535101a9d57e82.png)
 
-You can also click “Fine-tune workflow notifications by project” to configure this with more granularity. Selecting Default will use your preference from the last step for that project.
+After selecting the appropriate alert setting, selectively change it by project in **User Settings > Account > Fine tune alerts by project**.
+
+Each project has three options: Default, On, or Off. Selecting default uses your default preference from the previous step.
 
 ![https://docs.sentry.io/assets/notifications/fine_tune_workflow-302c0ab140d11a06981036b149e06ec6bec3aa979ac7b39966a59e2e56533025.png](https://docs.sentry.io/assets/notifications/fine_tune_workflow-302c0ab140d11a06981036b149e06ec6bec3aa979ac7b39966a59e2e56533025.png)
 
