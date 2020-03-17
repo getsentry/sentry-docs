@@ -32,9 +32,10 @@ platform :ios, '8.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
-    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{% sdk_version sentry.cocoa %}'
+    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.0.0-beta.0'
 end
 ```
+<!-- {% sdk_version sentry.cocoa %} -->
 
 Afterwards run `pod install`. In case you encounter problems with dependencies and you are on a newer CocoaPods you might have to run `pod repo update` first.
 
@@ -43,7 +44,7 @@ Afterwards run `pod install`. In case you encounter problems with dependencies a
 To integrate Sentry into your Xcode project using Carthage, specify it in your _Cartfile_:
 
 ```ruby
-github "getsentry/sentry-cocoa" "{% sdk_version sentry.cocoa %}"
+github "getsentry/sentry-cocoa" "5.0.0-beta.0"
 ```
 
 Run `carthage update` to download the framework and drag the built _Sentry.framework_ into your Xcode project.
@@ -79,9 +80,21 @@ The simplest way to figure out if the SDK is setup correctly and connected to yo
 
 If everything is working correctly, this message should appear within seconds in your Sentry project.
 
+## Crash Handling
+
+By default our SDK hooks into all the signal and exception handlers (for macOS there is one additional step -> see [Advanced Usage]({%- link _documentation/platforms/cocoa/usage.md -%})).
+If you want to try out if it works for you, the SDK provides a test crash function in order to crash your app:
 
 {% include components/platform_content.html content_dir='crash' %}
 
 _If you crash with a debugger attached, nothing will happen._
 
-Crashes are only submitted upon re-launching the application. To see the crash in Sentry, close the app and launch it again from the springboard.
+Crashes are only submitted upon re-launching the application. To see the crash in Sentry, close the app and launch it again.
+
+
+## Deep Dive
+
+-   [Uploading Debug Symbols]({%- link _documentation/platforms/cocoa/dsym.md -%})
+    -   [With Bitcode]({%- link _documentation/platforms/cocoa/dsym.md -%}#with-bitcode)
+    -   [Without Bitcode]({%- link _documentation/platforms/cocoa/dsym.md -%}#without-bitcode)
+-   [Advanced Usage]({%- link _documentation/platforms/cocoa/usage.md -%})
