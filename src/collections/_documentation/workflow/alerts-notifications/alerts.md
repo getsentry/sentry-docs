@@ -134,7 +134,7 @@ If you select "All Environments", Sentry checks individually for each environmen
 
 ### Digests
 
-The digests feature works only for **issue alert emails**. This project-level setting allows you to batch and deliver issue alert emails for a project. Use the sliders to control the frequency.
+The digests feature works only for **issue alert emails** and limits alerts across projects. This project-level setting allows you to batch and deliver issue alert emails for a project. Use the sliders to control the frequency.
 
 ![https://docs.sentry.io/assets/notifications/alert_digest-e0a488f304173985c095f8ef763a0d0f68d34336a00e114625cbb339d7e6f486.png](https://docs.sentry.io/assets/notifications/alert_digest-e0a488f304173985c095f8ef763a0d0f68d34336a00e114625cbb339d7e6f486.png)
 
@@ -180,7 +180,7 @@ Each project has three options: Default, On, or Off. Selecting default uses your
 - Can I set different default alert rules?
     - Unfortunately, this is currently not an option. However, this feature is coming soon.
 - Are there issue-level filters other than environment?
-    - No, all filters are event-based. For example, there aren’t configurations for alerting only if an issue is X days old, or assigned to Y, or alerted-on-before, etc.
+    - No, all filters are event-based. For example, configurations don't exist for alerting only if an issue is X days old, or assigned to Y, or alerted-on-before, etc.
 - What is the difference between Delete, Delete & Discard, and Ignore?
     - Delete - Deleting an issue deletes all data associated with it, and creates a new issue if an event with the same fingerprint happens again. Workflow notifications for this new issue behave just like notifications for any new issue.
     - [Delete & Discard](https://docs.sentry.io/accounts/quotas/#filter-by-issue) - when you delete and discard an issue, all notifications for the issue will stop
