@@ -3,7 +3,7 @@ title: Alerts
 sidebar_order: 1
 ---
 
-Sentry users with administrative permissions or higher can create one of two types of alerts: [Metric Alerts](#metric-alerts) or [Issue Alerts](#issue-alerts). You can use [Metric Alerts](#metric-alerts) for high-level monitoring of patterns, or fine-grained monitoring of individual events. An [Issue Alert](#issue-alerts) fires whenever any issue in the project matches specified criteria, such as a resolved issue re-appearing or an issue affecting many users. To confirm or set administrative permissions, see **Project Settings > Alerts > New Alert**. 
+Sentry users with admin permissions or higher can create one of two types of alerts: [Metric Alerts](#metric-alerts) or [Issue Alerts](#issue-alerts). You can use [Metric Alerts](#metric-alerts) for high-level monitoring of patterns, or fine-grained monitoring of individual events. An [Issue Alert](#issue-alerts) fires whenever any issue in the project matches specified criteria, such as a resolved issue re-appearing or an issue affecting many users. To confirm or set admin permissions, see **Project Settings > Alerts > New Alert**. 
 
 ## Metric Alerts
 
@@ -15,7 +15,7 @@ Metric alerts allow you to filter and set thresholds on all errors across a proj
 
 A metric alert has, at most, two triggers. The first is a critical trigger, which is required. The second is a warning trigger, which is optional. Triggers are independent of one another; however, the warning (optional) must be reached before the critical (required) trigger.
 
-Sentry evaluates triggers approximately every minute from the highest severity to lowest. When a match occurs, Sentry creates an alert with the defined status (warning or critical). In addition, if an alert has already been matched to a status, the status is updated. Administrators can resolve alerts manually or automatically by setting the resolution threshold appropriate to the type of alert.
+Sentry evaluates triggers approximately every minute from the highest severity to lowest. Sentry creates an alert with the severity of the matched trigger (warning or critical). If an alert is already active, its status is updated. Admins can resolve alerts manually, or automatically by setting the resolution threshold.
 
 When an alert is created or changes status, the actions associated with the trigger are executed. The available actions are:
 
@@ -30,7 +30,7 @@ Alerts can be accessed via the **Alerts** sidebar item.
 
 ### Alert Details
 
-In this page, you can view a single instance of an alert from the time a trigger creates the alert to when the alert is resolved, or the current time if the alert is still active.
+In this page, you can view a single instance of an alert from the time the alert is created to when the alert is resolved, or the current time if the alert is still active.
 
 ![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/03_Alert_Details.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/03_Alert_Details.png)
 
@@ -42,7 +42,7 @@ Issue alerts fire whenever any issue in the project matches the specified criter
 
 ### **Conditions**
 
-Conditions are evaluated for an issue alert **each time the issue receives a new event**.
+Conditions are evaluated for an issue alert **each time** the issue receives a new event, subject to [LINK: rate limits].
 
 **Each condition is evaluated independently of other conditions**. For example, the following alert will never fire:
 
@@ -92,27 +92,15 @@ The following actions are available:
 
 ![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-25_15.28.01.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-25_15.28.01.png)
 
-- Legacy Integrations (via “Service” as any individual integration) that can send Notifications:
+For more details, see [LINK: Legacy Integrations (via “Service” as any individual integration) that can send Notifications].
 
-    [ ALERT BOX: **Community Integrations** 
-
-    These integrations are [maintained and supported](https://forum.sentry.io/) by the Sentry community. ]
-
-    - Campfire*
-    - IRC
-    - OpsGenie
-    - Pushover
-    - Twilio
-    - VictorOps
-    - [Webhooks](https://docs.sentry.io/webhook-plugin/)
-
-By default, [LINK: issue owners] receive alert emails. If an issue owner is not configured or found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
+By default, [LINK: issue owners] receive alert emails. If an issue owner is not configured or not found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
 
 ![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png)
 
 **Rate Limit**
 
-Rate Limit control allows you to limit the number of times actions execute for each issue. The limit is set to perform the action according to one of these intervals:
+The rate limit determines how frequently an issue alerts. After an issue fires an alert, Sentry won't check the conditions and won't execute the actions for that issue until the rate limit period passes. The limit is set to perform the action according to one of these intervals:
 
 - minutes: 5, 10, 30, 60
 - hours: 3, 12, 24
@@ -134,7 +122,7 @@ If you select "All Environments", Sentry checks individually for each environmen
 
 ### Digests
 
-The digests feature works only for **issue alert emails** and limits alerts across projects. This project-level setting allows you to batch and deliver issue alert emails for a project. Use the sliders to control the frequency.
+The digests feature works only for **issue alert emails** and limits alerts across projects. This project-level setting allows you to batch issue alerts to limit the total number of emails you receive for that project. Use the sliders to control the frequency.
 
 ![https://docs.sentry.io/assets/notifications/alert_digest-e0a488f304173985c095f8ef763a0d0f68d34336a00e114625cbb339d7e6f486.png](https://docs.sentry.io/assets/notifications/alert_digest-e0a488f304173985c095f8ef763a0d0f68d34336a00e114625cbb339d7e6f486.png)
 
@@ -148,16 +136,14 @@ This is a listing of all your project's alerts.
 
 ### Issue Owners
 
-By default, [LINK: issue owners] receive alert emails. If an issue owner is not configured or found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
+By default, [LINK: issue owners] receive alert emails. If an issue owner is not configured or not found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
 
 
 ![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png)
 
 ### Ignore
 
-When an issue is set to ignore, Sentry mutes the alerts for that issue. You can also ignore an issue until certain conditions are met — for example, "ignore for 30 minutes." Keep in mind; **an ignored issue will still count towards your quota**.
-
-Finally, you can configure your personal alert notifications settings [here](https://sentry.io/settings/account/notifications/).
+When an issue is set to ignore, Sentry mutes the alerts for that issue. You can also ignore an issue until certain conditions are met —- for example, "ignore for 30 minutes." Keep in mind; **an ignored issue will still count towards your quota**.
 
 ### Personal Alert Settings
 
@@ -182,6 +168,6 @@ Each project has three options: Default, On, or Off. Selecting default uses your
 - Are there issue-level filters other than environment?
     - No, all filters are event-based. For example, configurations don't exist for alerting only if an issue is X days old, or assigned to Y, or alerted-on-before, etc.
 - What is the difference between Delete, Delete & Discard, and Ignore?
-    - Delete - Deleting an issue deletes all data associated with it, and creates a new issue if an event with the same fingerprint happens again. Workflow notifications for this new issue behave just like notifications for any new issue.
+    - Delete - Deleting an issue deletes all data associated with it, and creates a new issue if an event with the same fingerprint happens again. Alerts and workflow notifications for this new issue behave just like notifications for any new issue.
     - [Delete & Discard](https://docs.sentry.io/accounts/quotas/#filter-by-issue) - when you delete and discard an issue, all notifications for the issue will stop
     - Ignore - While an issue is ignored, all alerts for that issue are muted. You can also ignore an issue until certain conditions are met — for example, "ignore for 30 minutes." Keep in mind; **an ignored issue will still count towards your quota.**

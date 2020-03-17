@@ -4,7 +4,7 @@ sidebar_order: 0
 ---
 
 {% capture __alert_content -%}
-Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
+Sentry's Performance features are currently in beta. For more details about access to Metric Alerts, feel free to reach out at alerting-feedback@sentry.io.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -24,13 +24,13 @@ Metric alerts allow you to filter and set thresholds on all errors across a proj
 
 ### Issue Alerts
 
-Issue alerts fire whenever any issue in the project matches the specified criteria, such as a resolved issue re-appearing or an issue affecting many users.
+Issue alerts fire whenever **any issue** in the project matches the specified criteria, such as a resolved issue re-appearing or an issue affecting many users.
 
 For more details, see the [LINK: full documentation on Issue Alerts].
 
 [ screenshot of Alerts in-app ]
 
-Some alert settings apply at the project level (for example, to all alerts in the project), while others are specific to the alert. You can also tweak your personal alerts settings to control which alerts you receive.
+Some alert settings apply at the project level and to all alerts in the project. Other alert settings are specific to the alert. You can tweak your personal alerts settings to control which alerts you receive.
 
 ## Non-Alert Notifications
 
