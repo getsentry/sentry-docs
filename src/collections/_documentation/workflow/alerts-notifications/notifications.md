@@ -3,42 +3,49 @@ title: Other Notifications
 sidebar_order: 2
 ---
 
-Aside from Alerts, Sentry has other types of notifications, such as Workflow, Deploy, and Quota notifications. All these notifications are sent via email.
+Aside from Alerts, Sentry has other types of notifications, such as Workflow, Deploy, and Quota notifications. All these notifications are sent through email.
 
 ## Workflow
 
-Workflow relates to activity involving user actions and state changes on issues and alerts. This includes things like resolution, assignment, comments, and regressions. By default, Sentry subscribes you to issues it deems you're participating in, based on signals. 
+Workflow relates to activity involving user actions and state changes on issues and alerts. This includes things like resolution, assignment, comments, and regressions. 
 
-For example:
+By default, Sentry subscribes you to issues based on signals, such as: 
 
-- You're subscribed to the issue or all workflow emails in the project
-- You're involved in a commit related to the issue
-- You commented on or bookmarked the issue
-- You / your team was mentioned in the issue or assigned the issue
+- Subscription to the issue or all workflow emails in the project
+- Involvement in a commit related to the issue
+- Commenting on or bookmarking the issue
+- Mention of you or your team in the issue or assigned to the issue
 
 ### Issue States
 
 An issue can be in one of the following three states:
 
-**Unresolved**
+1. Unresolved
 
-- The default state when an issue is added to the system.
+    - The default state when an issue is added to the system.
 
-**Resolved**
+2. Resolved
+    - Resolve an issue to indicate that no more events are expected. If another event is seen in the issue, the issue will revert to unresolved. This is called a **regression**.
+    
+    - An issue is marked as resolved in one of three ways:
+        
+        1. When an individual resolves it by manually changing the state on the issue page UI
+        2. Submitting a fix with the associated issue ID
+        3. When the project’s auto-resolve feature is configured
 
-- An issue is marked as resolved when an individual resolves it by manually changing the state on the issue page UI, submitting a fix with the issue ID in it, or when the project’s auto-resolve feature is configured. Auto-resolve is located in **Project Settings > General Settings**. For more details about submitting a fix, see documentation on [resolving issues](https://docs.sentry.io/workflow/releases/#after-associating-commits).
+    - Auto-resolve is located in **Project Settings > General Settings**. For more details about submitting a fix, see documentation on [resolving issues](https://docs.sentry.io/workflow/releases/#after-associating-commits).
 
-    ![https://docs.sentry.io/assets/notifications/auto-resolve-4ff17e17a825d4e2f16293d1e3371666838dcf20630c2caa61fc3af609289db3.png](https://docs.sentry.io/assets/notifications/auto-resolve-4ff17e17a825d4e2f16293d1e3371666838dcf20630c2caa61fc3af609289db3.png)
+        ![https://docs.sentry.io/assets/notifications/auto-resolve-4ff17e17a825d4e2f16293d1e3371666838dcf20630c2caa61fc3af609289db3.png](https://docs.sentry.io/assets/notifications/auto-resolve-4ff17e17a825d4e2f16293d1e3371666838dcf20630c2caa61fc3af609289db3.png)
 
-- Resolve an issue to indicate that no more events are expected. If another event is seen in the issue, the issue will revert to unresolved. This is called a **regression**.
+3. Ignored
 
-**Ignored**
-
-- Ignored issues suppress alerts for the issue, and by default, are hidden from your project’s issue stream. Search the issue stream for `is:ignored` to view them.
+    - Ignored issues suppress alerts for the issue, and by default, are hidden from your project’s issue stream. Search the issue stream for `is:ignored` to view them.
+    
+    - Keep in mind; **an ignored issue will still count towards your quota.**
 
 Workflow emails are sent for issue state changes.
 
-### Other workflow notifications
+### Other Workflow Notifications
 
 - When you or your team is **Assigned or Unassigned** an issue
 - When someone leaves a comment

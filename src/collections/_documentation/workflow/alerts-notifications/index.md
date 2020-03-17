@@ -16,11 +16,11 @@ Sentry notifications are broadly categorized into alerts and non-alert notificat
 
 ## Alerts
 
-Alerts are configured per-project and are of two types: Metric Alerts and Issue Alerts.
+Sentry provides both Metric Alerts and Issue Alerts. You define either type of alert per project.
 
 ### Metric Alerts
 
-Metric alerts allow you to filter and set thresholds across all errors in a project. They can be used for high-level monitoring of patterns, or fine-grained monitoring of individual events. Metric alerts help express lightweight service-level objectives (SLOs) such as users affected by signup-page errors, or volume of database errors. For more details, see the [LINK: full documentation on Metric Alerts].
+Metric alerts allow you to filter and set thresholds on all errors across a project. Use metric alerts for high-level monitoring of patterns or fine-grained monitoring of individual events. Metric alerts help express lightweight service-level objectives (SLOs) such as users affected by signup-page errors or volume of database errors.
 
 ### Issue Alerts
 

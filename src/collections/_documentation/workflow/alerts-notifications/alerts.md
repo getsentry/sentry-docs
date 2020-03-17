@@ -7,7 +7,7 @@ Sentry users with administrative permissions or higher can create one of two typ
 
 ## Metric Alerts
 
-Metric alerts allow you to filter and set thresholds on all errors across a project. Use metric alerts for high-level monitoring of patterns or fine-grained monitoring of individual events. Using metric alerts helps express lightweight service-level objectives (SLOs) such as users affected by signup-page errors or volume of database errors.
+Metric alerts allow you to filter and set thresholds on all errors across a project. Use metric alerts for high-level monitoring of patterns or fine-grained monitoring of individual events. Metric alerts help express lightweight service-level objectives (SLOs) such as users affected by signup-page errors or volume of database errors.
 
 ### Alert Builder
 
