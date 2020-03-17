@@ -3,21 +3,19 @@ title: Alerts
 sidebar_order: 1
 ---
 
-Alerts can be created by users with admin permission or higher from **Project Settings > Alerts > New Alert**.
-
-There are two types of alerts: Issue Alerts and Metric Alerts. 
+Sentry users with administrative permissions or higher can create one of two types of alerts: [Metric Alerts](#metric-alerts) or [Issue Alerts](#issue-alerts). You can use [Metric Alerts](#metric-alerts) for high-level monitoring of patterns, or fine-grained monitoring of individual events. An [Issue Alert](#issue-alerts) fires whenever any issue in the project matches specified criteria, such as a resolved issue re-appearing or an issue affecting many users. To confirm or set administrative permissions, see **Project Settings > Alerts > New Alert**. 
 
 ## Metric Alerts
 
-Metric alerts allow you to filter and set thresholds on all errors across a project. They can be used for high-level monitoring of patterns, or fine-grained monitoring of individual events. Metric alerts help express lightweight service-level objectives (SLOs) such as users affected by signup-page errors, or volume of database errors.
+Metric alerts allow you to filter and set thresholds on all errors across a project. Use metric alerts for high-level monitoring of patterns or fine-grained monitoring of individual events. Using metric alerts helps express lightweight service-level objectives (SLOs) such as users affected by signup-page errors or volume of database errors.
 
 ### Alert Builder
 
 [ builder image ]
 
-A metric alert can have at most two triggers. The first one is a (required) critical trigger, and the second one is an (optional) warning trigger. Triggers are independent with one constraint: the warning trigger must be reached before the critical one.
+A metric alert has, at most, two triggers. The first is a critical trigger, which is required. The second is a warning trigger, which is optional. Triggers are independent of one another; however, the warning (optional) must be reached before the critical (required) trigger.
 
-Triggers are evaluated roughly every minute from the highest severity to lowest. If there's a match, an alert is created with that status. Or, if an alert exists, its status is updated. A metric alert can be resolved manually, or automatically by setting resolution thresholds on it.
+Sentry evaluates triggers approximately every minute from the highest severity to lowest. When a match occurs, Sentry creates an alert with the defined status (warning or critical). In addition, if an alert has already been matched to a status, the status is updated. Administrators can resolve alerts manually or automatically by setting the resolution threshold appropriate to the type of alert.
 
 When an alert is created or changes status, the actions associated with the trigger are executed. The available actions are:
 
@@ -32,7 +30,7 @@ Alerts can be accessed via the **Alerts** sidebar item.
 
 ### Alert Details
 
-This page shows you details about **one instance** of an alert. For example, from the time it started to the time it was resolved (or the current time if it's active).
+In this page, you can view a single instance of an alert from the time a trigger creates the alert to when the alert is resolved, or the current time if the alert is still active.
 
 ![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/03_Alert_Details.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/03_Alert_Details.png)
 
@@ -44,20 +42,20 @@ Issue alerts fire whenever any issue in the project matches the specified criter
 
 ### **Conditions**
 
-Conditions are evaluated for an issue **each time the issue receives a new event**.
+Conditions are evaluated for an issue alert **each time the issue receives a new event**.
 
 **Each condition is evaluated independently of other conditions**. For example, the following alert will never fire:
 
 ![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_21.52.38.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_21.52.38.png)
 
-This is because an event can't cause both of the following conditions to be satisfied simultaneously: 
+In the example, the alert will not fire because an event cannot satisfy both of these conditions simultaneously:
 
-- A new issue is created
+- Sentry detects/creates a new issue
 - The issue has happened 10 times
 
 **Available Conditions**
 
-- A new issue is created / An issue is first seen
+- Sentry detects/creates a new issue
 - An issue changes state from `resolved` to `unresolved`
 - An issue changes state from `ignored` to `unresolved`
 - An issue has happened more than {value} times in {interval}
@@ -66,16 +64,16 @@ This is because an event can't cause both of the following conditions to be sati
 - An issue has been seen by more than {value} users in {interval}
     - value: a positive integer
     - interval: one minute, one hour, one day, one week, or 30 days
-- A new event is seen
-- A new event is seen with tags matching {key} {match} {value}
+- Sentry detects a new event
+- Sentry detects a new event with tags matching {key} {match} {value}
     - key: any tag [LINK: tags]
     - match: equals, does not equal, starts with, ends with, contains, does not contain, is set, or is not set
     - value: any key’s value
-- A new event is seen with {attribute} {match} {value}
+- Sentry detects a new event with {attribute} {match} {value}
     - attribute: `message`, `platform`, `environment`, `type`, `exception.type`, `exception.value`, `user.id`, `user.email`, `user.username`, `user.ip_address`, `http.method`, `http.url`, `stacktrace.code`, `stacktrace.module`, or `stacktrace.filename`
     - match: equals, does not equal, starts with, ends with, contains, does not contain, is set, or is not set
     - value: any attribute’s value
-- A new event is seen with level {match} {level}
+- Sentry detects a new event with level {match} {level}
     - match: equal to, less than or equal to, greater than or equal to
     - level: fatal, error, warning, info, debug, or sample
 
@@ -108,34 +106,33 @@ The following actions are available:
     - VictorOps
     - [Webhooks](https://docs.sentry.io/webhook-plugin/)
 
-By default, **alert emails** are sent to [LINK: issue owners]. If issue owners isn't configured, or an owner isn't found, the email will do one of two things:
-
-- not send
-- send to all project members depending on the fall-through setting under **Project Settings > Issue Owners**.
+By default, [LINK: issue owners] receive alert emails. If an issue owner is not configured or found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
 
 ![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png)
 
 **Rate Limit**
 
-This control allows you to limit the number of times actions are executed for each issue.
+Rate Limit control allows you to limit the number of times actions execute for each issue. The limit is set to perform the action according to one of these intervals:
 
-- Perform these actions at most once every {interval} for an issue
-    - interval: 5 minutes, 10 minutes, 30 minutes, 60 minutes, 3 hours, 12 hours, 24 hours, one week, or 30 days
+- minutes: 5, 10, 30, 60
+- hours: 3, 12, 24
+- one week or 30 days
 
 For example, if an issue violates alert conditions multiple times in a 30-min period, but your frequency threshold is 30 minutes, you’ll only get one alert.
 
 ![https://docs.sentry.io/assets/notifications/alert_frequency-40d4d353342465f52d23147ed2fb32986e1a502c889cfb5579723cd161b53a62.png](https://docs.sentry.io/assets/notifications/alert_frequency-40d4d353342465f52d23147ed2fb32986e1a502c889cfb5579723cd161b53a62.png)
 
-### **Environment**
+### Environment
+Environment control allows you to specify which environment qualifies for your issue alert.
 
 - All Environments
 - Any one of your defined (and not hidden) environments
 
 ![https://docs.sentry.io/assets/notifications/alert_environment-e6e58d46f0a5773deb78f740f1f14ab37f236699161492dc20023d6586504529.png](https://docs.sentry.io/assets/notifications/alert_environment-e6e58d46f0a5773deb78f740f1f14ab37f236699161492dc20023d6586504529.png)
 
-If "All Environments" is selected, the alert conditions are checked individually for each environment, not for the combined events from all environments.
+If you select "All Environments", Sentry checks individually for each environment, rather than combined events across environments.
 
-### **Digests**
+### Digests
 
 The digests feature works only for **issue alert emails**. This project-level setting allows you to batch and deliver issue alert emails for a project. Use the sliders to control the frequency.
 
@@ -151,28 +148,26 @@ This is a listing of all your project's alerts.
 
 ### Issue Owners
 
-By default, **alert emails** are sent to [LINK: issue owners]. If issue owners isn't configured, or an owner isn't found, the email will do one of two things:
+By default, [LINK: issue owners] receive alert emails. If an issue owner is not configured or found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
 
-- not send
-- send to all project members depending on the fall-through setting under **Project Settings > Issue Owners**.
 
 ![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png)
 
 ### Ignore
 
-While an issue is ignored, all alerts for that issue are muted. You can also ignore an issue until certain conditions are met — for example, "ignore for 30 minutes." Keep in mind; **an ignored issue will still count towards your quota**.
+When an issue is set to ignore, Sentry mutes the alerts for that issue. You can also ignore an issue until certain conditions are met — for example, "ignore for 30 minutes." Keep in mind; **an ignored issue will still count towards your quota**.
 
 Finally, you can configure your personal alert notifications settings [here](https://sentry.io/settings/account/notifications/).
 
 ### Personal Alert Settings
 
-You can find your personal alert settings in **User Settings > Account > Notifications**.
+Review your personal alert settings in **User Settings > Account > Notifications**.
 
 Use the "default project alerts" setting to set your default preference across all projects — subscribed or unsubscribed.
 
 ![https://docs.sentry.io/assets/notifications/default_project_alerts-132a6776016d0827f14548f4e970adbcb273174f42c9aacfce2260e7c5434dfc.png](https://docs.sentry.io/assets/notifications/default_project_alerts-132a6776016d0827f14548f4e970adbcb273174f42c9aacfce2260e7c5434dfc.png)
 
-After making a selection, you can also selectively change it per project by going to **User Settings > Account > Notifications > Fine tune alerts by project**.
+After selecting the appropriate alert setting, selectively change it by project in **User Settings > Account > Fine tune alerts by project**.
 
 Each project has three options: Default, On, or Off. Selecting default uses your default preference from the previous step.
 
