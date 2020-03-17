@@ -1,5 +1,6 @@
 ---
 title: 'Migration Guide'
+robots: noindex
 ---
 
 ## Upgrade from 2.x.x to 3.x.x {#upgrade-from-2-x-x-to-3-0-x}
