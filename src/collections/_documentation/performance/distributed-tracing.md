@@ -167,12 +167,12 @@ $ npm install @sentry/apm
 
 ```javascript
 import * as Sentry from '@sentry/browser';
-import { Integrations as AmpIntegrations } from '@sentry/apm';
+import { Integrations as ApmIntegrations } from '@sentry/apm';
 
 Sentry.init({
     dsn: '___PUBLIC_DSN___',
     integrations: [
-        new AmpIntegrations.Tracing(),
+        new ApmIntegrations.Tracing(),
     ],
     tracesSampleRate: 1, // To enable sending traces
 });
@@ -182,12 +182,12 @@ To send any traces, set the `tracesSampleRate` to a nonzero value. The following
 
 ```javascript
 import * as Sentry from '@sentry/browser';
-import { Integrations as AmpIntegrations } from '@sentry/apm';
+import { Integrations as ApmIntegrations } from '@sentry/apm';
 
 Sentry.init({
     dsn: '___PUBLIC_DSN___',
     integrations: [
-        new AmpIntegrations.Tracing(),
+        new ApmIntegrations.Tracing(),
     ],
     tracesSampleRate: 0.1,
 });
@@ -209,7 +209,7 @@ The tracing integration will create a [transaction]({%- link _documentation/perf
 // This line starts an activity (and creates a span).
 // As long as you don't pop the activity, the transaction will not be finished and therefore not sent to Sentry.
 // If you do not want to create a span out of an activity, just don't provide the second arg.
-const activity = AmpIntegrations.Tracing.pushActivity(displayName, {
+const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
     data: {},
     op: 'react',
     description: `${displayName}`,
@@ -218,7 +218,7 @@ const activity = AmpIntegrations.Tracing.pushActivity(displayName, {
 // Sometime later ...
 // When we pop the activity, the Integration will finish the span and after the timeout finish the transaction and send it to Sentry
 // Keep in mind, as long as you do not pop the activity, the transaction will be kept alive and not sent to Sentry
-AmpIntegrations.Tracing.popActivity(activity);
+ApmIntegrations.Tracing.popActivity(activity);
 ```
 
 Keep in mind, if there is no active transaction you need to create one before otherwise nothing will happen.
@@ -229,10 +229,10 @@ So given a different example where you want to create an Transaction for a user 
 // Let's say this function is invoked when a user clicks on the checkout button of your shop
 shopCheckout() {
     // This will create a new Transaction for you
-    AmpIntegrations.Tracing.startIdleTransaction('shopCheckout');
+    ApmIntegrations.Tracing.startIdleTransaction('shopCheckout');
     
     const result = validateShoppingCartOnServer(); // Consider this function making an xhr/fetch call
-    const activity = AmpIntegrations.Tracing.pushActivity('task', {
+    const activity = ApmIntegrations.Tracing.pushActivity('task', {
         data: {
             result
         },
@@ -240,13 +240,13 @@ shopCheckout() {
         description: `processing shopping cart result`,
     });
     processAndValidateShoppingCart(result);
-    AmpIntegrations.Tracing.popActivity(activity);
+    ApmIntegrations.Tracing.popActivity(activity);
         
-    AmpIntegrations.Tracing.finshIdleTransaction(); // This is optional
+    ApmIntegrations.Tracing.finshIdleTransaction(); // This is optional
 }
 ```
 
-This example will send a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) `shopCheckout` to Sentry, containing all outgoing requests that might have happened in `validateShoppingCartOnServer`. It also contains a `task` span that measured how long the processing took. Finally the call to `AmpIntegrations.Tracing.finshIdleTransaction()` will finish the [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) and send it to Sentry. Calling this is optional since the Integration would send the [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) after the defined `idleTimeout` (default 500ms) itself.
+This example will send a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) `shopCheckout` to Sentry, containing all outgoing requests that might have happened in `validateShoppingCartOnServer`. It also contains a `task` span that measured how long the processing took. Finally the call to `ApmIntegrations.Tracing.finshIdleTransaction()` will finish the [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) and send it to Sentry. Calling this is optional since the Integration would send the [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) after the defined `idleTimeout` (default 500ms) itself.
 
 **What is an activity?**
 
