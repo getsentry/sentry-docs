@@ -154,27 +154,27 @@ def process_item(item):
 
 ### JavaScript
 
-To access our tracing features, you will need to install our Tracing integration:
+To access our tracing features, you will need to install our Tracing package `@sentry/apm`:
 
 ```bash
 $ npm install @sentry/browser
 $ npm install @sentry/apm
 ```
 
-**Sending Traces**
+**Sending Traces/Transactions/Spans**
 
-Tracing resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
+`Tracing` Integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
 
 ```javascript
 import * as Sentry from '@sentry/browser';
-import { Integrations as ApmIntegrations } from '@sentry/apm';
+import { Integrations as AmpIntegrations } from '@sentry/apm';
 
 Sentry.init({
     dsn: '___PUBLIC_DSN___',
-    tracesSampleRate: 1,
     integrations: [
-        new ApmIntegrations.Tracing(),
+        new AmpIntegrations.Tracing(),
     ],
+    tracesSampleRate: 1, // To enable sending traces
 });
 ```
 
@@ -182,12 +182,12 @@ To send any traces, set the `tracesSampleRate` to a nonzero value. The following
 
 ```javascript
 import * as Sentry from '@sentry/browser';
-import { Integrations as ApmIntegrations } from '@sentry/apm';
+import { Integrations as AmpIntegrations } from '@sentry/apm';
 
 Sentry.init({
     dsn: '___PUBLIC_DSN___',
     integrations: [
-        new Integrations.Tracing(),
+        new AmpIntegrations.Tracing(),
     ],
     tracesSampleRate: 0.1,
 });
@@ -198,16 +198,18 @@ You can pass many different options to tracing, but it comes with reasonable def
 
 - A [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) for every page load
 - All XHR/fetch requests as spans
+- If available: Browser Resources (Scripts, CSS, Images ...)
+- If available: Browser Performance API Marks
 
 **Using Tracing Integration for Manual Instrumentation**
 
-The tracing integration will create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) on page load by default; all [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) that are created will be attached to it. Also, the integration will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests (). If you want to extend the transaction's lifetime beyond 500ms, you can do so by adding more spans to the transaction. The following is an example of how you could profile a React component:
+The tracing integration will create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) on page load by default; all [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) that are created will be attached to it. Also, the integration will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests. If you want to extend the transaction's lifetime beyond 500ms, you can do so by adding more spans to the transaction. The following is an example of how you could profile a React component:
 
 ```javascript
 // This line starts an activity (and creates a span).
 // As long as you don't pop the activity, the transaction will not be finished and therefore not sent to Sentry.
 // If you do not want to create a span out of an activity, just don't provide the second arg.
-const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
+const activity = AmpIntegrations.Tracing.pushActivity(displayName, {
     data: {},
     op: 'react',
     description: `${displayName}`,
@@ -215,19 +217,53 @@ const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
 
 // Sometime later ...
 // When we pop the activity, the Integration will finish the span and after the timeout finish the transaction and send it to Sentry
-Integrations.ApmIntegrations.popActivity(activity);
+// Keep in mind, as long as you do not pop the activity, the transaction will be kept alive and not sent to Sentry
+AmpIntegrations.Tracing.popActivity(activity);
 ```
+
+Keep in mind, if there is no active transaction you need to create one before otherwise nothing will happen.
+So given a different example where you want to create an Transaction for a user interaction on you page you need to do the following:
+
+
+```javascript
+// Let's say this function is invoked when a user clicks on the checkout button of your shop
+shopCheckout() {
+    // This will create a new Transaction for you
+    AmpIntegrations.Tracing.startIdleTransaction('shopCheckout');
+    
+    const result = validateShoppingCartOnServer(); // Consider this function making an xhr/fetch call
+    const activity = AmpIntegrations.Tracing.pushActivity('task', {
+        data: {
+            result
+        },
+        op: 'task',
+        description: `processing shopping cart result`,
+    });
+    processAndValidateShoppingCart(result);
+    AmpIntegrations.Tracing.popActivity(activity);
+        
+    AmpIntegrations.Tracing.finshIdleTransaction(); // This is optional
+}
+```
+
+This example will send a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) `shopCheckout` to Sentry, containing all outgoing requests that might have happened in `validateShoppingCartOnServer`. It also contains a `task` span that measured how long the processing took. Finally the call to `AmpIntegrations.Tracing.finshIdleTransaction()` will finish the [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) and send it to Sentry. Calling this is optional since the Integration would send the [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) after the defined `idleTimeout` (default 500ms) itself.
+
+**What is an activity?**
+
+The concept of an activity only exists in the `Tracing` Integration in JavaScript Browser. It's a helper that tells the Integration for how long it should keep the `IdleTransaction` alive. An activity can be pushed and popped. Once all activities of an `IdleTransaction` have been popped, the `IdleTransaction` will be sent to Sentry.
 
 **Manual Transactions**
 
 To manually instrument certain regions of your code, you can create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) to capture them.
+This is both valid for JavaScript Browser and Node and works besides the `Tracing` integration.
 
 The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
 
 ```javascript
 const transaction = Sentry.getCurrentHub().startSpan({ 
+    description: 'My optional description',
     op: "task",  
-    transaction: item.getTransaction() 
+    transaction: item.getTransaction() // A name describing the operation
 })
 
 // processItem may create more spans internally (see next example)
