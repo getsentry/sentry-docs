@@ -3,7 +3,7 @@ title: Cocoa
 ---
 
 {% capture __alert_content -%}
-Version `5.0.0` is still in beta.
+Version `5.0.0` is in beta.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -23,7 +23,7 @@ It supports iOS (>= 8.0), tvOS (>= 9.0), macOS (>= 10.10) and partially watchOS 
 
 ### CocoaPods
 
-Installing the SDK with CocoaPods is currently our recommended way.
+We recommend installing the SDK with CocoaPods..
 To integrate Sentry into your Xcode project, specify it in your _Podfile_:
 
 ```ruby
@@ -36,7 +36,7 @@ end
 ```
 <!-- {% sdk_version sentry.cocoa %} -->
 
-Afterwards run `pod install`. In case you encounter problems with dependencies and you are on a newer CocoaPods you might have to run `pod repo update` first.
+Afterwards run `pod install`.
 
 ### Carthage
 
@@ -58,13 +58,13 @@ NOTE: Version tags or branches need to have the Package.swift file in it or Xcod
 
 ## Configuration {#configure}
 
-Make sure you initalize the SDK as soon as possible in your application lifecycle e.g. in you AppDelegate’s `application:didFinishLaunchingWithOptions` method:
+Make sure you initalize the SDK as soon as possible in your application lifecycle e.g. in your AppDelegate `application:didFinishLaunchingWithOptions` method:
 
 {% include components/platform_content.html content_dir='init' %}
 
 ## Debug Symbols {#sentry-cocoa-debug-symbols}
 
-Before you can start capturing crashes you will need to tell Sentry about the debug information by uploading dSYM files. Depending on your setup this can be done in different ways:
+Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by uploading dSYM files using one of two methods, dependent on your setup:
 
 -   [With Bitcode]({%- link _documentation/platforms/cocoa/dsym.md -%}#dsym-with-bitcode)
 -   [Without Bitcode]({%- link _documentation/platforms/cocoa/dsym.md -%}#dsym-without-bitcode)
@@ -73,7 +73,7 @@ Before you can start capturing crashes you will need to tell Sentry about the de
 
 ## Testing if the SDK works
 
-The simplest way to figure out if the SDK is setup correctly and connected to your Sentry project, just simply capture a message:
+To validate that the SDK is correctly set up and connected to your Sentry project, capture a test message:
 
 {% include components/platform_content.html content_dir='captureMessage' %}
 
@@ -81,14 +81,14 @@ If everything is working correctly, this message should appear within seconds in
 
 ## Crash Handling
 
-By default our SDK hooks into all the signal and exception handlers (for macOS there is one additional step -> see [Advanced Usage]({%- link _documentation/platforms/cocoa/usage.md -%})).
-If you want to try out if it works for you, the SDK provides a test crash function in order to crash your app:
+Our SDK hooks into all signal and exception handlers, except for MacOS. If you are using MacOS, please see the additional step provided in [Advanced Usage]({%- link _documentation/platforms/cocoa/usage.md -%})
+To try it out, the SDK provides a test crash function:
 
 {% include components/platform_content.html content_dir='crash' %}
 
 _If you crash with a debugger attached, nothing will happen._
 
-Crashes are only submitted upon re-launching the application. To see the crash in Sentry, close the app and launch it again.
+Crashes are submitted only upon re-launch of the application. To view the crash in Sentry, close your app and re-launch it.
 
 
 ## Deep Dive

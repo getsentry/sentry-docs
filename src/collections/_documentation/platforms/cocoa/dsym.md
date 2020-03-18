@@ -2,13 +2,13 @@
 title: 'Uploading Debug Symbols'
 ---
 
-A dSYM upload is required for Sentry to symoblicate your crash logs. The symoblication process unscrambles Apple’s crash logs to reveal the function, file names, and line numbers of the crash. The dSYM file can be uploaded through [sentry-cli](https://github.com/getsentry/sentry-cli) or through a [Fastlane](https://fastlane.tools/) action.
+Sentry requires a dSYM upload to symbolicate your crash logs. The symbolication process unscrambles Apple’s crash logs to reveal the function, file names, and line numbers of the crash. Upload the dSYM file using either [sentry-cli](https://github.com/getsentry/sentry-cli) or the [Fastlane](https://fastlane.tools/) action.
 
 ## With Bitcode {#dsym-with-bitcode}
 
-If [Bitcode](https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/AppThinning/AppThinning.html#//apple_ref/doc/uid/TP40012582-CH35-SW2) **is enabled** in your project, you will have to upload the dSYM to Sentry **after** it has finished processing in iTunesConnect. We also recommend using the latest Xcode version for submitting your build. The dSYM can be downloaded in three ways.
+If [Bitcode](https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/AppThinning/AppThinning.html#//apple_ref/doc/uid/TP40012582-CH35-SW2) **is enabled** in your project, you will have to upload the dSYM to Sentry **after** it has finished processing in iTunesConnect. We also recommend using the latest Xcode version for submitting your build. The dSYM can be downloaded either with [Fastlane](#bitcode-fastlane) or with [sentry-cli](#bitcode-sentrycli).
 
-### Using Fastlane
+### Using Fastlane {#bitcode-fastlane}
 
 Use the [Fastlane](https://github.com/fastlane/fastlane) action, _download_dsyms_, to download the dSYMs from iTunesConnect and upload to Sentry. The dSYM won’t be generated until **after** the app is done processing on iTunesConnect so this should be run in its own lane.
 
@@ -35,9 +35,9 @@ api_host: 'https://mysentry.invalid/'
   content=__alert_content
 %}
 
-### Using `sentry-cli`
+### Using `sentry-cli` {#bitcode-sentrycli}
 
-There are two ways to download the dSYM from iTunesConnect. After that, you can upload the dSYM using [sentry-cli](https://github.com/getsentry/sentry-cli/releases).
+Download the dSYM from iTunesConnect. After that, you can upload the dSYM using [sentry-cli](https://github.com/getsentry/sentry-cli/releases).
 
 1.  Open Xcode Organizer, go to your app, and click “Download dSYMs...”
 2.  Login to iTunes Connect, go to your app, go to “Activity", click the build number to go into the detail page, and click “Download dSYM”

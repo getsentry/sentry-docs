@@ -4,44 +4,48 @@ title: 'Advanced Usage'
 
 ## Capturing uncaught exceptions on macOS
 
-By default macOS application do not crash whenever an uncaught exception occurs. There are some additional steps you have to take to make this work with Sentry. You have to open the applications `Info.plist` file and look for `Principal class`. The content of it which should be `NSApplication` should be replaced with `SentryCrashExceptionApplication`.
+By default, MacOS applications do not crash whenever an uncaught exception occurs. To enable this with Sentry:
+
+- Open the application's `Info.plist` file
+- Search for `Principal class` (the entry is expected to be NSApplication)
+- Replace `NSApplication` with `SentryCrashExceptionApplication`
 
 ## Dealing with Scopes
 
-There are four different ways to interact with Scopes in the SDK.
+There are three different ways to interact with Scopes in the SDK. Either using [configureScope](#scope-configureScope), [passing a scope](#scope-pass) or using the [scope callback](#scope-callback). 
 
-### configureScope
+### configureScope {#scope-configureScope}
 
-Using `SentrySDK:configureScope` lets you set context data globally, this will be attached to all future events.
+Using `SentrySDK:configureScope` lets you set context data globally, which will be attached to all future events.
 
 {% include components/platform_content.html content_dir='configureScope' %}
 
-### Passing a Scope Instance
+### Passing a Scope Instance {#scope-pass}
 
-By passing an instance of a Scope directly, it will not merge with the current global Scope. 
+Setting an instance of Scope is helpful when you want to completely control what should be attached to the event.
 This is helpful in cases where you completly want to control what should be attache to the event.
 
 {% include components/platform_content.html content_dir='pass-scope' %}
 
-### Using Scope Callback
+### Using Scope Callback {#scope-callback}
 
-In cases where you might want to keep the global state but want to mutate context data just for one capture call, you might want to consider using the Scope callack:
+To maintain global state, but mutate context data for one capture call, use the Scope callback:
 
 {% include components/platform_content.html content_dir='scope-callback' %}
 
 ## Integrations
 
-The SDK comes with a few default integrations. All of them are enabled by default, if you decide to disable any of them you can do it like this:
+The SDK enables all integrations by default. To disable any of them:
 
 {% include components/platform_content.html content_dir='integrations' %}
 
 #### SentryCrashIntegration
 
-This integration is the core part of the SDK. It hooks into all signal and exception handlers to capture uncaught errors or crashes. This integration is also responsible for adding most of the device information to the events so beware of when disabling this, you will not get crash reports nor will your events contain a lot of device data.
+This integration is the core part of the SDK. It hooks into all signal and exception handlers to capture uncaught errors or crashes. This integration is also responsible for adding most of the device information to events. If it is disabled, you will not receive crash reports, nor will events contain much device data.
 
 #### SentryUIKitMemoryWarningIntegration
 
-This integration will only do something in app where UIKit is available (everywhere else it's noop). It will send an event to Sentry when `UIApplicationDidReceiveMemoryWarningNotification` is received.
+This integration only functions in apps where UIKit is available. The integration will send an event to Sentry when `UIApplicationDidReceiveMemoryWarningNotification` is received.
 
 #### SentryAutoBreadcrumbTrackingIntegration
 
