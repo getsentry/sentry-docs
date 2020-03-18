@@ -387,7 +387,7 @@ Once you’ve started sending tagged data, you’ll see it show up in a few plac
 
 We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
 
-### Setting the Level {#level}
+### Setting the Level {#setting-the-level}
 You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe and `debug` is the least severe.
 
 To set the level out of scope, you can call `captureMessage()` per event:
@@ -610,7 +610,7 @@ Sentry.withScope(function(scope) {
   Sentry.captureMessage('This shouldnt happen');
 });
 ```
-For more information, see [Setting the Level](#level).
+For more information, see [Setting the Level](#setting-the-level).
 
 ### Lazy Loading Sentry
 We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration). As noted there, if you want to use `defer`, you can, though keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). Therefore, if you do this, you'll need to a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), which will guarantee that it’s executed before any of the others.
