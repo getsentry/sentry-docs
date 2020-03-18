@@ -26,13 +26,13 @@ When an alert is created or changes status, the actions associated with the trig
 
 Alerts can be accessed via the **Alerts** sidebar item.
 
-![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Untitled.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Untitled.png)
+[{% asset notifications/alert-stream.png alt="Alert stream illustrates alert duration, trends, severity, time duration and percentage of users affected." %}]({% asset notifications/alert-stream.png @path %})
 
 ### Alert Details
 
 In this page, you can view a single instance of an alert from the time the alert is created to when the alert is resolved, or the current time if the alert is still active.
 
-![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/03_Alert_Details.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/03_Alert_Details.png)
+[{% asset notifications/alert-details.png alt="Alert details illustrates a graph showing errors." %}]({% asset notifications/alert-details.png @path %})
 
 The "subscribe" button subscribes you to workflow notifications for the alert, which include status changes and comments.
 
@@ -46,7 +46,7 @@ Conditions are evaluated for an issue alert **each time** the issue receives a n
 
 **Each condition is evaluated independently of other conditions**. For example, the following alert will never fire:
 
-![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_21.52.38.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_21.52.38.png)
+[{% asset notifications/alert-conditions2.png alt="The alert condition in this example shows the conditions are conflicting with each other." %}]({% asset notifications/alert-conditions2.png @path %})
 
 In the example, the alert will not fire because an event cannot satisfy both of these conditions simultaneously:
 
@@ -90,13 +90,13 @@ The following actions are available:
     - [Slack](https://docs.sentry.io/workflow/integrations/global-integrations/#slack)
     - Custom integrations built using the [Integration Platform](https://docs.sentry.io/workflow/integrations/integration-platform/)
 
-![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-25_15.28.01.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-25_15.28.01.png)
+[{% asset notifications/alert-actions2.png alt="The alert condition in this example shows the conditions are conflicting with each other." %}]({% asset notifications/alert-actions2.png @path %})
 
 For more details, see [LINK: Legacy Integrations (via “Service” as any individual integration) that can send Notifications].
 
 By default, [LINK: issue owners] receive alert emails. If an issue owner is not configured or not found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
 
-![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png)
+[{% asset notifications/issue_owners.png alt="Issue owners can be toggled on or off." %}]({% asset notifications/issue_owners.png @path %})
 
 **Rate Limit**
 
@@ -108,7 +108,7 @@ The rate limit determines how frequently an issue alerts. After an issue fires a
 
 For example, if an issue violates alert conditions multiple times in a 30-min period, but your frequency threshold is 30 minutes, you’ll only get one alert.
 
-![https://docs.sentry.io/assets/notifications/alert_frequency-40d4d353342465f52d23147ed2fb32986e1a502c889cfb5579723cd161b53a62.png](https://docs.sentry.io/assets/notifications/alert_frequency-40d4d353342465f52d23147ed2fb32986e1a502c889cfb5579723cd161b53a62.png)
+[{% asset notifications/alert_frequency.png alt="A dropdown that adjusts the frequency of an alert." %}]({% asset notifications/alert_frequency.png @path %})
 
 ### Environment
 Environment control allows you to specify which environment qualifies for your issue alert.
@@ -116,7 +116,7 @@ Environment control allows you to specify which environment qualifies for your i
 - All Environments
 - Any one of your defined (and not hidden) environments
 
-![https://docs.sentry.io/assets/notifications/alert_environment-e6e58d46f0a5773deb78f740f1f14ab37f236699161492dc20023d6586504529.png](https://docs.sentry.io/assets/notifications/alert_environment-e6e58d46f0a5773deb78f740f1f14ab37f236699161492dc20023d6586504529.png)
+[{% asset notifications/alert_environment.png alt="A dropdown allowing you to choose an environment to attach to an alert." %}]({% asset notifications/alert_environment.png @path %})
 
 If you select "All Environments", Sentry checks individually for each environment, rather than combined events across environments.
 
@@ -124,13 +124,13 @@ If you select "All Environments", Sentry checks individually for each environmen
 
 The digests feature works only for **issue alert emails** and limits alerts across projects. This project-level setting allows you to batch issue alerts to limit the total number of emails you receive for that project. Use the sliders to control the frequency.
 
-![https://docs.sentry.io/assets/notifications/alert_digest-e0a488f304173985c095f8ef763a0d0f68d34336a00e114625cbb339d7e6f486.png](https://docs.sentry.io/assets/notifications/alert_digest-e0a488f304173985c095f8ef763a0d0f68d34336a00e114625cbb339d7e6f486.png)
+[{% asset notifications/alert_digest.png alt="A sliding adjustment scale for the frequency of alert emails." %}]({% asset notifications/alert_digest.png @path %})
 
 ## Alert Listing
 
 This is a listing of all your project's alerts.
 
-![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Untitled%201.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Untitled%201.png)
+[{% asset notifications/alert-listing.png alt="Alert rules are divided by projects, their conditions/triggers, and actions(s)." %}]({% asset notifications/alert-listing.png @path %})
 
 ## Alert Subscription
 
@@ -138,8 +138,7 @@ This is a listing of all your project's alerts.
 
 By default, [LINK: issue owners] receive alert emails. If an issue owner is not configured or not found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
 
-
-![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Screenshot_2020-02-26_22.03.07.png)
+[{% asset notifications/issue_owners2.png alt="A toggle indicating if all users are issue owners or not." %}]({% asset notifications/issue_owners2.png @path %})
 
 ### Ignore
 
@@ -151,13 +150,13 @@ Review your personal alert settings in **User Settings > Account > Notifications
 
 Use the "default project alerts" setting to set your default preference across all projects — subscribed or unsubscribed.
 
-![https://docs.sentry.io/assets/notifications/default_project_alerts-132a6776016d0827f14548f4e970adbcb273174f42c9aacfce2260e7c5434dfc.png](https://docs.sentry.io/assets/notifications/default_project_alerts-132a6776016d0827f14548f4e970adbcb273174f42c9aacfce2260e7c5434dfc.png)
+[{% asset notifications/default_project_alerts.png alt="A toggle for turning on or off all project alerts." %}]({% asset notifications/default_project_alerts.png @path %})
 
 After selecting the appropriate alert setting, selectively change it by project in **User Settings > Account > Fine tune alerts by project**.
 
 Each project has three options: Default, On, or Off. Selecting default uses your default preference from the previous step.
 
-![https://docs.sentry.io/assets/notifications/specific_project_alert-8b39db12d437131adf61d367d1a7161bb6b7c5a99d2ead1c6e339aac98dc9e46.png](https://docs.sentry.io/assets/notifications/specific_project_alert-8b39db12d437131adf61d367d1a7161bb6b7c5a99d2ead1c6e339aac98dc9e46.png)
+[{% asset notifications/specific_project_alert.png alt="Dropdown indicating a choice between default, on, or off." %}]({% asset notifications/specific_project_alert.png @path %})
 
 ## **FAQs**
 
