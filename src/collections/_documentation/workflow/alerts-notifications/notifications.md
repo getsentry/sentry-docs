@@ -34,8 +34,8 @@ An issue can be in one of the following three states:
         3. When the project’s auto-resolve feature is configured
 
     - Auto-resolve is located in **Project Settings > General Settings**. For more details about submitting a fix, see documentation on [resolving issues](https://docs.sentry.io/workflow/releases/#after-associating-commits).
-
-        ![https://docs.sentry.io/assets/notifications/auto-resolve-4ff17e17a825d4e2f16293d1e3371666838dcf20630c2caa61fc3af609289db3.png](https://docs.sentry.io/assets/notifications/auto-resolve-4ff17e17a825d4e2f16293d1e3371666838dcf20630c2caa61fc3af609289db3.png)
+    
+        [{% asset notifications/auto-resolve.png alt="A slider to indicate whether the auto resolve is disabled or not." %}]({% asset notifications/auto-resolve.png @path %})
 
 3. Ignored
 
@@ -65,25 +65,25 @@ You can configure your personal workflow and deploy notifications [here](https:/
 
 ### **Workflow Notification Settings**
 
-![https://docs.sentry.io/assets/notifications/workflow_notifications_subscription-1f12011dbcd124436fb79f20b858eb338789fc530e4fa561f0535101a9d57e82.png](https://docs.sentry.io/assets/notifications/workflow_notifications_subscription-1f12011dbcd124436fb79f20b858eb338789fc530e4fa561f0535101a9d57e82.png)
+[{% asset notifications/workflow_notifications_subscription.png alt="Radio buttons with options for always, ony on issues I subscribe to, and never." %}]({% asset notifications/workflow_notifications_subscription.png @path %})
 
 After selecting the appropriate alert setting, selectively change it by project in **User Settings > Account > Fine tune alerts by project**.
 
 Each project has three options: Default, On, or Off. Selecting default uses your default preference from the previous step.
 
-![https://docs.sentry.io/assets/notifications/fine_tune_workflow-302c0ab140d11a06981036b149e06ec6bec3aa979ac7b39966a59e2e56533025.png](https://docs.sentry.io/assets/notifications/fine_tune_workflow-302c0ab140d11a06981036b149e06ec6bec3aa979ac7b39966a59e2e56533025.png)
+[{% asset notifications/fine_tune_workflow.png alt="A dropdown with the options to choose default, always, only on issues I subscribe to, and never." %}]({% asset notifications/fine_tune_workflow.png @path %})
 
 **Unsubscribe**
 
 To opt-out of workflow notifications for a specific issue, click "Unsubscribe" at the bottom right of the issue’s page.
 
-![https://docs.sentry.io/assets/notifications/unsubscribe-1fec0e1b843f1582b298596422ce6d15f239550945614de71943c9c083886e3a.png](https://docs.sentry.io/assets/notifications/unsubscribe-1fec0e1b843f1582b298596422ce6d15f239550945614de71943c9c083886e3a.png)
+[{% asset notifications/unsubscribe.png alt="An unsubscribe button to stop notifications." %}]({% asset notifications/unsubscribe.png @path %})
 
 ### Deploy Notifications
 
 Deploy notification settings are located in **Setting > Account > Notifications**.
 
-![DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Untitled%202.png](DON%20T%20add%20content%20to%20this%20Draft%20Alerts%20Notificatio/Untitled%202.png)
+[{% asset notifications/deploy_notifications.png alt="An unsubscribe button to stop notifications." %}]({% asset notifications/deploy_notifications.png @path %})
 
 ## **FAQ**
 
