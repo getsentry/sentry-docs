@@ -38,7 +38,7 @@ Rules generally consist of three parts:
 
 - A [_Redaction Method_](#redaction-methods): What to do.
 - A [_Rule Type_](#rule-types): What to look for.
-- A [_Selector_](#selector): Where to look.
+- A [_Selector_](#selectors): Where to look.
 
 ## Redaction Methods
 
