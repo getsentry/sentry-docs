@@ -28,7 +28,7 @@ import logging
 logging.debug("I am ignored")
 logging.info("I am a breadcrumb")
 logging.error("I am an event", extra=dict(bar=43))
-logging.error("An exception happened", exc_info=True)
+logging.exception("An exception happened")
 ```
 
 * There will be an error event with the message `"I am an event"`.
