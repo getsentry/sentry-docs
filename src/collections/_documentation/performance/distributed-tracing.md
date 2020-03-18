@@ -174,7 +174,7 @@ Sentry.init({
     integrations: [
         new ApmIntegrations.Tracing(),
     ],
-    tracesSampleRate: 1, // To enable sending traces
+    tracesSampleRate: 0.1,
 });
 ```
 
