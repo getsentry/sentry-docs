@@ -108,7 +108,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with re
 If you reach the account selection page during the Azure Devops installation process (step 4 in the instructions above) and see that there are no accounts available to select, please check the following possibilities:
 
 - Ensure you are logged into the account connected to your Azure DevOps organization.
-- Double check that your account is a Microsoft Account (MSA). At this time, we do not support Azure Active Directory (AAD) accounts. 
+- Double-check that your account is a Microsoft Account (MSA). At this time, we do not support Azure Active Directory (AAD) accounts. 
 
 ### Bitbucket
 
@@ -1084,6 +1084,6 @@ Follow the instructions in the link below:
 
 ## Troubleshooting
 If you're having trouble setting up Sentry with your on-premise integration like JIRA Server, Bitbucket Server, GitHub Enterprise, or Gitlab:
-- Ensure that the installation URL you provided is a fully qualified domain name (FQDN) which is resolvable on the internet.
-- Double check that the IP addresses Sentry uses to make outbound requests are whitelisted <https://docs.sentry.io/ip-ranges/>.
+- Ensure that the installation URL you provided is a fully qualified domain name (FQDN), which is resolvable on the internet.
+- Double-check that the IP addresses Sentry uses to make outbound requests are whitelisted <https://docs.sentry.io/ip-ranges/>.
 - Make sure that Sentry's access to your installation URL is not path restricted.
