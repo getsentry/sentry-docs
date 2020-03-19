@@ -7,6 +7,15 @@ Sentry users with admin permissions or higher can create one of two types of ale
 
 ## Metric Alerts
 
+{% capture __alert_content -%}
+Metric Alerts are currently in beta. For more information about access to Metric Alerts, feel free to reach out at alerting-feedback@sentry.io.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 Metric alerts allow you to filter and set thresholds on all errors across a project. Use metric alerts for high-level monitoring of patterns or fine-grained monitoring of individual events. Metric alerts help express lightweight service-level objectives (SLOs) such as users affected by signup-page errors or volume of database errors.
 
 ### Alert Builder
