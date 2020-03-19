@@ -35,17 +35,9 @@ A hash generated using your Client Secret and the request itself – used to ver
 
 ## Verifying the Signature
 
-```python
-    body = json.dumps(request.body)
-    expected = hmac.new(
-        key=client_secret.encode('utf-8'),
-        msg=body,
-        digestmod=sha256,
-    ).hexdigest()
-
-    if expected != request.headers['Sentry-Hook-Signature']:
-            raise UnauthorizedError
-```
+{% wizard %}
+{% include components/platform_content.html content_dir='webhooks-verifying-signature' %}
+{% endwizard %}
 
 ## Request Structure
 

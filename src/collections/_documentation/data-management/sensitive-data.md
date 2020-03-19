@@ -130,6 +130,10 @@ You can choose to expand the keys which are scrubbed by the server, as well as p
 
 As mentioned earlier, configure scrubbing within SDK if possible so that sensitive data is not sent with the request.
 
+### Advanced server-side data scrubbing
+
+We are currently betatesting additional features around server-side data scrubbing. For more information see [_Advanced Data Scrubbing_]({% link _documentation/data-management/advanced-datascrubbing.md %}).
+
 ## Restricting Emails
 
 It’s common that compliance within your company may mean that data can only be transmitted over SSL and stored in a secure manner. One common area this comes up is with email notifications. By default Sentry will send a large amount of data as part of the issue notification. In some cases this data may be source code or other user data.
@@ -143,3 +147,4 @@ If you’ve accidentally sent sensitive data to the server it’s likely you’r
 -   If you send it as a tagged value, removing the event is not enough. You can visit Project Settings and under Tags you’ll find a way to permanently remove any related data for a given tag.
 -   If you need to wipe just a single event, you’ll find the ability to bulk delete all sampled events under a rollup by visiting the rollup details page and selecting “Delete”.
 -   If you send sparse events to a project (potentially all of them), your only option is to remove the project and re-create it. Keep in mind this will revoke API credentials, so you likely want to do this in the reverse order.
+
