@@ -78,3 +78,53 @@ See [_Logging_]({% link _documentation/platforms/python/logging.md %})
 Reports crashing threads.
 
 It also accepts an option `propagate_hub` that changes the way clients are transferred between threads, and transfers scope data (such as tags) from the parent thread to the child thread. This option is currently disabled (`False`) by default, but this will likely change in the future.
+
+Next are two code samples that demonstrate what boilerplate you would have to write without `propagate_hub`. This boilerplate is still sometimes necessary if you want to propagate context data into a thread pool, for example.
+
+### Manual propagation
+
+```python
+import threading
+from sentry_sdk import Hub, init, configure_scope, capture_message
+
+init(...)
+
+with configure_scope() as scope:
+    scope.set_tag("mydata", 42)
+
+def run(thread_hub):
+    with thread_hub:
+        capture_message("hi")  # event will have `mydata` tag attached
+
+# We take all context data (the tags map and even the entire client
+# configuration), and pass it as explicit variable
+# into the thread.
+thread_hub = Hub(Hub.current)
+
+tr = threading.Thread(target=run, args=[thread_hub])
+tr.start()
+tr.join()
+```
+
+### Example B: Automatic propagation
+
+```python
+import threading
+
+from sentry_sdk import Hub, init, configure_scope, capture_message
+from sentry_sdk.integrations.threading import ThreadingIntegration
+
+init(..., integrations=[ThreadingIntegration(propagate_hub=True)])
+
+with configure_scope() as scope:
+    scope.set_tag("mydata", 42)
+
+def run():
+    capture_message("hi")  # event will have `mydata` tag attached
+
+# The threading integration hooks into the stdlib to automatically pass
+# existing context data when a `Thread` is instantiated.
+tr = threading.Thread(target=run)
+tr.start()
+tr.join()
+```
