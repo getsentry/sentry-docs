@@ -133,7 +133,7 @@ Select subsections by JSON-type or semantic meaning using the following:
 * `$array` matches any JSON array value
 * `$object` matches any JSON object
 * `$exception` matches a single exception instance in `{"exception": {"values": [...]}}`
-* `$stacktrace` matches a stacktrace instance
+* `$stacktrace` matches a stack trace instance
 * `$frame` matches a frame
 * `$request` matches the HTTP request context of an event
 * `$user` matches the user context of an event
