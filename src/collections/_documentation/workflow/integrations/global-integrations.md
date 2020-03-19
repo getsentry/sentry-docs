@@ -108,7 +108,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with re
 If you reach the account selection page during the Azure Devops installation process (step 4 in the instructions above) and see that there are no accounts available to select, please check the following possibilities:
 
 - Ensure you are logged into the account connected to your Azure DevOps organization.
-- Double check that your account is a Microsoft Account (MSA). At this time, we do not support Azure Active Directory (AAD) accounts. 
+- Double-check that your account is a Microsoft Account (MSA). At this time, we do not support Azure Active Directory (AAD) accounts. 
 
 ### Bitbucket
 
@@ -180,7 +180,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with re
 
 ### Bitbucket Server
 
-You can use the data from your Bitbucket Server commits to help find and fix bugs faster.
+You can use the data from your Bitbucket Server commits to help find and fix bugs faster. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
 
 #### Installing Bitbucket Server with Sentry
 
@@ -443,7 +443,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 ### GitHub Enterprise
 
-You can use the data from your GitHub Enterprise commits to help find and fix bugs faster.
+You can use the data from your GitHub Enterprise commits to help find and fix bugs faster. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
 
 #### Configure GitHub Enterprise
 
@@ -568,7 +568,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 ### GitLab
 
-Sentry’s GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry.
+Sentry’s GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
 
 #### Configure GitLab
 
@@ -765,7 +765,7 @@ individual users if you experience assignee sync not behaving as expected.
 
 ### JIRA Server
 
-Connect errors from Sentry with your Jira Server issues.
+Connect errors from Sentry with your Jira Server issues. [Troubleshooting](https://docs.sentry.io/workflow/integrations/global-integrations/#troubleshooting-2)
 
 #### Installing Jira Server with Sentry
 
@@ -1081,3 +1081,9 @@ The Split integration is only available for organizations on the Business and En
 
 Follow the instructions in the link below:  
 <https://help.split.io/hc/en-us/articles/360029879431>
+
+## Troubleshooting
+If you're having trouble setting up Sentry with your on-premise integration like JIRA Server, Bitbucket Server, GitHub Enterprise, or Gitlab:
+- Ensure that the installation URL you provided is a fully qualified domain name (FQDN), which is resolvable on the internet.
+- Double-check that the IP addresses Sentry uses to make outbound requests are whitelisted <https://docs.sentry.io/ip-ranges/>.
+- Make sure that Sentry's access to your installation URL is not path restricted.
