@@ -3,7 +3,7 @@ title: Alerts & Notifications
 sidebar_order: 0
 ---
 
-Sentry notifications are broadly categorized into alerts and non-alert notifications. Alerts can be sent to many supported [LINK: integrations]. Non-alert notifications only go to email.
+Sentry notifications are broadly categorized into alerts and non-alert notifications. Alerts can be sent to many supported [integrations]({%- link _documentation/workflow/integrations/index.md -%}#webhook-alerts). Non-alert notifications only go to email.
 
 ## Alerts
 
@@ -26,9 +26,7 @@ Metric alerts allow you to filter and set thresholds on all errors across a proj
 
 Issue alerts fire whenever **any issue** in the project matches the specified criteria, such as a resolved issue re-appearing or an issue affecting many users.
 
-For more details, see the [LINK: full documentation on Issue Alerts].
-
-[ screenshot of Alerts in-app ]
+For more details, see the [full documentation on Issue Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts).
 
 Some alert settings apply at the project level and to all alerts in the project. Other alert settings are specific to the alert. You can tweak your personal alerts settings to control which alerts you receive.
 
@@ -37,9 +35,7 @@ Some alert settings apply at the project level and to all alerts in the project.
 Non-alert notifications are all other types of Sentry notifications such as:
 
 - Workflow notifications: activity involving user actions and state changes on issues and alerts. This includes things like resolution, assignment, comments, and regressions.
-- Deploy notifications: when a release is deployed [LINK: deploy docs], Sentry automatically sends an email to users who have committed to the release.
+- Deploy notifications: when a release is [deployed]({%- link _documentation/workflow/alerts-notifications/notifications.md -%}#deploy), Sentry automatically sends an email to users who have committed to the release.
 - Quota & Usage notifications: emails about quota approaching/exceeded and spike protection
 
-For more details, see the [LINK: full documentation on Notifications].
-
-[ screenshot of Notifications in-app ]
+For more details, see the [full documentation on Notifications]({%- link _documentation/workflow/alerts-notifications/notifications.md -%}).

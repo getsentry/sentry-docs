@@ -49,7 +49,7 @@ Workflow emails are sent for issue state changes.
 
 Deploy emails are sent to users who have committed to the release that was deployed. See [LINK: deploy documentation] for more details
 
-[ screenshot deploy-emails.png ]
+[{% asset deploy-emails.png alt="An example of an email describing deployed features." %}]({% asset deploy-emails.png @path %})
 
 ## Quota
 
