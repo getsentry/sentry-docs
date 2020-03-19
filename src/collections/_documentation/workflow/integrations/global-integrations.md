@@ -1083,7 +1083,7 @@ Follow the instructions in the link below:
 <https://help.split.io/hc/en-us/articles/360029879431>
 
 ## Troubleshooting
-If you're having trouble setting up Sentry with your on-premise integration like JIRA Server, Bitbucket Server, Github Enterprise or Gitlab:
+If you're having trouble setting up Sentry with your on-premise integration like JIRA Server, Bitbucket Server, GitHub Enterprise, or Gitlab:
 - Ensure that the installation URL you provided is a fully qualified domain name (FQDN) which is resolvable on the internet.
 - Double check that the IP addresses Sentry uses to make outbound requests are whitelisted <https://docs.sentry.io/ip-ranges/>.
 - Make sure that Sentry's access to your installation URL is not path restricted.
