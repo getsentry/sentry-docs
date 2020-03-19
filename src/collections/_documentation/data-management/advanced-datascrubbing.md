@@ -125,13 +125,16 @@ You can combine selectors using boolean logic.
 
 ### Value Types
 
-Select subsections by JSON-type or semantic meaning using the following:
+Select subsections by JSON-type using the following:
 
 * `$string` matches any string value
 * `$number` matches any integer or float value
 * `$datetime` matches any field in the event that represents a timestamp
 * `$array` matches any JSON array value
 * `$object` matches any JSON object
+
+Select known parts of the schema using the following:
+
 * `$exception` matches a single exception instance in `{"exception": {"values": [...]}}`
 * `$stacktrace` matches a stack trace instance
 * `$frame` matches a frame
