@@ -81,11 +81,11 @@ It also accepts an option `propagate_hub` that changes the way clients are trans
 
 Next are two code samples that demonstrate what boilerplate you would have to write without `propagate_hub`. This boilerplate is still sometimes necessary if you want to propagate context data into a thread pool, for example.
 
+### Manual propagation
+
 ```python
 import threading
 from sentry_sdk import Hub, init, configure_scope, capture_message
-
-### Example A: Manual propagation
 
 init(...)
 
@@ -104,10 +104,16 @@ thread_hub = Hub(Hub.current)
 tr = threading.Thread(target=run, args=[thread_hub])
 tr.start()
 tr.join()
+```
 
 ### Example B: Automatic propagation
 
+```python
+import threading
+
+from sentry_sdk import Hub, init, configure_scope, capture_message
 from sentry_sdk.integrations.threading import ThreadingIntegration
+
 init(..., integrations=[ThreadingIntegration(propagate_hub=True)])
 
 with configure_scope() as scope:
