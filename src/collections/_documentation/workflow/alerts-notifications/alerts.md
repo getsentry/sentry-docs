@@ -170,9 +170,9 @@ Each project has three options: Default, On, or Off. Selecting default uses your
 ## **FAQs**
 
 - Can I copy an alert rule to another project?
-    - Unfortunately, this is not an option.
+    - This feature will be available in a future release.
 - Can I set different default alert rules?
-    - Unfortunately, this is currently not an option. However, this feature is coming soon.
+    - This feature will be available in a future release.
 - Are there issue-level filters other than environment?
     - No, all filters are event-based. For example, configurations don't exist for alerting only if an issue is X days old, or assigned to Y, or alerted-on-before, etc.
 - What is the difference between Delete, Delete & Discard, and Ignore?
