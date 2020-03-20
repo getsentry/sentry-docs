@@ -93,7 +93,7 @@ Another example. Sentry knows about two kinds of error messages: The exception m
   "logentry": {
     "formatted": "Failed to roll out the dinglebop"
   },
-  "exceptions": {
+  "exception": {
     "values": [
       {
         "type": "ZeroDivisionError",
