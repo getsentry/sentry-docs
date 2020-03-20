@@ -53,6 +53,7 @@ Issue alerts fire whenever any issue in the project matches the specified criter
 
 Conditions are evaluated for an issue alert **each time** the issue receives a new event, subject to [LINK: rate limits].
 
+{% capture __alert_content -%}
 **Each condition is evaluated independently of other conditions**. For example, the following alert will never fire:
 
 [{% asset notifications/alert-conditions2.png alt="The alert condition in this example shows the conditions are conflicting with each other." %}]({% asset notifications/alert-conditions2.png @path %})
@@ -61,6 +62,11 @@ In the example, the alert will not fire because an event cannot satisfy both of 
 
 - Sentry detects/creates a new issue
 - The issue has happened 10 times
+
+{%- endcapture -%}
+{%- include components/alert.html
+    content=__alert_content
+%}
 
 **Available Conditions**
 
