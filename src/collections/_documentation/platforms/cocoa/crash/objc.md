@@ -1,0 +1,3 @@
+```objc
+[SentrySDK crash];
+```

@@ -1,5 +1,6 @@
 ---
 title: 'Uploading Debug Symbols'
+robots: noindex
 ---
 
 A dSYM upload is required for Sentry to symoblicate your crash logs for viewing. The symoblication process unscrambles Apple’s crash logs to reveal the function, variables, file names, and line numbers of the crash. The dSYM file can be uploaded through the [sentry-cli](https://github.com/getsentry/sentry-cli) tool or through a [Fastlane](https://fastlane.tools/) action.
