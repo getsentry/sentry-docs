@@ -88,6 +88,7 @@ In the example, the alert will not fire because an event cannot satisfy both of 
     - attribute: `message`, `platform`, `environment`, `type`, `exception.type`, `exception.value`, `user.id`, `user.email`, `user.username`, `user.ip_address`, `http.method`, `http.url`, `stacktrace.code`, `stacktrace.module`, or `stacktrace.filename`
     - match: equals, does not equal, starts with, ends with, contains, does not contain, is set, or is not set
     - value: any attribute’s value
+    - When viewing an event, if an attribute is unclear or missing, you can view its JSON payload to determine its value.
 - Sentry detects a new event with level {match} {level}
     - match: equal to, less than or equal to, greater than or equal to
     - level: fatal, error, warning, info, debug, or sample
