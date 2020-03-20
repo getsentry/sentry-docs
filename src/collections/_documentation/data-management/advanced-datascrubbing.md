@@ -70,6 +70,7 @@ Sentry does not know if a local variable that looks like a creditcard number act
 {%- include components/alert.html
   title="Sentry does not know what your code does"
   content=__alert_content
+  level="warning"
 %}
 
 
