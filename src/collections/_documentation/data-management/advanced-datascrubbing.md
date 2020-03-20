@@ -64,7 +64,7 @@ Rules generally consist of three parts:
 
 {% capture __alert_content -%}
 
-Sentry does not know if a local variable that looks like a creditcard number actually is one. As such you need to expect false-positives but also false-negatives. [_Selectors_](#selectors) can help you in limiting the scope in which your rule runs.
+Sentry does not know if a local variable that looks like a credit card number actually is one. As such, you need to expect not only false-positives but also false-negatives. [_Selectors_](#selectors) can help you in limiting the scope in which your rule runs.
 
 {%- endcapture -%}
 {%- include components/alert.html
@@ -86,7 +86,7 @@ For example, what is called "Additional Data" in the UI is called `extra` in the
 [Remove] [Anything] from [extra.foo]
 ```
 
-Another example. Sentry knows about two kinds of error messages: The exception message, and the top-level log message. Here is an example of how such an event payload as sent by the SDK (and downloadable from the UI) would look like:
+Another example. Sentry knows about two kinds of error messages: the exception message, and the top-level log message. Here is an example of how such an event payload as sent by the SDK (and downloadable from the UI) would look like:
 
 ```json
 {
@@ -141,9 +141,9 @@ Select known parts of the schema using the following:
 * `$frame` matches a frame
 * `$request` matches the HTTP request context of an event
 * `$user` matches the user context of an event
-* `$logentry` (also applies to the `message` attribute)
+* `$logentry` matches both the `logentry` attribute of an event as well as the `message` attribute
 * `$thread` matches a single thread instance in `{"threads": {"values": [...]}}`
-* `$breadcrumb` matches a single breadcrumb in `{"breadcrumbs": [...]}`
+* `$breadcrumb` matches a single breadcrumb in `{"breadcrumbs": {"values": [...]}}`
 * `$span` matches a [trace span]({% link _documentation/performance/performance-glossary.md %}#span)
 * `$sdk` matches the SDK context in `{"sdk": ...}`
 
