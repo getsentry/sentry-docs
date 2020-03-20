@@ -203,17 +203,17 @@ You can pass many different options to tracing, but it comes with reasonable def
 
 *tracingOrigins Option*
  
-The default value of `tracingOrigins` is : `new ApmIntegrations.Tracing({tracingOrigins: ['localhost', /^\//]})`. This options will attach the `sentry-trace` header to all outgoing XHR/fetch requests that contain a string in the list or match the regex. In case your frontend is making requests to a different domain you might want to add it there so we attach the `sentry-trace`.
+The default value of `tracingOrigins` is : `new ApmIntegrations.Tracing({tracingOrigins: ['localhost', /^\//]})`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests that contain a string in the list or match a regex. In case your frontend is making requests to a different domain you might want to add it there in order to propagate the `sentry-trace` header to the backend services, required to link transactions together as part of a single trace.
 
 *Example:*
 
-- Your frontend is running `mywebapp.com`
-- Your backend is running `api.mybackend.com`
-- You setup your frontend to make API calls to `api.mybackend.com`
-- Then the option need to be configured like this `new ApmIntegrations.Tracing({tracingOrigins: ['localhost', /^\//, 'api.mybackend.com']})`
-- All outgoing XHR/fetch request would get the `sentry-trace` header attached
+- A frontend application is served from `example.com`
+- A backend service is served from `api.example.com`
+- The frontend application makes API calls to the backend
+- Then the option need to be configured like this `new ApmIntegrations.Tracing({tracingOrigins: ['api.example.com']})`
+- Outgoing XHR/fetch requests to `api.example.com` would get the `sentry-trace` header attached
 
-*NOTE:* You need to make sure you webserver CORS is configured to allow the `sentry-trace` header. The configuration might look like this: `"Access-Control-Allow-Headers: sentry-trace"`, this depends a lot on your configuration. But if you are not whitelisting the `sentry-trace` header the request might be blocked.
+*NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like this: `"Access-Control-Allow-Headers: sentry-trace"`, this depends a lot on your configuration. But if you are not whitelisting the `sentry-trace` header the request might be blocked.
 
 **Using Tracing Integration for Manual Instrumentation**
 
