@@ -3,7 +3,7 @@ title: 'Grouping & Fingerprints'
 sidebar_order: 0
 ---
 
-All events have a fingerprint and events with the same fingerprint are grouped together. By default, Sentry will run one of our built-in grouping algorithms to generate a fingerprint based on information available within the event such as `stacktrace`, `exception`, and `message`. To extend the default grouping behavior or change it completely, you can use a combination of the following options:
+All events have a fingerprint. Events with the same fingerprint are grouped together into an issue. By default, Sentry will run one of our built-in grouping algorithms to generate a fingerprint based on information available within the event such as `stacktrace`, `exception`, and `message`. To extend the default grouping behavior or change it completely, you can use a combination of the following options:
 
 1. [SDK Fingerprinting]({%- link _documentation/data-management/event-grouping/sdk-fingerprinting.md -%})
 2. [Server-side Fingerprinting]({%- link _documentation/data-management/event-grouping/server-side-fingerprinting.md -%})
@@ -13,7 +13,7 @@ All events have a fingerprint and events with the same fingerprint are grouped t
 
 Each time the default behavior is modified, Sentry releases it as a new version so it does not affect how existing issues are grouped. When you create a Sentry project, the latest and greatest version of the grouping algorithm is automatically selected. This means that the grouping behavior is consistent within a project. If you want to upgrade an existing project to a new grouping algorithm version, you can do so in the project settings. When upgrading you will very likely see new groups being created.
 
-All versions consider the `stacktrace`, `exception` and `message`. 
+All versions consider the `stacktrace`, `exception` and `message`.
 
 ### Grouping by Stacktrace
 
