@@ -163,7 +163,7 @@ $ npm install @sentry/apm
 
 **Sending Traces/Transactions/Spans**
 
-`Tracing` Integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
+The `Tracing` integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
 
 ```javascript
 import * as Sentry from '@sentry/browser';
@@ -174,7 +174,7 @@ Sentry.init({
     integrations: [
         new ApmIntegrations.Tracing(),
     ],
-    tracesSampleRate: 1, // To enable sending traces
+    tracesSampleRate: 0.1,
 });
 ```
 
