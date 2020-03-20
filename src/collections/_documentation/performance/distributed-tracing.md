@@ -201,6 +201,20 @@ You can pass many different options to tracing, but it comes with reasonable def
 - If available: Browser Resources (Scripts, CSS, Images ...)
 - If available: Browser Performance API Marks
 
+*tracingOrigins Option*
+ 
+The default value of `tracingOrigins` is : `new ApmIntegrations.Tracing({tracingOrigins: ['localhost', /^\//]})`. This options will attach the `sentry-trace` header to all outgoing XHR/fetch requests that contain a string in the list or match the regex. In case your frontend is making requests to a different domain you might want to add it there so we attach the `sentry-trace`.
+
+*Example:*
+
+- Your frontend is running `mywebapp.com`
+- Your backend is running `api.mybackend.com`
+- You setup your frontend to make API calls to `api.mybackend.com`
+- Then the option need to be configured like this `new ApmIntegrations.Tracing({tracingOrigins: ['localhost', /^\//, 'api.mybackend.com']})`
+- All outgoing XHR/fetch request would get the `sentry-trace` header attached
+
+*NOTE:* You need to make sure you webserver CORS is configured to allow the `sentry-trace` header. The configuration might look like this: `"Access-Control-Allow-Headers: sentry-trace"`, this depends a lot on your configuration. But if you are not whitelisting the `sentry-trace` header the request might be blocked.
+
 **Using Tracing Integration for Manual Instrumentation**
 
 The tracing integration will create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) on page load by default; all [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) that are created will be attached to it. Also, the integration will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests. If you want to extend the transaction's lifetime beyond 500ms, you can do so by adding more spans to the transaction. The following is an example of how you could profile a React component:
