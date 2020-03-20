@@ -334,3 +334,67 @@ You can also use our [API]({%- link _documentation/api/releases/post-release-dep
 ## Release Artifacts
 
 JavaScript and iOS projects can utilize release artifacts to unminify or symbolicate error stack traces. To learn more, please check out our [iOS]({%- link _documentation/clients/cocoa/index.md -%}#sentry-cocoa-debug-symbols) and [JavaScript]({%- link _documentation/platforms/javascript/sourcemaps.md -%}) docs.
+
+## Release Health
+
+[ ALERT BOX: Sentry’s Release Health features are currently in beta. For more details about access to these features, feel free to reach out at [LINK: email?]. ]
+
+Monitor the health of [LINK: releases] by observing user adoption, usage of the application, percentage of [LINK to glossary: crashes], and [LINK to glossary: session data]. Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+
+### Releases Index
+
+The releases index page gives a high-level view of each release version, its associated project, the authors of each commit, the percentage of crash-free users, and the percentage of crash-free sessions. Each release links to one project. If a release has multiple projects, Sentry will duplicate the release data in relation to each unique project. The data will present adoption of the release and usage in the most recent 24 hours to 14 days.
+
+[ SCREENSHOT: Releases index page ]
+
+### Release Details
+
+The release details page focuses on an individual release. Elements of the release are presented in visual trends for crashes and sessions, specifics regarding each issue, and commit author breakdowns.
+
+[ SCREENSHOT: Releases detail page ]
+
+For more information about Sentry's Mobile features, see the full documentation for [ LINK: Android SDK ] and [ LINK: iOS SDK ].
+
+### Session Data
+
+A [ LINK to glossary: session ] begins the moment a user starts interacting with an application or when an application resumes from the background into the foreground. With Release health, you can track the percentage of users using sessions.
+
+For more details about session payloads, see the full documentation [ LINK to session payloads under  [https://docs.sentry.io/development/sdk-dev/event-payloads/](https://docs.sentry.io/development/sdk-dev/event-payloads/) ]
+
+### Data Filtering
+
+Sentry has inbound data filters. These filters are exclusively applied at ingest time and not later in processing. This, for instance, lets one discard an error by error message when the error is ingested through the JSON API. On the other hand, this filter doesn't apply to ingested minidumps.
+
+Data filters are only partially supported for session events, and they might be working slightly different:
+
+#### Equivalent Filters
+
+**release filter**
+
+This filter discards events of a particular release. If sessions are started or updated and would match this filter, sessions are silently discarded entirely. This is consistent with error events.
+
+**web crawler filter**
+
+When session events send their user agent, they are discarded the same way as error events are. There might be a slight difference in the fallback case where the user agent of the sending SDK is used (browser javascript).
+
+**legacy browsers**
+
+This works exactly like the web crawler filter. No sessions are created or updated for legacy browsers when enabled.
+
+**ip filter**
+
+Throws away sessions of a specific IP.
+
+#### Unsupported Filters
+
+**error message filter**
+
+This filter does not apply for sessions. Even if a user is discarding such errors, they will count against their stability score. An alternative measure *could be* to discard such sessions entirely if an error of this type is filtered out, but we believe this would make the system harder to understand.
+
+**browser extensions**
+
+Since the logic for detecting such errors requires all the error information, we cannot support this filter at the session ingest time. If we want to improve this case, we could retroactively discard such sessions entirely once we identify such an error case.
+
+### FAQ
+
+1. When you change the time range, the crash-free settings and release adoption will be updated, and Sentry will use the new time range.
