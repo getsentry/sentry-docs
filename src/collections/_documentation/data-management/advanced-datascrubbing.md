@@ -62,17 +62,60 @@ Rules generally consist of three parts:
 - _MAC Addresses_
 - _Anything_: Matches any value. This is useful if you want to remove a certain JSON key by path using [_Selectors_](#selectors) regardless of the value.
 
+{% capture __alert_content -%}
+
+Sentry does not know if a local variable that looks like a credit card number actually is one. As such, you need to expect not only false-positives but also false-negatives. [_Selectors_](#selectors) can help you in limiting the scope in which your rule runs.
+
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Sentry does not know what your code does"
+  content=__alert_content
+  level="warning"
+%}
+
+
 ## Selectors
 
-You can select a region of the event using JSON-path-like syntax. As an example, to delete a specific key in "Additional Data", you would configure:
+Selectors allow you to restrict rules to certain parts of the event. This is useful to unconditionally remove certain data by variable/field name from the event, but can also be used to conservatively test rules on real data.
 
-> `Remove` `Anything` from `extra.foo`
+Data scrubbing always works on the raw event payload. Keep in mind that some fields in the UI may be called differently in the JSON schema. When looking at an event there should always be a link called "JSON" present that allows you to see what the data scrubber sees.
+
+For example, what is called "Additional Data" in the UI is called `extra` in the event payload. To remove a specific key called `foo`, you would write:
+
+```
+[Remove] [Anything] from [extra.foo]
+```
+
+Another example. Sentry knows about two kinds of error messages: the exception message, and the top-level log message. Here is an example of how such an event payload as sent by the SDK (and downloadable from the UI) would look like:
+
+```json
+{
+  "logentry": {
+    "formatted": "Failed to roll out the dinglebop"
+  },
+  "exception": {
+    "values": [
+      {
+        "type": "ZeroDivisionError",
+        "value": "integer division or modulo by zero",
+      }
+    ]
+  }
+}
+```
+
+Since the "error message" is taken from the `exception`'s `value`, and the "message" is taken from `logentry`, we would have to write the following to remove both from the event:
+
+```
+[Remove] [Anything] from [exception.value]
+[Remove] [Anything] from [logentry.formatted]
+```
 
 ### Boolean Logic
 
 You can combine selectors using boolean logic.
 
-* Prefix with `!` to invert the selector. `foo` matches the JSON key `foo`, while `(~foo)` matches everything but `foo`.
+* Prefix with `!` to invert the selector. `foo` matches the JSON key `foo`, while `!foo` matches everything but `foo`.
 * Build the conjunction (AND) using `&&`, such as: `foo && !extra.foo` to match the key `foo` except when inside of `extra`.
 * Build the disjunction (OR) using `||`, such as: `foo || bar` to match `foo` or `bar`.
 
@@ -83,32 +126,33 @@ You can combine selectors using boolean logic.
 
 ### Value Types
 
-Select subsections by JSON-type or semantic meaning using the following:
+Select subsections by JSON-type using the following:
 
-* `$string`
-* `$number`
-* `$boolean`
-* `$datetime`
-* `$array`
-* `$object`
-* `$event`
-* `$exception`
-* `$stacktrace`
-* `$frame`
-* `$request`
-* `$user`
-* `$logentry` (also applies to `event.message`)
-* `$thread`
-* `$breadcrumb`
-* `$span`
-* `$sdk`
+* `$string` matches any string value
+* `$number` matches any integer or float value
+* `$datetime` matches any field in the event that represents a timestamp
+* `$array` matches any JSON array value
+* `$object` matches any JSON object
 
-Examples:
+Select known parts of the schema using the following:
+
+* `$exception` matches a single exception instance in `{"exception": {"values": [...]}}`
+* `$stacktrace` matches a stack trace instance
+* `$frame` matches a frame
+* `$request` matches the HTTP request context of an event
+* `$user` matches the user context of an event
+* `$logentry` matches both the `logentry` attribute of an event as well as the `message` attribute
+* `$thread` matches a single thread instance in `{"threads": {"values": [...]}}`
+* `$breadcrumb` matches a single breadcrumb in `{"breadcrumbs": {"values": [...]}}`
+* `$span` matches a [trace span]({% link _documentation/performance/performance-glossary.md %}#span)
+* `$sdk` matches the SDK context in `{"sdk": ...}`
+
+#### Examples
 
 * Delete `event.user`:
 
   ```
-  [Remove] [Anything] from [event.user]
+  [Remove] [Anything] from [$user]
   ```
 
 * Delete all frame-local variables:
@@ -117,7 +161,7 @@ Examples:
   [Remove] [Anything] from [$frame.vars]
   ```
 
-### Escaping Specal Characters
+### Escaping Special Characters
 
 If the object key you want to match contains whitespace or special characters, you can use quotes to escape it:
 
