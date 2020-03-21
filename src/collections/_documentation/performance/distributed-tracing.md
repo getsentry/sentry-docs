@@ -256,7 +256,7 @@ shopCheckout() {
     processAndValidateShoppingCart(result);
     ApmIntegrations.Tracing.popActivity(activity);
         
-    ApmIntegrations.Tracing.finshIdleTransaction(); // This is optional
+    ApmIntegrations.Tracing.finishIdleTransaction(); // This is optional
 }
 ```
 
