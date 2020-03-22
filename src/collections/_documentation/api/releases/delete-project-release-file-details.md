@@ -5,7 +5,7 @@
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/files/{file_id}/", 
   "authentication": "required", 
   "description": "Permanently remove a file from a release.\n\nThis will also remove the physical file from storage.", 
-  "example_request": "DELETE /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/c87b3e186a6c51731d2e69f1e5c8763d1aa02f49/files/1/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>", 
+  "example_request": "DELETE /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/40ceb7ee278602b159a02802ccdbb1f21091fc7b/files/1/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>", 
   "example_response": "HTTP/1.1 204 No Content\nContent-Length: 0\nX-XSS-Protection: 1; mode=block\nX-Content-Type-Options: nosniff\nContent-Language: en\nAccess-Control-Expose-Headers: X-Sentry-Error, Retry-After\nVary: Accept-Language, Cookie\nAccess-Control-Allow-Methods: GET, PUT, DELETE, HEAD, OPTIONS\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Headers: X-Sentry-Auth, X-Requested-With, Origin, Accept, Content-Type, Authentication, Authorization\nX-Frame-Options: deny", 
   "method": "DELETE", 
   "parameters": null, 
