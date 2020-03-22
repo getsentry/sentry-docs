@@ -24,4 +24,5 @@ title: Organizations
 - [Verify If Any Project Within An Organization Has Received a First Event]({%- link _documentation/api/organizations/get-organization-projects-sent-first-event.md -%})
 - [List an Organization&#39;s Repositories]({%- link _documentation/api/organizations/get-organization-repositories.md -%})
 - [List a Repository&#39;s Commits]({%- link _documentation/api/organizations/get-organization-repository-commits.md -%})
+- [List an Organization&#39;s Users]({%- link _documentation/api/organizations/get-organization-users.md -%})
 - [Retrieve Event Counts for an Organization]({%- link _documentation/api/organizations/get-organization-stats.md -%})
