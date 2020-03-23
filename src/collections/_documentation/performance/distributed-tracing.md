@@ -154,16 +154,16 @@ def process_item(item):
 
 ### JavaScript
 
-To access our tracing features, you will need to install our Tracing integration:
+To access our tracing features, you will need to install our Tracing package `@sentry/apm`:
 
 ```bash
 $ npm install @sentry/browser
 $ npm install @sentry/apm
 ```
 
-**Sending Traces**
+**Sending Traces/Transactions/Spans**
 
-Tracing resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
+The `Tracing` integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
 
 ```javascript
 import * as Sentry from '@sentry/browser';
@@ -174,6 +174,7 @@ Sentry.init({
     integrations: [
         new ApmIntegrations.Tracing(),
     ],
+    tracesSampleRate: 0.1,
 });
 ```
 
@@ -186,10 +187,9 @@ import { Integrations as ApmIntegrations } from '@sentry/apm';
 Sentry.init({
     dsn: '___PUBLIC_DSN___',
     integrations: [
-        new Integrations.Tracing({
-            tracesSampleRate: 0.1,
-        }),
+        new ApmIntegrations.Tracing(),
     ],
+    tracesSampleRate: 0.1,
 });
 ```
 
@@ -198,6 +198,22 @@ You can pass many different options to tracing, but it comes with reasonable def
 
 - A [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) for every page load
 - All XHR/fetch requests as spans
+- If available: Browser Resources (Scripts, CSS, Images ...)
+- If available: Browser Performance API Marks
+
+*tracingOrigins Option*
+ 
+The default value of `tracingOrigins` is : `new ApmIntegrations.Tracing({tracingOrigins: ['localhost', /^\//]})`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests that contain a string in the list or match a regex. In case your frontend is making requests to a different domain you might want to add it there in order to propagate the `sentry-trace` header to the backend services, required to link transactions together as part of a single trace.
+
+*Example:*
+
+- A frontend application is served from `example.com`
+- A backend service is served from `api.example.com`
+- The frontend application makes API calls to the backend
+- Then the option need to be configured like this `new ApmIntegrations.Tracing({tracingOrigins: ['api.example.com']})`
+- Outgoing XHR/fetch requests to `api.example.com` would get the `sentry-trace` header attached
+
+*NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like this: `"Access-Control-Allow-Headers: sentry-trace"`, this depends a lot on your configuration. But if you are not whitelisting the `sentry-trace` header the request might be blocked.
 
 **Using Tracing Integration for Manual Instrumentation**
 
@@ -210,24 +226,58 @@ The tracing integration will create a [transaction]({%- link _documentation/perf
 const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
     data: {},
     op: 'react',
-    description: `<${displayName}>`,
+    description: `${displayName}`,
 });
 
 // Sometime later ...
 // When we pop the activity, the Integration will finish the span and after the timeout finish the transaction and send it to Sentry
-Integrations.ApmIntegrations.popActivity(activity);
+// Keep in mind, as long as you do not pop the activity, the transaction will be kept alive and not sent to Sentry
+ApmIntegrations.Tracing.popActivity(activity);
 ```
+
+Keep in mind, if there is no active transaction, you need to create one before pushing an activity otherwise nothing will happen.
+So given a different example where you want to create an Transaction for a user interaction on you page you need to do the following:
+
+
+```javascript
+// Let's say this function is invoked when a user clicks on the checkout button of your shop
+shopCheckout() {
+    // This will create a new Transaction for you
+    ApmIntegrations.Tracing.startIdleTransaction('shopCheckout');
+    
+    const result = validateShoppingCartOnServer(); // Consider this function making an xhr/fetch call
+    const activity = ApmIntegrations.Tracing.pushActivity('task', {
+        data: {
+            result
+        },
+        op: 'task',
+        description: `processing shopping cart result`,
+    });
+    processAndValidateShoppingCart(result);
+    ApmIntegrations.Tracing.popActivity(activity);
+        
+    ApmIntegrations.Tracing.finishIdleTransaction(); // This is optional
+}
+```
+
+This example will send a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) `shopCheckout` to Sentry, containing all outgoing requests that might have happened in `validateShoppingCartOnServer`. It also contains a `task` span that measured how long the processing took. Finally the call to `ApmIntegrations.Tracing.finshIdleTransaction()` will finish the [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) and send it to Sentry. Calling this is optional since the Integration would send the [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) after the defined `idleTimeout` (default 500ms) itself.
+
+**What is an activity?**
+
+The concept of an activity only exists in the `Tracing` Integration in JavaScript Browser. It's a helper that tells the Integration for how long it should keep the `IdleTransaction` alive. An activity can be pushed and popped. Once all activities of an `IdleTransaction` have been popped, the `IdleTransaction` will be sent to Sentry.
 
 **Manual Transactions**
 
 To manually instrument certain regions of your code, you can create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) to capture them.
+This is both valid for JavaScript Browser and Node and works besides the `Tracing` integration.
 
 The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
 
 ```javascript
 const transaction = Sentry.getCurrentHub().startSpan({ 
+    description: 'My optional description',
     op: "task",  
-    transaction: item.getTransaction() 
+    transaction: item.getTransaction() // A name describing the operation
 })
 
 // processItem may create more spans internally (see next example)
@@ -280,7 +330,7 @@ const Apm = require("@sentry/apm"); // This is required since it patches functio
 
 Sentry.init({
     dsn: "___PUBLIC_DSN___",
-    tracesSampleRate: 0.1
+    tracesSampleRate: 1
 });
 ```
 
