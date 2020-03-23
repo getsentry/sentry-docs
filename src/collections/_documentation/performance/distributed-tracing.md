@@ -235,7 +235,7 @@ const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
 ApmIntegrations.Tracing.popActivity(activity);
 ```
 
-Keep in mind, if there is no active transaction you need to create one before otherwise nothing will happen.
+Keep in mind, if there is no active transaction, you need to create one before pushing an activity otherwise nothing will happen.
 So given a different example where you want to create an Transaction for a user interaction on you page you need to do the following:
 
 
