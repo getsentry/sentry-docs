@@ -47,7 +47,7 @@ Workflow emails are sent for issue state changes.
 
 ## Deploy
 
-Deploy emails are sent to users who have committed to the release that was deployed. See [LINK: deploy documentation] for more details
+Deploy emails are sent to users who have committed to the release that was deployed. For more details, see [deploy documentation]({%- link _documentation/workflow/releases.md -%}#create-deploy).
 
 [{% asset deploy-emails.png alt="An example of an email describing deployed features." %}]({% asset deploy-emails.png @path %})
 
@@ -61,7 +61,7 @@ Sentry sends all owners of the organization emails when
 
 ## **Notification Subscription**
 
-You can configure your personal workflow and deploy notifications [here](https://sentry.io/settings/account/notifications/). You **cannot configure** quota notifications.
+You can configure your personal workflow and deploy notifications [in your account settings](https://sentry.io/settings/account/notifications/). You **cannot configure** quota notifications.
 
 ### **Workflow Notification Settings**
 
