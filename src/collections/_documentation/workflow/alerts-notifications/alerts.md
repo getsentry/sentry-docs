@@ -166,6 +166,8 @@ Review your personal alert settings in **User Settings > Account > Notifications
 
 Use the "default project alerts" setting to set your default preference across all projects — subscribed or unsubscribed.
 
+Note that this setting does not affect alerts you've configured to send to your email explicitly.
+
 [{% asset notifications/default_project_alerts.png alt="A toggle for turning on or off all project alerts." %}]({% asset notifications/default_project_alerts.png @path %})
 
 After selecting the appropriate alert setting, selectively change it by project in **User Settings > Account > Fine tune alerts by project**.
