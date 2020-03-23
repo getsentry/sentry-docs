@@ -5,7 +5,7 @@
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/keys/{key_id}/", 
   "authentication": "required", 
   "description": "Delete a client key.", 
-  "example_request": "DELETE /api/0/projects/the-interstellar-jurisdiction/pump-station/keys/5dcc71aae70c4bb9a5a8d3829063e467/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>", 
+  "example_request": "DELETE /api/0/projects/the-interstellar-jurisdiction/pump-station/keys/06f5c7ed569e4d19a3012eabec7e26e3/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>", 
   "example_response": "HTTP/1.1 204 No Content\nContent-Length: 0\nX-XSS-Protection: 1; mode=block\nX-Content-Type-Options: nosniff\nContent-Language: en\nAccess-Control-Expose-Headers: X-Sentry-Error, Retry-After\nVary: Accept-Language, Cookie\nAccess-Control-Allow-Methods: GET, PUT, DELETE, HEAD, OPTIONS\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Headers: X-Sentry-Auth, X-Requested-With, Origin, Accept, Content-Type, Authentication, Authorization\nX-Frame-Options: deny", 
   "method": "DELETE", 
   "parameters": null, 
