@@ -33,7 +33,7 @@ An issue can be in one of the following three states:
         2. Submitting a fix with the associated issue ID
         3. When the project’s auto-resolve feature is configured
 
-    - Auto-resolve is located in **Project Settings > General Settings**. For more details about submitting a fix, see documentation on [resolving issues](https://docs.sentry.io/workflow/releases/#after-associating-commits).
+    - Auto-resolve is located in **Project Settings > General Settings**. For more details about submitting a fix, see documentation on [resolving issues]({%- link _documentation/workflow/releases.md -%}#after-associating-commits).
     
         [{% asset notifications/auto-resolve.png alt="A slider to indicate whether the auto resolve is disabled or not." %}]({% asset notifications/auto-resolve.png @path %})
 
