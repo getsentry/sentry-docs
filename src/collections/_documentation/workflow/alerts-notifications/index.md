@@ -34,8 +34,8 @@ Some alert settings apply at the project level and to all alerts in the project.
 
 Non-alert notifications are all other types of Sentry notifications such as:
 
-- Workflow notifications: activity involving user actions and state changes on issues and alerts. This includes things like resolution, assignment, comments, and regressions.
-- Deploy notifications: when a release is [deployed]({%- link _documentation/workflow/alerts-notifications/notifications.md -%}#deploy), Sentry automatically sends an email to users who have committed to the release.
-- Quota & Usage notifications: emails about quota approaching/exceeded and spike protection
+- Workflow notifications - Activity involving user actions and state changes on issues and alerts. This includes things like resolution, assignment, comments, and regressions.
+- Deploy notifications - When a release is [deployed]({%- link _documentation/workflow/alerts-notifications/notifications.md -%}#deploy), Sentry automatically sends an email to users who have committed to the release.
+- Quota & Usage notifications -  Emails about quota approaching/exceeded and spike protection
 
 For more details, see the [full documentation on Notifications]({%- link _documentation/workflow/alerts-notifications/notifications.md -%}).
