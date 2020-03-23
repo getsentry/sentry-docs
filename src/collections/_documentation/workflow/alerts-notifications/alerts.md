@@ -18,9 +18,9 @@ Metric Alerts are currently in beta. For more information about access to Metric
 
 Metric alerts allow you to filter and set thresholds on all errors across a project. Use metric alerts for high-level monitoring of patterns or fine-grained monitoring of individual events. Metric alerts help express lightweight service-level objectives (SLOs) such as users affected by signup-page errors or volume of database errors.
 
-### Alert Builder
+Alternatively, [issue alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts) notify you about the impact of a specific error.
 
-[ builder image ]
+### Alert Builder
 
 A metric alert has, at most, two triggers. The first is a critical trigger, which is required. The second is a warning trigger, which is optional. Triggers are independent of one another; however, the warning (optional) must be reached before the critical (required) trigger.
 
