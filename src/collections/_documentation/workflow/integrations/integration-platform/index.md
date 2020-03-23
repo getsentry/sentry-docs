@@ -228,7 +228,7 @@ For more information, see the [full documentation on Webhooks]({%- link _documen
 
 ### Alerts
 
-There is an option called Alert Rule Action for the integration platform. What this means is that, when enabled, your integration will show up as a service in the action section when creating a new alert rule. For more information, see the [full documentation on Alert Rules]({%- link _documentation/workflow/notifications/alerts.md -%}).
+There is an option called Alert Rule Action for the integration platform. What this means is that, when enabled, your integration will show up as a service in the action section when creating a new alert rule. For more information, see the [full documentation on Alert Rules]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}).
 
 [{% asset integration-platform-index/alert-rules.png alt="Dropdown menu of options for alert rules." %}]({% asset integration-platform-index/alert-rules.png @path %})
 

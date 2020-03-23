@@ -41,7 +41,7 @@ Create or link issues in Asana based on Sentry events.
 
 ## Issue Notifications
 
-Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/notifications/alerts.md -%}) to properly route notifications to a specific integration.
+Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}) to properly route notifications to a specific integration.
 
 ### Hipchat
 
