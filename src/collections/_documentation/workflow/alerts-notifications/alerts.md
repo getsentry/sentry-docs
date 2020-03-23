@@ -51,7 +51,7 @@ Issue alerts fire whenever any issue in the project matches the specified criter
 
 ### **Conditions**
 
-Conditions are evaluated for an issue alert **each time** the issue receives a new event, subject to [LINK: rate limits].
+Conditions are evaluated for an issue alert **each time** the issue receives a new event, subject to [rate limits]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#rate-limit).
 
 {% capture __alert_content -%}
 **Each condition is evaluated independently of other conditions**. For example, the following alert will never fire:
@@ -81,7 +81,7 @@ In the example, the alert will not fire because an event cannot satisfy both of 
     - interval: one minute, one hour, one day, one week, or 30 days
 - Sentry detects a new event
 - Sentry detects a new event with tags matching {key} {match} {value}
-    - key: any tag [LINK: tags]
+    - key: any tag
     - match: equals, does not equal, starts with, ends with, contains, does not contain, is set, or is not set
     - value: any key’s value
 - Sentry detects a new event with {attribute} {match} {value}
@@ -93,28 +93,28 @@ In the example, the alert will not fire because an event cannot satisfy both of 
     - match: equal to, less than or equal to, greater than or equal to
     - level: fatal, error, warning, info, debug, or sample
 
-### **Actions**
+### Actions
 
 The following actions are available:
 
 - Send a notification to all legacy integrations
-    - Legacy integrations [LINK: legacy integrations], also known as Plugins, are configured per project. Legacy integrations currently include email.
+    - [Legacy integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}), also known as Plugins, are configured per project. Legacy integrations currently include email.
 - Send a notification to a single legacy integration (service)
     - "service" is the same as legacy integration
 - Send a notification to a global integration, which includes
-    - [PagerDuty](https://docs.sentry.io/workflow/integrations/global-integrations/#pagerduty)
-    - [Slack](https://docs.sentry.io/workflow/integrations/global-integrations/#slack)
-    - Custom integrations built using the [Integration Platform](https://docs.sentry.io/workflow/integrations/integration-platform/)
+    - [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
+    - [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
+    - Custom integrations built using the [Integration Platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%})
 
 [{% asset notifications/alert-actions2.png alt="The alert condition in this example shows the conditions are conflicting with each other." %}]({% asset notifications/alert-actions2.png @path %})
 
-For more details, see [LINK: Legacy Integrations (via “Service” as any individual integration) that can send Notifications].
+For more details, see [Legacy Integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}) (via “Service” as any individual integration) that can send Notifications.
 
-By default, [LINK: issue owners] receive alert emails. If an issue owner is not configured or not found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
+By default, [issue owners]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-owners) receive alert emails. If an issue owner is not configured or not found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
 
 [{% asset notifications/issue_owners.png alt="Issue owners can be toggled on or off." %}]({% asset notifications/issue_owners.png @path %})
 
-**Rate Limit**
+### Rate Limit
 
 The rate limit determines how frequently an issue alerts. After an issue fires an alert, Sentry won't check the conditions and won't execute the actions for that issue until the rate limit period passes. The limit is set to perform the action according to one of these intervals:
 
@@ -152,7 +152,7 @@ This is a listing of all your project's alerts.
 
 ### Issue Owners
 
-By default, [LINK: issue owners] receive alert emails. If an issue owner is not configured or not found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
+By default, issue owners receive alert emails. If an issue owner is not configured or not found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
 
 [{% asset notifications/issue_owners2.png alt="A toggle indicating if all users are issue owners or not." %}]({% asset notifications/issue_owners2.png @path %})
 
