@@ -5,8 +5,8 @@ title: Releases
 ---
 
 
-- [List an Organization&#39;s Releases]({%- link _documentation/api/releases/get-organization-releases/index.md -%})
-- [Create a New Release for an Organization]({%- link _documentation/api/releases/post-organization-releases/index.md -%})
+- [List an Organization&#39;s Releases]({%- link _documentation/api/releases/get-organization-releases.md -%})
+- [Create a New Release for an Organization]({%- link _documentation/api/releases/post-organization-releases.md -%})
 - [Retrieve an Organization&#39;s Release]({%- link _documentation/api/releases/get-organization-release-details.md -%})
 - [Update an Organization&#39;s Release]({%- link _documentation/api/releases/put-organization-release-details.md -%})
 - [Delete an Organization&#39;s Release]({%- link _documentation/api/releases/delete-organization-release-details.md -%})
