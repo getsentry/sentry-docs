@@ -346,7 +346,7 @@ Sentry’s Release Health features are currently in beta. For more details about
     level="warning"
 %}
 
-Monitor the health of releases by observing user adoption, usage of the application, percentage of [LINK to glossary: crashes], and [LINK to glossary: session data]. Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+Monitor the health of releases by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/release-health-glossary.md -%}#crash), and [session data]({%- link _documentation/workflow/releases/release-health-glossary.md -%}#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
 ### Releases Index
 
@@ -360,13 +360,13 @@ The release details page focuses on an individual release. Elements of the relea
 
 [ SCREENSHOT: Releases detail page ]
 
-For more information about Sentry's Mobile features, see the full documentation for [ LINK: Android SDK ] and [ LINK: iOS SDK ].
+For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}) and [iOS SDK](docs.sentry.io/platforms/cocoa/).
 
 ### Session Data
 
-A [ LINK to glossary: session ] begins the moment a user starts interacting with an application or when an application resumes from the background into the foreground. With Release health, you can track the percentage of users using sessions.
+A [session]({%- link _documentation/workflow/releases/release-health-glossary.md -%}#session) begins the moment a user starts interacting with an application or when an application resumes from the background into the foreground. With Release health, you can track the percentage of users using sessions.
 
-For more details about session payloads, see the full documentation [ LINK to session payloads under  [https://docs.sentry.io/development/sdk-dev/event-payloads/](https://docs.sentry.io/development/sdk-dev/event-payloads/) ]
+For more details, see the [full documentation on session payloads]({%- link _documentation/development/sdk-dev/event-payloads/session-fields.md -%}).
 
 ### Data Filtering
 
