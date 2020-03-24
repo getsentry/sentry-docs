@@ -12,7 +12,7 @@ _documentation/workflow/debug-files.md -%}).
 {% capture __alert_content -%}
 Source maps, while also being debug information files, are handled differently
 in Sentry. For more information see [Source Maps in sentry-cli]({%- link
-_documentation/cli/releases.md -%}#sentry-cli-sourcemaps).
+_documentation/cli/releases/index.md -%}#sentry-cli-sourcemaps).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

@@ -8,7 +8,7 @@ Sentry\init([
 ```
 
 {% capture __alert %}
-Some of the options listed below that are marked as _not available_ may be available in another form; see [PHP specific documentation]({% link _documentation/workflow/releases.md %}).
+Some of the options listed below that are marked as _not available_ may be available in another form; see [PHP specific documentation]({% link _documentation/workflow/releases/index.md %}).
 {% endcapture %}
 
 {% include components/alert.html

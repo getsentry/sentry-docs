@@ -41,7 +41,7 @@ Azure DevOps should now be enabled for all projects under your Sentry organizati
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -147,7 +147,7 @@ Bitbucket should now be enabled for all projects under your Sentry organization.
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -247,7 +247,7 @@ Bitbucket should now be authorized for all projects under your Sentry organizati
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -403,7 +403,7 @@ GitHub should now be enabled for all projects under your Sentry organization.
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -535,7 +535,7 @@ GitHub Enterprise should now be enabled for all projects under your Sentry organ
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -652,7 +652,7 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
 
 Commit tracking allows you to hone in on problematic commits. With commit tracking, you can better isolate what might be problematic by leveraging information from releases like tags and metadata.
 
-Once you've configured both [release and commit tracking]({%- link _documentation/workflow/releases.md -%}), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
+Once you've configured both [release and commit tracking]({%- link _documentation/workflow/releases/index.md -%}), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
 
 [{% asset gitlab/last-commit-in-releases.png alt="Dashboard with last commit highlighted" %}]({% asset gitlab/last-commit-in-releases.png @path %})
 
@@ -662,7 +662,7 @@ When you investigate deeper into that commit, you can leverage information from 
 
 Broadly, this lets you isolate problems in order to see which commits might be problematic.
 
-Learn more about [release and commit tracking]({%- link _documentation/workflow/releases.md -%}).
+Learn more about [release and commit tracking]({%- link _documentation/workflow/releases/index.md -%}).
 
 #### Suspect Commit
 
@@ -672,7 +672,7 @@ One special benefit of using Sentry's Commit Tracking is the ability to know the
 
 [{% asset gitlab/highlighting-suspect-commits.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/highlighting-suspect-commits.png @path %})
 
-Here is where you can find info for [suspect commit setup]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Here is where you can find info for [suspect commit setup]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Resolve via Commit or PR
 

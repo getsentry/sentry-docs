@@ -65,7 +65,7 @@ Events in sentry are immutable and can only be deleted by deleting the whole iss
 | **GET/PUT/POST/DELETE**  | `project:releases` |
 
 {% capture markdown_content %}
-Be aware that if you're using `sentry-cli` to [manage your releases]({%- link _documentation/cli/releases.md -%}), you'll need a token which also has `org:read` scope.
+Be aware that if you're using `sentry-cli` to [manage your releases]({%- link _documentation/cli/releases/index.md -%}), you'll need a token which also has `org:read` scope.
 {% endcapture %}
 {% include components/alert.html
   title="Note"

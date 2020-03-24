@@ -27,7 +27,7 @@ Sentry provides a few states for each issue, which significantly impacts how not
 
 ### Resolved
 
-- An issue is marked as resolved when an individual resolves it by manually changing the state on the issue page UI, submitting a fix, or when the project’s auto-resolve feature is configured. Team members are notified via email. Auto-resolve is located in **Project Settings > General Settings**. For more details about submitting a fix, see documentation on [resolving issues]({%- link _documentation/workflow/releases.md -%}#after-associating-commits).
+- An issue is marked as resolved when an individual resolves it by manually changing the state on the issue page UI, submitting a fix, or when the project’s auto-resolve feature is configured. Team members are notified via email. Auto-resolve is located in **Project Settings > General Settings**. For more details about submitting a fix, see documentation on [resolving issues]({%- link _documentation/workflow/releases/index.md -%}#after-associating-commits).
 
 [{% asset notifications/auto-resolve.png alt="Event settings sliding toggle for disabling auto resolve." %}]({% asset notifications/auto-resolve.png @path %})
 
