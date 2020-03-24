@@ -337,9 +337,16 @@ JavaScript and iOS projects can utilize release artifacts to unminify or symboli
 
 ## Release Health
 
-[ ALERT BOX: Sentry’s Release Health features are currently in beta. For more details about access to these features, feel free to reach out at [LINK: email?]. ]
+{% capture __alert_content -%}
+Sentry’s Release Health features are currently in beta. For more details about access to these features, feel free to reach out at [LINK: email?].
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
-Monitor the health of [LINK: releases] by observing user adoption, usage of the application, percentage of [LINK to glossary: crashes], and [LINK to glossary: session data]. Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+Monitor the health of releases by observing user adoption, usage of the application, percentage of [LINK to glossary: crashes], and [LINK to glossary: session data]. Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
 ### Releases Index
 
