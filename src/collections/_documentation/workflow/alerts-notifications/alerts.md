@@ -35,13 +35,13 @@ When an alert is created or changes status, the actions associated with the trig
 
 Alerts can be accessed via the **Alerts** sidebar item.
 
-[{% asset notifications/alert-stream.png alt="Alert stream illustrates alert duration, trends, severity, time duration and percentage of users affected." %}]({% asset notifications/alert-stream.png @path %})
+[{% asset notifications/alert-stream2.png alt="Alert stream illustrates alert duration, trends, severity, time duration and percentage of users affected." %}]({% asset notifications/alert-stream2.png @path %})
 
 ### Alert Details
 
 In this page, you can view a single instance of an alert from the time the alert is created to when the alert is resolved, or the current time if the alert is still active.
 
-[{% asset notifications/alert-details.png alt="Alert details illustrates a graph showing errors." %}]({% asset notifications/alert-details.png @path %})
+[{% asset notifications/alert_details.png alt="Alert details illustrates a graph showing errors." %}]({% asset notifications/alert_details.png @path %})
 
 The "subscribe" button subscribes you to workflow notifications for the alert, which include status changes and comments.
 
