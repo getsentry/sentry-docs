@@ -8,7 +8,7 @@ sidebar_order: 0
 
 * [Set up your Sentry Account]({%- link _documentation/guides/getting-started/index.md -%})
 
-* [Manage your Event Stream]({%- link _documentation/guides/manage-event-stream/index.md -%})
+* [Manage your Event Stream]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%})
 
 * [Alert Notifications]({%- link _documentation/guides/alert-notifications/index.md -%})
 

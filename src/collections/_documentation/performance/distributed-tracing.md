@@ -66,7 +66,7 @@ Sampling enables you to collect traces on a subset of your traffic and extrapola
 
 When you have multiple projects collecting transaction events, Sentry utilizes "head-based" sampling to ensure that once a sampling decision has been made at the beginning of the trace (typically the initial transaction), that decision is propagated to each application or project involved in the [trace]({%- link _documentation/performance/performance-glossary.md -%}#trace). If your applications have multiple entry points, you should aim to choose consistent sampling rates. Choosing different sampling rates can bias your results. Sentry does not support "tail-based" sampling at this time.
 
-If you enable Performance collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits]({%- link _documentation/accounts/quotas.md -%}).
+If you enable Performance collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits]({%- link _documentation/accounts/quotas/index.md -%}).
 
 ## Setting Up Tracing
 
@@ -91,7 +91,7 @@ To send any traces, set the `traces_sample_rate` to a nonzero value. The followi
 
 ```python
 import sentry_sdk
-    
+
 sentry_sdk.init("___PUBLIC_DSN___", traces_sample_rate=0.1)
 ```
 
@@ -119,7 +119,7 @@ sentry_sdk.init("___PUBLIC_DSN___", _experiments={"auto_enabling_integrations": 
 
 **Manual Instrumentation**
 
-To manually instrument certain regions of your code, you can create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) to capture them. 
+To manually instrument certain regions of your code, you can create a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) to capture them.
 
 The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
 
@@ -144,7 +144,7 @@ You can choose the value of `op` and `description`.
 import sentry_sdk
 
 def process_item(item):
-    
+
   # omitted code...
   with sentry_sdk.start_span(op="http", description="GET /") as span:
       response = my_custom_http_library.request("GET", "/")
@@ -202,7 +202,7 @@ You can pass many different options to tracing, but it comes with reasonable def
 - If available: Browser Performance API Marks
 
 *tracingOrigins Option*
- 
+
 The default value of `tracingOrigins` is : `new ApmIntegrations.Tracing({tracingOrigins: ['localhost', /^\//]})`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests that contain a string in the list or match a regex. In case your frontend is making requests to a different domain you might want to add it there in order to propagate the `sentry-trace` header to the backend services, required to link transactions together as part of a single trace.
 
 *Example:*
@@ -244,7 +244,7 @@ So given a different example where you want to create an Transaction for a user 
 shopCheckout() {
     // This will create a new Transaction for you
     ApmIntegrations.Tracing.startIdleTransaction('shopCheckout');
-    
+
     const result = validateShoppingCartOnServer(); // Consider this function making an xhr/fetch call
     const activity = ApmIntegrations.Tracing.pushActivity('task', {
         data: {
@@ -255,7 +255,7 @@ shopCheckout() {
     });
     processAndValidateShoppingCart(result);
     ApmIntegrations.Tracing.popActivity(activity);
-        
+
     ApmIntegrations.Tracing.finishIdleTransaction(); // This is optional
 }
 ```
@@ -274,7 +274,7 @@ This is both valid for JavaScript Browser and Node and works besides the `Tracin
 The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
 
 ```javascript
-const transaction = Sentry.getCurrentHub().startSpan({ 
+const transaction = Sentry.getCurrentHub().startSpan({
     description: 'My optional description',
     op: "task",  
     transaction: item.getTransaction() // A name describing the operation
@@ -292,9 +292,9 @@ The next example contains the implementation of the hypothetical `processItem ` 
 
 ```javascript
 function processItem(item, transaction) {
-    const span = transaction.child({ 
-        op: "http", 
-        description: "GET /" 
+    const span = transaction.child({
+        op: "http",
+        description: "GET /"
     })
 
     return new Promise((resolve, reject) => {
@@ -392,11 +392,11 @@ Let’s say you want to create a [transaction]({%- link _documentation/performan
 ```javascript
 app.use(function processItems(req, res, next) {
     const item = getFromQueue();
-    const transaction = Sentry.getCurrentHub().startSpan({ 
+    const transaction = Sentry.getCurrentHub().startSpan({
         op: "task",  
-        transaction: item.getTransaction() 
+        transaction: item.getTransaction()
     })
-    
+
     // processItem may create more spans internally (see next examples)
     processItem(item, transaction).then(() => {
         transaction.finish();
@@ -413,9 +413,9 @@ You can choose the value of `op` and `description`.
 
 ```javascript
 function processItem(item, transaction) {
-    const span = transaction.child({ 
-        op: "http", 
-        description: "GET /" 
+    const span = transaction.child({
+        op: "http",
+        description: "GET /"
     })
 
     return new Promise((resolve, reject) => {
