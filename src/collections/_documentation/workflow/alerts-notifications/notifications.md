@@ -77,7 +77,7 @@ Each project has three options: Default, On, or Off. Selecting default uses your
 
 To opt-out of workflow notifications for a specific issue, click "Unsubscribe" at the bottom right of the issue’s page.
 
-[{% asset notifications/unsubscribe.png alt="An unsubscribe button to stop notifications." %}]({% asset notifications/unsubscribe.png @path %})
+[{% asset notifications/unsubscribe.png alt="An unsubscribe button to stop notifications." width="300" %}]({% asset notifications/unsubscribe.png @path %})
 
 ### Deploy Notifications
 
