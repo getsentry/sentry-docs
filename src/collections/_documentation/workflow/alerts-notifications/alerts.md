@@ -168,13 +168,13 @@ Use the "default project alerts" setting to set your default preference across a
 
 Note that this setting does not affect alerts you've configured to send to your email explicitly.
 
-[{% asset notifications/default_project_alerts.png alt="A toggle for turning on or off all project alerts." %}]({% asset notifications/default_project_alerts.png @path %})
+[{% asset notifications/default_project_alerts.png alt="A toggle for turning on or off all project alerts." width="300" %}]({% asset notifications/default_project_alerts.png @path %})
 
 After selecting the appropriate alert setting, selectively change it by project in **User Settings > Account > Fine tune alerts by project**.
 
 Each project has three options: Default, On, or Off. Selecting default uses your default preference from the previous step.
 
-[{% asset notifications/specific_project_alert.png alt="Dropdown indicating a choice between default, on, or off." %}]({% asset notifications/specific_project_alert.png @path %})
+[{% asset notifications/specific_project_alert.png alt="Dropdown indicating a choice between default, on, or off." width="300" %}]({% asset notifications/specific_project_alert.png @path %})
 
 ## **FAQs**
 
