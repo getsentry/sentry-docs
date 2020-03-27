@@ -68,6 +68,50 @@ When you have multiple projects collecting transaction events, Sentry utilizes "
 
 If you enable Performance collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits]({%- link _documentation/accounts/quotas/index.md -%}).
 
+## Viewing Transactions
+
+View transaction events by clicking on the "Transactions" pre-built query in [LINK: Discover], or by using a search condition `event.type:transaction` in a [LINK: Discover Query Builder] view.
+
+When you open a Transaction Event in Discover, you'll see the **span view** at the top of the page. Other information the SDK captured as part of the Transaction event will also be displayed, such as breadcrumbs.
+
+![DON%20T%20add%20content%20to%20this%20Draft%20Product%20Performanc/discover-span.png](DON%20T%20add%20content%20to%20this%20Draft%20Product%20Performanc/discover-span.png)
+
+### Using the Span View
+
+Note that [LINK: traces] are segmented into pieces of [LINK: spans] called [LINK: transactions]. The span view enables you to examine the waterfall graph (or hierarchy) of the instrumented transaction.
+
+The span view is a split view where the left-hand side is the tree view displaying the parent-child relationship of the spans, and the right-hand side displays spans represented as colored rectangles. Within the tree view (left-hand side), Sentry identifies spans by their **operation name** and their **description**. If you don't provide the description, Sentry uses the span id as the fallback.
+
+At the top of the span view is a minimap, which is a "map" of the transaction. It helps orient you to the specific portion of the transaction that you're viewing.
+
+The first top-level span is the transaction span, which encompasses all other spans within the transaction.
+
+**Zooming in on a Transaction:**
+
+Click and drag your mouse cursor across the minimap. You can adjust the window selection by dragging the handlebars. 
+
+**Missing Instrumentation:**
+
+Sentry may indicate that gaps between spans are "Missing Instrumentation." This could mean that the SDK was unable to capture or instrument any spans within this gap automatically. It may require you to instrument the gap [LINK: manually].
+
+**Viewing Span Details:**
+
+Click on a row to expand the details of the span. From here, you can see all attached properties, such as **tags** and **data**.
+
+![DON%20T%20add%20content%20to%20this%20Draft%20Product%20Performanc/span-detail-view.png](DON%20T%20add%20content%20to%20this%20Draft%20Product%20Performanc/span-detail-view.png)
+
+**Search by Trace ID:**
+
+You can search using `trace id` by expanding any of the span details and click on "Search by Trace".
+
+Depending on your project access, some transactions may not be displayed as part of the trace.
+
+**Traversing to Child Transactions:**
+
+Note that child transactions are shown based on your project access.
+
+Some spans within the transaction may be a parent of another transaction. If you expand the span details, you may see the "View Child" button, which, when clicked, will lead to another transaction's details view.
+
 ## Setting Up Tracing
 
 {% capture __alert_content -%}
