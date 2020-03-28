@@ -86,7 +86,7 @@ At the top of the span view is a minimap, which is a "map" of the transaction. I
 
 The first top-level span is the transaction span, which encompasses all other spans within the transaction.
 
-**Zooming in on a Transaction:**
+**Zooming In On a Transaction:**
 
 Click and drag your mouse cursor across the minimap. You can adjust the window selection by dragging the handlebars. 
 
