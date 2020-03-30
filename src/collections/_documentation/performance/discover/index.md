@@ -1,6 +1,6 @@
 ---
 title: 'Discover'
-sidebar_order: 4
+sidebar_order: 0
 ---
 
 Our Discover tool provides visibility into your data across environments by building upon and enriching your error data. This feature will allow you to query and unlock deeper insights into the health of your entire system and answer critical business questions --- all in one place.
