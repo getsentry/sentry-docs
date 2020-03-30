@@ -77,6 +77,8 @@ By including and configuring Sentry, the SDK will automatically attach global ha
 
 [{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
 
+Keep in mind; browsers are taking some security measures when serving script files from different origins. For errors to always make their way to Sentry, make sure that you configure CORS headers and add appropriate script attributes. For more information, refer to our [What the heck is "Script error"?](https://blog.sentry.io/2016/05/17/what-is-script-error#the-fix-cors-attributes-and-headers) blog post.
+
 ### Automatically Capturing Errors with Promises
 By default, Sentry for JavaScript captures unhandled promise rejections as described in the official ECMAScript 6 standard.
 
