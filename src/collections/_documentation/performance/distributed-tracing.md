@@ -70,7 +70,7 @@ If you enable Performance collection for a large portion of your traffic, you ma
 
 ## Viewing Transactions
 
-View transaction events by clicking on the "Transactions" pre-built query in [LINK: Discover], or by using a search condition `event.type:transaction` in a [LINK: Discover Query Builder] view.
+View transaction events by clicking on the "Transactions" pre-built query in [Discover]({%- link _documentation/performance/discover/index.md -%}), or by using a search condition `event.type:transaction` in a [Discover Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}) view.
 
 When you open a Transaction Event in Discover, you'll see the **span view** at the top of the page. Other information the SDK captured as part of the Transaction event will also be displayed, such as breadcrumbs.
 
@@ -78,7 +78,7 @@ When you open a Transaction Event in Discover, you'll see the **span view** at t
 
 ### Using the Span View
 
-Note that [LINK: traces] are segmented into pieces of [LINK: spans] called [LINK: transactions]. The span view enables you to examine the waterfall graph (or hierarchy) of the instrumented transaction.
+Note that [traces]({%- link _documentation/performance/performance-glossary.md -%}#trace) are segmented into pieces of [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) called [transactions]({%- link _documentation/performance/performance-glossary.md -%}#transaction). The span view enables you to examine the waterfall graph (or hierarchy) of the instrumented transaction.
 
 The span view is a split view where the left-hand side is the tree view displaying the parent-child relationship of the spans, and the right-hand side displays spans represented as colored rectangles. Within the tree view (left-hand side), Sentry identifies spans by their **operation name** and their **description**. If you don't provide the description, Sentry uses the span id as the fallback.
 
@@ -92,7 +92,7 @@ Click and drag your mouse cursor across the minimap. You can adjust the window s
 
 **Missing Instrumentation:**
 
-Sentry may indicate that gaps between spans are "Missing Instrumentation." This could mean that the SDK was unable to capture or instrument any spans within this gap automatically. It may require you to instrument the gap [LINK: manually].
+Sentry may indicate that gaps between spans are "Missing Instrumentation." This could mean that the SDK was unable to capture or instrument any spans within this gap automatically. It may require you to instrument the gap [manually](#setting-up-tracing).
 
 **Viewing Span Details:**
 
