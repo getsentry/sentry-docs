@@ -86,29 +86,29 @@ At the top of the span view is a minimap, which is a "map" of the transaction. I
 
 The first top-level span is the transaction span, which encompasses all other spans within the transaction.
 
-**Zooming In on a Transaction:**
+**Zooming In on a Transaction**
 
 As displayed in the Discover span screenshot above, you can click and drag your mouse cursor across the minimap (top of the span view). You can also adjust the window selection by dragging the handlebars (black dashed lines). 
 
-**Missing Instrumentation:**
+**Missing Instrumentation**
 
 Sentry may indicate that gaps between spans are "Missing Instrumentation." This could mean that the SDK was unable to capture or instrument any spans within this gap automatically. It may require you to instrument the gap [manually](#setting-up-tracing).
 
-**Viewing Span Details:**
+**Viewing Span Details**
 
 Click on a row to expand the details of the span. From here, you can see all attached properties, such as **tags** and **data**.
 
 [{% asset performance/span-detail-view.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-detail-view.png @path %})
 
-**Search by Trace ID:**
+**Search by Trace ID**
 
 You can search using `trace id` by expanding any of the span details and click on "Search by Trace".
 
-Depending on your project access, some transactions may not be displayed as part of the trace.
+You need **project permissions for each project** to see all the transactions within a trace. Each transaction in a trace is likely a part of different projects. If you don't have project permissions, some transactions may not display as part of a trace.
 
-**Traversing to Child Transactions:**
+**Traversing to Child Transactions**
 
-Note that child transactions are shown based on your project access.
+Child transactions are shown based on your project permissions -- which are necessary to viewing transaction events.
 
 Some spans within the transaction may be a parent of another transaction. If you expand the span details, you may see the "View Child" button, which, when clicked, will lead to another transaction's details view.
 
