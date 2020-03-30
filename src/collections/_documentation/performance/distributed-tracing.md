@@ -74,7 +74,7 @@ View transaction events by clicking on the "Transactions" pre-built query in [LI
 
 When you open a Transaction Event in Discover, you'll see the **span view** at the top of the page. Other information the SDK captured as part of the Transaction event will also be displayed, such as breadcrumbs.
 
-![DON%20T%20add%20content%20to%20this%20Draft%20Product%20Performanc/discover-span.png](DON%20T%20add%20content%20to%20this%20Draft%20Product%20Performanc/discover-span.png)
+[{% asset performance/discover-span.png alt="Discover span showing the map of the transactions (aka minimap) and the black dashed handlebars for adjusting the window selection." %}]({% asset performance/discover-span.png @path %})
 
 ### Using the Span View
 
@@ -98,7 +98,7 @@ Sentry may indicate that gaps between spans are "Missing Instrumentation." This 
 
 Click on a row to expand the details of the span. From here, you can see all attached properties, such as **tags** and **data**.
 
-![DON%20T%20add%20content%20to%20this%20Draft%20Product%20Performanc/span-detail-view.png](DON%20T%20add%20content%20to%20this%20Draft%20Product%20Performanc/span-detail-view.png)
+[{% asset performance/span-detail-view.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-detail-view.png @path %})
 
 **Search by Trace ID:**
 
