@@ -294,7 +294,7 @@ When creating or linking an issue, the response format *must* have the following
 **Attributes**
 
 - `webUrl`: The URL of the linked issue in your project management system.
-- `project`: The first part of the displayed issue that should probably be associated with a project in your system.
+- `project`: The first part of the displayed issue that should probably be associated with a project in your system
 - `identifier`: The second part displayed issue name that should be unique the project.
 
 If the display name for your issue is `Front_End#12`, the project would be `Front_End` and the identifier would be `12`.
