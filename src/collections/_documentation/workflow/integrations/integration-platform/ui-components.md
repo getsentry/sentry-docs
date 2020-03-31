@@ -210,7 +210,7 @@ This feature allows the developer to insert a link within a stack trace frame. T
 
 **Attributes:**
 
-- `uri` - (Required) The link destination. We will automatically add the following query params to the link.
+- `uri` - (Required) The link destination. Sentry will automatically add the following query params to the link.
 - `installationId` - Your integration's installation ID (helps you determine the requesting Sentry org)
 - `projectSlug` - slug of the project the issue belongs to
 - `filename` - full path of the stack frame file
