@@ -33,7 +33,7 @@ The Issue Link component displays "Link <Service> Issue" in the Issue sidebar, w
 {
     "type": "issue-link",
     "link": {
-        "uri": <str>,
+        "uri": <String>,
         "required_fields": <Array<FormField>>,
     "optional_fields": <Array<FormField>>
     },
@@ -61,6 +61,7 @@ A `FormField` can be one of three types (which behave like their HTML equivalent
     "uri": <URI>,
     "async": <Bool>,
     "options": <Array<String, String>>,
+    "depends_on": <Array<String>> (optional)
 }
 ```
 
@@ -71,6 +72,26 @@ A `FormField` can be one of three types (which behave like their HTML equivalent
 - uri -(Required if developer doesn't provide `options`) URI to retrieve values from.
 - async - Used only if `uri` is present. If true, will query the URI as the user types, for autocomplete suggestions (see response format below). If false (default), will query the URI once initially to retrieve all possible options. This request *must* succeed, and the response *must* return data in the format Sentry expects, otherwise the entire component won't render.
 - options - (Required if developer doesn't provide `uri`) Static list of options in the format of [label, value]
+- depends_on - (Optional) If a field value depends on the value of another field, a request will be made to load those options when the dependent field is set.
+
+**URI Request Format**
+
+The request sent to the `uri` to load options is a `GET` request. The parameters are encoded into the query parameters as such:
+
+```
+{
+    "installationId": <String>,
+    "projectSlug": <String>,
+    "query": <String>,
+    "dependentData": <String> (optional),
+}
+```
+
+- installationId - The ID of the installation associated with the request
+- projectSlug - The slug of the project in Sentry
+- query - The search term the user is typing
+- dependentData - A JSON encoded string of the dependent data if that field has `depends_on` set
+
 
 **URI Response Format**
 
@@ -86,6 +107,7 @@ Response from `uri`, when specified, *must* be in the following format:
     ...
 ]
 ```
+
 
 ## **Text**
 
@@ -188,18 +210,18 @@ This feature allows the developer to insert a link within a stack trace frame. T
 
 **Attributes:**
 
-- uri - (Required) The link destination. We will automatically add the following query params to the link.
-    - `installationId`: Your integration's installation ID (helps you determine the requesting Sentry org)
-    - `projectSlug`: slug of the project the issue belongs to
-    - `filename`: full path of the stack frame file
-    - `lineNo`: line number of the stack trace in the file
+- `uri` - (Required) The link destination. Sentry will automatically add the following query params to the link.
+- `installationId` - Your integration's installation ID (helps you determine the requesting Sentry org)
+- `projectSlug` - slug of the project the issue belongs to
+- `filename` - full path of the stack frame file
+- `lineNo` - line number of the stack trace in the file
 
 **Example:** 
 
 ```
 "elements": [
     {
-        "type": "stacktrace-link".
+        "type": "stacktrace-link",
         "uri": "/stacktrace-redirect",
     }
 ]
@@ -215,6 +237,70 @@ For a more complete description of the grammar, see the [source code](https://gi
     content=__alert_content
     level="info"
 %}
+
+
+# Create/Link Issue
+
+If you have a UI component for issue linking and a user attempts to create or link an issue, it will send a request to your service based on the `uri` you provide.
+
+## Request Format
+
+The request that is sent is a `POST` request, so all the information is stored in the body.
+
+**Schema**
+
+```
+{
+    "fields": <Object>,
+    "installationId": <String>,
+    "issueId": <String>,
+    "webUrl": <String>,
+    "project": {"slug": <String>, "id": <String>},
+    "actor": {"type": "user", "name": <String>, "id": <String>},
+}
+```
+
+**Attributes**
+
+- `fields` - Key/value pairs of the data in the form fields
+- `installationId` - The ID of the installation associated with the request
+- `issueId` - The ID of the issue in Sentry
+- `webUrl` - The URL of the issue in Sentry
+- `project`:
+   - `slug` - The slug of the project in Sentry
+   - `id` - The ID of the project in Sentry 
+- `actor`:
+   - `name` - The name of the user in Sentry
+   - `id` - The ID of user in Sentry 
+
+
+
+## Response Format
+
+When creating or linking an issue, the response format *must* have the following schema:
+
+
+**Schema**
+
+```
+{
+    "webUrl": <String>,
+    "project": <String>,
+    "identifier": <String>,
+}
+```
+
+
+**Attributes**
+
+- `webUrl`: The URL of the linked issue in your project management system
+- `project`: The first part of the displayed issue that should probably be associated with a project in your system
+- `identifier`: The second part of the displayed issue that should be unique to the project
+
+When an external issue is created or linked in Sentry, Sentry shows a display name that links back to the service where it was either created or linked. The display name is composed of two pieces: the `project` and the `identifier`. A hash (#) connects each piece. Here's an example of what it looks like in Sentry:
+
+[{% asset clubhouse/clubhouse_story_in_linked_issues_82.png alt="Sentry's sidebar button illustrating that an issue is linked." %}]({% asset clubhouse/clubhouse_story_in_linked_issues_82.png @path %})
+
 
 # Supplementary Information
 
