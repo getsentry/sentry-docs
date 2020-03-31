@@ -263,7 +263,7 @@ The request that is sent is a `POST` request, so all the information is stored i
 **Attributes**
 
 - `fields` - Key/value pairs of the data in the form fields
-- `installationId` - The ID of the installation associated with the request.
+- `installationId` - The ID of the installation associated with the request
 - `issueId` - The ID of the issue in Sentry
 - `webUrl` - The URL of the issue in Sentry
 - `project`:
