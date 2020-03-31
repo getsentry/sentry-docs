@@ -87,7 +87,7 @@ The request sent to the `uri` to load options is a `GET` request. The parameters
 }
 ```
 
-- installationId - The ID of the installation associated with the request.
+- installationId - The ID of the installation associated with the request
 - projectSlug - The slug of the project in Sentry.
 - query - The search term the user is typing
 - dependentData - A JSON encoded string of the dependent data if that field has `depends_on` set
