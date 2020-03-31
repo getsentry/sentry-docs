@@ -297,7 +297,7 @@ When creating or linking an issue, the response format *must* have the following
 - `project`: The first part of the displayed issue that should probably be associated with a project in your system
 - `identifier`: The second part of the displayed issue that should be unique to the project
 
-The display name is composed of two pieces: the `project` and the `identifier`. A hash (#) connects each piece. Here's an example of what it looks like in Sentry:
+When an external issue is created or linked in Sentry, Sentry shows a display name that links back to the service where it was either created or linked. The display name is composed of two pieces: the `project` and the `identifier`. A hash (#) connects each piece. Here's an example of what it looks like in Sentry:
 
 [{% asset clubhouse/clubhouse_story_in_linked_issues_82.png alt="Sentry's sidebar button illustrating that an issue is linked." %}]({% asset clubhouse/clubhouse_story_in_linked_issues_82.png @path %})
 
