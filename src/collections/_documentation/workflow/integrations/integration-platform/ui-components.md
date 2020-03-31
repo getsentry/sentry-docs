@@ -245,7 +245,7 @@ If you have a UI component for issue linking and a user attempts to create or li
 
 ## Request Format
 
-The request that is sent is a `POST` request so all the information is stored in the body.
+The request that is sent is a `POST` request, so all the information is stored in the body.
 
 **Schema**
 
