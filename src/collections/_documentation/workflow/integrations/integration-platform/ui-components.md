@@ -293,11 +293,13 @@ When creating or linking an issue, the response format *must* have the following
 
 **Attributes**
 
-- `webUrl`: The URL of the linked issue in your project management system.
+- `webUrl`: The URL of the linked issue in your project management system
 - `project`: The first part of the displayed issue that should probably be associated with a project in your system
-- `identifier`: The second part displayed issue name that should be unique the project.
+- `identifier`: The second part of the displayed issue that should be unique to the project
 
-If the display name for your issue is `Front_End#12`, the project would be `Front_End` and the identifier would be `12`.
+When an external issue is created or linked in Sentry, Sentry shows a display name that links back to the service where it was either created or linked. The display name is composed of two pieces, the `project`, and the `identifier`, connected by a #.
+
+[{% asset clubhouse/clubhouse_story_in_linked_issues_82.png alt="Sentry's sidebar button illustrating that an issue is linked." %}]({% asset clubhouse/clubhouse_story_in_linked_issues_82.png @path %})
 
 
 # Supplementary Information
