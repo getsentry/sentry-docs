@@ -3,14 +3,16 @@ title: Breadcrumbs Interface
 sidebar_order: 6
 ---
 
-The breadcrumbs interface specifies a series of application events, or
-`breadcrumbs`, that occurred before the main event. Its canonical name is
-`breadcrumbs`.
+The Breadcrumbs Interface specifies a series of application events, or
+"breadcrumbs", that occurred before an event.
 
-This interface is an object with a single `values` key containing an ordered
-list of breadcrumb objects. The entries are ordered from oldest to newest.
-Consequently, the last entry in the array should be the last entry before the
-event occurred.
+An [event]({%- link _documentation/development/sdk-dev/event-payloads/index.md
+-%}) may contain one or more breadcrumbs in an attribute named `breadcrumbs`.
+
+This interface is an object with a single `values` attribute containing an
+ordered list of breadcrumb objects. The entries are ordered from oldest to
+newest. Consequently, the last entry in the list should be the last entry before
+the event occurred.
 
 Each breadcrumb has a few properties of which at least `timestamp` and
 `category` must be provided. The rest is optional, and depending on what is
@@ -142,6 +144,10 @@ Its `data` property has the following sub-properties:
 ```
 
 ## Examples
+
+The following example illustrates the breadcrumbs part of the [event
+payload]({%- link _documentation/development/sdk-dev/event-payloads/index.md
+-%}) and omits other attributes for simplicity.
 
 ```json
 {
