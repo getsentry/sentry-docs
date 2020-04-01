@@ -72,7 +72,7 @@ If you enable Performance collection for a large portion of your traffic, you ma
 
 View transaction events by clicking on the "Transactions" pre-built query in [Discover]({%- link _documentation/performance/discover/index.md -%}), or by using a search condition `event.type:transaction` in a [Discover Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}) view.
 
-When you open a Transaction Event in Discover, you'll see the **span view** at the top of the page. Other information the SDK captured as part of the Transaction event will also be displayed, such as breadcrumbs.
+When you open a transaction event in Discover, you'll see the **span view** at the top of the page. Other information the SDK captured as part of the Transaction event will also be displayed, such as breadcrumbs.
 
 [{% asset performance/discover-span.png alt="Discover span showing the map of the transactions (aka minimap) and the black dashed handlebars for adjusting the window selection." %}]({% asset performance/discover-span.png @path %})
 
@@ -92,7 +92,7 @@ As displayed in the Discover span screenshot above, you can click and drag your 
 
 **Missing Instrumentation**
 
-Sentry may indicate that gaps between spans are "Missing Instrumentation." This could mean that the SDK was unable to capture or instrument any spans within this gap automatically. It may require you to instrument the gap [manually](#setting-up-tracing).
+Sentry may indicate that gaps between spans are "Missing Instrumentation." This message could mean that the SDK was unable to capture or instrument any spans within this gap automatically. It may require you to instrument the gap [manually](#setting-up-tracing).
 
 **Viewing Span Details**
 
@@ -108,7 +108,7 @@ You need **project permissions for each project** to see all the transactions wi
 
 **Traversing to Child Transactions**
 
-Child transactions are shown based on your project permissions -- which are necessary to viewing transaction events.
+Child transactions are shown based on your project permissions -- which are necessary to viewing transaction events. To check project permissions, navigate to **Settings >> [your organization] >> [your project] >> General**.
 
 Some spans within the transaction may be a parent of another transaction. If you expand the span details, you may see the "View Child" button, which, when clicked, will lead to another transaction's details view.
 
