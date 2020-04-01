@@ -14,22 +14,25 @@ ordered list of breadcrumb objects. The entries are ordered from oldest to
 newest. Consequently, the last entry in the list should be the last entry before
 the event occurred.
 
-Each breadcrumb has a few properties of which at least `timestamp` and
-`category` must be provided. The rest is optional, and depending on what is
-provided, the rendering might be different:
+While breadcrumb attributes are not strictly enforced, a breadcrumb is most
+useful when it includes at least a `timestamp` and `type`, `category` or
+`message`. The rendering of breadcrumbs in Sentry depends on what is provided.
 
 ## Attributes
 
 `timestamp`:
 
-: **Required**. A timestamp representing when the breadcrumb occurred. This can
-  be either an ISO DateTime string or a Unix timestamp.
+: _Recommended_. A timestamp representing when the breadcrumb occurred. This can
+  be either an ISO DateTime string or a Unix timestamp. Breadcrumbs are most
+  useful when they include a timestamp, as it creates a timeline leading up to
+  an event.
 
 `type`:
 
 : _Optional_. The type of breadcrumb. The default type is `default`, which
   indicates no specific handling. Other types are currently `http` for HTTP
-  requests and `navigation` for navigation events. More about types later.
+  requests and `navigation` for navigation events. For more information, see the
+  [description of recognized breadcrumb types](#breadcrumb-types).
 
 `category`:
 
@@ -47,9 +50,9 @@ provided, the rendering might be different:
 `data`:
 
 : _Optional_. Arbitrary data associated with this breadcrumb. Contains a
-  dictionary whose contents depend on the breadcrumb `type`. See descriptions of
-  breadcrumb types below. Additional parameters that are unsupported by the type
-  are rendered as a key/value table.
+  dictionary whose contents depend on the breadcrumb `type`. See the
+  [description of breadcrumb types](#breadcrumb-types). Additional parameters
+  that are unsupported by the type are rendered as a key/value table.
 
 `level`:
 
