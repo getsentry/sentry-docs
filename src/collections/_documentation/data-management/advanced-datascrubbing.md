@@ -14,7 +14,8 @@ In addition to using [`beforeSend`]({% link _documentation/data-management/sensi
 
 **Advanced Data Scrubbing is available only if your organization is enabled as an Early Adopter.** To enable this option, navigate to your organization's settings and enable the "Early Adopter" option. Turning on this option allows access to features prior to full release, and can be disabled at any time.
 
-Early adopters have access to a new option ("Data Privacy Rules") in both organization settings as well as the setting of each project.
+Early adopters have access to a new option in both organization settings as well as the setting of each project. Go to your project- or organization-settings and click _Data Privacy_ (or _Security
+and Privacy_) in the sidebar. Scrolling down, you will find a new section _Data Privacy Rules_.
 
 Note that everything you configure there will have direct impact on all new events, just as all the other data privacy-related settings do. However, it is not possible to break or undo any other data privacy settings that you may have configured. In other words, it is only possible to accidentally remove too much data, not too little.
 
@@ -22,9 +23,7 @@ If you have any questions related to this feature, feel free to contact us at `m
 
 ## A Basic Example
 
-Go to your project- or organization-settings and click _Data Privacy_/_Security
-and Privacy_ in the sidebar. Scrolling down, you will find a new section _Data
-Privacy Rules_.
+Go to your project- or organization-settings and click _Data Privacy_ (or _Security and Privacy_) in the sidebar. Scrolling down, you will find a new section _Data Privacy Rules_.
 
 Click on _Add Rule_. This already adds a very simple rule:
 
@@ -45,6 +44,7 @@ Rules generally consist of three parts:
 - _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely or replace it with an empty string depending on technical constraints.
 - _Mask_: Replace all characters with `*`. For creditcards this replaces everything but the last 4 digits.
 - _Hash_: Replace the matched substring with a hashed value.
+- _Replace_: Replace the matched substring with a constant placeholder value.
 
 ## Rule Types
 
@@ -107,9 +107,11 @@ Another example. Sentry knows about two kinds of error messages: the exception m
 Since the "error message" is taken from the `exception`'s `value`, and the "message" is taken from `logentry`, we would have to write the following to remove both from the event:
 
 ```
-[Remove] [Anything] from [exception.value]
+[Remove] [Anything] from [exception.values.*.value]
 [Remove] [Anything] from [logentry.formatted]
 ```
+
+A handy alias for `exception.values.*` is `$error`, while `$message` can be used in place of `logentry.formatted`. See [_Selectors_](#selectors) for more information.
 
 ### Boolean Logic
 
@@ -136,12 +138,13 @@ Select subsections by JSON-type using the following:
 
 Select known parts of the schema using the following:
 
-* `$exception` matches a single exception instance in `{"exception": {"values": [...]}}`
-* `$stacktrace` matches a stack trace instance
-* `$frame` matches a frame
-* `$request` matches the HTTP request context of an event
+* `$error` matches a single exception instance in `{"exception": {"values": [...]}}`
+* `$stack` matches a stack trace instance
+* `$frame` matches a frame in a stack trace
+* `$http` matches the HTTP request context of an event
 * `$user` matches the user context of an event
-* `$logentry` matches both the `logentry` attribute of an event as well as the `message` attribute
+* `$message` matches the top-level log message in `{"logentry": {"formatted": ...}}`
+* `$logentry` matches the `logentry` attribute of an event.
 * `$thread` matches a single thread instance in `{"threads": {"values": [...]}}`
 * `$breadcrumb` matches a single breadcrumb in `{"breadcrumbs": {"values": [...]}}`
 * `$span` matches a [trace span]({% link _documentation/performance/performance-glossary.md %}#span)
