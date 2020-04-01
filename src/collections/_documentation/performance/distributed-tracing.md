@@ -1,6 +1,6 @@
 ---
 title: Distributed Tracing
-sidebar_order: 0
+sidebar_order: 2
 ---
 
 {% capture __alert_content -%}
@@ -67,6 +67,50 @@ Sampling enables you to collect traces on a subset of your traffic and extrapola
 When you have multiple projects collecting transaction events, Sentry utilizes "head-based" sampling to ensure that once a sampling decision has been made at the beginning of the trace (typically the initial transaction), that decision is propagated to each application or project involved in the [trace]({%- link _documentation/performance/performance-glossary.md -%}#trace). If your applications have multiple entry points, you should aim to choose consistent sampling rates. Choosing different sampling rates can bias your results. Sentry does not support "tail-based" sampling at this time.
 
 If you enable Performance collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits]({%- link _documentation/accounts/quotas/index.md -%}).
+
+## Viewing Transactions
+
+View transaction events by clicking on the "Transactions" pre-built query in [Discover]({%- link _documentation/performance/discover/index.md -%}), or by using a search condition `event.type:transaction` in a [Discover Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}) view.
+
+When you open a transaction event in Discover, you'll see the **span view** at the top of the page. Other information the SDK captured as part of the Transaction event will also be displayed, such as breadcrumbs.
+
+[{% asset performance/discover-span.png alt="Discover span showing the map of the transactions (aka minimap) and the black dashed handlebars for adjusting the window selection." %}]({% asset performance/discover-span.png @path %})
+
+### Using the Span View
+
+Note that [traces]({%- link _documentation/performance/performance-glossary.md -%}#trace) are segmented into pieces of [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) called [transactions]({%- link _documentation/performance/performance-glossary.md -%}#transaction). The span view enables you to examine the waterfall graph (or hierarchy) of the instrumented transaction.
+
+The span view is a split view where the left-hand side is the tree view displaying the parent-child relationship of the spans, and the right-hand side displays spans represented as colored rectangles. Within the tree view (left-hand side), Sentry identifies spans by their **operation name** and their **description**. If you don't provide the description, Sentry uses the span id as the fallback.
+
+At the top of the span view is a minimap, which is a "map" of the transaction. It helps orient you to the specific portion of the transaction that you're viewing.
+
+The first top-level span is the transaction span, which encompasses all other spans within the transaction.
+
+**Zooming In on a Transaction**
+
+As displayed in the Discover span screenshot above, you can click and drag your mouse cursor across the minimap (top of the span view). You can also adjust the window selection by dragging the handlebars (black dashed lines). 
+
+**Missing Instrumentation**
+
+Sentry may indicate that gaps between spans are "Missing Instrumentation." This message could mean that the SDK was unable to capture or instrument any spans within this gap automatically. It may require you to instrument the gap [manually](#setting-up-tracing).
+
+**Viewing Span Details**
+
+Click on a row to expand the details of the span. From here, you can see all attached properties, such as **tags** and **data**.
+
+[{% asset performance/span-detail-view.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-detail-view.png @path %})
+
+**Search by Trace ID**
+
+You can search using `trace id` by expanding any of the span details and click on "Search by Trace".
+
+You need **project permissions for each project** to see all the transactions within a trace. Each transaction in a trace is likely a part of different projects. If you don't have project permissions, some transactions may not display as part of a trace.
+
+**Traversing to Child Transactions**
+
+Child transactions are shown based on your project permissions -- which are necessary to viewing transaction events. To check project permissions, navigate to **Settings >> [your organization] >> [your project] >> General**.
+
+Some spans within the transaction may be a parent of another transaction. If you expand the span details, you may see the "View Child" button, which, when clicked, will lead to another transaction's details view.
 
 ## Setting Up Tracing
 
