@@ -85,7 +85,7 @@ Selectors allow you to restrict rules to certain parts of the event. This is use
 * `extra.**` to scrub everything in "Additional Data"
 * `$http.headers.x-custom-token` to scrub the request header `X-Custom-Token`
 * `$user.ip_address` to scrub the user's IP address
-* `$frame.vars.foo` to scrub a stacktrace frame variable called `foo`
+* `$frame.vars.foo` to scrub a stack trace frame variable called `foo`
 * `contexts.device.timezone` to scrub a key from the Device context
 * `tags.server_name` to scrub the tag `server_name`
 
