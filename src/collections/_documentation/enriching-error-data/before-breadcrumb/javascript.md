@@ -3,7 +3,7 @@
 import * as Sentry from '@sentry/browser';
 
 Sentry.init({
-  dsn: 'https://<key>@sentry.io/',
+  dsn: '___PUBLIC_DSN___',
   beforeBreadcrumb(breadcrumb, hint) {
     return breadcrumb.category === 'ui.click' ? null : breadcrumb;
   },

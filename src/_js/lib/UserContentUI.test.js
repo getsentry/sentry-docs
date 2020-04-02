@@ -27,13 +27,15 @@ const sampleProject1 = {
   PROJECT_NAME: 'test1',
   PROJECT_ID: '1',
   ORG_NAME: 'test1',
-  DSN: 'https://test1:test1@sentry.io/test1',
-  PUBLIC_DSN: 'https://test1@sentry.io/test1',
+  ORG_ID: '1',
+  DSN: 'https://test1:test1@o1.ingest.sentry.io/test1',
+  PUBLIC_DSN: 'https://test1@o1.ingest.sentry.io/test1',
   PUBLIC_KEY: 'test1',
   SECRET_KEY: 'test1',
   API_URL: 'https://sentry.io/api',
-  MINIDUMP_URL: 'https://sentry.io/api/test1/minidump/?sentry_key=test1',
-  MINIDUMP_URL: 'https://sentry.io/api/test1/unreal/test1/'
+  MINIDUMP_URL:
+    'https://o1.ingest.sentry.io/api/test1/minidump/?sentry_key=test1',
+  MINIDUMP_URL: 'https://o1.ingest.sentry.io/api/test1/unreal/test1/'
 };
 
 const sampleProject2 = {
@@ -42,13 +44,15 @@ const sampleProject2 = {
   PROJECT_NAME: 'test2',
   PROJECT_ID: '2',
   ORG_NAME: 'test2',
-  DSN: 'https://test2:test2@sentry.io/test2',
-  PUBLIC_DSN: 'https://test2@sentry.io/test2',
+  ORG_ID: '2',
+  DSN: 'https://test2:test2@o2.ingest.sentry.io/test2',
+  PUBLIC_DSN: 'https://test2@o2.ingest.sentry.io/test2',
   PUBLIC_KEY: 'test2',
   SECRET_KEY: 'test2',
   API_URL: 'https://sentry.io/api',
-  MINIDUMP_URL: 'https://sentry.io/api/test2/minidump/?sentry_key=test2',
-  MINIDUMP_URL: 'https://sentry.io/api/test2/unreal/test2/'
+  MINIDUMP_URL:
+    'https://o2.ingest.sentry.io/api/test2/minidump/?sentry_key=test2',
+  MINIDUMP_URL: 'https://o2.ingest.sentry.io/api/test2/unreal/test2/'
 };
 
 const sampleUser = {

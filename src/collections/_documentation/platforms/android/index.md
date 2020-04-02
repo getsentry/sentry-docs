@@ -47,7 +47,7 @@ Add your DSN to the manifest file.
 
 ```xml
 <application>
-    <meta-data android:name="io.sentry.dsn" android:value="https://key@sentry.io/123" />
+    <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
 </application>
 ```
 

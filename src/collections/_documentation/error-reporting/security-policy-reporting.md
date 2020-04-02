@@ -14,13 +14,13 @@ The integration process consists of configuring the appropriate header with your
 To configure CSP reports in Sentry, you’ll need to send a header from your server describing your policy, as well specifying the authenticated Sentry endpoint:
 
 ```
-Content-Security-Policy: ...; report-uri https://sentry.io/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___
+Content-Security-Policy: ...; report-uri https://o___ORG_ID___.ingest.sentry.io/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___
 ```
 
 Alternatively you can setup CSP reports to simply send reports rather than actually enforcing the policy:
 
 ```
-Content-Security-Policy-Report-Only: ...; report-uri https://sentry.io/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___
+Content-Security-Policy-Report-Only: ...; report-uri https://o___ORG_ID___.ingest.sentry.io/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___
 ```
 
 For more information, see the article on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy).
@@ -32,7 +32,7 @@ For more information, see the article on [MDN](https://developer.mozilla.org/en-
 To configure reports in Sentry, you’ll need to configure the Expect-CT a header from your server:
 
 ```
-Expect-CT: ..., report-uri="https://sentry.io/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___"
+Expect-CT: ..., report-uri="https://o___ORG_ID___.ingest.sentry.io/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___"
 ```
 
 For more information, see the article on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT).
@@ -44,7 +44,7 @@ For more information, see the article on [MDN](https://developer.mozilla.org/en-
 To configure HPKP reports in Sentry, you’ll need to send a header from your server describing your policy, as well specifying the authenticated Sentry endpoint:
 
 ```
-Public-Key-Pins: ...; report-uri="https://sentry.io/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___"
+Public-Key-Pins: ...; report-uri="https://o___ORG_ID___.ingest.sentry.io/api/___PROJECT_ID___/security/?sentry_key=___PUBLIC_KEY___"
 ```
 
 For more information, see the article on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Public_Key_Pinning).
