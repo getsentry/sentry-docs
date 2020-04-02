@@ -27,7 +27,7 @@ exception and Sentry will connect the two.
 
 `crashed`:
 
-: _Optional_. A flag indicating whether the thread has caused the error, it doesn't mean that the Application has been terminated, but captured the error. Defaults to `false`.
+: _Optional_. A flag indicating whether this thread has caused the error. It does not necessarily indicate the application terminated. Defaults to `false`.
 It may be seen as `crashed: yes` in the Issues page.
 
 `current`:
