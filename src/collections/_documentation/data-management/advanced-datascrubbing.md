@@ -78,7 +78,7 @@ Sentry does not know if a local variable that looks like a credit card number ac
 
 Selectors allow you to restrict rules to certain parts of the event. This is useful to unconditionally remove certain data by variable/field name from the event, but can also be used to conservatively test rules on real data. A few examples:
 
-* `**` to scrub everywhere
+* `**` to scrub everything
 * `$error.value` to scrub in the exception message
 * `$message` to scrub the event-level log message
 * `extra.'My Value'` to scrub the key `My Value` in "Additional Data"
