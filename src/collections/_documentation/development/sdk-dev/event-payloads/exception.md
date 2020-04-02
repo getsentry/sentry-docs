@@ -85,7 +85,7 @@ mechanism-specific values.
 
 : Optional flag indicating whether the user has handled the exception
   (for example, via `try ... catch`).
-  When this flag is set to `false`, it probably means that the Application has been terminated.
+   Where applicable, when this flag is set to `false` it indicates the application terminated.
 
 `meta`:
 
