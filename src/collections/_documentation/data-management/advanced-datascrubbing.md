@@ -76,7 +76,22 @@ Sentry does not know if a local variable that looks like a credit card number ac
 
 ## Selectors
 
-Selectors allow you to restrict rules to certain parts of the event. This is useful to unconditionally remove certain data by variable/field name from the event, but can also be used to conservatively test rules on real data.
+Selectors allow you to restrict rules to certain parts of the event. This is useful to unconditionally remove certain data by event attribute, and can also be used to conservatively test rules on real data. A few examples:
+
+* `**` to scrub everything
+* `$error.value` to scrub in the exception message
+* `$message` to scrub the event-level log message
+* `extra.'My Value'` to scrub the key `My Value` in "Additional Data"
+* `extra.**` to scrub everything in "Additional Data"
+* `$http.headers.x-custom-token` to scrub the request header `X-Custom-Token`
+* `$user.ip_address` to scrub the user's IP address
+* `$frame.vars.foo` to scrub a stack trace frame variable called `foo`
+* `contexts.device.timezone` to scrub a key from the Device context
+* `tags.server_name` to scrub the tag `server_name`
+
+All key names are treated case-insensitively.
+
+### Writing a Selector
 
 Data scrubbing always works on the raw event payload. Keep in mind that some fields in the UI may be called differently in the JSON schema. When looking at an event there should always be a link called "JSON" present that allows you to see what the data scrubber sees.
 
@@ -110,8 +125,6 @@ Since the "error message" is taken from the `exception`'s `value`, and the "mess
 [Remove] [Anything] from [exception.values.*.value]
 [Remove] [Anything] from [logentry.formatted]
 ```
-
-A handy alias for `exception.values.*` is `$error`, while `$message` can be used in place of `logentry.formatted`. See [_Selectors_](#selectors) for more information.
 
 ### Boolean Logic
 
@@ -149,20 +162,6 @@ Select known parts of the schema using the following:
 * `$breadcrumb` matches a single breadcrumb in `{"breadcrumbs": {"values": [...]}}`
 * `$span` matches a [trace span]({% link _documentation/performance/performance-glossary.md %}#span)
 * `$sdk` matches the SDK context in `{"sdk": ...}`
-
-#### Examples
-
-* Delete `event.user`:
-
-  ```
-  [Remove] [Anything] from [$user]
-  ```
-
-* Delete all frame-local variables:
-
-  ```
-  [Remove] [Anything] from [$frame.vars]
-  ```
 
 ### Escaping Special Characters
 
