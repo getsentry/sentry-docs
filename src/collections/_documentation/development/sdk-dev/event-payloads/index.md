@@ -143,6 +143,8 @@ highly encouraged:
   -   `info`
   -   `debug`
 
+  When this field is set to `fatal`, it probably means that the Application has been terminated.
+
 `transaction`
 
 : The name of the transaction which caused this exception.

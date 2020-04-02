@@ -27,12 +27,13 @@ exception and Sentry will connect the two.
 
 `crashed`:
 
-: _Optional_. A flag indicating whether the thread crashed. Defaults to `false`.
+: _Optional_. A flag indicating whether the thread has caused the error, it doesn't mean that the Application has been terminated, but captured the error. Defaults to `false`.
+It may be seen as `crashed: yes` in the Issues page.
 
 `current`:
 
-: _Optional_. A flag indicating whether the thread was in the foreground.
-  Defaults to `false`.
+: _Optional_. A flag indicating whether the thread was in the foreground, often known as UI or main thread. Defaults to `false`.
+It may be seen as `was active: yes` in the Issues page.
 
 `name`:
 
