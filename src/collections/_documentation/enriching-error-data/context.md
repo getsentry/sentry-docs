@@ -110,4 +110,4 @@ You can view the JSON payload of an event to see how Sentry stores additional da
 
 ![Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_13.35.04.png](Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_13.35.04.png)
 
-For more details about event payload, see the [full Event Payload documentation]({%- link _documentation/development/sdk-dev/event-payloads/index.md -%}).
+For more details, see the [full documentation on Event Payload]({%- link _documentation/development/sdk-dev/event-payloads/index.md -%}).
