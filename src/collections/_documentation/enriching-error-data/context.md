@@ -10,9 +10,9 @@ example_extra_value: 'Mighty Fighter'
 
 Additional data attached to an event can be predefined or custom.
 
-[LINK: Predefined data] is data that Sentry recognizes and uses to enhance the user experience. For example, Sentry's concept of a user lets us show how many unique users are affected by an issue. Sentry automatically captures predefined data where possible, such as information about the browser, HTTP request, and OS in the browser Javascript SDK.
+[Predefined data](#predefined-data) is data that Sentry recognizes and uses to enhance the user experience. For example, Sentry's concept of a user lets us show how many unique users are affected by an issue. Sentry automatically captures predefined data where possible, such as information about the browser, HTTP request, and OS in the browser Javascript SDK.
 
-[LINK: Custom data] is arbitrary structured or unstructured extra data you can attach to your event.
+[Custom data](#custom-data) is arbitrary structured or unstructured extra data you can attach to your event.
 
 ## Tags & Context
 
@@ -28,9 +28,9 @@ Context includes additional diagnostic information attached to an event. By defa
 
 ## Predefined Data
 
-The most common types of predefined data (where applicable) are level, [LINK: [release](https://docs.sentry.io/workflow/releases/)], [LINK: [environment](https://docs.sentry.io/enriching-error-data/environments/)], logger, [LINK: [fingerprint](https://docs.sentry.io/data-management/event-grouping/)], user, request, device, OS, runtime, app, browser, gpu, monitor, and [LINK: [traces](https://docs.sentry.io/performance/distributed-tracing/)].
+The most common types of predefined data (where applicable) are level, [release]({%- link _documentation/workflow/releases.md -%}), [environment]({%- link _documentation/enriching-error-data/environments.md -%}), logger, [fingerprint]({%- link _documentation/data-management/event-grouping/index.md -%}), user, request, device, OS, runtime, app, browser, gpu, monitor, and [traces]({%- link _documentation/performance/distributed-tracing.md -%}).
 
-To improve searchability, Sentry will turn the data or specific attributes on the data into tags. For example, `level` is available as a tag, and so is a user's email via the `user.email` tag. If Sentry is captures some predefined data but doesn't expose it as a tag, you can always set a [custom tag](https://www.notion.so/sentry/Docs-Additional-Data-2ff7bd7298fb4203bcd9f3dc09478517#7164a6944427436b95d657e30f0f490c) for it.
+To improve searchability, Sentry will turn the data or specific attributes on the data into tags. For example, `level` is available as a tag, and so is a user's email via the `user.email` tag. If Sentry is captures some predefined data but doesn't expose it as a tag, you can always set a [custom tag](#tags) for it.
 
 ### Capturing the User
 
@@ -64,7 +64,7 @@ You can set the severity of an event to one of five values: `fatal`, `error`,�
 
 {% include components/platform_content.html content_dir='set-level' %}
 
-For more details about how to set predefined properties, see the [LINK: [platform-specific](https://docs.sentry.io/platforms/)] documentation.
+For more details about how to set predefined properties, see the [platform-specific documentation]({%- link _documentation/platforms/index.md -%}).
 
 ## Custom Data
 
@@ -78,7 +78,7 @@ Most SDKs support configuring tags by configuring the scope:
 
 {% include components/platform_content.html content_dir='set-tag' %}
 
-Sentry promotes several pieces of predefined data to tags. We strongly recommend you don't set custom tags with these reserved names. But if you do, you can search for them with a [special tag syntax](https://docs.sentry.io/workflow/search/?platform=javascript#explicit-tag-syntax).
+Sentry promotes several pieces of predefined data to tags. We strongly recommend you don't set custom tags with these reserved names. But if you do, you can search for them with a [special tag syntax]({%- link _documentation/workflow/search.md -%}).
 
 ### Context
 
@@ -94,13 +94,15 @@ In the past, custom context was called "extra" and set via a method like setExtr
 
 Maximum payload size: There are times when you may want to send the whole application state as extra data. Sentry doesn't recommend this as the application state can be extensive and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you’ll get an `HTTP Error 413 Payload Too Large` message as the server response (when `keepalive: true` is set as `fetch` parameter), or the request will stay in the `pending` state forever (for example, in Chrome).
 
-Sentry will try its best to accommodate the data you send, but Sentry will trim large context payloads or truncate the payloads entirely. For more details, see the [LINK: [data handling SDK documentation](https://docs.sentry.io/development/sdk-dev/data-handling/)].
+Sentry will try its best to accommodate the data you send, but Sentry will trim large context payloads or truncate the payloads entirely. 
+
+For more details, see the [full documentation on SDK data handling SDK]({%- link _documentation/development/sdk-dev/data-handling.md -%}).
 
 ### Unsetting Context
 
 Sentry holds context in the current scope, and thus context clears out at the end of each operation (for example, requests). You can also push and pop your scopes to apply context data to a specific code block or function.
 
-For more information, [have a look at the scopes and hub documentation](https://docs.sentry.io/enriching-error-data/scopes/).
+For more details, see the [full documentation on Scopes and Hubs]({%- link _documentation/enriching-error-data/scopes.md -%}).
 
 ## Debugging Additional Data
 
@@ -108,4 +110,4 @@ You can view the JSON payload of an event to see how Sentry stores additional da
 
 ![Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_13.35.04.png](Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_13.35.04.png)
 
-For more details about event payload, see the [LINK: [full Event Payload documentation](https://docs.sentry.io/development/sdk-dev/event-payloads/)].
+For more details about event payload, see the [full Event Payload documentation]({%- link _documentation/development/sdk-dev/event-payloads/index.md -%}).
