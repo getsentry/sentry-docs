@@ -34,7 +34,7 @@ When you set this flag to `true`, it's also used to preselect a thread in the th
 `current`:
 
 : _Optional_. A flag indicating whether the thread was in the foreground, often known as UI or main thread. Defaults to `false`.
-It may be seen as `was active: yes` in the Issues page.
+It may display as `was active: yes` on the Issues page.
 
 `name`:
 
