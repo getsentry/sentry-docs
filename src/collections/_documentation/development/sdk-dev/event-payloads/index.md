@@ -143,7 +143,7 @@ highly encouraged:
   -   `info`
   -   `debug`
 
-  When this field is set to `fatal` it indicates the application terminated.
+  When you set this field to `fatal`, it indicates the application terminated.
 
 `transaction`
 
