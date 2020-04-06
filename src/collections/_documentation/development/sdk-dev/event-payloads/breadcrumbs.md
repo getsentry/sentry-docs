@@ -22,10 +22,13 @@ useful when it includes at least a `timestamp` and `type`, `category` or
 
 `timestamp`:
 
-: _Recommended_. A timestamp representing when the breadcrumb occurred. This can
-  be either an ISO DateTime string or a Unix timestamp. Breadcrumbs are most
-  useful when they include a timestamp, as it creates a timeline leading up to
-  an event.
+: _Recommended_. A timestamp representing when the breadcrumb occurred. The
+  format is either a string as defined in [RFC
+  3339](https://tools.ietf.org/html/rfc3339) or a numeric (integer or float)
+  value representing the number of seconds that have elapsed since the [Unix
+  epoch](https://en.wikipedia.org/wiki/Unix_time).  
+  Breadcrumbs are most useful when they include a timestamp, as it creates a
+  timeline leading up to an event.
 
 `type`:
 
@@ -74,7 +77,7 @@ completely rendered as a key/value table.
 
 ```json
 {
-  "timestamp": 1461185753845,
+  "timestamp": "2016-04-20T20:55:53.845Z",
   "message": "Something happened",
   "category": "log",
   "data": {
@@ -100,7 +103,7 @@ Its `data` property has the following sub-properties:
 
 ```json
 {
-  "timestamp": 1461185753845,
+  "timestamp": "2016-04-20T20:55:53.845Z",
   "type": "navigation",
   "data": {
     "from": "/login",
@@ -135,7 +138,7 @@ Its `data` property has the following sub-properties:
 
 ```json
 {
-  "timestamp": 1461185753845,
+  "timestamp": "2016-04-20T20:55:53.845Z",
   "type": "http",
   "data": {
     "url": "http://example.com/api/1.0/users",
@@ -157,7 +160,7 @@ payload]({%- link _documentation/development/sdk-dev/event-payloads/index.md
   "breadcrumbs": {
     "values": [
       {
-        "timestamp": 1461185753845,
+        "timestamp": "2016-04-20T20:55:53.845Z",
         "message": "Something happened",
         "category": "log",
         "data": {
