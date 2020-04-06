@@ -48,7 +48,7 @@ description of `ValueError`.
 `mechanism`:
 
 : An optional object describing the [mechanism](#exception-mechanism) that
-  created this exception (see below).
+  created this exception.
 
 `stacktrace`:
 
@@ -58,11 +58,10 @@ description of `ValueError`.
 
 ## Exception Mechanism
 
-The exception mechanism is an optional field residing in the [_Exception
-Interface_](#exception-interface). It carries additional information about the
-way the exception was created on the target system. This includes general
-exception values obtained from the operating system or runtime APIs, as well as
-mechanism-specific values.
+The exception mechanism is an optional field residing in the _Exception
+Interface_. It carries additional information about the way the exception was
+created on the target system. This includes general exception values obtained
+from the operating system or runtime APIs, as well as mechanism-specific values.
 
 ### Attributes
 
@@ -78,7 +77,7 @@ mechanism-specific values.
 
 `help_link`:
 
-: Optional fully qualified URL to an online help resource, possible interpolated
+: Optional fully qualified URL to an online help resource, possibly interpolated
   with error parameters.
 
 `handled`:
@@ -89,7 +88,7 @@ mechanism-specific values.
 `meta`:
 
 : Optional information from the operating system or runtime on the exception
-  mechanism (see below).
+  mechanism (see [meta information](#meta-information)).
 
 `data`:
 
