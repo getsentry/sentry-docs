@@ -2,7 +2,7 @@
 import * as Sentry from '@sentry/browser';
 
 Sentry.init({
-  dsn: 'https://<key>@sentry.io/',
+  dsn: '___PUBLIC_DSN___',
   beforeBreadcrumb(breadcrumb, hint) {
     if (breadcrumb.category === 'ui.click') {
       const { target } = hint.event;

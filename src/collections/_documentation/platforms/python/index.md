@@ -171,7 +171,7 @@ The Sentry SDK sets the options when you first initialize the SDK.
 import sentry_sdk
 
 sentry_sdk.init(
-    'https://<key>@sentry.io/<project>',
+    '___PUBLIC_DSN___',
     max_breadcrumbs=50,
     debug=True,
 )

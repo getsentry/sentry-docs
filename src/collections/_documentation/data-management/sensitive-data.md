@@ -23,7 +23,7 @@ In the SDKs, you can configure a `before-send` function, which is invoked before
 
 ```javascript
 Sentry.init({
-  dsn: 'https://XXXX@sentry.io/1234',
+  dsn: '___PUBLIC_DSN___',
   beforeSend(event) {
     // Modify the event here
     if (event.user) {
