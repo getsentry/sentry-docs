@@ -18,7 +18,7 @@ Additional data attached to an event can be predefined or custom.
 
 Whether predefined or custom, additional data can take two forms in Sentry: tags and context.
 
-Tags are key/value string pairs that are indexed and searchable. They power UI features like filters and tag-distribution heat maps.
+Tags are key/value string pairs that are indexed and searchable. They power UI features like filters and tag-distribution maps.
 
 ![Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_19.37.28.png](Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_19.37.28.png)
 
@@ -82,7 +82,7 @@ Sentry promotes several pieces of predefined data to tags. We strongly recommend
 
 ### Context
 
-Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries) to an event. These are unsearchable, but are viewable in the "Additional Data" section of an event.
+Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries) to an event. These are unsearchable, but are viewable on the issue page.
 
 ![Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_19.36.34.png](Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_19.36.34.png)
 
@@ -90,13 +90,17 @@ Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries
 
 In the past, custom context was called "extra" and set via a method like setExtra(), which is deprecated.
 
-### Context Size Limits (TO REVIEW)
+Custom data set using `setExtra` appears in the "Additional Data" section of an event. In contrast, each key set using `setContext` gets its own section on the issue page, with the section title being the key name.
+
+For more details about predefined and custom contexts, see the [full documentation on Context Interface]({%- link _documentation/development/sdk-dev/event-payloads/contexts.md -%}). 
+
+### Context Size Limits
 
 Maximum payload size: There are times when you may want to send the whole application state as extra data. Sentry doesn't recommend this as the application state can be extensive and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you’ll get an `HTTP Error 413 Payload Too Large` message as the server response (when `keepalive: true` is set as `fetch` parameter), or the request will stay in the `pending` state forever (for example, in Chrome).
 
 Sentry will try its best to accommodate the data you send, but Sentry will trim large context payloads or truncate the payloads entirely. 
 
-For more details, see the [full documentation on SDK data handling SDK]({%- link _documentation/development/sdk-dev/data-handling.md -%}).
+For more details, see the [full documentation on SDK data handling]({%- link _documentation/development/sdk-dev/data-handling.md -%}).
 
 ### Unsetting Context
 
@@ -106,7 +110,7 @@ For more details, see the [full documentation on Scopes and Hubs]({%- link _doc
 
 ## Debugging Additional Data
 
-You can view the JSON payload of an event to see how Sentry stores additional data in JSON form. The shape of the data may not exactly match the description above because our thinking around additional data has evolved faster than the protocol.
+You can view the JSON payload of an event to see how Sentry stores additional data in the event. The shape of the data may not exactly match the description above because our thinking around additional data has evolved faster than the protocol.
 
 ![Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_13.35.04.png](Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_13.35.04.png)
 
