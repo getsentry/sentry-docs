@@ -4,7 +4,7 @@ title: Cocoa
 
 <!-- WIZARD -->
 {% capture __alert_content -%}
-Version `5.0.0` is in beta. If you are not comfortable installing our the `beta` SDK to docs to our latest stable version can be found here. [4.x]({%- link _documentation/clients/cocoa/index.md -%})
+Version `5.0.0` is in beta. If you are not comfortable installing our `beta` SDK, our latest stable version can be found here. [4.x]({%- link _documentation/clients/cocoa/index.md -%})
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
