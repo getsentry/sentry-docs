@@ -35,10 +35,10 @@ For more details, see the [full documentation on Metric Alerts]({%- link _docum
 Use Issue Alerts to:
 - Alert when an individual issue is problematic. Any new bug on the checkout page? Any single issue affecting more than X users?
 - Alert on issue-specific concepts. For example, new issues and regressed issues.
-- Combine multiple conditions with the OR and NONE operators.
+- Combine multiple conditions with the `OR` and `NONE` operators.
 - Alert based on Issue Owner rules.
 
-Some alert settings apply at the project level and to all alerts in the project. Other alert settings are specific to the alert. You can tweak your personal alerts settings to control which alerts you receive.
+Some alert settings apply at the project level and to all alerts in the project. Other alert settings are specific to the alert. You can tweak your [personal alerts settings]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#alert-subscription) to control which alerts you receive.
 
 For more details, see the [full documentation on Issue Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts).
 
