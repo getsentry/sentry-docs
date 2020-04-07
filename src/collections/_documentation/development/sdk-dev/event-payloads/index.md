@@ -54,9 +54,10 @@ The following attributes are required for all events.
 
 `timestamp`
 
-: Indicates when the logging record was created (in the Sentry SDK). The Sentry
-  server assumes the time is in UTC. The timestamp should be in ISO 8601 format,
-  without a timezone.
+: Indicates when the event was created in the Sentry SDK. The format is either a
+  string as defined in [RFC 3339](https://tools.ietf.org/html/rfc3339) or a
+  numeric (integer or float) value representing the [number of seconds that have
+  elapsed since the Unix epoch](https://en.wikipedia.org/wiki/Unix_time).
 
   ```json
   {
@@ -64,12 +65,9 @@ The following attributes are required for all events.
   }
   ```
 
-  Alternatively, the timestamp can be specified as floating-point UNIX
-  timestamp.
-
   ```json
   {
-    "timestamp": 1304358096000
+    "timestamp": 1304358096.0
   }
   ```
 
