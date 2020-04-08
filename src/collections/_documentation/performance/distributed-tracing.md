@@ -143,8 +143,9 @@ sentry_sdk.init("___PUBLIC_DSN___", traces_sample_rate=0.1)
 
 Many integrations for popular frameworks automatically capture traces. If you already have any of the following frameworks set up for Sentry error reporting, you will start to see traces immediately:
 
-- All WSGI-based frameworks (Django, Flask, Pyramid, Falcon, Bottle)
+- All WSGI-based web frameworks (Django, Flask, Pyramid, Falcon, Bottle)
 - Celery
+- AIOHTTP web apps
 - Redis Queue (RQ)
 
 [Spans]({%- link _documentation/performance/performance-glossary.md -%}#span) are instrumented for the following operations within a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction):
@@ -152,6 +153,7 @@ Many integrations for popular frameworks automatically capture traces. If you al
 - Database that uses SQLAlchemy or the Django ORM
 - HTTP requests made with `requests` or the `stdlib`
 - Spawned subprocesses
+- Redis operations
 
 If you want to enable all relevant transactions automatically, you can use this alternative configuration (currently in alpha):
 
