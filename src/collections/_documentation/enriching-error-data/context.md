@@ -20,11 +20,11 @@ Whether predefined or custom, additional data can take two forms in Sentry: tags
 
 Tags are key/value string pairs that are indexed and searchable. They power UI features like filters and tag-distribution maps.
 
-![Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_19.37.28.png](Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_19.37.28.png)
+[{% asset additional-data/tags.png alt="All tags and their related values." %}]({% asset additional-data/tags.png @path %})
 
 Context includes additional diagnostic information attached to an event. By default, contexts are not searchable, but for convenience Sentry turns information in some predefined contexts into tags, making them searchable.
 
-![Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_19.38.02.png](Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_19.38.02.png)
+[{% asset additional-data/predefined_contexts.png alt="Predefined data such as the name and version." %}]({% asset additional-data/predefined_contexts.png @path %})
 
 ## Predefined Data
 
@@ -84,7 +84,7 @@ Sentry promotes several pieces of predefined data to tags. We strongly recommend
 
 Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries) to an event. These are unsearchable, but are viewable on the issue page.
 
-![Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_19.36.34.png](Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_19.36.34.png)
+[{% asset additional-data/additional_data.png alt="Custom contexts as viewed on the Additional Data section of an event." %}]({% asset additional-data/additional_data.png @path %})
 
 {% include components/platform_content.html content_dir='set-extra' %}
 
@@ -112,6 +112,6 @@ For more details, see the [full documentation on Scopes and Hubs]({%- link _doc
 
 You can view the JSON payload of an event to see how Sentry stores additional data in the event. The shape of the data may not exactly match the description above because our thinking around additional data has evolved faster than the protocol.
 
-![Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_13.35.04.png](Content%20Freeze%20DON%20T%20add%20content%20Docs%20Additional%20D/Screenshot_2020-03-28_13.35.04.png)
+[{% asset additional-data/event_JSON.png alt="Red box highlighting where to find the JSON connected to an event." width="400"%}]({% asset additional-data/event_JSON.png @path %})
 
 For more details, see the [full documentation on Event Payload]({%- link _documentation/development/sdk-dev/event-payloads/index.md -%}).
