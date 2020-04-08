@@ -39,7 +39,7 @@ into.  For more information about that consult the API documentation of the SDK.
 ## Next Steps
 
 * Need to add extra data to your events? Have a look at [our context
-  documentation]({% link _documentation/enriching-error-data/context.md %}).
+  documentation]({% link _documentation/enriching-error-data/additional-data.md %}).
 
 * Captured too much data? Have a look at [filtering]({% link
   _documentation/error-reporting/configuration/filtering.md %}) to remove spam
