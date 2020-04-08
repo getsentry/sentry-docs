@@ -15,7 +15,7 @@ if the key name is the type.
 
 Unknown data for the contexts is rendered as a key/value list.
 
-For more details about sending additonal data with your event, see the [full documentation on Additional Data]({%- link _documentation/enriching-error-data/additional-data.md -%}).
+For more details about sending additional data with your event, see the [full documentation on Additional Data]({%- link _documentation/enriching-error-data/additional-data.md -%}).
 
 ## Device Context
 
