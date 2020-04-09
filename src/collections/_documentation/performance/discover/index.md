@@ -9,7 +9,7 @@ Our Discover tool provides visibility into your data across environments by buil
 
 ## Discover Homepage
 
-The Discover Homepage offers views of all your saved queries and Sentry's pre-built queries so you can quickly dive into areas that need immediate attention.
+The Discover Homepage offers views of all your saved queries and Sentry's pre-built queries so you can quickly dive into areas that need immediate attention. Circular Sentry avatars indicate pre-built queries. User avatars indicate saved queries. The user who creates a saved query will automatically have their avatar attached to the saved query.
 
 ### Query Cards
 
@@ -17,13 +17,15 @@ Query cards are the individual cards on the Homepage that display a summarized v
 
 ### Pre-built Queries
 
+Circular Sentry avatars indicate pre-built queries.
+
 - All Events: Users can see the raw error stream for any group of projects. This replaces the Events feature and gives users the ability to add additional columns and change groupings to achieve their desired breakdown.
 - Errors by Title: Users can see their most frequently occurring errors by the total number of raw errors, as well as the total number of users affected.
 - Errors by URL: Users can see the pages that generated the most errors and different types of issues. As a reminder, issues are a group of fingerprinted Events. For more details, see the [full documentation on fingerprinting]({%- link _documentation/data-management/event-grouping/index.md -%}).
 
 ### Saved Queries
 
-Saved queries have a yellow star icon and sort from most recently updated to least recently updated.
+User avatars indicate saved queries. The user who creates a saved query will automatically have their avatar attached to the saved query.
 
 **Deleting or Duplicating Saved Queries**
 
@@ -51,7 +53,7 @@ Share your queries as often as you want. You can share URLs with other users who
 
 ### Saved Query
 
-Although search queries are shareable, you can save them as Saved Queries. Saved Queries are visible to the entire organization. In other words, Saved Queries **are not** scoped to the user's account. You can find Saved Queries on the Discover Homepage with the yellow star icon. You can use either a pre-built query or an existing saved query to create a new Saved Query.
+Although search queries are shareable, you can save them as saved queries. Saved queries are visible to the entire organization. In other words, saved queries **are not** scoped to the user's account. You can find saved queries on the Discover Homepage with the avatar of whoever built it. Circular Sentry logos indicate pre-built queries. You can use either a pre-built query or an existing saved query to create a new saved query.
 
 For more details, see [full documentation on the Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}).
 

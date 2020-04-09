@@ -172,29 +172,29 @@ Share your queries as often as you want. You can share URLs to other users who a
 
 ## Saved Query
 
-Although search queries are shareable, you can save them as Saved Queries. Saved Queries are visible to the entire organization. In other words, Saved Queries **are not** scoped to the user's account. You can find Saved Queries on the Discover homepage with the yellow star icon. You can use either a pre-built query or an existing saved query to create a new Saved Query.
+Although search queries are shareable, you can save them as saved queries. Saved queries are visible to the entire organization. In other words, saved queries **are not** scoped to the user's account. You can find saved queries on the Discover homepage with the avatar of whoever built it. Circular Sentry logos indicate pre-built queries. You can use either a pre-built query or an existing saved query to create a new saved query.
 
 ### Creating a new Saved Query
 
-You may create a new Saved Query in one of the following ways:
+You may create a new saved query in one of the following ways:
 
 - From a pre-built query:
     1. Click on "Save as..." in the top right
-    2. Enter the name of your Saved Query
+    2. Enter the name of your saved query
     3. Click "Save"
-- From a Saved Query:
-    1. Make changes to a Saved Query
+- From a saved query:
+    1. Make changes to a saved query
     2. Click on "Save as..." in the top right
-    3. Enter the name of your Saved Query
+    3. Enter the name of your saved query
     4. Click "Save"
 
 ### Saving Changes
 
-Changes to a Saved Query **will not** automatically be saved. An exception to this rule is renaming a Saved Query. Note that the state is still reflected in the URL so that you can share the URLs even though they're not saved. If you've made any unsaved changes to a Saved Query, you can click on the "Update Query" button in the top right corner.
+Changes to a saved query **will not** automatically be saved. An exception to this rule is renaming a saved query. Note that the state is still reflected in the URL so that you can share the URLs even though they're not saved. If you've made any unsaved changes to a saved query, you can click on the "Update Query" button in the top right corner.
 
 ### Renaming a Saved Query
 
-1. Click on the Saved Query name with the pencil icon 
+1. Click on the saved query name with the pencil icon 
 2. Enter a new name
 3. Click "Enter" or click outside to confirm changes
 4. The name is automatically saved
@@ -202,7 +202,7 @@ Changes to a Saved Query **will not** automatically be saved. An exception to th
 ### Deleting a Saved Query
 
 {% capture __alert_content -%}
-Deleting a Saved Query is irreversible.
+Deleting a saved query is irreversible.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Warning"
@@ -210,7 +210,7 @@ Deleting a Saved Query is irreversible.
     level="warning"
 %}
 
-From an existing Saved Query, click on the garbage bin icon in the top right-hand corner. After deleting a Saved Query, you'll be redirected back to the homepage.
+From an existing saved query, click on the garbage bin icon in the top right-hand corner. After deleting a saved query, you'll be redirected back to the homepage.
 
 ## Search Conditions
 
