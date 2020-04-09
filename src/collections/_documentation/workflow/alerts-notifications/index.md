@@ -7,7 +7,7 @@ Sentry notifications are broadly categorized into alerts and non-alert notificat
 
 ## Alerts
 
-Issue Alerts warn you about problematic _individual Sentry Issues_. An issue alert fires once for every issue that matches its conditions.
+Issue Alerts warn you about problematic _individual Sentry Issues_. An issue alert fires once for every _issue_ that matches its conditions.
 
 Metric Alerts allow you to filter, aggregate, and set thresholds across _all events in your project_, regardless of the Sentry Issue.
 
@@ -26,7 +26,7 @@ Use Metric Alerts to:
 - Alert on service-level metrics. Is my service affecting more than X users?
 - Alert on events across issues. How many errors on the signup page?
 - Alert when a metric goes below a threshold. For example, when the number of active users has drastically dropped.
-- Create alerts more quickly and intuitively. A visual interface that allows you to explore and refine.
+- Create alerts more quickly and intuitively, using a visual interface that allows you to explore and refine.
 
 For more details, see the [full documentation on Metric Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#metric-alerts).
 
@@ -36,7 +36,7 @@ Use Issue Alerts to:
 - Alert when an individual issue is problematic. Any new bug on the checkout page? Any single issue affecting more than X users?
 - Alert on issue-specific concepts. For example, new issues and regressed issues.
 - Combine multiple conditions with the `OR` and `NONE` operators.
-- Alert based on Issue Owner rules.
+- Alert based on [Issue Owner rules]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-owners).
 
 Some alert settings apply at the project level and to all alerts in the project. Other alert settings are specific to the alert. You can tweak your [personal alerts settings]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#alert-subscription) to control which alerts you receive.
 
