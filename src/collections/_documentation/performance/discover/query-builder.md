@@ -172,7 +172,7 @@ Share your queries as often as you want. You can share URLs to other users who a
 
 ## Saved Query
 
-Although search queries are shareable, you can save them as saved queries. saved queries are visible to the entire organization. In other words, saved queries **are not** scoped to the user's account. You can find saved queries on the Discover homepage with the avatar of whoever built it. Circular Sentry logos indicate pre-built queries. You can use either a pre-built query or an existing saved query to create a new saved query.
+Although search queries are shareable, you can save them as saved queries. Saved queries are visible to the entire organization. In other words, saved queries **are not** scoped to the user's account. You can find saved queries on the Discover homepage with the avatar of whoever built it. Circular Sentry logos indicate pre-built queries. You can use either a pre-built query or an existing saved query to create a new saved query.
 
 ### Creating a new Saved Query
 
