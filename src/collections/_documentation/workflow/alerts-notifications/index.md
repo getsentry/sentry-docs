@@ -41,7 +41,7 @@ Use Issue Alerts to:
 For more details about Issue Alerts, see the [full documentation on Issue Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts).
 
 {% capture __alert_content -%}
-Some alert settings apply at the project level and to all alerts in the project. Other alert settings are specific to the alert. You can tweak your [personal alerts settings]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#alert-subscription) to control which alerts you receive.
+Some alert settings apply to all the alerts at the project level. Other alert settings are specific to the alert. You can tweak your [personal alerts settings]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#alert-subscription) to control which alerts you receive.
 {%- endcapture -%}
 {%- include components/alert.html
     content=__alert_content
