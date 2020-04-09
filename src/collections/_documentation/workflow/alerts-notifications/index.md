@@ -40,7 +40,7 @@ Use Issue Alerts to:
 
 Some alert settings apply at the project level and to all alerts in the project. Other alert settings are specific to the alert. You can tweak your [personal alerts settings]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#alert-subscription) to control which alerts you receive.
 
-For more details, see the [full documentation on Issue Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts).
+For more details about Issue Alerts, see the [full documentation on Issue Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts).
 
 ## Non-Alert Notifications
 
