@@ -102,7 +102,7 @@ Click on a row to expand the details of the span. From here, you can see all att
 
 **Search by Trace ID**
 
-You can search using `trace id` by expanding any of the span details and click on "Search by Trace."
+You can search using `trace id` by expanding any of the span details and click on "Search by Trace".
 
 You need **project permissions for each project** to see all the transactions within a trace. Each transaction in a trace is likely a part of a different project. If you don't have project permissions, some transactions may not display as part of a trace.
 
