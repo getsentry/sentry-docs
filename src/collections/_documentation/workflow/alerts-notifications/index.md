@@ -25,7 +25,7 @@ Metric Alerts are currently in beta. For more information about access to Metric
 Use Metric Alerts to:
 - Alert on service-level metrics. Is my service affecting more than X users?
 - Alert on events across issues. How many errors on the signup page?
-- Alert when a metric goes below a threshold. For example, when something stops happening.
+- Alert when a metric goes below a threshold. For example, when the number of active users has drastically dropped.
 - Create alerts more quickly and intuitively. A visual interface that allows you to explore and refine.
 
 For more details, see the [full documentation on Metric Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#metric-alerts).
