@@ -12,7 +12,7 @@ public static IWebHost BuildWebHost(string[] args) =>
             o.Dsn = "___PUBLIC_DSN___";
             o.MaxBreadcrumbs = 50;
             o.Debug = true;
-        })
+        });
 ```
 
 ASP.NET Core 3.0:
@@ -28,6 +28,6 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
                 o.Dsn = "___PUBLIC_DSN___";
                 o.MaxBreadcrumbs = 50;
                 o.Debug = true;
-            })
+            });
         });
 ```
