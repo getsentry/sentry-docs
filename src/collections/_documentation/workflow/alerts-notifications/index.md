@@ -7,7 +7,9 @@ Sentry notifications are broadly categorized into alerts and non-alert notificat
 
 ## Alerts
 
-Sentry provides both Metric Alerts and Issue Alerts. You define either type of alert per project.
+Issue Alerts warn you about problematic _individual Sentry Issues_. An issue alert fires once for every _issue_ that matches its conditions.
+
+Metric Alerts allow you to filter, aggregate, and set thresholds across _all events in your project_, regardless of the Sentry Issue.
 
 ### Metric Alerts
 
@@ -20,15 +22,30 @@ Metric Alerts are currently in beta. For more information about access to Metric
     level="warning"
 %}
 
-Metric alerts allow you to filter and set thresholds on all errors across a project. Use metric alerts for high-level monitoring of patterns or fine-grained monitoring of individual events. Metric alerts help express lightweight service-level objectives (SLOs) such as users affected by signup-page errors or volume of database errors.
+Use Metric Alerts to:
+- Alert on service-level metrics. Is my service affecting more than X users?
+- Alert on events across issues. How many errors on the signup page?
+- Alert when a metric goes below a threshold. For example, when the number of active users has drastically dropped.
+- Create alerts more quickly and intuitively, using a visual interface that allows you to explore and refine.
+
+For more details, see the [full documentation on Metric Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#metric-alerts).
 
 ### Issue Alerts
 
-Issue alerts fire whenever **any issue** in the project matches the specified criteria, such as a resolved issue re-appearing or an issue affecting many users.
+Use Issue Alerts to:
+- Alert when an individual issue is problematic. Any new bug on the checkout page? Any single issue affecting more than X users?
+- Alert on issue-specific concepts. For example, new issues and regressions.
+- Combine multiple conditions with the `OR` and `NONE` operators.
+- Alert based on [Issue Owner rules]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-owners).
 
-For more details, see the [full documentation on Issue Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts).
+For more details about Issue Alerts, see the [full documentation on Issue Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts).
 
-Some alert settings apply at the project level and to all alerts in the project. Other alert settings are specific to the alert. You can tweak your personal alerts settings to control which alerts you receive.
+{% capture __alert_content -%}
+Some alert settings apply to all the alerts at the project level. Other alert settings are specific to the alert. You can tweak your [personal alerts settings]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#alert-subscription) to control which alerts you receive.
+{%- endcapture -%}
+{%- include components/alert.html
+    content=__alert_content
+%}
 
 ## Non-Alert Notifications
 
