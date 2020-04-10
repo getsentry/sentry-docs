@@ -44,11 +44,11 @@ Rules generally consist of three parts:
 - _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely or replace it with an empty string depending on technical constraints.
 - _Mask_: Replace all characters with `*`. For creditcards this replaces everything but the last 4 digits.
 - _Hash_: Replace the matched substring with a hashed value.
-- _Replace_: Replace the matched substring with a constant placeholder value.
+- _Replace_: Replace the matched substring with a constant placeholder value such as `[Filtered]` or `[creditcard]`. Right now this value cannot be configured.
 
 ## Rule Types
 
-- _Custom Regular Expression_: Custom Perl-style regex (PCRE).
+- _Regex Matches_: Custom Perl-style regex (PCRE).
 - _Credit Card Numbers_: Any substrings that look like credit card numbers.
 - _Password Fields_: Any substrings that look like they may contain passwords. Any string that mentions passwords, auth tokens or credentials, any variable that is called `password` or `auth`.
 - _IP Addresses_: Any substrings that look like valid IPv4 or IPv6 addresses.
