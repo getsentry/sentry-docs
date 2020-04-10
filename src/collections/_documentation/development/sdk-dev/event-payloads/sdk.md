@@ -16,8 +16,8 @@ and transmit an event.
 `version`:
 
 : **Required**. The version of the SDK. It should have the [Semantic
-  Versioning](https://semver.org) format `MAJOR.MINOR.PATCH`, without any
-  prefix.
+  Versioning](https://semver.org) format `MAJOR.MINOR.PATCH`, without any prefix
+  (no `v` or anything else in front of the major version number).
 
 `integrations`:
 
