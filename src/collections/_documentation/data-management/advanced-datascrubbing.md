@@ -28,7 +28,7 @@ Go to your project- or organization-settings and click _Data Privacy_ (or _Secur
 Click on _Add Rule_. This already adds a very simple rule:
 
 ```
-[Mask] [credit card numbers] from [$string]
+[Mask] [credit card numbers] from [    ]
 ```
 
 As soon as you hit _Save_, we will attempt to find all creditcard numbers in your events going forward, and replace them with a series of `******`, keeping only the last 4 digits.
