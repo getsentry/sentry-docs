@@ -370,6 +370,14 @@ Each release links to one project. If a release has multiple projects, Sentry wi
 
 [ SCREENSHOT: Releases index page ]
 
+### Time Range Change
+
+When you change the date range, Sentry recalculates the values. Sentry doesn't provide the average value of the daily crash-free users or daily crash-free sessions, but the actual value of those metrics calculated for the selected time period. The number can significantly change based on the selected time range. For example:
+
+Let's say you selected the 24-hour time range, have seven users that are using your application for seven days, and each day one of them experiences a crash. The Release Index page will show you that every day there were 85.7% crash-free users on the release.
+
+In contrast, let's say you selected the seven-day time range, have seven users, and each day a different user experiences a crash. By the end of the week, the Release Index page will show you the project had 0% crash-free users.
+
 ### Release Details
 
 The release details page focuses on an individual release. Elements of the release are presented in visual trends for crashes and sessions, specifics regarding each issue, and commit author breakdowns.
@@ -377,12 +385,6 @@ The release details page focuses on an individual release. Elements of the relea
 [ SCREENSHOT: Releases detail page ]
 
 For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}) and [iOS SDK](docs.sentry.io/platforms/cocoa/).
-
-### Session Data
-
-A [session](#session) begins the moment a user starts interacting with an application or when an application resumes from the background into the foreground. With Release health, you can track the percentage of users using sessions.
-
-For more details, see the [full documentation on session payloads]({%- link _documentation/development/sdk-dev/event-payloads/session-fields.md -%}).
 
 ### Data Filtering
 
@@ -433,6 +435,8 @@ The time when the user is interacting with the application. (The application is 
 - Session ends with the closing of the application or with the application being sent to the background.
 - If the application is in the background for less than 30 seconds, we do not need to start the session again.
 - Applications that are active even on the background (for example, music player) should track the sessions separately for the background process.
+
+For more details, see the [full documentation on session payloads]({%- link _documentation/development/sdk-dev/event-payloads/session-fields.md -%}).
 
 ### Active Users
 
