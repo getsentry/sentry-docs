@@ -338,7 +338,7 @@ JavaScript and iOS projects can utilize release artifacts to unminify or symboli
 ## Release Health
 
 {% capture __alert_content -%}
-Sentry’s Release Health features are currently in beta. For more details about access to these features, feel free to reach out at [LINK: email?].
+Sentry’s Release Health features are currently in beta. For more details about access to these features, feel free to reach out to mobile@sentry.io.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
