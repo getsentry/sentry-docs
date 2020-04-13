@@ -358,7 +358,15 @@ Sessions are submitted to Sentry so you can track the usage and adoption of your
 
 ### Releases Index
 
-The releases index page gives a high-level view of each release version, its associated project, the authors of each commit, the percentage of crash-free users, and the percentage of crash-free sessions. Each release links to one project. If a release has multiple projects, Sentry will duplicate the release data in relation to each unique project. The data will present adoption of the release and usage in the most recent 24 hours to 14 days.
+The releases index page provides a high-level view of:
+
+- Each release version
+- The associated project
+- The authors of each commit
+- The percentage of crash-free users
+- The percentage of crash-free sessions
+
+Each release links to one project. If a release has multiple projects, Sentry will duplicate the release data in relation to each project. The data will present adoption of the release from the most recent 24 hours.
 
 [ SCREENSHOT: Releases index page ]
 
