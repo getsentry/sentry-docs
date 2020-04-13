@@ -348,6 +348,14 @@ Sentry’s Release Health features are currently in beta. For more details about
 
 Monitor the health of releases by observing user adoption, usage of the application, percentage of [crashes](#crash), and [session data](#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
+### How Release Health Works
+
+Once configured, Sentry's mobile and browser SDKs will send health data about the usage of your application.
+
+The primary component that Sentry uses to monitor health is a session. A session represents the interaction of the user with the application and starts when a user opens the application. When a user closes the application or has a prolonged period of inactivity, the session ends.
+
+Sessions are submitted to Sentry so you can track the usage and adoption of your application. When a user of your application experiences a crash, error, or abnormal exit, the session will be flagged accordingly, and Sentry calculates derived metrics. The metrics include data such as the number of users that didn't experience a crash in the specified time range. Sentry connects the metrics to the specific version of your application and the associated code.
+
 ### Releases Index
 
 The releases index page gives a high-level view of each release version, its associated project, the authors of each commit, the percentage of crash-free users, and the percentage of crash-free sessions. Each release links to one project. If a release has multiple projects, Sentry will duplicate the release data in relation to each unique project. The data will present adoption of the release and usage in the most recent 24 hours to 14 days.
