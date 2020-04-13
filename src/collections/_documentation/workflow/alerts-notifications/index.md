@@ -36,7 +36,7 @@ Use Issue Alerts to:
 - Alert when an individual issue is problematic. Any new bug on the checkout page? Any single issue affecting more than X users?
 - Alert on issue-specific concepts. For example, new issues and regressions.
 - Combine multiple conditions with the `OR` and `NONE` operators.
-- Alert based on [Issue Owner rules]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-owners).
+- Alert based on [Issue Owner rules]({%- link _documentation/workflow/issue-owners.md -%}).
 
 For more details about Issue Alerts, see the [full documentation on Issue Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts).
 
