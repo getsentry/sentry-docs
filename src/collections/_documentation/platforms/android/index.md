@@ -303,6 +303,50 @@ SentryAndroid.init(this, options -> {
 });
 ```
 
+## Release Health
+
+Monitor the health of [LINK: releases] by observing user adoption, usage of the application, percentage of [LINK to glossary: crashes], and [LINK to glossary: session data].
+Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+
+To learn more about the functionality please check [Link].
+To be able to benefit from the release health data you need to use at least version 2.1 of the Android SDK
+and enable collection of the release health metrics in the AndroidManifest.xml
+
+```xml
+<meta-data android:name="io.sentry.session-tracking.enable" android:value="true" />
+```
+If you are initializing the SDK manually in your code you can enable the session tracking as follows:
+```java
+public class MyApplication extends Application {
+
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    SentryAndroid.init(
+      this,
+      options -> {
+        options.setEnableSessionTracking(true);
+      });
+  }
+}
+```
+
+The SDK will automatically manage start and end of the sessions when the application is started, goes to background, returns to foreground etc. 
+
+By default the session is terminated once the application is in the background for more than 30 seconds. To change the time out please change the following settings int the AndroidManifest.xml
+
+```xml
+ <meta-data android:name="io.sentry.session-tracking.timeout-interval-millis" android:value="10000" /> 
+```
+
+If you want to track the sessions manually you can do so using the API.
+Using the methods startSession and endSession on the Sentry class.
+
+### Identification of the users
+
+We do not use by default the user identification provided to the SDK via the API but the installation ID that is generated with the first use of the application that doesn't contain any 
+any private data of your users or any public or shared identified of the user or device.
+
 ## Context
 
 Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
