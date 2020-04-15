@@ -430,7 +430,7 @@ Since the logic for detecting such errors requires all the error information, we
 
 ## Release Health Glossary
 
-### Session
+#### Session
 
 The time when the user is interacting with the application. (The application is in foreground)
 
@@ -442,30 +442,30 @@ The time when the user is interacting with the application. (The application is 
 
 - Applications that are active even on the background (for example, music player) should track the sessions separately for the background process.
 
-### Active Users
+#### Active Users
 
 Number of users that started the application at least once in the specified time period.
 
-### Crash
+#### Crash
 
 The fatal error that caused the crash of the application. Errors that did not cause the end of the application should not be included.
 
-### Crash Free User
+#### Crash Free User
 
 Percentage of the users that did not experience a crash during the specified time period.
 
-### Crash Free Sessions
+#### Crash Free Sessions
 
 Number of sessions in the specified time range that did not end by the crash of the application.
 
-### Crashed Users
+#### Crashed Users
 
 Number of users that experienced a crash in the specified time range.
 
-### Release Adoption
+#### Release Adoption
 
 Number of users that started at least once during the specified time period of a specific release
 
-### Release Version
+#### Release Version
 
 A shorter version of the name = name without the package or short version of the hash
