@@ -110,6 +110,14 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
 }
 ```
 
+The SDK will automatically manage the start and end of the sessions when the application is started, goes to background, returns to the foreground, etc.
+
+By default, the session is terminated once the application is in the background for more than 30 seconds. To change the time out, change the item `sessionTrackingIntervalMillis` in the options passed to the SDK, as described in the previous example.
+
+Identification of the User
+
+By default, we don’t apply the user identification provided to the SDK via the API. Instead, we use the installation ID generated with the first use of the application. The ID doesn’t contain any private or public data of your users or any public or shared data of their device.
+
 For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases.md -%}#release-health).
 
 ## Deep Dive
