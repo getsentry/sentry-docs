@@ -412,7 +412,7 @@ Data filters are only partially supported for session events, and they might be 
 This filter discards events of a particular release. If sessions are started or updated and would match this filter, sessions are silently discarded entirely. This is consistent with error events.
 
 **web crawler filter**
-When session events send their user agent, they are discarded the same way as error events are. There might be a slight difference in the fallback case where the user agent of the sending SDK is used (browser javascript).
+When session events send their user agent, they are discarded the same way as error events are. There might be a slight difference in the fallback case where the user agent of the sending SDK is used (browser JavaScript).
 
 **legacy browsers**
 This works exactly like the web crawler filter. No sessions are created or updated for legacy browsers when enabled.
