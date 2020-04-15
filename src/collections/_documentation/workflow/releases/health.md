@@ -3,8 +3,6 @@ title: Health (Beta)
 sidebar_order: 1
 ---
 
-## Release Health
-
 {% capture __alert_content -%}
 Sentry’s Release Health features are currently in beta. For more details about access to these features, feel free to reach out to mobile@sentry.io.
 {%- endcapture -%}
@@ -16,7 +14,7 @@ Sentry’s Release Health features are currently in beta. For more details about
 
 Monitor the health of releases by observing user adoption, usage of the application, percentage of [crashes](#crash), and [session data](#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
-### How Release Health Works
+## How Release Health Works
 
 Once configured, Sentry's mobile and browser SDKs will send health data about the usage of your application.
 
@@ -24,7 +22,7 @@ The primary component that Sentry uses to monitor health is a session. A session
 
 Sessions are submitted to Sentry so you can track the usage and adoption of your application. When a user of your application experiences a crash, error, or abnormal exit, the session will be flagged accordingly, and Sentry calculates derived metrics. The metrics include data such as the number of users that didn't experience a crash in the specified time range. Sentry connects the metrics to the specific version of your application and the associated code.
 
-### Releases Index
+## Releases Index
 
 The releases index page provides a high-level view of:
 
@@ -38,7 +36,7 @@ Each release links to one project. If a release has multiple projects, Sentry wi
 
 [{% asset releases/release_index.png alt="View of the release index page showing each version of projects related to the release and the project details." %}]({% asset releases/release_index.png @path %})
 
-### Time Range Change
+## Time Range Change
 
 When you change the date range, Sentry recalculates the values. Sentry doesn't provide the average value of the daily crash-free users or daily crash-free sessions, but the actual value of those metrics calculated for the selected time period. The number can significantly change based on the selected time range. For example:
 
@@ -46,7 +44,7 @@ Let's say you selected the 24-hour time range, have seven users that are using y
 
 In contrast, let's say you selected the seven-day time range, have seven users, and each day a different user experiences a crash. By the end of the week, the Release Index page will show you the project had 0% crash-free users.
 
-### Release Details
+## Release Details
 
 The release details page focuses on an individual release. Elements of the release are presented in visual trends for crashes and sessions, specifics regarding each issue, and commit author breakdowns.
 
@@ -54,27 +52,27 @@ The release details page focuses on an individual release. Elements of the relea
 
 For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}) and [iOS SDK](docs.sentry.io/platforms/cocoa/).
 
-### Getting Started
+## Getting Started
 
 Currently, we only support the health functionality for Android and iOS applications.
 
-##### Android
+### Android
 
 To benefit from the health data provided in Releases v2, you must use at least 2.1.0 of the Android SDK, and enable the collection of release health metrics in the AndroidManifest.xml file.
 
 For more details, see the [full documentation on using Release Health with Android]({%- link _documentation/platforms/android/index.md -%}#release-health).
 
-#### iOS
+### iOS
 To benefit from the health data provided in Releases v2, you must use at least version 5.0.0 Beta 2 of the Cocoa SDK and enable the collection of the release health metrics by adding `“enableAutoSessionTracking": true` into options during the initialization of the SDK.
 
 For more details, see the [full documentation on using Release Health with iOS]({%- link _documentation/platforms/cocoa/index.md -%}#release-health).
 
-### Data Filtering
+## Data Filtering
 
 Sentry has inbound data filters. These filters are exclusively applied at ingest time and not later in processing. This, for instance, lets one discard an error by error message when the error is ingested through the JSON API. On the other hand, this filter doesn't apply to ingested minidumps.
 Data filters are only partially supported for session events, and they might be working slightly different:
 
-#### Equivalent Filters
+### Equivalent Filters
 
 **release filter**
 This filter discards events of a particular release. If sessions are started or updated and would match this filter, sessions are silently discarded entirely. This is consistent with error events.
