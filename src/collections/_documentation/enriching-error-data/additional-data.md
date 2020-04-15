@@ -10,7 +10,7 @@ example_extra_value: 'Mighty Fighter'
 
 Additional data attached to an event can be predefined or custom.
 
-[Predefined data](#predefined-data) is data that Sentry recognizes and uses to enhance the user experience. For example, Sentry's concept of a user lets us show how many unique users are affected by an issue. Sentry automatically captures predefined data where possible, such as information about the browser, HTTP request, and OS in the browser Javascript SDK.
+[Predefined data](#predefined-data) is data that Sentry recognizes and uses to enhance the user experience. For example, Sentry's concept of a user lets us show how many unique users are affected by an issue. Sentry automatically captures predefined data where possible, such as information about the browser, HTTP request, and OS in the browser JavaScript SDK.
 
 [Custom data](#custom-data) is arbitrary structured or unstructured extra data you can attach to your event.
 
