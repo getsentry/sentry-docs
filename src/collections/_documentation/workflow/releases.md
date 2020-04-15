@@ -368,7 +368,7 @@ The releases index page provides a high-level view of:
 
 Each release links to one project. If a release has multiple projects, Sentry will duplicate the release data in relation to each project. The data will present adoption of the release from the most recent 24 hours.
 
-[ SCREENSHOT: Releases index page ]
+[{% asset releases/release_index.png alt="View of the release index page showing each version of projects related to the release and the project details." %}]({% asset releases/release_index.png @path %})
 
 ### Time Range Change
 
@@ -382,7 +382,7 @@ In contrast, let's say you selected the seven-day time range, have seven users, 
 
 The release details page focuses on an individual release. Elements of the release are presented in visual trends for crashes and sessions, specifics regarding each issue, and commit author breakdowns.
 
-[ SCREENSHOT: Releases detail page ]
+[{% asset releases/release_details.png alt="View of the release details page showing an overview graph, files changed, and other details." %}]({% asset releases/release_details.png @path %})
 
 For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}) and [iOS SDK](docs.sentry.io/platforms/cocoa/).
 
