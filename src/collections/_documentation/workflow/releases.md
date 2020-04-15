@@ -391,9 +391,15 @@ For more information about Sentry's Mobile features, see the full documentation 
 Currently, we only support the health functionality for Android and iOS applications.
 
 ##### Android
-To benefit from the health data provided in the Releases v2, you must use at least 2.1.0 of the Android SDK, and enable the collection of release health metrics in the AndroidManifest.xml file.
+
+To benefit from the health data provided in Releases v2, you must use at least 2.1.0 of the Android SDK, and enable the collection of release health metrics in the AndroidManifest.xml file.
 
 For more details, see the [full documentation on using Release Health with Android]({%- link _documentation/platforms/android/index.md -%}#release-health)
+
+#### iOS
+To benefit from the health data provided in Releases v2, you must use at least version 5.0.0 Beta 2 of the Cocoa SDK and enable the collection of the release health metrics by adding `“enableAutoSessionTracking": true` into options during the initialization of the SDK.
+
+[ LINK to cocoa ]
 
 ### Data Filtering
 

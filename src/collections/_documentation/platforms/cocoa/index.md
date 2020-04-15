@@ -90,6 +90,11 @@ _If you crash with a debugger attached, nothing will happen._
 
 Crashes are submitted only upon re-launch of the application. To view the crash in Sentry, close your app and re-launch it.
 
+## Release Health
+
+Monitor the [health of releases]({%- link _documentation/workflow/releases.md -%}#release-health) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases.md -%}#crash), and [session data]({%- link _documentation/workflow/releases.md -%}#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+
+To benefit from the health data provided in Releases v2, you must use at least version 5.0.0 Beta 2 of the Cocoa SDK and enable the collection of the release health metrics by adding `“enableAutoSessionTracking": true` into options during the initialization of the SDK.
 
 ## Deep Dive
 
