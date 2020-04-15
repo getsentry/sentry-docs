@@ -15,6 +15,8 @@ if the key name is the type.
 
 Unknown data for the contexts is rendered as a key/value list.
 
+For more details about sending additional data with your event, see the [full documentation on Additional Data]({%- link _documentation/enriching-error-data/additional-data.md -%}).
+
 ## Device Context
 
 Device context describes the device that caused the event. This is most

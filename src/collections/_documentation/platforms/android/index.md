@@ -355,7 +355,7 @@ Most SDKs generally support configuring tags by configuring the scope:
 Sentry.setTag("tagKey", "tagValue");
 ```
 
-For more information, see [Tagging Events]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events) in Context.
+For more information, see [Tagging Events]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) in Context.
 
 ### Setting the Level
 

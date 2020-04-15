@@ -70,7 +70,7 @@ Those configuration options are documented below:
 
 `tags`
 
-: Additional [tags]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events) to assign to each event.
+: Additional [tags]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) to assign to each event.
 
   ```javascript
   {

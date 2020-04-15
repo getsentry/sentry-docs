@@ -97,7 +97,7 @@ config :sentry, filter: MyApp.SentryEventFilter,
 
 ## Context and Breadcrumbs
 
-Sentry has multiple options for including contextual information. They are organized into “Tags”, “User”, and “Extra”, and Sentry’s documentation on them is [here]({%- link _documentation/enriching-error-data/context.md -%}). Breadcrumbs are a similar concept and Sentry’s documentation covers them [here]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}).
+Sentry has multiple options for including contextual information. They are organized into “Tags”, “User”, and “Extra”, and Sentry’s documentation on them is [here]({%- link _documentation/enriching-error-data/additional-data.md -%}). Breadcrumbs are a similar concept and Sentry’s documentation covers them [here]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}).
 
 In Elixir this can be complicated due to processes being isolated from one another. Tags context can be set globally through configuration, and all contexts can be set within a process, and on individual events. If an event is sent within a process that has some context configured it will include that context in the event. Examples of each are below, and for more information see the documentation of [Sentry.Context](https://hexdocs.pm/sentry/Sentry.html#module-filtering-exceptions).
 

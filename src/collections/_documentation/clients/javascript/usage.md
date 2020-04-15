@@ -102,7 +102,7 @@ The `captureMessage`, `captureException`, `context`, and `wrap` functions all al
 
 `tags`
 
-: [Tags]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events) to assign to the event.
+: [Tags]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) to assign to the event.
 
   ```javascript
   Raven.wrap({

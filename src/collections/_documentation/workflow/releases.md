@@ -323,7 +323,7 @@ Tell Sentry when you deploy a release and we’ll automatically send an email to
 
 {% asset deploy-emails.png %}
 
-You must have environment [context]({%- link _documentation/enriching-error-data/context.md -%}) set in your SDK in order to use this feature. To let Sentry know you’ve deployed, just send an additional request after creating a release:
+You must have environment [context]({%- link _documentation/enriching-error-data/additional-data.md -%}) set in your SDK in order to use this feature. To let Sentry know you’ve deployed, just send an additional request after creating a release:
 
 ```bash
 sentry-cli releases deploys VERSION new -e ENVIRONMENT

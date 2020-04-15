@@ -252,7 +252,7 @@ issues or quick access to finding related events.
 sentry_set_tag("server_name", "caroline");
 ```
 
-For more information, see the [Tagging Events section]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events) in Context.
+For more information, see the [Tagging Events section]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) in Context.
 
 ### Setting the Level
 
