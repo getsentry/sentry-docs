@@ -178,7 +178,7 @@ Except for [Webpack]({%- link _documentation/platforms/javascript/sourcemaps.md 
 
 Now you need to set up your build system to create a release and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
-Sentry uses [**Releases**]({%- link _documentation/workflow/releases.md -%}) to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
+Sentry uses [**Releases**]({%- link _documentation/workflow/releases/index.md -%}) to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
 
 ```sh
 $ sentry-cli releases new <release_name>

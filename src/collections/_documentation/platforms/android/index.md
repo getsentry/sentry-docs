@@ -305,7 +305,7 @@ SentryAndroid.init(this, options -> {
 
 ### Release Health
 
-Monitor the [health of releases]({%- link _documentation/workflow/releases.md -%}#release-health) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases.md -%}#release-health-glossary), and [session data]({%- link _documentation/workflow/releases.md -%}#release-health-glossary). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+Monitor the [health of releases]({%- link _documentation/workflow/releases/index.md -%}#release-health) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/index.md -%}#release-health-glossary), and [session data]({%- link _documentation/workflow/releases/index.md -%}#release-health-glossary). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
 To benefit from the health data provided in the Releases v2, you must use at least 2.1.0 of the Android SDK, and enable the collection of release health metrics in the AndroidManifest.xml file.
 
@@ -338,7 +338,7 @@ By default, the session terminates once the application is in the background for
 
 If you want to track the sessions manually, use the API methods `startSession` and `endSession` on the Sentry class.
 
-For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases.md -%}#release-health).
+For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases/index.md -%}#release-health).
 
 ### Identification of the User
 
