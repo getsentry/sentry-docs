@@ -428,9 +428,6 @@ This filter does not apply for sessions. Even if a user is discarding such error
 **browser extensions**
 Since the logic for detecting such errors requires all the error information, we cannot support this filter at the session ingest time. If we want to improve this case, we could retroactively discard such sessions entirely once we identify such an error case.
 
-### FAQ
-1. When you change the time range, the crash-free settings and release adoption will be updated, and Sentry will use the new time range.
-
 ## Release Health Glossary
 
 ### Session
