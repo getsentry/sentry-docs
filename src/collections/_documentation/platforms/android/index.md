@@ -338,6 +338,8 @@ By default, the session terminates once the application is in the background for
 
 If you want to track the sessions manually, use the API methods `startSession` and `endSession` on the Sentry class.
 
+For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases.md -%}#release-health).
+
 ### Identification of the User
 
 By default, we don't apply the user identification provided to the SDK via the API. Instead, we use the installation ID generated with the first use of the application. The ID doesn't contain any private or public data of your users or any public or shared data of their device.

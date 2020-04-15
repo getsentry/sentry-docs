@@ -96,6 +96,22 @@ Monitor the [health of releases]({%- link _documentation/workflow/releases.md -%
 
 To benefit from the health data provided in Releases v2, you must use at least version 5.0.0 Beta 2 of the Cocoa SDK and enable the collection of the release health metrics by adding `“enableAutoSessionTracking": true` into options during the initialization of the SDK.
 
+```objective-c
+func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    // Override point for customization after application launch.
+    _ = SentrySDK(options: [
+           "dsn": “YOUR_SENTRY_DSN”,
+           "debug": true,
+           "logLevel": "verbose",
+           "enableAutoSessionTracking": true
+           "sessionTrackingIntervalMillis": 30000
+    ])
+    return true
+}
+```
+
+For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases.md -%}#release-health).
+
 ## Deep Dive
 
 -   [Uploading Debug Symbols]({%- link _documentation/platforms/cocoa/dsym.md -%})
