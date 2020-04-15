@@ -303,6 +303,43 @@ SentryAndroid.init(this, options -> {
 });
 ```
 
+### Release Health
+
+To benefit from the health data provided in the Releases v2, you must use at least 2.1.0 of the Android SDK, and enable the collection of release health metrics in the AndroidManifest.xml file.
+
+```xml
+<meta-data android:name="io.sentry.session-tracking.enable" android:value="true" />
+```
+
+If you're initializing the SDK manually in your code, enable the session tracking as follows:
+
+```groovy
+public class MyApplication extends Application {
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    SentryAndroid.init(
+      this,
+      options -> {
+        options.setEnableSessionTracking(true);
+      });
+  }
+}
+```
+
+The SDK automatically manages the start and end of sessions when the application is started, goes to background, returns to the foreground, etc.
+By default, the session terminates once the application is in the background for more than 30 seconds. To change the timeout, modify the following settings in the AndroidManifest.xml file.
+
+```xml
+ <meta-data android:name="io.sentry.session-tracking.timeout-interval-millis" android:value="10000" /> 
+```
+
+If you want to track the sessions manually, use the API methods `startSession` and `endSession` on the Sentry class.
+
+### Identification of the User
+
+By default, we don't apply the user identification provided to the SDK via the API. Instead, we use the installation ID generated with the first use of the application. The ID doesn't contain any private or public data of your users or any public or shared data of their device.
+
 ## Context
 
 Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:
