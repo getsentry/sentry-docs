@@ -83,7 +83,7 @@ When session events send their user agent, they are discarded the same way as er
 **legacy browsers**
 This works exactly like the web crawler filter. No sessions are created or updated for legacy browsers when enabled.
 
-**ip filter**
+**IP filter**
 Throws away sessions of a specific IP.
 
 #### Unsupported Filters
