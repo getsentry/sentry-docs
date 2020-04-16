@@ -63,7 +63,7 @@ To benefit from the health data provided in Releases v2, you must use at least 2
 For more details, see the [full documentation on using Release Health with Android]({%- link _documentation/platforms/android/index.md -%}#release-health).
 
 ### iOS
-To benefit from the health data provided in Releases v2, you must use at least version 5.0.0 Beta 2 of the Cocoa SDK and enable the collection of the release health metrics by adding `“enableAutoSessionTracking": true` into options during the initialization of the SDK.
+To benefit from the health data provided in Releases v2, you must use at least version 5.0.0 Beta 2 of the Cocoa SDK and enable the collection of the release health metrics in the initialization options of the SDK.
 
 For more details, see the [full documentation on using Release Health with iOS]({%- link _documentation/platforms/cocoa/index.md -%}#release-health).
 
