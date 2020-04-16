@@ -28,7 +28,7 @@ Context includes additional diagnostic information attached to an event. By defa
 
 ## Predefined Data
 
-The most common types of predefined data (where applicable) are level, [release]({%- link _documentation/workflow/releases.md -%}), [environment]({%- link _documentation/enriching-error-data/environments.md -%}), logger, [fingerprint]({%- link _documentation/data-management/event-grouping/index.md -%}), user, request, device, OS, runtime, app, browser, gpu, monitor, and [traces]({%- link _documentation/performance/distributed-tracing.md -%}).
+The most common types of predefined data (where applicable) are level, [release]({%- link _documentation/workflow/releases/index.md -%}), [environment]({%- link _documentation/enriching-error-data/environments.md -%}), logger, [fingerprint]({%- link _documentation/data-management/event-grouping/index.md -%}), user, request, device, OS, runtime, app, browser, gpu, monitor, and [traces]({%- link _documentation/performance/distributed-tracing.md -%}).
 
 To improve searchability, Sentry will turn the data or specific attributes on the data into tags. For example, `level` is available as a tag, and so is a user's email via the `user.email` tag. If Sentry is captures some predefined data but doesn't expose it as a tag, you can always set a [custom tag](#tags) for it.
 
