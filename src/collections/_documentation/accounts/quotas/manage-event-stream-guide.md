@@ -33,7 +33,7 @@ For more information and code samples checkout:
 
 - [Integrating the SDK: Decluttering Sentry](https://docs.sentry.io/platforms/javascript/#decluttering-sentry)
 - [Filtering Events](https://docs.sentry.io/error-reporting/configuration/filtering)
-- [Enriching Error Data](https://docs.sentry.io/enriching-error-data/context/?platform=browser)
+- [Enriching Error Data](https://docs.sentry.io/enriching-error-data/additional-data/?platform=browser)
 
 ### Inbound Data Filters
 

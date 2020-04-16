@@ -303,6 +303,51 @@ SentryAndroid.init(this, options -> {
 });
 ```
 
+### Release Health
+
+Monitor the [health of releases]({%- link _documentation/workflow/releases/health.md -%}) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/health.md -%}#crash), and [session data]({%- link _documentation/workflow/releases/health.md -%}#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+
+To benefit from the health data you must use at least version 2.1.0 of the Android SDK, and enable the collection of release health metrics in the AndroidManifest.xml file.
+
+```xml
+<application>
+  <meta-data android:name="io.sentry.session-tracking.enable" android:value="true" />
+</application>
+```
+
+If you're initializing the SDK manually in your code, enable the session tracking as follows:
+
+```java
+public class MyApplication extends Application {
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    SentryAndroid.init(
+      this,
+      options -> {
+        options.setEnableSessionTracking(true);
+      });
+  }
+}
+```
+
+The SDK automatically manages the start and end of sessions when the application is started, goes to background, returns to the foreground, etc.
+By default, the session terminates once the application is in the background for more than 30 seconds. To change the timeout, modify the following settings in the AndroidManifest.xml file.
+
+```xml
+<application>
+   <meta-data android:name="io.sentry.session-tracking.timeout-interval-millis" android:value="10000" />
+<application>
+```
+
+If you want to track the sessions manually, use the API methods `startSession` and `endSession` on the Sentry class.
+
+For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases/health.md -%}).
+
+### Identification of the User
+
+By default, we don't apply the user identification provided to the SDK via the API. Instead, we use the installation ID generated with the first use of the application. The ID doesn't contain any private or public data of your users or any public or shared data of their device.
+
 ## Context
 
 Sentry supports additional context with events. Often this context is shared among any issue captured in its lifecycle, and includes the following components:

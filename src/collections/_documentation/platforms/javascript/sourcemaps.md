@@ -7,7 +7,7 @@ Sentry supports un-minifying JavaScript via source maps. This lets you view sour
 
 ## Specify the release
 
-If you are uploading source map artifacts yourself, you must [specify the release]({%- link _documentation/workflow/releases.md -%}) in your SDK.  Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
+If you are uploading source map artifacts yourself, you must [specify the release]({%- link _documentation/workflow/releases/index.md -%}) in your SDK.  Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
 
 ## Generating a Source Map
 
@@ -125,7 +125,7 @@ Except for [webpack]({%- link _documentation/platforms/javascript/sourcemaps.md 
 
 Now you need to set up your build system to create a release, and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (for example, app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
-Sentry uses [**Releases**]({%- link _documentation/workflow/releases.md -%}) to match the correct source maps to your events. To create a new release, run the following command (for example, during publishing):
+Sentry uses [**Releases**]({%- link _documentation/workflow/releases/index.md -%}) to match the correct source maps to your events. To create a new release, run the following command (for example, during publishing):
 
 ```sh
 $ sentry-cli releases new <release_name>
@@ -256,7 +256,7 @@ Source maps can sometimes be tricky to get going. If you’re having trouble, tr
 
 In order for uploaded source maps to be located and applied, the release needs to be created by the CLI or API (and the correct artifacts uploaded with it), and the name of that newly-created release needs to be specified in your SDK configuration.
 
-To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors]({%- link _documentation/workflow/releases.md -%}#tag-errors). If this is properly set up you'll see "Release: my_example_release". 
+To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors]({%- link _documentation/workflow/releases/index.md -%}#tag-errors). If this is properly set up you'll see "Release: my_example_release". 
 
 ### Verify artifacts are uploaded
 
