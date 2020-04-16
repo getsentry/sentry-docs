@@ -334,8 +334,9 @@ The SDK automatically manages the start and end of sessions when the application
 By default, the session terminates once the application is in the background for more than 30 seconds. To change the timeout, modify the following settings in the AndroidManifest.xml file.
 
 ```xml
- <meta-data android:name="io.sentry.session-tracking.timeout-interval-millis" android:value="10000" /> 
-```
+<application>
+   <meta-data android:name="io.sentry.session-tracking.timeout-interval-millis" android:value="10000" />
+<application>
 
 If you want to track the sessions manually, use the API methods `startSession` and `endSession` on the Sentry class.
 
