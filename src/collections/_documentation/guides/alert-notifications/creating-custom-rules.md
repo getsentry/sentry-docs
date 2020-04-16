@@ -31,7 +31,7 @@ The `New Alert Rule` wizard allows you to compose alert rules combining multiple
 
 ### **Event Tags**
 
-Tags are key-value pairs that Sentry assigns to each event. Some of the tags are added by default depending on the platform and type of SDK. Developers can also add **Custom Tags** through the SDK. You can find the list of tags available in your project under `[Project Settings] > Tags`. The list is an aggregation of all of the tag keys (default and custom) that have been encountered in events in this project. For more information take a look at [Tagging Events](https://docs.sentry.io/enriching-error-data/context/?platform=browser#tagging-events)
+Tags are key-value pairs that Sentry assigns to each event. Some of the tags are added by default depending on the platform and type of SDK. Developers can also add **Custom Tags** through the SDK. You can find the list of tags available in your project under `[Project Settings] > Tags`. The list is an aggregation of all of the tag keys (default and custom) that have been encountered in events in this project. For more information take a look at [Tagging Events](https://docs.sentry.io/enriching-error-data/additional-data/?platform=browser#tagging-events)
 
 Event tags are useful for various reasons. First, tags are indexed and this allows you to query your errors in the Sentry `Event Stream` and `Issue Stream` based on specific tag values. In addition, adding the right tags in your code will allow you tell Sentry to notify you only when events with specific details occur.
 
