@@ -102,7 +102,6 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
     _ = SentrySDK(options: [
            "dsn": “YOUR_SENTRY_DSN”,
            "enableAutoSessionTracking": true
-           "sessionTrackingIntervalMillis": 30000
     ])
     return true
 }
