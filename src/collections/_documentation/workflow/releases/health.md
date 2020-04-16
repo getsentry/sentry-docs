@@ -16,7 +16,7 @@ Monitor the health of releases by observing user adoption, usage of the applicat
 
 ## How Release Health Works
 
-Once configured, Sentry's mobile and browser SDKs will send health data about the usage of your application.
+Once configured, Sentry's Android and Cocoa SDKs will send health data about the usage of your application.
 
 The primary component that Sentry uses to monitor health is a session. A session represents the interaction of the user with the application and starts when a user opens the application. When a user closes the application or has a prolonged period of inactivity, the session ends.
 
