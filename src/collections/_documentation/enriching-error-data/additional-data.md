@@ -84,7 +84,7 @@ Sentry promotes several pieces of predefined data to tags. We strongly recommend
 
 Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries) to an event. These are unsearchable, but are viewable on the issue page.
 
-[{% asset additional-data/additional_data.png alt="Custom contexts as viewed on the Additional Data section of an event." %}]({% asset additional-data/additional_data.png @path %})
+[{% asset additional-data/additional_data.png alt="Custom contexts as viewed on the Additional Data section of an event." width="500"%}]({% asset additional-data/additional_data.png @path %})
 
 {% include components/platform_content.html content_dir='set-extra' %}
 
