@@ -101,8 +101,6 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
     // Override point for customization after application launch.
     _ = SentrySDK(options: [
            "dsn": “YOUR_SENTRY_DSN”,
-           "debug": true,
-           "logLevel": "verbose",
            "enableAutoSessionTracking": true
            "sessionTrackingIntervalMillis": 30000
     ])
