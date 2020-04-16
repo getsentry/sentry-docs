@@ -92,9 +92,9 @@ Crashes are submitted only upon re-launch of the application. To view the crash 
 
 ## Release Health
 
-Monitor the [health of releases]({%- link _documentation/workflow/releases/index.md -%}#release-health) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/index.md -%}#release-health-glossary), and [session data]({%- link _documentation/workflow/releases/index.md -%}#release-health-glossary). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+Monitor the [health of releases]({%- link _documentation/workflow/releases/health.md -%}) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/health.md -%}#crash), and [session data]({%- link _documentation/workflow/releases/health.md -%}#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
-To benefit from the health data provided in Releases v2, you must use at least version 5.0.0 Beta 2 of the Cocoa SDK and enable the collection of the release health metrics by adding `“enableAutoSessionTracking": true` into options during the initialization of the SDK.
+To benefit from the health data you must use at least version 5.0.0 Beta 2 of the Cocoa SDK and enable the collection of the release health metrics by adding `“enableAutoSessionTracking": true` into options during the initialization of the SDK.
 
 ```objective-c
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -116,7 +116,7 @@ By default, the session is terminated once the application is in the background 
 
 By default, we don’t apply the user identification provided to the SDK via the API. Instead, we use the installation ID generated with the first use of the application. The ID doesn’t contain any private or public data of your users or any public or shared data of their device.
 
-For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases/index.md -%}#release-health).
+For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases/health.md -%}).
 
 ## Deep Dive
 
