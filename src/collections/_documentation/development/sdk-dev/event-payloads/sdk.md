@@ -3,18 +3,21 @@ title: SDK Interface
 sidebar_order: 12
 ---
 
-An interface which describes the Sentry SDK and its configuration used to
-capture and transmit the event.
+The SDK Interface describes the Sentry SDK and its configuration used to capture
+and transmit an event.
+
+## Attributes
 
 `name`:
 
-: **Required**. The name of the SDK. Its format is `sentry.ecosystem[.flavor]`
+: **Required**. The name of the SDK. The format is `sentry.ecosystem[.flavor]`
   where the _flavor_ is optional and should only be set if it has its own SDK.
 
 `version`:
 
-: **Required**. The semantic version of the SDK. The version should always be
-  sent without a `v` prefix.
+: **Required**. The version of the SDK. It should have the [Semantic
+  Versioning](https://semver.org) format `MAJOR.MINOR.PATCH`, without any prefix
+  (no `v` or anything else in front of the major version number).
 
 `integrations`:
 
@@ -25,28 +28,36 @@ capture and transmit the event.
 
 : _Optional_. A list of packages that were installed as part of this SDK or the
   activated integrations. Each package consists of a `name` in the format
-  `source:identifier` and a semver `version`. If the source is a git repository,
-  a checkout link and git reference (branch, tag or SHA) should be used.
+  `source:identifier` and `version`.  
+  If the source is a Git repository, the source should be `git`, the
+  `identifier` should be a checkout link and the `version` should be a Git
+  reference (branch, tag or SHA).
 
 ## Example
 
+The following example illustrates the SDK part of the [event payload]({%- link
+_documentation/development/sdk-dev/event-payloads/index.md -%}) and omits other
+attributes for simplicity.
+
 ```json
-"sdk": {
-  "name": "sentry.javscript.react-native",
-  "version": "1.0.0",
-  "integrations": [
-    "redux"
-  ],
-  "packages": [
-    {
-      "name": "npm:@sentry/react-native",
-      "version": "0.39.0"
-    },
-    {
-      "name": "git:https://github.com/getsentry/sentry-cocoa.git",
-      "version": "4.1.0"
-    }
-  ]
+{
+  "sdk": {
+    "name": "sentry.javascript.react-native",
+    "version": "1.0.0",
+    "integrations": [
+      "redux"
+    ],
+    "packages": [
+      {
+        "name": "npm:@sentry/react-native",
+        "version": "0.39.0"
+      },
+      {
+        "name": "git:https://github.com/getsentry/sentry-cocoa.git",
+        "version": "4.1.0"
+      }
+    ]
+  }
 }
 ```
 
