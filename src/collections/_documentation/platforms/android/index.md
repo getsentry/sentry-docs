@@ -310,8 +310,9 @@ Monitor the [health of releases]({%- link _documentation/workflow/releases/index
 To benefit from the health data provided in the Releases v2, you must use at least 2.1.0 of the Android SDK, and enable the collection of release health metrics in the AndroidManifest.xml file.
 
 ```xml
-<meta-data android:name="io.sentry.session-tracking.enable" android:value="true" />
-```
+<application>
+  <meta-data android:name="io.sentry.session-tracking.enable" android:value="true" />
+</application>
 
 If you're initializing the SDK manually in your code, enable the session tracking as follows:
 
