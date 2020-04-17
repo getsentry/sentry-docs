@@ -784,11 +784,11 @@ This integration attaches user-agent information to the event, which allows us t
 Pluggable integrations are integrations that can be additionally enabled, to provide some very specific features. Sentry documents them so you can see what they do and that they can be enabled. To enable pluggable integrations, install @sentry/integrations package and provide a new instance with your config to `integrations` option. For example: 
 ```js
 import * as Sentry from '@sentry/browser';
-import * as Integrations from '@sentry/integrations';
+import { ReportingObserver as ReportingObserverIntegration } from '@sentry/integrations';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: [new Integrations.ReportingObserver()]
+  integrations: [new ReportingObserverIntegration()]
 });
 ```
 
@@ -894,12 +894,12 @@ All pluggable / optional integrations do live inside `@sentry/integrations`.
 
 ```js
 import * as Sentry from '@sentry/browser';
-import * as Integrations from '@sentry/integrations';
+import { Vue as VueIntegration } from '@sentry/integrations';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: [
-    new Integrations.Vue({
+    new VueIntegration({
       Vue,
       attachProps: true,
     }),
