@@ -106,7 +106,7 @@ The time when the user is interacting with the application. (The application is 
 
 - If the application is in the background for less than 30 seconds, we do not need to start the session again.
 
-- Applications that are active even on the background (for example, music player) should track the sessions separately for the background process.
+- Applications that are active even on the background (for example, music player) should track the sessions manually for the background process.
 
 #### Active Users
 
@@ -114,7 +114,9 @@ Number of users that started the application at least once in the specified time
 
 #### Crash
 
-The fatal error that caused the crash of the application. Errors that did not cause the end of the application should not be included.
+The fatal error that caused the crash of the application. Errors that did not cause the end of the application should not be included.  
+Sentry consider every error event with the field level set to FATAL as a crash report.
+For more details about the error levels, see the documentation on [Enriching Error Data]({%- link _documentation/enriching-error-data/additional-data.md -%}#setting-the-level). 
 
 #### Crash Free User
 
