@@ -109,7 +109,15 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
 
 The SDK will automatically manage the start and end of the sessions when the application is started, goes to background, returns to the foreground, etc.
 
-By default, the session is terminated once the application is in the background for more than 30 seconds. To change the time out, change the item `sessionTrackingIntervalMillis` in the options passed to the SDK, as described in the previous example.
+By default, the session is terminated once the application is in the background for more than 30 seconds. You can change the time out with the option named `sessionTrackingIntervalMillis`. It takes the amount in milliseconds. For example, to configure it to be 60 seconds:
+
+```objective-c
+_ = SentrySDK(options: [
+       "dsn": “YOUR_SENTRY_DSN”,
+       "enableAutoSessionTracking": true,
+       "sessionTrackingIntervalMillis": 60000
+])
+```
 
 ### Identification of the User
 
