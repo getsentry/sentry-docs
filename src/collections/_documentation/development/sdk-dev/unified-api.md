@@ -54,14 +54,17 @@ meant that certain integrations (such as breadcrumbs) were often not possible.
 
 - **integration**: Code that provides middlewares, bindings or hooks into certain frameworks or environments, along with code that inserts those bindings and activates them. Usage for integrations does not follow a common interface.
 
-- **event processors**: Are callbacks that run for every event. They can either return a "new" event which in most cases means just adding data OR return `null` in case the event will be dropped and not sent.
+- **event processors**: Are callbacks that run for every event.
+  They can either return a "new" event which in most cases means just adding
+  data OR return `null` in case the event will be dropped and not sent.
 
-- **disabled SDK**: Before `init` has been called, or when no client is active,
-  the SDK is in a "disabled" state. This means that certain callbacks, such as 
-  `configure_scope` or *event processors* may not be invoked and no breadcrumbs
-  are being recorded.
-  
   See [Event Pipeline](#event-pipeline) for more information.
+
+- **disabled SDK / active Client**: Most of the SDK functionality depends on a
+  configured and active Client. A client is considered active when it has a
+  *transport*. Otherwise, the SDK is considered "disabled".
+  This means that certain callbacks, such as `configure_scope` or
+  *event processors* may not be invoked and no breadcrumbs are being recorded.
 
 
 ## "Static API"
@@ -94,7 +97,7 @@ Additionally it also setups all default integrations.
 
 - `capture_message(message, level)`: Reports a message. The level can be optional in language with default parameters in which case it should default to `info`.
 
-- `add_breadcrumb(crumb)`: Adds a new breadcrumb to the scope. If the total number of breadcrumbs exceeds the `max_breadcrumbs` setting, the oldest breadcrumb should be removed in turn. This works like the Hub api with regards to what `crumb` can be. The breadcrumb is ignored if the SDK is disabled.
+- `add_breadcrumb(crumb)`: Adds a new breadcrumb to the scope. If the total number of breadcrumbs exceeds the `max_breadcrumbs` setting, the oldest breadcrumb should be removed in turn. This works like the Hub api with regards to what `crumb` can be. The breadcrumb may be ignored if the SDK is disabled.
 
 - `configure_scope(callback)`: Calls a callback with a scope object that can be reconfigured. This is used to attach contextual data for future events in the same scope.
 
@@ -166,15 +169,15 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
 
 A scope holds data that should implicitly be sent with Sentry events. It can hold context data, extra parameters, level overrides, fingerprints etc.
 
-The user should be able to modify the current scope easily (to set extra, tags, current user), through a global function `configure_scope`.  `configure_scope` takes a callback function to which it passes the current scope. Here's an example from another place in the docs:
+The user should be able to modify the current scope easily (to set extra, tags, current user), through a global function `configure_scope`.  `configure_scope` takes a callback function to which it passes the current scope.
+The callback may not be invoked in case the SDK is disabled.
+
+Here's an example from another place in the docs:
 
 ```javascript
-Sentry.configureScope(function(scope) {
-  scope.setExtra("character_name", "Mighty Fighter");
-});
+Sentry.configureScope(scope =>
+  scope.setExtra("character_name", "Mighty Fighter"));
 ```
-
-Why not just have a `get_current_scope()` function instead of this indirection?  If the SDK is disabled, modifying a scope is pointless because there will never be any events to send. In that situation `configure_scope` may choose not to call the callback.  This is also used to more efficiently flush out scope changes in some languages.  When a `with` statement is used that always executes the scope needs to be a dummy scope object.  It also helps to emphasize that under normal circumstances we do not want the user the do the scope handling.
 
 - `scope.set_user(user)`: Shallow merges user configuration (`email`, `username`, …).  Removing user data is SDK-defined, either with a `remove_user` function or by passing nothing as data.
 
@@ -198,7 +201,8 @@ Why not just have a `get_current_scope()` function instead of this indirection? 
 
 - `scope.add_error_processor(processor)` (optional): Registers an error processor function.  It takes an event and exception object and returns a new event or `None` to drop it.  This can be used to extract additional information out of an exception object that the SDK cannot extract itself.
 
-- `scope.clear()`: Resets a scope to default values (prevents inheriting).  This never clears registered event processors.
+- `scope.clear()`: Resets a scope to default values however keeping all 
+  registered event processors. This has no effect on either child or parent scopes.
 
 - `scope.add_breadcrumb(breadcrumb)`: Adds a breadcrumb to the current scope.
 
@@ -233,15 +237,15 @@ Any event that is captured by `capture_event` is processed in the following
 order and can be discarded at any of the stages, at which point no further
 processing happens.
 
-1. If the SDK is disabled or there is no active client, the event is discarded
-   right away. The client is active if it has a valid *transport* configured.
+1. If the SDK is disabled, the event is discarded right away.
 2. The client does event sampling based on the configured sample rate.
    Events will be discarded randomly, according to the sample rate.
-3. The scope is applied, using `apply_to_event`. The scopes *event processors*
+3. The scope is applied, using `apply_to_event`. The scope’s *event processors*
    are invoked in order and can possibly discard the event.
 4. The *before-send* hook is invoked, which can also discard the event.
 5. The event is passed to the configured transport. The transport can discard
-   the event in case it has no valid DSN, or due to rate limiting.
+   the event in case it has no valid DSN, its internal queue is full,
+   or as a result of rate limiting requested by the server.
 
 ## Options
 
