@@ -31,8 +31,10 @@ and transmit an event.
 
 `integrations`:
 
-: _Optional_. A list of integrations with the platform or a framework that was
-  explicitly activated by the user. This does not include default integrations.
+: _Optional_. A list of names identifying enabled integrations. The list should
+  have all enabled integrations, including default integrations. Default
+  integrations are included because different SDK releases may contain different
+  default integrations.
 
 `packages`:
 
