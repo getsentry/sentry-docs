@@ -50,7 +50,7 @@ The release details page focuses on an individual release. Elements of the relea
 
 [{% asset releases/release_details.png alt="View of the release details page showing an overview graph, files changed, and other details." %}]({% asset releases/release_details.png @path %})
 
-For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}) and [iOS SDK](docs.sentry.io/platforms/cocoa/).
+For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}) and [iOS SDK]({%- link _documentation/platforms/cocoa/index.md -%}).
 
 ## Getting Started
 
@@ -106,7 +106,7 @@ The time when the user is interacting with the application. (The application is 
 
 - If the application is in the background for less than 30 seconds, we do not need to start the session again.
 
-- Applications that are active even on the background (for example, music player) should track the sessions separately for the background process.
+- Applications that are active even on the background (for example, music player) should track the sessions manually for the background process.
 
 #### Active Users
 
@@ -114,7 +114,9 @@ Number of users that started the application at least once in the specified time
 
 #### Crash
 
-The fatal error that caused the crash of the application. Errors that did not cause the end of the application should not be included.
+The fatal error that caused the crash of the application. Errors that did not cause the end of the application should not be included.  
+Sentry considers every error event with the field `level` set to `fatal` or the field `handled` set to `false` as a Crashed state.
+For more details about the error levels, see the documentation on [Enriching Error Data]({%- link _documentation/enriching-error-data/additional-data.md -%}#setting-the-level). 
 
 #### Crash Free User
 
