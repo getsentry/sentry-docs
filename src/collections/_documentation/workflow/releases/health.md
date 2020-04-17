@@ -50,7 +50,7 @@ The release details page focuses on an individual release. Elements of the relea
 
 [{% asset releases/release_details.png alt="View of the release details page showing an overview graph, files changed, and other details." %}]({% asset releases/release_details.png @path %})
 
-For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}) and [iOS SDK](docs.sentry.io/platforms/cocoa/).
+For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}) and [iOS SDK]({%- link _documentation/platforms/cocoa/index.md -%}).
 
 ## Getting Started
 
