@@ -34,11 +34,11 @@ Then add this to your `app.js`:
 ```javascript
 import Vue from 'vue'
 import * as Sentry from '@sentry/browser';
-import * as Integrations from '@sentry/integrations';
+import { Vue as VueIntegration } from '@sentry/integrations';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: [new Integrations.Vue({Vue, attachProps: true})],
+  integrations: [new VueIntegration({Vue, attachProps: true})],
 });
 ```
 

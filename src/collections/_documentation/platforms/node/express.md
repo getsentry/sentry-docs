@@ -17,9 +17,14 @@ $ npm install @sentry/node@{% sdk_version sentry.javascript.node %}
 Sentry should be initialized as early in your app as possible.
 
 ```javascript
-const express = require('express');
+import express from 'express';
+import * as Sentry from '@sentry/node';
+
+// or using CommonJS
+// const express = require('express');
+// const Sentry = require('@sentry/node');
+
 const app = express();
-const Sentry = require('@sentry/node');
 
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
 
