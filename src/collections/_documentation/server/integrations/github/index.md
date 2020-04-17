@@ -5,6 +5,15 @@ sidebar_order: 1
 
 ## Create a GitHub App
 
+{% capture __alert_content -%}
+The GitHub App name must not contain any spaces.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 1. Follow GitHub's [official guide on creating a GitHub App](https://developer.github.com/apps/building-github-apps/creating-a-github-app/)
 2. Using the following values when configuring your app:
 
