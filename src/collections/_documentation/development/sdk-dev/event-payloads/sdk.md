@@ -10,14 +10,24 @@ and transmit an event.
 
 `name`:
 
-: **Required**. The name of the SDK. The format is `sentry.ecosystem[.flavor]`
-  where the _flavor_ is optional and should only be set if it has its own SDK.
+: **Required**. The name of the SDK. The format is `entity.ecosystem[.flavor]`
+  where _entity_ identifies the developer of the SDK, _ecosystem_ refers to the
+  programming language or platform where the SDK is to be used and the optional
+  _flavor_ is used to identify standalone SDKs that are part of a major
+  ecosystem.  
+  Official Sentry SDKs use the _entity_ `sentry`. Examples:
+  - `sentry.python`
+  - `sentry.javascript.react-native`
 
 `version`:
 
 : **Required**. The version of the SDK. It should have the [Semantic
   Versioning](https://semver.org) format `MAJOR.MINOR.PATCH`, without any prefix
-  (no `v` or anything else in front of the major version number).
+  (no `v` or anything else in front of the major version number).  
+  Examples:
+  - `0.1.0`
+  - `1.0.0`
+  - `4.3.12`
 
 `integrations`:
 
