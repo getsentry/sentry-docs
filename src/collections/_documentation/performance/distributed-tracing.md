@@ -131,14 +131,14 @@ Supported SDKs for Tracing:
 
 ### Python
 
-To send traces, set the `traces_sample_rate` to a nonzero value. The following configuration will capture 10% of your transactions:
+To send traces, set the `traces_sample_rate` to a nonzero value. The following configuration will capture 25% of your transactions:
 
 ```python
 import sentry_sdk
 
 sentry_sdk.init(
     "___PUBLIC_DSN___", 
-    traces_sample_rate=0.1
+    traces_sample_rate=0.25
 )
 ```
 
@@ -226,11 +226,11 @@ Sentry.init({
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 0.1,
+  tracesSampleRate: 0.25,
 });
 ```
 
-To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 10% of your transactions.
+To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
 
 You can pass many different options to the Tracing integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. It will automatically capture a [transaction]({%- link _documentation/performance/performance-glossary.md -%}#transaction) for every page load. Within that transaction, [spans]({%- link _documentation/performance/performance-glossary.md -%}#span) are instrumented for the following operations:
 
@@ -367,7 +367,7 @@ $ npm install @sentry/apm
 
 **Sending Traces**
 
-To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 10% of all your transactions:
+To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 25% of all your transactions:
 
 ```javascript
 const Sentry = require("@sentry/node");
@@ -377,7 +377,7 @@ const Apm = require("@sentry/apm");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1
+  tracesSampleRate: .25
 });
 ```
 
