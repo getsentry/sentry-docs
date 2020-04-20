@@ -31,7 +31,7 @@ platform :ios, '8.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
-    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.0.0-beta.4s'
+    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.0.0-beta.4'
 end
 ```
 <!-- {% sdk_version sentry.cocoa %} -->
