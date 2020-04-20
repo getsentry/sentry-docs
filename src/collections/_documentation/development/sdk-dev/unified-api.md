@@ -54,17 +54,18 @@ meant that certain integrations (such as breadcrumbs) were often not possible.
 
 - **integration**: Code that provides middlewares, bindings or hooks into certain frameworks or environments, along with code that inserts those bindings and activates them. Usage for integrations does not follow a common interface.
 
-- **event processors**: Are callbacks that run for every event.
-  They can either return a "new" event which in most cases means just adding
-  data OR return `null` in case the event will be dropped and not sent.
+- **event processors**: Callbacks that run for every event.
+  They can either return a "new" event, which in most cases means just adding
+  data OR return `null` in which case the event will be discarded and not
+  processed further.
 
   See [Event Pipeline](#event-pipeline) for more information.
 
 - **disabled SDK / active Client**: Most of the SDK functionality depends on a
-  configured and active Client. A client is considered active when it has a
+  configured and active Client. Sentry considers the client active when it has a
   *transport*. Otherwise, the SDK is considered "disabled".
   This means that certain callbacks, such as `configure_scope` or
-  *event processors* may not be invoked and no breadcrumbs are being recorded.
+  *event processors*, may not be invoked, and no breadcrumbs are being recorded.
 
 
 ## "Static API"
@@ -97,7 +98,10 @@ Additionally it also setups all default integrations.
 
 - `capture_message(message, level)`: Reports a message. The level can be optional in language with default parameters in which case it should default to `info`.
 
-- `add_breadcrumb(crumb)`: Adds a new breadcrumb to the scope. If the total number of breadcrumbs exceeds the `max_breadcrumbs` setting, the oldest breadcrumb should be removed in turn. This works like the Hub api with regards to what `crumb` can be. The breadcrumb may be ignored if the SDK is disabled.
+- `add_breadcrumb(crumb)`: Adds a new breadcrumb to the scope. If the total
+  number of breadcrumbs exceeds the `max_breadcrumbs` setting, Sentry removes
+  the oldest breadcrumb. This works like the Hub API with regards to what
+  `crumb` can be. If the SDK is disabled, Sentry may ignore the breadcrumb.
 
 - `configure_scope(callback)`: Calls a callback with a scope object that can be reconfigured. This is used to attach contextual data for future events in the same scope.
 
@@ -141,7 +145,7 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
 
 - `Hub::pop_scope()` (optional): Only exists in languages without better resource management. Better to have this function on a return value of `push_scope` or to use `with_scope`.  This is also sometimes called `pop_scope_unsafe` to indicate that this method should not be used directly.
 
-- `Hub::configure_scope(callback)`: Invokes the callback with a mutable reference to the scope for modifications. This can also be a `with` statement in languages that have it (Python). The callback may not be invoked if no active client is bound to this hub.
+- `Hub::configure_scope(callback)`: Invokes the callback with a mutable reference to the scope for modifications. This can also be a `with` statement in languages that have it (Python). If no active client is bound to this hub, Sentry may not invoke the callback.
 
 - `Hub::add_breadcrumb(crumb, hint)`: Adds a breadcrumb to the current scope.
 
@@ -151,7 +155,7 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
     - a list of breadcrumbs (optional)
   - In languages where we do not have a basic form of overloading only a raw breadcrumb object should be accepted.
 
-  The breadcrumb may be ignored if no active client is bound to this hub.
+  Sentry may ignore the breadcrumb if no active client is bound to this hub.
 
   For the hint parameter see [hints](#hints).
 
@@ -169,8 +173,8 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
 
 A scope holds data that should implicitly be sent with Sentry events. It can hold context data, extra parameters, level overrides, fingerprints etc.
 
-The user should be able to modify the current scope easily (to set extra, tags, current user), through a global function `configure_scope`.  `configure_scope` takes a callback function to which it passes the current scope.
-The callback may not be invoked in case the SDK is disabled.
+The user can modify the current scope (to set extra, tags, current user) through the global function `configure_scope`.  `configure_scope` takes a callback function to which it passes the current scope.
+If the SDK is disabled, Sentry may not invoke the callback.
 
 Here's an example from another place in the docs:
 
@@ -202,7 +206,7 @@ Sentry.configureScope(scope =>
 - `scope.add_error_processor(processor)` (optional): Registers an error processor function.  It takes an event and exception object and returns a new event or `None` to drop it.  This can be used to extract additional information out of an exception object that the SDK cannot extract itself.
 
 - `scope.clear()`: Resets a scope to default values however keeping all 
-  registered event processors. This has no effect on either child or parent scopes.
+  registered event processors. This does not affect either child or parent scopes.
 
 - `scope.add_breadcrumb(breadcrumb)`: Adds a breadcrumb to the current scope.
 
@@ -237,15 +241,15 @@ Any event that is captured by `capture_event` is processed in the following
 order and can be discarded at any of the stages, at which point no further
 processing happens.
 
-1. If the SDK is disabled, the event is discarded right away.
+1. If the SDK is disabled, Sentry discards the event right away.
 2. The client does event sampling based on the configured sample rate.
    Events will be discarded randomly, according to the sample rate.
 3. The scope is applied, using `apply_to_event`. The scope’s *event processors*
    are invoked in order and can possibly discard the event.
-4. The *before-send* hook is invoked, which can also discard the event.
-5. The event is passed to the configured transport. The transport can discard
+4. Sentry invokes the *before-send* hook, which can also discard the event.
+5. Sentry passes the event to the configured transport. The transport can discard
    the event in case it has no valid DSN, its internal queue is full,
-   or as a result of rate limiting requested by the server.
+   or as a result of rate limiting, as requested by the server.
 
 ## Options
 

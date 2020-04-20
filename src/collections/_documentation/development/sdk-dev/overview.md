@@ -77,7 +77,7 @@ Sentry.init({
 ```
 
 {% capture __alert_content -%}
-If an empty DSN is passed, you should treat it as valid option.
+If you pass an empty DSN, treat it as a valid option.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
