@@ -77,7 +77,7 @@ Sentry.init({
 ```
 
 {% capture __alert_content -%}
-If you pass an empty DSN, treat it as a valid option.
+It is valid to configure the SDK with an empty DSN.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

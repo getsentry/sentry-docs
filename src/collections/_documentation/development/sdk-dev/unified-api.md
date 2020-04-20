@@ -54,16 +54,17 @@ meant that certain integrations (such as breadcrumbs) were often not possible.
 
 - **integration**: Code that provides middlewares, bindings or hooks into certain frameworks or environments, along with code that inserts those bindings and activates them. Usage for integrations does not follow a common interface.
 
-- **event processors**: Callbacks that run for every event.
+- **event processors**: Callbacks that run for every event.  
   They can either return a "new" event, which in most cases means just adding
   data OR return `null` in which case the event will be discarded and not
   processed further.
 
   See [Event Pipeline](#event-pipeline) for more information.
 
-- **disabled SDK / active Client**: Most of the SDK functionality depends on a
-  configured and active Client. Sentry considers the client active when it has a
-  *transport*. Otherwise, the SDK is considered "disabled".
+- **disabled SDK**: Most of the SDK functionality depends on a
+  configured and active Client.
+  Sentry considers the client active when it has a *transport*.
+  Otherwise, the client is inactive, and the SDK is considered "disabled".
   This means that certain callbacks, such as `configure_scope` or
   *event processors*, may not be invoked, and no breadcrumbs are being recorded.
 
@@ -99,9 +100,9 @@ Additionally it also setups all default integrations.
 - `capture_message(message, level)`: Reports a message. The level can be optional in language with default parameters in which case it should default to `info`.
 
 - `add_breadcrumb(crumb)`: Adds a new breadcrumb to the scope. If the total
-  number of breadcrumbs exceeds the `max_breadcrumbs` setting, Sentry removes
-  the oldest breadcrumb. This works like the Hub API with regards to what
-  `crumb` can be. If the SDK is disabled, Sentry may ignore the breadcrumb.
+  number of breadcrumbs exceeds the `max_breadcrumbs` setting, the SDK should
+  remove the oldest breadcrumb. This works like the Hub API with regards to what
+  `crumb` can be. If the SDK is disabled, it should ignore the breadcrumb.
 
 - `configure_scope(callback)`: Calls a callback with a scope object that can be reconfigured. This is used to attach contextual data for future events in the same scope.
 
@@ -145,7 +146,7 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
 
 - `Hub::pop_scope()` (optional): Only exists in languages without better resource management. Better to have this function on a return value of `push_scope` or to use `with_scope`.  This is also sometimes called `pop_scope_unsafe` to indicate that this method should not be used directly.
 
-- `Hub::configure_scope(callback)`: Invokes the callback with a mutable reference to the scope for modifications. This can also be a `with` statement in languages that have it (Python). If no active client is bound to this hub, Sentry may not invoke the callback.
+- `Hub::configure_scope(callback)`: Invokes the callback with a mutable reference to the scope for modifications. This can also be a `with` statement in languages that have it (Python). If no active client is bound to this hub, the SDK should not invoke the callback.
 
 - `Hub::add_breadcrumb(crumb, hint)`: Adds a breadcrumb to the current scope.
 
@@ -155,7 +156,7 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
     - a list of breadcrumbs (optional)
   - In languages where we do not have a basic form of overloading only a raw breadcrumb object should be accepted.
 
-  Sentry may ignore the breadcrumb if no active client is bound to this hub.
+  The SDK should ignore the breadcrumb if no active client is bound to this hub.
 
   For the hint parameter see [hints](#hints).
 
@@ -174,9 +175,9 @@ The SDK maintains two variables: The *main hub* (a global variable) and the *cur
 A scope holds data that should implicitly be sent with Sentry events. It can hold context data, extra parameters, level overrides, fingerprints etc.
 
 The user can modify the current scope (to set extra, tags, current user) through the global function `configure_scope`.  `configure_scope` takes a callback function to which it passes the current scope.
-If the SDK is disabled, Sentry may not invoke the callback.
 
-Here's an example from another place in the docs:
+The reason for this callback-based API is efficiency. If the SDK is disabled,
+it should not invoke the callback, thus avoiding unnecessary work.
 
 ```javascript
 Sentry.configureScope(scope =>
