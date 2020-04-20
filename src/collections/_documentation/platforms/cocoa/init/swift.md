@@ -5,7 +5,7 @@ import Sentry // Make sure you import Sentry
 
 func application(_ application: UIApplication, 
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-    _ = SentrySDK(options: [
+    SentrySDK.start(options: [
         "dsn": "___PUBLIC_DSN___",
         "debug": true // Enabled debug when first installing is always helpful
     ])

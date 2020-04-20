@@ -31,7 +31,7 @@ platform :ios, '8.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
-    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.0.0-beta.3'
+    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.0.0-beta.4'
 end
 ```
 <!-- {% sdk_version sentry.cocoa %} -->
@@ -43,7 +43,7 @@ Afterwards run `pod install`.
 To integrate Sentry into your Xcode project using Carthage, specify it in your _Cartfile_:
 
 ```ruby
-github "getsentry/sentry-cocoa" "5.0.0-beta.3"
+github "getsentry/sentry-cocoa" "5.0.0-beta.4"
 ```
 
 Run `carthage update` to download the framework and drag the built _Sentry.framework_ into your Xcode project.
@@ -94,30 +94,15 @@ Crashes are submitted only upon re-launch of the application. To view the crash 
 
 Monitor the [health of releases]({%- link _documentation/workflow/releases/health.md -%}) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/health.md -%}#crash), and [session data]({%- link _documentation/workflow/releases/health.md -%}#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
-To benefit from the health data you must use at least version 5.0.0 Beta 2 of the Cocoa SDK and enable the collection of the release health metrics by adding `“enableAutoSessionTracking": true` into options during the initialization of the SDK.
+To benefit from the health data you must use at least version 5.0.0 Beta 4 of the Cocoa SDK and enable the collection of the release health metrics by adding `"enableAutoSessionTracking": true` into options during the initialization of the SDK.
 
-```objective-c
-func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-    // Override point for customization after application launch.
-    _ = SentrySDK(options: [
-           "dsn": “YOUR_SENTRY_DSN”,
-           "enableAutoSessionTracking": true
-    ])
-    return true
-}
-```
+{% include components/platform_content.html content_dir='enableAutoSessionTracking' %}
 
 The SDK will automatically manage the start and end of the sessions when the application is started, goes to background, returns to the foreground, etc.
 
 By default, the session is terminated once the application is in the background for more than 30 seconds. You can change the time out with the option named `sessionTrackingIntervalMillis`. It takes the amount in milliseconds. For example, to configure it to be 60 seconds:
 
-```objective-c
-_ = SentrySDK(options: [
-       "dsn": “YOUR_SENTRY_DSN”,
-       "enableAutoSessionTracking": true,
-       "sessionTrackingIntervalMillis": 60000
-])
-```
+{% include components/platform_content.html content_dir='sessionTrackingIntervalMillis' %}
 
 ### Identification of the User
 
