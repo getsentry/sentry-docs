@@ -399,7 +399,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 
     [{% asset github-global-add-repo.png %}]({% asset github-global-add-repo.png @path %})
 
-GitHub should now be enabled for all projects under your Sentry organization.
+The GitHub integration is available for all projects under your Sentry organization. You can connect multiple GitHub organizations to one Sentry organization, but you **cannot** connect a single GitHub organization to multiple Sentry organizations.
 
 #### Commit Tracking
 
