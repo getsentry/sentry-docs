@@ -131,14 +131,14 @@ Supported SDKs for Tracing:
 
 ### Python
 
-To send traces, set the `traces_sample_rate` to a nonzero value. The following configuration will capture 10% of your transactions:
+To send traces, set the `traces_sample_rate` to a nonzero value. The following configuration will capture 25% of your transactions:
 
 ```python
 import sentry_sdk
 
 sentry_sdk.init(
     "___PUBLIC_DSN___", 
-    traces_sample_rate=0.1
+    traces_sample_rate=0.25
 )
 ```
 
