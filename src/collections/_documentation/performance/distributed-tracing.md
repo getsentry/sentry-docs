@@ -367,7 +367,7 @@ $ npm install @sentry/apm
 
 **Sending Traces**
 
-To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 10% of all your transactions:
+To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 25% of all your transactions:
 
 ```javascript
 const Sentry = require("@sentry/node");
@@ -377,7 +377,7 @@ const Apm = require("@sentry/apm");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1
+  tracesSampleRate: .25
 });
 ```
 
