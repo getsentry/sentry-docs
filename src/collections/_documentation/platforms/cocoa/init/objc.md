@@ -2,7 +2,7 @@
 @import Sentry;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    [SentrySDK initWithOptions:@{
+    [SentrySDK startWithOptions:@{
         @"dsn": @"___PUBLIC_DSN___",
         @"debug": @(YES)
     }];
