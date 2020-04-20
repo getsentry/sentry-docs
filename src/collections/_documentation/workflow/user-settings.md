@@ -16,7 +16,7 @@ Change the name displayed next to your avatar by editing the *Name* field.
 
 ## Preferences
 
-### Stack trace Order
+### Stack Trace Order
 
 Choose the default ordering of frames in stack traces. By default, this order is set to let Sentry decide. 
 
