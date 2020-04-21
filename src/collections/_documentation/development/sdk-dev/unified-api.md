@@ -55,18 +55,18 @@ meant that certain integrations (such as breadcrumbs) were often not possible.
 - **integration**: Code that provides middlewares, bindings or hooks into certain frameworks or environments, along with code that inserts those bindings and activates them. Usage for integrations does not follow a common interface.
 
 - **event processors**: Callbacks that run for every event.  
-  They can either return a "new" event, which in most cases means just adding
-  data OR return `null` in which case the event will be discarded and not
-  processed further.
+  They can either modify and return the event, or `null`.
+  Returning `null` will discard the event and not process further.
 
   See [Event Pipeline](#event-pipeline) for more information.
 
 - **disabled SDK**: Most of the SDK functionality depends on a
-  configured and active Client.
+  configured and active client.
   Sentry considers the client active when it has a *transport*.
   Otherwise, the client is inactive, and the SDK is considered "disabled".
-  This means that certain callbacks, such as `configure_scope` or
-  *event processors*, may not be invoked, and no breadcrumbs are being recorded.
+  In this case, certain callbacks, such as `configure_scope` or
+  *event processors*, may not be invoked.
+  As a result, breadcrumbs are not recorded.
 
 
 ## "Static API"
@@ -206,7 +206,7 @@ Sentry.configureScope(scope =>
 
 - `scope.add_error_processor(processor)` (optional): Registers an error processor function.  It takes an event and exception object and returns a new event or `None` to drop it.  This can be used to extract additional information out of an exception object that the SDK cannot extract itself.
 
-- `scope.clear()`: Resets a scope to default values however keeping all 
+- `scope.clear()`: Resets a scope to default values while keeping all 
   registered event processors. This does not affect either child or parent scopes.
 
 - `scope.add_breadcrumb(breadcrumb)`: Adds a breadcrumb to the current scope.
@@ -238,19 +238,19 @@ parameter however is reserved for this purpose.
 
 ## Event Pipeline
 
-Any event that is captured by `capture_event` is processed in the following
-order and can be discarded at any of the stages, at which point no further
+An event captured by `capture_event` is processed in the following order.  
+**Note**: The event can be discarded at any of the stages, at which point no further
 processing happens.
 
 1. If the SDK is disabled, Sentry discards the event right away.
-2. The client does event sampling based on the configured sample rate.
-   Events will be discarded randomly, according to the sample rate.
+2. The client samples events as defined by the configured sample rate.
+   Events may be discarded randomly, according to the sample rate.
 3. The scope is applied, using `apply_to_event`. The scope’s *event processors*
-   are invoked in order and can possibly discard the event.
-4. Sentry invokes the *before-send* hook, which can also discard the event.
-5. Sentry passes the event to the configured transport. The transport can discard
-   the event in case it has no valid DSN, its internal queue is full,
-   or as a result of rate limiting, as requested by the server.
+   are invoked in order.
+4. Sentry invokes the *before-send* hook.
+5. Sentry passes the event to the configured transport.
+   The transport can discard the event if it does no have valid DSN; its
+   internal queue is full; or due to rate limiting, as requested by the server.
 
 ## Options
 
