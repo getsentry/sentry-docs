@@ -249,7 +249,7 @@ processing happens.
    are invoked in order.
 4. Sentry invokes the *before-send* hook.
 5. Sentry passes the event to the configured transport.
-   The transport can discard the event if it does no have valid DSN; its
+   The transport can discard the event if it does not have a valid DSN; its
    internal queue is full; or due to rate limiting, as requested by the server.
 
 ## Options
