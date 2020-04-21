@@ -80,17 +80,13 @@ A historical list of sessions, including First Seen and Last Seen timestamps, ca
 
 The Notifications section includes options to customize alerts, email routing, weekly reports, and notifications for workflow, deploy and activity. 
 
-## Alerts
+## Alerts & Notifications
 
 While Project Alerts are defined in *Project Settings*, you can enable *Send Me Alerts* to receive alerts sent to your teams and fine-tuning the ones you receive per project. 
 
-{% asset user-settings/us-alert.png alt="Alerts field in Notifications under User Settings" width="450" %}
-
-## Workflow Notifications
-
 Control workflow notifications like changes in issue assignment, resolution status, and comments by enabling *Send Me Workflow Notifications* and fine-tuning them per project. 
 
-{% asset user-settings/us-work.png alt="Workflow selection in Notifications under User Settings" width="673" %}
+For more details, see the [full documentation on Alerts & Notifications]({%- link _documentation/workflow/alerts-notifications/index.md -%})
 
 ## Email Routing
 
