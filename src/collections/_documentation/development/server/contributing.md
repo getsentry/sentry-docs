@@ -1,5 +1,5 @@
 ---
-title: Contributing
+title: Contribution Guidelines
 sidebar_order: 0
 ---
 

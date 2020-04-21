@@ -3,12 +3,12 @@ title: 'Development'
 sidebar_order: 9
 ---
 
-Sentry is open-source software. We'd love to have you contribute!
+Looking to contribute to Sentry? You've come to the right place.
 
--   [Contributing]({%- link _documentation/development/contribute/contributing.md -%})
--   [Development Environment]({%- link _documentation/development/contribute/environment.md -%})
--   [Documentation Guide]({%- link _documentation/development/contribute/docs.md -%})
--   [Web API]({%- link _documentation/development/contribute/api.md -%})
+-   [Contributing]({%- link _documentation/development/server/contributing.md -%})
+-   [Development Environment]({%- link _documentation/development/server/environment.md -%})
+-   [Documentation Guide]({%- link _documentation/development/server/docs.md -%})
+-   [Web API]({%- link _documentation/development/server/api.md -%})
 
 If you want to develop against the Sentry API itself see:
 
