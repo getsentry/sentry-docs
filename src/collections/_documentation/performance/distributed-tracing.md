@@ -377,7 +377,7 @@ const Apm = require("@sentry/apm");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: .25
+  tracesSampleRate: 0.25
 });
 ```
 
@@ -393,7 +393,7 @@ const app = express();
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: .25
+  tracesSampleRate: 0.25
 });
 
 // RequestHandler creates a separate execution context using domains, so that every 
@@ -424,7 +424,7 @@ const app = express();
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: .25,
+  tracesSampleRate: 0.25,
   integrations: [
       // enable HTTP calls tracing
       new Sentry.Integrations.Http({ tracing: true }),
