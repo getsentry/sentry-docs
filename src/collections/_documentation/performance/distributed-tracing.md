@@ -138,7 +138,7 @@ import sentry_sdk
 
 sentry_sdk.init(
     "___PUBLIC_DSN___", 
-    traces_sample_rate= 0.25
+    traces_sample_rate = 0.25
 )
 ```
 
