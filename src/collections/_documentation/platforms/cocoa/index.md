@@ -31,7 +31,7 @@ platform :ios, '8.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
-    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.0.0-beta.4'
+    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.0.0-beta.5'
 end
 ```
 <!-- {% sdk_version sentry.cocoa %} -->
@@ -43,7 +43,7 @@ Afterwards run `pod install`.
 To integrate Sentry into your Xcode project using Carthage, specify it in your _Cartfile_:
 
 ```ruby
-github "getsentry/sentry-cocoa" "5.0.0-beta.4"
+github "getsentry/sentry-cocoa" "5.0.0-beta.5"
 ```
 
 Run `carthage update` to download the framework and drag the built _Sentry.framework_ into your Xcode project.
