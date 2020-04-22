@@ -3,7 +3,7 @@ title: 'Development Environment'
 sidebar_order: 2
 ---
 
-This guide steps you through configuring a local development environment for the Sentry server on macOS. If you're using another operating system the instructions are still roughly the same, but we don't maintain any official documention.
+This guide steps you through configuring a local development environment for the Sentry server on macOS. If you're using another operating system the instructions are still roughly the same, but we don't maintain any official documentation for anything else for now.
 
 #### A quick note on Bash vs Zsh...
 
