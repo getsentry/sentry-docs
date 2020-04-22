@@ -4,7 +4,7 @@ sidebar_order: 2
 ---
 
 {% capture __alert_content -%}
-Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
+Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [performance-feedback@sentry.io](mailto:performance-feedback@sentry.io).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
