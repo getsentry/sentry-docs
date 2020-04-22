@@ -6,9 +6,11 @@ Manage your account details from the User Settings page, available in the dropdo
 
 ## Account Details
 
-Sentry saves all changes in this section automatically.
+Sentry automatically saves all changes in the Account Details section.
 
 ## Preferences
+
+Unlike Account Details, the Preferences section doesn't automatically save all changes. Choose your changes in the provided dropdowns. 
 
 ### Stack Trace Order
 
