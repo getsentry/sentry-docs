@@ -109,7 +109,7 @@ Volta intercepts this and automatically downloads and installs the node version 
 
 We use [direnv](https://github.com/direnv/direnv) to automate configuration and constraints. It automatically sets some helpful environment variables for you, activates your virtual environment, and does some simple state checking to guide you towards the expected development environment.
 
-To install it, run `brew install direnv`. You'll want to add this to the end of your `~/.bashrc` file:
+You need to install it, and add the following snippet to the end of your `~/.bashrc` file:
 
 ```bash
 eval "$(direnv hook bash)"
