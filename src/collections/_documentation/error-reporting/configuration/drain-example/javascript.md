@@ -4,6 +4,7 @@ in.
 
 ```javascript
 Sentry.close(2000).then(function() {
+  // Don't use process.exit() in browser based javascript, process is available in NodeJS.
   process.exit();
 });
 ```
