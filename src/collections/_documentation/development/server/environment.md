@@ -5,7 +5,7 @@ sidebar_order: 2
 
 This guide steps you through configuring a local development environment for the Sentry server on macOS. If you're using another operating system the instructions are still roughly the same, but we don't maintain any official documentation for anything else for now.
 
-#### A quick note on Bash vs Zsh...
+#### A quick note on Bash vs Zsh
 
 macOS Catalina will recommend that you use `zsh` instead of `bash`. While the differences are minimal, this guide primarily covers Bash. Verify your shell by running `echo $SHELL`.
 
