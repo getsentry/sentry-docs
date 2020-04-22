@@ -75,7 +75,7 @@ If everything worked, running `which python` should now result in something like
 
 ## JavaScript
 
-We use [volta](https://github.com/volta-cli/volta) to install and manage the version of Node.ks that Sentry requires. To install Volta run:
+We use [volta](https://github.com/volta-cli/volta) to install and manage the version of Node.js that Sentry requires. To install Volta run:
 
 ```bash
 curl https://get.volta.sh | bash
