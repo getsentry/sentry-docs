@@ -127,7 +127,7 @@ And after doing that, reload your shell:
 PATH="" exec /bin/bash -l
 ```
 
-Any time the `.envrc` configuration changes (including the first time) you will be prompted to run `direnv allow` before any of the configuration will run.
+Any time the `.envrc` configuration changes (including the first time) you will be prompted to run `direnv allow` before any of the configuration will run. This is for security purposes and you are encouraged to inspect the changes before running this command.
 
 ## Bootstrap Services
 
