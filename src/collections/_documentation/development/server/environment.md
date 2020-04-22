@@ -115,12 +115,6 @@ To install it, run `brew install direnv`. You'll want to add this to the end of 
 eval "$(direnv hook bash)"
 ```
 
-Or in your `~/.zshrc`:
-
-```zsh
-eval "$(direnv hook zsh)"
-```
-
 And after doing that, reload your shell:
 
 ```bash
