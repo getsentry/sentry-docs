@@ -6,7 +6,7 @@ Manage your account details from the User Settings page, available in the dropdo
 
 ## Account Details
 
-Sentry automatically saves all changes in the Account Details section.
+Sentry automatically saves all changes made in the Account Details section.
 
 ## Preferences
 
@@ -14,7 +14,7 @@ Unlike Account Details, the Preferences section doesn't automatically save all c
 
 ### Stack Trace Order
 
-Choose the order of stack trace frames. Default sets to the option "let Sentry decide".
+Choose the order of stack trace frames; the default is "let Sentry decide".
 
 {% asset user-settings/us-sto.png alt="Stack trace order field in Account Details under User Settings" width="617.5" %}
 
@@ -26,7 +26,7 @@ Use the dropdown to choose the default language.
 
 ### Timezone
 
-Choose the timezone you want Sentry to display on issue timestamps. For a 24-hour clock, slide the toggle.
+Choose the timezone to display on issue timestamps. For a 24-hour clock, slide the toggle.
 
 {% asset user-settings/us-time.png alt="Timezone field in Account Details under User Settings" width="392" %}
 
@@ -44,7 +44,7 @@ Security contains two sections: Settings and Session History.
 ## Settings
 ### Password
 
-We recommend changing your password frequently. However, keep in mind that changing your password will invalidate all logged in sessions.
+As a reminder, changing your password invalidates all logged in sessions. For more details about changing passwords, see 1Password's blog post: [How often should you change your password?](https://blog.1password.com/how-often-should-you-change-your-password/)
 
 {% asset user-settings/us-pass.png alt="Password field in Security under User Settings" width="450" %}
 
