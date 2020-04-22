@@ -11,7 +11,7 @@ macOS Catalina will recommend that you use `zsh` instead of `bash`. While the di
 
 ## Clone the Repository
 
-To get started, clone the repo at [https://github.com/getsentry/sentry](https://github.com/getsentry/sentry) - or, your fork if you are not a member of `@getsentry`.
+To get started, clone the repo at [https://github.com/getsentry/sentry](https://github.com/getsentry/sentry) - or, your fork.
 
 ```bash
 git clone https://github.com/getsentry/sentry.git
