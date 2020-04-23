@@ -3,7 +3,7 @@ title: 'IP Ranges'
 ---
 
 {% capture __alert_content -%}
-The contents of this page only apply to Sentry's SaaS product. It **does not** apply to On-Premise or Single Tenant.
+The contents of this page only apply to Sentry's SaaS product. It **does not** apply to Self-hosted or Single Tenant.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
