@@ -135,7 +135,7 @@ with configure_scope() as scope:
     scope.set_tag("page_locale", "de-at")
 ```
 
-For more information, see the [Tagging Events section]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events) in Context.
+For more information, see the [Tagging Events section]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) in Context.
 
 ### Setting the Level
 
@@ -171,7 +171,7 @@ The Sentry SDK sets the options when you first initialize the SDK.
 import sentry_sdk
 
 sentry_sdk.init(
-    'https://<key>@sentry.io/<project>',
+    '___PUBLIC_DSN___',
     max_breadcrumbs=50,
     debug=True,
 )

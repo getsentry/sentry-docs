@@ -24,11 +24,11 @@ Then add this to your `app.js`:
 
 ```javascript
 import * as Sentry from '@sentry/browser'
-import * as Integrations from '@sentry/integrations';
+import { Ember as EmberIntegration } from '@sentry/integrations';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: [new Integrations.Ember()]
+  integrations: [new EmberIntegration()]
 });
 ```
 

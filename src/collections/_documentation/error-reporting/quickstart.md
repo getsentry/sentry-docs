@@ -11,7 +11,7 @@ Getting started with Sentry is a three step process:
 
 1.  [Sign up for an account](https://sentry.io/signup/)
 2.  [Install your SDK](#pick-a-client-integration)
-2.  [Configure it](#configure-the-sdk)
+2.  [Configure your SDK](#configure-the-sdk)
 
 ## Install an SDK {#pick-a-client-integration}
 
@@ -54,6 +54,6 @@ Now that you’ve got basic reporting set up, you’ll want to explore adding ad
 {% include components/platform_content.html content_dir='getting-started-next-steps' %}
 -   [_manual error and event capturing_]({%- link _documentation/error-reporting/capturing.md -%})
 -   [_configuration options_]({%- link _documentation/error-reporting/configuration/index.md -%})
--   [_adding context (tags, user and extra information)_]({%- link _documentation/enriching-error-data/context.md -%})
+-   [_adding context (tags, user and extra information)_]({%- link _documentation/enriching-error-data/additional-data.md -%})
 -   [_tracing issues with breadcrumbs_]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
 -   [_capturing user feedback on crashes_]({%- link _documentation/enriching-error-data/user-feedback.md -%})

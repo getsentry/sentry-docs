@@ -3,13 +3,19 @@ title: Threads Interface
 sidebar_order: 10
 ---
 
-The threads interface allows you to specify the threads that were running at the
-time an event happened. These threads can also contain stack traces. As per
-policy, the thread that crashed with an exception should not have a stack trace,
-but instead, the `thread_id` attribute should be set on the exception and Sentry
-will connect the two.
+The Threads Interface specifies threads that were running at the time an event
+happened. These threads can also contain stack traces.
 
-This interface supports multiple thread values in the `values` key.
+An [event]({%- link _documentation/development/sdk-dev/event-payloads/index.md
+-%}) may contain one or more threads in an attribute named `threads`.
+
+The `threads` attribute should be an object with the attribute `values`
+containing one or more values that are objects in the format described below.
+
+As per Sentry policy, the thread that crashed with an [exception]({%- link
+_documentation/development/sdk-dev/event-payloads/exception.md -%}) should not
+have a stack trace, but instead, the `thread_id` attribute should be set on the
+exception and Sentry will connect the two.
 
 ## Attributes
 
@@ -46,17 +52,21 @@ This interface supports multiple thread values in the `values` key.
 
 ## Examples
 
-A single thread wrapped in `values`:
+The following example illustrates the threads part of the [event payload]({%-
+link _documentation/development/sdk-dev/event-payloads/index.md -%}) and omits
+other attributes for simplicity.
 
 ```json
 {
   "threads": {
-    "values": [{
-      "id": "0",
-      "name": "main",
-      "crashed": true,
-      "stacktrace": {...}
-    }]
+    "values": [
+      {
+        "id": "0",
+        "name": "main",
+        "crashed": true,
+        "stacktrace": {}
+      }
+    ]
   }
 }
 ```

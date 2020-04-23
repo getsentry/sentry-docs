@@ -42,7 +42,7 @@ if you have the chance it's a better idea to manually set it.  That way it's gua
 in sync with your deploy integrations or source map uploads.
 
 Release names are just strings but some formats are detected by Sentry and might be rendered
-differently.  For more information have a look at [the releases documentation]({% link _documentation/workflow/releases.md %}).
+differently.  For more information have a look at [the releases documentation]({% link _documentation/workflow/releases/index.md %}).
 
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment
 variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE` if

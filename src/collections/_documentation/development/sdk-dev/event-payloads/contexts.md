@@ -3,9 +3,9 @@ title: Contexts Interface
 sidebar_order: 9
 ---
 
-The context interfaces provide additional context data. Typically, this is data
-related to the current user and the environment. For example, the device or application version. Its canonical name is
-`contexts`.
+The Contexts Interface provides additional context data. Typically, this is data
+related to the current user and the environment. For example, the device or
+application version. Its canonical name is `contexts`.
 
 The `contexts` type can be used to define arbitrary contextual data on the
 event. It accepts an object of key/value pairs. The key is the “alias” of the
@@ -14,6 +14,8 @@ type of the context unless there are two values for a type. You can omit `type`
 if the key name is the type.
 
 Unknown data for the contexts is rendered as a key/value list.
+
+For more details about sending additional data with your event, see the [full documentation on Additional Data]({%- link _documentation/enriching-error-data/additional-data.md -%}).
 
 ## Device Context
 
@@ -297,6 +299,10 @@ Example:
 ```
 
 ## Examples
+
+The following example illustrates the contexts part of the [event payload]({%-
+link _documentation/development/sdk-dev/event-payloads/index.md -%}) and omits
+other attributes for simplicity.
 
 ```json
 {

@@ -18,7 +18,7 @@ In addition, the environment filter affects all issue-related metrics like count
 
 **Releases**
 
-You can filter releases by which environment they’ve been deployed to (to learn more about configuring releases and deploys, click [here]({%- link _documentation/workflow/releases.md -%})). For example, a release linked to a `QA` deploy and a `Prod` deploy will appear in your view when filtering by `QA` as well as `Prod`. All issue-related metrics within a given release will be affected by the environment filter.
+You can filter releases by which environment they’ve been deployed to (to learn more about configuring releases and deploys, click [here]({%- link _documentation/workflow/releases/index.md -%})). For example, a release linked to a `QA` deploy and a `Prod` deploy will appear in your view when filtering by `QA` as well as `Prod`. All issue-related metrics within a given release will be affected by the environment filter.
 
 ## Hiding environments
 

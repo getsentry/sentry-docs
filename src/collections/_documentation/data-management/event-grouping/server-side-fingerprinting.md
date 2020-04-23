@@ -18,12 +18,22 @@ These rules can be configured on a per-project basis under *Project Settings > G
 All values are matched against, and in the case of stack traces, all frames are considered.
 If all matches in a line match then the fingerprint is applied.
 
-The matchers are [the same as for grouping enhancements]({% link _documentation/data-management/event-grouping/grouping-enhancements.md %}#rules)
-but some extra ones are available:
+The matchers are:
 
 - `type`: matches on an exception type
 - `value`: matches on an exception value
 - `message`: matches on a log message
+
+The matchers also include the following from Custom Grouping Enhancements. See [grouping enhancements]({% link _documentation/data-management/event-grouping/grouping-enhancements.md %}#rules) for more info on how they work:
+
+- `family`
+- `path`
+- `module`
+- `function`
+- `package`
+- `app`
+
+
 
 Don't forget that you can also use variables like `{% raw %}{{ function }}{% endraw %}` to
 customize fingerprinting like you can do if the client submits them.

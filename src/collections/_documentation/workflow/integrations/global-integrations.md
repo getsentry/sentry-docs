@@ -41,7 +41,7 @@ Azure DevOps should now be enabled for all projects under your Sentry organizati
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -108,7 +108,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with re
 If you reach the account selection page during the Azure Devops installation process (step 4 in the instructions above) and see that there are no accounts available to select, please check the following possibilities:
 
 - Ensure you are logged into the account connected to your Azure DevOps organization.
-- Double check that your account is a Microsoft Account (MSA). At this time, we do not support Azure Active Directory (AAD) accounts. 
+- Double-check that your account is a Microsoft Account (MSA). At this time, we do not support Azure Active Directory (AAD) accounts. 
 
 ### Bitbucket
 
@@ -147,7 +147,7 @@ Bitbucket should now be enabled for all projects under your Sentry organization.
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -180,7 +180,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with re
 
 ### Bitbucket Server
 
-You can use the data from your Bitbucket Server commits to help find and fix bugs faster.
+You can use the data from your Bitbucket Server commits to help find and fix bugs faster. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
 
 #### Installing Bitbucket Server with Sentry
 
@@ -247,7 +247,7 @@ Bitbucket should now be authorized for all projects under your Sentry organizati
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -399,11 +399,11 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 
     [{% asset github-global-add-repo.png %}]({% asset github-global-add-repo.png @path %})
 
-GitHub should now be enabled for all projects under your Sentry organization.
+The GitHub integration is available for all projects under your Sentry organization. You can connect multiple GitHub organizations to one Sentry organization, but you **cannot** connect a single GitHub organization to multiple Sentry organizations.
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -443,7 +443,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 ### GitHub Enterprise
 
-You can use the data from your GitHub Enterprise commits to help find and fix bugs faster.
+You can use the data from your GitHub Enterprise commits to help find and fix bugs faster. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
 
 #### Configure GitHub Enterprise
 
@@ -535,7 +535,7 @@ GitHub Enterprise should now be enabled for all projects under your Sentry organ
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -568,7 +568,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 ### GitLab
 
-Sentry’s GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry.
+Sentry’s GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
 
 #### Configure GitLab
 
@@ -652,7 +652,7 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
 
 Commit tracking allows you to hone in on problematic commits. With commit tracking, you can better isolate what might be problematic by leveraging information from releases like tags and metadata.
 
-Once you've configured both [release and commit tracking]({%- link _documentation/workflow/releases.md -%}), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
+Once you've configured both [release and commit tracking]({%- link _documentation/workflow/releases/index.md -%}), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
 
 [{% asset gitlab/last-commit-in-releases.png alt="Dashboard with last commit highlighted" %}]({% asset gitlab/last-commit-in-releases.png @path %})
 
@@ -662,7 +662,7 @@ When you investigate deeper into that commit, you can leverage information from 
 
 Broadly, this lets you isolate problems in order to see which commits might be problematic.
 
-Learn more about [release and commit tracking]({%- link _documentation/workflow/releases.md -%}).
+Learn more about [release and commit tracking]({%- link _documentation/workflow/releases/index.md -%}).
 
 #### Suspect Commit
 
@@ -672,7 +672,7 @@ One special benefit of using Sentry's Commit Tracking is the ability to know the
 
 [{% asset gitlab/highlighting-suspect-commits.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/highlighting-suspect-commits.png @path %})
 
-Here is where you can find info for [suspect commit setup]({%- link _documentation/workflow/releases.md -%}#link-repository).
+Here is where you can find info for [suspect commit setup]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
 
 #### Resolve via Commit or PR
 
@@ -765,7 +765,7 @@ individual users if you experience assignee sync not behaving as expected.
 
 ### JIRA Server
 
-Connect errors from Sentry with your Jira Server issues.
+Connect errors from Sentry with your Jira Server issues. [Troubleshooting](https://docs.sentry.io/workflow/integrations/global-integrations/#troubleshooting-2)
 
 #### Installing Jira Server with Sentry
 
@@ -879,7 +879,7 @@ If you hit a 4xx or 5xx error during or after setting up the Jira Server integra
 
 ## Issue Notifications
 
-Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/notifications/alerts.md -%}) to properly route notifications to a specific integration.
+Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}) to properly route notifications to a specific integration.
 
 ### Slack
 
@@ -1081,3 +1081,9 @@ The Split integration is only available for organizations on the Business and En
 
 Follow the instructions in the link below:  
 <https://help.split.io/hc/en-us/articles/360029879431>
+
+## Troubleshooting
+If you're having trouble setting up Sentry with your on-premise integration like JIRA Server, Bitbucket Server, GitHub Enterprise, or Gitlab:
+- Ensure that the installation URL you provided is a fully qualified domain name (FQDN), which is resolvable on the internet.
+- Double-check that the IP addresses Sentry uses to make outbound requests are whitelisted <https://docs.sentry.io/ip-ranges/>.
+- Make sure that Sentry's access to your installation URL is not path restricted.

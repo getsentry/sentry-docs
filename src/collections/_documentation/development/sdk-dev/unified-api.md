@@ -26,7 +26,7 @@ meant that certain integrations (such as breadcrumbs) were often not possible.
 
 - The common tasks need to be easy and obvious.
 
-- For helping 3rd party libraries the case of “non configured sentry” needs to be fast (and lazily executed).
+- For helping 3rd party libraries the case of “non configured Sentry” needs to be fast (and lazily executed).
 
 - The common API needs make sense in most languages and must not depend on super special constructs. To make it feel more natural we should consider language specifics and explicitly support them as alternatives (disposables, stack guards etc.).
 
@@ -38,13 +38,13 @@ meant that certain integrations (such as breadcrumbs) were often not possible.
 
 - **hub**: An object that manages the state. An implied global thread local or similar hub exists that can be used by default. Hubs can be created manually.
 
-- **scope**: A scope holds data that should implicitly be sent with sentry events. It can hold context data, extra parameters, level overrides, fingerprints etc.
+- **scope**: A scope holds data that should implicitly be sent with Sentry events. It can hold context data, extra parameters, level overrides, fingerprints etc.
 
-- **client**: A client is an object that is configured once and can be bound to the hub. The user can then auto discover the client and dispatch calls to it.  Users typically do not need to work with the client directly. They either do it via the hub or static convenience functions.
+- **client**: A client is an object that is configured once and can be bound to the hub. The user can then auto discover the client and dispatch calls to it.  Users typically do not need to work with the client directly. They either do it via the hub or static convenience functions. The client is mostly responsible for building Sentry events and dispatching those to the transport.
 
 - **client options**: Are parameters that are language and runtime specific and used to configure the client. This can be release and environment but also things like which integrations to configure, how in-app works etc.
 
-- **context**: Contexts give extra data to sentry. There are the special contexts (user and similar) and the generic ones (runtime, os, device), etc.  Check out [_Contexts_]({%- link _documentation/development/sdk-dev/event-payloads/contexts.md -%}) for valid keys. *Note: In older SDKs, you might encounter an unrelated concept of context, which is now deprecated by scopes*
+- **context**: Contexts give extra data to Sentry. There are the special contexts (user and similar) and the generic ones (`runtime`, `os`, `device`), etc.  Check out [_Contexts_]({%- link _documentation/development/sdk-dev/event-payloads/contexts.md -%}) for valid keys. *Note: In older SDKs, you might encounter an unrelated concept of context, which is now deprecated by scopes*
 
 - **tags**: Tags can be arbitrary string→string pairs by which events can be searched. Contexts are converted into tags.
 
@@ -108,7 +108,7 @@ Here are some common concurrency patterns:
 
 ## Hub
 
-Under normal circumstances the hub consists of a client and a stack of scopes.
+Under normal circumstances the hub consists of a stack of clients and scopes.
 
 The SDK maintains two variables: The *main hub* (a global variable) and the *current hub* (a variable local to the current thread or execution context, also sometimes known as async local or context local)
 
@@ -180,7 +180,7 @@ Why not just have a `get_current_scope()` function instead of this indirection? 
 
 - `scope.set_level(level)`: Sets the level of all events sent within this scope.
 
-- `scope.set_transaction(transcation_name)`: Sets the name of the current transaction.
+- `scope.set_transaction(transaction_name)`: Sets the name of the current transaction.
 
 - `scope.set_fingerprint(fingerprint[])`: Sets the fingerprint to group specific events together
 

@@ -8,7 +8,7 @@ example_tag_value: de-at
 Search is available on several major Sentry views: Issues, Events, and Releases.
 
 {% capture __alert_content -%}
-Discover is Sentry's powerful query builder for aggregating raw event data and has its own unique syntax not covered here. For more information, see [full Discover documentation]({%- link _documentation/workflow/discover2/index.md -%}).
+Discover is Sentry's powerful query builder for aggregating raw event data and has its own unique syntax not covered here. For more information, see [full Discover documentation]({%- link _documentation/performance/discover/index.md -%}).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -263,7 +263,7 @@ Several common uses for tags include:
 -   The version of your platform (for example, iOS 5.0)
 -   The user’s language
 
-For more information, see [full documentation on Tagging Events]({%- link _documentation/enriching-error-data/context.md -%}#tagging-events).
+For more information, see [full documentation on Tagging Events]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags).
 
 ## Premade Searches
 

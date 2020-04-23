@@ -35,17 +35,9 @@ A hash generated using your Client Secret and the request itself – used to ver
 
 ## Verifying the Signature
 
-```python
-    body = json.dumps(request.body)
-    expected = hmac.new(
-        key=client_secret.encode('utf-8'),
-        msg=body,
-        digestmod=sha256,
-    ).hexdigest()
-
-    if expected != request.headers['Sentry-Hook-Signature']:
-            raise UnauthorizedError
-```
+{% wizard %}
+{% include components/platform_content.html content_dir='webhooks-verifying-signature' %}
+{% endwizard %}
 
 ## Request Structure
 
@@ -532,7 +524,7 @@ The `error.created` resource subscription is only available for Business plans a
 - description: the api url for the associated issue
 
 {% capture markdown_content %}
-If you've set up [capturing the user](https://docs.sentry.io/enriching-error-data/context/?platform=python#capturing-the-user),
+If you've set up [capturing the user](https://docs.sentry.io/enriching-error-data/additional-data/?platform=python#capturing-the-user),
 you can find the user attributes under `data['error']['user']`.
 {% endcapture %}
 {% include components/alert.html

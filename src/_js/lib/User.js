@@ -118,7 +118,12 @@ const formatUnrealEngineURL = function(dsn) {
 };
 
 const formatAPIURL = function(dsn) {
-  return `${dsn.scheme}${dsn.host}/api`;
+  let host =
+    dsn.host.indexOf('.ingest.') >= 0
+      ? dsn.host.split('.ingest.')[1]
+      : dsn.host;
+
+  return `${dsn.scheme}${host}/api`;
 };
 
 export const defaultUser = {
@@ -129,9 +134,10 @@ export const defaultProject = {
   projectName: 'your-project',
   secretKey: '<secret>',
   publicKey: '<key>',
-  dsnPublic: 'https://<key>@sentry.io/<project>',
+  dsnPublic: 'https://<key>@<organization>.ingest.sentry.io/<project>',
   id: -1,
-  dsn: 'https://<key>:<secret>@sentry.io/<project>',
+  organizationId: -1,
+  dsn: 'https://<key>:<secret>@<organization>.ingest.sentry.io/<project>',
   organizationSlug: 'your-org',
   projectSlug: 'your-project'
 };
@@ -155,6 +161,7 @@ export const constructDSNObject = function(project = {}) {
     PROJECT_NAME: escape(project.projectSlug),
     PROJECT_ID: project.id.toString(),
     ORG_NAME: escape(project.organizationSlug),
+    ORG_ID: project.organizationId.toString(),
     DSN: formatDsn(dsn),
     PUBLIC_DSN: formatDsn(dsn, { public: true }),
     PUBLIC_KEY: dsn.publicKey,

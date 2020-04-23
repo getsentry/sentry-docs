@@ -3,6 +3,36 @@ title: Event Payloads
 sidebar_order: 3
 ---
 
+Events are the fundamental data that clients, often through the use of an SDK, send
+to the Sentry server.
+
+The API endpoint on the Sentry server where event payloads are sent is
+`/api/{PROJECT_ID}/store/`.
+
+{% capture __alert_content -%}
+We strive to document the canonical format of an event and its additional
+interfaces. However, for backwards compatibility the server also
+understands events that are not in the canonical format described throughout the
+documentation.
+
+Existing SDKs may be using a historical format that is not recommended for new
+code.
+{%- endcapture -%}
+
+{%- include components/alert.html title="Note on backwards compatibility" content=__alert_content level="info"%}
+
+
+{% capture __alert_content -%}
+If documentation is lacking or outdated, please let us know by [opening an
+issue](https://github.com/getsentry/sentry-docs/issues/new).
+
+SDK developers might benefit from consulting the [source code defining the
+protocol as understood by the
+server](https://github.com/getsentry/relay/tree/master/relay-general/src/protocol).
+{%- endcapture -%}
+
+{%- include components/alert.html title="Found a problem?" content=__alert_content level="warning"%}
+
 ## Required Attributes
 
 Attributes are simple data that Sentry understands to provide the most basic
@@ -24,9 +54,10 @@ The following attributes are required for all events.
 
 `timestamp`
 
-: Indicates when the logging record was created (in the Sentry SDK). The Sentry
-  server assumes the time is in UTC. The timestamp should be in ISO 8601 format,
-  without a timezone.
+: Indicates when the event was created in the Sentry SDK. The format is either a
+  string as defined in [RFC 3339](https://tools.ietf.org/html/rfc3339) or a
+  numeric (integer or float) value representing the [number of seconds that have
+  elapsed since the Unix epoch](https://en.wikipedia.org/wiki/Unix_time).
 
   ```json
   {
@@ -34,12 +65,9 @@ The following attributes are required for all events.
   }
   ```
 
-  Alternatively, the timestamp can be specified as floating-point UNIX
-  timestamp.
-
   ```json
   {
-    "timestamp": 1304358096000
+    "timestamp": 1304358096.0
   }
   ```
 

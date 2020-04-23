@@ -77,6 +77,8 @@ By including and configuring Sentry, the SDK will automatically attach global ha
 
 [{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
 
+Keep in mind; browsers are taking some security measures when serving script files from different origins. For errors to always make their way to Sentry, make sure that you configure CORS headers and add appropriate script attributes. For more information, refer to our [What the heck is "Script error"?](https://blog.sentry.io/2016/05/17/what-is-script-error#the-fix-cors-attributes-and-headers) blog post.
+
 ### Automatically Capturing Errors with Promises
 By default, Sentry for JavaScript captures unhandled promise rejections as described in the official ECMAScript 6 standard.
 
@@ -176,7 +178,7 @@ Except for [Webpack]({%- link _documentation/platforms/javascript/sourcemaps.md 
 
 Now you need to set up your build system to create a release and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
-Sentry uses [**Releases**]({%- link _documentation/workflow/releases.md -%}) to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
+Sentry uses [**Releases**]({%- link _documentation/workflow/releases/index.md -%}) to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
 
 ```sh
 $ sentry-cli releases new <release_name>
@@ -387,7 +389,7 @@ Once you’ve started sending tagged data, you’ll see it show up in a few plac
 
 We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. Even more so, we keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
 
-### Setting the Level {#level}
+### Setting the Level {#setting-the-level}
 You can set the severity of an event to one of five values: `fatal`, `error`, `warning`, `info`, and `debug`. `error` is the default, `fatal` is the most severe and `debug` is the least severe.
 
 To set the level out of scope, you can call `captureMessage()` per event:
@@ -610,7 +612,7 @@ Sentry.withScope(function(scope) {
   Sentry.captureMessage('This shouldnt happen');
 });
 ```
-For more information, see [Setting the Level](#level).
+For more information, see [Setting the Level](#setting-the-level).
 
 ### Lazy Loading Sentry
 We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration). As noted there, if you want to use `defer`, you can, though keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). Therefore, if you do this, you'll need to a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), which will guarantee that it’s executed before any of the others.
@@ -782,11 +784,11 @@ This integration attaches user-agent information to the event, which allows us t
 Pluggable integrations are integrations that can be additionally enabled, to provide some very specific features. Sentry documents them so you can see what they do and that they can be enabled. To enable pluggable integrations, install @sentry/integrations package and provide a new instance with your config to `integrations` option. For example: 
 ```js
 import * as Sentry from '@sentry/browser';
-import * as Integrations from '@sentry/integrations';
+import { ReportingObserver as ReportingObserverIntegration } from '@sentry/integrations';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
-  integrations: [new Integrations.ReportingObserver()]
+  integrations: [new ReportingObserverIntegration()]
 });
 ```
 
@@ -892,12 +894,12 @@ All pluggable / optional integrations do live inside `@sentry/integrations`.
 
 ```js
 import * as Sentry from '@sentry/browser';
-import * as Integrations from '@sentry/integrations';
+import { Vue as VueIntegration } from '@sentry/integrations';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: [
-    new Integrations.Vue({
+    new VueIntegration({
       Vue,
       attachProps: true,
     }),

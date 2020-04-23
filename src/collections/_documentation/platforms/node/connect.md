@@ -15,8 +15,12 @@ $ npm install @sentry/node@{% sdk_version sentry.javascript.node %}
 ```
 
 ```javascript
-const connect = require('connect');
-const Sentry = require('@sentry/node');
+import connect from 'connect';
+import * as Sentry from '@sentry/node';
+
+// or using CommonJS
+// const connect = require('connect');
+// const Sentry = require('@sentry/node');
 
 // Must configure Sentry before doing anything else with it
 Sentry.init({ dsn: '___PUBLIC_DSN___' });

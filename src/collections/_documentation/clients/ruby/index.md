@@ -3,7 +3,7 @@ title: Ruby
 sidebar_relocation: platforms
 ---
 
-Raven for Ruby is a client and integration layer for the Sentry error reporting API. It supports Ruby 1.9.3 and 2.x. JRuby support is provided but experimental.
+Raven for Ruby is a client and integration layer for the Sentry error reporting API. It supports Ruby >= 2.3. JRuby support is provided but experimental.
 
 ## Getting Started
 Getting started with Sentry is a three step process:

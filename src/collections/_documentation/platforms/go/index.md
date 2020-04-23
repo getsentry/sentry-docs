@@ -126,7 +126,7 @@ For more detailed information about how to get the most out of `sentry-go` there
 - [Configuration]({%- link _documentation/platforms/go/config.md -%})
 - [Error Reporting]({%- link _documentation/error-reporting/quickstart.md -%}?platform={{ include.platform }})
 - [Capturing Panics]({%- link _documentation/platforms/go/panics.md -%})
-- [Enriching Error Data]({%- link _documentation/enriching-error-data/context.md -%}?platform={{ include.platform }})
+- [Enriching Error Data]({%- link _documentation/enriching-error-data/additional-data.md -%}?platform={{ include.platform }})
 - [Transports]({%- link _documentation/platforms/go/transports.md -%})
 - [Goroutines]({%- link _documentation/platforms/go/goroutines.md -%})
 - [Integrations]({%- link _documentation/platforms/go/integrations.md -%})

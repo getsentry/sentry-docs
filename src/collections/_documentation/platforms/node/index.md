@@ -24,6 +24,8 @@ One thing that is the same across all our JavaScript SDKs --- how you add or rem
 
 ```javascript
 import * as Sentry from '@sentry/node';
+// or using CommonJS
+// const Sentry = require('@sentry/node');
 
 // All integrations that come with an SDK can be found on the Sentry.Integrations object
 // Custom integrations must conform Integration interface: https://github.com/getsentry/sentry-javascript/blob/master/packages/types/src/index.ts
@@ -40,6 +42,8 @@ In this example, we will remove the by default enabled integration for adding br
 
 ```javascript
 import * as Sentry from '@sentry/node';
+// or using CommonJS
+// const Sentry = require('@sentry/node');
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
@@ -56,6 +60,8 @@ Sentry.init({
 
 ```javascript
 import * as Sentry from '@sentry/node';
+// or using CommonJS
+// const Sentry = require('@sentry/node');
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
@@ -72,12 +78,15 @@ All pluggable / optional integrations do live inside `@sentry/integrations`.
 
 ```js
 import * as Sentry from '@sentry/node';
-import * as Integrations from '@sentry/integrations';
+import { Dedupe as DedupeIntegration } from '@sentry/integrations';
+// or using CommonJS
+// const Sentry = require('@sentry/node');
+// const { Dedupe: DedupeIntegration } = require('@sentry/integrations');
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: [
-    new Integrations.Dedupe(),
+    new DedupeIntegration(),
   ],
 });
 ```

@@ -64,14 +64,14 @@ npm install @sentry/browser @sentry/integrations
 ```javascript
 import angular from 'angular';
 import * as Sentry from '@sentry/browser';
-import * as Integrations from '@sentry/integrations';
+import { Angular as AngularIntegration } from '@sentry/integrations';
 
 // Make sure to call Sentry.init after importing AngularJS. 
 // You can also pass {angular: AngularInstance} to the Integrations.Angular() constructor.
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: [
-    new Integrations.Angular(),
+    new AngularIntegration(),
   ],
 });
 

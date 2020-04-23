@@ -3,19 +3,27 @@ title: Exception Interface
 sidebar_order: 2
 ---
 
-An exception consists of a list of values. In most cases, this list contains a
-single exception, with an optional stack trace interface. Multiple values
-represent a chained exception, and should be sent oldest to newest. That is, if
-your code does this:
+The Exception Interface specifies an exception or error that occurred in a program.
+
+An [event]({%- link _documentation/development/sdk-dev/event-payloads/index.md
+-%}) may contain one or more exceptions in an attribute named `exception`.
+
+The `exception` attribute should be an object with the attribute `values`
+containing a list of one or more values that are objects in the format described
+below.
+
+Multiple values represent chained exceptions and should be sorted oldest to
+newest. For example, consider this Python code snippet:
 
 ```python
 try:
     raise Exception
 except Exception as e:
-    raise ValueError() from e
+    raise ValueError from e
 ```
 
-The order of exceptions would be `Exception` and then `ValueError`.
+`Exception` would be described first in the `values` list, followed by a
+description of `ValueError`.
 
 ## Attributes
 
@@ -40,7 +48,7 @@ The order of exceptions would be `Exception` and then `ValueError`.
 `mechanism`:
 
 : An optional object describing the [mechanism](#exception-mechanism) that
-  created this exception (see below).
+  created this exception.
 
 `stacktrace`:
 
@@ -50,11 +58,10 @@ The order of exceptions would be `Exception` and then `ValueError`.
 
 ## Exception Mechanism
 
-The exception mechanism is an optional field residing in the [_Exception
-Interface_](#exception-interface). It carries additional information about the
-way the exception was created on the target system. This includes general
-exception values obtained from the operating system or runtime APIs, as well as
-mechanism-specific values.
+The exception mechanism is an optional field residing in the _Exception
+Interface_. It carries additional information about the way the exception was
+created on the target system. This includes general exception values obtained
+from the operating system or runtime APIs, as well as mechanism-specific values.
 
 ### Attributes
 
@@ -70,7 +77,7 @@ mechanism-specific values.
 
 `help_link`:
 
-: Optional fully qualified URL to an online help resource, possible interpolated
+: Optional fully qualified URL to an online help resource, possibly interpolated
   with error parameters.
 
 `handled`:
@@ -81,7 +88,7 @@ mechanism-specific values.
 `meta`:
 
 : Optional information from the operating system or runtime on the exception
-  mechanism (see below).
+  mechanism (see [meta information](#meta-information)).
 
 `data`:
 
@@ -166,23 +173,29 @@ information.
 
 ## Examples
 
-The following examples illustrate payloads that may be sent by SDKs in various
-circumstances.
+The following examples illustrate multiple ways to send exceptions. Each example
+contains the exception part of the [event payload]({%- link
+_documentation/development/sdk-dev/event-payloads/index.md -%}) and omits other
+attributes for simplicity.
 
 A single exception:
 
 ```json
 {
   "exception": {
-    "type": "ValueError",
-    "value": "My exception value",
-    "module": "__builtins__",
-    "stacktrace": {},
+    "values": [
+      {
+        "type": "ValueError",
+        "value": "my exception value",
+        "module": "__builtins__",
+        "stacktrace": {}
+      }
+    ]
   }
 }
 ```
 
-A list of exceptions:
+Chained exceptions:
 
 ```json
 {
@@ -190,12 +203,12 @@ A list of exceptions:
     "values": [
       {
         "type": "Exception",
-        "value": "Wrapped exception value",
+        "value": "initial exception",
         "module": "__builtins__"
       },
       {
         "type": "ValueError",
-        "value": "Original Exception value",
+        "value": "chained exception",
         "module": "__builtins__"
       },
     ]
@@ -208,29 +221,33 @@ iOS native mach exception with mechanism:
 ```json
 {
   "exception": {
-    "type": "EXC_BAD_ACCESS",
-    "value": "Attempted to dereference a null pointer",
-    "mechanism": {
-      "type": "mach",
-      "handled": false,
-      "data": {
-        "relevant_address": "0x1"
-      },
-      "meta": {
-        "signal": {
-          "number": 10,
-          "code": 0,
-          "name": "SIGBUS",
-          "code_name": "BUS_NOOP"
-        },
-        "mach_exception": {
-          "code": 0,
-          "subcode": 8,
-          "exception": 1,
-          "name": "EXC_BAD_ACCESS"
+    "values": [
+      {
+        "type": "EXC_BAD_ACCESS",
+        "value": "Attempted to dereference a null pointer",
+        "mechanism": {
+          "type": "mach",
+          "handled": false,
+          "data": {
+            "relevant_address": "0x1"
+          },
+          "meta": {
+            "signal": {
+              "number": 10,
+              "code": 0,
+              "name": "SIGBUS",
+              "code_name": "BUS_NOOP"
+            },
+            "mach_exception": {
+              "code": 0,
+              "subcode": 8,
+              "exception": 1,
+              "name": "EXC_BAD_ACCESS"
+            }
+          }
         }
       }
-    }
+    ]
   }
 }
 ```
@@ -240,16 +257,20 @@ JavaScript unhandled promise rejection:
 ```json
 {
   "exception": {
-    "type": "TypeError",
-    "value": "Object [object Object] has no method 'foo'",
-    "mechanism": {
-      "type": "promise",
-      "description": "This error originated either by throwing inside of an ...",
-      "handled": false,
-      "data": {
-        "polyfill": "bluebird"
+    "values": [
+      {
+        "type": "TypeError",
+        "value": "Object [object Object] has no method 'foo'",
+        "mechanism": {
+          "type": "promise",
+          "description": "This error originated either by throwing inside of an ...",
+          "handled": false,
+          "data": {
+            "polyfill": "bluebird"
+          }
+        }
       }
-    }
+    ]
   }
 }
 ```
@@ -258,7 +279,17 @@ Generic unhandled crash:
 
 ```json
 {
-    "type": "generic",
-    "handled": false
+  "exception": {
+    "values": [
+      {
+        "type": "Error",
+        "value": "An error occurred",
+        "mechanism": {
+          "type": "generic",
+          "handled": false
+        }
+      }
+    ]
+  }
 }
 ```

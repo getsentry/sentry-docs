@@ -3,31 +3,39 @@ title: Breadcrumbs Interface
 sidebar_order: 6
 ---
 
-The breadcrumbs interface specifies a series of application events, or
-`breadcrumbs`, that occurred before the main event. Its canonical name is
-`breadcrumbs`.
+The Breadcrumbs Interface specifies a series of application events, or
+"breadcrumbs", that occurred before an event.
 
-This interface is an object with a single `values` key containing an ordered
-list of breadcrumb objects. The entries are ordered from oldest to newest.
-Consequently, the last entry in the array should be the last entry before the
-event occurred.
+An [event]({%- link _documentation/development/sdk-dev/event-payloads/index.md
+-%}) may contain one or more breadcrumbs in an attribute named `breadcrumbs`.
 
-Each breadcrumb has a few properties of which at least `timestamp` and
-`category` must be provided. The rest is optional, and depending on what is
-provided, the rendering might be different:
+This interface is an object with a single `values` attribute containing an
+ordered list of breadcrumb objects. The entries are ordered from oldest to
+newest. Consequently, the last entry in the list should be the last entry before
+the event occurred.
+
+While breadcrumb attributes are not strictly enforced, a breadcrumb is most
+useful when it includes at least a `timestamp` and `type`, `category` or
+`message`. The rendering of breadcrumbs in Sentry depends on what is provided.
 
 ## Attributes
 
 `timestamp`:
 
-: **Required**. A timestamp representing when the breadcrumb occurred. This can
-  be either an ISO DateTime string or a Unix timestamp.
+: _Recommended_. A timestamp representing when the breadcrumb occurred. The
+  format is either a string as defined in [RFC
+  3339](https://tools.ietf.org/html/rfc3339) or a numeric (integer or float)
+  value representing the number of seconds that have elapsed since the [Unix
+  epoch](https://en.wikipedia.org/wiki/Unix_time).  
+  Breadcrumbs are most useful when they include a timestamp, as it creates a
+  timeline leading up to an event.
 
 `type`:
 
 : _Optional_. The type of breadcrumb. The default type is `default`, which
   indicates no specific handling. Other types are currently `http` for HTTP
-  requests and `navigation` for navigation events. More about types later.
+  requests and `navigation` for navigation events. For more information, see the
+  [description of recognized breadcrumb types](#breadcrumb-types).
 
 `category`:
 
@@ -45,9 +53,9 @@ provided, the rendering might be different:
 `data`:
 
 : _Optional_. Arbitrary data associated with this breadcrumb. Contains a
-  dictionary whose contents depend on the breadcrumb `type`. See descriptions of
-  breadcrumb types below. Additional parameters that are unsupported by the type
-  are rendered as a key/value table.
+  dictionary whose contents depend on the breadcrumb `type`. See the
+  [description of breadcrumb types](#breadcrumb-types). Additional parameters
+  that are unsupported by the type are rendered as a key/value table.
 
 `level`:
 
@@ -69,7 +77,7 @@ completely rendered as a key/value table.
 
 ```json
 {
-  "timestamp": 1461185753845,
+  "timestamp": "2016-04-20T20:55:53.845Z",
   "message": "Something happened",
   "category": "log",
   "data": {
@@ -95,7 +103,7 @@ Its `data` property has the following sub-properties:
 
 ```json
 {
-  "timestamp": 1461185753845,
+  "timestamp": "2016-04-20T20:55:53.845Z",
   "type": "navigation",
   "data": {
     "from": "/login",
@@ -130,7 +138,7 @@ Its `data` property has the following sub-properties:
 
 ```json
 {
-  "timestamp": 1461185753845,
+  "timestamp": "2016-04-20T20:55:53.845Z",
   "type": "http",
   "data": {
     "url": "http://example.com/api/1.0/users",
@@ -143,12 +151,16 @@ Its `data` property has the following sub-properties:
 
 ## Examples
 
+The following example illustrates the breadcrumbs part of the [event
+payload]({%- link _documentation/development/sdk-dev/event-payloads/index.md
+-%}) and omits other attributes for simplicity.
+
 ```json
 {
   "breadcrumbs": {
     "values": [
       {
-        "timestamp": 1461185753845,
+        "timestamp": "2016-04-20T20:55:53.845Z",
         "message": "Something happened",
         "category": "log",
         "data": {

@@ -1,5 +1,6 @@
 ---
 title: 'Advanced Usage'
+robots: noindex
 ---
 
 ## Capturing uncaught exceptions on macOS

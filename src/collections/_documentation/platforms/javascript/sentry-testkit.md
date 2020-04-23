@@ -31,8 +31,8 @@ Sentry.init({
 
 // then run any scenario that should call Sentry.catchException(...)
 
-expect(testKit.reports()).toHaveLength(1)
-const report = testKit.reports()[0]
+expect(testkit.reports()).toHaveLength(1)
+const report = testkit.reports()[0]
 expect(report).toHaveProperty(/*...*/)
 ```
 
