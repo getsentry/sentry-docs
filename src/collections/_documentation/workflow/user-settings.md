@@ -43,7 +43,7 @@ Security contains two sections: Settings and Session History.
 ## Settings
 ### Password
 
-As a reminder, changing your password invalidates all logged in sessions. For more details about changing passwords, see 1Password's blog post: [How often should you change your password?](https://blog.1password.com/how-often-should-you-change-your-password/)
+As a reminder, changing your password invalidates all logged in sessions. For more details about changing passwords, check with your information technology (IT) department.
 
 {% asset user-settings/us-pass.png alt="Password field in Security under User Settings" width="450" %}
 
@@ -84,7 +84,7 @@ Define Project Alerts in [Project] > Project Settings > Alerts. Slide the toggle
 
 Control workflow notifications (for example, in issue assignment, resolution status, and comments) by clicking a radio button under Send Me Workflow Notifications. Fine-tune workflow notifications per project with the dropdown selector.
 
-For more details, see the [full documentation on Alerts & Notifications]({%- link _documentation/workflow/alerts-notifications/index.md -%})
+For more details, see the [full documentation on Alerts & Notifications]({%- link _documentation/workflow/alerts-notifications/index.md -%}).
 
 ## Email Routing
 
