@@ -36,7 +36,6 @@ Choose between displaying your initials, an image, or a Gravatar next to your na
 
 {% asset user-settings/us-avatar.png alt="Avatar field in Account Details under User Settings" width="227.5" %}
 
-
 # Security
 
 Security contains two sections: Settings and Session History.
@@ -50,7 +49,7 @@ As a reminder, changing your password invalidates all logged in sessions. For mo
 
 ### Sessions
 
-Sessions end with each sign out. Clicking "Sing out of all devices" will end your sessions with all Sentry devices.
+Sessions end with each sign out. Clicking "Sign out of all devices" will end your sessions with all Sentry devices.
 
 {% asset user-settings/us-sess.png alt="Sessions field in Security under User Settings" width="550" %}
 
@@ -62,37 +61,40 @@ Keep your account information secure by enabling a two-factor authentication met
 
 ### Recover Codes
 
-Use recovery codes to access your account if you lose your device and cannot receive two-factor authentication codes. Click the "View Codes" button to download, print, or copy your codes to a secure location.
+If you cannot receive two-factor authentication codes, such as when you lose your device, use recovery codes to access your account. Click the "View Codes" button to download, print, or copy your codes to a secure location.
 
 {% asset user-settings/us-rec.png alt="Recover codes field in Security under User Settings" width="673" %}
 
 ### Session History
 
-Find a historical list of sessions, including First Seen and Last Seen timestamps, under the Session History tab.
+Find a historical list of your sessions, including First Seen and Last Seen timestamps, under the Session History tab.
 
 {% asset user-settings/us-shistory.png alt="Session History tab in Security under User Settings" width="380" %}
 
 # Notifications
 
-Sentry notifications are broadly categorized into alerts and non-alert notifications. Alerts can be sent to many supported [integrations]({%- link _documentation/workflow/integrations/index.md -%}#webhook-alerts). Non-alert notifications only go to email.
+Sentry notifications are broadly categorized into alerts and non-alert notifications. 
+
+- Alerts can be sent to many supported [integrations]({%- link _documentation/workflow/integrations/index.md -%}#webhook-alerts). 
+- Non-alert notifications only go to email.
 
 ## Alerts & Notifications
 
-You can define Project Alerts in  [Project] > Project Settings > Alerts. Slide the toggle under Send Me Alerts to receive team alerts. You can also fine-tune the alerts you receive per project.
+Define Project Alerts in [Project] > Project Settings > Alerts. Slide the toggle under Send Me Alerts to receive team alerts. Fine-tune the alerts you receive per project with the dropdown selector.
 
-Control workflow notifications (for example, in issue assignment, resolution status, and comments) by clicking a radio button under Send Me Workflow Notifications. You can also fine-tune workflow notifications per project.
+Control workflow notifications (for example, in issue assignment, resolution status, and comments) by clicking a radio button under Send Me Workflow Notifications. Fine-tune workflow notifications per project with the dropdown selector.
 
 For more details, see the [full documentation on Alerts & Notifications]({%- link _documentation/workflow/alerts-notifications/index.md -%})
 
 ## Email Routing
 
-Route email notifications to an alternative email address and keep your project notifications organized. 
+Email notifications default to the email address used to set up your Sentry account. Route email notifications to an alternative email address and keep your project notifications organized. For example, infrastructure-related projects can route to an email dedicated to your team's infrastructure.
 
 {% asset user-settings/us-eroute.png alt="Email Routing field in Notifications under User Settings" width="450" %}
 
 ## Weekly Reports
 
-Sentry generates reports per project and sends them once a week. You can fine-tune your reports per project.
+Sentry generates reports per project and sends them once a week on Mondays. Fine-tune your reports per project with the dropdown selector.
 
 {% asset user-settings/us-wrfield.png alt="Weekly Reports field in Notifications under User Settings" width="450" %}
 
@@ -102,7 +104,7 @@ The following report sample shows details on Events Seen This Week, Events by Is
 
 ## Deploy Notifications
 
-Choose a Deploy Notifications option to keep track of deployment details like release version, environments, and commit reviews. You can fine-tune options from the dropdown next to each organization.
+Choose a Deploy Notifications option to keep track of deployment details such as release version, environments, and commit reviews. Fine-tune options from the dropdown next to each organization.
 
 {% asset user-settings/us-deploy.png alt="Deploy Notifications selection in Notifications under User Settings" width="673" %}
 
@@ -113,7 +115,7 @@ Updates regarding your user account actions, such as claiming unassigned issues,
 {% asset user-settings/us-myact.png alt="My Activity selection in Notifications under User Settings" width="450" %}
 
 {% capture __alert_content -%}
-You can find a shortcut to the Emails panel at the bottom of this section.
+Find a shortcut to the Emails panel at the bottom of this section.
 
 {% asset user-settings/us-npanellink.png alt="A link to the Email panel in Notifications under My Activity" width="465" %}
 
@@ -125,13 +127,13 @@ You can find a shortcut to the Emails panel at the bottom of this section.
 
 ## Emails
 
-The email address used to login to your Sentry account is by default your primary email address. You can add an alternative email address under the Add Secondary Emails section.
+The email address used to login to your Sentry account is by default your primary email address. Add an alternative email address under the Add Secondary Emails section.
 
 {% asset user-settings/us-eprime.png alt="Primary email field in Emails under User Settings" width="494" %}
 
 {% capture __alert_content -%}
 
-You can find a shortcut to the Notifications panel at the bottom of this section.
+Find a shortcut to the Notifications panel at the bottom of this section.
 
 {% asset user-settings/us-epanellink.png alt="A link to the Notifications panel in Emails under Additional Email" width="450" %} 
 
@@ -143,13 +145,13 @@ You can find a shortcut to the Notifications panel at the bottom of this section
 
 ## Subscriptions
 
-As part of our compliance with the EU’s General Data Protection Regulation (GDPR), you wills only receive marketing campaign emails after explicitly opting-in to any of the listed categories. 
+As part of our compliance with the EU’s General Data Protection Regulation (GDPR), you receive marketing campaign emails only after explicitly opting into any of the listed categories.
 
 {% asset user-settings/us-subs.png alt="Subscriptions section under User Settings" width="450" %}
 
 ## Authorized Applications
 
-Sentry lists all authorized third-party applications in this section and requires authentication tokens for authorization. You can find tokens in the [*Auth Tokens*](https://sentry.io/api/) section. 
+Sentry lists all authorized third-party applications in this section and requires authentication tokens for authorization. Find tokens in the [*Auth Tokens*](https://sentry.io/api/) section. 
 
 ## Identities
 
