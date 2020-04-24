@@ -20,6 +20,7 @@ title: Organizations
 - [Delete a Widget on an Organization&#39;s Dashboard]({%- link _documentation/api/organizations/delete-organization-dashboard-widget-details.md -%})
 - [Resolve a Short ID]({%- link _documentation/api/organizations/get-short-id-lookup.md -%})
 - [Resolve a Event ID]({%- link _documentation/api/organizations/get-event-id-lookup.md -%})
+- [Generate a list of data scrubbing selectors from existing event data.]({%- link _documentation/api/organizations/get-data-scrubbing-selector-suggestions.md -%})
 - [List an Organization&#39;s Projects]({%- link _documentation/api/organizations/get-organization-projects.md -%})
 - [Verify If Any Project Within An Organization Has Received a First Event]({%- link _documentation/api/organizations/get-organization-projects-sent-first-event.md -%})
 - [List an Organization&#39;s Repositories]({%- link _documentation/api/organizations/get-organization-repositories.md -%})

@@ -28,7 +28,7 @@
       "type": "array[string]"
     }
   ], 
-  "sidebar_order": 17, 
+  "sidebar_order": 18, 
   "title": "Verify If Any Project Within An Organization Has Received a First Event", 
   "warning": null
 }

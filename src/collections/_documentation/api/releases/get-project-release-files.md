@@ -5,8 +5,8 @@
   "api_path": "/api/0/projects/{organization_slug}/{project_slug}/releases/{version}/files/", 
   "authentication": "required", 
   "description": "Retrieve a list of files for a given release.", 
-  "example_request": "GET /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/cd5c599e185c87fe5de29e2a47d72ff5e4549779/files/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>", 
-  "example_response": "HTTP/1.1 200 OK\nContent-Length: 219\nX-XSS-Protection: 1; mode=block\nX-Content-Type-Options: nosniff\nContent-Language: en\nAccess-Control-Expose-Headers: X-Sentry-Error, Retry-After\nVary: Accept-Language, Cookie\nAccess-Control-Allow-Methods: GET, POST, HEAD, OPTIONS\nLink: <https://sentry.io/api/0/projects/the-interstellar-jurisdiction/pump-station/releases/cd5c599e185c87fe5de29e2a47d72ff5e4549779/files/?&cursor=100:-1:1>; rel=\"previous\"; results=\"false\"; cursor=\"100:-1:1\", <https://sentry.io/api/0/projects/the-interstellar-jurisdiction/pump-station/releases/cd5c599e185c87fe5de29e2a47d72ff5e4549779/files/?&cursor=100:1:0>; rel=\"next\"; results=\"false\"; cursor=\"100:1:0\"\nAllow: GET, POST, HEAD, OPTIONS\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Headers: X-Sentry-Auth, X-Requested-With, Origin, Accept, Content-Type, Authentication, Authorization\nContent-Type: application/json\nX-Frame-Options: deny\n\n[\n  {\n    \"dateCreated\": \"2020-03-23T15:31:07.153495Z\", \n    \"dist\": null, \n    \"headers\": {\n      \"Content-Type\": \"text/plain; encoding=utf-8\"\n    }, \n    \"id\": \"2\", \n    \"name\": \"/demo/message-for-you.txt\", \n    \"sha1\": \"2ef7bde608ce5404e97d5f042f95f89f1c232871\", \n    \"size\": 12\n  }\n]", 
+  "example_request": "GET /api/0/projects/the-interstellar-jurisdiction/pump-station/releases/3e80c1da2bbbe10c942dd60224e9304e6c9dc078/files/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>", 
+  "example_response": "HTTP/1.1 200 OK\nContent-Length: 219\nX-XSS-Protection: 1; mode=block\nX-Content-Type-Options: nosniff\nContent-Language: en\nAccess-Control-Expose-Headers: X-Sentry-Error, Retry-After\nVary: Accept-Language, Cookie\nAccess-Control-Allow-Methods: GET, POST, HEAD, OPTIONS\nLink: <https://sentry.io/api/0/projects/the-interstellar-jurisdiction/pump-station/releases/3e80c1da2bbbe10c942dd60224e9304e6c9dc078/files/?&cursor=100:-1:1>; rel=\"previous\"; results=\"false\"; cursor=\"100:-1:1\", <https://sentry.io/api/0/projects/the-interstellar-jurisdiction/pump-station/releases/3e80c1da2bbbe10c942dd60224e9304e6c9dc078/files/?&cursor=100:1:0>; rel=\"next\"; results=\"false\"; cursor=\"100:1:0\"\nAllow: GET, POST, HEAD, OPTIONS\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Headers: X-Sentry-Auth, X-Requested-With, Origin, Accept, Content-Type, Authentication, Authorization, Content-Encoding\nContent-Type: application/json\nX-Frame-Options: deny\n\n[\n  {\n    \"dateCreated\": \"2020-04-23T21:41:34.545097Z\", \n    \"dist\": null, \n    \"headers\": {\n      \"Content-Type\": \"text/plain; encoding=utf-8\"\n    }, \n    \"id\": \"2\", \n    \"name\": \"/demo/message-for-you.txt\", \n    \"sha1\": \"2ef7bde608ce5404e97d5f042f95f89f1c232871\", \n    \"size\": 12\n  }\n]", 
   "method": "GET", 
   "parameters": null, 
   "path_parameters": [
@@ -27,7 +27,7 @@
     }
   ], 
   "query_parameters": null, 
-  "sidebar_order": 17, 
+  "sidebar_order": 18, 
   "title": "List a Project Release's Files", 
   "warning": null
 }

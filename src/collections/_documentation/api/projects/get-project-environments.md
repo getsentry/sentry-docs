@@ -6,7 +6,7 @@
   "authentication": "required", 
   "description": "Return environments for a given project.", 
   "example_request": "GET /api/0/projects/the-interstellar-jurisdiction/pump-station/environments/ HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>", 
-  "example_response": "HTTP/1.1 200 OK\nContent-Length: 91\nX-XSS-Protection: 1; mode=block\nX-Content-Type-Options: nosniff\nContent-Language: en\nAccess-Control-Expose-Headers: X-Sentry-Error, Retry-After\nVary: Accept-Language, Cookie\nAccess-Control-Allow-Methods: GET, HEAD, OPTIONS\nAllow: GET, HEAD, OPTIONS\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Headers: X-Sentry-Auth, X-Requested-With, Origin, Accept, Content-Type, Authentication, Authorization\nContent-Type: application/json\nX-Frame-Options: deny\n\n[\n  {\n    \"id\": \"1\", \n    \"isHidden\": false, \n    \"name\": \"prod\"\n  }, \n  {\n    \"id\": \"2\", \n    \"isHidden\": false, \n    \"name\": \"production\"\n  }\n]", 
+  "example_response": "HTTP/1.1 200 OK\nContent-Length: 91\nX-XSS-Protection: 1; mode=block\nX-Content-Type-Options: nosniff\nContent-Language: en\nAccess-Control-Expose-Headers: X-Sentry-Error, Retry-After\nVary: Accept-Language, Cookie\nAccess-Control-Allow-Methods: GET, HEAD, OPTIONS\nAllow: GET, HEAD, OPTIONS\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Headers: X-Sentry-Auth, X-Requested-With, Origin, Accept, Content-Type, Authentication, Authorization, Content-Encoding\nContent-Type: application/json\nX-Frame-Options: deny\n\n[\n  {\n    \"id\": \"1\", \n    \"isHidden\": false, \n    \"name\": \"prod\"\n  }, \n  {\n    \"id\": \"2\", \n    \"isHidden\": false, \n    \"name\": \"production\"\n  }\n]", 
   "method": "GET", 
   "parameters": null, 
   "path_parameters": [

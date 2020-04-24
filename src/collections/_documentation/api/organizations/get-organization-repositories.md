@@ -17,7 +17,7 @@
     }
   ], 
   "query_parameters": null, 
-  "sidebar_order": 18, 
+  "sidebar_order": 19, 
   "title": "List an Organization's Repositories", 
   "warning": null
 }

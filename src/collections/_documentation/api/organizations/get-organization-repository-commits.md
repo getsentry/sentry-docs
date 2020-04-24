@@ -22,7 +22,7 @@
     }
   ], 
   "query_parameters": null, 
-  "sidebar_order": 19, 
+  "sidebar_order": 20, 
   "title": "List a Repository's Commits", 
   "warning": null
 }

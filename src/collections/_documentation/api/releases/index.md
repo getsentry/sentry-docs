@@ -21,6 +21,7 @@ title: Releases
 - [List an Organization Release&#39;s Commits]({%- link _documentation/api/releases/get-organization-release-commits.md -%})
 - [List a Project Release&#39;s Commits]({%- link _documentation/api/releases/get-project-release-commits.md -%})
 - [List issues to be resolved in a particular release]({%- link _documentation/api/releases/get-project-issues-resolved-in-release.md -%})
+- [Get a Project Release&#39;s Stats]({%- link _documentation/api/releases/get-project-release-stats.md -%})
 - [List a Project Release&#39;s Files]({%- link _documentation/api/releases/get-project-release-files.md -%})
 - [Upload a New Project Release File]({%- link _documentation/api/releases/post-project-release-files.md -%})
 - [Retrieve a Project Release&#39;s File]({%- link _documentation/api/releases/get-project-release-file-details.md -%})

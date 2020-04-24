@@ -6,7 +6,7 @@
   "authentication": "required", 
   "description": "Permanently remove the given issues. The list of issues to\nmodify is given through the `id` query parameter.  It is repeated\nfor each issue that should be removed.\n\nOnly queries by 'id' are accepted.\n\nIf any ids are out of scope this operation will succeed without\nany data mutation.", 
   "example_request": "DELETE /api/0/projects/the-interstellar-jurisdiction/amazing-plumbing/issues/?id=5&id=6 HTTP/1.1\nHost: sentry.io\nAuthorization: Bearer <token>", 
-  "example_response": "HTTP/1.1 204 No Content\nContent-Length: 0\nX-XSS-Protection: 1; mode=block\nX-Content-Type-Options: nosniff\nContent-Language: en\nAccess-Control-Expose-Headers: X-Sentry-Error, Retry-After\nVary: Accept-Language, Cookie\nAccess-Control-Allow-Methods: GET, PUT, DELETE, HEAD, OPTIONS\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Headers: X-Sentry-Auth, X-Requested-With, Origin, Accept, Content-Type, Authentication, Authorization\nX-Frame-Options: deny", 
+  "example_response": "HTTP/1.1 204 No Content\nContent-Length: 0\nX-XSS-Protection: 1; mode=block\nX-Content-Type-Options: nosniff\nContent-Language: en\nAccess-Control-Expose-Headers: X-Sentry-Error, Retry-After\nVary: Accept-Language, Cookie\nAccess-Control-Allow-Methods: GET, PUT, DELETE, HEAD, OPTIONS\nAllow: GET, PUT, DELETE, HEAD, OPTIONS\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Headers: X-Sentry-Auth, X-Requested-With, Origin, Accept, Content-Type, Authentication, Authorization, Content-Encoding\nX-Frame-Options: deny", 
   "method": "DELETE", 
   "parameters": null, 
   "path_parameters": [
