@@ -93,3 +93,11 @@ In order to keep the original log and context files, make sure to enable the *Ev
 feature in your Sentry project.
 
 {% include platforms/event-attachments.md %}
+
+## Size Limits
+
+Event ingestion imposes limits on the size of UE4 crash reports. These limits
+are subject to future change and defined currently as:
+
+- *20MB* for a compressed request
+- *50MB* for the full crash report after decompression
