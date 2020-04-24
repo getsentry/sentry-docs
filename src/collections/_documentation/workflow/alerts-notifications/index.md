@@ -14,7 +14,7 @@ Metric Alerts allow you to filter, aggregate, and set thresholds across _all eve
 ### Metric Alerts
 
 {% capture __alert_content -%}
-Metric Alerts are currently in beta. For more information about access to Metric Alerts, feel free to reach out at alerting-feedback@sentry.io.
+Metric Alerts are currently in beta and available for [Team and Business plans](https://sentry.io/pricing/). For more information about access to Metric Alerts, feel free to reach out at [alerting-feedback@sentry.io](mailto:alerting-feedback@sentry.io).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"

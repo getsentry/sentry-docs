@@ -8,7 +8,7 @@ Sentry users with admin permissions or higher can create one of two types of ale
 ## Metric Alerts
 
 {% capture __alert_content -%}
-Metric Alerts are currently in beta. For more information about access to Metric Alerts, feel free to reach out at alerting-feedback@sentry.io.
+Metric Alerts are currently in beta and available for [Team and Business plans](https://sentry.io/pricing/). For more information about access to Metric Alerts, feel free to reach out at [alerting-feedback@sentry.io](mailto:alerting-feedback@sentry.io).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
