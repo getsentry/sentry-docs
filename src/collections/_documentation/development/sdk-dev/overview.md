@@ -107,7 +107,8 @@ The final endpoint you’ll be sending requests to is constructed per the follow
 '{BASE_URI}/api/{PROJECT_ID}/{ENDPOINT}/'
 ```
 
-There are the following endpoints:
+Sentry provides the following endpoints:
+
 - [`/envelope/`]({%- link _documentation/development/sdk-dev/envelopes.md -%})
   for any submission using Envelopes.
 - [`/store/`]({%- link _documentation/development/sdk-dev/store.md -%}) for
@@ -198,7 +199,7 @@ it’s possible to send these values via the querystring:
 
 `sentry_client`
 
-: An arbitrary string which identifies your SDK, including its version. The
+: An arbitrary string that identifies your SDK, including its version. The
   typical pattern for this is ‘**client_name**/**client_version**‘.
 
   For example, the Python SDK might send this as ‘raven-python/1.0’.
@@ -217,7 +218,7 @@ it’s possible to send these values via the querystring:
 
 ## HTTP Headers
 
-SDKs are always recommended to send the following headers:
+We recommend always sending the following headers:
 
 - `content-type`
 - `content-length`
@@ -250,10 +251,9 @@ and Sentry:
 
 ## Transfer Encoding
 
-Only recommended for very large envelopes, transmission may be chunked using
-chunked transfer encoding by setting the header `transfer-encoding: chunked`.
-This allows the `content-length` header to be omitted and requires the request
-body to be wrapped into chunk headers.
+Transfer encoding is recommended for only very large requests. Set the header to
+`transfer-encoding: chunked`, which allows omission of the `content-length`
+header and requires the request body to be wrapped into chunk headers.
 
 See
 [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding)
@@ -273,20 +273,19 @@ Content-Type: application/json
 }
 ```
 
-One thing to take note of is the response status code. Sentry uses this in a
-variety of ways. You’ll **always** want to check for a `200` response if you
-want to ensure that the message was delivered. A small level of validation
+Note the response code which Sentry will use. **Always** check for a `200`
+response, which confirms the message was delivered. A small level of validation
 happens immediately that may result in a different response code (and message).
 
 ## Handling Errors
 
-It is **highly encouraged** that your SDK handles failures from the Sentry
-server gracefully. SDKs are expected to honor the 429 status code and to not
-try sending until the retry-after kicks in. It is expected for SDKs to drop
-events if Sentry is unavailable instead of retrying.
+We **highly encourage** that your SDK handle failures from the Sentry server
+gracefully. Specifically, SDKs must honor the `429` status code and not attempt
+sending until the `Retry-After` kicks in. SDKs should drop events if Sentry is
+unavailable instead of retrying.
 
 To debug an error during development, inspect the response headers and response
-body. For example, you might get something like this:
+body. For example, you may get a response similar to:
 
 ```http
 HTTP/1.1 400 Bad Request
@@ -303,14 +302,15 @@ X-Sentry-Error: failed to read request body
 ```
 
 The `X-Sentry-Error` header and response body will not always contain a message,
-but they can be used to debug clients. When emitted, they will contain the
-precise error message. This is a good way to identify the root cause.
+but they can still be helpful in debugging clients. When emitted, they will
+contain a precise error message, which is useful to identify root cause.
 
 {% capture __alert_content -%}
-SDKs are not recommended to retry event submission automatically on error, not
-even if a `Retry-After` is declared in the response headers. If a request failed
-once, it very likely fails again on the next attempt. Retrying too often may
-result in rate limiting or blocking by the Sentry server.
+We do not recommend that SDKs retry event submissions automatically on error
+&nbsp; not even if `Retry-After` is declared in the response headers. If a
+request fails once, it is very likely to fail again on the next attempt.
+Retrying too often may cause further rate limiting or blocking by the Sentry
+server.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

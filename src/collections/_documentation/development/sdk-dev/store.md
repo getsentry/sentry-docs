@@ -44,8 +44,8 @@ _documentation/development/sdk-dev/event-payloads/index.md
 
 ## HTTP Headers
 
-The store endpoint only supports JSON payloads. While not enforced by the
-endpoint, it is recommended to submit the valid MIME type for JSON payloads:
+The store endpoint supports only JSON payloads. While not enforced by the
+endpoint, we recommend submitting the valid MIME type for JSON payloads:
 
 ```
 Content-Type: application/json
