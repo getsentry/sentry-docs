@@ -416,10 +416,9 @@ POST /api/<project_id>/envelope/
 
 ### HTTP Headers
 
-Envelope requests may contain all headers as regular store requests. Required
-headers by this endpoint are:
-
-- `content-type` must be set to `application/x-sentry-envelope`.
+Envelope requests may contain all headers as regular store requests. The only
+accepted `content-type` is `application/x-sentry-envelope`, which is implied if
+it is missing.
 
 ### Authentication
 
