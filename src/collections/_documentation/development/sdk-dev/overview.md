@@ -104,13 +104,30 @@ The final endpoint you’ll be sending requests to is constructed per the follow
 ```
  {BASE_URI} = '{PROTOCOL}://{HOST}{PATH}'
 
-'{BASE_URI}/api/{PROJECT_ID}/store/'
+'{BASE_URI}/api/{PROJECT_ID}/{ENDPOINT}/'
 ```
+
+Sentry provides the following endpoints:
+
+- [`/envelope/`]({%- link _documentation/development/sdk-dev/envelopes.md -%})
+  for any submission using Envelopes.
+- [`/store/`]({%- link _documentation/development/sdk-dev/store.md -%}) for
+  plain JSON event submission.
+- [`/minidump/`]({%- link _documentation/platforms/native/minidump.md -%}) for
+  multipart requests containing Minidumps.
+- [`/unreal/`]({%- link _documentation/platforms/native/ue4.md -%}) for Unreal
+  Engine 4 crash reports.
+- [`/security/`]({%- link
+  _documentation/error-reporting/security-policy-reporting.md -%}) for Browser
+  CSP reports, usually configured in a browser instead of an SDK.
+
+See the respective endpoints for information on how to compose proper request
+payloads.
 
 For example, given the following constructor:
 
 ```javascript
-Sentry.init({dsn: 'https://public:secret@sentry.example.com/1'})
+Sentry.init({dsn: 'https://public@sentry.example.com/1'})
 ```
 
 You should parse the following settings:
@@ -120,7 +137,7 @@ You should parse the following settings:
 -   Secret Key = `secret`
 -   Project ID = `1`
 
-The resulting POST request would then transmit to:
+The resulting POST request for a plain JSON payload would then transmit to:
 
 ```
 'https://sentry.example.com/api/1/store/'
@@ -137,50 +154,22 @@ code must not require the secret key to be set.
   level="warning"
 %}
 
-## Building the JSON Packet
-
-The body of the post is a string representation of a JSON object. For example, with an included Exception event, a basic JSON body might resemble the following:
-
-```json
-{
-  "event_id": "fc6d8c0c43fc4630ad850ee518f1b9d0",
-  "transaction": "my.module.function_name",
-  "timestamp": "2011-05-02T17:41:36",
-  "tags": {
-    "ios_version": "4.0"
-  },
-  "exception": {"values":[{
-    "type": "SyntaxError",
-    "value": "Wattttt!",
-    "module": "__builtins__"
-  }]}
-}
-```
-
-The body of the event can carry attributes or interface values. The difference
-between them is that attributes are very barebones key/value pairs (for the
-most part) and interfaces are rich styled interface elements. Examples of
-attribute are `event_id` or `tags` whereas the `exception` key is an interface.
-
-For a list of all supported attributes and interfaces in event payloads, see
-[_Event Payloads_]({%- link
-_documentation/development/sdk-dev/event-payloads/index.md
--%}).
-
 ## Authentication
 
-An authentication header is expected to be sent along with the message body, which acts as an ownership identifier:
+An authentication header is expected to be sent along with the message body,
+which acts as an ownership identifier:
 
 ```
-X-Sentry-Auth: Sentry sentry_version=5,
+X-Sentry-Auth: Sentry sentry_version=7,
   sentry_client=<client version, arbitrary>,
   sentry_timestamp=<current timestamp>,
   sentry_key=<public api key>,
   sentry_secret=<secret api key>
 ```
 
-The `secret_secret` must only be included if a secret key portion was contained in the DSN.  Future versions
-of the protocol will fully deprecate the secret key.
+The `secret_secret` must only be included if a secret key portion was contained
+in the DSN.  Future versions of the protocol will fully deprecate the secret
+key.
 
 {% capture __alert_content -%}
 You should include the SDK version string in the User-Agent portion of the header, and it will be used if `sentry_client` is not sent in the auth header.
@@ -191,31 +180,33 @@ You should include the SDK version string in the User-Agent portion of the heade
   level="info"
 %}
 
-In situations where it’s not possible to send the custom `X-Sentry-Auth` header, it’s possible to send these values via the querystring:
+In situations where it’s not possible to send the custom `X-Sentry-Auth` header,
+it’s possible to send these values via the querystring:
 
 ```
-?sentry_version=5&sentry_key=<public api key>&sentry_secret=<secret api key>...
+?sentry_version=7&sentry_key=<public api key>&sentry_secret=<secret api key>...
 ```
+
+`sentry_key`
+
+: **Required.** The public key which should be provided as part of the SDK
+  configuration.
 
 `sentry_version`
 
-: The protocol version. The current version of the protocol is ‘7’.
+: **Required.** The protocol version. The current version of the protocol is
+  `7`.
 
 `sentry_client`
 
-: An arbitrary string which identifies your SDK, including its version.
+: An arbitrary string that identifies your SDK, including its version. The
+  typical pattern for this is `client_name/client_version`.
 
-  The typical pattern for this is ‘**client_name**/**client_version**‘.
-
-  For example, the Python SDK might send this as ‘raven-python/1.0’.
+  For example, the Python SDK might send this as `raven-python/1.0`.
 
 `sentry_timestamp`
 
 : The unix timestamp representing the time at which this event was generated.
-
-`sentry_key`
-
-: The public key which should be provided as part of the SDK configuration.
 
 `sentry_secret`
 
@@ -225,50 +216,53 @@ In situations where it’s not possible to send the custom `X-Sentry-Auth` heade
   emitted by SDKs as some older Sentry versions required it in most situations.
   The secret key will be phased out entirely in future versions of Sentry.
 
-## A Working Example
+## HTTP Headers
 
-When all is said and done, you should be sending an HTTP POST request to a Sentry webserver, where the path is the `BASE_URI/api/PROJECT_ID/store/`. So given the following DSN:
+We recommend always sending the following headers:
 
-```
-https://b70a31b3510c4cf793964a185cfe1fd0:b7d80b520139450f903720eb7991bf3d@sentry.example.com/1
-```
+- `content-type`
+- `content-length`
 
-The request body should then somewhat resemble the following:
+The following additional headers are permitted as per CORS policy:
 
-```http
-POST /api/1/store/ HTTP/1.1
-User-Agent: raven-python/1.0
-Content-Type: application/json
-X-Sentry-Auth: Sentry sentry_version=7,
-  sentry_timestamp=1329096377,
-  sentry_key=b70a31b3510c4cf793964a185cfe1fd0,
-  sentry_secret=b7d80b520139450f903720eb7991bf3d,
-  sentry_client=raven-python/1.0
+- `x-sentry-auth`
+- `x-requested-with`
+- `x-forwarded-for`
+- `origin`
+- `referer`
+- `accept`
+- `authentication`
+- `authorization`
+- `content-encoding`
+- `transfer-encoding`
 
-{
-  "event_id": "fc6d8c0c43fc4630ad850ee518f1b9d0",
-  "culprit": "my.module.function_name",
-  "timestamp": "2011-05-02T17:41:36",
-  "message": "SyntaxError: Wattttt!",
-  "exception": {
-    "values": [
-      {
-        "type": "SyntaxError",
-        "value": "Wattttt!",
-        "module": "__builtins__"
-      }
-    ]
-  }
-}
-```
+## Request Compression
 
-## Request Encoding
+SDKs are heavily encouraged to compress the request body before sending it to
+the server to keep the data small. The preferred method for this is to send a
+`content-encoding` header. The following content encodings are accepted by Relay
+and Sentry:
 
-SDKs are heavily encouraged to gzip or deflate encode the request body before sending it to the server to keep the data small. The preferred method for this is to send an `Content-Encoding: gzip` header. Alternatively the server also accepts gzip compressed json in a base64 wrapper which is detected regardless of the header. This allows you to send compressed events in very restrictive environments.
+- `gzip`: Using the [LZ77](http://en.wikipedia.org/wiki/LZ77_and_LZ78#LZ77)
+  compression algorithm.
+- `deflate`: Using [zlib](http://tools.ietf.org/html/rfc1950) structure with the
+  [deflate](http://tools.ietf.org/html/rfc1951) compression algorithm.
+- `br`: Using the [Brotli](https://en.wikipedia.org/wiki/Brotli) algorithm.
+
+## Transfer Encoding
+
+Transfer encoding is recommended for only very large requests. Set the header to
+`transfer-encoding: chunked`, which allows omission of the `content-length`
+header and requires the request body to be wrapped into chunk headers.
+
+See
+[MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding)
+for more details.
 
 ## Reading the Response
 
-You will receive an HTTP response from the server that looks something like this:
+On success, you will receive an HTTP response from the server containing a JSON
+payload with information on the submitted payload:
 
 ```http
 HTTP/1.1 200 OK
@@ -279,29 +273,50 @@ Content-Type: application/json
 }
 ```
 
-One thing to take note of is the response status code. Sentry uses this in a variety of ways. You’ll **always** want to check for a 200 response if you want to ensure that the message was delivered, as a small level of validation happens immediately that may result in a different response code (and message).
+Note the response code which Sentry will use. **Always** check for a `200`
+response, which confirms the message was delivered. A small level of validation
+happens immediately that may result in a different response code (and message).
 
-For example, you might get something like this:
+## Handling Errors
 
-```
+We **highly encourage** that your SDK handle failures from the Sentry server
+gracefully. Specifically, SDKs must honor the `429` status code and not attempt
+sending until the `Retry-After` kicks in. SDKs should drop events if Sentry is
+unavailable instead of retrying.
+
+To debug an error during development, inspect the response headers and response
+body. For example, you may get a response similar to:
+
+```http
 HTTP/1.1 400 Bad Request
-X-Sentry-Error: Client request error: Missing client version identifier
+Content-Type: application/json
+X-Sentry-Error: failed to read request body
 
-Client request error: Missing client version identifier
+{
+  "detail":"failed to read request body",
+  "causes":[
+    "failed to decode zlib payload",
+    "corrupt deflate stream"
+  ]
+}
 ```
+
+The `X-Sentry-Error` header and response body will not always contain a message,
+but they can still be helpful in debugging clients. When emitted, they will
+contain a precise error message, which is useful to identify root cause.
 
 {% capture __alert_content -%}
-The X-Sentry-Error header will not always be present but it can be used to debug clients.  When it can be emitted it will contain the precise error message.  This header is a good way to identify the root cause.
+We do not recommend that SDKs retry event submissions automatically on error
+&nbsp; not even if `Retry-After` is declared in the response headers. If a
+request fails once, it is very likely to fail again on the next attempt.
+Retrying too often may cause further rate limiting or blocking by the Sentry
+server.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
   content=__alert_content
   level="info"
 %}
-
-## Handling Failures
-
-It is **highly encouraged** that your SDK handles failures from the Sentry server gracefully.  SDKs are expected to honor the 429 status code and to not try sending until the retry-after kicks in.  It's acceptable for SDKs to drop events if Sentry is unavailable instead of retrying.
 
 ## Concurrency (Scope and Hubs)
 
