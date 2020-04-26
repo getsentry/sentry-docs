@@ -160,7 +160,7 @@ An authentication header is expected to be sent along with the message body,
 which acts as an ownership identifier:
 
 ```
-X-Sentry-Auth: Sentry sentry_version=5,
+X-Sentry-Auth: Sentry sentry_version=7,
   sentry_client=<client version, arbitrary>,
   sentry_timestamp=<current timestamp>,
   sentry_key=<public api key>,
@@ -184,7 +184,7 @@ In situations where it’s not possible to send the custom `X-Sentry-Auth` heade
 it’s possible to send these values via the querystring:
 
 ```
-?sentry_version=5&sentry_key=<public api key>&sentry_secret=<secret api key>...
+?sentry_version=7&sentry_key=<public api key>&sentry_secret=<secret api key>...
 ```
 
 `sentry_key`
@@ -195,14 +195,14 @@ it’s possible to send these values via the querystring:
 `sentry_version`
 
 : **Required.** The protocol version. The current version of the protocol is
-  ‘7’.
+  `7`.
 
 `sentry_client`
 
 : An arbitrary string that identifies your SDK, including its version. The
-  typical pattern for this is ‘**client_name**/**client_version**‘.
+  typical pattern for this is `client_name/client_version`.
 
-  For example, the Python SDK might send this as ‘raven-python/1.0’.
+  For example, the Python SDK might send this as `raven-python/1.0`.
 
 `sentry_timestamp`
 

@@ -18,8 +18,11 @@ of multiple Items in a single payload, such as:
 - Allow batching of certain Items into a single submission.
 - Offline storage of events along with all their meta data for deferred sending.
 
-Sentry specifies a dedicated endpoint at `/api/<project>/envelope/` for
-ingesting Envelopes.
+Sentry specifies a dedicated endpoint at for ingesting Envelopes:
+
+```
+POST /api/<project_id>/envelope/
+```
 
 ## Terminology
 
