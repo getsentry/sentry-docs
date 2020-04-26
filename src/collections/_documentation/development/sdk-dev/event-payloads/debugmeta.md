@@ -92,7 +92,7 @@ Attributes:
   still choose to place it at a different address. 
   
   If this value is non-zero, all symbols and addresses declared in the native
-  image start at this address, rather than `0`. In contrast, Sentry deals with
+  image start at this address, rather than `0`. By contrast, Sentry deals with
   addresses relative to the start of the image. For example, with
   `image_vmaddr: 0x40000`, a symbol located at `0x401000` has a relative address
   of `0x1000`.
@@ -188,7 +188,7 @@ Attributes:
   still choose to place it at a different address. 
   
   If this value is non-zero, all symbols and addresses declared in the native
-  image start at this address, rather than `0`. In contrast, Sentry deals with
+  image start at this address, rather than `0`. By contrast, Sentry deals with
   addresses relative to the start of the image. For example, with
   `image_vmaddr: 0x40000`, a symbol located at `0x401000` has a relative address
   of `0x1000`.

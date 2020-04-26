@@ -42,7 +42,7 @@ When you change the date range, Sentry recalculates the values. Sentry doesn't p
 
 Let's say you selected the 24-hour time range, have seven users that are using your application for seven days, and each day one of them experiences a crash. The Release Index page will show you that every day there were 85.7% crash-free users on the release.
 
-In contrast, let's say you selected the seven-day time range, have seven users, and each day a different user experiences a crash. By the end of the week, the Release Index page will show you the project had 0% crash-free users.
+By contrast, let's say you selected the seven-day time range, have seven users, and each day a different user experiences a crash. By the end of the week, the Release Index page will show you the project had 0% crash-free users.
 
 ## Release Details
 
