@@ -90,7 +90,7 @@ Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries
 
 In the past, custom context was called "extra" and set via a method like setExtra(), which is deprecated.
 
-Custom data set using `setExtra` appears in the "Additional Data" section of an event. In contrast, each key set using `setContext` gets its own section on the issue page, with the section title being the key name.
+Custom data set using `setExtra` appears in the "Additional Data" section of an event. By contrast, each key set using `setContext` gets its own section on the issue page, with the section title being the key name.
 
 For more details about predefined and custom contexts, see the [full documentation on Context Interface]({%- link _documentation/development/sdk-dev/event-payloads/contexts.md -%}). 
 

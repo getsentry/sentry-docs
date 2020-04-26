@@ -85,6 +85,21 @@ Attributes:
 : _Optional_. The absolute path to the dynamic library or executable. This helps
   to locate the file if it is missing on Sentry.
 
+`image_vmaddr`:
+
+: _Optional_: Preferred load address of the image in virtual memory, as declared
+  in the headers of the image. When loading an image, the operating system may
+  still choose to place it at a different address. 
+  
+  If this value is non-zero, all symbols and addresses declared in the native
+  image start at this address, rather than `0`. By contrast, Sentry deals with
+  addresses relative to the start of the image. For example, with
+  `image_vmaddr: 0x40000`, a symbol located at `0x401000` has a relative address
+  of `0x1000`.
+  
+  Relative addresses used in Apple Crash Reports and `addr2line` are usually in
+  the preferred address space, and not relative address space.
+  
 `arch`:
 
 : _Optional_: Architecture of the module. If missing, this will be backfilled by
@@ -100,6 +115,7 @@ Example:
   "code_file": "/usr/lib/libDiagnosticMessagesClient.dylib",
   "image_addr": "0x7fffe668e000",
   "image_size": 8192,
+  "image_vmaddr": "0x40000",
   "arch": "x86_64",
 }
 ```
@@ -165,6 +181,21 @@ Attributes:
 : _Optional_. The absolute path to the dynamic library or executable. This helps
   to locate the file if it is missing on Sentry.
 
+`image_vmaddr`:
+
+: _Optional_: Preferred load address of the image in virtual memory, as declared
+  in the headers of the image. When loading an image, the operating system may
+  still choose to place it at a different address. 
+  
+  If this value is non-zero, all symbols and addresses declared in the native
+  image start at this address, rather than `0`. By contrast, Sentry deals with
+  addresses relative to the start of the image. For example, with
+  `image_vmaddr: 0x40000`, a symbol located at `0x401000` has a relative address
+  of `0x1000`.
+  
+  Relative addresses used in `addr2line` are usually in the preferred address
+  space, and not relative address space.
+
 `arch`:
 
 : _Optional_: Architecture of the module. If missing, this will be backfilled by
@@ -180,6 +211,7 @@ Example:
   "debug_id": "e20a2268-5dc6-c165-b6aa-a12fa6765a6e",
   "image_addr": "0x7f5140527000",
   "image_size": 90112,
+  "image_vmaddr": "0x40000",
   "arch": "x86_64"
 }
 ```
@@ -247,6 +279,16 @@ debugging. Their structure is identical to other native images.
   the file if it is missing on Sentry. The code file should be provided to allow
   server-side stack walking of binary crash reports, such as Minidumps.
 
+`image_vmaddr`:
+
+: _Optional_: Preferred load address of the image in virtual memory, as declared
+  in the headers of the image. When loading an image, the operating system may
+  still choose to place it at a different address. 
+  
+  Symbols and addresses in the native image are always relative to the start of
+  the image and do not consider the preferred load address. It is merely a hint
+  to the loader.
+
 `arch`:
 
 : _Optional_: Architecture of the module. If missing, this will be backfilled by
@@ -263,6 +305,7 @@ Example:
   "debug_file": "dbghelp.pdb",
   "image_addr": "0x70850000",
   "image_size": "1331200",
+  "image_vmaddr": "0x40000",
   "arch": "x86"
 }
 ```
