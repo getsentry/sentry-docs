@@ -31,7 +31,9 @@ Automatic addition of useful attributes such as `tags` or `extra` or specific `c
 
 ## Breadcrumbs
 
-Manually record application events (into the current context) during the lifecycle of an application. Needs to implement a ring buffer so as not to grow indefinitely. The most recent breadcrumbs should be attached to events as they are created.
+Manually record application events (into the current scope) during the
+lifecycle of an application. Implement a ring buffer so as not to grow
+indefinitely. The most recent breadcrumbs should be attached to events as they occur.
 
 With deeper framework integration, the automatic recording of some breadcrumbs is possible and recommended.
 
