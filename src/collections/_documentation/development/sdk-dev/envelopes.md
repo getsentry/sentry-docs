@@ -18,13 +18,22 @@ of multiple Items in a single payload, such as:
 - Allow batching of certain Items into a single submission.
 - Offline storage of events along with all their meta data for deferred sending.
 
-Sentry specifies a dedicated endpoint at for ingesting Envelopes:
+Sentry specifies a dedicated endpoint for ingesting Envelopes:
 
 ```
 POST /api/<project_id>/envelope/
 ```
 
 ## Terminology
+
+<!--
+
+TODO: clarify reference points
+
+- What does "the implementation" refer to? SDK implementation?
+- If the SDK is building the envelope itself what does it do with the error it emits? Maybe this is only a problem when using Envelopes for inter-SDK communication.
+
+-->
 
 - *required*: The implementation may emit an error if this field is missing.
 - *recommended*: This field should be emitted when writing, but can be missing
@@ -44,7 +53,7 @@ These definitions apply to all parts of the Envelope data format:
 
 1. Newlines are defined as UNIX newlines, represented by `\n` and ASCII code 10.
    If newlines are preceded with `\r`, this character is considered part of the
-   previous line or payload and may emit an error.
+   previous line or payload and (who?) may emit an error.
 2. UUIDs are declared as 36 character strings and must contain
    dashes:`"12c2d058-d584-4270-9aa2-eca08bf20986"`. It is recommended to use
    UUID v4 in all cases.
@@ -70,7 +79,7 @@ Envelopes contain Headers in several places. Headers are JSON-encoded objects
   any implementation.
 - All known headers and their data types can be validated by an implementation;
   if validation fails, the Envelope may be rejected as malformed.
-- Empty headers `{}` are technically valid
+- Empty headers `{}` are valid.
 
 Header-only Example:
 
@@ -99,9 +108,15 @@ Payload = { * } ;
   implementation should consume Items until the file ends. 
 - Envelopes should be terminated with a trailing newline. This newline is
   optional. After the final newline, no whitespace is allowed.
+  <!-- is the trailing newline expected for binary content as well?
+ 
+  "Envelopes may be terminated by an optional trailing newline character.
+  After the final newline, no whitespace is allowed."
+  -->
 - Envelopes may be empty, terminating immediately after the headers.
 - The end of file (EOF) does not implicitly terminate an Envelope if more data
   is expected, such as a Payload.
+  <!-- what does the EOF mean in that case, then? A malformed envelope?! -->
 
 ### Items
 
@@ -112,13 +127,13 @@ There are two generic headers for every Item:
 
 `type`
 
-: **String, required.** Specifies the type of this Item and its contents. Based
+: **string, required.** Specifies the type of this Item and its contents. Based
   on the Item type, more headers may be required. See Data Integrity for a list
   of all Item types.
 
 `length`
 
-: *int, recommended.* The length of the payload in bytes. If no `length` is
+: **int, recommended.** The length of the payload in bytes. If no `length` is
   specified, the payload implicitly goes to the next newline. For payloads
   containing newline characters, the `length` must be specified.
 
@@ -171,7 +186,7 @@ Note that the attachment contains a Windows newline at the end of its
 payload which is included in `length`:
 
 ```
-{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","dsn":"https://e12d836b15bb49d7bbf99e64295d995b:@sentry.io/42"}\n
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","dsn":"___PUBLIC_DSN___"}\n
 {"type":"attachment","length":10,"content_type":"text/plain","filename":"hello.txt"}\n
 \xef\xbb\xbfHello\r\n\n
 {"type":"event","length":41,"content_type":"application/json","filename":"application.log"}\n
@@ -184,7 +199,7 @@ Note that the attachment contains a Windows newline at the end of its
 payload which is included in `length`:
 
 ```
-{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","dsn":"https://e12d836b15bb49d7bbf99e64295d995b:@sentry.io/42"}\n
+{"event_id":"9ec79c33ec9942ab8353589fcb2e04dc","dsn":"___PUBLIC_DSN___"}\n
 {"type":"attachment","length":10,"content_type":"text/plain","filename":"hello.txt"}\n
 \xef\xbb\xbfHello\r\n\n
 {"type":"event","length":41,"content_type":"application/json","filename":"application.log"}\n
@@ -425,7 +440,9 @@ it is missing.
 
 ### Authentication
 
-In addition to regular HTTP header- and querystring authentication, the Envelope
+<!-- The DSN being public, this sounds more like "identification" than "Authentication" https://en.wikipedia.org/wiki/Authentication -->
+
+In addition to regular HTTP header and querystring authentication, the Envelope
 endpoint allows to authenticate via an Envelope header. To choose this
 authentication method, set the `"dsn"` Envelope header to the full DSN string.
 
@@ -449,3 +466,11 @@ These limits are subject to future change and defined currently as:
 
 - [Multi Part Form Data](https://tools.ietf.org/html/rfc7578)
 - [Chunked Transfer Encoding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding)
+
+<!-- unless we talk about these references, what is the point of having them here?!
+
+`multipart/form-data` is what we don't use (and the alternatives are really `multipart/mixed`, `multipart/related`) -- https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
+
+`Chunked-Tranfer` seems orthogonal to Envelopes. In fact, Envelopes could be sent using `Chunked-Transfer` (couldn't they? A standards-compliant web server would handle the incoming stream and present it as an envelope)
+
+-->
