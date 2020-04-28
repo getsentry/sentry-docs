@@ -1,0 +1,173 @@
+---
+title: "Serializers"
+---
+
+Serializers are used to take complex python models and translate them into json. Serializers can also be used to deserialize json back to the python models after validating the incoming data.
+
+At Sentry we have **two** different types of serializers: Django Rest Framework serializers and model serializers.
+
+## Django Rest Framework
+
+Django Rest Framework's serializers are used to handle input validation and transformation.
+
+### Example
+
+The version of [Django Rest Framework](http://www.tomchristie.com/rest-framework-2-docs/) we currently use is **2.5**. We use Django Rest Framework serializers for data coming into Sentry. In the typical serializer, the fields are specified so that they validate the type and format of the data to your specifications. Django Rest Framework serializers can also save the information into the database if written to fit to the model.
+
+```python
+from rest_framework import serializers
+from sentry.api.serializers.rest_framework import ValidationError
+
+class ExampleSerializer(serializers.Serializer):
+	name = serializers.CharField()
+    age = serializers.IntegerField(required=False)
+    type = serializers.CharField()
+
+	def validate_type(self, attrs, source):
+		type = attrs[source]
+		if type not in ['bear', 'rabbit', 'puppy']:
+			raise ValidationError('%s is not a valid type' % type)
+		return attrs
+```
+
+**Field Checking**
+
+In the above example the serializer will accept and validate json containing three fields: `name`, `age`, and `type`.  Where `name` and `type` must be `strings` and `age` must be an `integer` as suggested. By default, fields are required, and if not supplied will be marked as invalid by the serializer. Note that the integer field age, required is set to `False`. And so may not be included and the serializer would still be considered valid.
+
+**Custom Validation**
+
+For values that need custom validation (in addition to simple type checking), a 
+
+`def validate_<variable_name>(self, attrs, source)`
+
+can be created where `<variable_name>` is substituted with the **exact** variable name as the field is given. So for example if I had a field name `typeName` the validate method name would be `validate_typeName` whereas if I had a field named `type_name` the validate method name would be `validate_type_name`. In the example given above, type is checked an must be a certain string. If a field does not match what your validate method is expecting raise a `ValidationError`. 
+
+### Usage
+
+In an endpoint, this is the typical use of a Django Rest Framework Serializer
+
+```python
+class ExampleEndpoint(Endpoint):
+	def post(self, request):
+		serializer = ExampleSerializer(request.DATA)
+		if not serializer.is_valid():
+			return Response(serializer.errors, status=400)
+
+    result = serializer.object
+		
+		#Assuming Example is a model with the same fields 
+		try:
+			with transaction.atomic():
+				Example.objects.create(
+						name=result['name'],
+						age=result.get('age'),
+						type=result['type'],
+				)
+		except IntegrityError:
+			return Response('This example already exists', status=409)
+		
+		return Response(serialize(result, request.user), status=201)
+```
+
+**Validating Data**
+
+The Serializer from the Django Rest Framework will be used in methods with incoming data (i.e. `put` and `post` methods) that need to be validated. Once the serializer is instantiated, you can call `serializer.is_valid()` to validate the data. `serializer.errors` will give feedback on specifically what was invalid about the data given. 
+
+For example given input
+
+```python
+{
+	'age':5,
+	'type':'puppy'
+}
+```
+
+The serializer would return an error stating that the required field name was not provided.
+
+**Saving Data**
+
+Once you have verified that the data is valid, you can save the data in one of two ways. The example given above is the most commonly done in sentry. Taking the `serializer.object` which is simply the validated data (and will be `None` if `serializer.is_valid()` return `False`) and saving that data directly in the model with `<ModelName>.objects.create`.
+
+An alternative method uses more of Django Rest Framework's features, the [ModelSerializer](http://www.tomchristie.com/rest-framework-2-docs/api-guide/serializers#modelserializer)
+
+```python
+from rest_framework import serializers
+from sentry.api.serializers.rest_framework import ValidationError
+
+class ExampleSerializer(serializer.ModelSerializer):
+	name = serializers.CharField()
+  age = serializers.IntegerField(required=False)
+  type = serializers.CharField()
+	
+	class Meta:
+		model = Example
+ 
+	def validate_type(self, attrs, source):
+		type = attrs[source]
+		if type not in ['bear', 'rabbit', 'puppy']:
+			raise ValidationError('%s is not a valid type' % type)
+		return attrs
+
+class ExampleEndpoint(Endpoint):
+	def post(self, request):
+		serializer = ExampleSerializer(request.DATA)
+		if not serializer.is_valid():
+			return Response(serializer.errors, status=400)
+
+    example = serializer.save()
+		return Response(serialize(example, request.user), status=201)
+```
+
+## Model Serializer
+
+[Sentry's Model Serializers](https://github.com/getsentry/sentry/blob/master/src/sentry/api/serializers/base.py) are a home grown version that is used only for outgoing data. The typical model serializer looks like this:
+
+```python
+@register(Example)
+class ExampleSerializer(Serializer):
+	def get_attrs(self, item_list, user):
+			attrs = {}
+			types = ExampleTypes.objects.filter(
+				type_name__in=[i.type for i in item_list]
+			)
+			for item in item_list:
+				attrs[item] = {}
+				attrs[item]['type'] = [t for t in types if t.name == item.type_name]
+			return attrs
+
+	def serialize(self, obj, attrs, user):
+		return {
+			'name':obj.name,
+			'type':attrs['type'],
+			'age': obj.age,
+		}
+
+```
+
+**Registering Model Serializers** 
+
+The decorator `@register` is required so that 
+
+```python
+`return Response(serialize(example, request.user), status=201)`
+```
+
+works. Under the hood it searches for a matching model `Example` in this case, given the type of model the variable `example` is. To match the model serializer with the Model you simply do 
+
+```python
+@register(<ModelName>)
+class ModelSerailizer(Serializer):
+...
+```
+
+**get_attrs Method**
+
+Why do this when Django Rest Framework has similar functionality? The `get_attrs` method is the reason. It allows you to do a bulk query versus multiple queries. In our example, instead of calling `ExampleTypes.objects.get(...)` multiple items, I can filter for the ones I want and assign them to the item in question using python. In the case of `attr` dictionary, the `key` is the item iteself. and the `value` is a dictionary with the name of the attribute you want to add and it's values. 
+
+```python
+attrs[item] = {'attribute_name': attribute}
+```
+
+**Serialize Method**
+
+Finally you return a dictionary with json serializable information that will be returned with the response.
