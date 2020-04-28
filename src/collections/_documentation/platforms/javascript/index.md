@@ -61,7 +61,19 @@ Then, you can see the error in your dashboard:
 [{% asset js-index/error-message.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/error-message.png @path %})
 
 ## Capturing Errors
-In most situations, you can capture errors automatically with `captureException()`.
+Automatically and manually capture errors, exceptions, and rejections.
+
+### Automatically Capture Errors
+By including and configuring Sentry, the SDK will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
+
+[{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
+
+Keep in mind; browsers are taking some security measures when serving script files from different origins. For errors to always make their way to Sentry, make sure that you configure CORS headers and add appropriate script attributes. 
+
+For more details, see Sentry's blog post: [What the heck is "Script error"?](https://blog.sentry.io/2016/05/17/what-is-script-error#the-fix-cors-attributes-and-headers).
+
+### Manually Capture Errors
+In most situations, you can capture errors manually with `captureException()`.
 
 ```javascript
 try {
@@ -72,19 +84,12 @@ try {
 ```
 For additional functionality, see [SDK Integrations](#sdk-integrations).
 
-### Automatically Capturing Errors
-By including and configuring Sentry, the SDK will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
-
-[{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
-
-Keep in mind; browsers are taking some security measures when serving script files from different origins. For errors to always make their way to Sentry, make sure that you configure CORS headers and add appropriate script attributes. For more information, refer to our [What the heck is "Script error"?](https://blog.sentry.io/2016/05/17/what-is-script-error#the-fix-cors-attributes-and-headers) blog post.
-
 ### Automatically Capturing Errors with Promises
-By default, Sentry for JavaScript captures unhandled promise rejections as described in the official ECMAScript 6 standard.
+By default, Sentry for JavaScript captures unhandled promise rejections, as described in the official ECMAScript 6 standard.
 
 Configuration may be required if you are using a third-party library to implement promises.
 
-Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by changing `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
+Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by changing the `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 ## Releases
 
