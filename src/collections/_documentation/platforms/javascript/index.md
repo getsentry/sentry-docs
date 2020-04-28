@@ -84,7 +84,7 @@ try {
 ```
 For additional functionality, see [SDK Integrations](#sdk-integrations).
 
-### Automatically Capturing Errors with Promises
+### Automatically Capture Errors with Promises
 By default, Sentry for JavaScript captures unhandled promise rejections, as described in the official ECMAScript 6 standard.
 
 Configuration may be required if you are using a third-party library to implement promises.
