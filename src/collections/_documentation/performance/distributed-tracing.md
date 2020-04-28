@@ -115,7 +115,7 @@ Some spans within a transaction may be the parent of another transaction. If you
 ## Setting Up Tracing
 
 {% capture __alert_content -%}
-Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [https://sentry.io/for/performance/](https://sentry.io/for/performance/).
+Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [performance-feedback@sentry.io](mailto:performance-feedback@sentry.io).
 
 Supported SDKs for Tracing:
 - JavaScript Browser SDK ≥ 5.14.0
