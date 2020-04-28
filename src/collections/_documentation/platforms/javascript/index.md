@@ -89,7 +89,7 @@ By default, Sentry for JavaScript captures unhandled promise rejections, as desc
 
 Configuration may be required if you are using a third-party library to implement promises.
 
-Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by changing the `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
+Most promise libraries have a global hook for capturing unhandled errors. Disable default behavior by changing the `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into each event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 ## Releases
 
