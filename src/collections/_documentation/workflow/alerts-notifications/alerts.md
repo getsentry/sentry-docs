@@ -98,7 +98,7 @@ In the example, the alert will not fire because an event cannot satisfy both of 
 The following actions are available:
 
 - Send a notification to all legacy integrations
-    - [Legacy integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}), also known as Plugins, are configured per project. Legacy integrations currently include email.
+    - [Legacy integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}), also known as Plugins, are configured per project. 
 - Send a notification to a single legacy integration (service)
     - "service" is the same as legacy integration
 - Send a notification to a global integration, which includes
