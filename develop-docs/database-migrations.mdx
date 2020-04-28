@@ -1,0 +1,291 @@
+---
+title: "Database Migrations"
+---
+
+Django migrations are how we handle changes to the database in Sentry.
+
+Django migration official docs: [https://docs.djangoproject.com/en/1.11/topics/migrations/](https://docs.djangoproject.com/en/1.11/topics/migrations/) . These will cover most things you need to understand what a migration is doing.
+
+## Commands
+
+Note that for all of these commands you can substitute `getsentry` for `sentry` if in the `getsentry` repo.
+
+### Upgrade your database to latest
+
+`sentry upgrade` will automatically bring your migrations up to date. You can also run `sentry django migrate` to access the migration command directly.
+
+### Move your database to a specific migration
+
+This can be helpful for when you want to test a migration.
+
+`sentry django migrate <app_name> <migration_name>` - Note that `migration_name` can be a partial match, often the number is all you need. 
+
+eg: `sentry django migrate sentry 0005`
+
+This can be used to roll a migration back as well. Useful in dev if you make a mistake.
+
+### Produce SQL for a migration
+
+This is helpful for people reviewing your code, since it's not always clear exactly what a Django migration is actually going to do.
+
+`sentry django sqlmigrate <app_name> <migration_name>`
+
+eg `sentry django sqlmigrate sentry 0003`
+
+### Generate Migrations
+
+This generates migrations for you automatically based on changes you've made to models.
+
+`sentry django makemigrations`
+
+or
+
+`sentry django makemigrations <app_name>` for a specific app. 
+
+eg `sentry django makemigrations sentry`
+
+When you include a migration in a pr, also generate the sql for the migration and include it as a comment so that your reviewers can more easily understand what Django is doing.
+
+You can also generate an empty migration with `sentry django makemigrations <app_name> --empty`. This is useful for data migrations and other custom work.
+
+## Merging migrations to master
+
+When merging to master you might notice a conflict with `migrations_lockfile.txt`. This file is in place to help us avoid merging two migrations with the same migration number to master, and if you're conflicting with it then it's likely someone has committed a migration ahead of you.
+
+To resolve this, rebase against latest master, delete your current migration and then regenerate it. If your migration was custom, just save the operations in a text file somewhere so that you can reapply them on the regenerated migration.
+
+Always commit the changes to `migrations_lockfile.txt` with your migration.
+
+## Guidelines
+
+There are some things we need to be careful about when running migrations.
+
+### Filters
+
+If a (data) migration involves large tables, or columns that aren't indexed it is better to iterate over the entire table instead of using a filter.
+For example:
+
+```python
+EnvironmentProject.objects.filter(environment__name="none")
+```
+
+Because there are too many `EnvironmentProject` rows, this will lock the whole table.
+Instead we should iterate over all the `Environment` rows using `RangeQuerySetWrapperWithProgressBar` since it will do it in chunks. 
+For example:
+
+```python
+for env in RangeQuerySetWrapperWithProgressBar(Environment.objects.all()):
+	if env.name == 'none':
+		# Do what you need
+```
+
+This will run slower, but that's better than locking the database.
+
+### Indexes
+
+We prefer to create indexes on large existing tables with `CREATE INDEX CONCURRENTLY`. When we do this we can't run the migration in a transaction, so it's important to use `atomic = False` to run these.
+
+### Deleting columns/tables
+
+This is complicated due to our deploy process. When we deploy, we run migrations, and then push out the application code, which takes a while. This means that if we just delete a column or model, then code in sentry will be looking for those columns/tables and erroring until the deploy completes. In some cases, this can mean sentry is hard down until the deploy is finished.
+
+To avoid this, follow these steps:
+
+#### Columns
+
+- Mark the column as nullable if it isn't, and create a migration.
+- Deploy.
+- Remove the column from the model, but in the migration make sure we only mark the state as removed.
+- Deploy.
+- Finally, create a migration that deletes the column.
+
+Here's an example of removing columns that were already nullable. First we remove the columns from the model, and then modify the migration to only update the state and make no database operations.
+
+```python
+operations = [
+        migrations.SeparateDatabaseAndState(
+            database_operations=[],
+            state_operations=[
+                migrations.RemoveField(model_name="alertrule", name="alert_threshold"),
+                migrations.RemoveField(model_name="alertrule", name="resolve_threshold"),
+                migrations.RemoveField(model_name="alertrule", name="threshold_type"),
+            ],
+        )
+    ]
+```
+
+Once this is deployed, we can then deploy the actual column deletion. This pr will have only a migration, since Django no longer knows about these fields. Note that the reverse SQL is only for dev, so it's fine to not assign a default or do any sort of backfill:
+
+```python
+operations = [
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    """
+                    ALTER TABLE "sentry_alertrule" DROP COLUMN "alert_threshold";
+                    ALTER TABLE "sentry_alertrule" DROP COLUMN "resolve_threshold";
+                    ALTER TABLE "sentry_alertrule" DROP COLUMN "threshold_type";
+                    """,
+                    reverse_sql="""
+                    ALTER TABLE "sentry_alertrule" ADD COLUMN "alert_threshold" smallint NULL;
+                    ALTER TABLE "sentry_alertrule" ADD COLUMN "resolve_threshold" int NULL;
+                    ALTER TABLE "sentry_alertrule" ADD COLUMN "threshold_type" int NULL;
+
+                    """,
+                )
+            ],
+            state_operations=[],
+        )
+    ]
+```
+
+#### Tables
+
+Extra care is needed here if the table is referenced as a foreign key in other tables. In that case, first remove the foreign key columns in the other tables, then come back to this step.
+
+- Remove any database level foreign key constraints from this table to other tables by setting `db_constraint=False` on the columns.
+- Deploy
+- Remove the model and all references from the sentry codebase. Make sure that the migration only marks the state as removed.
+- Deploy.
+- Create a migrations that deletes the table.
+- Deploy
+
+Here's an example of removing this model:
+
+```python
+class AlertRuleTriggerAction(Model):
+    alert_rule_trigger = FlexibleForeignKey("sentry.AlertRuleTrigger")
+    integration = FlexibleForeignKey("sentry.Integration", null=True)
+    type = models.SmallIntegerField()
+    target_type = models.SmallIntegerField()
+    # Identifier used to perform the action on a given target
+    target_identifier = models.TextField(null=True)
+    # Human readable name to display in the UI
+    target_display = models.TextField(null=True)
+    date_added = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        app_label = "sentry"
+        db_table = "sentry_alertruletriggeraction"
+```
+
+First we checked that it's not referenced by any other models, and it's not. Next we need to remove and db level foreign key constraints. To do this, we change these two columns and generate a migration:
+
+```python
+alert_rule_trigger = FlexibleForeignKey("sentry.AlertRuleTrigger", db_constraint=False)
+integration = FlexibleForeignKey("sentry.Integration", null=True, db_constraint=False)
+```
+
+The operations in the migration look like
+
+```python
+    operations = [
+        migrations.AlterField(
+            model_name='alertruletriggeraction',
+            name='alert_rule_trigger',
+            field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(db_constraint=False, on_delete=django.db.models.deletion.CASCADE, to='sentry.AlertRuleTrigger'),
+        ),
+        migrations.AlterField(
+            model_name='alertruletriggeraction',
+            name='integration',
+            field=sentry.db.models.fields.foreignkey.FlexibleForeignKey(db_constraint=False, null=True, on_delete=django.db.models.deletion.CASCADE, to='sentry.Integration'),
+        ),
+    ]
+```
+
+And we can see the sql it generates just drops the FK constaints
+
+```python
+BEGIN;
+SET CONSTRAINTS "a875987ae7debe6be88869cb2eebcdc5" IMMEDIATE; ALTER TABLE "sentry_alertruletriggeraction" DROP CONSTRAINT "a875987ae7debe6be88869cb2eebcdc5";
+SET CONSTRAINTS "sentry_integration_id_14286d876e86361c_fk_sentry_integration_id" IMMEDIATE; ALTER TABLE "sentry_alertruletriggeraction" DROP CONSTRAINT "sentry_integration_id_14286d876e86361c_fk_sentry_integration_id";
+COMMIT;
+```
+
+So now we deploy this and move onto the next stage.
+
+The next stage involves removing all references to the model from the codebase. So we do that, and then we generate a migration that removes the model from the migration state, but not the database. The operations in this migration look like
+
+```python
+operations = [
+        migrations.SeparateDatabaseAndState(
+            state_operations=[migrations.DeleteModel(name="AlertRuleTriggerAction")],
+            database_operations=[],
+        )
+    ]
+```
+
+and the generated SQL shows no database changes occurring. So now we deploy this and move into the final step. 
+
+In this last step, we just want to manually write DDL to remove the table. So we use `sentry django makemigrations --empty` to produce an empty migration, and then modify the operations to be like:
+
+```python
+operations = [
+        migrations.RunSQL(
+            """
+            DROP TABLE "sentry_alertruletriggeraction";
+            """,
+            reverse_sql="CREATE TABLE sentry_alertruletriggeraction (fake_col int)", # We just create a fake table here so that the DROP will work if we roll back the migration.
+        )
+    ]
+```
+
+Then we deploy this and we're done.
+
+### Foreign Keys
+
+Creating foreign keys is mostly fine, but for some large/busy tables like `Project`, `Group` it can cause problems due to difficulties in acquiring a lock. You can still create a Django level foreign key though, without creating a database constraint. To do so, set `db_constraint=False` when defining the key.
+
+**Note: that this previously didn't work as expected in South and we had to modify the migration to make this work. It works correctly in Django migrations though.**
+
+## South Transition Background
+
+Note: Ignore this if you don't know what South is.
+
+We recently moved over from using our old migration framework South to Django migrations. South is no longer supported and doesn't work with newer versions of Django, and we've missed out on running some core Django migrations because of this.
+
+Django migrations are similar to the migrations from South, but are more concise. We no longer store the entire state of the database in every migration; instead, Django migrations builds the state of the world incrementally from existing migrations. This means that we'll no longer have conflicts when people merge migrations at the same time. We should still do our best to keep the numbers strictly ascending, but if they're not it won't break anything.
+
+## Moving from South to Django Migrations Steps
+
+### Sentry
+
+First we need to make sure the latest South migration is run:
+
+`git checkout 12aaaf29b4981673c13c1fcdb05d4bfbebf2258b`
+
+`SENTRY_LIGHT_BUILD=1 pip install -e .`
+
+`sentry upgrade`
+
+Now that your database is up to latest, we can move over to Django migrations.
+
+`git checkout master`
+
+`git pull`
+
+`SENTRY_LIGHT_BUILD=1 pip install -e . --no-use-pep517`
+
+`sentry upgrade`
+
+### GetSentry
+
+First we need to make sure the latest South migration is run:
+
+`git checkout 2ebf55ccbdd8f161a55c539ea94d4a40598efef4`
+
+If you have `sentry` installed via `-e`, then in your sentry folder, `git checkout 12aaaf29b4981673c13c1fcdb05d4bfbebf2258b`
+
+Then in getsentry
+
+`getsentry upgrade`
+
+Now that your database is up to the latest south migration, we can move over to Django migrations.
+
+`git checkout master`
+
+`git pull`
+
+If you have `sentry` installed via `-e`, then in your sentry folder, `git pull`, `git checkout master`
+
+`getsentry upgrade`
