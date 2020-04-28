@@ -70,6 +70,40 @@ By including and configuring Sentry, the SDK will automatically attach global ha
 
 Browsers take security measures when serving script files from different origins. To ensure errors are routed to Sentry, configure the CORS headers, and add script attributes. 
 
+**CORS Attributes and Headers**
+
+To gain visibility into a JavaScript exception thrown from scripts originating from different origins, do two things:
+
+1. Add a `crossorigin=”anonymous”` script attribute
+
+    ```javascript
+    <script src="http://another-domain.com/app.js" crossorigin="anonymous"></script>
+    ```
+
+    The script attribute tells the browser to fetch the target file "anonymously." Potentially user-identifying information like cookies or HTTP credentials won't be transmitted by the browser to the server when requesting this file.
+
+2. Add a Cross-Origin HTTP header
+
+    ```javascript
+    Access-Control-Allow-Origin: *
+    ```
+    Cross-Origin Resource Sharing (CORS) is a set of APIs (mostly HTTP headers) that dictate how files ought to be downloaded and served across origins.
+    
+    By setting `Access-Control-Allow-Origin: *`, the server is indicating to browsers that any origin can fetch this file. Alternatively, you can restrict it to a known origin you control:
+    
+    ```javascript
+    Access-Control-Allow-Origin: https://www.example.com
+    ```
+    
+    Most community CDNs properly set an Access-Control-Allow-Origin header.
+
+    ```bash
+    $ curl --head https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.js | \
+    grep -i "access-control-allow-origin"
+
+    Access-Control-Allow-Origin: *
+    ```
+    
 ### Manually Capture Errors
 In most situations, you can capture errors manually with `captureException()`.
 
