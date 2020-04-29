@@ -68,7 +68,7 @@ By including and configuring Sentry, the SDK will automatically attach global ha
 
 [{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
 
-Browsers take security measures when serving script files from different origins. To ensure errors are routed to Sentry, configure the CORS headers, and add script attributes. 
+Browsers take security measures when serving script files from different origins. To ensure errors are routed to Sentry, configure CORS headers, and add appropriate script attributes. 
 
 **CORS Attributes and Headers**
 
