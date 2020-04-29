@@ -6,6 +6,29 @@ Sentry comes with a built-in queue to process tasks in a more asynchronous fashi
 
 Sentry relies on the [Celery](http://celeryproject.org/) library for managing workers.
 
+## Registering a Task
+
+Sentry configures tasks with a special decorator that allows us more explicit control over the callable.
+
+```python
+from sentry.tasks.base import instrumented_task
+
+@instrumented_task(
+    name="sentry.tasks.do_work",
+    queue="important_queue",
+    default_retry_delay=60 * 5,
+    max_retries=None,
+)
+def do_work(kind_of_work, **kwargs):
+    # ...
+```
+
+There's a few key differences we practice:
+
+- The task name _must_ be declared.
+- Tasks _must_ accept `\*\*kwargs`` to handle rolling compatibility.
+- Tasks _should_ automatically retry on failure.
+
 ## Running a Worker
 
 Workers can be run by using the Sentry CLI.
