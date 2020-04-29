@@ -97,18 +97,11 @@ In the example, the alert will not fire because an event cannot satisfy both of 
 
 The following actions are available:
 
+- Send an email
 - Send a notification to all legacy integrations
     - [Legacy integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}), also known as Plugins, are configured per project. 
-- Send a notification to a single legacy integration (service)
-    - "service" is the same as legacy integration
-- Send a notification to a global integration, which includes
-    - [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
-    - [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
-    - Custom integrations built using the [Integration Platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%})
 
 [{% asset notifications/alert-actions2.png alt="The alert condition in this example shows the conditions are conflicting with each other." %}]({% asset notifications/alert-actions2.png @path %})
-
-For more details, see [Legacy Integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}) (via “Service” as any individual integration) that can send Notifications.
 
 By default, [issue owners]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-owners) receive alert emails. If an issue owner is not configured or not found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
 
