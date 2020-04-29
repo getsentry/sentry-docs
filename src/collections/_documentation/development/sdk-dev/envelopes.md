@@ -127,7 +127,7 @@ By default, always declare the payload length to enable faster parsing of an
 Envelope.
 
 If the Envelope contains a large number of very small Items, omitting the length
-can be beneficial for compression. This is the case for session events.
+can be beneficial for compression. This is the case for sessions.
 
 The implementor should assess this on a per-case basis and explicitly argue
 about the decision.
@@ -277,8 +277,8 @@ encoded in JSON.
 
 ### Transaction
 
-Item type `"transaction"`. This Item contains a transaction event payload
-encoded in JSON.
+Item type `"transaction"`. This Item contains a transaction payload encoded
+in JSON.
 
 **Constraints:**
 
