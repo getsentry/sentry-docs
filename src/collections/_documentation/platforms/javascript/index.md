@@ -990,7 +990,7 @@ basic stack trace. This exception is stored here for further data extraction.
 
 : For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API. This holds the original xhr object.
 
-## Troubleshooting
+## Troubleshoot
 
 ### CORS Attributes and Headers
 
