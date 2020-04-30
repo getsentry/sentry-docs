@@ -17,9 +17,9 @@ To get you started, you might find some of these links relevant:
 -   New to Sentry? Have a look at the [_Getting Started_]({%- link _documentation/error-reporting/quickstart.md -%}).
 -   No account yet? You can sign up for one at [sentry.io](https://sentry.io/signup/).
 -   Stuck? Feel free to contact [_Support_]({%- link _documentation/support/index.md -%}).
--   Self-hosting the Sentry server? See [_Installation_]({%- link _documentation/server/installation/index.md -%}).
+-   Self-hosting the Sentry server? See [_Installation_](https://github.com/getsentry/onpremise).
 
 ## Contributing
 
-Looking to get started contributing to Sentry? Our [_internal documentation_]({%- link _documentation/development/server/contributing.md -%}) has you covered.  Want an SDK for a language we don't yet support? Check out the [_SDK development_]({%- link _documentation/development/sdk-dev/index.md -%}) docs. Also
+Looking to get started contributing to Sentry? Our [_developer documentation_](https://develop.sentry.dev) has you covered.  Want an SDK for a language we don't yet support? Check out the [_SDK development_]({%- link _documentation/development/sdk-dev/index.md -%}) docs. Also
 have a look at our [_Forums_](https://forum.sentry.io/) and our [_GitHub org_](https://github.com/getsentry).
