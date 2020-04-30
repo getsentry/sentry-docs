@@ -68,7 +68,7 @@ By including and configuring Sentry, the SDK will automatically attach global ha
 
 [{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
 
-Browsers take security measures when serving script files from different origins. To ensure errors are routed to Sentry, configure CORS headers, and add appropriate script attributes. 
+Note: Browsers may take security measures when serving script files from different origins that can block error reporting. If you find errors are not being reported accurately, please see the troubleshooting section on [Cross-Origin Resource Sharing (CORS)](#cors-attributes-and-headers).
     
 ### Manually Capture Errors
 In most situations, you can capture errors manually with `captureException()`.
@@ -990,7 +990,7 @@ basic stack trace. This exception is stored here for further data extraction.
 
 : For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API. This holds the original xhr object.
 
-## Troubleshoot
+## Troubleshooting
 
 ### CORS Attributes and Headers
 
