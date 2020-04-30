@@ -1,0 +1,143 @@
+---
+title: "Email"
+---
+
+Sentry provides support for both outbound, and incoming email.
+
+Inbound email is fairly limited in use, and currently it only supports processing replies to error and note notifications.
+
+## Outbound Email
+
+You'll need to configure an SMTP provider for outbound email.
+
+TODO: Document mail preview backend.
+
+<dl>
+<dt><code>mail.backend</code></dt>
+<dd><markdown>
+Declared in `config.yml`.
+
+The backend to be used for email delivery. Options are `smtp`, `console`, and `dummy`.
+
+Defaults to `smtp`. Use `dummy` if you’d like to disable email delivery.
+
+</markdown></dd>
+
+<dt><code>mail.from</code></dt>
+<dd><markdown>
+Declared in `config.yml`.
+
+The email address used for outbound email in the `From` header.
+
+Defaults to `root@localhost`. It’s highly recommended to change this value to ensure reliable email delivery.
+
+</markdown></dd>
+
+<dt><code>mail.host</code></dt>
+<dd><markdown>
+Declared in `config.yml`.
+
+The hostname to connect to for SMTP connections.
+
+Defaults to `localhost`.
+
+</markdown></dd>
+
+<dt><code>mail.port</code></dt>
+<dd><markdown>
+Declared in `config.yml`.
+
+The port to connect to for SMTP connections.
+
+Defaults to `25`.
+
+</markdown></dd>
+
+<dt><code>mail.username</code></dt>
+<dd><markdown>
+Declared in `config.yml`.
+
+The username to use when authenticating with the SMTP server.
+
+Defaults to `(empty)`.
+
+</markdown></dd>
+
+<dt><code>mail.password</code></dt>
+<dd><markdown>
+Declared in `config.yml`.
+
+The password to use when authenticating with the SMTP server.
+
+Defaults to `(empty)`.
+
+</markdown></dd>
+
+<dt><code>mail.use-tls</code></dt>
+<dd><markdown>
+Declared in `config.yml`.
+
+Should Sentry use TLS when connecting to the SMTP server?
+
+Defaults to `false`.
+
+</markdown></dd>
+
+<dt><code>mail.list-namespace</code></dt>
+<dd><markdown>
+Declared in `config.yml`.
+
+The mailing list namespace for emails sent by this Sentry server. This should be a domain you own (often the same domain as the domain part of the `mail.from` configuration parameter value) or `localhost`.
+
+</markdown></dd>
+</dl>
+
+## Inbound Email
+
+For configuration you can pick from different backends.
+
+### Mailgun
+
+Start by choosing a domain to handle inbound email. We find it easiest if you maintain a separate domain from anything else. In our example, we’re going to choose `inbound.sentry.example.com`. You’ll need to configure your DNS records for the given domain according to the Mailgun documentation.
+
+Create a new route in mailgun:
+
+```
+Priority:
+  0
+Filter Expression:
+  catch_all()
+Actions:
+  forward("https://sentry.example.com/api/hooks/mailgun/inbound/")
+Description:
+  Sentry inbound handler
+```
+
+Configure Sentry with the appropriate settings:
+
+```yaml
+# Your Mailgun API key (used to verify incoming webhooks)
+mail.mailgun-api-key: ""
+
+# Set the SMTP hostname to your configured inbound domain
+mail.reply-hostname: "inbound.sentry.example.com"
+
+# Inform Sentry to send the appropriate mail headers to enable
+# incoming replies
+mail.enable-replies: true
+```
+
+That’s it! You’ll now be able to respond to activity notifications on errors via your email client.
+
+And finally, update Sentry with the appropriate settings:
+
+```yaml
+# Set the SMTP hostname to your configured inbound domain
+mail.reply-hostname: "inbound.sentry.example.com"
+
+# Inform Sentry to send the appropriate mail headers to enable
+# incoming replies
+mail.enable-replies: true
+```
+
+That’s it! You’ll now be able to respond to activity notifications on errors via your email client.
