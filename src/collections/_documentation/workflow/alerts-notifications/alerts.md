@@ -101,8 +101,10 @@ The following actions are available:
     - Send email to either [Issue Owners]({%- link _documentation/workflow/issue-owners.md -%}), Team, or [Member]({%- link _documentation/accounts/membership.md -%}#member)
 - Send a notification to all legacy integrations
     - [Legacy integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}), also known as Plugins, are configured per project 
-- Send a notification to one legacy integration (service)
-    - "service" is the same as legacy integration
+- Send a notification via an integration
+    - This includes:
+        - Legacy integrations
+        - Integrations built using the [Integration platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}) (includes published integrations, internal integrations, unpublished integrations)
     - If no integrations (legacy or internal) are enabled, this option is hidden
 - Send a notification to a global integration, which includes
     - [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
