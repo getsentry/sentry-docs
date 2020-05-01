@@ -105,7 +105,7 @@ The following actions are available:
     - This includes:
         - Legacy integrations
         - Integrations built using the [Integration platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}) (includes published integrations, internal integrations, unpublished integrations)
-    - If no integrations (legacy or internal) are enabled, this option is hidden
+    -  If no legacy integrations or integrations built using the integration platform are enabled, this option is hidden.
 - Send a notification to a global integration, which includes
     - [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
     - [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
