@@ -44,7 +44,7 @@ Sentry open-source provides a command line interface that allows you to perform 
 
 Run the following command in your terminal to start the export script and redirect the output (_containing_ the transport JSON) to a file:
 
-    $ docker-compose run --rm web export > sentry_export.json
+    $ docker-compose run --rm web sentry export > sentry_export.json
     
 > This invokes the sentry CLI `export` command on a new isolated instance of our Docker web container.
 
