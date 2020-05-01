@@ -98,12 +98,12 @@ In the example, the alert will not fire because an event cannot satisfy both of 
 The following actions are available:
 
 - Send an email
-    - Send email to either [Issue Owners]({%- link _documentation/workflow/issue-owners.md -%}), Team, or [Member]({%- link _documentation/accounts/membership.md -%}#member).
+    - Send email to either [Issue Owners]({%- link _documentation/workflow/issue-owners.md -%}), Team, or [Member]({%- link _documentation/accounts/membership.md -%}#member)
 - Send a notification to all legacy integrations
-    - [Legacy integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}), also known as Plugins, are configured per project. 
+    - [Legacy integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}), also known as Plugins, are configured per project 
 - Send a notification to one legacy integration (service)
     - "service" is the same as legacy integration
-    - If no legacy integrations are enabled, this option is hidden.
+    - If no integrations (legacy or internal) are enabled, this option is hidden
 - Send a notification to a global integration, which includes
     - [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
     - [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
