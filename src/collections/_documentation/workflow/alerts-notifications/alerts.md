@@ -109,7 +109,6 @@ The following actions are available:
 - Send a notification to a global integration, which includes
     - [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
     - [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
-    - Custom integrations built using the [Integration Platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%})
 
 [{% asset notifications/alert-actions2.png alt="The alert condition in this example shows the conditions are conflicting with each other." %}]({% asset notifications/alert-actions2.png @path %})
 
