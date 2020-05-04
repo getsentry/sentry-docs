@@ -4,7 +4,7 @@ in.
 
 ```javascript
 Sentry.close(2000).then(function() {
-  process.exit();
+  // perform something after close
 });
 ```
 
