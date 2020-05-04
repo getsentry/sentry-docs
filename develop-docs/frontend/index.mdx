@@ -1,0 +1,256 @@
+---
+title: Frontend Handbook
+---
+
+This guide covers how we write frontend code at Sentry, and is specifically focussed on the [Sentry](https://github.com/getsentry/sentry) and [Getsentry](https://github.com/getsentry/getsentry) codebases. It assumes you are using the eslint rules outlined by [eslint-config-sentry](https://github.com/getsentry/eslint-config-sentry); hence code style enforced by these linting rules will not be discussed here.
+
+## Quick links:
+
+- [Directory structure](#directory-structure)
+- [React](#react)
+- [CSS and Emotion](#css-and-emotion)
+- [State management](#state-management)
+- [Testing](#testing)
+- [Babel Syntax Plugins](#babel-syntax-plugins)
+- [New Syntax](#new-syntax)
+- [lodash](#lodash)
+- [Typescript](#typescript)
+- [Contributing](#contributing)
+
+## Directory structure
+
+The frontend codebase is currently located under `src/sentry/static/sentry/app` in sentry and `static/getsentry` in getsentry. (We intend to align to `static/sentry` in future.)
+
+## React
+
+### Defining React components
+
+New components use the class syntax, and the class field+arrow function method definition when they need to access this.
+
+```javascript
+class Note extends React.Component {
+  static propTypes = {
+    author: PropTypes.object.isRequired,
+    onEdit: PropTypes.func.isRequired,
+  };
+
+  // Note that method is defined using an arrow function class field (to bind "this")
+  handleChange = value => {
+    let user = ConfigStore.get('user');
+
+    if (user.isSuperuser) {
+      this.props.onEdit(value);
+    }
+  };
+
+  render() {
+    let {content} = this.props; // use destructuring assignment for props
+
+    return <div onChange={this.handleChange}>{content}</div>;
+  }
+}
+
+export default Note;
+```
+
+Some older components use `createReactClass` and mixins, but this is deprecated.
+
+### Components vs views
+
+Both the `app/components/` and `app/views` folders contain React components.
+
+- Use a view for UI that will typically not be reused in other parts of the codebase
+- Use a component for UI that is designed to be highly reusable.
+
+Components should have an associated `.stories.js` file that documents how it should be used.
+
+Run Storybook locally with `yarn storybook` or view the hosted version at `https://storybook.getsentry.net/`
+
+### PropTypes
+
+Use them, be explicit, use the shared custom proptypes when possible.
+
+Prefer `Proptypes.arrayOf` to `PropTypes.array` and `PropTypes.shape` to `PropTypes.object`
+
+If you’re passing Objects with an important, well defined set of keys (that your component relies on) then define them explicitly with `PropTypes.shape`:
+
+```javascript
+PropTypes.shape({
+  username: PropTypes.string.isRequired,
+  email: PropTypes.string
+})
+```
+
+If you’re re-using a custom prop-type or passing around a common shared shape like an organization, project, or user, then be sure to import a proptype from our useful collection of custom ones! [https://github.com/getsentry/sentry/blob/master/src/sentry/static/sentry/app/sentryTypes.jsx](https://github.com/getsentry/sentry/blob/master/src/sentry/static/sentry/app/sentryTypes.jsx)
+
+### Event handlers
+
+We use different prefixes to better distinguish event handlers from event callback props.
+
+Use the `handle` prefix for event handlers, e.g:
+
+```javascript
+<Button onClick={this.handleDelete}/>
+```
+
+For event callback props passed to the component use the `on` prefix, e.g:
+
+```javascript
+<Button onClick={this.props.onDelete}>
+```
+
+## CSS and Emotion
+
+* Use Emotion, use the `theme` object.
+* The best styles are ones you don’t write - whenever possible use existing components.
+* New code should use the css-in-js library [e m o t i o n](https://emotion.sh/) - it lets you bind styles to elements without the indirection of global selectors. You don’t even need to open another file!
+* Take constants (z-indexes, paddings, colors) from [props.theme](https://github.com/getsentry/sentry/blob/master/src/sentry/static/sentry/app/utils/theme.jsx)
+
+```javascript
+import styled from 'react-emotion';
+
+const SomeComponent = styled('div')`
+  border-radius: 1.45em;
+  font-weight: bold;
+  z-index: ${p => p.theme.zIndex.modal};
+  padding: ${p => p.theme.grid}px ${p => p.theme.grid * 2}px;
+  border: 1px solid ${p => p.theme.borderLight};
+  color: ${p => p.theme.purple};
+  box-shadow: ${p => p.theme.dropShadowHeavy};
+`;
+
+export default SomeComponent;
+```
+
+* Note that `reflexbox` (e.g. `Flex` and `Box`) is being deprecated, avoid using in new code.
+
+### `stylelint` Errors
+
+#### "No duplicate selectors"
+This happens when you use a styled component as a selector, we need to tell stylelint that what we are interpolating is a selector by using comments to assist the linter. e.g.
+
+```javascript
+
+const ButtonBar = styled("div")`
+  ${/* sc-selector */Button) {
+     border-radius: 0;
+  }
+`;
+```
+
+See https://styled-components.com/docs/tooling#interpolation-tagging for other tags and more information.
+
+## State management
+
+We currently use [Reflux](https://github.com/reflux/refluxjs) for managing global state.
+
+Reflux implements the unidirectional data flow pattern outlined by [Flux](https://facebook.github.io/flux/docs/overview.html). Stores are registered under `app/stores` and are used to store various pieces of data used by the application. Actions need to be registered under `app/actions`. We use action creator functions (under `app/actionCreators`) to dispatch actions. Reflux stores listen to actions and update themselves accordingly.
+
+We are currently exploring alternatives to the `Reflux` library for future use.
+
+## Testing
+
+Note: Your filename needs to be .spec.jsx or jest won’t run it!
+
+We have useful fixtures defined in [setup.js](https://github.com/getsentry/sentry/blob/master/tests/js/setup.js) Use these! If you are defining mock data in a repetitive way, it’s probably worth adding this this file. routerContext is a particularly useful one for providing the context object that most view are written to rely on.
+
+Client.addMockResponse is the best way to mock API requests. it’s [our code](https://github.com/getsentry/sentry/blob/master/src/sentry/static/sentry/app/__mocks__/api.jsx) so if it’s confusing you, just put `console.log()` statements into its logic!
+
+An important gotcha in our testing environment is the way that enzyme modifies many aspects of the react lifecycle to evaluate synchronously (even when they’re usually async). This can lull you into a false sense of security when you trigger some logic and don’t find it reflected immediately afterwards in your assert logic.
+
+Marking your test method `async` and using the `await tick();` utility can let the event loop flush run events and fix this:
+
+```javascript
+wrapper.find('ExpandButton').simulate('click');
+await tick();
+expect(wrapper.find('CommitRow')).toHaveLength(2);
+```
+
+### Selectors
+
+If you are writing jest tests, you can use a Component (and Styled Component) names as a selector. Additionally, if you need to use a DOM query selector, use `data-test-id` instead of a class name. We currently don’t, but it is something we can use babel to strip out during the build process.
+
+### Undefined `theme` properties in tests
+
+Instead of using `mount()` from `enzyme` ...use this: `import {mountWithTheme} from 'sentry-test/enzyme'` so that the component under test gets wrapped with a [`<ThemeProvider>`](https://emotion.sh/docs/theming).
+
+
+## Babel Syntax Plugins
+We have decided to only use ECMAScript proposals that are in stage 3 (or later) (See [TC39 Proposals](https://github.com/tc39/proposals)). Additionally, because we are migrating to typescript, we will align with what their compiler supports.
+The only exception to this are decorators.
+
+## New Syntax
+
+### Optional Chaining
+
+[Optional chaining](https://github.com/tc39/proposal-optional-chaining) helps us access [nested] objects without having to check for existence before each property/method access. If we try to access a property of an `undefined` or `null` object, it will stop and return `undefined`.
+
+#### Syntax
+
+The Optional Chaining operator is spelled `?.`. It may appear in three positions:
+
+```
+obj?.prop       // optional static property access
+obj?.[expr]     // optional dynamic property access
+func?.(...args) // optional function or method call
+```
+> From https://github.com/tc39/proposal-optional-chaining
+
+### Nullish Coalescing
+
+This is a way to set a "default" value. e.g. previously you would do something like
+
+```javascript
+let x = volume || 0.5;
+```
+
+Which is a problem since `0` is a valid value for `volume`, but because it evaluates to `false` -y, we do not short circuit the expression and the value of `x` is `0.5`
+
+If instead we used [nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing)
+
+```javascript
+let x = volume ?? 0.5
+```
+
+It will only default to `0.5` if `volume` is `null` or `undefined`.
+
+#### Syntax
+Base case. If the expression at the left-hand side of the ?? operator evaluates to undefined or null, its right-hand side is returned.
+
+```javascript
+const response = {
+  settings: {
+    nullValue: null,
+    height: 400,
+    animationDuration: 0,
+    headerText: '',
+    showSplashScreen: false
+  }
+};
+
+const undefinedValue = response.settings.undefinedValue ?? 'some other default'; // result: 'some other default'
+const nullValue = response.settings.nullValue ?? 'some other default'; // result: 'some other default'
+const headerText = response.settings.headerText ?? 'Hello, world!'; // result: ''
+const animationDuration = response.settings.animationDuration ?? 300; // result: 0
+const showSplashScreen = response.settings.showSplashScreen ?? true; // result: false
+```
+
+> From https://github.com/tc39/proposal-nullish-coalescing
+
+## Lodash
+
+Be sure to not import `lodash` utilities using the default `lodash` package. There is an `eslint` rule to make sure this does not happen. Instead, import the utility directly, e.g. `import isEqual from 'lodash/isEqual';`.
+
+Previously we used a combination of [lodash-webpack-plugin](https://www.npmjs.com/package/lodash-webpack-plugin) and [babel-plugin-lodash](https://github.com/lodash/babel-plugin-lodash) but it is easy to overlook these plugins and configuration when trying to use a new lodash utility (e.g. [this PR](https://github.com/getsentry/sentry/pull/13834)). With `webpack` tree shaking and `eslint` enforcement, we should be able to maintain reasonable bundle sizes.
+
+See [this PR](https://github.com/getsentry/sentry/pull/15521) for more information.
+
+We prefer using optional chaining and nullish coalescing over `get` from `loadash/get`.
+
+## Typescript
+
+- <Link to="/frontend/defaultprops/">Typing DefaultProps</Link>
+
+## Migration Guides
+
+- <Link to="/frontend/migration-gridemotion/">Grid-Emotion</Link>
