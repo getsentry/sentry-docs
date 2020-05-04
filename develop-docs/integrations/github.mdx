@@ -1,0 +1,64 @@
+---
+title: "GitHub Integration"
+---
+
+## Create a GitHub App
+
+To configure the GitHub integration you'll need to create a GitHub app and obtain credentials. If you're developing within `getsentry` a set of development credentials are already configured.
+
+Start by following GitHub's [official guide on creating a GitHub App](https://developer.github.com/apps/building-github-apps/creating-a-github-app/).
+
+When configuring the app, use the following values:
+
+| Setting                         | Value                                     |
+| ------------------------------- | ----------------------------------------- |
+| Homepage URL                    | `${urlPrefix}`                            |
+| User authorization callback URL | `${urlPrefix}/auth/sso/`                  |
+| Setup URL (optional)            | `${urlPrefix}/extensions/github/setup/`   |
+| Webhook URL                     | `${urlPrefix}/extensions/github/webhook/` |
+
+When prompted for permissions, choose the following:
+
+| Permission                | Setting      |
+| ------------------------- | ------------ |
+| Repository administration | Read-only    |
+| Repository contents       | Read-only    |
+| Issues                    | Read & write |
+| Pull requests             | Read & write |
+| Repository webhooks       | Read & write |
+
+You'll be given various credentials, configure them in `config.yml`:
+
+```yml
+# App ID
+github-app.id: "GITHUB_APP_ID"
+# App Name
+github-app.name: "GITHUB_APP_NAME"
+# Client ID
+github-app.client-id: "GITHUB_CLIENT_ID"
+# Client Secret
+github-app.client-secret: "GITHUB_CLIENT_SECRET"
+```
+
+Sentry utilizes webhooks for `Push` and `Pull Request` events. Generate a webhook secret and add it to your configuration:
+
+```shell
+$ ruby -rsecurerandom -e 'puts SecureRandom.hex(20)'
+```
+
+```yml
+github-app.webhook-secret: "GITHUB_WEBHOOK_SECRET"
+```
+
+Last, generate and download the private key, and add it to your configuration for your app:
+
+```yml
+github-app.private-key: |
+  -----BEGIN RSA PRIVATE KEY-----
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  privatekeyprivatekeyprivatekeyprivatekey
+  -----END RSA PRIVATE KEY-----
+```
