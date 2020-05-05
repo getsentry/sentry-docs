@@ -114,8 +114,7 @@ $ curl -X POST \
   -F 'sentry[tags][mytag]=value'
 ```
 
-For the full list of supported values, see [_Event Payloads_]({%- link
-_documentation/development/sdk-dev/event-payloads/index.md -%}) and linked
+For the full list of supported values, see [_Event Payloads_](https://develop.sentry.dev/sdk/event-payloads/) and linked
 documents.
 
 ## Event Attachments (Preview)
