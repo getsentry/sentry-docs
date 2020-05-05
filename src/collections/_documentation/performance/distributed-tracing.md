@@ -12,13 +12,21 @@ Sentry's Performance features are currently in beta. For more details about acce
     level="warning"
 %}
 
-Enabling tracing augments your existing error data by capturing interactions among your software systems. With tracing, Sentry tracks metrics about your software performance, like throughput and latency, as well as displays the impact of errors across multiple systems. In addition, tracing makes Sentry a more complete monitoring solution, helping you both diagnose problems and measure your application's overall health more easily. Tracing in Sentry provides insights such as:
+Enabling tracing augments your existing error data by capturing interactions among your software systems. With tracing, Sentry tracks metrics about your software performance, like throughput and latency, as well as displays the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution, helping you both diagnose problems and measure your application's overall health more easily. Tracing in Sentry provides insights such as:
 
 - What occurred for a specific error event or issue
 - The conditions that cause bottlenecks or latency issues in your application
 - The endpoints or operations that consume the most time
 
 ## What is Tracing?
+
+To begin, a note about what tracing is not: Tracing is not profiling. Though the goals of profiling and tracing overlap quite a bit, and though they are both tools which can be used to diagnose problems in your application, they differ both in terms of what they measure and how the data is recorded.
+
+A [profiler](https://en.wikipedia.org/wiki/Profiling_(computer_programming)) may measure any number of aspects of an application's operation: the number of instructions executed, the amount of memory being used by various processes, the amount of time a given function call takes, and many more. The resulting profile is a statistical summary of these measurements. 
+
+A [tracing tool](https://en.wikipedia.org/wiki/Tracing_(software)), on the other hand, focuses on _what_ happened (and when), rather than how many times it happened or how long it took. The resulting trace is log of events which occurred during a program's execution, often across multiple systems. Though traces most often - or, in the case of Sentry's traces, always - include timestamps, allowing durations to be calculated, measuring performance is not their only purpose. They can also show the ways in which interconnected systems interact, and the ways in which problems in one can cause problems in another.
+
+### Why Tracing?
 
 Applications typically consist of interconnected components, which are also called services. As an example, let's look at a modern web application, composed of the following components, separated by network boundaries:
 
@@ -199,54 +207,72 @@ Because there is no way for Sentry to judge either the relative or absolute accu
 
 **What We Send**: Individual spans aren't sent to Sentry. Rather, those spans are attached to their containing transaction, and the transaction is sent as one unit. This means that no span data will be recorded by Sentry's servers until the transaction to which they belong is closed and dispatched. 
 
-`[kmclb: STOP READING AT THIS POINT. Or, keep reding if you want, but I haven't worked on anything below here in a concerted way yet, so for the purposes of this initial feedback session, I'm really just looking for comments on ^^^^^^^^^] FPA: got it :)`
-
 ## Data Sampling
 
-**When collecting traces, we strongly recommend sampling your data.**
+When you enable sampling in your tracing setup, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of 0.25 would result in approximately 250 transactions (25%) being sent to Sentry. (The number is approximate because each request is either tracked or not, independently and pseudorandomly, with a 25% probability. So in the same way that 100 fair coins, when flipped, will result in approximately 50 heads, the SDK will decide to collect a trace in approximately 250 cases.) Because you know the sampling percentage, you can then extrapolate your total traffic volume.
 
-When you enable sampling for transaction events in Sentry, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of 0.25 would result in 250 transactions (25%) being sent to Sentry.
+When collecting traces, we **strongly recommend** sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single pageload, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you'll more easily prevent yourself from exceeding your organization's [event quota]({%- link _documentation/accounts/quotas/index.md -%}), which will help you manage costs.
 
-Sampling enables you to collect traces on a subset of your traffic and extrapolate to the total volume. Furthermore, **enabling sampling allows you to control the volume of data you send to Sentry and lets you better manage your costs**. If you don't have a good understanding of what sampling rate to choose, we recommend you start with a low value and gradually increase the sampling rate as you learn more about your traffic patterns and volume.
+When choosing a sampling rate, the goal is to not collect _too_ much data (given the reasons above) but also to collect enough data that you are able to draw meaningful conclusions. If you're not sure what rate to choose, we recommend starting with a low value and gradually increasing it as you learn more about your traffic patterns and volume, until you've found a rate which lets you balance performance and cost concerns with data accuracy.
 
-When you have multiple projects collecting transaction events, Sentry utilizes "head-based" sampling to ensure that once a sampling decision has been made at the beginning of the trace (typically the initial transaction), that decision is propagated to each service or project involved in the trace. If your services have multiple entry points, you should aim to choose a consistent sampling rate for each, as choosing different sampling rates can bias your results. Sentry does not support "tail-based" sampling at this time.
+### Consistency Across Transactions Within a Trace
 
-If you enable Performance collection for a large portion of your traffic, you may exceed your organization's [Quotas and Rate Limits]({%- link _documentation/accounts/quotas/index.md -%}).
+For traces which involve multiple transactions, Sentry uses a "head-based" approach: a sampling decision is made in the originating service, and then that decision is passed to all subsequent services. To see how this works, let's return to our webapp example above. Consider two users, A and B, who are both loading your app in their respective browsers. When A loads the app, the SDK pseudorandomly "decides" to collect a trace, whereas when B loads the app, the SDK "decides" not to. When each browser makes requests to your backend, it includes in those requests the "yes, please collect transactions" or the "no, not collecting transactions this time" decision in the headers. 
+
+When your backend processes the requests from A's browser, it will see the "yes" decision, collect transaction and span data, and send it to Sentry. Further, it will include the "yes" decision in any requests it makes to subsequent services (like your database server), which will similarly collect data, send it to Sentry, and pass the decision along to any services they call. Though this process, all of the relevant transactions in A's trace will be collected and sent to Sentry.
+
+On the other hand, when your backend processes the requests from B's browser, it will see the "no" decision, and as a result it will _not_ collect and send transaction and span data to Sentry. It will, however, do the same thing it did in A's case in terms of propagating the decision to subsequent services, telling them not to collect or send data either. They will in turn tell any services they call not to send data, and in this way no transactions from B's trace will be collected.
+
+Put simply: as a result of this head-based approach, where the decision is made once in the originating service and passed to all subsequent services, either all of the transactions for a given trace will be collected, or none will, so there shouldn't be any incomplete traces.
+
+### Consistency Across Services
+
+If you enable tracing in services with multiple entry points, we recommend choosing similar sampling rates, to avoid biasing your data. For example, suppose the backend of our on-going webapp example also serves as a public API. In that case, some traces would start with a pageload transaction in the web app, and likely include multiple backend transactions, while other traces (those representing folks hitting the public API) would begin with a single backend request transaction, which would be the only backend transaction in the trace. Choosing a very different sampling rate for your webapp from that chosen for your backend would lead to one of those scenarios being oversampled compared to the other, compromising the accuracy of your overall data.
 
 ## Viewing Trace Data
 
 You can see a list of transaction events by clicking on the "Transactions" pre-built query in [Discover]({%- link _documentation/performance/discover/index.md -%}), or by using a search condition `event.type:transaction` in the [Discover Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}) view.
 
-`[kmclb: I think we should have a section here on searching, which would mention that transactions (but not spans) are searchable, and what data one can use to search. Should also probably link to the main search docs.]`
+### Transaction List View
 
-### Performance Metrics
+`[kmclb: There's a LOT we don't document currently about the transaction list view (which is to say, almost anything). Some of it may be covered in the Discover docs, but even if so, I think we need to do a quick overview of all of the controls/what's displayed and then point to those docs. ]`
 
-`[kmclb: we don't actually tell you *how* to do this...]`
-Some aggregate functions can be applied to transaction events to help you better understand the performance characteristics of your applications.
+`[kmclb: I think we should have a section - or at least a sentence or two - here on searching, which would mention that transactions (but not spans) are searchable, and what data one can use to search. Should also probably link to the main search docs.]`
 
-**Duration Percentiles**
+`[kmclb: We probably also want to explain how transactions are grouped in this view]`
 
+#### Performance Metrics
+
+`[kmclb: Help! This is a dangling modifier (there's a "you" implied by the first clause which never materializes in the second) but I can't think of a good way to fix it.]`
+When choosing which columns to display in your transaction list, there are a few metrics which lend themselves well to analyzing your application's performance.
+
+`[kmclb: Do we want to mention the count() option? see note above above grouping]`
+
+**Aggregate Duration Metrics**
 
 You can aggregate transaction durations using the following functions:
 - average
-- 75%, 95%, and 99% duration percentiles
+- various percentiles (by default, the pre-built Transactions query shows the 75th and 95th percentiles, but there are many other options, including displaying a custom percentile)
 
 One use case for tracking these statistics is to help you identify transactions that are slower than your organization's target SLAs.
 
-A word of caution when looking at averages and percentiles: In most cases, you'll want to set up tracing so that only a fraction of possible traces are actually sent to Sentry, to avoid overwhelming your system. `[kmclb: include a link to sampling section]` Further, you may want to filter your transaction data by date or other factors, or you may be tracing a relatively uncommon operation. For all of these reasons, you may end up with average and percentile data that is directionally correct, but not accurate. (To use the most extreme case as an example, if only a single transaction matches your filters, you can still compute an "average" duration, even though that's clearly not what is usually meant by "average.")
+A word of caution when looking at averages and percentiles: In most cases, you'll want to set up tracing so that only [a fraction](#data-sampling) of possible traces are actually sent to Sentry, to avoid overwhelming your system. Further, you may want to filter your transaction data by date or other factors, or you may be tracing a relatively uncommon operation. For all of these reasons, you may end up with average and percentile data that is directionally correct, but not accurate. (To use the most extreme case as an example, if only a single transaction matches your filters, you can still compute an "average" duration, even though that's clearly not what is usually meant by "average.")
 
-`[kmclb: "We can calculate an average with less data than a 95th percentile" - is there some threshold below which we won't do the calculation?]`
+`[kmclb: Below: "We can calculate an average with less data than a 95th percentile" - is there some threshold below which we won't do the calculation?]`
 
-The problem of small sample size (and the resulting inability to be usefully accurate) will happen more often in some columns than others. `[kmclb: which ones?]` We can calculate an average with less data than it takes to calculate the 95th percentile, but it’ll also vary by row. (For example, `/settings/` will always get more traffic than `/settings/country/belgium/tax`.) 
+The problem of small sample size (and the resulting inability to be usefully accurate) will happen more often for some metrics than others. `[kmclb: which ones?]` We can calculate an average with less data than it takes to calculate the 95th percentile, but it’ll also vary by row. (For example, `/settings/` will always get more traffic than `/settings/country/belgium/tax`.) 
 
 **Requests Per Minute (RPM)**
 
+`[kmclb: is there a reason we talk about RPM but not RPS?]`
+
 Requests Per Minute is a way to measure throughput. It is the average of all request durations, bucketed by the minute `[kmclb: start time or end time?]` for the current time window and query string.
 
+`[kmclb: now that I read this again, it doesn't make sense. Requests/min is a *number* of requests, whereas the description says it's the average *duration* of a group of requests. Which is it?]`
 
 ### Transaction Detail View
 
-When you open a transaction event in Discover (by clicking on the ), you'll see the **span view** at the top of the page. Other information the SDK captured as part of the transaction event, such as the transaction's tags and automatically collected breadcrumbs, is displayed underneath and to the right of the span view.
+When you open a transaction event in Discover (by clicking on the icon at the left side of the row), you'll see the **span view** at the top of the page. Other information the SDK captured as part of the transaction event (such as the transaction's tags and automatically collected breadcrumbs) is displayed underneath and to the right of the span view.
 
 [{% asset performance/discover-span.png alt="Discover span showing the map of the transactions (aka minimap) and the black dashed handlebars for adjusting the window selection." %}]({% asset performance/discover-span.png @path %})
 
@@ -262,25 +288,28 @@ As shown in the Discover span screenshot above, you can click and drag your mous
 
 **Missing Instrumentation**
 
-Sentry may indicate that gaps between spans are "Missing Instrumentation." This message could mean that the SDK was unable to capture or instrument any spans within this gap automatically. It may require you to instrument the gap [manually](#setting-up-tracing).
+Sentry may indicate that gaps between spans are "Missing Instrumentation." This means that there is time in the transaction which isn't accounted for by any of the transaction's spans, and likely means that you need to manually instrument that part of your process.
 
 **Viewing Span Details**
 
-Click on a row to expand the details of the span. From here, you can see all attached properties, such as **tags** and **data**.
+Click on a row in the span view to expand the details of that span. From here, you can see all attached properties, such as tags and data.
 
 [{% asset performance/span-detail-view.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-detail-view.png @path %})
 
 **Search by Trace ID**
 
-You can search using `trace id` by expanding any of the span details and clicking on "Search by Trace".
+You can search for all of the transactions in a given trace by expanding any of the span details and clicking on "Search by Trace".
 
-You need **project permissions for each project** to see all the transactions within a trace. Each transaction in a trace is likely a part of a different project. If you don't have project permissions, some transactions may not display as part of a trace.
+_Note:_ Each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view, which may or may not be all of the given trace's transactions.
 
 **Traversing to Child Transactions**
 
-Child transactions are shown based on your project permissions -- which are necessary to viewing transaction events. To check project permissions, navigate to **Settings >> [your organization] >> [your project] >> General**.
-
 Some spans within a transaction may be the parent of another transaction. When you expand the span details for such spans, you'll see the "View Child" button, which, when clicked, will lead to the child transaction's details view.
+
+_Note:_ Each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view, which may or may not include a given span's child transaction. `[kmclb: Does the button even show up if you don't have the right permissions?]`
+
+
+`[kmclb: Haven't really touched much below this. It needs real work, but that's the next PR. :-) ]`
 
 ## Setting Up Tracing
 
