@@ -21,5 +21,5 @@ To get you started, you might find some of these links relevant:
 
 ## Contributing
 
-Looking to get started contributing to Sentry? Our [_developer documentation_](https://develop.sentry.dev) has you covered.  Want an SDK for a language we don't yet support? Check out the [_SDK development_]({%- link _documentation/development/sdk-dev/index.md -%}) docs. Also
+Looking to get started contributing to Sentry? Our [_developer documentation_](https://develop.sentry.dev) has you covered.  Want an SDK for a language we don't yet support? Check out the [_SDK development_](https://develop.sentry.dev/sdk/overview/) docs. Also
 have a look at our [_Forums_](https://forum.sentry.io/) and our [_GitHub org_](https://github.com/getsentry).

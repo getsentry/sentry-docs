@@ -3,7 +3,7 @@ title: 'API Reference'
 sidebar_order: 6
 ---
 
-The Sentry API is used for submitting events to the Sentry collector as well as exporting and managing data. The reporting and web APIs are individually versioned. This document refers to the web APIs only. For information about the reporting API see [_SDK Development_]({%- link _documentation/development/sdk-dev/index.md -%}).
+The Sentry API is used for submitting events to the Sentry collector as well as exporting and managing data. The reporting and web APIs are individually versioned. This document refers to the web APIs only. For information about the reporting API see [_SDK Development_](https://develop.sentry.dev/sdk/overview/).
 
 ## Versioning
 

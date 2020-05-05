@@ -5,7 +5,7 @@ sidebar_order: 1
 
 ## Migrating from `sentry-android 1.x` to `sentry-android 2.0`
 
-With Sentry Android, we've updated the API to resemble the [Unified API]({%- link _documentation/development/sdk-dev/unified-api.md -%}) more closely. And now that the SDK isn't built on top of `sentry-java`, Sentry Android has more Android-specific features.
+With Sentry Android, we've updated the API to resemble the [Unified API](https://develop.sentry.dev/sdk/unified-api/) more closely. And now that the SDK isn't built on top of `sentry-java`, Sentry Android has more Android-specific features.
 
 If you want to upgrade from the previous version of the SDK, please check the following sections of changes that may need updating in your code.
 

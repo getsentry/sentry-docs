@@ -92,7 +92,7 @@ In the past, custom context was called "extra" and set via a method like setExtr
 
 Custom data set using `setExtra` appears in the "Additional Data" section of an event. By contrast, each key set using `setContext` gets its own section on the issue page, with the section title being the key name.
 
-For more details about predefined and custom contexts, see the [full documentation on Context Interface]({%- link _documentation/development/sdk-dev/event-payloads/contexts.md -%}). 
+For more details about predefined and custom contexts, see the [full documentation on Context Interface](https://develop.sentry.dev/sdk/event-payloads/contexts). 
 
 ### Context Size Limits
 
@@ -100,7 +100,7 @@ Maximum payload size: There are times when you may want to send the whole applic
 
 Sentry will try its best to accommodate the data you send, but Sentry will trim large context payloads or truncate the payloads entirely. 
 
-For more details, see the [full documentation on SDK data handling]({%- link _documentation/development/sdk-dev/data-handling.md -%}).
+For more details, see the [full documentation on SDK data handling](https://develop.sentry.dev/sdk/data-handling/).
 
 ### Unsetting Context
 
@@ -114,4 +114,4 @@ You can view the JSON payload of an event to see how Sentry stores additional da
 
 [{% asset additional-data/event_JSON.png alt="Red box highlighting where to find the JSON connected to an event." width="400"%}]({% asset additional-data/event_JSON.png @path %})
 
-For more details, see the [full documentation on Event Payload]({%- link _documentation/development/sdk-dev/event-payloads/index.md -%}).
+For more details, see the [full documentation on Event Payload](https://develop.sentry.dev/sdk/event-payloads/).

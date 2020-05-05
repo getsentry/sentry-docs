@@ -366,7 +366,7 @@ Sentry supports additional context with events. Often this context is shared amo
 
 ### Context Size Limits
 
-Sentry will try its best to accommodate the data you send it, but large context payloads will be trimmed or may be truncated entirely. For more details, see the [data handling SDK documentation]({%- link _documentation/development/sdk-dev/data-handling.md -%}).
+Sentry will try its best to accommodate the data you send it, but large context payloads will be trimmed or may be truncated entirely. For more details, see the [data handling SDK documentation](https://develop.sentry.dev/sdk/data-handling/).
 
 ### Capturing the User
 
