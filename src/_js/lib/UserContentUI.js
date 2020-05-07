@@ -31,6 +31,8 @@ const renderDropdownHeader = function(item) {
 };
 
 const renderDropdown = function(list, preferred) {
+  // take list (which is a flat structure) and create an object of arrays,
+  // keyed by org slug
   const grouped = list.reduce((obj, item) => {
     if (obj[item.group] === undefined) obj[item.group] = [];
     obj[item.group].push(item);
