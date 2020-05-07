@@ -36,11 +36,6 @@
       "description": "an optional Sentry structured search query.  If not provided an implied `\"is:unresolved\"` is assumed.)", 
       "name": "query", 
       "type": "querystring"
-    }, 
-    {
-      "description": "this restricts the issues to ones containing events from this environment", 
-      "name": "environment", 
-      "type": "string"
     }
   ], 
   "sidebar_order": 12, 

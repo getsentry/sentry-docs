@@ -18,11 +18,6 @@
       "description": "optionally a slug for the new project.  If it's not provided a slug is generated from the name.", 
       "name": "slug", 
       "type": "string"
-    }, 
-    {
-      "description": "create default rules (defaults to True)", 
-      "name": "default_rules", 
-      "type": "bool"
     }
   ], 
   "path_parameters": [

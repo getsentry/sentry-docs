@@ -11,6 +11,11 @@
   "parameters": null, 
   "path_parameters": null, 
   "query_parameters": [
+   {
+      "description": "restrict results to organizations which you have membership",
+      "name": "member",
+      "type": "bool"
+    },
     {
       "description": "restrict results to organizations in which you are an organization owner", 
       "name": "owner", 
