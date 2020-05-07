@@ -48,7 +48,7 @@ A **trace** represents the record of the entire operation you want to measure or
 
 Each trace consists of one or more tree-like structures called **transactions**, the nodes of which are called **spans**. In most cases, each transaction represents a single instance of a service being called, and each span within that transaction represents that service performing a single unit of work, whether calling a function within that service or making a call to a different service.
 
-Because a transaction has a tree structure, top-level spans can themselves be broken down into smaller spans, mirroring the way that one function may call a number of other, smaller functions; this is expressed using the parent-child metaphor, so that every span may be the **parent span** to multiple other spans. Further, since all trees must have a single root, one span always represents the transaction itself, of which all other spans are descendants.
+Because a transaction has a tree structure, top-level spans can themselves be broken down into smaller spans, mirroring the way that one function may call a number of other, smaller functions; this is expressed using the parent-child metaphor, so that every span may be the **parent span** to multiple other spans. Further, since all trees must have a single root, one span always represents the transaction itself, and all other spans are descendants of that root span.
 
 To make all of this more concrete, let's consider our example web app again.
 
@@ -56,24 +56,19 @@ To make all of this more concrete, let's consider our example web app again.
 
 Suppose your web application is slow to load, and you'd like to know why. A lot has to happen for your app to first get to a usable state: multiple requests to your backend, likely some work - including calls to your database or to outside APis - completed before responses are returned, and processing by the browser to render all of the returned data into something meaningful to the user. So which part of that process is slowing things down?
 
-`[kmclb: In what follows I'm not worrying yet about list formatting/indenting, what's a header, what's italics masquerading as a header, etc. Open to opinions here, and also just note-to-self-ing that it needs to be thought about eventually. FPA: maybe a table? First column, the service and second column, the processing that needs to happen?]`
-
 Let's say, in this simplified example, that when a user loads the app in their browser, the following happens in each service:
 
-  _Browser_
-
+- _Browser_
   - 1 request each for HTML, CSS, and JavaScript
   - 1 rendering task, which sets off 2 requests for JSON data
-
-  _Backend_
-
+^
+- _Backend_
   - 3 requests to serve static files (the HTML, CSS, and JS)
   - 2 requests for JSON data
-    - 1 requires a call to the database 
-    - 1 requires a call to an external API and work to process the results before returning them to the front end
-
-  _Database Server_
-
+    - 1 requiring a call to the database 
+    - 1 requiring a call to an external API and work to process the results before returning them to the front end
+^
+- _Database Server_
   - 1 request which requires 2 queries
     - 1 query to check authentication 
     - 1 query to get data
@@ -82,74 +77,97 @@ _Note:_ The external API is not listed precisely because it's external, and you 
 
 In this example, the entire page-loading process, including all of the above, is represented by a single **trace**. That trace would consist of the following **transactions**:
 
-  - 1 browser transaction (for page load)
-  - 5 backend transactions (one for each request)
-  - 1 database server transaction (for the single DB request)
+- 1 browser transaction (for page load)
+- 5 backend transactions (one for each request)
+- 1 database server transaction (for the single DB request)
   
 Each transaction would be broken down into **spans** as follows:
 
-  _Browser Page-load Transaction_: 7 spans
+- _Browser Page-load Transaction_: 7 spans
   - 1 root span representing the entire page load
   - 1 span each (3 total) for the HTML, CSS, and JS requests
   - 1 span for the rendering task, which itself contains
     - 2 child spans, one for each JSON request
-    
+
 Let's pause here to make an important point: Some, though not all, of the browser transaction spans listed have a direct correspondence to backend transactions listed earlier. Specifically, each request _span_ in the browser transaction corresponds to a separate request _transaction_ in the backend. In this situation, when a span in one service gives rise to a transaction in a subsequent service, we call the original span a parent span to _both_ the transaction and its root span.
 
 In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service, which means that every root span other than the browser transaction root has a parent span (albeit in a different service). In a fully-instrumented system (one in which every service has tracing enabled) this pattern will always hold true: _the only parentless span will be the root of the initial transaction, and of the remaining parented spans, every one will live in the same service as its parent, except for the root spans, whose parents will live in a previous service_. This is worth noting because it is the one way in which transactions are not perfect trees - their roots can (and mostly do) have parents.
 
 Now, for the sake of completeness, back to our spans:
 
-  _Backend HTML/CSS/JS Request Transactions_: 2 spans each `[kmclb: if transactions can have no children, this might be only 1 span, the root]`
+- _Backend HTML/CSS/JS Request Transactions_: 1 span each
   - 1 root span representing the entire request (child of a browser span)
-  - 1 span for serving the static file
-
-  _Backend Request with DB Call Transaction_: 2 spans
+^
+- _Backend Request with DB Call Transaction_: 2 spans
   - 1 root span representing the entire request (child of a browser span)
   - 1 span for querying the database (parent of the database server transaction)
-
-  _Backend Request with API Call Transaction_: 3 spans
+^
+- _Backend Request with API Call Transaction_: 3 spans
   - 1 root span representing the entire request (child of a browser span)
   - 1 span for the API request (unlike with the DB call, _not_ a parent span, since the API is external)
   - 1 span for processing the API data
-
-  _Database Server Request Transaction_: 3 spans
+^
+- _Database Server Request Transaction_: 3 spans
   - 1 root span representing the entire request (child of the backend span above)
   - 1 span for the authentication query
   - 1 span for the query retrieving data
-    
-To wrap up the example, after instrumenting all of your services, you might discover that - for some reason - it's the auth query in your database server that is making things slow, accounting for more than half of the time it takes for your entire page load process to complete. Tracing can't tell you _why_ that's happening, but at least now you know where to look!
 
-`[kmclb: this def needs an illustration (or multiple illustrations) - can we maybe just adjust the current one for this example, or should we use one with more specifics? Current diagram: FPA: am asking Sami in Creative, who made the original drawing]`
+To wrap up the example: after instrumenting all of your services, you might discover that - for some reason - it's the auth query in your database server that is making things slow, accounting for more than half of the time it takes for your entire page load process to complete. Tracing can't tell you _why_ that's happening, but at least now you know where to look!
+
+`[kmclb: working w Sami on updating the illustrations to match this example. Keeping the link below just to have the example of how to format the markdown]`
 [{% asset performance/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset performance/tracing-diagram.png @path %})
   
 ### Further Examples
 
 This section contains a few more examples of tracing, broken down into transactions and spans.
 
-_Note:_ Starred spans represent spans that are the parent of a later transaction (and its root span).
-
 **Measuring a Specific User Action**
 
-If your application involves e-commerce, you likely want to measure the time between a user clicking "Submit Order" and the order confirmation appearing, including tracking the submitting of the charge to the payment processor and the sending of an order confirmation email. That entire process is one trace, and typically you'd have transactions for:
+If your application involves e-commerce, you likely want to measure the time between a user clicking "Submit Order" and the order confirmation appearing, including tracking the submitting of the charge to the payment processor and the sending of an order confirmation email. That entire process is one trace, and typically you'd have transactions (_T_) and spans (_S_) for:
 
-  - The browser's full process (example spans: XHR request to backend\*, rendering confirmation screen)
-  - Your backend's processing of that request (example spans: function call to compute total, DB call to store order*, API call to payment processor, queuing of email confirmation\*)
-  - Your database's work updating the customer's order history (example spans: individual SQL queries)
-  - The queued task of sending the email (example spans: function call to populate email template, API call to email-sending service)
+- The browser's full process (_T_)
+  - XHR request to backend\* (_S_)
+  - Rendering confirmation screen (_S_)
+^
+- Your backend's processing of that request
+  - Function call to compute total (_S_)
+  - DB call to store order\* (_S_)
+  - API call to payment processor (_S_)
+  - Queuing of email confirmation\* (_S_)
+^
+- Your database's work updating the customer's order history (_T_)
+  - Individual SQL queries (_S_)
+^
+- The queued task of sending the email (_T_)
+  - Function call to populate email template (_S_)
+  - API call to email-sending service (_S_)
   
+_Note:_ Starred spans represent spans that are the parent of a later transaction (and its root span).
+
 **Monitoring a Background Process**
 
-If your backend periodically polls for data from an external service, processes it, caches it, and then forwards it to an internal service, each instance of this happening is a trace, and you'd typically have transactions for:
+If your backend periodically polls for data from an external service, processes it, caches it, and then forwards it to an internal service, each instance of this happening is a trace, and you'd typically have transactions (_T_) and spans (_S_) for:
 
-- The cron job that completes the entire process (example spans: API call to external service, processing function, call to caching service\*, API call to internal service\*)
-- The work done in your caching service (example spans: checking cache for existing data, storing new data in cache)
-- Your internal service's processing of the request (example spans: anything that service might do to handle the request)
+- The cron job that completes the entire process (_T_)
+  - API call to external service (_S_)
+  - Processing function (_S_)
+  - Call to caching service\* (_S_)
+  - API call to internal service\* (_S_)
+^
+- The work done in your caching service (_T_)
+  - Checking cache for existing data (_S_)
+  - Storing new data in cache (_S_)
+^
+- Your internal service's processing of the request (_T_)
+  - Anything that service might do to handle the request (_S_)
+  
+_Note:_ Starred spans represent spans that are the parent of a later transaction (and its root span).
   
 ### Tracing Data Model
 
-`[kmclb: do we want to format this in a quote-y kind of way? FPA: like a Note or Alert. I think it would be kind of cool.]`
-"Show me your flowchart and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowchart; it'll be obvious." -- [Fred Brooks](https://en.wikipedia.org/wiki/Fred_Brooks), The Mythical Man Month (1975)
+> "Show me your flowchart and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowchart; it'll be obvious." 
+>
+> -- [Fred Brooks](https://en.wikipedia.org/wiki/Fred_Brooks), The Mythical Man Month (1975)
 
 While the theory is interesting, ultimately any data structure is defined by the kind of data it contains, and relationships between data structures are defined by how links between them are recorded. Traces, transactions, and spans are no different. `[FPA: this sentence is confusing to me. Do we mean. "Traces, transactions, and spans are defined by what's in them. The relationships among the three are defined by the manner in which the links between them are recorded." or something like that? kmclb: Does this read more easily to you?]`
 
@@ -159,53 +177,58 @@ Traces are not an entity in and of themselves. Rather, a trace is defined as the
 
 **Transactions**
 
-Transactions share most of their properties (start and end time, tags, and so forth) with their root spans, so the same options described below for spans are available in transactions, and setting them in either place is equivalent. `[FPA: suggest we say "so the same options described <link> are available kmclb: A link felt like overkill for something which is 5 lines below, but hopefully the new wording makes it crystal clear which options we're talking about]` Transactions also have two additional properties not included in spans:
+Transactions share most of their properties (start and end time, tags, and so forth) with their root spans, so the same options described below for spans are available in transactions, and setting them in either place is equivalent.
 
-`[kmclb: anything missing from this list?]`
-
-- `transaction_name`: used in the UI to identify the transaction
-- `root_span`: pointer to the root of the transactions span tree
-
-`[kmclb: how the heck do you get less-than or greater-than symbols to show up in code snippets? FPA: I usually just enclose in backticks, but it can be tricky - you can force also with html <code></code> tags kmclb: how do you mean, enclose in backticks? How would you handle the user_id example below?]`
-Common examples of `transaction_name` values include endpoint paths (like `/store/checkout/` or `api/v2/users/\<user_id\>/`) for backend request transactions, task names (like `data.cleanup.delete_inactive_users`) for cron job transactions, and URLs (like `https://docs.sentry.io/performance/distributed-tracing/`) for page-load transactions.
+Transactions also have one additional property not included in spans, called `transaction_name`, which is used in the UI to identify the transaction. Common examples of `transaction_name` values include endpoint paths (like `/store/checkout/` or `api/v2/users/&lt;user_id&gt;/`) for backend request transactions, task names (like `data.cleanup.delete_inactive_users`) for cron job transactions, and URLs (like `https://docs.sentry.io/performance/distributed-tracing/`) for page-load transactions.
 
 **Spans**
 
 The majority of the data in a transaction resides in the individual spans the transaction contains. Span data includes:
 
-`[kmclb: the list below isn't currently ground truth (quite), but the ground is potentially shifting. Will update once API is settled.]`
-
-  - `parent_span_id`: ties the span to its parent span
-  - `op`: short code identifying the type of operation the span is measuring
-  - `start_timestamp`: when the span was opened
-  - `end_timestamp`: when the span was closed
-  - `description`: longer description of the span's operation, often specific to that instance (optional)
-  - `status`: short code indicating operation's status (optional)
-  - `tags`: key-value pairs holding additional data about the span (optional)
-  - `data`: arbitrarily-structured additional data about the span (optional)
+- `parent_span_id`: ties the span to its parent span
+- `op`: short string identifying the type of operation the span is measuring
+- `start_timestamp`: when the span was opened
+- `end_timestamp`: when the span was closed
+- `description`: longer description of the span's operation, often specific to that instance (optional)
+- `status`: short code indicating operation's status (optional)
+- `tags`: key-value pairs holding additional data about the span (optional)
+- `data`: arbitrarily-structured additional data about the span (optional)
 
 An example use of the `op` and `description` properties together is `op: sql.query` and `description: SELECT * FROM users WHERE last_active < DATE_SUB(CURRENT_DATE, INTERVAL 1 YEAR)`. The `status` property is often used to indicate the success or failure of the span's operation, or for a response code in the case of HTTP requests. Finally, `tags` and `data` allow you attach further contextual information to the span, such as `function: middleware.auth.is_authenticated` for a function call or `request: {url: ..., headers: ... , body: ...}` for an HTTP request.
   
-### Good to Know (needs a better name) `[FPA: Tracing Relationships kmclb: but that's really what this entire (big) section is about. This smaller section is more "fun factoids which are helpful but didn't fit anywhere else" - some are about relationships between traces, transactions, and spans, but some are just about one of those]`
+### Further Information
 
 A few more important points about traces, transactions, and spans, and the way they relate to one another:
 
-**Trace Duration**: Because a trace just is a collection of transactions, traces don't have their own start and end times. Instead, a trace begins when its earliest transaction starts, and ends when its latest transaction ends. As a result, you can't explicitly start or end a trace directly. Instead, you create a trace by creating the first transaction in that trace, and you complete a trace by completing all of transactions it contains.
+**Trace Duration**
 
-**Async Transactions**: Because of the possibility of asynchronous processes, child transactions may outlive the transactions containing their parent spans, sometimes by many orders of magnitude. For example, if a backend API call sets off a long-running processing task and then immediately returns a response, the backend transaction will finish (and its data will be sent to Sentry) long before the async task transaction does. Asynchronicity also means that the order in which transactions are sent to (and received by) Sentry does not in any way depend on the order in which they were created. (By contrast, order of receipt for transactions in the same trace _is_ correlated with order of completion, though because of factors like the variability of transmission times, the correlation is far from perfect.)
+Because a trace just is a collection of transactions, traces don't have their own start and end times. Instead, a trace begins when its earliest transaction starts, and ends when its latest transaction ends. As a result, you can't explicitly start or end a trace directly. Instead, you create a trace by creating the first transaction in that trace, and you complete a trace by completing all of transactions it contains.
 
-**Orphan Transactions**: In theory, in a fully instrumented system, each trace should contain only one transaction and one span (the transaction's root) without a parent, namely the transaction in the originating service. However, in practice, you may not have tracing enabled in every one of your services, or an instrumented service may fail to report a transaction due to network disruption or other unforeseen circumstances. When this happens, you may see gaps in your trace hierarchy. Specifically, you may see transactions partway through the trace whose parent spans haven't been recorded as part of any known transactions. Such non-originating, parentless transactions are called **orphan transactions**.
+**Async Transactions**
 
-`[kmclb: depending on how we end up formatting this, may need to make this one paragraph]`
-**Clock Skew**: If you are collecting transactions from multiple machines, you will likely encounter **clock skew**, where timestamps in one transaction don't align with timestamps in another. For example, if your backend makes a database call, the backend transaction logically should start before the database transaction does. But if the system time on each machine (those hosting your backend and database, respectively) isn't synced to common standard, it's possible that won't be the case. It's also possible for the ordering to be correct, but for the two recorded timeframes to not line up in a way that accurately reflects what actually happened.
+Because of the possibility of asynchronous processes, child transactions may outlive the transactions containing their parent spans, sometimes by many orders of magnitude. For example, if a backend API call sets off a long-running processing task and then immediately returns a response, the backend transaction will finish (and its data will be sent to Sentry) long before the async task transaction does. Asynchronicity also means that the order in which transactions are sent to (and received by) Sentry does not in any way depend on the order in which they were created. (By contrast, order of receipt for transactions in the same trace _is_ correlated with order of completion, though because of factors like the variability of transmission times, the correlation is far from perfect.)
 
-Because there is no way for Sentry to judge either the relative or absolute accuracy of your timestamps, it does not attempt to correct or modify them in any way. And while you can reduce clock skew by using Network Time Protocol (NTP) or your cloud provider's clock synchronization services, you may still notice small drifts in your data, as synchronizing clocks on small intervals is challenging.
+**Orphan Transactions**
 
-**Nesting Spans**: Though our examples above had four levels in their hierarchy (trace, transaction, span, child span) there's no set limit to how deep the nesting of spans can go. There are, however, practical limits: transaction payloads sent to Sentry have a maximum allowed size (currently `[kmclb: find out what this is]`), and there's a balance to be struck between your data's granularity and its usability. 
+In theory, in a fully instrumented system, each trace should contain only one transaction and one span (the transaction's root) without a parent, namely the transaction in the originating service. However, in practice, you may not have tracing enabled in every one of your services, or an instrumented service may fail to report a transaction due to network disruption or other unforeseen circumstances. When this happens, you may see gaps in your trace hierarchy. Specifically, you may see transactions partway through the trace whose parent spans haven't been recorded as part of any known transactions. Such non-originating, parentless transactions are called **orphan transactions**.
 
-**Zero-duration Spans**: It's possible for a span to have equal start and end times, and therefore be recorded as taking no time. This can occur either because the span is being used as a marker (such as is done in [the browser's Performance API](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark)) or because the amount of time the operation took is less than the measurement resolution (which will vary by service).
+**Nested Spans**
 
-**What We Send**: Individual spans aren't sent to Sentry. Rather, those spans are attached to their containing transaction, and the transaction is sent as one unit. This means that no span data will be recorded by Sentry's servers until the transaction to which they belong is closed and dispatched. 
+Though our examples above had four levels in their hierarchy (trace, transaction, span, child span) there's no set limit to how deep the nesting of spans can go. There are, however, practical limits: transaction payloads sent to Sentry have a maximum allowed size, and as with any kind of logging, there's a balance to be struck between your data's granularity and its usability. 
+
+**Zero-duration Spans**
+
+It's possible for a span to have equal start and end times, and therefore be recorded as taking no time. This can occur either because the span is being used as a marker (such as is done in [the browser's Performance API](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark)) or because the amount of time the operation took is less than the measurement resolution (which will vary by service).
+
+**Clock Skew**
+
+If you are collecting transactions from multiple machines, you will likely encounter **clock skew**, where timestamps in one transaction don't align with timestamps in another. For example, if your backend makes a database call, the backend transaction logically should start before the database transaction does. But if the system time on each machine (those hosting your backend and database, respectively) isn't synced to common standard, it's possible that won't be the case. It's also possible for the ordering to be correct, but for the two recorded timeframes to not line up in a way that accurately reflects what actually happened.
+
+Because there is no way for Sentry to judge either the relative or absolute accuracy of your timestamps, it does not attempt to correct for this. And while you can reduce clock skew by using Network Time Protocol (NTP) or your cloud provider's clock synchronization services, you may still notice small discrepancies in your data, as synchronizing clocks on small intervals is challenging.
+
+**What We Send**
+
+Individual spans aren't sent to Sentry. Rather, those spans are attached to their containing transaction, and the transaction is sent as one unit. This means that no span data will be recorded by Sentry's servers until the transaction to which they belong is closed and dispatched. 
 
 ## Data Sampling
 
@@ -215,7 +238,7 @@ When collecting traces, we **strongly recommend** sampling your data, for two re
 
 When choosing a sampling rate, the goal is to not collect _too_ much data (given the reasons above) but also to collect enough data that you are able to draw meaningful conclusions. If you're not sure what rate to choose, we recommend starting with a low value and gradually increasing it as you learn more about your traffic patterns and volume, until you've found a rate which lets you balance performance and cost concerns with data accuracy.
 
-### Consistency Across Transactions Within a Trace
+### Consistency Within a Trace
 
 For traces which involve multiple transactions, Sentry uses a "head-based" approach: a sampling decision is made in the originating service, and then that decision is passed to all subsequent services. To see how this works, let's return to our webapp example above. Consider two users, A and B, who are both loading your app in their respective browsers. When A loads the app, the SDK pseudorandomly "decides" to collect a trace, whereas when B loads the app, the SDK "decides" not to. When each browser makes requests to your backend, it includes in those requests the "yes, please collect transactions" or the "no, not collecting transactions this time" decision in the headers. 
 
@@ -225,9 +248,9 @@ On the other hand, when your backend processes the requests from B's browser, it
 
 Put simply: as a result of this head-based approach, where the decision is made once in the originating service and passed to all subsequent services, either all of the transactions for a given trace will be collected, or none will, so there shouldn't be any incomplete traces.
 
-### Consistency Across Services
+### Consistency Between Traces
 
-If you enable tracing in services with multiple entry points, we recommend choosing similar sampling rates, to avoid biasing your data. For example, suppose the backend of our on-going webapp example also serves as a public API. In that case, some traces would start with a pageload transaction in the web app, and likely include multiple backend transactions, while other traces (those representing folks hitting the public API) would begin with a single backend request transaction, which would be the only backend transaction in the trace. Choosing a very different sampling rate for your webapp from that chosen for your backend would lead to one of those scenarios being oversampled compared to the other, compromising the accuracy of your overall data.
+If you enable tracing in services with multiple entry points, we recommend choosing similar sampling rates, to avoid biasing your data. For example, suppose the backend of our on-going webapp example also serves as a public API. In that case, some traces would start with a pageload transaction in the web app, and likely include multiple backend transactions, while other traces (those representing folks hitting the public API) would begin with a single backend request transaction, which would be the only backend transaction in the trace. Choosing a very different sampling rate for your web app from that chosen for your backend would lead to one of those scenarios being oversampled compared to the other, compromising the accuracy of your overall data.
 
 ## Viewing Trace Data
 
@@ -235,20 +258,18 @@ You can see a list of transaction events by clicking on the "Transactions" pre-b
 
 ### Transaction List View
 
-`[kmclb: There's a LOT we don't document currently about the transaction list view (which is to say, almost anything). Some of it may be covered in the Discover docs, but even if so, I think we need to do a quick overview of all of the controls/what's displayed and then point to those docs. ]`
+The results of either of the above queries will be presented in a list view, where each entry represents a group of one or more transactions. Data about each group is displayed in table form, and comes in two flavors: value-based (such as transaction name), and aggregate (such as average duration). The choice of which kinds of data to display is configurable, and can be changed by clicking 'Edit Columns' at the top right of the table. Bear in mind that adding or removing any value-based columns may affect the way the results are grouped.
 
-`[kmclb: I think we should have a section - or at least a sentence or two - here on searching, which would mention that transactions (but not spans) are searchable, and what data one can use to search. Should also probably link to the main search docs.]`
+From this view transactions can also be filtered, both by restricting the time window and by adding attributes to the query. It is important to note that **currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore is not searched.**
 
-`[kmclb: We probably also want to explain how transactions are grouped in this view]`
+Full documentation of the transaction list view (which is just a special case of the Discover query builder) can be found [here]({%- link _documentation/performance/discover/query-builder.md -%}). 
 
 #### Performance Metrics
 
 `[kmclb: Help! This is a dangling modifier (there's a "you" implied by the first clause which never materializes in the second) but I can't think of a good way to fix it.]`
 When choosing which columns to display in your transaction list, there are a few metrics which lend themselves well to analyzing your application's performance.
 
-`[kmclb: Do we want to mention the count() option? see note above above grouping]`
-
-**Aggregate Duration Metrics**
+**Transaction Duration Metrics**
 
 You can aggregate transaction durations using the following functions:
 - average
@@ -258,17 +279,17 @@ One use case for tracking these statistics is to help you identify transactions 
 
 A word of caution when looking at averages and percentiles: In most cases, you'll want to set up tracing so that only [a fraction](#data-sampling) of possible traces are actually sent to Sentry, to avoid overwhelming your system. Further, you may want to filter your transaction data by date or other factors, or you may be tracing a relatively uncommon operation. For all of these reasons, you may end up with average and percentile data that is directionally correct, but not accurate. (To use the most extreme case as an example, if only a single transaction matches your filters, you can still compute an "average" duration, even though that's clearly not what is usually meant by "average.")
 
-`[kmclb: Below: "We can calculate an average with less data than a 95th percentile" - is there some threshold below which we won't do the calculation?]`
+The problem of small sample size (and the resulting inability to be usefully accurate) will happen more often for some metrics than others, and sample size will also vary by row. For example, it takes less data to calculate a meaningful average than it does to calculate an equally meaningful 95th percentile. Further, a row representing requests to `/settings/my-awesome-org/` will likely contain many times as many transactions as one representing requests to `/settings/my-awesome-org/projects/best-project-ever/`.
 
-The problem of small sample size (and the resulting inability to be usefully accurate) will happen more often for some metrics than others. `[kmclb: which ones?]` We can calculate an average with less data than it takes to calculate the 95th percentile, but it’ll also vary by row. (For example, `/settings/` will always get more traffic than `/settings/country/belgium/tax`.) 
+**Transaction Frequency Metrics**
 
-**Requests Per Minute (RPM)**
+Transaction counts and the rate at which transactions are recorded can be calculated using the following functions:
+- count
+- count unique values (for a given field)
+- average requests (transactions) per second
+- average requests (transactions) per minute
 
-`[kmclb: is there a reason we talk about RPM but not RPS?]`
-
-Requests Per Minute is a way to measure throughput. It is the average of all request durations, bucketed by the minute `[kmclb: start time or end time?]` for the current time window and query string.
-
-`[kmclb: now that I read this again, it doesn't make sense. Requests/min is a *number* of requests, whereas the description says it's the average *duration* of a group of requests. Which is it?]`
+Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, you have set up your SDK to [sample your data](#data-sampling), remember that only the transactions which are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 (5 * 4) requests to that endpoint each second.
 
 ### Transaction Detail View
 
@@ -300,16 +321,13 @@ Click on a row in the span view to expand the details of that span. From here, y
 
 You can search for all of the transactions in a given trace by expanding any of the span details and clicking on "Search by Trace".
 
-_Note:_ Each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view, which may or may not be all of the given trace's transactions.
+_Note:_ On the Team plan, results will only be shown for one project at a time. Further, each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view. Therefore, you may not see all transactions in a given trace in your results list.
 
 **Traversing to Child Transactions**
 
 Some spans within a transaction may be the parent of another transaction. When you expand the span details for such spans, you'll see the "View Child" button, which, when clicked, will lead to the child transaction's details view.
 
-_Note:_ Each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view, which may or may not include a given span's child transaction. `[kmclb: Does the button even show up if you don't have the right permissions?]`
-
-
-`[kmclb: Haven't really touched much below this. It needs real work, but that's the next PR. :-) ]`
+_Note:_ Traversing between transactions in this way is only available on the Business plan. Further, each transaction belongs to a specific project, and you will only be able to see the "View Child" button if the child transaction belongs to a project you have permission to view.
 
 ## Setting Up Tracing
 
@@ -449,7 +467,6 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 - Therefore, the option needs to be configured like this: `new ApmIntegrations.Tracing({tracingOrigins: ['api.example.com']})`
 - Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
 
-`[kmclb: does this only apply to web servers, or all services which accept incoming requests?]`
 *NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your set up. If you do not whitelist the `sentry-trace` header, the request might be blocked.
 
 **Using Tracing Integration for Manual Instrumentation**
