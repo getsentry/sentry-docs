@@ -13,7 +13,7 @@ The Apdex graph shows the ratio of response times in a user's application. Users
 The Throughput graph indicates the number of transactions over a given time range. Users can quickly visualize the traffic patterns in their application and see if a spike in throughput might be correlated with a dip in their Apdex score.
 
 ## Transaction Table
-Underneath the graphs, users can view a list of their transactions with the capability to filter down on which transactions users want to view. In this table, users can sort on the provided columns to understand key characteristics of their transactions like [LINK: P95] duration time, [LINK: Average Transaction Duration] time, or [LINK: Throughput].
+Underneath the graphs, users can view a list of their transactions with the capability to filter down on which transactions users want to view. In this table, users can sort on the provided columns to understand key characteristics of their transactions like [P95]({%- link _documentation/performance/performance-metrics.md -%}#p95-threshold) duration time, [Average Transaction Duration]({%- link _documentation/performance/performance-metrics.md -%}#average-transaction-duration) time, or [Throughput]({%- link _documentation/performance/performance-metrics.md -%}#throughput).
 
 ## My Key Transactions
 "My Key Transactions" are transactions that users bookmark and can view in a separate dedicated tab. Users may want to bookmark a Transaction as a "Key Transaction" if they monitor performance on a particular transaction or group of transactions. Users can set a Transaction as a "Key Transaction" on the Transaction Summary page. The "All Transactions" view also displays these transactions.
@@ -37,10 +37,10 @@ Duration Percentiles: This graph shows the average transaction duration across d
 The sidebar contains a Tag Summary and more statistics about the transaction. This information updates dynamically if a user changes any of the selections in the global header or when a user drills in on a latency segment (applicable when viewing the Latency Histogram).
 
 ## Slowest Transactions
-On initial load, the table displays the slowest occurrences of the transaction along with the Event ID, User, Transaction Duration, and Timestamp of the event. Users can click on the [LINK: Event ID] to open the span view for the transaction ([https://docs.sentry.io/performance/distributed-tracing/#viewing-transactions](https://docs.sentry.io/performance/distributed-tracing/#viewing-transactions)). The table updates dynamically if a user changes any of the selections in the global header or when a user drills in on a latency segment -- applicable when viewing the Latency Histogram.
+On initial load, the table displays the slowest occurrences of the transaction along with the Event ID, User, Transaction Duration, and Timestamp of the event. Users can click on the [Event ID]({%- link _documentation/performance/distributed-tracing.md -%}#viewing-transactions) to open the span view for the transaction. The table updates dynamically if a user changes any of the selections in the global header or when a user drills in on a latency segment -- applicable when viewing the Latency Histogram.
 
 ## Open in Discover
-When viewing transactions, users may want to create more curated views. To do this, they can click on the "Open in Discover" button to create a custom query and investigate further. Read more about our Discover Query Builder here ([https://docs.sentry.io/performance/discover/query-builder/](https://docs.sentry.io/performance/discover/query-builder/)). 
+When viewing transactions, users may want to create more curated views. To do this, they can click on the "Open in Discover" button to create a custom query and investigate further. Read more about our [Discover Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}).
 
 ## Setting a Key Transaction
 Users can set personal "Key Transactions" from the Transaction Summary page. After setting a "Key Transaction," they will be able to view the transactions in a dedicated tab on the Performance Homepage. These "Key Transactions" are not currently shared and limited to ten per user.
