@@ -3,6 +3,14 @@ title: Cocoa
 robots: noindex
 ---
 
+{% capture __alert_content -%}
+A new Cocoa SDK has superseded this deprecated version. Sentry preserves this documentation for customers using the old client. We recommend using the [updated Cocoa SDK]({%- link _documentation/platforms/cocoa/index.md -%}) for new projects.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 This is the documentation for our official clients for Cocoa (Swift and Objective-C). Starting with version `3.0.0` we’ve switched our internal code from Swift to Objective-C to maximize compatibility. Also we trimmed the public API of our SDK to a minimum. Check out [Migration Guide]({%- link _documentation/clients/cocoa/migration.md -%}#migration) or [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%}#advanced) for details.
 
 ## Getting Started
