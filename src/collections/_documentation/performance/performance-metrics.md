@@ -3,10 +3,10 @@ title: 'Performance Metrics'
 sidebar_order: 2
 ---
 
-Sentry's application monitoring product collects performance metrics. Performance metrics make possible a better understanding of how users are interacting with your application. By tracking metrics like Latency and Throughput in [LINK: Discover] or [LINK: Performance], Sentry provides you with a fuller, real-time picture of your application health, such as the occurrence of errors or performance issues.
+Sentry's application monitoring product collects performance metrics. Performance metrics make possible a better understanding of how users are interacting with your application. By tracking metrics like Latency and Throughput in [LINK: Discover] or [LINK: Performance], Sentry provides you with a fuller, real-time picture of your application's health, such as the occurrence of errors or performance issues.
 
 ## Apdex
-Apdex is an industry-standard used to track and measure user satisfaction based on the response times in your application. Your Apdex score is a measurement of the ratio of satisfactory, tolerable, and frustrated requests in a specific transaction or endpoint. This metric provides a standard for you to compare transaction performance, understand which ones may require additional optimization or investigation, and set targets or goals for performance.
+Apdex is an industry-standard metric used to track and measure user satisfaction based on response times in your application. Your Apdex score is a measurement of the ratio of satisfactory, tolerable, and frustrated requests in a specific transaction or endpoint. This metric provides a standard for you to compare transaction performance, understand which ones may require additional optimization or investigation, and set targets or goals for performance.
 
 - Below are the various components of Apdex and its formula:
     - T = Response time threshold for your target response time
@@ -14,7 +14,6 @@ Apdex is an industry-standard used to track and measure user satisfaction based 
     - Tolerable = >T and ≤ 4*T
     - Frustrated = 4*T
     - Apdex = (# of Satisfactory Requests + (# of Tolerable Requests/2)) / (# of Total Requests)
-- Impact/Paindex - a user-weighted performance metric to assess the relative magnitude of your application performance
     
 ## Average Transaction Duration
 Average Transaction Duration indicates the average response time for all occurrences of a given transaction
