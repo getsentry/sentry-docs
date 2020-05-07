@@ -66,7 +66,7 @@ If you're using the Symfony Flex plugin, you'll find this file already created f
 ## Customization
 
 The [Sentry 2.0 SDK]({% link _documentation/platforms/php/index.md %}#php-specific-options) uses the 
-[Unified API]({% link _documentation/development/sdk-dev/unified-api.md %}), hence it uses the concept of `Scope`s to 
+[Unified API](https://develop.sentry.dev/sdk/unified-api/), hence it uses the concept of `Scope`s to 
 hold information about the current state of the app, and attach it to any event that is reported. 
 This bundle has three listeners (`RequestListener`, `SubRequestListener`, and `ConsoleListener`) that add some easy 
 default information. Those listeners normally are executed with a priority of `1` to allow easier customization with 

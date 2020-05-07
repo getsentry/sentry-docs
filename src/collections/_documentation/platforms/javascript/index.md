@@ -61,7 +61,17 @@ Then, you can see the error in your dashboard:
 [{% asset js-index/error-message.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/error-message.png @path %})
 
 ## Capturing Errors
-In most situations, you can capture errors automatically with `captureException()`.
+Automatically and manually capture errors, exceptions, and rejections.
+
+### Automatically Capture Errors
+By including and configuring Sentry, the SDK will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
+
+[{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
+
+Note: Browsers may take security measures when serving script files from different origins that can block error reporting. If you find errors are not being reported accurately, please see the troubleshooting section on [Cross-Origin Resource Sharing (CORS)](#cors-attributes-and-headers).
+    
+### Manually Capture Errors
+In most situations, you can capture errors manually with `captureException()`.
 
 ```javascript
 try {
@@ -72,19 +82,12 @@ try {
 ```
 For additional functionality, see [SDK Integrations](#sdk-integrations).
 
-### Automatically Capturing Errors
-By including and configuring Sentry, the SDK will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
-
-[{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
-
-Keep in mind; browsers are taking some security measures when serving script files from different origins. For errors to always make their way to Sentry, make sure that you configure CORS headers and add appropriate script attributes. For more information, refer to our [What the heck is "Script error"?](https://blog.sentry.io/2016/05/17/what-is-script-error#the-fix-cors-attributes-and-headers) blog post.
-
-### Automatically Capturing Errors with Promises
-By default, Sentry for JavaScript captures unhandled promise rejections as described in the official ECMAScript 6 standard.
+### Automatically Capture Errors with Promises
+By default, Sentry for JavaScript captures unhandled promise rejections, as described in the official ECMAScript 6 standard.
 
 Configuration may be required if you are using a third-party library to implement promises.
 
-Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by changing `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
+Most promise libraries have a global hook for capturing unhandled errors. Disable default behavior by changing the `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into each event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 ## Releases
 
@@ -986,6 +989,42 @@ basic stack trace. This exception is stored here for further data extraction.
 `xhr`
 
 : For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API. This holds the original xhr object.
+
+## Troubleshooting
+
+### CORS Attributes and Headers
+
+To gain visibility into a JavaScript exception thrown from scripts originating from different origins, do two things:
+
+1. Add a `crossorigin=”anonymous”` script attribute
+
+    ```javascript
+    <script src="http://another-domain.com/app.js" crossorigin="anonymous"></script>
+    ```
+
+    The script attribute tells the browser to fetch the target file "anonymously." Potentially user-identifying information like cookies or HTTP credentials won't be transmitted by the browser to the server when requesting this file.
+
+2. Add a Cross-Origin HTTP header
+
+    ```javascript
+    Access-Control-Allow-Origin: *
+    ```
+    Cross-Origin Resource Sharing (CORS) is a set of APIs (mostly HTTP headers) that dictate how files ought to be downloaded and served across origins.
+    
+    By setting `Access-Control-Allow-Origin: *`, the server is indicating to browsers that any origin can fetch this file. Alternatively, you can restrict it to a known origin you control:
+    
+    ```javascript
+    Access-Control-Allow-Origin: https://www.example.com
+    ```
+    
+    Most community CDNs properly set an Access-Control-Allow-Origin header.
+
+    ```bash
+    $ curl --head https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.js | \
+    grep -i "access-control-allow-origin"
+
+    Access-Control-Allow-Origin: *
+    ```
 
 ## Additional Resources
 - [Optimizing the Sentry Workflow](https://blog.sentry.io/2018/03/06/the-sentry-workflow)

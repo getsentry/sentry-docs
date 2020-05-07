@@ -40,7 +40,7 @@ If you're expecting higher volumes or you're interested in our Enterprise capabi
 
 ### 3. Export your data
 
-Sentry open-source provides a [command line interface](https://docs.sentry.io/server/cli/) that allows you to perform various operations that are unachievable within the web UI. One of those is `export`, exporting your data into a transport JSON.
+Sentry open-source provides a command line interface that allows you to perform various operations that are unachievable within the web UI. One of those is `export`, exporting your data into a transport JSON.
 
 Run the following command in your terminal to start the export script and redirect the output (_containing_ the transport JSON) to a file:
 

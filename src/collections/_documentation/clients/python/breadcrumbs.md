@@ -53,7 +53,7 @@ If you want to manually record breadcrumbs the most convenient way to do that is
 
 {: #raven.breadcrumbs.record}`raven.breadcrumbs.``record`(_**options_)
 
-: This function accepts keyword arguments matching the attributes of a breadcrumb. For more information see [_Event Payloads_]({%- link _documentation/development/sdk-dev/event-payloads/index.md -%}). Additionally, a _processor_ callback can be passed which will be invoked to process the data if the crumb was not rejected.
+: This function accepts keyword arguments matching the attributes of a breadcrumb. For more information see [_Event Payloads_](https://develop.sentry.dev/sdk/event-payloads/). Additionally, a _processor_ callback can be passed which will be invoked to process the data if the crumb was not rejected.
 
   The most important parameters:
 

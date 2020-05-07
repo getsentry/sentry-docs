@@ -2,6 +2,15 @@
 title: 'IP Ranges'
 ---
 
+{% capture __alert_content -%}
+The contents of this page only apply to Sentry's SaaS product. It **does not** apply to Self-hosted or Single Tenant.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 Sentry is served from a single IP address for all web traffic and all event accepting. The IP address is:
 
 ```python

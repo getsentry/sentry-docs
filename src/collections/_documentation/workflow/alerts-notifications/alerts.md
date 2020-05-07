@@ -8,7 +8,7 @@ Sentry users with admin permissions or higher can create one of two types of ale
 ## Metric Alerts
 
 {% capture __alert_content -%}
-Metric Alerts are currently in beta. For more information about access to Metric Alerts, feel free to reach out at alerting-feedback@sentry.io.
+Metric Alerts are currently in beta and available for [Team and Business plans](https://sentry.io/pricing/). For more information about access to Metric Alerts, feel free to reach out at [alerting-feedback@sentry.io](mailto:alerting-feedback@sentry.io).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -97,14 +97,18 @@ In the example, the alert will not fire because an event cannot satisfy both of 
 
 The following actions are available:
 
+- Send an email
+    - Send email to either [Issue Owners]({%- link _documentation/workflow/issue-owners.md -%}), Team, or [Member]({%- link _documentation/accounts/membership.md -%}#member)
 - Send a notification to all legacy integrations
-    - [Legacy integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}), also known as Plugins, are configured per project. Legacy integrations currently include email.
-- Send a notification to a single legacy integration (service)
-    - "service" is the same as legacy integration
+    - [Legacy integrations]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}), also known as Plugins, are configured per project 
+- Send a notification via an integration
+    - This includes:
+        - Legacy integrations
+        - Integrations built using the [Integration platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%}) (includes published integrations, internal integrations, unpublished integrations)
+    -  If no legacy integrations or integrations built using the integration platform are enabled, this option is hidden.
 - Send a notification to a global integration, which includes
     - [PagerDuty]({%- link _documentation/workflow/integrations/global-integrations.md -%}#pagerduty)
     - [Slack]({%- link _documentation/workflow/integrations/global-integrations.md -%}#slack)
-    - Custom integrations built using the [Integration Platform]({%- link _documentation/workflow/integrations/integration-platform/index.md -%})
 
 [{% asset notifications/alert-actions2.png alt="The alert condition in this example shows the conditions are conflicting with each other." %}]({% asset notifications/alert-actions2.png @path %})
 

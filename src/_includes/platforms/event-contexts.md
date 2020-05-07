@@ -29,8 +29,7 @@ components:
 {% capture __alert_content -%}
 Sentry will try its best to accommodate the data you send it, but large context
 payloads will be trimmed or may be truncated entirely. For more details see the
-[data handling SDK documentation]({%- link
-_documentation/development/sdk-dev/data-handling.md -%})
+[data handling SDK documentation](https://develop.sentry.dev/sdk/data-handling/)
 {%- endcapture -%}
 {%- include components/alert.html
   title="Context Size Limits"
