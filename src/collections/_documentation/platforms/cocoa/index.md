@@ -3,14 +3,6 @@ title: Cocoa
 ---
 
 <!-- WIZARD -->
-{% capture __alert_content -%}
-Version `5.0.0` is in beta. If you are not comfortable installing our `beta` SDK, our latest stable version can be found here. [4.x]({%- link _documentation/clients/cocoa/index.md -%})
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="info"
-%}
 
 This is the documentation for our Cocoa SDK (Swift and Objective-C).
 If you are migrating from an older version, please consider our [Migration Guide](https://github.com/getsentry/sentry-cocoa/blob/master/MIGRATION.md). Also always make sure to follow the [changelog](https://github.com/getsentry/sentry-cocoa/blob/master/CHANGELOG.md)
@@ -94,7 +86,7 @@ Crashes are submitted only upon re-launch of the application. To view the crash 
 
 Monitor the [health of releases]({%- link _documentation/workflow/releases/health.md -%}) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/health.md -%}#crash), and [session data]({%- link _documentation/workflow/releases/health.md -%}#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
-To benefit from the health data you must use at least version 5.0.0 Beta 4 of the Cocoa SDK and enable the collection of the release health metrics by adding `"enableAutoSessionTracking": true` into options during the initialization of the SDK.
+To benefit from the health data you must use at least version 5.0.0 of the Cocoa SDK and enable the collection of the release health metrics by adding `"enableAutoSessionTracking": true` into options during the initialization of the SDK.
 
 {% include components/platform_content.html content_dir='enableAutoSessionTracking' %}
 
