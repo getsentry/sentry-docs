@@ -169,7 +169,7 @@ _Note:_ Starred spans represent spans that are the parent of a later transaction
 >
 > -- [Fred Brooks](https://en.wikipedia.org/wiki/Fred_Brooks), The Mythical Man Month (1975)
 
-While the theory is interesting, ultimately any data structure is defined by the kind of data it contains, and relationships between data structures are defined by how links between them are recorded. Traces, transactions, and spans are no different. `[FPA: this sentence is confusing to me. Do we mean. "Traces, transactions, and spans are defined by what's in them. The relationships among the three are defined by the manner in which the links between them are recorded." or something like that? kmclb: Does this read more easily to you?]`
+While the theory is interesting, ultimately any data structure is defined by the kind of data it contains, and relationships between data structures are defined by how links between them are recorded. Traces, transactions, and spans are no different.
 
 **Traces**
 
@@ -232,7 +232,7 @@ Individual spans aren't sent to Sentry. Rather, those spans are attached to thei
 
 ## Data Sampling
 
-When you enable sampling in your tracing setup, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of 0.25 would result in approximately 250 transactions (25%) being sent to Sentry. (The number is approximate because each request is either tracked or not, independently and pseudorandomly, with a 25% probability. So in the same way that 100 fair coins, when flipped, will result in approximately 50 heads, the SDK will decide to collect a trace in approximately 250 cases.) Because you know the sampling percentage, you can then extrapolate your total traffic volume.
+When you enable sampling in your tracing setup, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of 0.25 would result in approximately 250 transactions (25%) being sent to Sentry. (The number is approximate because each request is either tracked or not, independently and pseudorandomly, with a 25% probability. So in the same way that 100 fair coins, when flipped, result in approximately 50 heads, the SDK will "decide" to collect a trace in approximately 250 cases.) Because you know the sampling percentage, you can then extrapolate your total traffic volume.
 
 When collecting traces, we **strongly recommend** sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single pageload, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you'll more easily prevent yourself from exceeding your organization's [event quota]({%- link _documentation/accounts/quotas/index.md -%}), which will help you manage costs.
 
@@ -240,13 +240,13 @@ When choosing a sampling rate, the goal is to not collect _too_ much data (given
 
 ### Consistency Within a Trace
 
-For traces which involve multiple transactions, Sentry uses a "head-based" approach: a sampling decision is made in the originating service, and then that decision is passed to all subsequent services. To see how this works, let's return to our webapp example above. Consider two users, A and B, who are both loading your app in their respective browsers. When A loads the app, the SDK pseudorandomly "decides" to collect a trace, whereas when B loads the app, the SDK "decides" not to. When each browser makes requests to your backend, it includes in those requests the "yes, please collect transactions" or the "no, not collecting transactions this time" decision in the headers. 
+For traces that involve multiple transactions, Sentry uses a "head-based" approach: a sampling decision is made in the originating service, and then that decision is passed to all subsequent services. To see how this works, let's return to our webapp example above. Consider two users, A and B, who are both loading your app in their respective browsers. When A loads the app, the SDK pseudorandomly "decides" to collect a trace, whereas when B loads the app, the SDK "decides" not to. When each browser makes requests to your backend, it includes in those requests the "yes, please collect transactions" or the "no, not collecting transactions this time" decision in the headers. 
 
-When your backend processes the requests from A's browser, it will see the "yes" decision, collect transaction and span data, and send it to Sentry. Further, it will include the "yes" decision in any requests it makes to subsequent services (like your database server), which will similarly collect data, send it to Sentry, and pass the decision along to any services they call. Though this process, all of the relevant transactions in A's trace will be collected and sent to Sentry.
+When your backend processes the requests from A's browser, it sees the "yes" decision, collects transaction and span data, and sends it to Sentry. Further, it includes the "yes" decision in any requests it makes to subsequent services (like your database server), which similarly collect data, send it to Sentry, and pass the decision along to any services they call. Through this process, all of the relevant transactions in A's trace are collected and sent to Sentry.
 
-On the other hand, when your backend processes the requests from B's browser, it will see the "no" decision, and as a result it will _not_ collect and send transaction and span data to Sentry. It will, however, do the same thing it did in A's case in terms of propagating the decision to subsequent services, telling them not to collect or send data either. They will in turn tell any services they call not to send data, and in this way no transactions from B's trace will be collected.
+On the other hand, when your backend processes the requests from B's browser, it sees the "no" decision, and as a result it does _not_ collect and send transaction and span data to Sentry. It does, however, do the same thing it does in A's case in terms of propagating the decision to subsequent services, telling them not to collect or send data either. They then in turn tell any services they call not to send data, and in this way no transactions from B's trace are collected.
 
-Put simply: as a result of this head-based approach, where the decision is made once in the originating service and passed to all subsequent services, either all of the transactions for a given trace will be collected, or none will, so there shouldn't be any incomplete traces.
+Put simply: as a result of this head-based approach, where the decision is made once in the originating service and passed to all subsequent services, either all of the transactions for a given trace are collected, or none are, so there shouldn't be any incomplete traces.
 
 ### Consistency Between Traces
 
@@ -258,22 +258,24 @@ You can see a list of transaction events by clicking on the "Transactions" pre-b
 
 ### Transaction List View
 
-The results of either of the above queries will be presented in a list view, where each entry represents a group of one or more transactions. Data about each group is displayed in table form, and comes in two flavors: value-based (such as transaction name), and aggregate (such as average duration). The choice of which kinds of data to display is configurable, and can be changed by clicking 'Edit Columns' at the top right of the table. Bear in mind that adding or removing any value-based columns may affect the way the results are grouped.
+The results of either of the above queries are presented in a list view, where each entry represents a group of one or more transactions. Data about each group is displayed in table form, and comes in two flavors: value-based (such as transaction name), and aggregate (such as average duration). The choice of which kinds of data to display is configurable, and can be changed by clicking 'Edit Columns' at the top right of the table. Bear in mind that adding or removing any value-based columns may affect the way the results are grouped.
 
-From this view transactions can also be filtered, both by restricting the time window and by adding attributes to the query. It is important to note that **currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore is not searched.**
+From this view, you can also filter the transactions list, both by restricting the time window and by adding attributes to the query.
+
+_Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore is not searched.
 
 Full documentation of the transaction list view (which is just a special case of the Discover query builder) can be found [here]({%- link _documentation/performance/discover/query-builder.md -%}). 
 
 #### Performance Metrics
 
-`[kmclb: Help! This is a dangling modifier (there's a "you" implied by the first clause which never materializes in the second) but I can't think of a good way to fix it.]`
-When choosing which columns to display in your transaction list, there are a few metrics which lend themselves well to analyzing your application's performance.
+A number of the metrics available as column choices lend themselves well to analyzing your application's performance.
 
 **Transaction Duration Metrics**
 
-You can aggregate transaction durations using the following functions:
+The following functions aggregate transaction durations:
+
 - average
-- various percentiles (by default, the pre-built Transactions query shows the 75th and 95th percentiles, but there are many other options, including displaying a custom percentile)
+- various percentiles (by default, the pre-built Transactions query shows the 75th and 95th percentiles, but there are many other options, including a custom percentile)
 
 One use case for tracking these statistics is to help you identify transactions that are slower than your organization's target SLAs.
 
@@ -283,13 +285,14 @@ The problem of small sample size (and the resulting inability to be usefully acc
 
 **Transaction Frequency Metrics**
 
-Transaction counts and the rate at which transactions are recorded can be calculated using the following functions:
+The following functions aggregate transaction counts and the rate at which transactions are recorded:
+
 - count
 - count unique values (for a given field)
 - average requests (transactions) per second
 - average requests (transactions) per minute
 
-Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, you have set up your SDK to [sample your data](#data-sampling), remember that only the transactions which are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 (5 * 4) requests to that endpoint each second.
+Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data](#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 (5 * 4) requests to that endpoint each second.
 
 ### Transaction Detail View
 
@@ -309,11 +312,11 @@ As shown in the Discover span screenshot above, you can click and drag your mous
 
 **Missing Instrumentation**
 
-Sentry may indicate that gaps between spans are "Missing Instrumentation." This means that there is time in the transaction which isn't accounted for by any of the transaction's spans, and likely means that you need to manually instrument that part of your process.
+Sentry may indicate that gaps between spans are "Missing Instrumentation." This means that there is time in the transaction that isn't accounted for by any of the transaction's spans, and likely means that you need to manually instrument that part of your process.
 
 **Viewing Span Details**
 
-Click on a row in the span view to expand the details of that span. From here, you can see all attached properties, such as tags and data.
+Clicking on a row in the span view to expands the details of that span. From here, you can see all attached properties, such as tags and data.
 
 [{% asset performance/span-detail-view.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-detail-view.png @path %})
 
