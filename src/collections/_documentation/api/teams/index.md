@@ -5,7 +5,6 @@ title: Teams
 ---
 
 
-- [List your Teams In the Current Organization]({%- link _documentation/api/teams/get-organization-user-teams.md -%})
 - [List an Organization&#39;s Teams]({%- link _documentation/api/teams/get-organization-teams.md -%})
 - [Create a new Team]({%- link _documentation/api/teams/post-organization-teams.md -%})
 - [Retrieve a Team]({%- link _documentation/api/teams/get-team-details.md -%})

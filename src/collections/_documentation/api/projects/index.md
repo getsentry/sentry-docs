@@ -9,7 +9,6 @@ title: Projects
 - [Retrieve a Project]({%- link _documentation/api/projects/get-project-details.md -%})
 - [Update a Project]({%- link _documentation/api/projects/put-project-details.md -%})
 - [Delete a Project]({%- link _documentation/api/projects/delete-project-details.md -%})
-- [List a Project&#39;s Environments]({%- link _documentation/api/projects/get-project-environments.md -%})
 - [List a Project&#39;s Debug Information Files]({%- link _documentation/api/projects/get-debug-files.md -%})
 - [Upload a New File]({%- link _documentation/api/projects/post-debug-files.md -%})
 - [Delete a specific Project&#39;s Debug Information File]({%- link _documentation/api/projects/delete-debug-files.md -%})
