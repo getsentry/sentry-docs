@@ -34,7 +34,7 @@ Apdex / Throughput Graphs: Users can see the same graphs from the Performance ho
 Duration Percentiles: This graph shows the average transaction duration across distinct percentiles. For example, users can see how different the P50 and P99 response time durations are for a given transaction and understand the rate of increase between segments.
 
 ## Sidebar
-The sidebar contains a Tag Summary and more statistics about the transaction. This information updates dynamically if a user changes any of the selections in the global header or when a user drills in on a latency segment (applicable when viewing the Latency Histogram).
+The sidebar contains a Tag Summary, Apdex/Throughput graphs, error rate graphs, and more statistics about the transaction. This information updates dynamically if a user changes any of the selections in the global header or when a user drills in on a latency segment (applicable when viewing the Latency Histogram).
 
 ## Slowest Transactions
 On initial load, the table displays the slowest occurrences of the transaction along with the Event ID, User, Transaction Duration, and Timestamp of the event. Users can click on the [Event ID]({%- link _documentation/performance/distributed-tracing.md -%}#viewing-transactions) to open the span view for the transaction. The table updates dynamically if a user changes any of the selections in the global header or when a user drills in on a latency segment -- applicable when viewing the Latency Histogram.
