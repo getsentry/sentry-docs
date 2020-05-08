@@ -44,3 +44,7 @@ Sentry.setRelease(RELEASE_NAME)
 `DISTRIBUTION_NAME`:
 
 : This is the version code or build ID depending on your platform. So for instance just set this to whatever is set in your _Info.plist_ or what your Gradle setup generates (For example, `52`).
+
+```js
+Sentry.setDist(DISTRIBUTION_NAME);
+```
