@@ -24,7 +24,7 @@ To begin, a note about what tracing is not: Tracing is not profiling. Though the
 
 A [profiler](https://en.wikipedia.org/wiki/Profiling_(computer_programming)) may measure any number of aspects of an application's operation: the number of instructions executed, the amount of memory being used by various processes, the amount of time a given function call takes, and many more. The resulting profile is a statistical summary of these measurements. 
 
-A [tracing tool](https://en.wikipedia.org/wiki/Tracing_(software)), on the other hand, focuses on _what_ happened (and when), rather than how many times it happened or how long it took. The resulting trace is log of events which occurred during a program's execution, often across multiple systems. Though traces most often - or, in the case of Sentry's traces, always - include timestamps, allowing durations to be calculated, measuring performance is not their only purpose. They can also show the ways in which interconnected systems interact, and the ways in which problems in one can cause problems in another.
+A [tracing tool](https://en.wikipedia.org/wiki/Tracing_(software)), on the other hand, focuses on _what_ happened (and when), rather than how many times it happened or how long it took. The resulting trace is a log of events which occurred during a program's execution, often across multiple systems. Though traces most often - or, in the case of Sentry's traces, always - include timestamps, allowing durations to be calculated, measuring performance is not their only purpose. They can also show the ways in which interconnected systems interact, and the ways in which problems in one can cause problems in another.
 
 ### Why Tracing?
 
@@ -54,7 +54,7 @@ To make all of this more concrete, let's consider our example web app again.
 
 ### Example: Investigating Slow Page Load
 
-Suppose your web application is slow to load, and you'd like to know why. A lot has to happen for your app to first get to a usable state: multiple requests to your backend, likely some work - including calls to your database or to outside APis - completed before responses are returned, and processing by the browser to render all of the returned data into something meaningful to the user. So which part of that process is slowing things down?
+Suppose your web application is slow to load, and you'd like to know why. A lot has to happen for your app to first get to a usable state: multiple requests to your backend, likely some work - including calls to your database or to outside APIs - completed before responses are returned, and processing by the browser to render all of the returned data into something meaningful to the user. So which part of that process is slowing things down?
 
 Let's say, in this simplified example, that when a user loads the app in their browser, the following happens in each service:
 
@@ -91,7 +91,7 @@ Each transaction would be broken down into **spans** as follows:
 
 Let's pause here to make an important point: Some, though not all, of the browser transaction spans listed have a direct correspondence to backend transactions listed earlier. Specifically, each request _span_ in the browser transaction corresponds to a separate request _transaction_ in the backend. In this situation, when a span in one service gives rise to a transaction in a subsequent service, we call the original span a parent span to _both_ the transaction and its root span.
 
-In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service, which means that every root span other than the browser transaction root has a parent span (albeit in a different service). In a fully-instrumented system (one in which every service has tracing enabled) this pattern will always hold true: _the only parentless span will be the root of the initial transaction, and of the remaining parented spans, every one will live in the same service as its parent, except for the root spans, whose parents will live in a previous service_. This is worth noting because it is the one way in which transactions are not perfect trees - their roots can (and mostly do) have parents.
+In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service, which means that every root span other than the browser transaction root has a parent span (albeit in a different service). In a fully-instrumented system (one in which every service has tracing enabled) this pattern will always hold true. The only parentless span will be the root of the initial transaction; every other span will have a parent. Further, parents and children will always live in the same service, except in the case where the child span is the root of a child transaction, in which case the parent span will live in the calling service and the child transaction/child root span will live in the called service. (This is worth noting because it is the one way in which transactions are not perfect trees - their roots can (and mostly do) have parents.)
 
 Now, for the sake of completeness, back to our spans:
 
@@ -114,8 +114,8 @@ Now, for the sake of completeness, back to our spans:
 
 To wrap up the example: after instrumenting all of your services, you might discover that - for some reason - it's the auth query in your database server that is making things slow, accounting for more than half of the time it takes for your entire page load process to complete. Tracing can't tell you _why_ that's happening, but at least now you know where to look!
 
-`[kmclb: working w Sami on updating the illustrations to match this example. Keeping the link below just to have the example of how to format the markdown]`
-[{% asset performance/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset performance/tracing-diagram.png @path %})
+<!-- kmclb: working w Sami on updating the illustrations to match this example. Keeping the link below just to have the example of how to format the markdown
+[{% asset performance/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset performance/tracing-diagram.png @path %}) -->
   
 ### Further Examples
 
@@ -125,20 +125,20 @@ This section contains a few more examples of tracing, broken down into transacti
 
 If your application involves e-commerce, you likely want to measure the time between a user clicking "Submit Order" and the order confirmation appearing, including tracking the submitting of the charge to the payment processor and the sending of an order confirmation email. That entire process is one trace, and typically you'd have transactions (_T_) and spans (_S_) for:
 
-- The browser's full process (_T_)
+- The browser's full process (_T_ and root span _S_)
   - XHR request to backend\* (_S_)
   - Rendering confirmation screen (_S_)
 ^
-- Your backend's processing of that request
+- Your backend's processing of that request (_T_ and root span _S_)
   - Function call to compute total (_S_)
   - DB call to store order\* (_S_)
   - API call to payment processor (_S_)
   - Queuing of email confirmation\* (_S_)
 ^
-- Your database's work updating the customer's order history (_T_)
+- Your database's work updating the customer's order history (_T_ and root span _S_)
   - Individual SQL queries (_S_)
 ^
-- The queued task of sending the email (_T_)
+- The queued task of sending the email (_T_ and root span _S_)
   - Function call to populate email template (_S_)
   - API call to email-sending service (_S_)
   
@@ -148,17 +148,17 @@ _Note:_ Starred spans represent spans that are the parent of a later transaction
 
 If your backend periodically polls for data from an external service, processes it, caches it, and then forwards it to an internal service, each instance of this happening is a trace, and you'd typically have transactions (_T_) and spans (_S_) for:
 
-- The cron job that completes the entire process (_T_)
+- The cron job that completes the entire process (_T_ and root span _S_)
   - API call to external service (_S_)
   - Processing function (_S_)
   - Call to caching service\* (_S_)
   - API call to internal service\* (_S_)
 ^
-- The work done in your caching service (_T_)
+- The work done in your caching service (_T_ and root span _S_)
   - Checking cache for existing data (_S_)
   - Storing new data in cache (_S_)
 ^
-- Your internal service's processing of the request (_T_)
+- Your internal service's processing of the request (_T_ and root span _S_)
   - Anything that service might do to handle the request (_S_)
   
 _Note:_ Starred spans represent spans that are the parent of a later transaction (and its root span).
@@ -194,7 +194,7 @@ The majority of the data in a transaction resides in the individual spans the tr
 - `tags`: key-value pairs holding additional data about the span (optional)
 - `data`: arbitrarily-structured additional data about the span (optional)
 
-An example use of the `op` and `description` properties together is `op: sql.query` and `description: SELECT * FROM users WHERE last_active < DATE_SUB(CURRENT_DATE, INTERVAL 1 YEAR)`. The `status` property is often used to indicate the success or failure of the span's operation, or for a response code in the case of HTTP requests. Finally, `tags` and `data` allow you attach further contextual information to the span, such as `function: middleware.auth.is_authenticated` for a function call or `request: {url: ..., headers: ... , body: ...}` for an HTTP request.
+An example use of the `op` and `description` properties together is `op: sql.query` and `description: SELECT * FROM users WHERE last_active < DATE_SUB(CURRENT_DATE, INTERVAL 1 YEAR)`. The `status` property is often used to indicate the success or failure of the span's operation, or for a response code in the case of HTTP requests. Finally, `tags` and `data` allow you to attach further contextual information to the span, such as `function: middleware.auth.is_authenticated` for a function call or `request: {url: ..., headers: ... , body: ...}` for an HTTP request.
   
 ### Further Information
 
@@ -226,21 +226,21 @@ If you are collecting transactions from multiple machines, you will likely encou
 
 Because there is no way for Sentry to judge either the relative or absolute accuracy of your timestamps, it does not attempt to correct for this. And while you can reduce clock skew by using Network Time Protocol (NTP) or your cloud provider's clock synchronization services, you may still notice small discrepancies in your data, as synchronizing clocks on small intervals is challenging.
 
-**What We Send**
+**How Data is Sent**
 
-Individual spans aren't sent to Sentry. Rather, those spans are attached to their containing transaction, and the transaction is sent as one unit. This means that no span data will be recorded by Sentry's servers until the transaction to which they belong is closed and dispatched. 
+Individual spans aren't sent to Sentry. Rather, those spans are attached to their containing transaction, and the transaction is sent as one unit. This means that no span data will be recorded by Sentry's servers until the transaction to which they belong is closed and dispatched. The converse is not true, however - though spans can't be sent without a transaction, transaction _are_ still valid, and will be sent, even if they only span they contain is their root span.
 
 ## Data Sampling
 
-When you enable sampling in your tracing setup, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of 0.25 would result in approximately 250 transactions (25%) being sent to Sentry. (The number is approximate because each request is either tracked or not, independently and pseudorandomly, with a 25% probability. So in the same way that 100 fair coins, when flipped, result in approximately 50 heads, the SDK will "decide" to collect a trace in approximately 250 cases.) Because you know the sampling percentage, you can then extrapolate your total traffic volume.
+When you enable sampling in your tracing setup, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of `0.25` would result in approximately 250 transactions (25%) being sent to Sentry each minute. (The number is approximate because each request is either tracked or not, independently and pseudorandomly, with a 25% probability. So in the same way that 100 fair coins, when flipped, result in approximately 50 heads, the SDK will "decide" to collect a trace in approximately 250 cases.) Because you know the sampling percentage, you can then extrapolate your total traffic volume.
 
-When collecting traces, we **strongly recommend** sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single pageload, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you'll more easily prevent yourself from exceeding your organization's [event quota]({%- link _documentation/accounts/quotas/index.md -%}), which will help you manage costs.
+When collecting traces, we **strongly recommend** sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you'll more easily prevent yourself from exceeding your organization's [event quota]({%- link _documentation/accounts/quotas/index.md -%}), which will help you manage costs.
 
 When choosing a sampling rate, the goal is to not collect _too_ much data (given the reasons above) but also to collect enough data that you are able to draw meaningful conclusions. If you're not sure what rate to choose, we recommend starting with a low value and gradually increasing it as you learn more about your traffic patterns and volume, until you've found a rate which lets you balance performance and cost concerns with data accuracy.
 
 ### Consistency Within a Trace
 
-For traces that involve multiple transactions, Sentry uses a "head-based" approach: a sampling decision is made in the originating service, and then that decision is passed to all subsequent services. To see how this works, let's return to our webapp example above. Consider two users, A and B, who are both loading your app in their respective browsers. When A loads the app, the SDK pseudorandomly "decides" to collect a trace, whereas when B loads the app, the SDK "decides" not to. When each browser makes requests to your backend, it includes in those requests the "yes, please collect transactions" or the "no, not collecting transactions this time" decision in the headers. 
+For traces that involve multiple transactions, Sentry uses a "head-based" approach: a sampling decision is made in the originating service, and then that decision is passed to all subsequent services. To see how this works, let's return to our web app example above. Consider two users, A and B, who are both loading your app in their respective browsers. When A loads the app, the SDK pseudorandomly "decides" to collect a trace, whereas when B loads the app, the SDK "decides" not to. When each browser makes requests to your backend, it includes in those requests the "yes, please collect transactions" or the "no, not collecting transactions this time" decision in the headers. 
 
 When your backend processes the requests from A's browser, it sees the "yes" decision, collects transaction and span data, and sends it to Sentry. Further, it includes the "yes" decision in any requests it makes to subsequent services (like your database server), which similarly collect data, send it to Sentry, and pass the decision along to any services they call. Through this process, all of the relevant transactions in A's trace are collected and sent to Sentry.
 
@@ -250,7 +250,7 @@ Put simply: as a result of this head-based approach, where the decision is made 
 
 ### Consistency Between Traces
 
-If you enable tracing in services with multiple entry points, we recommend choosing similar sampling rates, to avoid biasing your data. For example, suppose the backend of our on-going webapp example also serves as a public API. In that case, some traces would start with a pageload transaction in the web app, and likely include multiple backend transactions, while other traces (those representing folks hitting the public API) would begin with a single backend request transaction, which would be the only backend transaction in the trace. Choosing a very different sampling rate for your web app from that chosen for your backend would lead to one of those scenarios being oversampled compared to the other, compromising the accuracy of your overall data.
+If you enable tracing in services with multiple entry points, we recommend choosing similar sampling rates, to avoid biasing your data. For example, suppose the backend of our on-going web app example also serves as a public API. In that case, some traces would start with a page-load transaction in the web app, and likely include multiple backend transactions, while other traces (those representing folks hitting the public API) would begin with a single backend request transaction, which would be the only backend transaction in the trace. Choosing a very different sampling rate for your web app from that chosen for your backend would lead to one of those scenarios being oversampled compared to the other, compromising the accuracy of your overall data.
 
 ## Viewing Trace Data
 
@@ -262,9 +262,9 @@ The results of either of the above queries are presented in a list view, where e
 
 From this view, you can also filter the transactions list, both by restricting the time window and by adding attributes to the query.
 
-_Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore is not searched.
+_Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore cannot be searched.
 
-Full documentation of the transaction list view (which is just a special case of the Discover query builder) can be found [here]({%- link _documentation/performance/discover/query-builder.md -%}). 
+Full documentation of the transaction list view (which is just a special case of the Discover Query Builder) can be found [here]({%- link _documentation/performance/discover/query-builder.md -%}). 
 
 #### Performance Metrics
 
@@ -292,7 +292,7 @@ The following functions aggregate transaction counts and the rate at which trans
 - average requests (transactions) per second
 - average requests (transactions) per minute
 
-Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data](#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 (5 * 4) requests to that endpoint each second.
+Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data](#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 requests to that endpoint each second. (20 because you're sampling 25% - or 1/4 - of your data, so your real volume is 4 times what you're seeing in Sentry.)
 
 ### Transaction Detail View
 
@@ -316,7 +316,7 @@ Sentry may indicate that gaps between spans are "Missing Instrumentation." This 
 
 **Viewing Span Details**
 
-Clicking on a row in the span view to expands the details of that span. From here, you can see all attached properties, such as tags and data.
+Clicking on a row in the span view expands the details of that span. From here, you can see all attached properties, such as tags and data.
 
 [{% asset performance/span-detail-view.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-detail-view.png @path %})
 
@@ -364,7 +364,7 @@ sentry_sdk.init(
 
 **Automatic Instrumentation**
 
-Many integrations for popular frameworks automatically capture traces. If you already have any of the following frameworks set up for Sentry error reporting, you will start to see traces immediately:
+Many integrations for popular frameworks automatically capture transactions. If you already have any of the following frameworks set up for Sentry error reporting, you will start to see traces immediately:
 
 - All WSGI-based web frameworks (Django, Flask, Pyramid, Falcon, Bottle)
 - Celery
@@ -452,7 +452,7 @@ Sentry.init({
 
 To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
 
-You can pass many different options to the Tracing integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. It will automatically capture a trace for every page load. Within that transaction, spans are instrumented for the following operations:
+You can pass many different options to the Tracing integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. It will automatically capture a transaction for every page load. Within that transaction, spans are instrumented for the following operations:
 
 - XHR/fetch requests
 - If available: Browser Resources (Scripts, CSS, Images ...)
@@ -474,7 +474,7 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 
 **Using Tracing Integration for Manual Instrumentation**
 
-The tracing integration will create a transaction on page load by default; all spans that are created will be attached to it. Also, the integration will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests. If you want to extend the transaction's lifetime, you can do so by adding more spans to it. The following is an example of how you could profile a React component:
+The tracing integration will create a transaction on page load by default; all spans that are created will be attached to it. Also, the integration will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests. If you want to extend the transaction's lifetime, you can do so by adding more spans to it. The following is an example of how you could manually instrument a React component:
 
 ```javascript
 // This line starts an activity (and creates a span).
