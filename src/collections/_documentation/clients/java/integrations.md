@@ -7,6 +7,14 @@ The Sentry Java SDK comes with support for some frameworks and libraries so that
 
 ## Android
 
+{% capture __alert_content -%}
+A new Android SDK has superseded this deprecated version. Sentry preserves this documentation for customers using the old client. We recommend using the [updated Android SDK]({%- link _documentation/platforms/android/index.md -%}) for new projects.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 ### Features
 
 The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options]({%- link _documentation/clients/java/config.md -%}), and more. Adding version `1.7.30` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
