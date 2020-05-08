@@ -899,8 +899,8 @@ Sentry owner or manager permissions are required to install this integration. Sl
 
 1. In Sentry, navigate to Organization Settings > **Integrations**.
 
-1. Once on the page, you’ll see the available Global Integrations list, which will include Slack. You can use the search bar to filter for Slack, if it doesn't appear at the top. 
-Click on **Slack** to go to the details page for the integration.
+1. When you enter the page, the integrations list displays, which includes Slack. Use the search bar to filter quickly for the Slack integration. 
+Click **Slack** to navigate to the details page for this integration.
 
     [{% asset slack-integration-directory.png %}]({% asset slack-integration-directory.png @path %})
 
@@ -909,7 +909,7 @@ Click on **Slack** to go to the details page for the integration.
     [{% asset slack-overview-details-page.png %}]({% asset slack-overview-details-page.png @path %})
 
 
-1. You can toggle the Slack workspace you want to connect in the dropdown menu in the upper right corner of the authentication window. To set up multiple workspaces, go through this process for each separate workspace. Once you've chosen the correct workspace, click **Allow**.
+1. Toggle to the Slack workspace to which you want to connect using the dropdown menu in the upper right corner of the authentication window, then select **Allow**. Repeat this process if you are connecting to multiple workspaces.
 
     [{% asset slack-allow-install.png %}]({% asset slack-allow-install.png @path %})
 
@@ -917,7 +917,9 @@ Click on **Slack** to go to the details page for the integration.
 
     [{% asset slack-install-success.png %}]({% asset slack-install-success.png @path %})
 
-Now your Slack integration is available to all projects in your Sentry organization. In order to get Slack notifications for private channels, please make sure to add the Slack app to the channel. You can do so easily by using `@sentry` to invite the bot to the channel. See the next section to configure your notification settings.
+Your Slack integration is now available to all projects in your Sentry organization. To enable Slack notification for private channels, add the Slack app to the channel. One quick method: use `@sentry` to invite the Sentry bot the Slack channel.
+
+In the next section, we'll walk you through configuring your notification settings.
 
 #### Configure Alert Rules
 
@@ -925,11 +927,11 @@ Now your Slack integration is available to all projects in your Sentry organizat
 
     [{% asset slack-directory-installed.png %}]({% asset slack-directory-installed.png @path %})
     
-1. Here you will see all the Slack workspaces connected to Sentry. Click on **Configure** for the workspace you just added.
+1. Select the Slack workspace to configure from the list, then click **Configure**.
 
     [{% asset slack-install-success.png %}]({% asset slack-install-success.png @path %})
 
-1. From this page, you can click on **Add Alert Rule** for this project to go directly to your Alert Rule settings.
+1. Click **Add Alert Rule** for this project to navigate to Alert Rule settings.
 
     [{% asset slack-project-configuration.png %}]({% asset slack-project-configuration.png @path %})
 
@@ -941,11 +943,11 @@ Now your Slack integration is available to all projects in your Sentry organizat
 
     [{% asset slack-alert-rules.png %}]({% asset slack-alert-rules.png @path %})
 
-    For any existing Alert Rules, you can edit the rule to update the Slack channel routing. In an Alert Rule under **Perform these actions** you can pick Slack as the action:
+    Update the Slack channel routing by for existing Alert Rules by choosing Slack as the action under **Perform these actions**:
 
     [{% asset slack-alert-rule-edit.png %}]({% asset slack-alert-rule-edit.png @path %})
 
-    After selecting **Send a Slack notification**, you can specify the workspace, channel(s), and tags you’d like to include with your Alert Rule.
+    After selecting **Send a Slack notification**, specify the workspace, channel(s), and tags you’d like to include with your Alert Rule.
 
     [{% asset slack-alert-rule-edit-channels.png %}]({% asset slack-alert-rule-edit-channels.png @path %})
 
@@ -954,7 +956,7 @@ Now your Slack integration is available to all projects in your Sentry organizat
 1. Then once you receive a Slack notification, you can use the Resolve, Ignore, or Assign buttons to update the Issue in Sentry.
 
     [{% asset slack-alert-message.png %}]({% asset slack-alert-message.png @path %})
-
+    
 #### Deleting the legacy Slack integration
 
 Once you configure the global Slack integration and Alert Rules, you can disable the old Slack integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy integration after setting up the global integration.
