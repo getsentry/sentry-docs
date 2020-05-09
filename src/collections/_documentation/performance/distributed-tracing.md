@@ -121,7 +121,7 @@ To wrap up the example: after instrumenting all of your services, you might disc
 
 This section contains a few more examples of tracing, broken down into transactions and spans.
 
-**Measuring a Specific User Action**
+#### Measuring a Specific User Action
 
 If your application involves e-commerce, you likely want to measure the time between a user clicking "Submit Order" and the order confirmation appearing, including tracking the submitting of the charge to the payment processor and the sending of an order confirmation email. That entire process is one trace, and typically you'd have transactions (_T_) and spans (_S_) for:
 
@@ -144,7 +144,7 @@ If your application involves e-commerce, you likely want to measure the time bet
   
 _Note:_ Starred spans represent spans that are the parent of a later transaction (and its root span).
 
-**Monitoring a Background Process**
+#### Monitoring a Background Process
 
 If your backend periodically polls for data from an external service, processes it, caches it, and then forwards it to an internal service, each instance of this happening is a trace, and you'd typically have transactions (_T_) and spans (_S_) for:
 
@@ -171,17 +171,17 @@ _Note:_ Starred spans represent spans that are the parent of a later transaction
 
 While the theory is interesting, ultimately any data structure is defined by the kind of data it contains, and relationships between data structures are defined by how links between them are recorded. Traces, transactions, and spans are no different.
 
-**Traces**
+#### Traces
 
 Traces are not an entity in and of themselves. Rather, a trace is defined as the collection of all transactions that share a `trace_id` value. 
 
-**Transactions**
+#### Transactions
 
 Transactions share most of their properties (start and end time, tags, and so forth) with their root spans, so the same options described below for spans are available in transactions, and setting them in either place is equivalent.
 
 Transactions also have one additional property not included in spans, called `transaction_name`, which is used in the UI to identify the transaction. Common examples of `transaction_name` values include endpoint paths (like `/store/checkout/` or `api/v2/users/&lt;user_id&gt;/`) for backend request transactions, task names (like `data.cleanup.delete_inactive_users`) for cron job transactions, and URLs (like `https://docs.sentry.io/performance/distributed-tracing/`) for page-load transactions.
 
-**Spans**
+#### Spans
 
 The majority of the data in a transaction resides in the individual spans the transaction contains. Span data includes:
 
@@ -200,33 +200,31 @@ An example use of the `op` and `description` properties together is `op: sql.que
 
 A few more important points about traces, transactions, and spans, and the way they relate to one another:
 
-**Trace Duration**
+#### Trace Duration
 
 Because a trace just is a collection of transactions, traces don't have their own start and end times. Instead, a trace begins when its earliest transaction starts, and ends when its latest transaction ends. As a result, you can't explicitly start or end a trace directly. Instead, you create a trace by creating the first transaction in that trace, and you complete a trace by completing all of transactions it contains.
 
-**Async Transactions**
+#### Async Transactions
 
 Because of the possibility of asynchronous processes, child transactions may outlive the transactions containing their parent spans, sometimes by many orders of magnitude. For example, if a backend API call sets off a long-running processing task and then immediately returns a response, the backend transaction will finish (and its data will be sent to Sentry) long before the async task transaction does. Asynchronicity also means that the order in which transactions are sent to (and received by) Sentry does not in any way depend on the order in which they were created. (By contrast, order of receipt for transactions in the same trace _is_ correlated with order of completion, though because of factors like the variability of transmission times, the correlation is far from perfect.)
 
-**Orphan Transactions**
+#### Orphan Transactions
 
 In theory, in a fully instrumented system, each trace should contain only one transaction and one span (the transaction's root) without a parent, namely the transaction in the originating service. However, in practice, you may not have tracing enabled in every one of your services, or an instrumented service may fail to report a transaction due to network disruption or other unforeseen circumstances. When this happens, you may see gaps in your trace hierarchy. Specifically, you may see transactions partway through the trace whose parent spans haven't been recorded as part of any known transactions. Such non-originating, parentless transactions are called **orphan transactions**.
 
-**Nested Spans**
+#### Nested Spans
 
 Though our examples above had four levels in their hierarchy (trace, transaction, span, child span) there's no set limit to how deep the nesting of spans can go. There are, however, practical limits: transaction payloads sent to Sentry have a maximum allowed size, and as with any kind of logging, there's a balance to be struck between your data's granularity and its usability. 
 
-**Zero-duration Spans**
+#### Zero-duration Spans
 
 It's possible for a span to have equal start and end times, and therefore be recorded as taking no time. This can occur either because the span is being used as a marker (such as is done in [the browser's Performance API](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark)) or because the amount of time the operation took is less than the measurement resolution (which will vary by service).
 
-**Clock Skew**
+#### Clock Skew
 
-If you are collecting transactions from multiple machines, you will likely encounter **clock skew**, where timestamps in one transaction don't align with timestamps in another. For example, if your backend makes a database call, the backend transaction logically should start before the database transaction does. But if the system time on each machine (those hosting your backend and database, respectively) isn't synced to common standard, it's possible that won't be the case. It's also possible for the ordering to be correct, but for the two recorded timeframes to not line up in a way that accurately reflects what actually happened.
+If you are collecting transactions from multiple machines, you will likely encounter **clock skew**, where timestamps in one transaction don't align with timestamps in another. For example, if your backend makes a database call, the backend transaction logically should start before the database transaction does. But if the system time on each machine (those hosting your backend and database, respectively) isn't synced to common standard, it's possible that won't be the case. It's also possible for the ordering to be correct, but for the two recorded timeframes to not line up in a way that accurately reflects what actually happened. To reduce this possibility, we recommend using Network Time Protocol (NTP) or your cloud provider's clock synchronization services.
 
-Because there is no way for Sentry to judge either the relative or absolute accuracy of your timestamps, it does not attempt to correct for this. And while you can reduce clock skew by using Network Time Protocol (NTP) or your cloud provider's clock synchronization services, you may still notice small discrepancies in your data, as synchronizing clocks on small intervals is challenging.
-
-**How Data is Sent**
+#### How Data is Sent
 
 Individual spans aren't sent to Sentry. Rather, those spans are attached to their containing transaction, and the transaction is sent as one unit. This means that no span data will be recorded by Sentry's servers until the transaction to which they belong is closed and dispatched. The converse is not true, however - though spans can't be sent without a transaction, transaction _are_ still valid, and will be sent, even if they only span they contain is their root span.
 
@@ -270,7 +268,7 @@ Full documentation of the transaction list view (which is just a special case of
 
 A number of the metrics available as column choices lend themselves well to analyzing your application's performance.
 
-**Transaction Duration Metrics**
+_Transaction Duration Metrics_
 
 The following functions aggregate transaction durations:
 
@@ -283,7 +281,7 @@ A word of caution when looking at averages and percentiles: In most cases, you'l
 
 The problem of small sample size (and the resulting inability to be usefully accurate) will happen more often for some metrics than others, and sample size will also vary by row. For example, it takes less data to calculate a meaningful average than it does to calculate an equally meaningful 95th percentile. Further, a row representing requests to `/settings/my-awesome-org/` will likely contain many times as many transactions as one representing requests to `/settings/my-awesome-org/projects/best-project-ever/`.
 
-**Transaction Frequency Metrics**
+_Transaction Frequency Metrics_
 
 The following functions aggregate transaction counts and the rate at which transactions are recorded:
 
@@ -306,27 +304,27 @@ The span view is a split view where the left-hand side shows the transaction's s
 
 At the top of the span view is a minimap, which shows which specific portion of the transaction you're viewing.
 
-**Zooming In on a Transaction**
+_Zooming In on a Transaction_
 
 As shown in the Discover span screenshot above, you can click and drag your mouse cursor across the minimap (top of the span view). You can also adjust the window selection by dragging the handlebars (black dashed lines). 
 
-**Missing Instrumentation**
+_Missing Instrumentation_
 
 Sentry may indicate that gaps between spans are "Missing Instrumentation." This means that there is time in the transaction that isn't accounted for by any of the transaction's spans, and likely means that you need to manually instrument that part of your process.
 
-**Viewing Span Details**
+_Viewing Span Details_
 
 Clicking on a row in the span view expands the details of that span. From here, you can see all attached properties, such as tags and data.
 
 [{% asset performance/span-detail-view.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-detail-view.png @path %})
 
-**Search by Trace ID**
+_Search by Trace ID_
 
 You can search for all of the transactions in a given trace by expanding any of the span details and clicking on "Search by Trace".
 
 _Note:_ On the Team plan, results will only be shown for one project at a time. Further, each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view. Therefore, you may not see all transactions in a given trace in your results list.
 
-**Traversing to Child Transactions**
+_Traversing to Child Transactions_
 
 Some spans within a transaction may be the parent of another transaction. When you expand the span details for such spans, you'll see the "View Child" button, which, when clicked, will lead to the child transaction's details view.
 
@@ -362,7 +360,7 @@ sentry_sdk.init(
 )
 ```
 
-**Automatic Instrumentation**
+#### Automatic Instrumentation
 
 Many integrations for popular frameworks automatically capture transactions. If you already have any of the following frameworks set up for Sentry error reporting, you will start to see traces immediately:
 
@@ -389,7 +387,7 @@ sentry_sdk.init(
 )
 ```
 
-**Manual Instrumentation**
+#### Manual Instrumentation
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
 
@@ -406,7 +404,7 @@ while True:
       process_item(item)
 ```
 
-**Adding More Spans to the Transaction**
+#### Adding More Spans to the Transaction
 
 The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add all newly created spans as child operations to that transaction. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction.
 
@@ -433,7 +431,7 @@ $ npm install @sentry/browser
 $ npm install @sentry/apm
 ```
 
-**Sending Traces/Transactions/Spans**
+#### Sending Traces/Transactions/Spans
 
 The `Tracing` integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
 
@@ -472,7 +470,7 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 
 *NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your set up. If you do not whitelist the `sentry-trace` header, the request might be blocked.
 
-**Using Tracing Integration for Manual Instrumentation**
+#### Using Tracing Integration for Manual Instrumentation
 
 The tracing integration will create a transaction on page load by default; all spans that are created will be attached to it. Also, the integration will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests. If you want to extend the transaction's lifetime, you can do so by adding more spans to it. The following is an example of how you could manually instrument a React component:
 
@@ -527,11 +525,11 @@ shopCheckout() {
 
 This example will send a transaction `shopCheckout` to Sentry, containing all outgoing requests that happen in `validateShoppingCartOnServer` as spans. The transaction will also contain a `task` span that measures how long `processAndValidateShoppingCart` took. Finally, the call to `ApmIntegrations.Tracing.finishIdleTransaction()` will finish the transaction and send it to Sentry. Calling this is optional; if it is not called, the integration will automatically send the transaction itself after the defined `idleTimeout` (default 500ms).
 
-**What is an activity?**
+#### What is an activity?
 
 The concept of an activity only exists in the `Tracing` integration in JavaScript Browser. It's a helper that tells the integration how long it should keep the `IdleTransaction` alive. An activity can be pushed and popped. Once all activities of an `IdleTransaction` have been popped, the `IdleTransaction` will be sent to Sentry.
 
-**Manual Transactions**
+#### Manual Transactions
 
 To manually instrument a certain region of your code, you can create a transaction to capture it.
 This is valid for both JavaScript Browser and Node and works independent of the `Tracing` integration.
@@ -551,7 +549,7 @@ processItem(item).then(() => {
 })
 ```
 
-**Adding Additional Spans to the Transaction**
+#### Adding Additional Spans to the Transaction
 
 The next example contains the implementation of the hypothetical `processItem ` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add to it all newly created spans as child operations. Keep in mind that each individual span needs to be manually finished; otherwise, that span will not show up in the transaction.
 
@@ -585,7 +583,7 @@ $ npm install @sentry/node
 $ npm install @sentry/apm
 ```
 
-**Sending Traces**
+#### Sending Traces
 
 To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 25% of all your transactions:
 
@@ -601,7 +599,7 @@ Sentry.init({
 });
 ```
 
-**Automatic Instrumentation**
+#### Automatic Instrumentation
 
 It’s possible to add tracing to all popular frameworks; however, we provide pre-written handlers only for Express.js.
 
@@ -654,7 +652,7 @@ Sentry.init({
 });
 ```
 
-**Manual Transactions**
+#### Manual Transactions
 
 To manually instrument a certain region of your code, you can create a transaction to capture it.
 
@@ -676,7 +674,7 @@ app.use(function processItems(req, res, next) {
 });
 ```
 
-**Adding Additional Spans to the Transaction**
+#### Adding Additional Spans to the Transaction
 
 The next example contains the implementation of the hypothetical `processItem ` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add to it all newly created spans as child operations. Keep in mind that each individual span needs to be manually finished; otherwise, that span will not show up in the transaction.
 
