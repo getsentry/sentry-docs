@@ -32,3 +32,31 @@ module.exports.hello = sentryHandler(async event => {
   throw new Error("asd");
 });
 ```
+
+## Vercel Next.js API Routes
+
+To set up Sentry error logging for a Next.js API route, build a wrapper (similar to the [AWS Lambda Sentry wrapper](#aws-lambda)).
+
+```javascript
+import Sentry from "@sentry/node"
+
+Sentry.init({
+  dsn: "YOUR DSN"
+});
+
+function sentryHandler(routeHandler) {
+  return async (req, res) => {
+    try {
+      return await routeHandler(req, res);
+    } catch (error) {
+      Sentry.captureException(error);
+      await Sentry.flush(2000);
+      throw error;
+    }
+  };
+}
+
+export default sentryHandler(async (req, res) => {
+  throw new Error("asd");
+});
+```
