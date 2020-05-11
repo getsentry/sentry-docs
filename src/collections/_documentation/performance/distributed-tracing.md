@@ -12,7 +12,7 @@ Sentry's Performance features are currently in beta. For more details about acce
     level="warning"
 %}
 
-Enabling tracing augments your existing error data by capturing interactions among your software systems. With tracing, Sentry tracks metrics about your software performance, like throughput and latency, as well as displays the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution, helping you both diagnose problems and measure your application's overall health more easily. Tracing in Sentry provides insights such as:
+Enabling tracing augments your existing error data by capturing interactions among your software systems. With tracing, Sentry tracks your software performance, measuring things like throughput and latency, and can also display the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution, helping you both diagnose problems and measure your application's overall health more easily. Tracing in Sentry provides insights such as:
 
 - What occurred for a specific error event or issue
 - The conditions that cause bottlenecks or latency issues in your application
@@ -20,7 +20,7 @@ Enabling tracing augments your existing error data by capturing interactions amo
 
 ## What is Tracing?
 
-To begin, a note about what tracing is not: Tracing is not profiling. Though the goals of profiling and tracing overlap quite a bit, and though they are both tools which can be used to diagnose problems in your application, they differ both in terms of what they measure and how the data is recorded.
+To begin, a note about what tracing is not: Tracing is not profiling. Though the goals of profiling and tracing overlap quite a bit, and though they can both be used to diagnose problems in your application, they differ in terms of what they measure and how the data is recorded.
 
 A [profiler](https://en.wikipedia.org/wiki/Profiling_(computer_programming)) may measure any number of aspects of an application's operation: the number of instructions executed, the amount of memory being used by various processes, the amount of time a given function call takes, and many more. The resulting profile is a statistical summary of these measurements. 
 
@@ -30,7 +30,7 @@ A [tracing tool](https://en.wikipedia.org/wiki/Tracing_(software)), on the other
 
 Applications typically consist of interconnected components, which are also called services. As an example, let's look at a modern web application, composed of the following components, separated by network boundaries:
 
-- Front End (Single-Page Application)
+- Frontend (Single-Page Application)
 - Backend (REST API)
 - Task Queue
 - Database Server
@@ -38,7 +38,7 @@ Applications typically consist of interconnected components, which are also call
 
 Each of these components may be written in a different language on a different platform. Each can be instrumented individually using a Sentry SDK to capture error data or crash reports, but that instrumentation doesn't provide the full picture, as each piece is considered separately. Tracing allows you to tie all of the data together. 
 
-In our example web application, tracing means being able to follow a request from the front end to the backend and back, pulling in data from any background tasks or notification jobs that request creates. Not only does this allow you to correlate Sentry error reports, to see how an error in one service may have propagated to another, but it also allows you to gain stronger insights into which services may be having a negative impact on your application's overall performance.
+In our example web application, tracing means being able to follow a request from the frontend to the backend and back, pulling in data from any background tasks or notification jobs that request creates. Not only does this allow you to correlate Sentry error reports, to see how an error in one service may have propagated to another, but it also allows you to gain stronger insights into which services may be having a negative impact on your application's overall performance.
 
 Before learning how to enable tracing in your application, it helps to understand a few key terms and how they relate to one another.
 
@@ -48,7 +48,7 @@ A **trace** represents the record of the entire operation you want to measure or
 
 Each trace consists of one or more tree-like structures called **transactions**, the nodes of which are called **spans**. In most cases, each transaction represents a single instance of a service being called, and each span within that transaction represents that service performing a single unit of work, whether calling a function within that service or making a call to a different service.
 
-Because a transaction has a tree structure, top-level spans can themselves be broken down into smaller spans, mirroring the way that one function may call a number of other, smaller functions; this is expressed using the parent-child metaphor, so that every span may be the **parent span** to multiple other spans. Further, since all trees must have a single root, one span always represents the transaction itself, and all other spans are descendants of that root span.
+Because a transaction has a tree structure, top-level spans can themselves be broken down into smaller spans, mirroring the way that one function may call a number of other, smaller functions; this is expressed using the parent-child metaphor, so that every span may be the **parent span** to multiple other spans. Further, since all trees must have a single root, one span in a transaction always represents the transaction itself, with all other spans in the transaction descending from that root span.
 
 To make all of this more concrete, let's consider our example web app again.
 
@@ -66,7 +66,7 @@ Let's say, in this simplified example, that when a user loads the app in their b
   - 3 requests to serve static files (the HTML, CSS, and JS)
   - 2 requests for JSON data
     - 1 requiring a call to the database 
-    - 1 requiring a call to an external API and work to process the results before returning them to the front end
+    - 1 requiring a call to an external API and work to process the results before returning them to the frontend
 ^
 - _Database Server_
   - 1 request which requires 2 queries
@@ -181,12 +181,14 @@ Transactions share most of their properties (start and end time, tags, and so fo
 
 Transactions also have one additional property not included in spans, called `transaction_name`, which is used in the UI to identify the transaction. Common examples of `transaction_name` values include endpoint paths (like `/store/checkout/` or `api/v2/users/&lt;user_id&gt;/`) for backend request transactions, task names (like `data.cleanup.delete_inactive_users`) for cron job transactions, and URLs (like `https://docs.sentry.io/performance/distributed-tracing/`) for page-load transactions.
 
+_Note:_ Before the transaction is sent, the `tags` and `data` properties will get merged with data from the global scope. (Global scope data is set either in `Sentry.init()` - for things like `environment` and `release` - or by using `Sentry.configureScope()`, `Sentry.setTag()`, `Sentry.setUser()`, and `Sentry.setExtra()`. See the [Additional Data]({%- link _documentation/enriching-error-data/additional-data.md -%}) docs for more information.)
+
 #### Spans
 
 The majority of the data in a transaction resides in the individual spans the transaction contains. Span data includes:
 
 - `parent_span_id`: ties the span to its parent span
-- `op`: short string identifying the type of operation the span is measuring
+- `op`: short string identifying the type or category of operation the span is measuring
 - `start_timestamp`: when the span was opened
 - `end_timestamp`: when the span was closed
 - `description`: longer description of the span's operation, often specific to that instance (optional)
@@ -222,7 +224,7 @@ It's possible for a span to have equal start and end times, and therefore be rec
 
 #### Clock Skew
 
-If you are collecting transactions from multiple machines, you will likely encounter **clock skew**, where timestamps in one transaction don't align with timestamps in another. For example, if your backend makes a database call, the backend transaction logically should start before the database transaction does. But if the system time on each machine (those hosting your backend and database, respectively) isn't synced to common standard, it's possible that won't be the case. It's also possible for the ordering to be correct, but for the two recorded timeframes to not line up in a way that accurately reflects what actually happened. To reduce this possibility, we recommend using Network Time Protocol (NTP) or your cloud provider's clock synchronization services.
+If you are collecting transactions from multiple machines, you will likely encounter **clock skew**, where timestamps in one transaction don't align with timestamps in another. For example, if your backend makes a database call, the backend transaction logically should start before the database transaction does. But if the system time on each machine (those hosting your backend and database, respectively) isn't synced to a common standard, it's possible that won't be the case. It's also possible for the ordering to be correct, but for the two recorded timeframes to not line up in a way that accurately reflects what actually happened. To reduce this possibility, we recommend using Network Time Protocol (NTP) or your cloud provider's clock synchronization services.
 
 #### How Data is Sent
 
@@ -238,7 +240,7 @@ When choosing a sampling rate, the goal is to not collect _too_ much data (given
 
 ### Consistency Within a Trace
 
-For traces that involve multiple transactions, Sentry uses a "head-based" approach: a sampling decision is made in the originating service, and then that decision is passed to all subsequent services. To see how this works, let's return to our web app example above. Consider two users, A and B, who are both loading your app in their respective browsers. When A loads the app, the SDK pseudorandomly "decides" to collect a trace, whereas when B loads the app, the SDK "decides" not to. When each browser makes requests to your backend, it includes in those requests the "yes, please collect transactions" or the "no, not collecting transactions this time" decision in the headers. 
+For traces that involve multiple transactions, Sentry uses a "head-based" approach: a sampling decision is made in the originating service, and then that decision is passed to all subsequent services. To see how this works, let's return to our webapp example above. Consider two users, A and B, who are both loading your app in their respective browsers. When A loads the app, the SDK pseudorandomly "decides" to collect a trace, whereas when B loads the app, the SDK "decides" not to. When each browser makes requests to your backend, it includes in those requests the "yes, please collect transactions" or the "no, don't collect transactions this time" decision in the headers.  
 
 When your backend processes the requests from A's browser, it sees the "yes" decision, collects transaction and span data, and sends it to Sentry. Further, it includes the "yes" decision in any requests it makes to subsequent services (like your database server), which similarly collect data, send it to Sentry, and pass the decision along to any services they call. Through this process, all of the relevant transactions in A's trace are collected and sent to Sentry.
 
@@ -258,7 +260,7 @@ You can see a list of transaction events by clicking on the "Transactions" pre-b
 
 The results of either of the above queries are presented in a list view, where each entry represents a group of one or more transactions. Data about each group is displayed in table form, and comes in two flavors: value-based (such as transaction name), and aggregate (such as average duration). The choice of which kinds of data to display is configurable, and can be changed by clicking 'Edit Columns' at the top right of the table. Bear in mind that adding or removing any value-based columns may affect the way the results are grouped.
 
-From this view, you can also filter the transactions list, both by restricting the time window and by adding attributes to the query.
+This view also includes a timeseries graph, aggregating all results of the query, as well as a summary of the most common tags associated with those results (either via your Sentry instance's [global context]({%- link _documentation/enriching-error-data/additional-data.md -%}) or via each transaction's root span). From this view, you can also filter the transactions list, either by restricting the time window or by adding attributes to the query (or both!).
 
 _Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore cannot be searched.
 
@@ -274,6 +276,7 @@ The following functions aggregate transaction durations:
 
 - average
 - various percentiles (by default, the pre-built Transactions query shows the 75th and 95th percentiles, but there are many other options, including a custom percentile)
+- maximum
 
 One use case for tracking these statistics is to help you identify transactions that are slower than your organization's target SLAs.
 
@@ -322,13 +325,13 @@ _Search by Trace ID_
 
 You can search for all of the transactions in a given trace by expanding any of the span details and clicking on "Search by Trace".
 
-_Note:_ On the Team plan, results will only be shown for one project at a time. Further, each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view. Therefore, you may not see all transactions in a given trace in your results list.
+_Note:_ On the [Team plan](https://sentry.io/pricing/), results will only be shown for one project at a time. Further, each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view. Therefore, you may not see all transactions in a given trace in your results list.
 
 _Traversing to Child Transactions_
 
 Some spans within a transaction may be the parent of another transaction. When you expand the span details for such spans, you'll see the "View Child" button, which, when clicked, will lead to the child transaction's details view.
 
-_Note:_ Traversing between transactions in this way is only available on the Business plan. Further, each transaction belongs to a specific project, and you will only be able to see the "View Child" button if the child transaction belongs to a project you have permission to view.
+_Note:_ Traversing between transactions in this way is only available on the [Business plan](https://sentry.io/pricing/). Further, each transaction belongs to a specific project, and you will only be able to see the "View Child" button if the child transaction belongs to a project you have permission to view.
 
 ## Setting Up Tracing
 
