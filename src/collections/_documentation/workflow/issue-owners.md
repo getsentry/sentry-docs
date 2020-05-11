@@ -43,7 +43,7 @@ Issue Owner rules use the following structure:
 
 `type:glob owner`
 
-`type` can be either `path` or `url`, depending on whether you’re specifying a path or URL.
+`type` can be either `path`, `url` or `tags.TAG_NAME`, depending on whether you’re specifying a path, URL or on a specific tag.
 
 `glob` will be the path or URL you are specifying (for example, `src/javascript/*` or `https://www.example.io/checkout`. You can use the _*_ character to match everything, or the _?_ character to match any single character. _This feature does not support regex._
 
