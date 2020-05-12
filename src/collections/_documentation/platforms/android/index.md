@@ -638,6 +638,7 @@ buildscript {
     
     dependencies {
         // Add the line below, the plugin that copies the binaries
+        // https://github.com/howardpang/androidNativeBundle/releases
         classpath 'com.ydq.android.gradle.build.tool:nativeBundle:{version}'
     }
 }
