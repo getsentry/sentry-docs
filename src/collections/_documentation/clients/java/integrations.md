@@ -160,7 +160,8 @@ And declare a dependency in your toplevel `build.gradle`:
 ```groovy
 buildscript {
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.30'
+        // https://github.com/getsentry/sentry-android-gradle-plugin/releases
+        classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
     }
 }
 ```

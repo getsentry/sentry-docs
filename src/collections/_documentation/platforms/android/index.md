@@ -25,6 +25,7 @@ android {
 
 // ADD SENTRY ANDROID AS A DEPENDENCY
 dependencies {
+    // https://github.com/getsentry/sentry-android/releases
     implementation 'io.sentry:sentry-android:{version}'
 }
 ```
@@ -193,7 +194,8 @@ buildscript {
     }
     
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.31'
+        // https://github.com/getsentry/sentry-android-gradle-plugin/releases
+        classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
     }
 }
 ```
@@ -507,6 +509,7 @@ compileOptions {
 
 // ADD SENTRY ANDROID AS A DEPENDENCY
 dependencies {
+    // https://github.com/getsentry/sentry-android/releases
     implementation 'io.sentry:sentry-android-core:{version}'
 }
 ```
@@ -637,7 +640,8 @@ buildscript {
     
     dependencies {
         // Add the line below, the plugin that copies the binaries
-        classpath 'com.ydq.android.gradle.build.tool:nativeBundle:1.0.4'
+        // https://github.com/howardpang/androidNativeBundle/releases
+        classpath 'com.ydq.android.gradle.build.tool:nativeBundle:{version}'
     }
 }
 ```
