@@ -35,18 +35,18 @@ As soon as you hit _Save_, we will attempt to find all creditcard numbers in you
 
 Rules generally consist of three parts:
 
-- A [_Redaction Method_](#redaction-methods): What to do.
-- A [_Rule Type_](#rule-types): What to look for.
-- A [_Selector_](#selectors): Where to look.
+- A [_Method_](#methods): What to do.
+- A [_Data Type_](#data-types): What to look for.
+- A [_Source_](#sources): Where to look.
 
-## Redaction Methods
+## Methods
 
 - _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely or replace it with an empty string depending on technical constraints.
 - _Mask_: Replace all characters with `*`. For creditcards this replaces everything but the last 4 digits.
 - _Hash_: Replace the matched substring with a hashed value.
 - _Replace_: Replace the matched substring with a constant placeholder value such as `[Filtered]` or `[creditcard]`. Right now this value cannot be configured.
 
-## Rule Types
+## Data Types
 
 - _Regex Matches_: Custom Perl-style regex (PCRE).
 - _Credit Card Numbers_: Any substrings that look like credit card numbers.
@@ -60,11 +60,11 @@ Rules generally consist of three parts:
 - _US social security numbers_: 9-digit social security numbers for the USA.
 - _Usernames in filepaths_: For example `myuser` in `/Users/myuser/file.txt`, `C:/Users/myuser/file.txt`, `C:/Documents and Settings/myuser/file.txt`, `/home/myuser/file.txt`, ...
 - _MAC Addresses_
-- _Anything_: Matches any value. This is useful if you want to remove a certain JSON key by path using [_Selectors_](#selectors) regardless of the value.
+- _Anything_: Matches any value. This is useful if you want to remove a certain JSON key by path using [_Sources_](#sources) regardless of the value.
 
 {% capture __alert_content -%}
 
-Sentry does not know if a local variable that looks like a credit card number actually is one. As such, you need to expect not only false-positives but also false-negatives. [_Selectors_](#selectors) can help you in limiting the scope in which your rule runs.
+Sentry does not know if a local variable that looks like a credit card number actually is one. As such, you need to expect not only false-positives but also false-negatives. [_Sources_](#sources) can help you in limiting the scope in which your rule runs.
 
 {%- endcapture -%}
 {%- include components/alert.html
@@ -74,7 +74,7 @@ Sentry does not know if a local variable that looks like a credit card number ac
 %}
 
 
-## Selectors
+## Sources
 
 Selectors allow you to restrict rules to certain parts of the event. This is useful to unconditionally remove certain data by event attribute, and can also be used to conservatively test rules on real data. A few examples:
 
@@ -91,7 +91,7 @@ Selectors allow you to restrict rules to certain parts of the event. This is use
 
 All key names are treated case-insensitively.
 
-### Writing a Selector
+### Advanced source names
 
 Data scrubbing always works on the raw event payload. Keep in mind that some fields in the UI may be called differently in the JSON schema. When looking at an event there should always be a link called "JSON" present that allows you to see what the data scrubber sees.
 
@@ -128,9 +128,9 @@ Since the "error message" is taken from the `exception`'s `value`, and the "mess
 
 ### Boolean Logic
 
-You can combine selectors using boolean logic.
+You can combine sources using boolean logic.
 
-* Prefix with `!` to invert the selector. `foo` matches the JSON key `foo`, while `!foo` matches everything but `foo`.
+* Prefix with `!` to invert the source. `foo` matches the JSON key `foo`, while `!foo` matches everything but `foo`.
 * Build the conjunction (AND) using `&&`, such as: `foo && !extra.foo` to match the key `foo` except when inside of `extra`.
 * Build the disjunction (OR) using `||`, such as: `foo || bar` to match `foo` or `bar`.
 
