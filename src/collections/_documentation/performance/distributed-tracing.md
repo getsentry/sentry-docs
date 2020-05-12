@@ -91,7 +91,9 @@ Each transaction would be broken down into **spans** as follows:
 
 Let's pause here to make an important point: Some, though not all, of the browser transaction spans listed have a direct correspondence to backend transactions listed earlier. Specifically, each request _span_ in the browser transaction corresponds to a separate request _transaction_ in the backend. In this situation, when a span in one service gives rise to a transaction in a subsequent service, we call the original span a parent span to _both_ the transaction and its root span.
 
-In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service, which means that every root span other than the browser transaction root has a parent span (albeit in a different service). In a fully-instrumented system (one in which every service has tracing enabled) this pattern will always hold true. The only parentless span will be the root of the initial transaction; every other span will have a parent. Further, parents and children will always live in the same service, except in the case where the child span is the root of a child transaction, in which case the parent span will live in the calling service and the child transaction/child root span will live in the called service. (This is worth noting because it is the one way in which transactions are not perfect trees - their roots can (and mostly do) have parents.)
+In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service, which means that every root span other than the browser transaction root has a parent span (albeit in a different service). In a fully-instrumented system (one in which every service has tracing enabled) this pattern will always hold true. The only parentless span will be the root of the initial transaction; every other span will have a parent. Further, parents and children will always live in the same service, except in the case where the child span is the root of a child transaction, in which case the parent span will live in the calling service and the child transaction/child root span will live in the called service.
+
+Put another way, a fully-instrumented system creates a trace which is itself a connected tree - with each transaction a subtree - and in that tree, the boundaries between subtrees/transactions are precisely the boundaries between services.
 
 Now, for the sake of completeness, back to our spans:
 
@@ -191,12 +193,12 @@ The majority of the data in a transaction resides in the individual spans the tr
 - `op`: short string identifying the type or category of operation the span is measuring
 - `start_timestamp`: when the span was opened
 - `end_timestamp`: when the span was closed
-- `description`: longer description of the span's operation, often specific to that instance (optional)
+- `description`: longer description of the span's operation, which uniquely identifies the span but is consistent across instances of the span (optional)
 - `status`: short code indicating operation's status (optional)
 - `tags`: key-value pairs holding additional data about the span (optional)
 - `data`: arbitrarily-structured additional data about the span (optional)
 
-An example use of the `op` and `description` properties together is `op: sql.query` and `description: SELECT * FROM users WHERE last_active < DATE_SUB(CURRENT_DATE, INTERVAL 1 YEAR)`. The `status` property is often used to indicate the success or failure of the span's operation, or for a response code in the case of HTTP requests. Finally, `tags` and `data` allow you to attach further contextual information to the span, such as `function: middleware.auth.is_authenticated` for a function call or `request: {url: ..., headers: ... , body: ...}` for an HTTP request.
+An example use of the `op` and `description` properties together is `op: sql.query` and `description: SELECT * FROM users WHERE last_active < %s`. The `status` property is often used to indicate the success or failure of the span's operation, or for a response code in the case of HTTP requests. Finally, `tags` and `data` allow you to attach further contextual information to the span, such as `function: middleware.auth.is_authenticated` for a function call or `request: {url: ..., headers: ... , body: ...}` for an HTTP request.
   
 ### Further Information
 
@@ -228,7 +230,7 @@ If you are collecting transactions from multiple machines, you will likely encou
 
 #### How Data is Sent
 
-Individual spans aren't sent to Sentry. Rather, those spans are attached to their containing transaction, and the transaction is sent as one unit. This means that no span data will be recorded by Sentry's servers until the transaction to which they belong is closed and dispatched. The converse is not true, however - though spans can't be sent without a transaction, transaction _are_ still valid, and will be sent, even if they only span they contain is their root span.
+Individual spans aren't sent to Sentry; rather, the entire transaction is sent as one unit. This means that no span data will be recorded by Sentry's servers until the transaction to which they belong is closed and dispatched. The converse is not true, however - though spans can't be sent without a transaction, transactions _are_ still valid, and will be sent, even if the only span they contain is their root span.
 
 ## Data Sampling
 
