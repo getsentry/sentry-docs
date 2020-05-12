@@ -193,7 +193,7 @@ buildscript {
     }
     
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.31'
+        classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
     }
 }
 ```
@@ -637,7 +637,7 @@ buildscript {
     
     dependencies {
         // Add the line below, the plugin that copies the binaries
-        classpath 'com.ydq.android.gradle.build.tool:nativeBundle:1.0.4'
+        classpath 'com.ydq.android.gradle.build.tool:nativeBundle:{version}'
     }
 }
 ```
