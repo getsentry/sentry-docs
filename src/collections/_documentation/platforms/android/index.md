@@ -193,6 +193,7 @@ buildscript {
     }
     
     dependencies {
+        // https://github.com/getsentry/sentry-android-gradle-plugin/releases
         classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
     }
 }
