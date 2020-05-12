@@ -3,30 +3,30 @@ title: Manage Your Event Stream, a Guide
 sidebar_order: 3
 ---
 
-Getting started with Sentry error monitoring is pretty straightforward --- create a Sentry project, install and initialize the Sentry SDK in your code and you're ready to go. Once completed, **any** Exception, Runtime Error or Crash that occurs **wherever** and **whenever** your code is running, will be aggregated in your `Event Stream`. Depending on your portfolio, your stream might be aggregating millions of events in no time. Sending all your errors to Sentry is generally a good practice. This ensures greater visibility into the health and performance of your application code. However, with just this basic setup in place, you might risk:
+Sending all application errors to Sentry ensures you'll be notified in real-time when errors occur in your code. However, with just the basic setup, you might quickly realize that your applications generate many errors, and those might trigger many notifications. Sentry provides tools to control the _type_ and _amount_ of errors that are monitored. These will allow you to:
 
-1. Flooding your event stream with excessive noise such as errors from 3rd party libraries, errors from unstable versions of your code, etc.
-2. Getting spammed with alert notifications about things you don't care about or worse --- lose track of the critical issues that are hiding in your code.
+1. Shape your event stream to make it actionable and meaningful.
+2. Reserve those real-time notifications for errors that actually break your code.
+3. Manage your quotas if you're on an event-quota based plan, since too much noise may drain your quota.
 
-Filtering this noise will help ensure that you only see the relevant errors that you want or need to fix. Also, if you're on an event-quota based plan, unnecessary noise might end up draining your quota and leaving you blind when and where it matters.
+## 1. SDK Filtering: beforeSend
 
-To cope with these challenges, Sentry provides several mechanisms that allow you to control the _type_ and _amount_ of events that make it to your event stream.
+All Sentry SDKs support the `beforeSend` callback method. Once implemented, the method is invoked when the SDK captures an event, right before sending it to your Sentry account. It receives the event object as a parameter, so developers can use that to modify the event's data or drop it completely (by returning `null`) based on their custom logic and the data available on the event like _tags_, _environment_, _release version_, _error attributes_, and so forth. For more information see [Filtering Events](https://docs.sentry.io/error-reporting/configuration/filtering/)
 
-## 1. Filtering
+## 2. SDK Configuration
 
-Filtering is the optimal way to manage your event stream and quota. It ensures that only actionable errors related to your source code make it to your event stream. If it's redundant, filter it --- clear your event stream from undesired "noise" and keep your alert notifications for the errors that matter.
+The Sentry SDKs have several configuration options that can be used to filter unwanted errors from leaving your application's runtime. A lot of these options are platform-specific, so make sure you look for yours in our docs under [Platforms](https://docs.sentry.io/platforms/) and [Configuration](https://docs.sentry.io/error-reporting/configuration/). Here are some examples:
 
-### Outbound Filters
+### JavaScript
 
-Sentry SDK has several configuration options that can be used to filter unwanted errors from reaching your account. By default, all errors will be sent. Those include:
+The SDK includes multiple `Integrations` - functional plugins that you can configure, enable, or disable. For more information see [JavaScript SDK Integrations](https://docs.sentry.io/platforms/javascript/#sdk-integrations). Several integrations allow you to configure the types of events you want Sentry to monitor:
 
-- `beforeSend`: A callback method invoked before an event is sent from your code runtime to Sentry with the event object passed to it as a parameter. Developers can hook into this callback to modify the event or drop it (filter) completely by returning `null`. You can filter outgoing events based on custom logic and data available on the SDK and event object like _tags_, _environment_, _release version_, _error attributes_, etc.
+#### InboundFilters
 
-For JavaScript SDKs:
+The integration is enabled by default and adds the following configuration options to the SDK:
 
 - `whitelistUrls`: Domains that might raise acceptable exceptions represented in a regex pattern format.
-- `blacklistUrls`: A list of strings or regex patterns that match error URLs which should be blocked from sending events.
- > **Note**: Configuring both options on the SDK can be used to blacklist **subdomains** of the domains listed in `whitelistUrls`.
+- `blacklistUrls`: A list of strings or regex patterns that match error URLs which should be blocked from sending events (Configuring both options on the SDK can be used to blacklist **subdomains** of the domains listed in `whitelistUrls`).
 - `ignoreErrors`: Instruct the SDK to never send an error to Sentry if it matches any of the listed error **messages**. If no message is available, the SDK will try to compare against an underlying **exception type and value**.
 
 For more information and code samples checkout:
@@ -35,70 +35,50 @@ For more information and code samples checkout:
 - [Filtering Events](https://docs.sentry.io/error-reporting/configuration/filtering)
 - [Enriching Error Data](https://docs.sentry.io/enriching-error-data/additional-data/?platform=browser)
 
-### Inbound Data Filters
+#### GlobalHandlers
 
-While using outbound filters requires changes to your source code and applying them depend on your next deployment, Inbound Filters (or server-side filters) can be easily configured in your Sentry account under `[Project Settings] > Inbound Filters > Data Filters`.
+The integration attaches global handlers to capture uncaught exceptions (`onerror`) and unhandled rejections (`onunhandledrejection`). Both handlers are enabled by default but can be disabled through configuration. For more information see [GlobalHandlers Integration](https://docs.sentry.io/platforms/javascript/#globalhandlers)
 
-These include predefined configurations to filter out:
+Checkout additional configuration options with the [TryCatch](https://docs.sentry.io/platforms/javascript/#trycatch) and [ReportingObserver](https://docs.sentry.io/platforms/javascript/#reportingobserver) integrations.
 
-- Common **browser extension** errors
-- Events coming from **localhost**
-- Known **legacy browsers** errors
-- Errors caused by known **web crawlers** crawling your site
+### Other SDKs
 
-![Built-in Inbound Filters]({% asset guides/manage-event-stream/01.png @path %})
+**Java** - Sentry SDK provides integrations with common Java loggers through implemented _Handlers_ and _Appenders_. The configuration allows you to set a logging threshold determining the level under which all errors will be filtered. For more information see Java Integrations [java.util.logging](https://docs.sentry.io/clients/java/integrations/#javautillogging), [Log4j 1.x](https://docs.sentry.io/clients/java/integrations/#log4j-1x), [Log4j 2.x](https://docs.sentry.io/clients/java/integrations/#log4j-2x), and [Logback](https://docs.sentry.io/clients/java/integrations/#logback).
 
-Those also include custom filters to filter out errors:
+**PHP** - The `error_types` configuration option allows you to set the error types you want Sentry to monitor. For more information see [PHP: error_types](https://docs.sentry.io/error-reporting/configuration/?platform=php#error_types).
 
-- By their **error message**
-- From specific **release versions** of your code
-- From certain **IP addresses**
+**Ruby** - The `excluded_exceptions` configuration option allows you to set the exception types you wish to suppress. For more information see [Ruby Configuration](https://docs.sentry.io/clients/ruby/config/#optional-settings)
 
-![Custom Inbound Filters]({% asset guides/manage-event-stream/02.png @path %})
+## 3. Inbound Data Filters
 
-Once applied, you can track the number of filtered errors using the graph provided at the top of the Inbound Data Filters view.
+While SDK configuration requires changes to your source code and depends on your next deployment, server-side filters can be easily configured per project under `[Project Settings] > Inbound Filters > Data Filters`. For more information, see [Inbound Filters](https://docs.sentry.io/accounts/quotas/#inbound-data-filters) and [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters)
+
+Once applied, you can track the filtered events (numbers and cause) using the graph provided at the top of the Inbound Data Filters view.
 
 ![Built-in Inbound Filters]({% asset guides/manage-event-stream/03.png @path %})
 
-> For more information on inbound filtering options take a look at:
->
-> - [Inbound Filters](https://docs.sentry.io/accounts/quotas/#inbound-data-filters)
-> - [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters)
-
 ## 2. Event Grouping
 
-Any event that makes it from your source code runtime though the outbound and inbound filters will be persisted and available in your Event Stream. **Similar _Events_ are grouped into unique _Issues_ based on the event's _Fingerprint_**. An event's fingerprint (and proper grouping) relies on its **stack trace**. If a stack trace is not available, the fingerprint will be determined by the type and value of the **Exception** associated with this event. If all else fails, the fingerprint will default to the **Event Message**.
+Proper event grouping is essential for maintaining a meaningful Issue Stream and reducing redundant notifications. Sentry groups similar _Events_ into unique _Issues_ based on their _Fingerprint_. An event's fingerprint relies firstly on its **stack trace**. 
 
-Sentry provides various configuration options to modify and fine-tune event grouping. For more information, take a look at our docs on [Grouping & Fingerprints](https://docs.sentry.io/data-management/event-grouping/).
-
-### Optimize your Event Grouping
-
-Proper grouping of events into issues is essential for maintaining a meaningful Issue Stream, gaining accurate visibility into the health of your application code, and leveraging Sentry workflows and integrations in a meaningful way. To make sure your events are grouped properly:
-
-1. With **JavaScript SDKs**, a minimized source code will result in a nondeterministic stack trace that will mess up associated event grouping. Make sure Sentry has access to your Source Maps and minimized artifacts. For more information, take a look at our documentation on [Uploading Source Maps](https://docs.sentry.io/platforms/javascript/#source-maps).
+With **JavaScript** errors, a minified source code might result in a nondeterministic stack trace that could mess up associated event grouping. Make sure Sentry has access to your `Source Maps` and minified artifacts. For more information see [Uploading Source Maps](https://docs.sentry.io/platforms/javascript/#source-maps).
 
  ![JavaScript stack trace without source maps]({% asset guides/manage-event-stream/04.png @path %})
  ![JavaScript stack trace with source maps]({% asset guides/manage-event-stream/05.png @path %})
 
-2. For native errors, debug information files (also known as symbols) should be uploaded so Sentry can extract stack traces and symbolicate stack frames into function names and line numbers. For more information, take a look at the following resources:
-
-- [Fixing Native Apps with Sentry](https://blog.sentry.io/2019/09/26/fixing-native-apps-with-sentry/)
-- [Sentry Native SDK](https://docs.sentry.io/platforms/native/)
-- [Debug Information Files](https://docs.sentry.io/workflow/debug-files/#source-context)
+For more information on the Fingerprint algorithm and customizing event grouping see [Grouping & Fingerprints](https://docs.sentry.io/data-management/event-grouping/).
 
 ## 3. Applying Workflows
 
 Now that your event stream is fine-tuned to reflect real problems in your code, it's an excellent practice to react to errors as they happen. If an issue reflects a real problem in your code, resolve it; otherwise--- discard.
 
-### Resolve Issue
+### Resolve
 
-You've been alerted on a new error in your code? Jump into the issue page to see all the data you need to know about the issue. If it's a real error in your code, assign a team member to resolve it. Don't forget to let Sentry know once it's resolved.
-
-For more information take a look at [The Sentry Workflow — Resolve](https://blog.sentry.io/2019/07/03/the-sentry-workflow-resolve)
+You've been alerted on a new error in your code? Jump into the issue page to get all the data you need to know about the error. If it's a real issue in your code, assign a team member to resolve it. Don't forget to let Sentry know once it's resolved. For more information see [The Sentry Workflow — Resolve](https://blog.sentry.io/2019/07/03/the-sentry-workflow-resolve)
 
 ### Delete & Discard
 
-If there is an irrelevant reoccurring issue that you are unable or unwilling to resolve, you can delete and discard it from the issue details page by clicking `Delete and discard future events`. This will remove the issue and event data from Sentry and filter out matching events before they reach your stream.
+If there is an irrelevant reoccurring issue that you are unable or unwilling to resolve, you can delete and discard it from the issue details page by clicking `Delete and discard future events`. This will remove the issue and event data from Sentry and filter out future matching events.
 
 ![Delete and Discard]({% asset guides/manage-event-stream/06.png @path %})
 
@@ -110,17 +90,17 @@ Discarded issues are listed under `[Project Settings] > Inbound Filters > Discar
 
 ## 4. Rate Limiting
 
-Rate limiting allows you to limit the amount of events Sentry accepts per-project for a defined period --- minutes, hours, a day. While this is quite useful for managing your monthly event quota, keep in mind that once a defined threshold is crossed, **subsequent events will be dropped**. Therefore, your rate limit shouldn't be constantly hit, but rather defined as a ceiling intended to protect you from unexpected spikes that might drain your monthly quota and leave you in the dark for a while.
+Rate limiting allows you to limit the amount of events Sentry accepts per-project for a defined time span. While this is quite useful for managing your monthly event quota, keep in mind that once a defined threshold is crossed, **subsequent events will be dropped**. Therefore, your rate limit shouldn't be constantly hit, but rather defined as a ceiling intended to protect you from unexpected spikes.
 
-Under `[Project Settings] » Client Keys » Configure`, you can create multiple keys per-project and assign different (or no) limits to each key. This will allow you to dynamically allocate keys (with varying thresholds) depending on Release, Environment, etc.
+Under `[Project Settings] » Client Keys » Configure`, you can create multiple DSN keys per-project and assign different (or no) limits to each key. This will allow you to dynamically allocate keys (with varying thresholds) depending on Release, Environment, and so forth.
 
 ![Per DSN Key rate limits]({% asset guides/manage-event-stream/11.png @path %})
 
-For more information: [Rate Limiting Projects](https://docs.sentry.io/accounts/quotas/#id1)
+For more information see [Rate Limiting Projects](https://docs.sentry.io/accounts/quotas/#id1)
 
 ### Spike Protection
 
-Sentry also applies a dynamic rate limit to your account designed to protect you from short-term spikes. However, we would recommend applying all of the previously mentioned methods. For more information:
+Sentry also applies a dynamic rate limit to your account designed to protect you from short-term spikes. However, we would recommend applying all of the previously mentioned methods. For more information see:
 
 - [Spike Protection](https://docs.sentry.io/accounts/quotas/#spike-protection)
 - [Protect Yourself Against Spikes in Events with Spike Protection](https://blog.sentry.io/2018/05/08/event-spike-protection#what-counts-as-a-spike)
@@ -133,50 +113,48 @@ Applying the proper filters, SDK configuration, and rate limits is an iterative 
 
 ### > **How can I see a breakdown of incoming events?**
 
-Opening the `Stats` view from the left side navigation bar displays details about the total number of events Sentry has received across your entire organization over the last week. The report breaks down the events by project into three categories:
+The `Stats` view displays details about the total number of events Sentry has received across your entire organization over the last week. The report breaks down the events by project into three categories:
 
-- **Accepted**: events processed and persisted displayed in your event and issue streams.
-- **Rate Limited**: events that Sentry threw away due to the limit being hit
+- **Accepted**: events processed and persisted displayed in your event stream.
+- **Rate Limited**: events that were dropped due to the limit being hit.
 - **Filtered**: events that were blocked based on your inbound filter rules.
 
 ![STATS View]({% asset guides/manage-event-stream/12.png @path %})
 
-Clicking on a project name will open the project settings view where you can manage the project's Inbound Filtering and Rate Limiting.
+Clicking on a project name will open the project settings view where you can manage the project's Inbound Filters and Rate Limits.
+
+You can also download monthly reports with a similar break down of all your previous billing periods under `Settings > Usage & Payments > Usage History`
 
 ### > **What are my busiest projects?**
 
-The [Discover](https://docs.sentry.io/workflow/discover/) view provides a flexible query builder to query event data cross-project.
+[Discover](https://docs.sentry.io/workflow/discover/) provides a powerful query builder to query through all your event data cross-project.
 
-- Open the Discover view from the left side navigation bar
-- From the top-level filter bar, select `View All Projects` from the project drop-down and apply the desired date range
-- Build, Run, and Save the following query:
+1. Open Discover and click on `Build a new query`.
+2. From the top-level filter select `View All Projects` in the project drop-down and apply the desired environments and date range
+3. In the query builder input enter `event.type:error`  
+4. From the `Results` table click on `Edit Columns` and edit the columns and aggregates as below
 
- ![Busiest Projects]({% asset guides/manage-event-stream/16.png @path %})
+    ![Busiest Projects]({% asset guides/manage-event-stream/01.png @path %})
 
-> NOTE: Queries in Discover are executed against a subset of events defined in the **top-level filter bar** based on selected _projects_ and _date range_. The Projects drop-down allows you to search for events across:
->
-> - **My Projects:** all projects that you are assigned to via team-membership within the organization
-> - **All Projects:** all projects within the organization (requires owner permission role)
-> - **Subset** of selected projects
->
-> ![Project Filter]({% asset guides/manage-event-stream/17.png @path %})
+ 5. Apply the changes and click on the event `COUNT()` column to orders the table rows by the number of events
+
+    ![Busiest Projects]({% asset guides/manage-event-stream/16.png @path %})
+
+ 6. Click on `Save as...` to save this query to your main Discover Dashboard
 
 ### > **What issues are consuming my quota?**
 
-- Navigate to the Discover view
-- From the top-level filter bar, select `View All Projects` from the project drop-down and apply the desired date range
-- Build, Run, and Save the following query
-- Notice that you can open an issue details page by clicking on the `issue id` link
+The Sentry workflow starts with a real-time alert notifying you about an error in your code. If you want to take a more proactive approach to resolve your busiest errors, follow steps 1 - 6 from above. For step 4 select the columns as seen below:
 
- ![Busiest Issues]({% asset guides/manage-event-stream/10.png @path %})
+![Busiest Projects]({% asset guides/manage-event-stream/02.png @path %})
 
-- Alternatively, you can sort the `Issues` table by issue `Frequency`
+ Once applying the changes the Results table will display your busiest issues:
 
- ![Issue Frequency]({% asset guides/manage-event-stream/13.png @path %})
+![Busiest Issues]({% asset guides/manage-event-stream/10.png @path %})
 
 ### > **How to set proper rate limits?**
 
-A good way to set a project rate limit is by figuring out the expected event volume based on past traffic. Let's look at an example:
+A good way to set a project rate limit is by figuring out the expected event volume based on your average traffic. Let's look at an example:
 
 ![Calculating rate limits]({% asset guides/manage-event-stream/14.png @path %})
 
@@ -196,16 +174,14 @@ You received an email notifying you that Spike Protection was triggered and appl
 
 Many times an unexpected spike is caused by a new error (or errors) introduced into your code with a new release version. Here are ways you can search for these errors:
 
-- Open the Events view from the left side navigation bar.
-- Select `View All Projects` from the Project drop-down to see events from all projects in your org.
-- Find the spike in the events timeline graph and mark the range with your cursor. Notice the events timeline and date filter (on the top filter bar) zooms into the selected date range.
+1. Open Discover and click on `Build a new query`.
+2. From the top-level filter select `View All Projects` in the project drop-down and apply the desired environments and date range around the time the spike occurred.
+3. Find the spike in the events timeline graph and mark the range with your cursor. Notice the events timeline and date filter (on the top filter bar) are updated to zoom into the selected date range.
  ![Event Spike Range]({% asset guides/manage-event-stream/08.png @path %})
 
-- Now, you can use Discover to query the set of events that happened during the spike.
-- Run the query below to see the busiest issues that contributed to the spike.
- ![Issues in Spike Range]({% asset guides/manage-event-stream/09.png @path %})
-
-- Open an issue details page by clicking on the `issue id` link. If it's a real issue - assign it to a project team member to resolve it; otherwise - discard it.
+4. Now, you can use Discover to query only the set of events sent to Sentry during the spike. Edit the Results table columns as shown below to see the busiest issues that contributed to the spike.
+   ![Issues in Spike Range]({% asset guides/manage-event-stream/09.png @path %})
+5. Click on the `Issue Id` to open the issue details page. If it's a real issue - assign it to a project team member to resolve it; otherwise - discard it.
 
 Also, consider doing the following:
 
