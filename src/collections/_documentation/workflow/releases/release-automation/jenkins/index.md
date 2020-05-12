@@ -1,6 +1,6 @@
 ---
 title: Jenkins
-sidebar_order: 2
+sidebar_order: 0
 
 ---
 
@@ -8,7 +8,7 @@ This guide walks you through the process of automating Sentry release management
 
 Before starting, confirm that your Sentry project is properly set up to track commit metadata. The easiest method to do so is to [install a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration). Once that's installed, and you've added your repository, come back to this guide. If you've already installed a repository integration, you're ready to go.
 
-## I. Create a Sentry Internal Integration
+## Create a Sentry Internal Integration
 
 For Jenkins to communicate securely with Sentry, you'll need to create a new internal integration. In Sentry, navigate to **Settings > Developer Settings > New Internal Integration**.
 
@@ -20,7 +20,7 @@ See our [docs page on permissions]({%- link _documentation/api/permissions.md -%
 
 Click “Save” at the bottom of the page and grab your token, which you'll need this in the next step.
 
-## II. Add Token to Jenkins Credentials
+## Add Token to Jenkins Credentials
 
 To access our internal integration token securely in Jenkins, store it as a [credential](https://www.jenkins.io/doc/book/using/using-credentials/):
 
@@ -34,12 +34,12 @@ To access our internal integration token securely in Jenkins, store it as a [cre
 [{% asset releases/jenkins/jenkins-add-credential.png alt="View of Jenkins add credentials." %}]({% asset releases/jenkins/jenkins-add-credential.png @path %})
 
 
-## III. Notify Sentry of Deployment
+## Notify Sentry of Deployment
 
 Depending on what type of Jenkins project you are using to build and deploy, you want to follow different steps:
 
-- [Pipeline (Jenkinsfile)]({%- link _documentation/workflow/releases/jenkins.md -%}#pipeline)
-- [Freestyle project]({%- link _documentation/workflow/releases/jenkins.md -%}#freestyle-project)
+- [Pipeline (Jenkinsfile)]({%- link _documentation/workflow/releases/release-automation/jenkins/index.md -%}#pipeline)
+- [Freestyle project]({%- link _documentation/workflow/releases/release-automation/jenkins/index.md -%}#freestyle-project)
 
 For more detailed information on release management concepts below, see our [release management docs]({%- link _documentation/cli/releases.md -%}).
 
@@ -47,7 +47,7 @@ For more detailed information on release management concepts below, see our [rel
 
 If you are using a Jenkins pipeline, you need to add a new stage with the following snippet after your deploy stage:
 
-```
+```groovy
 pipeline {
 		// ...
     stages {
@@ -99,7 +99,7 @@ If you are using Freestyle projects, you need to add another build step after de
 
     [{% asset releases/jenkins/jenkins-freestyle-shell.png alt="View of jenkins freestyle shell." %}]({% asset releases/jenkins/jenkins-freestyle-shell.png @path %})
 
-    ```
+    ```bash
     curl -sL https://sentry.io/get-cli/ | bash || true
 
     export SENTRY_ORG=sample-organization-slug
