@@ -25,6 +25,7 @@ android {
 
 // ADD SENTRY ANDROID AS A DEPENDENCY
 dependencies {
+    // https://github.com/getsentry/sentry-android/releases
     implementation 'io.sentry:sentry-android:{version}'
 }
 ```
@@ -508,6 +509,7 @@ compileOptions {
 
 // ADD SENTRY ANDROID AS A DEPENDENCY
 dependencies {
+    // https://github.com/getsentry/sentry-android/releases
     implementation 'io.sentry:sentry-android-core:{version}'
 }
 ```
