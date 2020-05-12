@@ -3,15 +3,15 @@ title: Manage Your Event Stream, a Guide
 sidebar_order: 3
 ---
 
-Sending all of your application errors and crashes to Sentry ensures that you'll be notified in real-time as errors happen in your code. However, with just the basic setup in place, you might soon realize that your applications are generating a lot of errors, and those might trigger quite a few notifications. Sentry provides various tools that give you control over the _type_ and _amount_ of errors that are monitored. These will allow you to:
+Sending all application errors to Sentry ensures you'll be notified in real-time when errors occur in your code. However, with just the basic setup, you might quickly realize that your applications generate many errors, and those might trigger many notifications. Sentry provides tools to control the _type_ and _amount_ of errors that are monitored. These will allow you to:
 
 1. Shape your event stream to make it actionable and meaningful.
 2. Reserve those real-time notifications for errors that actually break your code.
-3. If you're on an event-quota based plan, unnecessary noise might end up draining your quota and leaving you blind when and where it matters.
+3. Manage your quotas if you're on an event-quota based plan, since too much noise may drain your quota.
 
-## 1. SDK Filtering: before-send
+## 1. SDK Filtering: beforeSend
 
-All Sentry SDKs support the `beforeSend` callback method. Once implemented, the method is invoked when the SDK captures an event, right before sending it to your Sentry account. It receives the event object as a parameter, so developers can use that to modify the event's data or drop it completely (by returning `null`) based on their custom logic and the data available on the event like _tags_, _environment_, _release version_, _error attributes_, etc. For more information see [Filtering Events](https://docs.sentry.io/error-reporting/configuration/filtering/)
+All Sentry SDKs support the `beforeSend` callback method. Once implemented, the method is invoked when the SDK captures an event, right before sending it to your Sentry account. It receives the event object as a parameter, so developers can use that to modify the event's data or drop it completely (by returning `null`) based on their custom logic and the data available on the event like _tags_, _environment_, _release version_, _error attributes_, and so forth. For more information see [Filtering Events](https://docs.sentry.io/error-reporting/configuration/filtering/)
 
 ## 2. SDK Configuration
 
@@ -92,7 +92,7 @@ Discarded issues are listed under `[Project Settings] > Inbound Filters > Discar
 
 Rate limiting allows you to limit the amount of events Sentry accepts per-project for a defined time span. While this is quite useful for managing your monthly event quota, keep in mind that once a defined threshold is crossed, **subsequent events will be dropped**. Therefore, your rate limit shouldn't be constantly hit, but rather defined as a ceiling intended to protect you from unexpected spikes.
 
-Under `[Project Settings] » Client Keys » Configure`, you can create multiple DSN keys per-project and assign different (or no) limits to each key. This will allow you to dynamically allocate keys (with varying thresholds) depending on Release, Environment, etc.
+Under `[Project Settings] » Client Keys » Configure`, you can create multiple DSN keys per-project and assign different (or no) limits to each key. This will allow you to dynamically allocate keys (with varying thresholds) depending on Release, Environment, and so forth.
 
 ![Per DSN Key rate limits]({% asset guides/manage-event-stream/11.png @path %})
 
