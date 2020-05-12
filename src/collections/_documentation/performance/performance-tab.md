@@ -8,7 +8,7 @@ sidebar_order: 1
 The Performance Homepage offers Apdex and Throughput graphs as well as a list of the most problematic transactions so users can see a high-level report of their overall application health.
 
 ## Apdex & Throughput Graphs
-The Apdex graph shows the ratio of response times in a user's application. Users can get, on aggregate, a sense of how long a customer has waited. For example, if there is a significant dip in an Apdex score in a given window, a user may want to dig into that time period to investigate a potential performance bottleneck.
+The Apdex graph shows the ratio of response times in a user's application against a threshold. Users can get, on aggregate, a sense of how long a customer has waited. For example, if there is a significant dip in an Apdex score in a given window, a user may want to dig into that time period to investigate a potential performance bottleneck.
 
 The Throughput graph indicates the number of transactions over a given time range. Users can quickly visualize the traffic patterns in their application and see if a spike in throughput might be correlated with a dip in their Apdex score.
 
