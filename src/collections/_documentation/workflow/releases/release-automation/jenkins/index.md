@@ -12,13 +12,13 @@ Before starting, confirm that your Sentry project is properly set up to track co
 
 For Jenkins to communicate securely with Sentry, you'll need to create a new internal integration. In Sentry, navigate to **Settings > Developer Settings > New Internal Integration**.
 
-Give your new integration a name (for example, “Jenkins Deploy Integration”) and specify the necessary permissions. In this case, we need Admin access for “Release” and Read access for “Organization”.
+Give your new integration a name (for example, “Jenkins Deploy Integration”) and specify the necessary permissions. In this case, you need Admin access for “Release” and Read access for “Organization”.
 
-See our [docs page on permissions]({%- link _documentation/api/permissions.md -%}) to learn more about scopes for Sentry’s API endpoints.
+For more details about scopes and API endpoints, see the full documentation on [API Permissions]({%- link _documentation/api/permissions.md -%}).
 
 [{% asset releases/jenkins/internal-integration-permissions.png alt="View of internal integration permissions." %}]({% asset releases/jenkins/internal-integration-permissions.png @path %})
 
-Click “Save” at the bottom of the page and grab your token, which you'll need this in the next step.
+Click “Save” at the bottom of the page and grab your token, which you'll need in the next step.
 
 ## Add Token to Jenkins Credentials
 
@@ -36,16 +36,16 @@ To access our internal integration token securely in Jenkins, store it as a [cre
 
 ## Notify Sentry of Deployment
 
-Depending on what type of Jenkins project you are using to build and deploy, you want to follow different steps:
+Depending on what type of Jenkins project you're using to build and deploy, you want to follow different steps:
 
 - [Pipeline (Jenkinsfile)]({%- link _documentation/workflow/releases/release-automation/jenkins/index.md -%}#pipeline)
 - [Freestyle project]({%- link _documentation/workflow/releases/release-automation/jenkins/index.md -%}#freestyle-project)
 
-For more detailed information on release management concepts below, see our [release management docs]({%- link _documentation/cli/releases.md -%}).
+For more details about the release management concepts below, see the full documenation on [release management]({%- link _documentation/cli/releases.md -%}).
 
 ### Pipeline
 
-If you are using a Jenkins pipeline, you need to add a new stage with the following snippet after your deploy stage:
+If you're using a Jenkins pipeline, you need to add a new stage with the following snippet after your deploy stage:
 
 ```groovy
 pipeline {
@@ -88,9 +88,9 @@ pipeline {
 
 ### Freestyle Project
 
-If you are using Freestyle projects, you need to add another build step after deployment.
+If you're using Freestyle projects, you need to add another build step after deployment.
 
-1. Make sure you add a binding to map the environment variable 'SENTRY_AUTH_TOKEN' to the internal integration token credential you added in the previous step.
+1. Make sure you add a binding to map the environment variable `SENTRY_AUTH_TOKEN` to the internal integration token credential you added in the previous step.
 
     [{% asset releases/jenkins/jenkins-freestyle-bindings.png alt="View of environment variable bindings." %}]({% asset releases/jenkins/jenkins-freestyle-bindings.png @path %})
 
@@ -116,6 +116,6 @@ If you are using Freestyle projects, you need to add another build step after de
 
     **Notes**: 
 
-    - If you not deploying a JavaScript project, omit the `upload-sourcemaps` line.
+    - If you're not deploying a JavaScript project, omit the `upload-sourcemaps` line.
     - If you can't install a repository integration, omit the `set-commits` line.
     - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.

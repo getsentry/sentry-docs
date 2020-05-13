@@ -8,4 +8,4 @@ Sentry release management can be automated using any continuous integration and 
 
 ### Release Management Automation Guides
 - [Jenkins]({%- link _documentation/workflow/releases/release-automation/jenkins/index.md -%})
-- [Other]({%- link _documentation/workflow/releases/index.md -%}#create-release)
+- [CLI]({%- link _documentation/workflow/releases/index.md -%}#create-release)
