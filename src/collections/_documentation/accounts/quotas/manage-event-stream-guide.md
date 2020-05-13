@@ -59,7 +59,7 @@ Once applied, you can track the filtered events (numbers and cause) using the gr
 
 ## 4. Event Grouping
 
-Proper event grouping is essential for maintaining a meaningful Issue Stream and reducing redundant notifications. Sentry groups similar _Events_ into unique _Issues_ based on their _Fingerprint_. An event's fingerprint relies firstly on its **stack trace**. 
+Proper event grouping is essential to maintain a meaningful Issue Stream and reduce redundant notifications. Sentry groups similar _Events_ into unique _Issues_ based on their _Fingerprint_. An event's fingerprint relies firstly on its **stack trace**.
 
 With **JavaScript** errors, a minified source code might result in a nondeterministic stack trace that could mess up associated event grouping. Make sure Sentry has access to your `Source Maps` and minified artifacts. For more information see [Uploading Source Maps](https://docs.sentry.io/platforms/javascript/#source-maps).
 
