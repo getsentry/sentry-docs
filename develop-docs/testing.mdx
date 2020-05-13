@@ -1,0 +1,143 @@
+---
+title: Testing Tips
+---
+
+We run several kinds of tests at Sentry as part of our CI process. This section
+aims to document some of the sentry specific helpers and give guidelines on
+what kinds of tests you should consider including when building new features.
+
+## Getting Setup
+
+The acceptance and python tests require a functioning set of devservices. It is
+recommended you use `devservices` to ensure you have the required services
+running. If you also use your local environment for local testing you will want
+to use the `--project` flag to separate local testing volumes from test suite
+volumes:
+
+```shell
+# Turn off services for local testing.
+sentry devservices down
+
+# Turn on services with a test prefix to use separate containers and volumes
+sentry devservices --project test up
+```
+
+When using the `--project` option you can confirm which containers are running
+`docker ps`. Each running container should be prefixed with `test_`. See the
+[devservices docs](/services/devservices/) section for more information on
+managing services.
+
+## Python Tests
+
+For python tests we use [pytest](https://docs.pytest.org/en/latest/) and testing tools
+provided by Django. On top of this foundation we've added a few base test cases (in `sentry.testutils.cases`).
+
+Endpoint integration tests is where the bulk of our test suite is focused. These tests help us ensure that
+the APIs our customers, integrations and front-end application continue to work in expected ways. You should
+endeavour to include tests that cover the various user roles, and cross organization/team access scenarios,
+as well as invalid data scenarios as those are often overlooked when manually testing.
+
+### Creating data in tests
+
+Sentry has also added a suite of factory helper methods that help you build data to write your tests against.
+The factory methods in `sentry.testutils.factories` are available on all our test suite classes. Use these methods
+to build up the required organization, projects and other postgres based state.
+
+You should also use `store_event()` to store events in a similar way that the application does in
+production. Storing events requires your test to inherit from `SnubaTestCase`.
+
+### Setting options and feature flags
+
+If your tests are for feature flagged endpoints, or require specific options to be set. You
+can use helper methods to mutate the configuration data into the right state:
+
+```python
+def test_success(self):
+    with self.feature('organization:new-thing'):
+        with self.options({'option': 'value'}):
+            # Run test logic with features and options set.
+```
+
+### External Services
+
+Use the `responses` library to add stub responses for an outbound API requests your code is making.
+This will help you simulate success and failure scenarios with relative ease.
+
+## Acceptance Tests
+
+Our acceptance tests leverage selenium and chromedriver to simulate a user using the
+front-end application and the entire backend stack. We use acceptance tests for two purposes at Sentry:
+
+1. To cover workflows that are not possible to cover with just endpoint tests or with Jest alone.
+2. To prepare snapshots for visual regression tests via percy.
+
+Acceptance tests can be found in `tests/acceptance` and run locally with `pytest`.
+
+### Running acceptance tests
+
+```shell
+# Run a single acceptance test.
+pytest tests/acceptance/test_organization_group_index.py -k test_with_onboarding
+
+# Run the browser with a head so you can watch it.
+pytest tests/acceptance/test_organization_group_index.py --no-headless=true -k test_with_onboarding
+
+# Open each snapshot in preview
+SENTRY_SCREENSHOT=open pytest tests/acceptance/test_organization_group_index.py -k test_with_onboarding
+```
+
+### Locating Elements
+
+Because we use emotion our classnames are generally not useful to browser automation. Instead
+we liberally use `data-test-id` attributes to define hook points for browser automation and Jest
+tests.
+
+### Dealing with Asynchronous actions
+
+All of our data is loaded asynchronously into the front-end and acceptance tests need to account for
+various latencies and response times. We favour using selenium's `wait_until*` features to poll the DOM
+until elements are present or visible. We do not use `sleep()`.
+
+### Percy
+
+Pixels Matter and because of that we use Percy to help catch visual regressions with how Sentry is rendered.
+We send Percy a variety of HTML snapshots from our acceptance tests. Percy renders these HTMl snapshots into images
+and compares them with approved baselines. If differences are detected percy will fail.
+
+While we have fairly wide coverage with percy there are a few important blind spots:
+
+* Tooltips
+* Hover cards and hover states
+* Modal windows
+* Charts and data visualizations
+
+All of these components and interactions are generally not included in percy snapshots, and you should take care
+when working on any of them.
+
+#### Dealing with variable data
+
+Because percy compares image snapshots, and a significant portion of our data deals with timeseries data we often
+need to replace time based content with 'fixed' data. You can use the `getDynamicText` helper to provide fixed
+content for components/data that is dependent on the current time or varies too frequently to be included in a
+percy snapshot.
+
+## Jest Tests
+
+Our Jest suite covers providing functional and unit testing for frontend components. We favour writing functional tests
+that interact with components and observe outcomes (navigation, API calls) over checking prop passing and state mutations.
+
+```shell
+# Run jest in interactive mode
+yarn test
+
+# Run a single test
+yarn test tests/js/spec/views/issueList/overview.spec.js
+```
+
+### API Fixtures
+
+Because our Jest tests run without an API we have a variety of fixture builders available to help generate
+API response payloads. The `TestStubs` global includes all the fixture functions in `tests/js/sentry-test/fixtures/`.
+
+You should also use `MockApiClient.addMockResponse()` to set responses for API calls your components will make. Failing
+to mock an endpoint will result in tests failing.

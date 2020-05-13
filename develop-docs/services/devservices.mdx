@@ -20,3 +20,43 @@ Commands:
   rm      Delete all services and associated data.
   up      Run/update dependent services.
 ```
+
+## Viewing logs for a service
+
+```shell
+# Follow snuba logs
+docker logs -f sentry_snuba
+```
+
+## Running CLI clients for redis, postgres and clickhouse
+
+```shell
+# redis
+docker exec -it sentry_redis redis-cli
+
+# clickhouse
+docker exec -it sentry_clickhouse clickhouse-client
+
+# psql
+docker exec -it sentry_postgres psql -U postgres
+```
+
+## Removing container state
+
+Should you really bamboozle your containers or volumes, you can use docker to remove them. As
+an example lets say we've managed to corrupt our postgres database while working on a migration,
+and we want to start over:
+
+```shell
+# First ensure you containers are off
+sentry devservices down
+
+# Find the postgres container. Note the container id in the first column
+docker ps -a | grep postgres
+
+# Remove the postgres container
+docker rm <container-id>
+
+# Remove all unreferenced volumes
+docker volume prune
+```
