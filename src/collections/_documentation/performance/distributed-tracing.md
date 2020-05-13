@@ -44,11 +44,15 @@ Before learning how to enable tracing in your application, it helps to understan
 
 ### Traces, Transactions, and Spans
 
-A **trace** represents the record of the entire operation you want to measure or track - like page load, an instance of a user completing some action in your application, or a cron job in your backend. When a trace includes work in multiple services, such as those listed above, it's called a **distributed trace**, because the trace is distributed across those services. To recap, a trace is a record of an operation; a distributed trace is a record of an operation that's distributed across services.
+A **trace** represents the record of the entire operation you want to measure or track - like page load, an instance of a user completing some action in your application, or a cron job in your backend. When a trace includes work in multiple services, such as those listed above, it's called a **distributed trace**, because the trace is distributed across those services.
 
-Each trace consists of one or more tree-like structures called **transactions**, the nodes of which are called **spans**. In most cases, each transaction represents a single instance of a service being called, and each span within that transaction represents that service performing a single unit of work, whether calling a function within that service or making a call to a different service.
+Each trace consists of one or more tree-like structures called **transactions**, the nodes of which are called **spans**. In most cases, each transaction represents a single instance of a service being called, and each span within that transaction represents that service performing a single unit of work, whether calling a function within that service or making a call to a different service. Here's an example trace, broken down into transactions and spans:
 
-Because a transaction has a tree structure, top-level spans can themselves be broken down into smaller spans, mirroring the way that one function may call a number of other, smaller functions; this is expressed using the parent-child metaphor, so that every span may be the **parent span** to multiple other spans. Further, since all trees must have a single root, one span in a transaction always represents the transaction itself, with all other spans in the transaction descending from that root span.
+[{% asset performance/trace-transactions-spans-generic.png alt="Diagram illustrating how a trace is composed of multiple transactions, and each transaction is composed of multiple spans." %}]({% asset performance/trace-transactions-spans-generic.png @path %})
+
+Because a transaction has a tree structure, top-level spans can themselves be broken down into smaller spans, mirroring the way that one function may call a number of other, smaller functions; this is expressed using the parent-child metaphor, so that every span may be the **parent span** to multiple other **child spans**. Further, since all trees must have a single root, one span in every transaction always represents the transaction itself, with all other spans in the transaction descending from that root span. Here's a zoomed-in view of one of the transactions from the diagram above:
+
+[{% asset performance/span-parent-child-relationship.png alt="Diagram illustrating the parent-child relationship between spans within a single transaction." %}]({% asset performance/span-parent-child-relationship.png @path %})
 
 To make all of this more concrete, let's consider our example web app again.
 
@@ -89,11 +93,15 @@ Each transaction would be broken down into **spans** as follows:
   - 1 span for the rendering task, which itself contains
     - 2 child spans, one for each JSON request
 
-Let's pause here to make an important point: Some, though not all, of the browser transaction spans listed have a direct correspondence to backend transactions listed earlier. Specifically, each request _span_ in the browser transaction corresponds to a separate request _transaction_ in the backend. In this situation, when a span in one service gives rise to a transaction in a subsequent service, we call the original span a parent span to _both_ the transaction and its root span.
+Let's pause here to make an important point: Some, though not all, of the spans listed here in the browser transaction have a direct correspondence to backend transactions listed earlier. Specifically, each request span in the browser transaction corresponds to a separate request transaction in the backend. In this situation, when a span in one service gives rise to a transaction in a subsequent service, we call the original span a parent span to _both_ the transaction and its root span. In the diagram below, the squggly lines represent this parent-child relationship.
 
-In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service, which means that every root span other than the browser transaction root has a parent span (albeit in a different service). In a fully-instrumented system (one in which every service has tracing enabled) this pattern will always hold true. The only parentless span will be the root of the initial transaction; every other span will have a parent. Further, parents and children will always live in the same service, except in the case where the child span is the root of a child transaction, in which case the parent span will live in the calling service and the child transaction/child root span will live in the called service.
+[{% asset performance/trace-transactions-spans-concrete-example.png alt="Diagram illustrating the trace-transaction-span relationship illustrated above, now applied to the example." %}]({% asset performance/trace-transactions-spans-concrete-example.png @path %})
 
-Put another way, a fully-instrumented system creates a trace which is itself a connected tree - with each transaction a subtree - and in that tree, the boundaries between subtrees/transactions are precisely the boundaries between services.
+In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service, which means that every root span other than the browser transaction root has a parent span (albeit in a different service). 
+
+In a fully-instrumented system (one in which every service has tracing enabled) this pattern will always hold true. The only parentless span will be the root of the initial transaction; every other span will have a parent. Further, parents and children will always live in the same service, except in the case where the child span is the root of a child transaction, in which case the parent span will live in the calling service and the child transaction/child root span will live in the called service.
+
+Put another way, a fully-instrumented system creates a trace which is itself a connected tree - with each transaction a subtree - and in that tree, the boundaries between subtrees/transactions are precisely the boundaries between services. The diagram above shows one branch of our example's full trace tree.
 
 Now, for the sake of completeness, back to our spans:
 
@@ -115,9 +123,6 @@ Now, for the sake of completeness, back to our spans:
   - 1 span for the query retrieving data
 
 To wrap up the example: after instrumenting all of your services, you might discover that - for some reason - it's the auth query in your database server that is making things slow, accounting for more than half of the time it takes for your entire page load process to complete. Tracing can't tell you _why_ that's happening, but at least now you know where to look!
-
-<!-- kmclb: working w Sami on updating the illustrations to match this example. Keeping the link below just to have the example of how to format the markdown
-[{% asset performance/tracing-diagram.png alt="Diagram illustrating how a trace is composed of multiple transactions." %}]({% asset performance/tracing-diagram.png @path %}) -->
   
 ### Further Examples
 
@@ -295,7 +300,7 @@ The following functions aggregate transaction counts and the rate at which trans
 - average requests (transactions) per second
 - average requests (transactions) per minute
 
-Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data](#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 requests to that endpoint each second. (20 because you're sampling 25% - or 1/4 - of your data, so your real volume is 4 times what you're seeing in Sentry.)
+Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data](#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 requests to that endpoint each second. (20 because you're collecting 25% - or 1/4 - of your data, so your real volume is 4 times what you're seeing in Sentry.)
 
 ### Transaction Detail View
 
