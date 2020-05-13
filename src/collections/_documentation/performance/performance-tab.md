@@ -36,7 +36,7 @@ The sidebar contains a Tag Summary, Apdex/Throughput graphs, error rate graphs, 
 On initial load, the table displays the slowest occurrences of the transaction along with the Event ID, User, Transaction Duration, and Timestamp of the event. Click on the [Event ID]({%- link _documentation/performance/distributed-tracing.md -%}#viewing-transactions) to open the span view for the transaction. The table updates dynamically if you change any of the selections in the global header or when you drill in on a latency segment -- applicable when viewing the Latency Histogram.
 
 ## Open in Discover
-When viewing transactions, you may want to create more curated views. To do this, click on the "Open in Discover" button to create a custom query and investigate further. For more details, see the full documentatin on [Discover Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}).
+When viewing transactions, you may want to create more curated views. To do this, click on the "Open in Discover" button to create a custom query and investigate further. For more details, see the full documentation on [Discover Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}).
 
 ## Setting a Key Transaction
 Set personal "Key Transactions" from the Transaction Summary page. After setting a "Key Transaction," they will be able to view the transactions in a dedicated tab on the Performance Homepage. These "Key Transactions" are not currently shared and limited to ten per user.
