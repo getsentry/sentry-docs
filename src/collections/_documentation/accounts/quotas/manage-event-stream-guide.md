@@ -57,9 +57,9 @@ Once applied, you can track the filtered events (numbers and cause) using the gr
 
 ![Built-in Inbound Filters]({% asset guides/manage-event-stream/03.png @path %})
 
-## 2. Event Grouping
+## 4. Event Grouping
 
-Proper event grouping is essential for maintaining a meaningful Issue Stream and reducing redundant notifications. Sentry groups similar _Events_ into unique _Issues_ based on their _Fingerprint_. An event's fingerprint relies firstly on its **stack trace**. 
+Proper event grouping is essential to maintain a meaningful Issue Stream and reduce redundant notifications. Sentry groups similar _Events_ into unique _Issues_ based on their _Fingerprint_. An event's fingerprint relies firstly on its **stack trace**.
 
 With **JavaScript** errors, a minified source code might result in a nondeterministic stack trace that could mess up associated event grouping. Make sure Sentry has access to your `Source Maps` and minified artifacts. For more information see [Uploading Source Maps](https://docs.sentry.io/platforms/javascript/#source-maps).
 
@@ -68,7 +68,7 @@ With **JavaScript** errors, a minified source code might result in a nondetermin
 
 For more information on the Fingerprint algorithm and customizing event grouping see [Grouping & Fingerprints](https://docs.sentry.io/data-management/event-grouping/).
 
-## 3. Applying Workflows
+## 5. Applying Workflows
 
 Now that your event stream is fine-tuned to reflect real problems in your code, it's an excellent practice to react to errors as they happen. If an issue reflects a real problem in your code, resolve it; otherwise--- discard.
 
@@ -88,7 +88,7 @@ Discarded issues are listed under `[Project Settings] > Inbound Filters > Discar
 
 > Note: Once you've identified a set of discarded issues, it might make sense to go back to your SDK configuration and add the related errors into your before-send client-side filtering.
 
-## 4. Rate Limiting
+## 6. Rate Limiting
 
 Rate limiting allows you to limit the amount of events Sentry accepts per-project for a defined time span. While this is quite useful for managing your monthly event quota, keep in mind that once a defined threshold is crossed, **subsequent events will be dropped**. Therefore, your rate limit shouldn't be constantly hit, but rather defined as a ceiling intended to protect you from unexpected spikes.
 
@@ -98,7 +98,7 @@ Under `[Project Settings] » Client Keys » Configure`, you can create multiple 
 
 For more information see [Rate Limiting Projects](https://docs.sentry.io/accounts/quotas/#id1)
 
-### Spike Protection
+## 7. Spike Protection
 
 Sentry also applies a dynamic rate limit to your account designed to protect you from short-term spikes. However, we would recommend applying all of the previously mentioned methods. For more information see:
 
@@ -107,7 +107,7 @@ Sentry also applies a dynamic rate limit to your account designed to protect you
 
 ***
 
-## Workflows for Managing your Event Stream
+## Common Workflows for Managing Your Event Stream
 
 Applying the proper filters, SDK configuration, and rate limits is an iterative and on-going process. Sentry provides several tools to increase your visibility into the events and issues aggregating in your streams. Let's see how they can be leveraged to manage your streams.
 
