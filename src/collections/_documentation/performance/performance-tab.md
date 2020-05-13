@@ -3,8 +3,6 @@ title: 'Performance Tab'
 sidebar_order: 1
 ---
 
-[SCREENSHOT of Performance Homepage]
-
 The Performance Homepage offers Apdex and Throughput graphs as well as a list of the most problematic transactions to display a high-level report of their overall application health.
 
 ## Apdex & Throughput Graphs
@@ -19,8 +17,6 @@ Underneath the graphs, view a list of your transactions with the capability to f
 "My Key Transactions" are transactions that you bookmark and can view in a separate dedicated tab. You may want to bookmark a Transaction as a "Key Transaction" if you monitor performance on a particular transaction or group of transactions. Set a Transaction as a "Key Transaction" on the Transaction Summary page. The "All Transactions" view also displays these transactions.
 
 ## Transaction Summary
-
-[ SCREENSHOT of Transaction Summary page ]
 
 Navigate to the Transaction Summary page by clicking on any transaction on the Performance Homepage. On the Transaction Summary page, you'll find graphs, a list of slowest transactions, facet maps, and summary statistics about the transaction.
 
