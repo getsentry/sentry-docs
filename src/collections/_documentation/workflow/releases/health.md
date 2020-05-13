@@ -1,16 +1,7 @@
 ---
-title: Health (Beta)
+title: Health
 sidebar_order: 1
 ---
-
-{% capture __alert_content -%}
-Sentry’s Release Health features are currently in beta. For more details about access to these features, feel free to reach out to mobile@sentry.io.
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Note"
-    content=__alert_content
-    level="warning"
-%}
 
 Monitor the health of releases by observing user adoption, usage of the application, percentage of [crashes](#crash), and [session data](#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
