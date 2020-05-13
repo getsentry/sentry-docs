@@ -31,4 +31,4 @@ The P99 Threshold indicates that 1% of transaction durations are greater than th
 Throughput indicates the number of requests over a given time range (Total), requests per minute (RPM), or requests per second (RPS).
     
 ## User Misery
-User Misery is a user-weighted performance metric to assess the relative magnitude of your application performance. While you can measure the ratio of various response time threshold levels with Apdex, User Misery counts the number of unique users who were frustrated based on the specified response time threshold. User Misery highlights transactions that have the highest impact on users.
+User Misery is a user-weighted performance metric to assess the relative magnitude of your application performance. While you can examine the ratio of various response time threshold levels with Apdex, User Misery counts the number of unique users who were frustrated based on the specified response time threshold. User Misery highlights transactions that have the highest impact on users.
