@@ -3,7 +3,7 @@ title: 'Performance Metrics'
 sidebar_order: 2
 ---
 
-Sentry's application monitoring product collects performance metrics. Performance metrics provide a better understanding of how users are interacting with your application. By tracking metrics like Latency and Throughput in [Discover]({%- link _documentation/performance/discover/index.md -%}) or Performance, Sentry provides you with a fuller, real-time picture of your application's health, such as the occurrence of errors or performance issues.
+Performance metrics provide insight about how users experience your application. You set the target thresholds, then identify how your application is performing. For example, you can track metrics such as Latency and Throughput in [Discover]({%- link _documentation/performance/discover/index.md -%}) or Performance. By identifying useful thresholds by which to measure your application, you have a quantifiable measure of your application's health and can more easily identify when errors occur or if performance issues are emerging.
 
 ## Apdex
 Apdex is an industry-standard metric used to track and measure user satisfaction based on response times in your application. The Apdex score provides the ratio of satisfactory, tolerable, and frustrated requests in a specific transaction or endpoint. This metric provides a standard for you to compare transaction performance, understand which ones may require additional optimization or investigation, and set targets or goals for performance.
