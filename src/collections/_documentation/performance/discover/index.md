@@ -47,6 +47,8 @@ Navigate to any query page from the Discover Homepage in these ways:
 
 On the query's results page, you'll find the graph, table, and facet maps. The Query Builder enables the user to create custom views of the events sent to Sentry.io. You can add any tags/fields as columns, aggregate with columns, and sort with columns.
 
+If you don't apply aggregate functions to any of the applicable columns, or if they're not present, Sentry doesn't group the rows. If aggregate functions are present, Discover results group by unaggregated columns (tags, events). The unaggregated columns act as grouping keys and combine rows that have the same values as summary rows. Each summary row has the corresponding values in the specified columns. Aggregate functions (`avg`, `count`, `count_unique`) are optional. 
+
 ### Sharing Query Views
 
 Share your queries as often as you want. You can share URLs with other users who also have access to the same organization. As each part of the query is built, the results update, and the URL is updated so that in-progress searches can be shared in email/chat.
