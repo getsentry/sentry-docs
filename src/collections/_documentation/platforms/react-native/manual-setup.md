@@ -34,6 +34,7 @@ To this:
 
 ```bash
 export NODE_BINARY=node
+export EXTRA_PACKAGER_ARGS="--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map"
 export SENTRY_PROPERTIES=../sentry.properties
 
 # If you are using RN 0.46+
