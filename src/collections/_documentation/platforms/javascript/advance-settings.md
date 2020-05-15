@@ -85,6 +85,8 @@ const client1 = new Sentry.BrowserClient({
     return null; // Returning null does not send the event
   }
 });
+client1.setupIntegrations();
+
 const hub1 = new Sentry.Hub(client1);
 
 const client2 = new Sentry.BrowserClient({
@@ -95,6 +97,8 @@ const client2 = new Sentry.BrowserClient({
     return null; // Returning null does not send the event
   }
 });
+client2.setupIntegrations();
+
 const hub2 = new Sentry.Hub(client2);
 
 hub1.run(currentHub => { // The hub.run method makes sure that Sentry.getCurrentHub() returns this hub during the callback
