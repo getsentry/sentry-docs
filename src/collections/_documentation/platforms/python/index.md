@@ -20,6 +20,10 @@ The SDK provides support for Python 2.7 and 3.4 or later. [Integrations](#integr
   level="info"
 %}
 
+### Migrating from Raven
+
+If you are migrating from [raven-python](https://github.com/getsentry/raven-python), have a look at [our migration guide]({%- link _documentation/platforms/python/migration.md -%}) before continuing.
+
 ### Connecting the SDK to Sentry
 
 After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
