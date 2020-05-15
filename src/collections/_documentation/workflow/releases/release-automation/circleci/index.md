@@ -24,15 +24,15 @@ Click “Save” at the bottom of the page and grab your token, which you'll nee
 
 Next, you'll need a few environment variables to configure the Sentry CLI:
 
-- `SENTRY_AUTH_TOKEN` - Your internal integration token.
-- `SENTRY_ORG` - Your Sentry organization slug.
-- `SENTRY_PROJECT` - Your Sentry project slug.
+- `SENTRY_AUTH_TOKEN` - Your internal integration token
+- `SENTRY_ORG` - Your Sentry organization slug
+- `SENTRY_PROJECT` - Your Sentry project slug
 
 To access you internal integration token securely, store it as an [environment variable on your project](https://circleci.com/docs/2.0/env-vars/#setting-an-environment-variable-in-a-project):
 
 1. In the CircleCI application, go to your project’s settings by clicking the gear icon on the Pipelines page, or the three dots on other pages in the application.
 2. Click on Environment Variables.
-3. Add a new variable by clicking the Add Variable button and enter `SENTRY_AUTH_TOKEN` as the name and your internal integration token as the value.
+3. Add a new variable by clicking the "Add Variable" button and enter `SENTRY_AUTH_TOKEN` as the name and your internal integration token as the value.
 
 [{% asset releases/circleci/project-settings-env-var.png alt="View of CircleCI environment variables." %}]({% asset releases/circleci/project-settings-env-var.png @path %})
 
@@ -40,7 +40,7 @@ The other variables do not contain sensitive information, so you'll use the envi
 
 ## Create Release and Notify Sentry of Deployment
 
-In order to automate your Sentry release management process you'll need to add the `Create release and notify Sentry of deploy` step below after your deploy step, either in a new job or at the end of your existing deploy job:
+To automate your Sentry release management process you'll need to add the `Create release and notify Sentry of deploy` step below after your deploy step, either in a new job or at the end of your existing deploy job:
 
 ```yaml
 notify-sentry-deploy:
@@ -60,7 +60,7 @@ notify-sentry-deploy:
             export SENTRY_RELEASE=$(sentry-cli releases propose-version)
             sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
             sentry-cli releases set-commits $SENTRY_RELEASE --auto
-            sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps build/static/js
+            sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps path-to-sourcemaps-if-applicable
             sentry-cli releases finalize $SENTRY_RELEASE
             sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
 ```
@@ -69,6 +69,6 @@ For more details about the release management concepts in the snippet above, see
 
 **Notes**:
 
-- If you’re not deploying a JavaScript project, omit the `upload-sourcemaps` line.
-- If you can’t install a repository integration, omit the `set-commits` line.
+- If you’re not deploying a JavaScript project or have sent source maps to Sentry using another method, omit the `upload-sourcemaps` line.
+- If you can’t install a repository integration, send commit metadata via the [create release endpoint]({%- link _documentation/workflow/releases/index.md -%}#alternatively-without-a-repository-integration) or omit the `set-commits` line.
 - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
