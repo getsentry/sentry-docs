@@ -81,8 +81,8 @@ pipeline {
 
 **Notes**: 
 
-- If you're not deploying a JavaScript project, omit the `upload-sourcemaps` line.
-- If you can't install a repository integration, omit the `set-commits` line.
+- If you’re not deploying a JavaScript project or have sent source maps to Sentry using another method, omit the `upload-sourcemaps` line.
+- If you can’t install a repository integration, send commit metadata via the [create release endpoint]({%- link _documentation/workflow/releases/index.md -%}#alternatively-without-a-repository-integration) or omit the `set-commits` line.
 - `credentials('sentry-auth-token')` refers to the ID of the credentials just added to Jenkins.
 - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
 
@@ -116,6 +116,6 @@ If you're using Freestyle projects, you need to add another build step after dep
 
     **Notes**: 
 
-    - If you're not deploying a JavaScript project, omit the `upload-sourcemaps` line.
-    - If you can't install a repository integration, omit the `set-commits` line.
+    - If you’re not deploying a JavaScript project or have sent source maps to Sentry using another method, omit the `upload-sourcemaps` line.
+    - If you can’t install a repository integration, send commit metadata via the [create release endpoint]({%- link _documentation/workflow/releases/index.md -%}#alternatively-without-a-repository-integration) or omit the `set-commits` line.
     - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
