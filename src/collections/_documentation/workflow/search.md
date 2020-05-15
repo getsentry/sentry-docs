@@ -199,6 +199,9 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
   Exact match on the version of a release.
 
+`release:latest`
+
+: Exact match on the most recent release.
 
 `user.id`
 `user.email`
