@@ -39,7 +39,10 @@ We use the `Makefile` in the `frontend-monitoring` project to handle Sentry rela
         ![Create Auth Token 1]({% asset guides/integrate-frontend/upload-source-maps-04.png @path %})
 
     - Enter a `Name`
-    - Under `Permissions` set `Release:Admin`
+    - Under `Permissions` set `Release:Admin` and `Organization:Read & Write`
+
+        ![Token Permissions]({% asset guides/integrate-frontend/upload-source-maps-016.png @path %})
+
     - Click on `Save Changes`
     - Once the save is successfully confirmed, scroll down to the bottom of the page and copy the allocated token under `TOKENS`
 
