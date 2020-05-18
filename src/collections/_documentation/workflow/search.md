@@ -197,11 +197,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 : Restrict results to events tagged with the given release.
 
-  Exact match on the version of a release.
-
-`release:latest`
-
-: Exact match on the most recent release.
+  Exact match on the version of a release, or `release:latest` to pick the most recent release.
 
 `user.id`
 `user.email`
