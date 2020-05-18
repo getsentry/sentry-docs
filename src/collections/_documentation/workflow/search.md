@@ -132,7 +132,7 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
 
 : Restrict results to issues first seen within the given release.
 
-  Exact match on the version of a release.
+  Exact match on the version of a release, or `first-release:latest` to pick the most recent release.
 
 `has`
 
@@ -197,8 +197,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 : Restrict results to events tagged with the given release.
 
-  Exact match on the version of a release.
-
+  Exact match on the version of a release, or `release:latest` to pick the most recent release.
 
 `user.id`
 `user.email`
