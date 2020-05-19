@@ -3,9 +3,9 @@ title: Capture your First Error
 sidebar_order: 3
 ---
 
-Now that the Demo App is up and running on your local environment integrated with the Sentry SDK, you're ready to generate the first error. 
+Now that the Demo App is up and running on your local environment integrated with the Sentry SDK, you're ready to generate the first error.
 
-> **Note:** If you're not using the provided React demo code, follow [Capturing your first event](https://docs.sentry.io/error-reporting/quickstart/?platform=browser) to introduce an error to your source code and continue with [Step 2](#step-2-handle-the-error)
+> **Note:** If you're not using the provided React demo code, follow [Capturing your first event]({%- link _documentation/error-reporting/quickstart.md -%}) to introduce an error to your source code and continue with [Step 2](#step-2-handle-the-error)
 
 ## Step 1: Capture your first event
 

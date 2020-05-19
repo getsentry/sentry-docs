@@ -9,7 +9,7 @@ Now that you've created a release, you can tell Sentry which commits are associa
 
 ## Step 1: Integrate your GitHub account and repositories
 
-1. To integrate GitHub with your Sentry org, follow the instructions in the [Global Integrations documentation](https://docs.sentry.io/workflow/integrations/global-integrations/#github)
+1. To integrate GitHub with your Sentry org, follow the instructions in the [Global Integrations documentation]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github)
 
 2. For the last step, add the `frontend-monitoring` repository from your GitHub account
 
@@ -60,9 +60,9 @@ Now suspect commits and suggested assignees should start appearing on the issue 
 
 1. Refresh the browser and generate an error by adding products to your cart and clicking **Checkout**
 
-2. Check your Email for the alert about the new error. Notice that a new **Suspect Commits** section has been added to the email
+2. Check your email for the alert about the new error. Notice that a new **Suspect Commits** section has been added to the email
 
-    ![Suspect Commits Email]({% asset guides/integrate-frontend/configure-scms-08.png @path %})
+    ![Suspect Commits email]({% asset guides/integrate-frontend/configure-scms-08.png @path %})
 
 3. Click **View on Sentry** to open the issue page
 
@@ -89,9 +89,9 @@ Now suspect commits and suggested assignees should start appearing on the issue 
 
 10. Select the `Commits` tab. Notice that release now contains the associated list of commits
 
-   ![Release with Commits]({% asset guides/integrate-frontend/configure-scms-07.png @path %})
+    ![Release with Commits]({% asset guides/integrate-frontend/configure-scms-07.png @path %})
 
 ## More Information
 
-- [Create Release and Associate Commits](https://docs.sentry.io/workflow/releases/?platform=javascript#create-release)
-- [Global Integrations](https://docs.sentry.io/workflow/integrations/global-integrations/)
+- [Create Release and Associate Commits]({%- link _documentation/workflow/releases/index.md -%}#create-release)
+- [Global Integrations]({%- link _documentation/workflow/integrations/global-integrations.md -%})
