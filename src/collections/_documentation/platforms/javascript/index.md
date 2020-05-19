@@ -725,7 +725,19 @@ This integration allows the SDK to provide original functions and method names, 
 _Import name: `Sentry.Integrations.TryCatch`_
 
 This integration wraps native time and events APIs (`setTimeout`, `setInterval`, `requestAnimationFrame`,
-`addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions.
+`addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions. By default, the Sentry SDK wraps all possible APIs.
+
+Available options:
+
+```javascript
+{
+  setTimeout: boolean;             // Wrap `setTimeout` callback functions
+  setInterval: boolean;            // Wrap `setInterval` callback functions
+  requestAnimationFrame: boolean;  // Wrap `requestAnimationFrame` callback functions
+  XMLHttpRequest: boolean;         // Wrap `XMLHttpRequest.send` callback functions
+  eventTarget: boolean | string[]; // Wrap EventTarget API callback functions. For a list of constructors wrapped by default see: https://github.com/getsentry/sentry-javascript/blob/master/packages/browser/src/integrations/trycatch.ts
+}
+```
 
 ##### Breadcrumbs
 
