@@ -109,8 +109,7 @@ When using your own `ErrorHandler`, make sure that whenever you use `HttpInterce
 the interceptor doesn't modify the error captured originally.
 The same goes for writing your own API services with built-in `http` methods.
 
-For example, the service below make it impossible for the SDK to extract correct value.
-The reason being that it's not passed down the error pipeline in it's entirety, but returning `error` property of the original instead.
+For example, the service below makes it impossible for the SDK to extract the correct data, because the full, original error `e` is not propagated.
 
 ```js
 export class ApiService {
@@ -131,7 +130,7 @@ export class ApiService {
 }
 ```
 
-Instead, make sure that you always rethrow or pass-down directly original error, eg.:
+Instead, make sure that you always rethrow or directly pass the original error. For example:
 
 ```js
 export class ApiService {

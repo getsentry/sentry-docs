@@ -735,7 +735,10 @@ Available options:
   setInterval: boolean;            // Wrap `setInterval` callback functions
   requestAnimationFrame: boolean;  // Wrap `requestAnimationFrame` callback functions
   XMLHttpRequest: boolean;         // Wrap `XMLHttpRequest.send` callback functions
-  eventTarget: boolean | string[]; // Wrap EventTarget API callback functions. For a list of constructors wrapped by default see: https://github.com/getsentry/sentry-javascript/blob/master/packages/browser/src/integrations/trycatch.ts
+  eventTarget: boolean | string[]; // Wrap EventTarget API callback functions. Can provide an
+                                   // array to only wrap callbacks on specific event targets. 
+                                   // For a list of targets wrapped by default, see
+                                   // https://github.com/getsentry/sentry-javascript/blob/master/packages/browser/src/integrations/trycatch.ts
 }
 ```
 
