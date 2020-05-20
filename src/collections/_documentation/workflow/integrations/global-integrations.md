@@ -957,9 +957,51 @@ In the next section, we'll walk you through configuring your notification settin
 
     [{% asset slack-alert-message.png %}]({% asset slack-alert-message.png @path %})
     
-#### Deleting the legacy Slack integration
+#### Deleting the legacy project-based Slack integration
 
-Once you configure the global Slack integration and Alert Rules, you can disable the old Slack integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy integration after setting up the global integration.
+Once you configure the global Slack integration and Alert Rules, you can disable the old project-based Slack integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy project-based integration after setting up the global integration. If you're looking to upgrade your global integration, please refer to the information below under **Upgrading Slack**.
+
+### Upgrading Slack
+
+#### How do I know if I need to upgrade? 
+
+If you installed the global Slack integration on a Sentry organization prior to May 8, 2020, you'll need to upgrade your integration. If you're unsure whether or not that includes your organization, please visit your integrations page via the Organization Settings > Integrations. You will see a call to action for the Slack integration. (screenshot?) (Please note we are still rolling this out, if you don't see this yet you may be in a later wave)
+
+If you installed the Slack integration on a Sentry organization after May 8, 2020, your integration will already be up to date and no upgrade is needed.
+
+#### Why do I need to upgrade?
+
+We built our previous Slack integration on top of Slack's workspace apps. Unfortunately, not long after, Slack deprecated the workspace apps - more details on what went into that decision on [their blog](https://medium.com/slack-developer-blog/an-update-on-workspace-apps-aabc9e42a98b). While we've been able to maintain the current integration in the past, there are some upcoming deprecations to Slack APIs our workspace app relies on that require the move to their newly supported [bot app](maybe link to this) framework.
+
+
+#### What changes after my integration is upgraded?
+
+Previously, workspace apps allowed you to pick which channels you gave us access to, whether that was all public channels, or specific channels which could be either public or private.  Bot apps in Slack work differently. By default, the Sentry bot will be able to post alerts in public channels, but in order to be able to post to private channels, you'll need to add the bot to that specific channel.
+
+In terms of your alert rule configurations, if your current Slack integration only uses public channels then nothing needs to change after you upgrade.
+
+Going forward, if you want to add private channels to alert rules, you'll need to add the Sentry bot to the channel first before making the rule in Sentry. 
+
+If you do have any private channels currently used in your alert rules, you'll need to add the Sentry bot once you've upgraded in order for the alerts to continue to work. You'll have a chance in the upgrade flow to review which private channels, if any, are being used. We'll also send a message to each of those channels once you've upgrade to remind you to add the Sentry bot to that channel.
+
+#### How do I upgrade?
+
+1. Go to your Slack configurations page in Sentry.
+    [screenshot]
+
+2. Click **Upgrade Now**.
+    [screenshot]
+
+3. Click **Continue**.
+    [screenshot]
+
+4. If you have any private channels in use, you'll see them listed here. Click **Upgrade**.
+    [screenshot]
+
+
+#### When do I need to migrate by?
+
+All Sentry organizations will have until October 1, 2020 to upgrade their Slack integration. If you have any questions or concerns, please email us at partners@sentry.io.
 
 ## Incident Management
 
