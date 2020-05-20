@@ -4,7 +4,7 @@ sidebar_order: 35
 ---
 
 <!-- WIZARD -->
-On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application. Additionally, `@sentry/browser` can be configured to catch any Angular-specific exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component. This is also a great opportunity to collect user feedback by using `Sentry.showReportDialog`.
+On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application. Additionally, you can configure `@sentry/browser` to catch any Angular-specific exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component. This is also a great opportunity to collect user feedback by using `Sentry.showReportDialog`.
 
 First, install `@sentry/browser`:
 
@@ -16,7 +16,7 @@ yarn add @sentry/browser
 npm install @sentry/browser
 ```
 
-Then initialize new Sentry instance and configure Angular with `ErrorHandler` provided and explained below:
+Then initialize a new Sentry instance and configure Angular with the `ErrorHandler` provided and explained below:
 
 ```typescript
 import { BrowserModule } from "@angular/platform-browser";
@@ -31,7 +31,7 @@ import * as Sentry from "@sentry/browser";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   // TryCatch has to be configured to disable XMLHttpRequest wrapping, as we are going to handle
-  // http module exceptions manually in Angular's ErrorHandler and we don't want it to capture same error twice.
+  // http module exceptions manually in Angular's ErrorHandler and we don't want it to capture the same error twice.
   // Please note that TryCatch configuration requires at least @sentry/browser v5.16.0.
   integrations: [new Sentry.Integrations.TryCatch({
     XMLHttpRequest: false,
@@ -56,17 +56,17 @@ export class SentryErrorHandler implements ErrorHandler {
 
     // If it's http module error, extract as much information from it as we can.
     if (error instanceof HttpErrorResponse) {
-      // `error` property of http exception can be either `Error` which we can use.
+      // The `error` property of http exception can be either an `Error` object, which we can use directly...
       if (error.error instanceof Error) {
         return error.error;
       }
 
-      // `ErrorEvent` which can provide us with the message but no stack.
+      // ... or an`ErrorEvent`, which can provide us with the message but no stack...
       if (error.error instanceof ErrorEvent) {
         return error.error.message;
       }
 
-      // Or the request body itself, which we can use as a message instead.
+      // ...or the request body itself, which we can use as a message instead.
       if (typeof error.error === "string") {
         return `Server returned code ${error.status} with body "${error.error}"`;
       }
@@ -106,8 +106,8 @@ export class AppModule {}
 ```
 
 When using your own `ErrorHandler`, make sure that whenever you use `HttpInterceptor` alongside it,
-it doesn't modify the error captured originally.
-The same goes for writing your own API Services with built-in `http` methods.
+the interceptor doesn't modify the error captured originally.
+The same goes for writing your own API services with built-in `http` methods.
 
 For example, the service below make it impossible for the SDK to extract correct value.
 The reason being that it's not passed down the error pipeline in it's entirety, but returning `error` property of the original instead.
