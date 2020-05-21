@@ -71,10 +71,18 @@ The following changes will be performed:
 If you are upgrading from an earlier version of react-native-sentry you should unlink the package to ensure the generated code is updated to the latest version:
 
 ```bash
-$ react-native unlink react-native-sentry
+react-native unlink react-native-sentry
 ```
 
-After that remove `react-native-sentry` from your `package.json` and follow the installation instructions.
+After that remove `react-native-sentry` from your `package.json`:
+
+```bash
+npm uninstall react-native-sentry --save
+# or
+yarn remove react-native-sentry
+```
+
+You can then follow the installation instructions above.
 
 ## iOS Specifics
 
