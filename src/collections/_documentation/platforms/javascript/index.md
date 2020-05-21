@@ -710,7 +710,7 @@ _Import name: `Sentry.Integrations.InboundFilters`_
 This integration allows developers to ignore specific errors based on the type or message, as well as blacklist/whitelist URLs that originate from the exception.
 It ignores errors, which message starts with `Script error` or `Javascript error: Script error` by default. More on this in our ["What the heck is "Script error"?"](https://blog.sentry.io/2016/05/17/what-is-script-error) blog post. Also, keep in mind that blacklist and whitelist work only for captured exceptions, not raw message events.
 
-To configure it, use `ignoreErrors`, `blacklistUrls`, and `whitelistUrls` SDK options directly.
+To configure the integration, use `ignoreErrors`, `blacklistUrls`, and `whitelistUrls` SDK options directly. All three options accept an array of strings or RegExp patterns. When provided with a string, they’ll partially match the URL in case of `backlistUrls` and `whitelistUrl`, or two variants in case of `ignoreErrors` - `message` itself, and `${type}: {message}` format. When given RegExp, it will use the `RegExp.test` method instead, which you can use to achieve an exact match if desired.
 
 ##### FunctionToString
 
