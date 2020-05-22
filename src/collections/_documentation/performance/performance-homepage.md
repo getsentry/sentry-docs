@@ -2,6 +2,14 @@
 title: 'Performance Homepage'
 sidebar_order: 1
 ---
+{% capture __alert_content -%}
+Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [performance-feedback@sentry.io](mailto:performance-feedback@sentry.io).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 The Performance Homepage offers [Apdex]({%- link _documentation/performance/performance-metrics.md -%}#apdex) and [Throughput]({%- link _documentation/performance/performance-metrics.md -%}#throughput-total-rpm-rps) graphs as well as a list of the most problematic transactions to display a high-level report of their overall application health.
 
