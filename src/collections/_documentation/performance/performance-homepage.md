@@ -1,5 +1,5 @@
 ---
-title: 'Performance Tab'
+title: 'Performance Homepage'
 sidebar_order: 1
 ---
 
