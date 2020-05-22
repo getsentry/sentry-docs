@@ -60,7 +60,7 @@ Although search queries are shareable, you can save them as saved queries. Saved
 For more details, see [full documentation on the Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}).
 
 ### Performance Homepage
-Custom queries also provide more curated views in the [Performance Homepage]({%- link _documentation/performance/performance-tab.md -%}). In the Performance Homepage, you can investigate transaction spikes, possible performance regressions, average transaction duration, etc. Together, Discover and Performance offer multiple views of errors and data.  
+Custom queries also provide more curated views in the [Performance Homepage]({%- link _documentation/performance/performance-homepage.md -%}). In the Performance Homepage, you can investigate transaction spikes, possible performance regressions, average transaction duration, etc. Together, Discover and Performance offer multiple views of errors and data.  
 
 ## Event Details
 
