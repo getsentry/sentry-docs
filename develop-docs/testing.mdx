@@ -20,6 +20,12 @@ sentry devservices down
 
 # Turn on services with a test prefix to use separate containers and volumes
 sentry devservices up --project test
+
+# Verify that test containers came up correctly
+docker ps --format '{{.Names}}'
+
+# Later when you're done running tests and want to run local servers again
+sentry devservices down --project test && sentry devservices up
 ```
 
 When using the `--project` option you can confirm which containers are running
@@ -36,6 +42,35 @@ Endpoint integration tests is where the bulk of our test suite is focused. These
 the APIs our customers, integrations and front-end application continue to work in expected ways. You should
 endeavour to include tests that cover the various user roles, and cross organization/team access scenarios,
 as well as invalid data scenarios as those are often overlooked when manually testing.
+
+### Running pytest
+
+You can use pytest to run a single directory, single file, or single test depending on the scope of your
+changes:
+
+```shell
+# Run tests for an entire directory
+pytest tests/sentry/api/endpoints/
+
+# Run tests for all files matching a pattern in a directory
+pytest tests/sentry/api/endpoints/test_organization_*.py
+
+# Run test from a single file
+pytest tests/sentry/api/endpoints/test_organization_group_index.py
+
+# Run a single test
+pytest tests/snuba/api/endpoints/test_organization_events_distribution.py::OrganizationEventsDistributionEndpointTest::test_this_thing
+
+# Run all tests in a file that match a substring
+pytest tests/snuba/api/endpoints/test_organization_events_distribution.py -k method_name
+```
+
+Some frequently used options for pytest are:
+
+* `-k` Filter test methods/classes by a substring.
+* `-s` Don't capture stdout when running tests.
+
+Refer to the [pytest](http://doc.pytest.org/en/latest/usage.html) docs for more usage options.
 
 ### Creating data in tests
 
@@ -63,6 +98,36 @@ def test_success(self):
 Use the `responses` library to add stub responses for an outbound API requests your code is making.
 This will help you simulate success and failure scenarios with relative ease.
 
+### Inspecting SQL queries in tests
+
+Add the following to `conftest.py` in the project root:
+
+```python
+import itertools
+from django.conf import settings
+from django.db import connection, connections, reset_queries
+from django.template import Template, Context
+
+@pytest.fixture(scope="function", autouse=True)
+def log_sql():
+    reset_queries()
+    settings.DEBUG = True
+
+    yield
+
+    time = sum([float(q["time"]) for q in connection.queries])
+    t = Template(
+        "{% for sql in sqllog %}{{sql.sql|safe}}{% if not forloop.last %}\n\n{% endif %}{% endfor %}"
+    )
+    queries = list(itertools.chain.from_iterable([conn.queries for conn in connections.all()]))
+    log = t.render(Context({"sqllog": queries, "count": len(queries), "time": time}))
+    print(log)
+```
+
+Now all SQL executed during tests will be printed to stdout. It's recommended
+to narrow down the output by using pytest's `-k` selector. Also note that
+you'll need to pass `-s` to see stdout.
+
 ## Acceptance Tests
 
 Our acceptance tests leverage selenium and chromedriver to simulate a user using the
@@ -75,6 +140,10 @@ Acceptance tests can be found in `tests/acceptance` and run locally with `pytest
 
 ### Running acceptance tests
 
+When you run acceptance tests, webpack will be run automatically to build static assets.
+If you change Javascript files while creating or modifying acceptance tests, you'll need
+to `rm .webpack.meta` after each change to trigger a rebuild on static assets.
+
 ```shell
 # Run a single acceptance test.
 pytest tests/acceptance/test_organization_group_index.py -k test_with_onboarding
@@ -85,6 +154,11 @@ pytest tests/acceptance/test_organization_group_index.py --no-headless=true -k t
 # Open each snapshot in preview
 SENTRY_SCREENSHOT=open pytest tests/acceptance/test_organization_group_index.py -k test_with_onboarding
 ```
+
+<Alert title="Tip!" level="info">
+  If you're seeing `WARNING: Failed to gather log types: Message: unknown command: 
+  Cannot call non W3C standard command while in W3C mode`, it means that `Webpack` hasn't compiled assets properly.
+</Alert>
 
 ### Locating Elements
 
