@@ -2,6 +2,14 @@
 title: 'Performance Metrics'
 sidebar_order: 2
 ---
+{% capture __alert_content -%}
+Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [performance-feedback@sentry.io](mailto:performance-feedback@sentry.io).
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
 
 Performance metrics provide insight about how users experience your application. You set the target thresholds, then identify how your application is performing. For example, you can track metrics such as Latency and [Throughput](#throughput-total-rpm-rps) in [Discover]({%- link _documentation/performance/discover/index.md -%}) or Performance. By identifying useful thresholds by which to measure your application, you have a quantifiable measure of your application's health and can more easily identify when errors occur or if performance issues are emerging.
 
