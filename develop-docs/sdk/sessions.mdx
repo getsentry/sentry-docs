@@ -1,0 +1,211 @@
+---
+title: Sessions
+sidebar_order: 12
+---
+
+For basic health tracking Sentry accepts <Link to="/sdk/envelopes/">envelopes</Link>
+containing session update events.  These session update events can be used to
+inform Sentry about release and project associated project health.
+
+## Basic Operation
+
+- Sessions are entirely client driven.  The client determins when a session
+  starts, ends or transitions into an unhealthy state.
+  - Client can explicitly end a session to record time or exit condition (crash etc.)
+  - Clients should explicitly end sessions on restart if needed but it is acceptable
+    for a session not to end.
+- Sessions are updated through session change events which hold the entire session state
+- Sessions are updated from events sent in. The most recent event holds the
+  entire session state. The initial session event that is sent to the server is
+  marked explicitly.
+- Session updates must not change the attributes or data corrupts when materialized
+- Sessions can only be updated for a period of 5 days. If a session did not
+  receive a second event in 5 days it's permanently good.
+- A session does not have to be started in order to crash. Just reporting a crash is sufficient.
+
+## Server Model
+
+At present Sentry's session system is optimized towards ease of scalability and
+cost of operation.  This means that the protocol is heavily geared towards
+achieving this goal.  Some of these optimizations show in the protocol and it's
+important for the client to follow the protocol accurately to avoid creating
+bad data on the server.
+
+The server has hourly buckets of pre-materialized session data.  As a session
+update event comes in the server will immediately materialize the data into the
+correct bucket.  This means that the protocol is restricted to being "additive".
+This also means that the client needs to store the entire state of the session
+on its side.
+
+## Session Update Payload
+
+A session update is an item in an envelope called `session`.  It consists a JSON
+payload that looks roughly like this:
+
+```json
+{
+  "sid": "7c7b6585-f901-4351-bf8d-02711b721929",
+  "did": "optional distinct user id",
+  "init": true,
+  "started": "2020-02-07T14:16:00Z",
+  "duration": 60,
+  "status": "exited",
+  "attrs": {
+    "release": "release name",
+    "environment": "environment name",
+    "ip_address": "optional user ip address for filtering",
+    "user_agent": "optional user agent for filtering"
+  }
+}
+```
+
+Note that this must be enclosed in an envelope.  So the full event looks
+something like this:
+
+```json
+{}
+{"type":"session"}
+{"sid":"..."}
+```
+
+The following fields exist:
+
+`sid` (optional)
+
+> Session ID (unique and client generated). Clients are allowed to skip it if
+> the initial session state is `exited`.
+
+`did` (optional, distinct ID)
+
+> The distinct ID. Should be device or user ID.  The system automatically hashes
+> this ID before storing.
+
+`seq` (optional)
+
+> A logical clock. Defaults to the current UNIX time stamp in milliseconds
+> during ingestion.  THe value `0` is reserved in the sense that a session with
+> `init` set to `true` will automatically have `seq` forced to `0`.
+
+`timestamp` (optional)
+
+> The timestamp of when the session change event came in. Must be an ISO string
+> for now. If not sent the server can assume current UTC timestamp. In the data
+> model this is called `received`.
+
+`started`
+
+> Timestamp when the session started. Must be an ISO string for now.
+
+`init` (optional, default is `false`)
+
+> If this is set to `true` it means that this was the first event of the session.
+> This lets the server optimize the session counts because no deduplication is
+> needed (client is authoritative anyways). Internally when this flag is set
+> `seq` is changed to `0` on processing.
+
+`duration` (optional)
+
+> An optional field that can transmit the session duration when the event was
+> received. This can be client controlled so for instance inactive time can be
+> subtracted (seconds as float).
+
+`status` (optional, default = `ok`)
+
+> The current status of the session. A session can only be in two states
+> effectively: `ok` which means the session is alive or one of the terminal
+> states. When a session is moved away from `ok` it must not be updated any more.
+> 
+> * `ok`: session is currently in progress but healthy. This can be the terminal state of a session
+> * `exited`: the session terminated normally
+> * `crashed`: the session terminated in a crash
+> * `abnormal`: the session encountered a non crash related abnormal exit
+
+`errors` (optional, default = 0)
+
+> A running counter of errors encountered while this session was ongoing.
+> It's important that this counter is also incremented when a session goes to
+> crashed`. (eg: the crash itself is always an error as well).
+> Ingest should force `errors` to 1 if not set or 0.
+
+`attrs` (all but release optional)
+
+> - `release`: a sentry release ID (`release`)
+> - `environment`: a sentry environment (`environment`)
+> - `ip_address`: the primary IP address to be considered. This is normally the
+>   IP of the user. This data is not persisted but used for filtering.  If not
+>   set the IP is filled in automatically.
+> - `user_agent`: the user agent to be considered. This is normally the user
+>   agent of the user that caused the session. This data is not persisted but
+>   used for filtering.
+
+## Crashes vs Sessions
+
+Sessions and error events are two distinct systems within Sentry.  Session
+updates can be done without error events to be sent and likewise errors can be
+sent without session updates.
+
+This gives the client the full control over how session updates should be
+performed.  The motivating factor is that the server is free to reject error
+events in some situations where it would still be interesting to record
+session information.  For instance if a project has a rate limit applied on
+error events they session data can still be routed to the project bypassing
+this rate limit.
+
+However it's strongly recommended to send session updates in the same envelope
+as the crash event in case the session transitions to the crashed status.  This
+will ensure that they events arrive at the same time in the system if the
+network is unreliable.
+
+## Important Client Behavior
+
+These are important rules that the clients must follow:
+
+### Attribute Immutability
+
+It's currently not allowed for a session to change any of the attributes
+in subsequent updates which includes the `did`, `started` or other attributes.
+The only attributes which are allowed to change is the session status, duration
+or error count.  If a user is not known on the beginning then either the session
+start should be delayed or the session should be restarted once the user is
+known.
+
+### Session Counting / init
+
+It's crucial that the intial session update sent to the system has `init` set
+to `true`. This is necessary because the server currently does not
+deduplicate the total session count as an optimization.  If a session is sent
+with `init` not set once.
+
+### Terminal Session States
+
+A session can exist in two states: in progress or terminated.  A terminated
+session must not receive further updates.  `exited`, `crashed` and `abnormal`
+are all terminal states.  When a session reaches this state the client must
+not report any more session updates or start a new session.
+
+### Crashed, Abnormal vs Errored
+
+A session is supposed to transition to `crashed` when it encountered an unhandled
+error such as a full application crash.  For applications that cannot fully
+crash such as a website it's acceptable to transition to the crashed state if
+the user encountered an error dialog.
+
+Abnormal are sessions of which their fate is unknown.  For desktop applications
+for instance it makes sense to transition a session to abnormal if it was stored
+but the exit of the application was not observed but also did not crash.  For
+instance these are situations where the user forced the app to close via the
+task manager, the machine lost power or other situations.
+
+Errored sessions are determined by a an `errors` count of greater than zero.
+The client is required to count events that are considered errors and send the
+count along with session updates.  A session that is `ok` and has an error
+count of greater than zero is considered an errored session.  All crashed and
+abnormal sessions are also at all times considered errored but subtracted from
+the final errored session count.
+
+### Exited
+
+A session can transition to `exited` which is exactly the same state as `ok`
+with one difference: sessions transitioned to `exited` have their session
+duration averaged.  This lets Sentry show you the duration of non crashed
+sessions over time.
