@@ -16,9 +16,9 @@ Give your new integration a name (for example, “CircleCI Deploy Integration”
 
 For more details about scopes and API endpoints, see the full documentation on [API Permissions]({%- link _documentation/api/permissions.md -%}).
 
-[{% asset releases/circleci/internal-integration-permissions.png alt="View of internal integration permissions." %}]({% asset releases/jenkins/internal-integration-permissions.png @path %})
+[{% asset releases/circleci/internal-integration-permissions.png alt="View of internal integration permissions." %}]({% asset releases/circleci/internal-integration-permissions.png @path %})
 
-Click “Save” at the bottom of the page and grab your token, which you'll need this in the next step.
+Click "Save", then record your token, which you'll need in the next section.
 
 ## Setting Environment Variables in CircleCI
 

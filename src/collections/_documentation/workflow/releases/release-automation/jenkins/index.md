@@ -18,7 +18,7 @@ For more details about scopes and API endpoints, see the full documentation on [
 
 [{% asset releases/jenkins/internal-integration-permissions.png alt="View of internal integration permissions." %}]({% asset releases/jenkins/internal-integration-permissions.png @path %})
 
-Click “Save” at the bottom of the page and grab your token, which you'll need in the next step.
+Click "Save", then record your token, which you'll need in the next section.
 
 ## Add Token to Jenkins Credentials
 
