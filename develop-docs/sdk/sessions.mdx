@@ -183,6 +183,30 @@ session must not receive further updates.  `exited`, `crashed` and `abnormal`
 are all terminal states.  When a session reaches this state the client must
 not report any more session updates or start a new session.
 
+SDKs are encouraged to distinct different end of session cases:
+
+- `exited`: this means the session ended cleanly. It's in no way different than
+  the session staying in `ok` from the point of success reports. However only
+  sessions ending in `exited` will be considered for session durations.
+  A session is allowed to go to `exited` even if errors occurred.
+
+- `crashed`: a session should be reported as crashed under the following cases:
+
+    - an unhandled error occurred and there is a natural session end (eg: end of HTTP request)
+    - a complete crash of the application occurred (crash to desktop, termination)
+    - a user feedback dialog is surfaced to the user. After this the SDK must start a new session as if it fully crashed.;
+
+- `abnormal`: SDKs are encouraged to always cleanly exit a session if they can do
+  so. For SDKs that are capable of always ending sessions they should end a
+  session in `abnormal` if they could not detect the application shutting down
+  correctly. These would be desktop SDKs but not mobile SDKs. Examples for
+  abnormal sessions:
+
+    - a computer was shut down / lost power
+    - the user force closed an application through `kill -9` or the task manager
+
+  Abnormal session ends are normally to be recorded on application restart.
+
 ### Crashed, Abnormal vs Errored
 
 A session is supposed to transition to `crashed` when it encountered an unhandled
@@ -209,3 +233,74 @@ A session can transition to `exited` which is exactly the same state as `ok`
 with one difference: sessions transitioned to `exited` have their session
 duration averaged.  This lets Sentry show you the duration of non crashed
 sessions over time.
+
+## SDK Considerations
+
+Generally speaking there are two separate modes for health reporting that SDKs
+can use. One is very short lived sessions, the other are user attended sessions.
+
+**Short lived sessions** *(req-mode)*
+
+These are sessions that correspond to a single HTTP request or RPC call.
+
+- high in volume
+- timing information is typically useless because session time in the milliseconds
+- typically send a single session update for the entire session
+
+**User attended sessions** *(user-mode)*
+
+These are sessions that are more corresponding to an actual user session. This
+is what you would see in a web browser, mobile world or similar.
+
+- session duration typically in the minutes
+- timing information is useful
+- typically send in two more more session updates (start and end)
+
+Both of those cases look similar from the API point of view but different
+recommendations apply for SDKs.
+
+### Exposed API
+
+The most basic API exposed is on the hub level and lets you start and stop session recording:
+
+**API:**
+
+`Hub.start_session()`
+
+> Stores a session on the current scope and starts tracking it. This normally attaches a brand new `session` to the scope.
+
+`Hub.end_session()`
+
+> Ends the session. This also sends the session to the transport for later flushing for SDKs operating in *req-mode*.
+
+`Hub.start_auto_session_tracking()` / `Hub.stop_auto_session_tracking()`
+
+> Reactivates automatic session tracking.
+
+**Options:**
+
+`auto_session_tracking`:
+
+> This enables / disables automatic session tracking through integrations.
+
+### When to Send Sessions
+
+SDKs should generally aim to send session updates upstream as little as
+possible. *req-mode* SDKs should use a periodic session flusher (every 30/60 secs)
+that assembles envelopes of session items and forwards them to the transport.
+
+Sessions should in most cases be sent once or twice:
+
+- When started
+- When crashed/exited
+
+If the time between those two events is short it's permissible to send a single
+event. In either case the `init` flag must be set correctly for the *first
+transmission* of the session.
+
+### Implicit Session updates
+
+For all SDKs the current session shall be automatically updated whenever data is
+captured at a similar place where `apply_to_scope` is called to increase the
+`error` count.  For server side SDKs with delayed session sending the user ID
+can also be pulled in there.
