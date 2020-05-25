@@ -1,6 +1,6 @@
 ---
 title: Bitbucket Pipelines
-sidebar_order: 2
+sidebar_order: 0
 
 ---
 

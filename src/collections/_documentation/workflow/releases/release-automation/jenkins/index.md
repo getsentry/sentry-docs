@@ -1,6 +1,6 @@
 ---
 title: Jenkins
-sidebar_order: 0
+sidebar_order: 2
 
 ---
 
