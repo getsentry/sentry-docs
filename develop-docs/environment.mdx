@@ -164,3 +164,80 @@ If you would like to be able to run `devserver` outside of your root checkout, y
   <em>and</em> port are required in order for DNS and some pages urls to be
   displayed correctly.
 </Alert>
+
+
+## Troubleshooting
+
+**Problem:** something like `pkg_resources.DistributionNotFound: The 'some_dependency<0.6.0,>=0.5.5' distribution was not found and is required by sentry`
+
+**Solution:** Your virtualenv needs to be updated. run `make install-py-dev`.
+
+---
+
+**Problem:** You see `Error occured while trying to proxy to: dev.getsentry.net:8000/`
+
+**Solution:**  You likely need to upgrade your Python dependencies. Go to the git root directory and run `make install-py-dev`.
+
+---
+
+**Problem:** `Module not found: Error: Can't resolve 'integration-docs-platforms'`
+
+**Solution:**
+
+```bash
+make build-platform-assets
+```
+
+---
+
+**Problem:** `SessionNotCreatedException: Message: session not created: This version of ChromeDriver only supports Chrome version 76`
+
+Also, another symptom indicating you need to upgrade chromedriver:
+
+```shell
+Traceback (most recent call last):
+  File "/Users/joshua.li/dev/sentry/sentry/src/sentry/utils/pytest/selenium.py", line 344, in browser
+    driver = start_chrome(**chrome_args)
+  File "/Users/joshua.li/dev/sentry/sentry/src/sentry/utils/retries.py", line 41, in execute_with_retry
+    return retrier(functools.partial(fn, *args, **kwargs))
+  File "/Users/joshua.li/dev/sentry/sentry/src/sentry/utils/retries.py", line 85, in __call__
+    error,
+RetryException: Could not successfully execute <functools.partial object at 0x10f31e7e0> within 15.830 seconds (12 attempts.)
+```
+
+**Solution:**
+
+```bash
+brew cask upgrade chromedriver
+```
+
+---
+
+**Problem:**
+
+```shell
+--- snip ---
+00:51:27 server  | ImportError: cannot import name _remove_dead_weakref
+00:51:27 server  | unable to load app 0 (mountpoint='') (callable not found or import error)
+```
+
+This is caused by uwsgi running the wrong version of python. When starting up, you'll see something like
+
+```shell
+uwsgi socket 0 bound to TCP address 127.0.0.1:8889 fd 3
+Python version: 2.7.10 (default, Feb 22 2019, 21:17:52)  [GCC 4.2.1 Compatible Apple LLVM 10.0.1 (clang-1001.0.37.14)]
+Set PythonHome to /Users/dfuller/code/sentry/.venv
+```
+
+The python version here should be 2.7.16, but will be a lower version, likely your system python. This is because uwsgi was compiled against a stale python and the resultant wheel has been cached by pip.
+
+**Solution:** 
+
+In your sentry virtualenv:
+
+```shell
+pip uninstall uwsgi
+pip install --no-cache-dir uwsgi
+```
+
+
