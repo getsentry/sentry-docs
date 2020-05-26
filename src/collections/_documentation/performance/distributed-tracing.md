@@ -298,7 +298,7 @@ The following functions aggregate transaction counts and the rate at which trans
 - count
 - count unique values (for a given field)
 - average events (transactions) per second (eps)
-- average event (transactions) per minute (epm)
+- average events (transactions) per minute (epm)
 
 Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data](#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 requests to that endpoint each second. (20 because you're collecting 25% - or 1/4 - of your data, so your real volume is 4 times what you're seeing in Sentry.)
 
