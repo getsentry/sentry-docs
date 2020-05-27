@@ -23,9 +23,6 @@ Apdex is an industry-standard metric used to track and measure user satisfaction
     - **Frustrated**: Users are frustrated with the app when their page load times are greater than T.
     - **Apdex**: (Number of Satisfactory Requests + (Number of Tolerable Requests/2)) / (Number of Total Requests)
     
-## Average Transaction Duration
-Average Transaction Duration indicates the average response time for all occurrences of a given transaction.
-    
 ## P75 Threshold
 The P75 Threshold indicates that 25% of transaction durations are greater than the threshold. For example, if the P75 threshold is set to 10 milliseconds, then 25% of transactions exceeded that threshold, taking longer than 10 milliseconds.
 
@@ -44,7 +41,9 @@ User Misery is a user-weighted performance metric to assess the relative magnitu
 ## Transaction Metrics
 A number of the metrics available as column choices lend themselves well to analyzing your application's performance.
 
-### Transaction Duration Metrics
+### Transaction Duration
+
+Average Transaction Duration indicates the average response time for all occurrences of a given transaction.
 
 The following functions aggregate transaction durations:
 
@@ -58,7 +57,7 @@ A word of caution when looking at averages and percentiles: In most cases, you'l
 
 The problem of small sample size (and the resulting inability to be usefully accurate) will happen more often for some metrics than others, and sample size will also vary by row. For example, it takes less data to calculate a meaningful average than it does to calculate an equally meaningful 95th percentile. Further, a row representing requests to `/settings/my-awesome-org/` will likely contain many times as many transactions as one representing requests to `/settings/my-awesome-org/projects/best-project-ever/`.
 
-### Transaction Frequency Metrics
+### Transaction Frequency
 
 The following functions aggregate transaction counts and the rate at which transactions are recorded:
 

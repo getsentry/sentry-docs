@@ -271,7 +271,7 @@ This view also includes a timeseries graph, aggregating all results of the query
 
 _Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore cannot be searched.
 
-Full documentation of the transaction list view (which is just a special case of the Discover Query Builder) can be found [here]({%- link _documentation/performance/discover/query-builder.md -%}). 
+For more details about the transaction list view, see the full documentation on [Discover's Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}), and for more about transaction metrics, see [Performance Metrics]({%- link _documentation/performance/performance-metrics.md -%}#transaction-metrics).
 
 ### Transaction Detail View
 
