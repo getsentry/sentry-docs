@@ -234,7 +234,7 @@ While making source maps available to Sentry from your servers is the easiest in
 For these reasons, it is recommended to upload source maps to Sentry beforehand (see [above](#uploading-source-maps-to-sentry)).
 
 {% capture __alert_content -%}
-While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs, [IP Ranges]({%- link ip-ranges.md -%}#ip-ranges).
+While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs, [IP Ranges]({%- link _documentation/meta/ip-ranges.md -%}).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Working Behind a Firewall"
