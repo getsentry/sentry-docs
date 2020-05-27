@@ -6,7 +6,7 @@ sidebar_order: 2
 
 This guide walks you through the process of automating Sentry release management and deploy notifications in Jenkins. After deploying in Jenkins, you'll be able to identify suspect commits that are likely the culprit for new errors. You'll also be able to apply source maps to see the original code in Sentry.
 
-Before starting, confirm that your Sentry project is properly set up to track commit metadata. The easiest method to do so is to [install a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration). Once that's installed, and you've added your repository, come back to this guide. If you've already installed a repository integration, you're ready to go.
+Before starting, confirm that your Sentry project is properly set up to track commit metadata by [installing a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration). Once that's installed, and you've added your repository, come back to this guide. If you've already installed a repository integration, you're ready to go.
 
 ## Create a Sentry Internal Integration
 
@@ -18,11 +18,11 @@ For more details about scopes and API endpoints, see the full documentation on [
 
 [{% asset releases/jenkins/internal-integration-permissions.png alt="View of internal integration permissions." %}]({% asset releases/jenkins/internal-integration-permissions.png @path %})
 
-Click “Save” at the bottom of the page and grab your token, which you'll need in the next step.
+Click "Save", then record your token, which you'll need in the next section.
 
 ## Add Token to Jenkins Credentials
 
-To access our internal integration token securely in Jenkins, store it as a [credential](https://www.jenkins.io/doc/book/using/using-credentials/):
+To access your internal integration token securely in Jenkins, store it as a [credential](https://www.jenkins.io/doc/book/using/using-credentials/):
 
 1. From the Jenkins home page (the Dashboard of the classic Jenkins UI), click **Credentials > System**.
 2. Under **System**, click the **Global credentials (unrestricted)** link to access this default domain.
@@ -41,7 +41,7 @@ Depending on what type of Jenkins project you're using to build and deploy, you 
 - [Pipeline (Jenkinsfile)]({%- link _documentation/workflow/releases/release-automation/jenkins/index.md -%}#pipeline)
 - [Freestyle project]({%- link _documentation/workflow/releases/release-automation/jenkins/index.md -%}#freestyle-project)
 
-For more details about the release management concepts below, see the full documenation on [release management]({%- link _documentation/cli/releases.md -%}).
+For more details about the release management concepts below, see the full documentation on [release management]({%- link _documentation/cli/releases.md -%}).
 
 ### Pipeline
 

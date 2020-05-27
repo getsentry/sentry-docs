@@ -6,7 +6,7 @@ sidebar_order: 1
 
 This guide walks you through the process of automating Sentry release management and deploy notifications in CircleCI. After deploying in CircleCI, you'll be able to identify suspect commits that are likely the culprit for new errors. You'll also be able to apply source maps to see the original code in Sentry.
 
-Before starting, confirm that your Sentry project is properly set up to track commit metadata. The easiest method to do so is to [install a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration). Once that's installed, and you've added your repository, come back to this guide. If you've already installed a repository integration, you're ready to go.
+Before starting, confirm that your Sentry project is properly set up to track commit metadata by [installing a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration). Once that's installed, and you've added your repository, come back to this guide. If you've already installed a repository integration, you're ready to go.
 
 ## Create a Sentry Internal Integration
 
@@ -16,9 +16,9 @@ Give your new integration a name (for example, “CircleCI Deploy Integration”
 
 For more details about scopes and API endpoints, see the full documentation on [API Permissions]({%- link _documentation/api/permissions.md -%}).
 
-[{% asset releases/circleci/internal-integration-permissions.png alt="View of internal integration permissions." %}]({% asset releases/jenkins/internal-integration-permissions.png @path %})
+[{% asset releases/circleci/internal-integration-permissions.png alt="View of internal integration permissions." %}]({% asset releases/circleci/internal-integration-permissions.png @path %})
 
-Click “Save” at the bottom of the page and grab your token, which you'll need this in the next step.
+Click "Save", then record your token, which you'll need in the next section.
 
 ## Setting Environment Variables in CircleCI
 
@@ -28,7 +28,7 @@ Next, you'll need a few environment variables to configure the Sentry CLI:
 - `SENTRY_ORG` - Your Sentry organization slug
 - `SENTRY_PROJECT` - Your Sentry project slug
 
-To access you internal integration token securely, store it as an [environment variable on your project](https://circleci.com/docs/2.0/env-vars/#setting-an-environment-variable-in-a-project):
+To access your internal integration token securely, store it as an [environment variable on your project](https://circleci.com/docs/2.0/env-vars/#setting-an-environment-variable-in-a-project):
 
 1. In the CircleCI application, go to your project’s settings by clicking the gear icon on the Pipelines page, or the three dots on other pages in the application.
 2. Click on Environment Variables.
@@ -40,7 +40,7 @@ The other variables do not contain sensitive information, so you'll use the envi
 
 ## Create Release and Notify Sentry of Deployment
 
-To automate your Sentry release management process you'll need to add the `Create release and notify Sentry of deploy` step below after your deploy step, either in a new job or at the end of your existing deploy job:
+To automate your Sentry release management process, you'll need to add the `Create release and notify Sentry of deploy` step below after your deploy step, either in a new job or at the end of your existing deploy job:
 
 ```yaml
 notify-sentry-deploy:
@@ -65,7 +65,7 @@ notify-sentry-deploy:
             sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
 ```
 
-For more details about the release management concepts in the snippet above, see the full documenation on [release management]({%- link _documentation/cli/releases.md -%}).
+For more details about the release management concepts in the snippet above, see the full documentation on [release management]({%- link _documentation/cli/releases.md -%}).
 
 **Notes**:
 
