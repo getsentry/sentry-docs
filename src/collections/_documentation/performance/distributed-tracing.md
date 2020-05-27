@@ -297,8 +297,8 @@ The following functions aggregate transaction counts and the rate at which trans
 
 - count
 - count unique values (for a given field)
-- average requests (transactions) per second
-- average requests (transactions) per minute
+- average events (transactions) per second (eps)
+- average events (transactions) per minute (epm)
 
 Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data](#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 requests to that endpoint each second. (20 because you're collecting 25% - or 1/4 - of your data, so your real volume is 4 times what you're seeing in Sentry.)
 
@@ -328,7 +328,7 @@ Clicking on a row in the span view expands the details of that span. From here, 
 
 [{% asset performance/span-detail-view.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-detail-view.png @path %})
 
-_Search by Trace ID_
+_Searching by Trace ID_
 
 You can search for all of the transactions in a given trace by expanding any of the span details and clicking on "Search by Trace".
 

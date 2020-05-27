@@ -35,8 +35,8 @@ The P95 Threshold indicates that 5% of transaction durations are greater than th
 ## P99 Threshold
 The P99 Threshold indicates that 1% of transaction durations are greater than the threshold. For example, if the P99 threshold is 5 seconds, then 1% of transactions exceeded that threshold, taking longer than 5 seconds.
 
-## Throughput (Total, RPM, RPS)
-Throughput indicates the number of requests over a given time range (Total), requests per minute (RPM), or requests per second (RPS).
+## Throughput (Total, TPM, TPS)
+Throughput indicates the number of transactions over a given time range (Total), average transactions per minute (TPM), or average transactions per second (TPS).
     
 ## User Misery
 User Misery is a user-weighted performance metric to assess the relative magnitude of your application performance. While you can examine the ratio of various response time threshold levels with [Apdex](#apdex), User Misery counts the number of unique users who were frustrated based on the specified response time threshold. User Misery highlights transactions that have the highest impact on users.
