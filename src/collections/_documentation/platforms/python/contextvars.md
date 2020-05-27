@@ -62,7 +62,7 @@ separate server process, as this is a legitimate usage of `asyncio` for which
 server does not import or use gevent at all (and much less call
 `gevent.monkey.patch_all`), and you should be good.
 
-Even then there are still edgecases where this behavior is flat-out broken,
+Even then there are still edge cases where this behavior is flat-out broken,
 such as mixing asyncio code with gevent/eventlet-based code. In that case there
 is no right, *static* answer as to which context library to use. Even then
 gevent's aggressive monkeypatching is likely to interfere in a way that cannot
