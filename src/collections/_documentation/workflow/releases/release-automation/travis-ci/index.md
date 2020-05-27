@@ -6,7 +6,7 @@ sidebar_order: 4
 
 This guide walks you through the process of automating Sentry release management and deploy notifications in Travis CI. After deploying in Travis CI, you’ll be able to identify suspect commits that are likely the culprit for new errors. You’ll also be able to apply source maps to see the original code in Sentry.
 
-Before starting, confirm that your Sentry project is properly set up to track commit metadata. The easiest method to do so is to [install a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration). Once that's installed, and you've added your repository, come back to this guide. If you've already installed a repository integration, you're ready to go.
+Before starting, confirm that your Sentry project is properly set up to track commit metadata by [installing a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration). Once that's installed, and you've added your repository, come back to this guide. If you've already installed a repository integration, you're ready to go.
 
 ## Create a Sentry Internal Integration
 
@@ -28,7 +28,7 @@ Next, you'll need a few environment variables to configure the Sentry CLI:
 - `SENTRY_ORG` - Your Sentry organization slug
 - `SENTRY_PROJECT` - Your Sentry project slug
 
-To access you internal integration token securely, store it as an [environment variable on your repository](https://docs.travis-ci.com/user/environment-variables/#defining-variables-in-repository-settings):
+To access your internal integration token securely, store it as an [environment variable on your repository](https://docs.travis-ci.com/user/environment-variables/#defining-variables-in-repository-settings):
 
 1. In the Travis CI application, go to your repository's settings by clicking "Settings" from the "More options" menu.
 2. Find the "Environment Variables" section.
@@ -40,7 +40,7 @@ The other variables do not contain sensitive information, so you'll use the `env
 
 ## Create Release and Notify Sentry of Deployment
 
-To automate your Sentry release management process you'll need to add the `Create release and notify Sentry of deploy` job below after your deploy step:
+To automate your Sentry release management process, you'll need to add the `Create release and notify Sentry of deploy` job below after your deploy step:
 
 ```yaml
 jobs:
@@ -58,10 +58,10 @@ jobs:
           sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
 ```
 
-For more details about the release management concepts in the snippet above, see the full documenation on [release management]({%- link _documentation/cli/releases.md -%}).
+For more details about the release management concepts in the snippet above, see the full documentation on [release management]({%- link _documentation/cli/releases.md -%}).
 
 **Notes**:
 
 - If you’re not deploying a JavaScript project or have sent source maps to Sentry using another method, omit the `upload-sourcemaps` line.
-- If you can’t install a repository integration, send commit metadata via the [create release endpoint]({%- link _documentation/workflow/releases/index.md -%}#alternatively-without-a-repository-integration) or omit the `set-commits` line.
-- `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
+- If you can’t install a repository integration, send commit metadata via the [create release endpoint]({%- link _documentation/workflow/releases/index.md -%}#alternatively-without-a-repository-integration) or omit the `set-commits` line (`set-commits` is required for suspect commits).
+- `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed (recommended). To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
