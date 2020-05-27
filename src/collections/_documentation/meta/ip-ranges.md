@@ -1,5 +1,6 @@
 ---
 title: 'IP Ranges'
+sidebar_order: 5
 ---
 
 {% capture __alert_content -%}
