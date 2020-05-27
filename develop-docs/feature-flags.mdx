@@ -16,14 +16,220 @@ The feature can be enabled with the following in your `config.py`:
 SENTRY_FEATURES["organizations:onboarding"] = True
 ```
 
-Additionally a helper is provided within the Python test suite give feature variants:
+You can modify the state of [feature flags in tests](/testing/#setting-options-and-feature-flags) using a context manger.
+
+# Creating a new Feature Flag
+
+## Determine what scope the feature should have
+
+Features can be scoped by organization, and projects. If you're not confident
+you want a project feature, create an organization level one. In this example
+we'll build a feature called `test-feature` scoped at the *organization* level.
+
+## Add your feature to server.py
+
+Server.py (`/src/sentry/conf/server.py`) contains many of the default settings
+in the application. Here you will add your feature, and decide what default
+value it should hold unless specified by the user.
+
+The `SENTRY_FEATURES` dictionary contains all the features in the application
+with their corresponding scope. Your feature should start off disabled by default:
 
 ```python
-# test with the feature on
-with self.feature("organizations:onboarding"):
+SENTRY_FEATURES = {
+    'organizations:test-feature': False,
+    'auth:register': True,
     # ...
-
-# test with the feature off
-with self.feature({"organizations:onboarding": False}):
-    # ...
+    'projects:minidump': False,
+}
 ```
+
+## Add your feature to the FeatureManager
+
+The `FeatureManager` handles the application features. We add all the features
+to the `FeatureManager`, including the type of feature we want to add to the
+file `/src/sentry/features/__init__.py`.
+
+In our case, it is
+
+```python
+default_manager.add('organizations:test-feature', OrganizationFeature)
+```
+
+## Add it to the Organization Model Serializer
+
+The Organization model serializer
+(`src/sentry/api/serializers/models/organization.py`) builds a list
+called `feature_list` that is given to the front-end to use. By default the all
+features are checked and those that are present are added into the list. If
+your feature requires additional custom logic you will have to update the
+organization serializer
+
+### Using Model Flags (Less common)
+
+Sometimes a flag on the model is used to indicate a feature flag as shown
+below. This is not recommended unless there is a specific reason to make
+changes to the model. For example, the `require_2fa` flag affects behavior on
+the backend to enforce two-factor authentication.
+
+```python
+feature_list = []
+
+if getattr(obj.flags, 'allow_joinleave'):
+    feature_list.append('open-membership')
+if not getattr(obj.flags, 'disable_shared_issues'):
+    feature_list.append('shared-issues')
+if getattr(obj.flags, 'require_2fa'):
+    feature_list.append('require-2fa')
+```
+
+# Checking your feature
+
+## In Python code
+
+The FeatureManager's `has` method checks see if the feature exists. The has
+method takes in the feature's name, the object that corresponds to the scope of
+the feature *(i.e. an organization for an organization level feature or
+a project for a project level feature)*, and the actor (aka user). In our case
+the feature will be added like:
+
+```python
+if features.has('organizations:test-feature', obj, actor=user):
+    feature_list.append('test-feature')
+```
+
+which only adds the feature to the `feature_list` if that feature is enabled for
+the organization and the type of user given. Note that when we give the feature
+to the frontend, we remove the scope prefix, and
+our `'organizations:test-feature'` becomes `'test-feature'`.
+
+## In JavaScript
+
+There is a difference between using the flag in Sentry and in GetSentry. At this
+stage you're not quite ready to use your feature flag in GetSentry, but you are
+able to use it inside Sentry.
+
+## Declarative features with the Feature component
+
+React uses a declarative programming paradigm. As such, we have a utility
+component that we use to hide components based on the feature flags available to
+a organization/project
+
+```jsx
+import Feature from 'app/components/acl/feature';
+
+<Feature features={['test-feature']}>
+  <MyComponentToFlag/>
+</Feature>
+```
+
+## Imperitive feature flag checks
+
+There are some exceptions when React components are generated imperatively (e.g.
+headers/columns for Tables). In difficult times like these, the `Organization`
+/ `Project` object has a array of the feature flags, which you can use in this
+way:
+
+```jsx
+const {organization} = this.props;
+
+// Method 2
+organization.features.includes('test-feature') // evals to True/False
+```
+
+# Enabling features in development
+
+In Sentry you can run `sentry devserver` to view your changes in development
+mode. If you would like to view a change behind a feature flag, you will need to
+open the file `~/.sentry/sentry.config.py` on your local machine. This file
+contains your local settings for the sentry application, and can be viewed and
+edited. If you would like to toggle a flag on or off, add this to your
+configuration file:
+
+```python
+SENTRY_FEATURES['organizations:test-feature'] = True
+```
+
+Where `SENTRY_FEATURES` will correspond to the `SENTRY_FEATURES` from `step 2`.
+Set it to `True` if you'd like the feature to be available and `False` if not.
+
+# Enabling your feature in production
+
+If you want to enable your feature for a subset of production users, you will
+need to update the feature handlers in getsentry.
+
+In `getsentry/features.py` you will find a collection of feature handlers that
+enable various early adopter and billing related features.
+
+## Releasing a feature to a subset of organization
+
+You can enable a feature for a specific list of organization slugs by adding
+your feature and the list of organizations to the `FEATURE_EARLY_ADOPTERS`
+dictionary.
+
+## Releasing a feature to organizations with specific plans
+
+Enabling a feature for customers on specific plans will require creating
+a FeatureHandler and updating the plan catalog.
+
+1. Update the feature list in `getsentry/accounts/plans.py` This list contains
+   the feature name, a customer facing name and a short description of the
+   feature.
+2. Update the relevant plans in `getsentry/accounts/plans.py` . For example if
+   your feature is only available on Business plans, ensure that the plan
+   definition includes the `test-feature` flag in its list of features.
+3.  Create a feature handler for our feature. 
+
+```python
+class TestFeatureFeatureHandler(features.FeatureHandler):
+    # Tell FeatureManager which feature this handler is for.
+    features = {"organizations:test-feature"}
+
+    def has(self, feature, actor):
+        org = feature.organization
+
+        try:
+            sub = Subscription.get_for_organization(org)
+        except Subscription.DoesNotExist:
+            return False
+
+        plan_features = active_features(sub)
+        return "test-feature" in plan_features
+```
+
+The `has` method of a feature handler in getsentry should always return
+a boolean. This prevents fall through to the `SENTRY_FEATURES` dictionary.
+
+## Releasing to organizations of a specific plan incrementally
+
+When releasing a large or potentially disruptive feature you may want to enable
+it for a percentage of organizations incrementally. For example, on monday it is
+available to 10% of users, and increasing the percentage of customers by 10%
+each day.
+
+1. Regsiter an integer typed option in sentry. Eg. `test-feature.rollout-rate`
+   . The default value should be `0`.
+2. Create a feature handler that uses the `PercentageRollout` mixin 
+
+```python
+class TestFeatureFeatureHandler(features.FeatureHandler, PercentageRollout):
+    # Tell FeatureManager which feature this handler is for.
+    features = {"organizations:test-feature"}
+
+    def has(self, feature, actor):
+        org = feature.organization
+    # Other conditions can go here.
+    return self.in_rollout_group(org.id, 'test-feature.rollout-rate')
+```
+
+3. Work with operations to set and increase the value of your option as
+   required.
+
+## After launch
+
+After your feature has been mainlined and is available for all hosted customers.
+You should go back and enable the feature in `conf/server.py` which will enable
+the feature for on-premise users.
+
+If your feature switch is doesn't have an 'off' mode you should go back and
+remove the feature switch checks and feature flag as feature flags are not free.
