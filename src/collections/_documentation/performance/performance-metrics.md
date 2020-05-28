@@ -51,7 +51,7 @@ The following functions aggregate transaction durations:
 - various percentiles (by default, the pre-built Transactions query shows the 75th and 95th percentiles, but there are many other options, including a custom percentile)
 - maximum
 
-One use case for tracking these statistics is to help you identify transactions that are slower than your organization's target SLAs.
+One use case for tracking these statistics is to help you identify transactions that are slower than your organization's target Service Level Agreements (SLAs).
 
 A word of caution when looking at averages and percentiles: In most cases, you'll want to set up tracing so that only [a fraction](#data-sampling) of possible traces are actually sent to Sentry, to avoid overwhelming your system. Further, you may want to filter your transaction data by date or other factors, or you may be tracing a relatively uncommon operation. For all of these reasons, you may end up with average and percentile data that is directionally correct, but not accurate. (To use the most extreme case as an example, if only a single transaction matches your filters, you can still compute an "average" duration, even though that's clearly not what is usually meant by "average.")
 
