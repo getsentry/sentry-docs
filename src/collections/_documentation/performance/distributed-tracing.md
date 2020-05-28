@@ -1,6 +1,6 @@
 ---
 title: Distributed Tracing
-sidebar_order: 0
+sidebar_order: 2
 ---
 
 {% capture __alert_content -%}
@@ -271,36 +271,7 @@ This view also includes a timeseries graph, aggregating all results of the query
 
 _Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore cannot be searched.
 
-Full documentation of the transaction list view (which is just a special case of the Discover Query Builder) can be found [here]({%- link _documentation/performance/discover/query-builder.md -%}). 
-
-#### Performance Metrics
-
-A number of the metrics available as column choices lend themselves well to analyzing your application's performance.
-
-_Transaction Duration Metrics_
-
-The following functions aggregate transaction durations:
-
-- average
-- various percentiles (by default, the pre-built Transactions query shows the 75th and 95th percentiles, but there are many other options, including a custom percentile)
-- maximum
-
-One use case for tracking these statistics is to help you identify transactions that are slower than your organization's target SLAs.
-
-A word of caution when looking at averages and percentiles: In most cases, you'll want to set up tracing so that only [a fraction](#data-sampling) of possible traces are actually sent to Sentry, to avoid overwhelming your system. Further, you may want to filter your transaction data by date or other factors, or you may be tracing a relatively uncommon operation. For all of these reasons, you may end up with average and percentile data that is directionally correct, but not accurate. (To use the most extreme case as an example, if only a single transaction matches your filters, you can still compute an "average" duration, even though that's clearly not what is usually meant by "average.")
-
-The problem of small sample size (and the resulting inability to be usefully accurate) will happen more often for some metrics than others, and sample size will also vary by row. For example, it takes less data to calculate a meaningful average than it does to calculate an equally meaningful 95th percentile. Further, a row representing requests to `/settings/my-awesome-org/` will likely contain many times as many transactions as one representing requests to `/settings/my-awesome-org/projects/best-project-ever/`.
-
-_Transaction Frequency Metrics_
-
-The following functions aggregate transaction counts and the rate at which transactions are recorded:
-
-- count
-- count unique values (for a given field)
-- average events (transactions) per second (eps)
-- average events (transactions) per minute (epm)
-
-Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data](#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 requests to that endpoint each second. (20 because you're collecting 25% - or 1/4 - of your data, so your real volume is 4 times what you're seeing in Sentry.)
+For more details about the transaction list view, see the full documentation on [Discover's Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}), and for more about transaction metrics, see [Performance Metrics]({%- link _documentation/performance/performance-metrics.md -%}#transaction-metrics).
 
 ### Transaction Detail View
 
