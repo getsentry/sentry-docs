@@ -32,7 +32,7 @@ Every member who creates a new account via SSO will be given global organization
 
 Our SSO implementation prioritizes security. We aggressively monitor linked accounts and will disable them within any reasonable sign that the account’s access may have been revoked. Generally this will be transparent to you, but if the provider is functioning in an unexpected way you may experience more frequent re-authorization requests.
 
-Sessions last for [Django's default session length](https://docs.djangoproject.com/en/3.0/topics/http/sessions/#using-cookie-based-sessions), which is 2 weeks. We do not currently support customizing this value.
+Sessions last for [Django's default session length](https://docs.djangoproject.com/en/3.0/topics/http/sessions/#using-cookie-based-sessions), which is 2 weeks. We do not support customizing the session length.
 
 ## Providers
 
