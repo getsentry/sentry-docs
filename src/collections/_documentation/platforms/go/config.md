@@ -85,7 +85,7 @@ sentryClientOptions := sentry.ClientOptions{
 
 rootCAs, err := gocertifi.CACerts()
 if err != nil {
-	log.Println("Coudnt load CA Certificates: %v\n", err)
+	log.Println("Could not load CA Certificates: %v\n", err)
 } else {
 	sentryClientOptions.CaCerts = rootCAs
 }
