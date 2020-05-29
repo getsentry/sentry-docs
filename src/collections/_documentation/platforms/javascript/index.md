@@ -447,7 +447,7 @@ The following example will split up the default group Sentry would create (repre
 function makeRequest(path, options) {
     return fetch(path, options).catch(function(err) {
         Sentry.withScope(function(scope) {
-          scope.setFingerprint(['{{default}}', path]);
+          scope.setFingerprint(['{{ "{{default"}}}}', path]);
           Sentry.captureException(err);
         });
     });
