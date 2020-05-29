@@ -24,6 +24,9 @@ events.
 
 In runtimes without a process environment (such as the browser) that fallback does not apply.
 
+The DSN does not need to be kept private. If it is abused, the worst case is that another 
+application could send events to your account.
+
 {:.config-key}
 ### `debug`
 
