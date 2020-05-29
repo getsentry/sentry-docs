@@ -71,3 +71,13 @@ be fixed from within the SDK.
 This [issue has been fixed with gevent
 20.5](https://github.com/gevent/gevent/issues/1407) but continues to be one for
 eventlet.
+
+## Contextvars vs Django 3/asgiref
+
+*This only applies to sentry_sdk 0.15 and newer.*
+
+Similarly to the gevent/eventlet situation, contextvars are not used when
+`asgiref` is available. The reason for that is that `asgiref.local`, and
+particularly the way it is used in Django 3, exhibits more correct behavior
+than anything else. Starting with Django 3.1 `asgiref.local` is the only
+implementation that behaves correctly at all.
