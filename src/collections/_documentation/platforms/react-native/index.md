@@ -136,14 +136,44 @@ try {
 }
 ```
 
-## Setting Release / Dist
+### Release Health
+
+Monitor the [health of releases]({%- link _documentation/workflow/releases/health.md -%}) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/health.md -%}#crash), and [session data]({%- link _documentation/workflow/releases/health.md -%}#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+
+To benefit from the health data you must use at least version 1.4.0 of the React Native SDK, and enable the collection of release health metrics when initializing the SDK:
 
 ```javascript
-Sentry.setRelease('release');
-Sentry.setDist('dist');
+import * as Sentry from '@sentry/react-native';
+    
+Sentry.init({ 
+  dsn: '___PUBLIC_DSN___',
+  enableAutoSessionTracking: true,
+});
 ```
 
-Since this SDK is unified, all function that are available for JavaScript are also available in this SDK, for more examples:
+The SDK automatically manages the start and end of sessions when the application is started, goes to background, returns to the foreground, etc.
+By default, the session terminates once the application is in the background for more than 30 seconds. To change the timeout, use the option `sessionTrackingIntervalMillis`. For example:
+
+```javascript
+import * as Sentry from '@sentry/react-native';
+    
+Sentry.init({ 
+  dsn: '___PUBLIC_DSN___',
+  enableAutoSessionTracking: true,
+  // Sessions close after app is 10 seconds in the background.
+  sessionTrackingIntervalMillis: 10000,
+});
+```
+
+For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases/health.md -%}).
+
+### Identification of the User
+
+By default, we don't apply the user identification provided to the SDK via the API. Instead, we use the installation ID generated with the first use of the application. The ID doesn't contain any private or public data of your users or any public or shared data of their device.
+
+### More options
+
+This SDK is based on our browser JavaScript. That means that all function available for JavaScript are also available in this SDK. For more examples:
 - [Adding Context]({%- link _documentation/platforms/javascript/index.md -%}#adding-context)
 - [JavaScript Advanced Usage]({%- link _documentation/platforms/javascript/index.md -%}#advanced-usage)
 
