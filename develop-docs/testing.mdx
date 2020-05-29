@@ -102,6 +102,25 @@ def test_success(self):
 Use the `responses` library to add stub responses for an outbound API requests your code is making.
 This will help you simulate success and failure scenarios with relative ease.
 
+### Working with time reliably
+
+When writing tests related to ingesting events we have to operate within the
+constraint of events cannot be older than 30 days. Because all events must
+be recent, we cannot use traditional time freezing strategies to get consistent
+data in tests. Instead of choosing arbitrary points in time we work backwards
+from the present, and have a few helper functions to do so:
+
+```python
+from sentry.testutils.helpers.datetime import before_now, iso_format
+
+five_min_ago = before_now(minutes=5)
+iso_timestamp = iso_format(five_min_ago)
+```
+
+These functions generate datetime objects, and ISO 8601 formatted
+datetime strings relative to the present enabling you to have events at known
+time offsets without violating the 30 day constraint that relay imposes.
+
 ### Inspecting SQL queries in tests
 
 Add the following to `conftest.py` in the project root:
@@ -192,7 +211,7 @@ While we have fairly wide coverage with percy there are a few important blind sp
 All of these components and interactions are generally not included in percy snapshots, and you should take care
 when working on any of them.
 
-#### Dealing with variable data
+#### Dealing with always changing data
 
 Because percy compares image snapshots, and a significant portion of our data deals with timeseries data we often
 need to replace time based content with 'fixed' data. You can use the `getDynamicText` helper to provide fixed
