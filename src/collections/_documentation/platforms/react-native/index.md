@@ -165,7 +165,7 @@ Sentry.init({
 });
 ```
 
-For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases/health.md -%}).
+For more details, see the [full documentation on Release Health]({%- link _documentation/workflow/releases/health.md -%}).
 
 ### Identification of the User
 
@@ -173,7 +173,7 @@ By default, we don't apply the user identification provided to the SDK via the A
 
 ### More options
 
-This SDK is based on our browser JavaScript. That means that all function available for JavaScript are also available in this SDK. For more examples:
+This SDK is based on our browser JavaScript. That means that all functions available for JavaScript are also available in this SDK. For more examples:
 - [Adding Context]({%- link _documentation/platforms/javascript/index.md -%}#adding-context)
 - [JavaScript Advanced Usage]({%- link _documentation/platforms/javascript/index.md -%}#advanced-usage)
 
