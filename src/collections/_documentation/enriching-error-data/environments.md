@@ -8,7 +8,7 @@ Sentry environments are available for most features — excluding Dashboards. En
 
 Use projects to separate different services or applications, and environments to separate different environments or release stages within each. If you've selected one or more projects in the global header of Sentry's web UI, the environment selector shows only environments associated with events from the selected projects.
 
-![Environments%20page%20d4793df3e5c44b2f849965c5e301d966/Untitled.png](Environments%20page%20d4793df3e5c44b2f849965c5e301d966/Untitled.png)
+[SCREENSHOT]
 
 Environments are unique to each organization. Environment settings, however, are defined per project since you can hide environments per project.
 
@@ -42,5 +42,4 @@ Since you can't delete environments, Sentry has an option to hide it from the UI
 
 If a project is hidden, you won't see that environment in the environment selector, unless another project with events from the same environment is also selected (and doesn't have it hidden in its project settings).
 
-![Environments%20page%20d4793df3e5c44b2f849965c5e301d966/Untitled%201.png](Environments%20page%20d4793df3e5c44b2f849965c5e301d966/Untitled%201.png)
-
+[SCREENSHOT]
