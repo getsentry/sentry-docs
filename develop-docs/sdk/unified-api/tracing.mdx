@@ -1,0 +1,59 @@
+---
+title: 'Guideline for AM support'
+---
+
+This document covers how unified SDKs should implement AM.
+Things listed here are in no specific order, cover the API shape and not how it should be internally implemented.
+Read this fully before asking questions.
+
+See [https://github.com/getsentry/sentry-javascript](https://github.com/getsentry/sentry-javascript) 
+
+or
+
+[https://github.com/getsentry/sentry-javascript/tree/master/packages/apm](https://github.com/getsentry/sentry-javascript/tree/master/packages/apm) for a reference implementation
+
+- New option for the SDK `tracesSampleRate`
+    - Defaults to `0.0`, which means send no transactions (0% delivery rate)
+    - `1.0` (100% delivery rate) means send all transactions
+    - Value is expressed in `0.0` - `1.0` float, ranged from 0% to 100% rate
+    - Default makes AM an opt-in feature
+- Introduce `Sentry.startTransaction`
+    - Internally this creates a `Transaction` and returns the instance
+    - Users need to interact with the instance and keep track of it themselves
+    - Internally we can use the `Scope` to hold on to a reference of the current `Transaction` if needed
+- Introduce the new type [Span](/sdk/event-payloads/span/)
+- Introduce new type [Transaction](/sdk/event-payloads/transaction/) which inherits from `Span`
+- `Span` Interface
+    - When a `Span` is created, set the `startTimestamp` to the current time
+    - `SpanContext` is the attribute collection for a `Span` (Can be an implementation detail)
+    - The relation between parent - child is captured in the property `parentSpanId`
+- `Transaction` Interface
+    - A `Transaction` internally holds a flat list of child Spans (not a tree structure)
+    - `Transaction` has additionally a `setName` method the set the name of the transaction
+    - `Transaction` receives a `TransactionContext` on creation (new property vs. `SpanContext` is `name`)
+    - Since a `Transaction` inherits a `Span` it has all functions available and can be interacted with like it was a `Span`
+- `Hub` → Introduce a method called `startTransaction`
+    - Creates a new `Transaction` instance
+    - This method deals with sampling, and therefore it should take the `tracesSampleRate` option into account:
+        - Depending on the outcome, the sample decision should be stored in the `Transaction`'s `sampled` property and again forwarded to its children
+- `Hub` → Introduce a method called `startSpan`
+    - Creates a new `Span` instance
+    - If there is already a `Span` on the current `Scope`, the created `Span` should be its child
+- `Hub` → Introduce a method called `traceHeaders`
+    - This function returns a header (string) `sentry-trace`
+    - The value should be the trace header string of the `Span` that is currently on the `Scope`
+- `Scope` Introduce `setSpan`
+    - This can be used internally to pass a `Span` / `Transaction` around so that integrations can attach children to it
+    - Setting the `transaction` property on the `Scope` (legacy) should overwrite the name of the `Transaction` stored in the `Scope`, if there is one. With that we give users the option to change the transaction name even if they don't have access to the instance of the `Transaction` directly.
+- `Span.finish()`
+    - Just set `endTimestamp` to the current time (in payload `timestamp`)
+- `Transaction.finish()`
+    - `super.finish()` (call finish on Span)
+    - Send it to Sentry only if `sampled == true`
+    - A `Transaction` needs to be wrapped in an `Envelope` and sent to the [Envelope Endpoint](/sdk/envelopes/)
+    - The `Transport` should use the same internal queue for `Transactions` / `Events`
+    - The `Transport` should implement category-based rate limiting →
+    - The `Transport` should deal with wrapping a `Transaction` in an `Envelope` internally
+- A `Transaction` should **not** go through `beforeSend` (but `EventProcessors` are fine for now, since they are considered internal)
+    - The distinctive feature of a `Transaction` is `type: "transaction"`
+    - **Motivation**: If we ever want to move to individual Span ingestion, we can't users rely on using this for Transaction.
