@@ -42,4 +42,4 @@ Since you can't delete environments, Sentry has an option to hide it from the UI
 
 If a project is hidden, you won't see that environment in the environment selector, unless another project with events from the same environment is also selected (and doesn't have it hidden in its project settings).
 
-[{% asset environments/env_hidden.png alt="The Manage Environments page has two tabs for Environments and Hidden." %}]({% asset environments/env_hidden.png @path %})
+[{% asset environments/env_hidden.png alt="The Manage Environments page has two tabs for Environments and Hidden." width="600" %}]({% asset environments/env_hidden.png @path %})
