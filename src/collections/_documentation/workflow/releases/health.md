@@ -57,12 +57,12 @@ For more details, see the [full documentation on using Release Health with Andro
 ### iOS
 To benefit from the health data you must use at least version 5.0.0 of the Cocoa SDK and enable the collection of the release health metrics in the initialization options of the SDK.
 
-For more details, see the [full documentation on using Release Health with React Native.]({%- link _documentation/platforms/cocoa/index.md -%}#release-health).
+For more details, see the [full documentation on using Release Health with iOS.]({%- link _documentation/platforms/cocoa/index.md -%}#release-health).
 
 ### React Native
 To benefit from the health data you must use at least version 1.4.0 of the React Native SDK and enable the collection of the release health metrics in the initialization options of the SDK.
 
-For more details, see the [full documentation on using Release Health with iOS]({%- link _documentation/platforms/react-native/index.md -%}#release-health).
+For more details, see the [full documentation on using Release Health with React Native.]({%- link _documentation/platforms/react-native/index.md -%}#release-health).
 
 ## Data Filtering
 
