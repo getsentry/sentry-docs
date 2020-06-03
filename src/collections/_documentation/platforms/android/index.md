@@ -344,7 +344,7 @@ By default, the session terminates once the application is in the background for
 
 If you want to track the sessions manually, use the API methods `startSession` and `endSession` on the Sentry class.
 
-For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases/health.md -%}).
+For more details, see the [full documentation on Release Health]({%- link _documentation/workflow/releases/health.md -%}).
 
 ### Identification of the User
 
