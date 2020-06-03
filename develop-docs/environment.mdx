@@ -27,7 +27,7 @@ You can verify that Docker is running by running `docker ps`. If it doesn't erro
 
 We utilize [pyenv](https://github.com/pyenv/pyenv) to install and manage python versions. It should have already been installed earlier when you ran `brew bundle`.
 
-To install the required versions of Python you'll need to run `pyenv install`. This will take a while, since your computer is actually compiling python!
+To install the required versions of Python you'll need to run `make setup-pyenv`. This will take a while, since your computer is actually compiling python!
 
 After this, if you type `which python`, you should see something like `/usr/bin/python`... this means `python` will resolve to the system's python. You'll need to make some manual changes to your shell initialization files, if you want your shell to see pyenv's python.
 
@@ -35,7 +35,6 @@ If you're using bash, make sure your `~/.bash_profile` contains the following:
 
 ```bash {filename: ~/.bash_profile}
 source ~/.bashrc
-
 ````
 
 Configure your shell to load pyenv:
@@ -91,7 +90,14 @@ exec "$SHELL"
 
 This works because the volta installer conveniently made changes to your shell installation files for your shell's startup script:
 
-```bash
+```bash {filename: ~/.bashrc}
+eval "$(pyenv init -)"
+
+export VOLTA_HOME="~/.volta"
+grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
+```
+
+```bash {filename: ~/.zshrc} {tabTitle: Zsh}
 eval "$(pyenv init -)"
 
 export VOLTA_HOME="~/.volta"
@@ -119,7 +125,6 @@ eval "$(direnv hook bash)"
 ```bash {filename: ~/.zshrc} {tabTitle: Zsh}
 eval "$(direnv hook zsh)"
 ```
-
 
 And after doing that, reload your shell:
 
@@ -239,5 +244,3 @@ In your sentry virtualenv:
 pip uninstall uwsgi
 pip install --no-cache-dir uwsgi
 ```
-
-
