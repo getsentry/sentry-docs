@@ -412,9 +412,7 @@ $ npm install @sentry/browser
 $ npm install @sentry/apm
 ```
 
-OR
-
-Alternativly if you can't use npm packages you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
+Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
 
 ```html
 <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" crossorigin="anonymous"></script>
@@ -424,8 +422,13 @@ Alternativly if you can't use npm packages you can use our pre-built CDN bundle 
 
 #### Automatic Instrumentation
 
-For Javascript Browser we provide you with an integration that does automatic instrumentation creating `pageload` and `navigation` transaction containing Spans for XHR/fetch, Performance API (marks, measures, FCP, LCP) and resources timings (also provided by the Performance API). The Tracing
-intergration is specific to Browser so it doesn't work on Node.js.
+For `@sentry/browser`, we provide an integration called `Tracing` that does
+automatic instrumentation creating `pageload` and `navigation` transactions
+containing spans for XHR/fetch requests and Performance API entries such as
+marks, measures and resource timings.
+
+The `Tracing` integration is specific to `@sentry/browser` and does not work
+with `@sentry/node`.
 
 The `Tracing` integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
 
@@ -446,7 +449,7 @@ To send transaction, you will need to set the `tracesSampleRate` to a nonzero va
 
 You can pass many different options to the `Tracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box.
 
-For all possible options see [TypeDocs](http://getsentry.github.io/sentry-javascript/interfaces/apm.tracingoptions.html)
+For all possible options see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/apm.tracingoptions.html)
 
 *tracingOrigins Option*
 
@@ -500,7 +503,7 @@ shopCheckout() {
 }
 ```
 
-This example will send a transaction `shopCheckout` to Sentry, The transaction will contain a `task` span that measures how long `processAndValidateShoppingCart` took. Finally, the call to `transaction.finish()` will finish the transaction and send it to Sentry.
+This example will send a transaction `shopCheckout` to Sentry, the transaction will contain a `task` span that measures how long `processAndValidateShoppingCart` took. Finally, the call to `transaction.finish()` will finish the transaction and send it to Sentry.
 
 #### Adding Additional Spans to the Transaction
 
@@ -538,7 +541,7 @@ $ npm install @sentry/apm
 
 #### Sending Traces
 
-To send transaction, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 25% of all your transactions:
+To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 25% of all your transactions:
 
 ```javascript
 const Sentry = require("@sentry/node");
