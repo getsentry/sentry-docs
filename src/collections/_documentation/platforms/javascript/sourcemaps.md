@@ -428,6 +428,10 @@ The Sentry API currently only works with source maps and source files that are u
 
 This sometimes occurs with build scripts and plugins that produce pre-compressed minified files. For example, Webpack’s [compression plugin](https://github.com/webpack/compression-webpack-plugin). You’ll need to disable such plugins and perform the compression _after_ the generated source maps / source files have been uploaded to Sentry.
 
+### Verify workers are sharing the same volume as web (if runing as docker on premise)
+
+Sentry does source map calculation in its workers. This means the workers need access to the files uploaded through the front end. When starting sentry in docker, add --mount source=sentry_artifact,target=/var/lib/sentry/files to the container options. A new volume named sentry_artifact is created, and now workers can see the files uploaded.
+
 ## Additional Resources
 
 * [Using sentry-cli to Upload Source Maps]({%- link _documentation/cli/releases.md -%}#sentry-cli-sourcemaps)
