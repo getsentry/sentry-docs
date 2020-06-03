@@ -424,7 +424,7 @@ Alternativly if you can't use npm packages you can use our pre-built CDN bundle 
 
 #### Automatic Instrumentation
 
-For Javascript Browser we provide you with an integration that does automatic instrumentation creating `pageload` and `navigation` transaction containing Spans for XHR/fetch, Performance API (marks, measures, FCP, LCP) and resources timings (also provided by the Performance API). The Tracing
+For JavaScript Browser we provide you with an integration that does automatic instrumentation creating `pageload` and `navigation` transaction containing Spans for XHR/fetch, Performance API (marks, measures, FCP, LCP) and resources timings (also provided by the Performance API). The Tracing
 intergration is specific to Browser so it doesn't work on Node.js.
 
 The `Tracing` integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
