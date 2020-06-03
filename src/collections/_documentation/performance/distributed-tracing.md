@@ -445,7 +445,7 @@ Sentry.init({
 });
 ```
 
-To send transaction, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
+To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
 
 You can pass many different options to the `Tracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box.
 
