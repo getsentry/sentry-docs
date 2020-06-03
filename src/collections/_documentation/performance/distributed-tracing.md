@@ -418,8 +418,6 @@ Alternatively, instead of npm packages, you can use our pre-built CDN bundle tha
 <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" crossorigin="anonymous"></script>
 ```
 
-*NOTE:* The `Tracing` integration is available then under `Sentry.Integrations.Tracing`.
-
 #### Automatic Instrumentation
 
 For `@sentry/browser`, we provide an integration called `Tracing` that does
@@ -444,6 +442,8 @@ Sentry.init({
   tracesSampleRate: 0.25,
 });
 ```
+
+*NOTE:* The `Tracing` integration is available then under `Sentry.Integrations.Tracing` when using the CDN bundle.
 
 To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
 
