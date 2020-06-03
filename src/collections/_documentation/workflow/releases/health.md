@@ -7,7 +7,7 @@ Monitor the health of releases by observing user adoption, usage of the applicat
 
 ## How Release Health Works
 
-Once configured, Sentry's Android and Cocoa SDKs will send health data about the usage of your application.
+Once configured, Sentry's Android, Cocoa and React Native SDKs will send health data about the usage of your application.
 
 The primary component that Sentry uses to monitor health is a session. A session represents the interaction of the user with the application and starts when a user opens the application. When a user closes the application or has a prolonged period of inactivity, the session ends.
 
@@ -41,11 +41,12 @@ The release details page focuses on an individual release. Elements of the relea
 
 [{% asset releases/release_details.png alt="View of the release details page showing an overview graph, files changed, and other details." %}]({% asset releases/release_details.png @path %})
 
-For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}) and [iOS SDK]({%- link _documentation/platforms/cocoa/index.md -%}).
+For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}), [iOS SDK]({%- link _documentation/platforms/cocoa/index.md -%}) and
+[React Native SDK]({%- link _documentation/platforms/react-native/index.md -%}).
 
 ## Getting Started
 
-Currently, we only support the health functionality for Android and iOS applications.
+Currently, we support the health functionality for Android, iOS and React Native applications.
 
 ### Android
 
@@ -56,7 +57,12 @@ For more details, see the [full documentation on using Release Health with Andro
 ### iOS
 To benefit from the health data you must use at least version 5.0.0 of the Cocoa SDK and enable the collection of the release health metrics in the initialization options of the SDK.
 
-For more details, see the [full documentation on using Release Health with iOS]({%- link _documentation/platforms/cocoa/index.md -%}#release-health).
+For more details, see the [full documentation on using Release Health with iOS.]({%- link _documentation/platforms/cocoa/index.md -%}#release-health).
+
+### React Native
+To benefit from the health data you must use at least version 1.4.0 of the React Native SDK and enable the collection of the release health metrics in the initialization options of the SDK.
+
+For more details, see the [full documentation on using Release Health with React Native.]({%- link _documentation/platforms/react-native/index.md -%}#release-health).
 
 ## Data Filtering
 
