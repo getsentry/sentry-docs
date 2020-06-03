@@ -317,8 +317,8 @@ _Note:_ Traversing between transactions in this way is only available on the [Bu
 Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [performance-feedback@sentry.io](mailto:performance-feedback@sentry.io).
 
 Supported SDKs for Tracing:
-- JavaScript Browser SDK ≥ 5.14.0
-- JavaScript Node SDK ≥ 5.14.0
+- JavaScript Browser SDK ≥ 5.16.0
+- JavaScript Node SDK ≥ 5.16.0
 - Python SDK version ≥ 0.11.2
 
 {%- endcapture -%}
@@ -412,7 +412,21 @@ $ npm install @sentry/browser
 $ npm install @sentry/apm
 ```
 
-#### Sending Traces/Transactions/Spans
+Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
+
+```html
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" crossorigin="anonymous"></script>
+```
+
+#### Automatic Instrumentation
+
+For `@sentry/browser`, we provide an integration called `Tracing` that does
+automatic instrumentation creating `pageload` and `navigation` transactions
+containing spans for XHR/fetch requests and Performance API entries such as
+marks, measures and resource timings.
+
+The `Tracing` integration is specific to `@sentry/browser` and does not work
+with `@sentry/node`.
 
 The `Tracing` integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
 
@@ -429,13 +443,13 @@ Sentry.init({
 });
 ```
 
+*NOTE:* The `Tracing` integration is available then under `Sentry.Integrations.Tracing` when using the CDN bundle.
+
 To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
 
-You can pass many different options to the Tracing integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. It will automatically capture a transaction for every page load. Within that transaction, spans are instrumented for the following operations:
+You can pass many different options to the `Tracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box.
 
-- XHR/fetch requests
-- If available: Browser Resources (Scripts, CSS, Images ...)
-- If available: Browser Performance API Marks
+For all possible options see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/apm.tracingoptions.html)
 
 *tracingOrigins Option*
 
@@ -451,46 +465,31 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 
 *NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your set up. If you do not whitelist the `sentry-trace` header, the request might be blocked.
 
-#### Using Tracing Integration for Manual Instrumentation
+#### Manual Instrumentation
 
-The tracing integration will create a transaction on page load by default; all spans that are created will be attached to it. Also, the integration will finish the transaction after the default timeout of 500ms of inactivity. The page is considered inactive if there are no pending XHR/fetch requests. If you want to extend the transaction's lifetime, you can do so by adding more spans to it. The following is an example of how you could manually instrument a React component:
+To manually instrument certain regions of your code, you can create a transaction to capture them.
+This is valid for both JavaScript Browser and Node and works independent of the `Tracing` integration.
 
 ```javascript
-// This line starts an activity (and creates a span).
-// As long as you don't pop the activity, the transaction will not be finished and
-// therefore not sent to Sentry.
-// If you do not want to create a span out of an activity, just don't provide the
-// second arg.
-const activity = ApmIntegrations.Tracing.pushActivity(displayName, {
-  data: {},
-  op: 'react',
-  description: `${displayName}`,
-});
-
-// Sometime later ...
-// When we pop the activity, the integration will finish the span and after the timeout 
-// finish the transaction and send it to Sentry.
-// Keep in mind, as long as you do not pop the activity, the transaction will be kept 
-// alive and not sent to Sentry.
-ApmIntegrations.Tracing.popActivity(activity);
+const transaction = Sentry.startTransaction({name: 'test-transaction'});
+const span = transaction.startChild({op: 'functionX'}); // This function returns a Span
+// functionCallX
+span.finish(); // Remember that only finished spans will be sent with the transaction
+transaction.finish(); // Finishing the transaction will send it to Sentry
 ```
-
-Keep in mind that if there is no active transaction, you will need to create one before pushing an activity, otherwise nothing will happen.
 
 Here is a different example. If you want to create a transaction for a user interaction on you page, you need to do the following:
 
-
 ```javascript
-// Let's say this function is invoked when a user clicks on the checkout button of 
-// your shop
+// Let's say this function is invoked when a user clicks on the checkout button of your shop
 shopCheckout() {
   // This will create a new Transaction for you
-  ApmIntegrations.Tracing.startIdleTransaction('shopCheckout');
+  const transaction = Sentry.startTransaction('shopCheckout');
 
   // Assume this function makes an xhr/fetch call
   const result = validateShoppingCartOnServer(); 
   
-  const activity = ApmIntegrations.Tracing.pushActivity('task', {
+  const span = transaction.startChild({
     data: {
       result
     },
@@ -498,37 +497,13 @@ shopCheckout() {
     description: `processing shopping cart result`,
   });
   processAndValidateShoppingCart(result);
-  ApmIntegrations.Tracing.popActivity(activity);
+  span.finish();
 
-  ApmIntegrations.Tracing.finishIdleTransaction(); // This is optional
+  transaction.finish();
 }
 ```
 
-This example will send a transaction `shopCheckout` to Sentry, containing all outgoing requests that happen in `validateShoppingCartOnServer` as spans. The transaction will also contain a `task` span that measures how long `processAndValidateShoppingCart` took. Finally, the call to `ApmIntegrations.Tracing.finishIdleTransaction()` will finish the transaction and send it to Sentry. Calling this is optional; if it is not called, the integration will automatically send the transaction itself after the defined `idleTimeout` (default 500ms).
-
-#### What is an activity?
-
-The concept of an activity only exists in the `Tracing` integration in JavaScript Browser. It's a helper that tells the integration how long it should keep the `IdleTransaction` alive. An activity can be pushed and popped. Once all activities of an `IdleTransaction` have been popped, the `IdleTransaction` will be sent to Sentry.
-
-#### Manual Transactions
-
-To manually instrument a certain region of your code, you can create a transaction to capture it.
-This is valid for both JavaScript Browser and Node and works independent of the `Tracing` integration.
-
-The following example creates a transaction for a part of the code that contains an expensive operation (for example, `processItem`), and sends the result to Sentry:
-
-```javascript
-const transaction = Sentry.getCurrentHub().startSpan({
-  description: 'My optional description', // A name describing the operation
-  op: "task",  
-  transaction: item.getTransaction() 
-})
-
-// processItem may create more spans internally (see next example)
-processItem(item).then(() => {
-  transaction.finish()
-})
-```
+This example will send a transaction `shopCheckout` to Sentry, the transaction will contain a `task` span that measures how long `processAndValidateShoppingCart` took. Finally, the call to `transaction.finish()` will finish the transaction and send it to Sentry.
 
 #### Adding Additional Spans to the Transaction
 
@@ -536,7 +511,7 @@ The next example contains the implementation of the hypothetical `processItem ` 
 
 ```javascript
 function processItem(item, transaction) {
-  const span = transaction.child({
+  const span = transaction.startChild({
     op: "http",
     description: "GET /"
   })
@@ -582,7 +557,7 @@ Sentry.init({
 
 #### Automatic Instrumentation
 
-It’s possible to add tracing to all popular frameworks; however, we provide pre-written handlers only for Express.js.
+It’s possible to add tracing to all popular frameworks; however, we provide pre-written handlers only for Express.
 
 ```javascript
 const Sentry = require("@sentry/node");
@@ -592,6 +567,12 @@ const app = express();
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  integrations: [
+      // enable HTTP calls tracing
+      new Sentry.Integrations.Http({ tracing: true }),
+      // enable Express.js middleware tracing
+      new Apm.Integrations.Express({ app })
+  ],
   tracesSampleRate: 0.25
 });
 
@@ -613,26 +594,6 @@ Spans are instrumented for the following operations within a transaction:
 - `get` calls using native `http` and `https` modules
 - Middleware (Express.js only)
 
-To enable this:
-
-```javascript
-const Sentry = require("@sentry/node");
-const Apm = require("@sentry/apm");
-const express = require("express");
-const app = express();
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 0.25,
-  integrations: [
-      // enable HTTP calls tracing
-      new Sentry.Integrations.Http({ tracing: true }),
-      // enable Express.js middleware tracing
-      new Apm.Integrations.Express({ app })
-  ],
-});
-```
-
 #### Manual Transactions
 
 To manually instrument a certain region of your code, you can create a transaction to capture it.
@@ -642,9 +603,9 @@ The following example creates a transaction for a part of the code that contains
 ```javascript
 app.use(function processItems(req, res, next) {
   const item = getFromQueue();
-  const transaction = Sentry.getCurrentHub().startSpan({
+  const transaction = Sentry.startTransaction({
       op: "task",  
-      transaction: item.getTransaction()
+      name: item.getTransaction()
   })
 
   // processItem may create more spans internally (see next examples)
@@ -653,29 +614,4 @@ app.use(function processItems(req, res, next) {
       next();
   })
 });
-```
-
-#### Adding Additional Spans to the Transaction
-
-The next example contains the implementation of the hypothetical `processItem ` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add to it all newly created spans as child operations. Keep in mind that each individual span needs to be manually finished; otherwise, that span will not show up in the transaction.
-
-```javascript
-function processItem(item, transaction) {
-  const span = transaction.child({
-    op: "http",
-    description: "GET /"
-  })
-
-  return new Promise((resolve, reject) => {
-    http.get(`/items/${item.id}`, (response) => {
-      response.on('data', () => {});
-      response.on('end', () => {
-        span.setTag("http.status_code", response.statusCode);
-        span.setData("http.foobarsessionid", getFoobarSessionid(response));
-        span.finish();
-        resolve(response);
-      });
-    });
-  });
-}
 ```
