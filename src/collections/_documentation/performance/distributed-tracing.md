@@ -412,9 +412,19 @@ $ npm install @sentry/browser
 $ npm install @sentry/apm
 ```
 
+OR
+
+Alternativly if you can't use npm packages you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
+
+```html
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" crossorigin="anonymous"></script>
+```
+
+*NOTE:* The `Tracing` integration is available then under `Sentry.Integrations.Tracing`.
+
 #### Automatic Instrumentation
 
-For Javascript (Browser) we provide you with an integration that does automatic instrumentation creating `pageload` and `navigation` transaction containing Spans for XHR/fetch, Performance API (marks, measures, FCP, LCP) and resources timings (also provided by the Performance API). The Tracing
+For Javascript Browser we provide you with an integration that does automatic instrumentation creating `pageload` and `navigation` transaction containing Spans for XHR/fetch, Performance API (marks, measures, FCP, LCP) and resources timings (also provided by the Performance API). The Tracing
 intergration is specific to Browser so it doesn't work on Node.js.
 
 The `Tracing` integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
@@ -435,6 +445,8 @@ Sentry.init({
 To send transaction, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
 
 You can pass many different options to the `Tracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box.
+
+For all possible options see [TypeDocs](http://getsentry.github.io/sentry-javascript/interfaces/apm.tracingoptions.html)
 
 *tracingOrigins Option*
 
