@@ -445,7 +445,7 @@ Provided data will be merged with the one that is already stored inside the curr
 It works in three different variations:
 
 - plain object containing updatable attributes
-- scope instance that will extract the attributes from
+- scope instance that we will extract the attributes from
 - callback function that will receive the current scope as an argument and allow for modifications
 
 Possible context keys allowed to be passed are: `tags`, `extra`, `contexts`, `user`, `level`, `fingerprint`.
@@ -477,7 +477,7 @@ Sentry.captureException(new Error("something went wrong"), scope);
 ```
 
 ```javascript
-// Use Scope instance to store the data and ignore global one completely
+// Use Scope instance to store the data and ignore the global one completely
 const scope = new Sentry.Scope();
 scope.setTag("section", "articles");
 Sentry.captureException(new Error("something went wrong"), () => scope);
