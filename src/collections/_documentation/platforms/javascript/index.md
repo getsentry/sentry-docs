@@ -437,6 +437,52 @@ Sentry.setExtra("character_name", "Mighty Fighter");
   level="warning"
 %}
 
+### Passing Context Directly
+
+Starting version `5.16.0` of our JavaScript SDKs, some of the contextual data can be provided directly to `captureException` and `captureMessage` calls.
+Provided data will be merged with the one that is already stored inside the current scope, unless explicitly cleared using a callback method.
+
+It works in three different variations:
+
+- plain object containing updatable attributes
+- scope instance that will extract the attributes from
+- callback function that will receive the current scope as an argument and allow for modifications
+
+Possible context keys allowed to be passed are: `tags`, `extra`, `contexts`, `user`, `level`, `fingerprint`.
+
+#### Example Usages
+
+```javascript
+Sentry.captureException(new Error("something went wrong"), {
+  tags: {
+    section: "articles",
+  }
+});
+```
+
+```javascript
+// Explicitly clear what has been already stored on the scope
+Sentry.captureException(new Error("clean as never"), (scope) => {
+  scope.clear();
+  scope.setTag("clean", "slate");
+  return scope;
+});
+```
+
+```javascript
+// Use Scope instance to store the data (it will still merge with the global scope)
+const scope = new Sentry.Scope();
+scope.setTag("section", "articles");
+Sentry.captureException(new Error("something went wrong"), scope);
+```
+
+```javascript
+// Use Scope instance to store the data and ignore global one completely
+const scope = new Sentry.Scope();
+scope.setTag("section", "articles");
+Sentry.captureException(new Error("something went wrong"), () => scope);
+```
+
 ### Unsetting Context
 Context is held in the current scope and thus is cleared out at the end of each operation --- request, etc. You can also push and pop your own scopes to apply context data to a specific code block or function.
 
