@@ -4,7 +4,7 @@ sidebar_order: 1
 example_environment: "staging"
 ---
 
-Sentry environments are available for most features — excluding Dashboards. Environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI. On that page, you can view information about a specific environment, with the focus on the most recent release. If you’re using a multi-staged release process, you can also select a different default environment and set conditions that match the `environment` attribute to restrict alerts to only specific release stages. 
+Environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI. On that page, you can view information about a specific environment, focusing on the most recent release. If you’re using a multi-staged release process, you can also select a different default environment and set conditions that match the `environment` attribute to restrict alerts to only specific release stages. Sentry environments are available for most features — excluding Dashboards.
 
 Use projects to separate different services or applications, and environments to separate different environments or release stages within each. If you've selected one or more projects in the global header of Sentry's web UI, the environment selector shows only environments associated with events from the selected projects.
 
