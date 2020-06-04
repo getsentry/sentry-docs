@@ -430,7 +430,7 @@ This sometimes occurs with build scripts and plugins that produce pre-compressed
 
 ### Verify workers are sharing the same volume as web (if runing as docker on premise)
 
-Sentry does source map calculation in its workers. This means the workers need access to the files uploaded through the front end. When starting sentry in docker, add --mount source=sentry_artifact,target=/var/lib/sentry/files to the container options. A new volume named sentry_artifact is created, and now workers can see the files uploaded.
+Sentry does source map calculation in its workers. This means the workers need access to the files uploaded through the front end. Double check that the cron workers and web workers can read/write files from the same disk.
 
 ## Additional Resources
 
