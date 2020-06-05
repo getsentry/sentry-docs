@@ -314,49 +314,6 @@ You can also set context when manually triggering events.
 
 {% include platforms/event-contexts.md %}
 
-### Extra Context {#extra-context}
-In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
-
-```javascript
-Sentry.setExtra("character_name", "Mighty Fighter");
-```
-
-{% capture __alert_content -%}
-**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data. Sentry does not recommend this, as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay `pending` forever (e.g. in Chrome).
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="warning"
-%}
-
-### Unsetting Context
-Context is held in the current scope and thus is cleared out at the end of each operation --- request, etc. You can also push and pop your own scopes to apply context data to a specific code block or function.
-
-There are two different scopes for unsetting context --- a global scope which Sentry does not discard at the end of an operation, and a scope that can be created by the user.
-
-```javascript
-// This will be changed for all future events
-Sentry.setUser(someUser);
-
-// This will be changed only for the error caught inside and automatically discarded afterward
-Sentry.withScope(function(scope) {
-  scope.setUser(someUser);
-  Sentry.captureException(error);
-});
-```
-
-If you want to remove globally configured data from the scope, you can call:
-
-```javascript
-Sentry.configureScope(scope => scope.clear())
-```
-
-For more information, see:
-- [Full documentation on Scopes and Hubs]({%- link
-_documentation/enriching-error-data/scopes.md -%})
-- [Debug Tough Front End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues).
-
 ### Capturing the User
 Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
 
@@ -463,6 +420,99 @@ Sentry.withScope(function(scope) {
   Sentry.captureException(err);
 });
 ```
+
+### Extra Context {#extra-context}
+In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
+
+```javascript
+Sentry.setContext("character_name", "Mighty Fighter");
+```
+
+{% capture __alert_content -%}
+**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data. We don't recommend sending the whole application state as extra data because the state can exceed the 200kB maximum Sentry allows for individual payloads. If the payload size exceeds the maximum allowed, you'll receive an `HTTP Error 413 Payload Too Large` server response. If you set `keepalive: true` as a `fetch` parameter, the request will staying `pending` forever (for example, in Google Chrome).
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+### Passing Context Directly
+
+Starting in version `5.16.0` of our JavaScript SDKs, some of the contextual data can be provided directly to `captureException` and `captureMessage` calls.
+Provided data will be merged with the one that is already stored inside the current scope, unless explicitly cleared using a callback method.
+
+This functionality works in three different variations:
+
+- plain object containing updatable attributes
+- scope instance that we will extract the attributes from
+- callback function that will receive the current scope as an argument and allow for modifications
+
+We allow the following context keys to be passed: `tags`, `extra`, `contexts`, `user`, `level`, `fingerprint`.
+
+#### Example Usages
+
+```javascript
+Sentry.captureException(new Error("something went wrong"), {
+  tags: {
+    section: "articles",
+  }
+});
+```
+
+```javascript
+// Explicitly clear what has been already stored on the scope
+Sentry.captureException(new Error("clean as never"), (scope) => {
+  scope.clear();
+  scope.setTag("clean", "slate");
+  return scope;
+});
+```
+
+```javascript
+// Use Scope instance to pass the data (its attributes will still merge with the global scope)
+const scope = new Sentry.Scope();
+scope.setTag("section", "articles");
+Sentry.captureException(new Error("something went wrong"), scope);
+```
+
+```javascript
+// Use Scope instance to pass the data and ignore globally configured Scope attributes
+const scope = new Sentry.Scope();
+scope.setTag("section", "articles");
+Sentry.captureException(new Error("something went wrong"), () => scope);
+```
+
+### Unsetting Context
+Context is held in the current scope and thus is cleared out at the end of each operation --- request and so forth. You can also push and pop your own scopes to apply context data to a specific code block or function.
+
+Sentry supports two different scopes for unsetting context:
+
+- a global scope, which Sentry does not discard at the end of an operation
+- a scope created by the user
+
+```javascript
+// This will be changed for all future events
+Sentry.setUser(someUser);
+
+// This will be changed only for the error caught inside the `withScope` callback
+// and automatically restored to the previous value afterward
+Sentry.withScope(function(scope) {
+  scope.setUser(someUser);
+  Sentry.captureException(error);
+});
+```
+
+If you want to remove globally configured data from the scope, you can call:
+
+```javascript
+Sentry.configureScope(scope => scope.clear())
+```
+
+For more information, see:
+- [Full documentation on Scopes and Hubs]({%- link
+_documentation/enriching-error-data/scopes.md -%})
+- [Debug Tough Front End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues).
 
 ## Supported Browsers {#browser-table}
 
