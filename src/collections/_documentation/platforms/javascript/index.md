@@ -422,10 +422,14 @@ Sentry.withScope(function(scope) {
 ```
 
 ### Extra Context {#extra-context}
-In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
+In addition to the structured context that Sentry understands, you can send a key paired with a data object which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
 
 ```javascript
-Sentry.setContext("character_name", "Mighty Fighter");
+Sentry.setContext("character_attributes", {
+  name: "Mighty Fighter",
+  age: 19,
+  attack_type: "melee"
+});
 ```
 
 {% capture __alert_content -%}
