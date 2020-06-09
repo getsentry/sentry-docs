@@ -7,7 +7,7 @@ Sending all application errors to Sentry ensures you'll be notified in real-time
 
 1. Shape your event stream to make it actionable and meaningful.
 2. Reserve those real-time notifications for errors that actually break your code.
-3. Manage your quotas if you're on an event-quota based plan, since too much noise may drain your quota.
+3. Manage your quotas if you're on an event-quota based plan.
 
 ## 1. SDK Filtering: beforeSend
 
@@ -111,6 +111,20 @@ Sentry also applies a dynamic rate limit to your account designed to protect you
 
 Applying the proper filters, SDK configuration, and rate limits is an iterative and on-going process. Sentry provides several tools to increase your visibility into the events and issues aggregating in your streams. Let's see how they can be leveraged to manage your streams.
 
+### > **How to set proper rate limits?**
+
+A good way to set a project rate limit is by figuring out the expected event volume based on your average traffic. Let's look at an example:
+
+![Calculating rate limits]({% asset guides/manage-event-stream/14.png @path %})
+
+- Open the project DSN key configuration under `[Project Settings] > Client Keys > [Configure]`
+- Take a look at the `KEY USAGE IN THE LAST 30 DAYS` graph. Max daily rate in the last month is < 326K
+- Based on that, we can define a ceiling **daily** max value of ~330K, which is ~13,750 events an **hour**, or ~230 events a **minute**.
+- Notice that you can set a daily, hourly, or minute-based rate limit. We'd recommend using a minute based rate to avoid situations where a random event spike might exhaust your daily or hourly set quota and leave you blind for a long while.
+- You can always go back, check the graph to see the number of events dropped due to rate limiting and revisit your settings.
+
+ ![Revisit rate limits]({% asset guides/manage-event-stream/15.png @path %})
+
 ### > **How can I see a breakdown of incoming events?**
 
 The `Stats` view displays details about the total number of events Sentry has received across your entire organization over the last week. The report breaks down the events by project into three categories:
@@ -151,20 +165,6 @@ The Sentry workflow starts with a real-time alert notifying you about an error i
  Once applying the changes the Results table will display your busiest issues:
 
 ![Busiest Issues]({% asset guides/manage-event-stream/10.png @path %})
-
-### > **How to set proper rate limits?**
-
-A good way to set a project rate limit is by figuring out the expected event volume based on your average traffic. Let's look at an example:
-
-![Calculating rate limits]({% asset guides/manage-event-stream/14.png @path %})
-
-- Open the project DSN key configuration under `[Project Settings] > Client Keys > [Configure]`
-- Take a look at the `KEY USAGE IN THE LAST 30 DAYS` graph. Max daily rate in the last month is < 326K
-- Based on that, we can define a ceiling **daily** max value of ~330K, which is ~13,750 events an **hour**, or ~230 events a **minute**.
-- Notice that you can set a daily, hourly, or minute-based rate limit. We'd recommend using a minute based rate to avoid situations where a random event spike might exhaust your daily or hourly set quota and leave you blind for a long while.
-- You can always go back, check the graph to see the number of events dropped due to rate limiting and revisit your settings.
-
- ![Revisit rate limits]({% asset guides/manage-event-stream/15.png @path %})
 
 ### > **Spike Protection was activated --- what should I do?**
 
