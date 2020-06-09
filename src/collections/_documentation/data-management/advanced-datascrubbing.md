@@ -25,11 +25,10 @@ If you have any questions related to this feature, feel free to contact us at `m
 
 Go to your project- or organization-settings and click _Data Privacy_ (or _Security and Privacy_) in the sidebar. Scrolling down, you will find a new section _Data Privacy Rules_.
 
-Click on _Add Rule_. This already adds a very simple rule:
-
-```
-[Mask] [credit card numbers] from [    ]
-```
+1. Click on _Add Rule_. You will be presented with a new dialog.
+2. Select _Mask_ as _Method_.
+3. Select _Credit card numbers_ as _Data Type_.
+4. Enter `$string` as _Source_.
 
 As soon as you hit _Save_, we will attempt to find all creditcard numbers in your events going forward, and replace them with a series of `******`, keeping only the last 4 digits.
 
