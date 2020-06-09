@@ -3,57 +3,76 @@ title: 'Issue Owners'
 sidebar_order: 2
 ---
 
-The Issue Owners feature allows you to reduce noise by directing notifications to specific teams or users based on a path or URL. This allows you to get issues into the hands of the developer who can fix them, faster.
+The Issue Owners feature allows you to create rules to decide which user or team should own an [Issue](https://docs.sentry.io/data-management/event-grouping/). These rules resemble a typical code owners file in a repository, and can match on file paths of files in the stack trace, URL of the request, or event tags. You can automatically assign issues to their owners and alert them about it, allowing you to get issues into the developers' hands who can fix them best.
 
 ## How It Works
 
-Issue owners builds upon your alert rules to specify who to notify about a given issue (to learn more about alert rules, click [here](https://blog.sentry.io/2017/10/12/proactive-alert-rules)).
+While the feature is called Issue Owners, Sentry matches ownership rules against individual events in an issue. This has implications for different parts of Sentry that rely on this feature, which we describe in more detail on this page. But this is generally not a problem, and you can think of issue owners as an issue-level property.
 
-In your project settings, you will define which users or teams own which paths or URLs for your application. When an exception is caught that triggers an alert, Sentry evaluates whether the exception’s URL tag matches the URL you specified, or if the path you specified matches any of the paths in the exception’s stack trace.
+### Creating Rules
 
-If there is a match, only Owners will receive the alert for the exception. By default, if there is no match, the alert will be sent to all members of teams associated with this project. You can also choose to specify that in the case of no match, no users be notified, by toggling off the switch in project settings > Issue Owners > ‘If ownership cannot be determined for an issue...’
+You define ownership rules per project. To configure ownership rules, navigate to your **Project Settings > Issue Owners,** or click on the "Create Ownership Rule" button on an issue details page.
 
-[{% asset owners_default_everyone.png %}]({% asset owners_default_everyone.png @path %})
+There are three types of matchers available:
 
-At this time, the Issue Owners feature is only available for email notifications. This means that your alert rules must trigger email notifications to be affected by your Issue Owners' rules.
+1. Path: matches against all file paths in the event's stack trace
+2. URL: matches against the event's `url` tag
+3. Tag: matches against event tags
 
-## Configuration
+The general format of a rule is: `type:pattern owners`
 
-**Adding a New Rule**
+`type`
 
-To configure Issue Owners, navigate to your project settings > Issue Owners.
+can be either `path`, `url`, or `tags.TAG_NAME`, depending on whether you want to match on paths, URL, or a specific tag.
 
-To add a new rule, you can use the dropdown to specify whether you’re using a path or URL. Then add the path or URL, and specify which users or teams own that path. You can add multiple users or teams to one path.
+`pattern`
 
-You can also use the text editor below to manually add rules.
+The pattern you're matching on (for example, `src/javascript/*` for `path`, `[https://www.example.io/checkout](https://www.example.io/checkout)` for `url`, or `Chrome 81.0.*` for `tags.browser`. It supports unix-style [glob syntax](https://en.wikipedia.org/wiki/Glob_(programming)). For example, `*` to match anything and `?` to match a single character. *This is not a regex.*
 
-[{% asset owners_panel.png %}]({% asset owners_panel.png @path %})
+`owners` 
 
-You can also add a new rule from an individual issue. From the issue details, click the ‘Create Ownership Rule’ on the right-hand panel.
+The single owner or space-separated list of owners. Each owner is the email of a Sentry user, or the name of a team prefixed with `#` (for example, `#backend-team`).
 
-[{% asset ownership_rule.png %}]({% asset ownership_rule.png @path %})
+Teams and users *must* have access to the project to become owners. To grant a team access to a project, navigate to **Project Settings > Project Teams**, and click 'Add Team to [project]'. 
 
-In the resulting modal, you’ll see the paths and URLs connected to the issue, and can either select one to build a rule off of, or create your own rule.
+To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a team, navigate to **Settings > Teams**, select a team, then click "Add Member".
 
-[{% asset ownership_modal.png %}]({% asset ownership_modal.png @path %})
+From project settings:
 
-**Syntax**
+![Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.23.57.png](Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.23.57.png)
 
-Issue Owner rules use the following structure:
+From an issue page:
 
-`type:glob owner`
+![Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-06-09_14.50.21.png](Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-06-09_14.50.21.png)
 
-`type` can be either `path`, `url` or `tags.TAG_NAME`, depending on whether you’re specifying a path, URL or on a specific tag.
+When creating a rule from the issue page, you'll see some suggested paths and URLs based on the events in the issue. Note that Sentry doesn't suggest tags.
 
-`glob` will be the path or URL you are specifying (for example, `src/javascript/*` or `https://www.example.io/checkout`. You can use the _*_ character to match everything, or the _?_ character to match any single character. _This feature does not support regex._
+### Suggested Assignees
 
-`owner` can be the email of a Sentry user, or the name of a team, prefaced with `#` (i.e., `#backend-team`). To list multiple owners of the same path or URL, place them on the same line like so:
+On the issue page, you'll see suggested assignees based on ownership rules matching the event you're looking at (by default, the issue page shows the latest event). Suggested assignees can also be based on [suspect commits](https://docs.sentry.io/workflow/releases/#after-associating-commits). You can assign the *issue* to a suggested assignee by clicking on the suggestion. An event can have multiple suggested assignees if it matches multiple ownership rules.
 
-`type:glob owner1 owner2 owner3`
+![Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.13.06.png](Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.13.06.png)
 
-Teams and users _must_ have access to the project to become owners. To grant a team access to a project, navigate to project settings > Project Teams, and click ‘Add Team to [project]’. To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a project’s team, navigate to Project Settings > Project Teams, select a team, then click ‘Add Member.’
+**Auto-Assign**
+
+You can automatically assign issues to their owners by enabling the following setting in **Project Settings > Issue Owners**.
+
+![Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Untitled.png](Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Untitled.png)
+
+If an issue is already assigned, new events for that issue will not re-assign the issue even if they have a different owner. If an issue is not assigned, but a new event has multiple owners, Sentry assigns it to the owner matching the longest `pattern` in the rules that matched (regardless of the rule `type`).
+
+### Issue Alerts
+
+You can send [Issue Alerts](https://docs.sentry.io/workflow/alerts-notifications/alerts/#issue-alerts) to issue owners. Issue alerts are event-driven: when Sentry receives an event, it evaluates issue alert rules for the issue for that event. If the alert conditions match, Sentry sends an alert to the *event owners that triggered the alert*.
+
+![Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.17.32.png](Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.17.32.png)
+
+If no ownership rules match the event, the alert will either be sent to nobody or all members of the project, depending on the following setting in **Project Settings > Issue Owners:**
+
+![https://docs.sentry.io/assets/owners_default_everyone-c7befc4231e759d8fb45a395ccdebb76ee0143ffaa30841e068f4cdc7463dc27.png](https://docs.sentry.io/assets/owners_default_everyone-c7befc4231e759d8fb45a395ccdebb76ee0143ffaa30841e068f4cdc7463dc27.png)
+
+Alerts sent to Issue Owners only support email.
 
 ## Troubleshooting
 
--   Make sure that all teams and users have access to the project; if they do not have the correct access, the Issue Owners rules will fail to save. To grant a team access to a project, navigate to project settings > Project Teams, and click ‘Add Team to [project]’. To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a project’s team, navigate to Project Settings > Project Teams, select a team, then click ‘Add Member.’
--   Make sure that alert rules are configured to send email. First, check to see that the Mail plugin is enabled by navigating to project settings > Integrations. Then, navigate to project settings > Alerts > Rules, and confirm that notifications are being sent to Mail or to ‘all enabled legacy services.’
+- Make sure that all teams and users have access to the project; if they do not have the correct access, the Issue Owners rules will fail to save. To grant a team access to a project, navigate to **Project Settings > Project Teams**, and click 'Add Team to [project]'. To grant a user access to a project, the user must have at least member access to a team associated with the project. To add a user to a project's team, navigate to **Settings > Teams**, select a team, then click "Add Member".
