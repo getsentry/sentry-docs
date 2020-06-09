@@ -1,0 +1,76 @@
+---
+title: "Continuous Integration"
+---
+
+Sentry uses a variety of continuous integration services to help ensure we don't
+accidentally break the application.
+
+## Travis CI
+
+Travis CI is our primary CI system and runs our tests on every pull request and
+on merges to master. It is required that tests pass before changes can be
+merged.
+
+### Clearing Travis Cache
+
+The "Delete all repository caches" button does NOT work.
+
+Type the following into your browser devtools console on the [Travis cache page](https://travis-ci.org/getsentry/sentry/caches):
+
+```javascript
+Travis.__registry__._resolveCache['config:environment'].skipConfirmations = true; btns=document.getElementsByClassName("delete-cache-icon"); i=0; while (i<btns.length) { btns[i].click(); i++; }
+```
+
+Or this works too and is prettier:
+
+```javascript
+window.confirm = (m => true); Array.from(document.getElementsByClassName('delete-cache-icon')).map(e => e.click());
+```
+
+## GitHub Actions
+
+We use GitHub Actions to supplement front-end builds and apply automatic style
+fixes. We're also trialing it as a way to run acceptance tests.
+
+## Percy
+
+Percy checks the outputs of acceptance tests and reports on changes in rendered
+results. See the [testing chapter for more information](/testing#percy)
+
+## Freight
+
+Freight is how we deploy our applications to staging & production.
+
+### Reverting / Rolling Back After a Bad Deploy
+
+If you've deployed something bad, you'll need to do the following:
+
+- Deploy the most recently known good commit that succeeded ASAP. Keep an eye on
+  this as deploys MUST finish, otherwise it's possible some web machines will
+  still be stuck on the bad deploy's code.
+- Inform #team-engineering that you're rolling back a bad deploy, and that no
+  one should deploy getsentry master until the issue is resolved.
+- Fix the issue, and get it merged into master.
+- Deploy the fix, and verify that the issue has indeed been fixed.
+- Inform #team-engineering that it is safe to deploy getsentry again.
+
+## Troubleshooting CI
+
+**Problem:**
+
+`ContextualVersionConflict` while installing stuff in Travis CI.
+
+**Solution:**
+
+Purge the travis cache. How? See the FAQ.
+
+---
+
+**Problem:**
+
+When pushing your build to staging and you it fails the `Ensure test image` step on Travis.
+
+**Solution:**
+
+You probably forgot to push your branch on Sentry to GitHub.
+
