@@ -14,16 +14,15 @@ In addition to using [`beforeSend`]({% link _documentation/data-management/sensi
 
 **Advanced Data Scrubbing is available only if your organization is enabled as an Early Adopter.** To enable this option, navigate to your organization's settings and enable the "Early Adopter" option. Turning on this option allows access to features prior to full release, and can be disabled at any time.
 
-Early adopters have access to a new option in both organization settings as well as the setting of each project. Go to your project- or organization-settings and click _Data Privacy_ (or _Security
-and Privacy_) in the sidebar. Scrolling down, you will find a new section _Data Privacy Rules_.
+Early adopters have access to a new option in both organization settings as well as the setting of each project. Go to your project- or organization-settings and click _Security and Privacy_ in the sidebar. Scrolling down, you will find a new section _Advanced Data Scrubbing_.
 
-Note that everything you configure there will have direct impact on all new events, just as all the other data privacy-related settings do. However, it is not possible to break or undo any other data privacy settings that you may have configured. In other words, it is only possible to accidentally remove too much data, not too little.
+Note that everything you configure there will have direct impact on all new events, just as all the other data privacy-related settings do. However, it is not possible to break or undo any other data scrubbing settings that you may have configured. In other words, it is only possible to accidentally remove too much data, not too little.
 
 If you have any questions related to this feature, feel free to contact us at `markus@sentry.io`.
 
 ## A Basic Example
 
-Go to your project- or organization-settings and click _Data Privacy_ (or _Security and Privacy_) in the sidebar. Scrolling down, you will find a new section _Data Privacy Rules_.
+Go to your project- or organization-settings and click _Security and Privacy_ in the sidebar. Scrolling down, you will find a new section _Advanced Data Scrubbing_.
 
 1. Click on _Add Rule_. You will be presented with a new dialog.
 2. Select _Mask_ as _Method_.
