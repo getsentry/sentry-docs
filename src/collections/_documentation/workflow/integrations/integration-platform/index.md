@@ -232,7 +232,7 @@ There is an option called Alert Rule Action for the integration platform. What t
 
 [{% asset integration-platform-index/alert-rules.png alt="Dropdown menu of options for alert rules." %}]({% asset integration-platform-index/alert-rules.png @path %})
 
-For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via <your service>` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
+For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via &lt;your service&gt;` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ### Published State
 
@@ -301,7 +301,7 @@ For more information, see the [full documentation on UI Components]({%- link _do
 Webhooks allows your service to receive requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
 
 ## Authorized Origins
-It is possible to use Auth Tokens from the browser if you whitelist the origins of the pages making the requests. In the field that is called `Authorized JavaScript Origins`, add each origin you want to be separated by a newline (for example, docs.sentry.io). You do not need the protocol in the origin (http or https). At this moment, you cannot use any wildcard characters (for example, *.sentry.io), so if you have multiple subdomains, you will need to add them individually.
+It is possible to use Auth Tokens from the browser if you whitelist the origins of the pages making the requests. In the field that is called `Authorized JavaScript Origins`, add each origin you want to be separated by a newline (for example, docs.sentry.io). You do not need the protocol in the origin (http or https). At this moment, you cannot use any wildcard characters (for example, `*.sentry.io`), so if you have multiple subdomains, you will need to add them individually.
 
 ## FAQ
 
@@ -335,7 +335,7 @@ OAuth apps and Auth Tokens allow you to access Sentry as a specific user in your
 
 - If this user leaves the org or their permissions change, the integration can break. A Sentry Integrations App, on the other hand, is a separate, independent entity with its own permissions.
 - OAuth apps and Auth Tokens permit the user to access other Sentry organizations they belong to, so there is limited isolation.
-- Actions taken in Sentry will connect to this user rather than the integration/app. For example, if your alerting integration automatically assigns issues to a teammate, it will appear in the history as “Alice assigned Bob issue XYZ” rather than “<Your Sentry Integration apps> assigned Bob issue XYZ.”
+- Actions taken in Sentry will connect to this user rather than the integration/app. For example, if your alerting integration automatically assigns issues to a teammate, it will appear in the history as “Alice assigned Bob issue XYZ” rather than “&lt;Your Sentry Integration apps&gt; assigned Bob issue XYZ.”
 
 **Managing Webhooks**
 

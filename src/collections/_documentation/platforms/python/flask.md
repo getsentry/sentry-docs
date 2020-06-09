@@ -69,7 +69,7 @@ You can pass the following keyword arguments to `FlaskIntegration()`:
 
   In the above code, you would set the transaction to:
 
-  * `/myurl/<foo>` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
+  * `/myurl/&lt;foo&gt;` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
   * `myendpoint` if you set `transaction_style="endpoint"`
 
   The default is `"endpoint"`.

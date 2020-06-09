@@ -253,7 +253,7 @@ If you’re hosting your scripts on another domain and things don’t get caught
 
 To help mitigate this, we can tell the browser that these scripts are safe and we’re allowing them to expose their errors to us.
 
-In your `<script>` tag, specify the `crossorigin` attribute:
+In your `&lt;script&gt;` tag, specify the `crossorigin` attribute:
 
 ```html
 <script src="//cdn.example.com/script.js" crossorigin="anonymous"></script>

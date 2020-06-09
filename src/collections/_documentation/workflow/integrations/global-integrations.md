@@ -89,7 +89,7 @@ To configure Issue sync, navigate to Organization Settings > **Integrations**, a
 
 #### Resolve in Commit
 
-Once you send commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you send commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -167,7 +167,7 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 
 #### Resolving in Commit
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -259,7 +259,7 @@ You’ll also see that the author of the suspect commit will be listed as a sugg
 
 #### Resolving in Commit
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -425,7 +425,7 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 
 #### Resolving in Commit/Pull Request
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -433,7 +433,7 @@ Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
+You can also resolve issues with pull requests by including `fixes &lt;SENTRY-SHORT-ID&gt;` in the title or description.
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
 
@@ -555,14 +555,14 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 
 #### Resolving in Commit/Pull Request
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
+You can also resolve issues with pull requests by including `fixes &lt;SENTRY-SHORT-ID&gt;` in the title or description.
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
 
@@ -676,9 +676,9 @@ Here is where you can find info for [suspect commit setup]({%- link _documentati
 
 #### Resolve via Commit or PR
 
-Once you've added a repository (see configuration step 8), you can start resolving issues by including `fixes <SHORT-ID>` in your commit messages. You might want to type something in the commit like: "this fixes MyApp-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes <SHORT-ID>` in the title or description. This will automatically resolve the issue in the next release. 
+Once you've added a repository (see configuration step 8), you can start resolving issues by including `fixes &lt;SHORT-ID&gt;` in your commit messages. You might want to type something in the commit like: "this fixes MyApp-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes &lt;SHORT-ID&gt;` in the title or description. This will automatically resolve the issue in the next release. 
 
-A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
+A `&lt;SHORT-ID&gt;` may look something like 'BACKEND-C' in the image below.
 
 [{% asset gitlab/short-id.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/short-id.png @path %})
 
