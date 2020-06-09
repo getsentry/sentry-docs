@@ -13,15 +13,17 @@ git clone https://github.com/getsentry/sentry.git
 cd sentry
 ```
 
-You're going to be working out of the repository for the remainder of the setup.
+You're going to be working out of this repository for the remainder of the setup.
 
 ## System Dependencies
 
-Install [Homebrew](http://brew.sh), and then run `brew bundle` to install the various system packages as listed in sentry's `Brewfile`.
+You'll need to first install Xcode cli tools. (If you try running `git` or `make`, you'll get an xcrun error. Run `xcode-select --install` and follow the instructions.
 
-One thing that requires manual attention is `docker`, which should have just been installed. Open up Spotlight, search for "Docker" and start it. You should soon see the docker icon in your macOS toolbar. Docker will automatically run on system restarts, so this should be the only time you do this.
+Once you have Xcode installed, install [Homebrew](http://brew.sh), and then run `brew bundle` to install the various system packages as listed in sentry's `Brewfile`.
 
-You can verify that Docker is running by running `docker ps`. If it doesn't error with something like `Error response from daemon: dial unix docker.raw.sock: connect: connection refused`, you're good to continue.
+One thing that requires manual attention is `docker`, which should have just been installed. Open up Spotlight, search for "Docker" and start it. You should soon see the docker icon in your macOS menubar. Docker will automatically run on system restarts, so this should be the only time you do this.
+
+You can verify that Docker is running by running `docker ps` in your terminal. If it doesn't error with something like `Error response from daemon: dial unix docker.raw.sock: connect: connection refused`, you're good to continue.
 
 ## Python
 
@@ -170,6 +172,65 @@ If you would like to be able to run `devserver` outside of your root checkout, y
   displayed correctly.
 </Alert>
 
+## Setting up Getsentry
+
+<Alert title="Corporate Users Only" level="warning">
+  Only Sentry employees have access to getsentry.
+</Alert>
+
+Now that you have sentry all set up, it's time to set up getsentry. Getsentry is
+the application we deploy to production and contains additional functionality
+only offered in our SaaS offering.
+
+Let's start off by cloning the `getsentry` repository to be adjacent with your
+sentry repository:
+
+```bash
+# Go to where you have sentry and clone getsentry.
+cd /path/to/sentry
+cd ..
+git clone git@github.com:getsentry/getsentry.git
+```
+
+It's necessary to keep getsentry in an adjacent directory (it's expected by
+`install-py-dev` in the getsentry Makefile). For example, if you
+did a `ls ~/code` you'd see something like:
+
+```bash
+sentry/   getsentry/
+```
+
+Next, run `make develop` and follow any additional instructions that come up.
+Once you've completed installation you can create start the development server
+with
+
+```bash
+# Run the development server
+getsentry devserver --workers
+```
+
+Once you've booted the server you'll access the development environment
+via [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000/), which will
+allow you to use the appropriate subdomains (app and www).
+
+You can set your local instance's org to use a business plan by running the
+following in getsentry:
+
+```go
+./bin/mock-subscription <org_slug> --plan mm2_a_500k
+```
+
+# How does Getsentry development work?
+
+Getsentry and sentry are configured with different Django settings. For
+getsentry, the settings are configured in `getsentry/conf/settings/defaults.py`.
+Additional environment specific overrides are found in files matching the
+environment name. For example, local development is found in
+`getsentry/conf/settings/dev.py`.
+
+For sentry, the settings file is installed at `~/.sentry/sentry.conf.py`
+(outside both repos). If you're investigating, or want to explore, discrepancies
+between the two files, those two files are a good place to start looking.
 
 ## Troubleshooting
 
