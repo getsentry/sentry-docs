@@ -80,7 +80,7 @@ Those configuration options are documented below:
 
 `whitelistUrls`
 
-: The inverse of `ignoreUrls`. Only report errors from whole URLs matching a regex pattern or an exact string. `whitelistUrls` should match the URL of your actual JavaScript files. It should match the URL of your site if and only if you are inlining code inside `<script>` tags. Not setting this value is equivalent to a catch-all and will not filter out any values.
+: The inverse of `ignoreUrls`. Only report errors from whole URLs matching a regex pattern or an exact string. `whitelistUrls` should match the URL of your actual JavaScript files. It should match the URL of your site if and only if you are inlining code inside `&lt;script&gt;` tags. Not setting this value is equivalent to a catch-all and will not filter out any values.
 
   ```javascript
   {
