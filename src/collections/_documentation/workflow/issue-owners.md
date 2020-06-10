@@ -3,7 +3,7 @@ title: 'Issue Owners'
 sidebar_order: 2
 ---
 
-The Issue Owners feature allows you to create rules to decide which user or team should own an [Issue]({%- link _documentationdata-management/event-grouping.md -%}). These rules resemble a typical code owners file in a repository, and can match on file paths of files in the stack trace, URL of the request, or event tags. You can automatically assign issues to their owners and alert them about it, allowing you to get issues into the developers' hands who can fix them best.
+The Issue Owners feature allows you to create rules to decide which user or team should own an [Issue]({%- link _documentation/data-management/event-grouping/index.md -%}). These rules resemble a typical code owners file in a repository, and can match on file paths of files in the stack trace, URL of the request, or event tags. You can automatically assign issues to their owners and alert them about it, allowing you to get issues into the developers' hands who can fix them best.
 
 ## How It Works
 
@@ -39,25 +39,25 @@ To grant a user access to a project, the user must be a member of a team with ac
 
 From project settings:
 
-![Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.23.57.png](Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.23.57.png)
+[{% asset issue-owners/ownership_rules.png alt="Configuration options for defining ownership rules in project settings." %}]({% asset issue-owners/ownership_rules.png @path %})
 
 From an issue page:
 
-![Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-06-09_14.50.21.png](Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-06-09_14.50.21.png)
+[{% asset issue-owners/create_ownership_rule.png alt="Configuration options for defining ownership rules from an issue page." %}]({% asset issue-owners/create_ownership_rule.png @path %})
 
 When creating a rule from the issue page, you'll see some suggested paths and URLs based on the events in the issue. Note that Sentry doesn't suggest tags.
 
 ### Suggested Assignees
 
-On the issue page, you'll see suggested assignees based on ownership rules matching the event you're looking at (by default, the issue page shows the latest event). Suggested assignees can also be based on [suspect commits]({%- link _documentation/workflow/releases.md -%}#after-associating-commits). You can assign the *issue* to a suggested assignee by clicking on the suggestion. An event can have multiple suggested assignees if it matches multiple ownership rules.
+On the issue page, you'll see suggested assignees based on ownership rules matching the event you're looking at (by default, the issue page shows the latest event). Suggested assignees can also be based on [suspect commits]({%- link _documentation/workflow/releases/index.md -%}#after-associating-commits). You can assign the *issue* to a suggested assignee by clicking on the suggestion. An event can have multiple suggested assignees if it matches multiple ownership rules.
 
-![Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.13.06.png](Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.13.06.png)
+[{% asset issue-owners/suggested_assignees.png alt="Avatar icons of suggested assignees and ability to click on them for assignment." width="400"%}]({% asset issue-owners/suggested_assignees.png @path %})
 
 **Auto-Assign**
 
 You can automatically assign issues to their owners by enabling the following setting in **Project Settings > Issue Owners**.
 
-![Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Untitled.png](Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Untitled.png)
+[{% asset issue-owners/new_event_matches.png alt="Toggle to automatically assign issues to their owners."%}]({% asset issue-owners/new_event_matches.png @path %})
 
 If an issue is already assigned, new events for that issue will not re-assign the issue even if they have a different owner. If an issue is not assigned, but a new event has multiple owners, Sentry assigns it to the owner matching the longest `pattern` in the rules that matched (regardless of the rule `type`).
 
@@ -65,11 +65,12 @@ If an issue is already assigned, new events for that issue will not re-assign th
 
 You can send [Issue Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts) to issue owners. Issue alerts are event-driven: when Sentry receives an event, it evaluates issue alert rules for the issue for that event. If the alert conditions match, Sentry sends an alert to the *event owners that triggered the alert*.
 
-![Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.17.32.png](Issue%20Owners%20page%203a4e6ced176441e484886551dd5c9ce8/Screenshot_2020-05-26_14.17.32.png)
+[{% asset issue-owners/perform_these_actions.png alt="Dropdown indicating choices for Issue Alert recipients."%}]({% asset issue-owners/perform_these_actions.png @path %})
+
 
 If no ownership rules match the event, the alert will either be sent to nobody or all members of the project, depending on the following setting in **Project Settings > Issue Owners:**
 
-![https://docs.sentry.io/assets/owners_default_everyone-c7befc4231e759d8fb45a395ccdebb76ee0143ffaa30841e068f4cdc7463dc27.png](https://docs.sentry.io/assets/owners_default_everyone-c7befc4231e759d8fb45a395ccdebb76ee0143ffaa30841e068f4cdc7463dc27.png)
+[{% asset issue-owners/ownership_not_determined.png alt="Toggle that auto-assigns issue owners if no ownership rules match the event." width="600"%}]({% asset issue-owners/ownership_not_determined.png @path %})
 
 Alerts sent to Issue Owners only support email.
 
