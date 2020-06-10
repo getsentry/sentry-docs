@@ -89,6 +89,12 @@ Selectors allow you to restrict rules to certain parts of the event. This is use
 
 All key names are treated case-insensitively.
 
+### Using an event ID to auto-complete sources
+
+Above the _Source_ input field you will find another input field for an event ID. Providing a value there allows for better auto-completion of arbitrary _Additional Data_ fields and variable names.
+
+The event ID is purely optional and the value is not saved as part of your settings. Data scrubbing settings always apply to all events within a project/organization going forward.
+
 ### Advanced source names
 
 Data scrubbing always works on the raw event payload. Keep in mind that some fields in the UI may be called differently in the JSON schema. When looking at an event there should always be a link called "JSON" present that allows you to see what the data scrubber sees.
