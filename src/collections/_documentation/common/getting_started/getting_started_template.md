@@ -1,0 +1,124 @@
+<!--
+Guideline: This page is common to all SDKs; add the name of the SDK you're documenting as well as the code samples as instructed. If you have questions, please ask Fiona or Daniel. 
+
+**The objective for this page is that a developer can quickly complete an ideal integration.**
+-->
+
+Add Sentry's <!--SDK name--> SDK to automatically report errors, exceptions, and rejections in your application. 
+
+On this page, we provide concise information to get you up and running quickly. To learn more, use the links to in-depth content.
+
+In the right place? We also offer documentation for:
+<!-- 
+Guideline: Add icons for related languages/frameworks.
+-->
+What's covered on this page:
+
+- [Install](#install)
+- [Initialize](#initialize)
+- [Verify Setup](#verify-setup)
+- [Capture Errors](#capture-errors)
+    1. [Enrich Error Data](#enrich-error-data) 
+    2. [Set the Release Version](#set-release-version)
+    
+<!--
+Guideline: Add any step to set up information that's specific to the SDK; for example, in the JavaScript example, this heading is for Source Maps. Then add the link to that heading
+-->
+
+- [Monitor Performance](#monitor-performance)
+
+## Install {#install}
+
+1.  If you already have an account, log in to Sentry. If not, establish your account:
+    1. Use your Google, GitHub, or Azure Devops account
+    2. Or, provide the basics: Your name, email, and organization, then set your password.
+2. Select <SDK> as the platform you're working with
+3. Name your project
+
+*Projects* in Sentry scope events to a distinct application in your organization, and assign responsibility and ownership. 
+
+4. Choose your installation method:
+
+<!--
+Guideline: Add SDK specific installation information
+-->
+
+## Initialize {#initialize}
+
+`init` Sentry as soon as possible:
+<!--
+Guideline: Add init code example for this SDK 
+-->
+Once this is done, all unhandled exceptions are automatically captured by Sentry. 
+
+**Important: Record your DSN.** The *DSN* (Data Source Name) tells the SDK where to send the error, associating errors with the project you just created. If you forget your DSN, log in to Sentry to obtain the project DSN from your organization's *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI. The DSN includes the protocol, public key, server address, and project identifier, using this format:
+
+`https://<Public Key>@<Sentry Server Address>/<Project Identifier>`
+
+## Verify Setup {#verify-setup}
+
+Verify your setup by intentionally sending an error that breaks your application. Sentry will send an alert to the email address configured on [Sentry.io](http://sentry.io/) notifying you about the event.
+
+An *event* is one instance of sending data to Sentry. Generally, this data is an error. An *issue* is a grouping of similar events.
+
+For example, in <!--SDK name-->, 
+<!--
+Guideline: Add verify setup example for the SDK you are documenting
+-->
+Resolve the created error by either: 
+
+- Clicking `View on Sentry` in the alert sent to the email provided when you established your account
+- Logging in to Sentry, then opening your project
+
+On the **Issue Details** page, scroll down to the Exception stack trace and view the error. 
+
+## Capture Errors {#capture-errors}
+
+The reporting of an *event* - an error, exception, or rejection - is called *capturing*. When an event is captured, it’s sent to Sentry, then creates a new issue group (or is added to an already existing one) based on Sentry’s grouping algorithm. 
+<!--
+Guideline: Add SDK specific information, as appropriate
+-->
+Learn more about how to manually capture errors or enable message capture with the <!--SDK name--> SDK in Capture Errors <!--link to the Capture Errors content for this SDK-->.
+
+### Enrich Error Data {#enrich-error-data}
+
+When the SDK sends an event to Sentry, the event is enriched with data to help identify the source of the event. We include data both pertinent to the event as well as what led up to the event. Much of this data is sent automatically - including the error context <!--link to the Event Context content for this SDK--> and environment <!--link to the Manage Environments--> - as well as the trail of events that happened prior to an issue, which we call breadcrumbs <!--link to the breadcrumbs content for this SDK-->. You don't need to configure these, though you may modify them. 
+
+Learn more about enriching data sent with events in Enrich Event Data <!--link to the Enrich Event Data page for this SDK-->.
+
+### Set the Release Version {#set-release-version}
+
+When you configure Sentry to include the version of your application, Sentry can tell you about regressions as well as detailed information about the suspect commit. 
+
+Use the <!--SDK setting-->:
+
+<!-- SDK configuration example -->
+
+After you inform Sentry of a new release, you will see information about it, such as new issues and regressions introduced in the release.
+
+Learn more about what releases can do, including using a repository integration, creating the release and associated commits, and telling Sentry when you deploy a release in Track Releases. <!--link to the Track Releases page for this SDK-->.
+
+### <SDK-Specific Setup>
+
+Here, add information that is particular to the SDK you are documenting. For example, in the JavaScript SDK, this is where we discuss setting up Source Maps.
+
+## Monitor Performance {#monitor-performance}
+
+Performance monitoring augments your existing error data by capturing interaction among your software systems, tracking throughput and latency, and providing insight into how users experience your application. This helps you both diagnose problem and measure your application's overall health. 
+
+To get started with performance monitoring, first install the `@sentry/tracing` package:
+
+`npm install --save @sentry/tracing`
+
+Next, initialize the integration in your call to `Sentry.init`:
+
+<!-- SDK example, setting sample rate to 25% of captured transactions -->
+
+Performance data is transmitted using a new event type called `transactions` <!--link to Distributing Tracing-->. **To sample transactions, you must set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions.Learn more about sampling in Using Your SDK to Filter Events <!--add link to this content for the SDK you are documenting-->.
+
+Next steps:
+
+- Manage your SDK Configuration <!--add link-->
+- Learn more about enriching event data <!--add link-->
+- Review and manage integrations <!--add link-->
+- Review common problems <!--add link-->
