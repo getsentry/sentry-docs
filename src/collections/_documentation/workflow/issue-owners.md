@@ -3,17 +3,17 @@ title: 'Issue Owners'
 sidebar_order: 2
 ---
 
-The Issue Owners feature allows you to create rules to decide which user or team should own an [Issue]({%- link _documentation/data-management/event-grouping/index.md -%}). These rules resemble a typical code owners file in a repository, and can match on file paths of files in the stack trace, URL of the request, or event tags. You can automatically assign issues to their owners and alert them about it, allowing you to find the developer with the most context about a fix.
+The Issue Owners feature allows you to create rules to decide which user or team should own an [Issue]({%- link _documentation/data-management/event-grouping/index.md -%}). These rules resemble a typical code owners file in a repository, and can match on file paths of files in the stack trace, URL of the request, or event tags. You can automatically assign issues to their respective owners, which will trigger an alert, allowing you to find the developer with the most context about a fix.
 
 ## How It Works
 
-While the feature is called Issue Owners, Sentry matches ownership rules against individual events in an issue. This has implications for different parts of Sentry that rely on this feature, which we describe in more detail on this page. But this is generally not a problem, and you can think of issue owners as an issue-level property.
+Sentry matches ownership rules against individual events in an issue. This matching is relied upon in other areas of Sentry, described in the following sections. One key item: Issue owners are set for an issue, not a project or organization.
 
 ### Creating Rules
 
-You define ownership rules per project. To configure ownership rules, navigate to your **Project Settings > Issue Owners,** or click on the "Create Ownership Rule" button on an issue details page.
+You define ownership rules per project. To configure ownership rules, navigate to your **Project Settings > Issue Owners**, or click on the "Create Ownership Rule" button on an issue details page.
 
-There are three types of matchers available:
+Types of matchers available:
 
 1. Path: matches against all file paths in the event's stack trace
 2. URL: matches against the event's `url` tag
@@ -23,19 +23,21 @@ The general format of a rule is: `type:pattern owners`
 
 `type`
 
-can be either `path`, `url`, or `tags.TAG_NAME`, depending on whether you want to match on paths, URL, or a specific tag.
+: Can be either `path`, which matches on paths, `url`, which matches the specified URL, or `tags.TAG_NAME` which matches the specified tag.
 
 `pattern`
 
-The pattern you're matching on (for example, `src/javascript/*` for `path`, `[https://www.example.io/checkout](https://www.example.io/checkout)` for `url`, or `Chrome 81.0.*` for `tags.browser`. It supports unix-style [glob syntax](https://en.wikipedia.org/wiki/Glob_(programming)). For example, `*` to match anything and `?` to match a single character. *This is not a regex.*
+: The pattern you're matching on. For example, `src/javascript/*` for `path`, `[https://www.example.io/checkout](https://www.example.io/checkout)` for `url`, or `Chrome 81.0.*` for `tags.browser`.
+
+: `pattern` matching supports unix-style [glob syntax](https://en.wikipedia.org/wiki/Glob_(programming)). For example, `*` to match anything and `?` to match a single character. *This is not a regex.*
 
 `owners` 
 
-The single owner or space-separated list of owners. Each owner is the email of a Sentry user, or the name of a team prefixed with `#` (for example, `#backend-team`).
+: The owner, or list of owners, identified by either the email of the Sentry user or the name of the team, prefixed with `#`. Thus, the owner may be example@company.com or example1@company.com example2@company.com or `#backend-team@company.com`.
 
-Teams and users *must* have access to the project to become owners. To grant a team access to a project, navigate to **Project Settings > Project Teams**, and click 'Add Team to [project]'. 
+: Users and teams *must* both have access to the project to become owners. To grant a team access to a project, navigate to **Project Settings > Project Teams**, and click 'Add Team to [project]'. 
 
-To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a team, navigate to **Settings > Teams**, select a team, then click "Add Member".
+: To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a team, navigate to **Settings > Teams**, select a team, then click "Add Member".
 
 Adding a rule from project settings:
 
@@ -59,7 +61,7 @@ You can automatically assign issues to their owners by enabling the following se
 
 [{% asset issue-owners/new_event_matches.png alt="Toggle to automatically assign issues to their owners."%}]({% asset issue-owners/new_event_matches.png @path %})
 
-If an issue is already assigned, a new event for that issue will not re-assign the issue even if they have a different owner. If an issue is not assigned, but a new event has multiple owners, Sentry assigns it to the owner matching the longest `pattern` in the rules that matched (regardless of the rule `type`).
+If an issue is already assigned, a new event for that issue will not re-assign the issue even if it has a different owner. If an issue is not assigned, but a new event has multiple owners, Sentry assigns it to the owner matching the longest `pattern` in the rules that matched (regardless of the rule `type`).
 
 ### Issue Alerts
 
