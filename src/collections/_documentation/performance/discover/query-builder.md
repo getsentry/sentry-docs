@@ -314,10 +314,10 @@ A down arrow indicates sorting the column in descending order. An up arrow indic
 
 ### Download CSV
 
-If you want to take the data elsewhere, click on the "Export" button to start the export. The results are going to take a while, so sit back and relax. You'll get an email with the download link once they're ready.
+If you want to take the data elsewhere, click on the "Export" button to start the export. The results are going to take a while. You'll get an email with the download link once they're ready.
 
 {% capture __alert_content -%}
-The results are limited to 10 million rows or 2GB whichever comes first.
+The results are limited to 10 million rows or 2GB, whichever comes first.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -327,7 +327,7 @@ The results are limited to 10 million rows or 2GB whichever comes first.
 
 #### Verifying the Download
 
-The download page contains a `SHA1` checksum of the file which you can use to verify its integrity with the following command.
+The download page contains a `SHA1` checksum of the file, which you can use to verify its integrity with the following command:
 
 ```bash
 echo "<SHA1 checksum> <downloaded CSV name>" | sha1sum -c -
