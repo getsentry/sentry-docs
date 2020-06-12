@@ -103,7 +103,7 @@ To get started with performance monitoring, first install the `@sentry/tracing` 
 Guideline: Add SDK specific installation information
 -->
 
-Next, initialize the integration in your call to `Sentry.init`:
+Next, configure your call to `Sentry.init`:
 
 <!-- SDK example, setting sample rate to 25% of captured transactions -->
 
