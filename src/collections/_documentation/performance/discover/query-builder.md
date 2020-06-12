@@ -314,7 +314,7 @@ A down arrow indicates sorting the column in descending order. An up arrow indic
 
 ### Download CSV
 
-If you want to take the data elsewhere, click on the "Export" button to start the export. The results are going to take a while. You'll get an email with the download link once they're ready.
+If you want to take the data elsewhere, click on the "Export" button to start the export. Depending on the amount of data, the wait times will vary. You'll get an email with the download link once they're ready.
 
 {% capture __alert_content -%}
 The results are limited to 10 million rows or 2GB, whichever comes first.
