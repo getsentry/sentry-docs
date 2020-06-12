@@ -3,7 +3,7 @@ title: 'Issue Owners'
 sidebar_order: 2
 ---
 
-The Issue Owners feature allows you to create rules to decide which user or team should own an [Issue]({%- link _documentation/data-management/event-grouping/index.md -%}). These rules resemble a typical code owners file in a repository, and can match on file paths of files in the stack trace, URL of the request, or event tags. You can automatically assign issues to their respective owners, which will trigger an alert, allowing you to find the developer with the most context about a fix.
+The Issue Owners feature allows you to create rules to decide which user or team should own an [Issue]({%- link _documentation/data-management/event-grouping/index.md -%}). These rules resemble a typical code owners file in a repository, and can match on file paths of files in the stack trace, URL of the request, or event tags. You can automatically assign issues to their respective owners, or alert the owners about the issue, allowing you to find the developer with the most context about a fix.
 
 ## How It Works
 
@@ -33,9 +33,9 @@ The general format of a rule is: `type:pattern owners`
 
 `owners` 
 
-: The owner, or list of owners, identified by either the email of the Sentry user or the name of the team, prefixed with `#`. Thus, the owner may be example@company.com or example1@company.com example2@company.com or `#backend-team@company.com`.
+: The owner, or list of owners, identified by either the email of the Sentry user or the name of the team, prefixed with `#`. Thus, the owner may be example@company.com or example1@company.com example2@company.com or `#backend-team`. A space separates each owner in the list of owners.
 
-: Users and teams *must* both have access to the project to become owners. To grant a team access to a project, navigate to **Project Settings > Project Teams**, and click 'Add Team to [project]'. 
+: Teams *must* have access to the project to become owners. To grant a team access to a project, navigate to **Project Settings > Project Teams**, and click 'Add Team to [project]'. 
 
 : To grant a user access to a project, the user must be a member of a team with access to the project. To add a user to a team, navigate to **Settings > Teams**, select a team, then click "Add Member".
 
