@@ -15,7 +15,7 @@ Guideline: Add icons for related languages/frameworks.
 What's covered on this page:
 
 - [Install](#install)
-- [Initialize](#initialize)
+- [Configure](#configure)
 - [Verify Setup](#verify-setup)
 - [Capture Errors](#capture-errors)
     1. [Enrich Error Data](#enrich-error-data) 
@@ -41,7 +41,7 @@ Guideline: Add any step to set up information that's specific to the SDK; for ex
 Guideline: Add SDK specific installation information
 -->
 
-## Initialize
+## Configure
 
 `init` Sentry as soon as possible:
 <!--
@@ -49,7 +49,7 @@ Guideline: Add init code example for this SDK
 -->
 Once this is done, all unhandled exceptions are automatically captured by Sentry. 
 
-**Important: Note your DSN.** The *DSN* (Data Source Name) tells the SDK where to send the error, associating errors with the project you just created. If you forget your DSN, log in to Sentry to obtain the project DSN from your organization's *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI. The DSN includes the protocol, public key, server address, and project identifier, using this format:
+**Important: Note your DSN.** The *DSN* (Data Source Name) tells the SDK where to send the error, associating errors with the project you just created. If you forget your DSN, log in to Sentry and view your organization's *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI. The DSN includes the protocol, public key, server address, and project identifier, using this format:
 
 `https://<Public Key>@<Sentry Server Address>/<Project Identifier>`
 
