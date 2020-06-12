@@ -254,7 +254,7 @@ For more information, see:
 #### Serverless
 
 - [AWS Lambda]({%- link _documentation/platforms/python/aws_lambda.md -%})
-- [Generic Serverless]({%- link _documentation/platforms/python/serverless.md -%})
+- [Generic Serverless]({%- link _documentation/platforms/python/generic.md -%})
 
 #### Other Integrations
 
