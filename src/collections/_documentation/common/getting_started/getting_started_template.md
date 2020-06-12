@@ -6,7 +6,7 @@ Guideline: This page is common to all SDKs; add the name of the SDK you're docum
 
 Add Sentry's <!--SDK name--> SDK to automatically report errors and exceptions in your application. 
 
-On this page, we provide concise information to get you up and running quickly. To learn more, use the links to in-depth content.
+On this page, we provide concise information to get you up and running quickly. To learn more, use the links to in-depth content. Also, if you don't already have an account and Sentry project established, head over to [Sentry.io](https://sentry.io/signup/), then return to this page.
 
 In the right place? We also offer documentation for:
 <!-- 
@@ -29,13 +29,7 @@ Guideline: Add any step to set up information that's specific to the SDK; for ex
 
 ## Install
 
-1.  If you don't already have an account, head over to Sentry.io and establish one, then return to this page to continue.
-2. Select <SDK> as the platform you're working with
-3. Name your project
-
-*Projects* in Sentry scope events to a distinct application in your organization, and assign responsibility and ownership. 
-
-4. Choose your installation method:
+Sentry captures data by using an SDK within your application’s runtime. Choose your installation method:
 
 <!--
 Guideline: Add SDK specific installation information
@@ -65,7 +59,7 @@ Resolve the created error by logging in to Sentry, then opening your project. On
 
 ## Capture Errors
 
-The reporting of an *event* - an error or exception - is called *capturing*. When an event is captured, it’s sent to Sentry.. 
+The reporting of an *event* - an error or exception - is called *capturing*. When an event is captured, it’s sent to Sentry.
 <!--
 Guideline: Add SDK specific information, as appropriate
 -->
