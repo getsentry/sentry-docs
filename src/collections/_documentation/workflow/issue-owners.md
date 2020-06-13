@@ -7,7 +7,7 @@ The Issue Owners feature allows you to create rules to decide which user or team
 
 ## How It Works
 
-Sentry matches ownership rules against individual events in an issue. This matching is relied upon in other areas of Sentry, described in the following sections. You can think of issue owners as an issue-level property.
+You can think of Issue Owners as an issue-level property. Sentry matches ownership rules against individual events in an issue. Some Sentry features rely on Issue Owners to work, and matching impacts how they operate, as described below.
 
 ### Creating Rules
 
