@@ -314,7 +314,24 @@ A down arrow indicates sorting the column in descending order. An up arrow indic
 
 ### Download CSV
 
-Note, only the current values visible on the table are exported, not the paginated results. To export the table as CSV, click on the "Download CSV" button.
+If you want to take the data elsewhere, click on the "Export" button to start the export. Depending on the amount of data, the wait times will vary. You'll get an email with the download link once they're ready.
+
+{% capture __alert_content -%}
+The results are limited to 10 million rows or 2GB, whichever comes first.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="info"
+%}
+
+#### Verifying the Download
+
+The download page contains a `SHA1` checksum of the file, which you can use to verify its integrity with the following command:
+
+```bash
+echo "<SHA1 checksum> <downloaded CSV name>" | sha1sum -c -
+```
 
 ### Expand Row Aggregates
 
