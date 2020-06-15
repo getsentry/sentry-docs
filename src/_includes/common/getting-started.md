@@ -9,9 +9,11 @@ Add Sentry's {{ include.sdk_name }} SDK to automatically report errors and excep
 On this page, we provide concise information to get you up and running quickly. To learn more, use the links to in-depth content. Also, if you don't already have an account and Sentry project established, head over to [Sentry.io](https://sentry.io/signup/), then return to this page.
 
 In the right place? We also offer documentation for:
+
 <!-- 
 Guideline: Add icons for related languages/frameworks.
 -->
+
 What's covered on this page:
 
 - [Install](#install)
@@ -20,11 +22,9 @@ What's covered on this page:
 - [Capture Errors](#capture-errors)
     1. [Enrich Error Data](#enrich-error-data) 
     2. [Set the Release Version](#set-the-release-version)
-    
 <!--
 Guideline: Add any step to set up information that's specific to the SDK; for example, in the JavaScript example, this heading is for Source Maps. Then add the link to that heading
 -->
-
 - [Monitor Performance](#monitor-performance)
 
 ## Install
@@ -39,20 +39,22 @@ Guideline: Add SDK specific installation information
 ## Configure
 
 `init` Sentry as soon as possible:
+
 <!--
 Guideline: Add init code example for this SDK 
 -->
+
 Once this is done, all unhandled exceptions are automatically captured by Sentry. 
 
 **Important: Note your DSN.** The *DSN* (Data Source Name) tells the SDK where to send the error, associating errors with the project you just created. If you forget your DSN, log in to Sentry and view your organization's *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI. The DSN includes the protocol, public key, server address, and project identifier, using this format:
 
-`https://<Public Key>@<Sentry Server Address>/<Project Identifier>`
+```https://<Public Key>@<Sentry Server Address>/<Project Identifier>```
 
 ## Verify Setup
 
 Verify your setup by intentionally sending an error that breaks your application. An *event* is one instance of sending data to Sentry. Generally, this data is an error. An *issue* is a grouping of similar events.
 
-For example, in <!--SDK name-->, 
+For example, in {{ include.sdk_name }}, 
 <!--
 Guideline: Add verify setup example for the SDK you are documenting
 -->
@@ -64,7 +66,7 @@ The reporting of an *event* - an error or exception - is called *capturing*. Whe
 <!--
 Guideline: Add SDK specific information, as appropriate
 -->
-Learn more about how to manually capture errors or enable message capture with the <!--SDK name--> SDK in Capture Errors <!--link to the Capture Errors content for this SDK-->.
+Learn more about how to manually capture errors or enable message capture with the {{ include.sdk_name }} SDK in Capture Errors <!--link to the Capture Errors content for this SDK-->.
 
 
 ### Enrich Error Data
@@ -77,21 +79,23 @@ Learn more about enriching data sent with events in Enrich Event Data <!--link t
 
 When you configure Sentry to include the version of your application, Sentry can tell you about regressions as well as detailed information about the suspect commit. 
 
-Use the <!--SDK setting-->:
+Use the<!--SDK setting-->:
 
 <!-- SDK configuration example -->
 
 After you inform Sentry of a new release, you will see information about it, such as new issues and regressions introduced in the release.
 
-Learn more about what releases can do, including using a repository integration, creating the release and associated commits, and telling Sentry when you deploy a release in Track Releases. <!--link to the Track Releases page for this SDK-->.
+Learn more about what releases can do, including using a repository integration, creating the release and associated commits, and telling Sentry when you deploy a release in Track Releases. <!--link to the Track Releases page for this SDK-->
 
-### <SDK-Specific Setup>
+<!--
+### SDK-Specific Setup
 
 Here, add information that is particular to the SDK you are documenting. For example, in the JavaScript SDK, this is where we discuss setting up Source Maps.
+-->
 
 ## Monitor Performance
 
-Performance monitoring augments your existing error data by capturing interaction among your software systems, tracking throughput and latency, and providing insight into how users experience your application. This helps you both diagnose problem and measure your application's overall health. 
+Performance monitoring helps developers measure Apdex, Throughput, and trace slow transactions down to the poor performing API call or DB query. Available for both JavaScript and Python SDKs, performance monitoring helps you both diagnose problems and measure your application's overall health. 
 
 To get started with performance monitoring, first install the `@sentry/tracing` package:
 
