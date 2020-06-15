@@ -94,7 +94,7 @@ For Android, we hook into Gradle for the source map build process. When you run 
 
 If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build.
 
-To disable this feature, set `org.gradle.configureondemand=false` or remove it as it's default value is disabled, do this in the `gradle.properties` file.
+To disable this feature, set `org.gradle.configureondemand=false` or remove it as its default value is disabled, do this in the `gradle.properties` file.
 
 <!-- WIZARD -->
 ## Connecting the SDK to Sentry
