@@ -18,3 +18,13 @@ $ npm install @sentry/browser
 {%- include common/getting-started.md 
 sdk_name=page.title
 install_content=__install_content -%}
+
+{%- capture __config_content -%}
+
+```Sentry.init({ dsn: '___PUBLIC_DSN___' });```
+
+{%- endcapture -%}
+
+{%- include common/getting-started.md 
+sdk_name=page.title
+install_content=__config_content -%}

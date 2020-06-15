@@ -40,6 +40,7 @@ Guideline: Add SDK specific installation information
 
 `init` Sentry as soon as possible:
 
+{{ include.config_content }}
 <!--
 Guideline: Add init code example for this SDK 
 -->
