@@ -57,7 +57,7 @@ The [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will guide you t
 
 The following changes will be performed:
 
-- add the sentry-java package for native crash reporting on Android
+- add the sentry-android package for native crash reporting on Android
 - add the sentry-cocoa package for native crash reporting on iOS
 - enable the Sentry Gradle build step for Android
 - patch *_MainApplication.java_* for Android
