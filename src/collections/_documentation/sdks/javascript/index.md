@@ -1,8 +1,9 @@
 ---
 title: JavaScript
+excerpt: ""
 ---
 
-{% capture __install_content -%}
+{%- capture __install_content -%}
 Add the Sentry SDK as a dependency using `yarn` or `npm`:
 
 ```bash
@@ -14,7 +15,6 @@ $ npm install @sentry/browser
 ```
 {%- endcapture -%}
 
-{% include common/getting-started.md 
+{%- include common/getting-started.md 
 sdk_name=page.title
-install_content=__install_content
-%}
+install_content=__install_content -%}
