@@ -160,20 +160,3 @@ Sentry.getContext().addExtra("extra", "thing");
 ```java
 Sentry.setExtra("extra", "thing");
 ```
-
-### Multi-Dex support
-
-If you're using Multi-Dex and our SDK, we would recommend updating your Multi-Dex configuration:
-
-```groovy
-release {
-    multiDexKeepProguard file('multidex-config.pro')
-}
-```
-
-And, add to `multidex-config.pro` the following lines:
-
-```
--keep class io.sentry.android.core.SentryAndroidOptions
--keep class io.sentry.android.ndk.SentryNdk
-```
