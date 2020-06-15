@@ -708,4 +708,4 @@ And, add to `multidex-config.pro` the following lines:
 -keep class io.sentry.android.ndk.SentryNdk
 ```
 
-If you experience issues like `Could not find class` on devices running the `Dalvik VM`, you may expand the above rules in order to keep the necessary classes in the main dex file.
+If you experience issues like `Could not find class` on devices running the `Dalvik VM`, you may expand the above rules to keep the necessary classes in the main dex file.
