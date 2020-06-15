@@ -114,6 +114,10 @@ The following options exist to change the behavior of the upload command:
 
 : This prevents the automatic detection of source map references. It’s not recommended to use this option since the system falls back to not emitting a reference anyways. It is however useful if you are manually adding `sourceMapURL` comments to the minified files and you know that they are more correct than the autodetection.
 
+`--dist`
+
+: Sets the distribution for the source map. Note that both the release and the dist on the source map will need to exactly match the event for it to be symbolicated correctly.
+
 `--rewrite`
 
 : When this option is provided, `sentry-cli` will rewrite the source maps before upload. This does two things:
@@ -152,9 +156,9 @@ Some example usages:
 ```bash
 $ sentry-cli releases files 0.1 upload-sourcemaps /path/to/sourcemaps
 $ sentry-cli releases files 0.1 upload-sourcemaps /path/to/sourcemaps \
-    --url-prefix '~/static/js`
+    --dist 0.1.0.1 --url-prefix '~/static/js' 
 $ sentry-cli releases files 0.1 upload-sourcemaps /path/to/sourcemaps \
-    --url-prefix '~/static/js` --rewrite --strip-common-prefix
+    --dist 0.1.0.1 --url-prefix '~/static/js' --rewrite --strip-common-prefix
 $ sentry-cli releases files 0.1 upload-sourcemaps /path/to/sourcemaps \
     --ignore-file .sentryignore
 ```
