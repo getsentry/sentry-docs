@@ -27,4 +27,4 @@ install_content=__install_content -%}
 
 {%- include common/getting-started.md 
 sdk_name=page.title
-install_content=__config_content -%}
+config_content=__config_content -%}
