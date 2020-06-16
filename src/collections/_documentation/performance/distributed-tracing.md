@@ -618,22 +618,22 @@ app.use(function processItems(req, res, next) {
 
 ### Vue.js
 
-Vue Tracing Integration allows us to track rendering performance during initial application load.
+The Vue Tracing Integration allows us to track rendering performance during an initial application load.
 
-It is achieved by injecting our handler inside Vue's `beforeCreate` mixin, which gives us an access to component during it is all lifecycle stages.
-When we encounter component named `root`, which is top-level Vue instance (as in `new Vue({})`), we use our APM Tracing integration,
-and create a new activity named `Vue Application Render`. Once it is created, it will wait until all it is child components are rendered, and there are no new rendering events triggered within configured `timeout`, before marking the activity as completed.
+It is achieved by injecting our handler inside Vue's `beforeCreate` mixin, which gives us access to a Vue component during all of it's lifecycle stages.
+When we encounter component named `root`, which is a top-level Vue instance (as in `new Vue({})`), we use our AM Tracing integration,
+and create a new activity named `Vue Application Render`. Once it is created, it will wait until all of it's child components are rendered, and there are no new rendering events triggered within configured `timeout`, before marking the activity as completed.
 
-This will give you a very high-level information about rendering timing of the app. However, we can provide more fine-grained details about what actually happened during mentioned activity.
+This will give you very high-level information about the rendering performance of the Vue instance, however the integration can also provide more fine-grained details about what actually happened during a specific activity.
 In order to do that, you need to specify which components you want to track and what hooks you want to listen to (list of all available hooks can be found here https://vuejs.org/v2/api/#Options-Lifecycle-Hooks). If you really want to, you can turn on tracking for all the components, however it can be rather noisy if your app consists of hundreds of components, thus we encourage being more specific. When hooks are not provided, we will track component's `mount` and `update` hooks.
 
 Note that we do not use `before` and `-ed` pairs for hooks, and you should provide a simple verb instead, eg. `update`, not `beforeUpdate` and `updated`.
 
-To setup Vue Tracing Integration, first you need to configure APM Tracing integration itself. For details on how to do this, see [JavaScript]({%- link _documentation/performance/distributed-tracing.md -%}#javascript) section above.
-Once it is done, you can move to configuring Vue integration itself.
+To setup the Vue Tracing Integration, you will first need to configure the AM Tracing integration itself. For details on how to do this, see [JavaScript]({%- link _documentation/performance/distributed-tracing.md -%}#javascript) section above.
+Once the Tracing integration has been configured, you can move on to configuring the Vue integration itself.
 Our new tracing capabilites are baked-in inside original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
 
-The most basic configuration for the tracing, which would track only top-level component looks like this:
+The most basic configuration for tracing your Vue app, which would track only the top-level component, looks like this:
 
 ```js
 import * as Sentry from "@sentry/browser";
