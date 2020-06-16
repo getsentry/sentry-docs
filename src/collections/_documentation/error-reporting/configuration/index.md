@@ -117,10 +117,10 @@ A list of strings or regex patterns that match error URLs which should not be se
 {% endsupported %}
 
 {:.config-key}
-### `allowlist-urls`
+### `whitelist-urls`
 
 {% supported browser browsernpm %}
-A list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry.  By default, all errors
+A legacy alias for a list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry.  By default, all errors
 will be sent.
 {% endsupported %}
 
