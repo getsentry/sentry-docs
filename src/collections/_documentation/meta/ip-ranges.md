@@ -29,9 +29,9 @@ Sentry uses the following IP addresses to make outbound requests:
 130.211.230.102/32
 ```
 
-## Whitelisting Access via Nginx
+## Allowing Access via Nginx
 
-To whitelist access to source maps with Nginx for instance, you can use this location example. This example assumes your source maps live in `/static/dist`:
+To allow access to source maps with Nginx for instance, you can use this location example. This example assumes your source maps live in `/static/dist`:
 
 ```python
 location ~ ^/static/dist/(.+)\.map$ {
@@ -45,9 +45,9 @@ location ~ ^/static/dist/(.+)\.map$ {
 }
 ```
 
-## Whitelisting Access via Apache
+## Allowing Access via Apache
 
-To whitelist access to source maps with Apache you can use this example. It can either go into your _.htaccess_ or global config. This example assumes your source maps live in `/static/dist`:
+To allow access to source maps with Apache you can use this example. It can either go into your _.htaccess_ or global config. This example assumes your source maps live in `/static/dist`:
 
 ```apache
 <FilesMatch "\.map$">
