@@ -112,7 +112,6 @@ The SDK can also be configured via `NLog.config` XML file:
     <target xsi:type="Sentry" name="sentry"
             dsn="___PUBLIC_DSN___"
             layout="${message}"
-            debug="true"
             breadcrumbLayout="${message}"
             minimumBreadcrumbLevel="Debug"
             minimumEventLevel="Error">
