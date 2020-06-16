@@ -1,7 +1,6 @@
 ---
 title: 'Serverless'
-sidebar_rder:0
-# This is required.
+sidebar_order: 0
 ---
 
 Sentry for Serverless captures error events along by using an SDK within your application’s runtime (as opposed to logs to filter error events). These are platform specific and allow Sentry to have a deep understanding of how your application behavior including the ability to add additional context during runtime and applying pin filters.
