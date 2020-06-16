@@ -615,3 +615,122 @@ app.use(function processItems(req, res, next) {
   })
 });
 ```
+
+### Vue.js
+
+Vue Tracing Integration allows us to track rendering performance during initial application load.
+
+It is achieved by injecting our handler inside Vue's `beforeCreate` mixin, which gives us an access to component during it is all lifecycle stages.
+When we encounter component named `root`, which is top-level Vue instance (as in `new Vue({})`), we use our APM Tracing integration,
+and create a new activity named `Vue Application Render`. Once it is created, it will wait until all it is child components are rendered, and there are no new rendering events triggered within configured `timeout`, before marking the activity as completed.
+
+This will give you a very high-level information about rendering timing of the app. However, we can provide more fine-grained details about what actually happened during mentioned activity.
+In order to do that, you need to specify which components you want to track and what hooks you want to listen to (list of all available hooks can be found here https://vuejs.org/v2/api/#Options-Lifecycle-Hooks). If you really want to, you can turn on tracking for all the components, however it can be rather noisy if your app consists of hundreds of components, thus we encourage being more specific. When hooks are not provided, we will track component's `mount` and `update` hooks.
+
+Note that we do not use `before` and `-ed` pairs for hooks, and you should provide a simple verb instead, eg. `update`, not `beforeUpdate` and `updated`.
+
+To setup Vue Tracing Integration, first you need to configure APM Tracing integration itself. For details on how to do this, see [JavaScript]({%- link _documentation/performance/distributed-tracing.md -%}#javascript) section above.
+Once it is done, you can move to configuring Vue integration itself.
+Our new tracing capabilites are baked-in inside original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
+
+The most basic configuration for the tracing, which would track only top-level component looks like this:
+
+```js
+import * as Sentry from "@sentry/browser";
+import { Vue as VueIntegration } from "@sentry/integrations";
+import { Integrations } from "@sentry/apm";
+import Vue from "vue";
+
+Sentry.init({
+  // ...
+  integrations: [
+    new Integrations.Tracing(),
+    new VueIntegration({
+      Vue,
+      tracing: true
+    })
+  ],
+  tracesSampleRate: 1
+});
+```
+
+If we want to track child components, and see more details about the rendering process, we can ask the integration to either track them all:
+
+```js
+new VueIntegration({
+  Vue,
+  tracing: true,
+  tracingOptions: {
+    trackComponents: true
+  }
+})
+```
+
+or be more granular with our choices:
+
+```js
+new VueIntegration({
+  Vue,
+  tracing: true,
+  tracingOptions: {
+    trackComponents: ["App", "RwvHeader", "RwvFooter", "RwvArticleList", "Pagination"]
+  }
+})
+```
+
+If we also want to know if some components are for example removed during initial page load, we can add `destroy` hook, to our defaults:
+
+```js
+new VueIntegration({
+  Vue,
+  tracing: true,
+  tracingOptions: {
+    trackComponents: ["App", "RwvHeader", "RwvFooter", "RwvArticleList", "Pagination"],
+    hooks: ['mount', 'update', 'destroy']
+  }
+})
+```
+
+The last thing that we can specify, is how long top-level activity should wait for the last component to perform it is rendering.
+Every new rendering cycle is debouncing the timeout, and it starts counting from the beginning. Once the timeout is reached, tracking is completed and all the information is sent to Sentry.
+
+```js
+new VueIntegration({
+  Vue,
+  tracing: true,
+  tracingOptions: {
+    trackComponents: true,
+    timeout: 4000
+  }
+})
+```
+
+#### Configuration
+
+```js
+/**
+ * When set to `true`, enables tracking of components lifecycle performance.
+ * Default: false
+ */
+tracing: boolean;
+tracingOptions: {
+  /**
+   * Decides whether to track components by hooking into its lifecycle methods.
+   * Can be either set to `boolean` to enable/disable tracking for all of them.
+   * Or to an array of specific component names (case-sensitive).
+   * Default: false
+   */
+  trackComponents: boolean | string[];
+  /**
+   * How long to wait (in ms) until the tracked root activity is marked as finished and sent of to Sentry
+   * Default: 2000
+   */
+  timeout: number;
+  /**
+   * List of hooks to keep track of during component lifecycle.
+   * Available hooks: 'activate' | 'create' | 'destroy' | 'mount' | 'update'
+   * Based on https://vuejs.org/v2/api/#Options-Lifecycle-Hooks
+   */
+  hooks: string[];
+}
+```
