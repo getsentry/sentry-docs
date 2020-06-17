@@ -618,20 +618,20 @@ app.use(function processItems(req, res, next) {
 
 ### Vue.js
 
-The Vue Tracing Integration allows us to track rendering performance during an initial application load.
+The Vue Tracing Integration allows you to track rendering performance during an initial application load.
 
-It is achieved by injecting our handler inside Vue's `beforeCreate` mixin, which gives us access to a Vue component during all of it's lifecycle stages.
-When we encounter component named `root`, which is a top-level Vue instance (as in `new Vue({})`), we use our AM Tracing integration,
-and create a new activity named `Vue Application Render`. Once it is created, it will wait until all of it's child components are rendered, and there are no new rendering events triggered within configured `timeout`, before marking the activity as completed.
+Sentry injects a handler inside Vue's `beforeCreate` mixin, providing access to a Vue component during its life cycle stages.
+When Sentry encounters a component named `root`, which is a top-level Vue instance (as in `new Vue({})`), we use our AM Tracing integration,
+and create a new activity named `Vue Application Render`. Once the activity has been created, it will wait until all of its child components render, and there aren't new rendering events triggered within the configured `timeout`, before marking the activity as completed.
 
-This will give you very high-level information about the rendering performance of the Vue instance, however the integration can also provide more fine-grained details about what actually happened during a specific activity.
-In order to do that, you need to specify which components you want to track and what hooks you want to listen to (list of all available hooks can be found here https://vuejs.org/v2/api/#Options-Lifecycle-Hooks). If you really want to, you can turn on tracking for all the components, however it can be rather noisy if your app consists of hundreds of components, thus we encourage being more specific. When hooks are not provided, we will track component's `mount` and `update` hooks.
+The described instrumentation functionality will give you very high-level information about the rendering performance of the Vue instance. However, the integration can also provide more fine-grained details about what actually happened during a specific activity.
+To do that, you need to specify which components you want to track and what hooks you want to listen to (you can find a list of all available hooks can [here](https://vuejs.org/v2/api/#Options-Lifecycle-Hooks)). You can also turn on tracking for all the components. However, it can be rather noisy if your app consists of hundreds of components. We encourage being more specific. If you don't provide hooks, Sentry will track a component's `mount` and `update` hooks.
 
-Note that we do not use `before` and `-ed` pairs for hooks, and you should provide a simple verb instead, eg. `update`, not `beforeUpdate` and `updated`.
+Note that we don't use `before` and `-ed` pairs for hooks, and you should provide a simple verb instead. For example, `update` is correct. `beforeUpdate` and `updated` are incorrect.
 
-To setup the Vue Tracing Integration, you will first need to configure the AM Tracing integration itself. For details on how to do this, see [JavaScript]({%- link _documentation/performance/distributed-tracing.md -%}#javascript) section above.
-Once the Tracing integration has been configured, you can move on to configuring the Vue integration itself.
-Our new tracing capabilites are baked-in inside original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
+To set up the Vue Tracing Integration, you will first need to configure the AM Tracing integration itself. For details on how to do this, see the [JavaScript]({%- link _documentation/performance/distributed-tracing.md -%}#javascript) section above.
+Once you've configured the Tracing integration, move on to configuring the Vue integration itself.
+Sentry's new tracing capabilities are built into the original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
 
 The most basic configuration for tracing your Vue app, which would track only the top-level component, looks like this:
 
@@ -654,7 +654,7 @@ Sentry.init({
 });
 ```
 
-If we want to track child components, and see more details about the rendering process, we can ask the integration to either track them all:
+If you want to track child components, and see more details about the rendering process, configure the integration to track them all:
 
 ```js
 new VueIntegration({
@@ -666,7 +666,7 @@ new VueIntegration({
 })
 ```
 
-or be more granular with our choices:
+Or, you can choose more granularity:
 
 ```js
 new VueIntegration({
@@ -678,7 +678,7 @@ new VueIntegration({
 })
 ```
 
-If we also want to know if some components are for example removed during initial page load, we can add `destroy` hook, to our defaults:
+If you want to know if some components are, for example, removed during the initial page load, add a `destroy` hook to the default:
 
 ```js
 new VueIntegration({
@@ -691,8 +691,8 @@ new VueIntegration({
 })
 ```
 
-The last thing that we can specify, is how long top-level activity should wait for the last component to perform it is rendering.
-Every new rendering cycle is debouncing the timeout, and it starts counting from the beginning. Once the timeout is reached, tracking is completed and all the information is sent to Sentry.
+You can specify how long a top-level activity should wait for the last component to render.
+Every new rendering cycle is debouncing the timeout, and it starts counting from the beginning. Once the timeout is reached, tracking is completed, and all the information is sent to Sentry.
 
 ```js
 new VueIntegration({
@@ -722,7 +722,7 @@ tracingOptions: {
    */
   trackComponents: boolean | string[];
   /**
-   * How long to wait (in ms) until the tracked root activity is marked as finished and sent of to Sentry
+   * How long to wait (in ms) until the tracked root activity is marked as finished and sent to Sentry
    * Default: 2000
    */
   timeout: number;
