@@ -16,7 +16,7 @@ To receive symbolicated stack traces, you have to upload debug information to Se
 
 Attachments persist for 30 days; if your total storage included in your quota is exceeded, attachments will not be stored. You can delete attachments or their containing events at any time. Deleting an attachment does not affect your quota - Sentry counts an attachment toward your quota as soon as it is stored. 
 
-Learn more about how attachments impact your [quota] ({%- link _documentation/accounts/quotas/index.md -%}.
+Learn more about how attachments impact your [quota]({%- link _documentation/accounts/quotas/index.md %}).
 
 ## Crash Reports and Privacy
 
