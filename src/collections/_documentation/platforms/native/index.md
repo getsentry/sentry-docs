@@ -437,12 +437,10 @@ The crashpad handler executable must be shipped alongside your application so
 that it can be launched when initializing the SDK. The path is evaluated
 relative to the current working directory at runtime.
 
-## Event Attachments (Preview)
+## Event Attachments
 
 Besides the Minidump file, Sentry can optionally store additional files uploaded
-in the same request, such as log files.
-
-{% include platforms/event-attachments.md %}
+in the same request, such as log files. Learn more about these in [Attachments] ({%- link _documentation/enriching-error-data/attachments.md -%})
 
 To add an attachment, the path to the file has to be configured when
 initializing the SDK. It will monitor the file and upload it along with any event
