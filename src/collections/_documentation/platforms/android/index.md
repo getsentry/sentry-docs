@@ -624,7 +624,7 @@ If you want to have control over what breadcrumbs are attached to your data, you
 
 That allows the user to decide whether and how a breadcrumb should be sent.
 
-### Multi-Dex support
+### Multi-Dex Support
 
 If you're using Multi-Dex and our SDK, we would recommend updating your Multi-Dex configuration:
 
