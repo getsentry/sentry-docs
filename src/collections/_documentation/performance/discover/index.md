@@ -27,17 +27,27 @@ Circular Sentry avatars indicate pre-built queries.
 
 User avatars indicate saved queries. The user who creates a saved query will automatically have their avatar attached to the saved query.
 
-**Deleting or Duplicating Saved Queries**
-
-Delete or duplicate a saved query in the Context Menu --- looks like ellipses --- located in the lower right corner of each query card.
-
 **Searching Saved Queries**
 
-Saved queries will be viewable by anyone in your Sentry organization. You can use our search bar on the homepage to find a specific query. 
+Saved queries are viewable by anyone in your organization with a Sentry account. Looking for a specific query? Use the search bar on the homepage to find it. 
 
+
+**Sorting Saved Queries**
+
+The dropdown in the top right will allow you to sort by attributes.
+
+- Recently Edited (Default)
+- My Queries 
+- Query Name (A-Z)
+- Date Created (Newest)
+- Date Created (Oldest)
+- Most Outdated
+
+**Deleting or Duplicating Saved Queries**
+
+The ellipsis on the bottom right of each saved query card has an ellipsis that will show a context menu. Delete or duplicate a saved query from here. 
 
 ## Query Builder
-
 [{% asset discover/discover-results.png alt="Page displaying a graph of error spikes by URL, the event tag summary, and results of the query." %}]({% asset discover/discover-results.png @path %})
 
 Navigate to any query page from the Discover Homepage in these ways:
@@ -60,6 +70,7 @@ Although search queries are shareable, you can save them as saved queries. Saved
 For more details, see [full documentation on the Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}).
 
 ### Performance Homepage
+
 Custom queries also provide more curated views in the [Performance Homepage]({%- link _documentation/performance/performance-homepage.md -%}). In the Performance Homepage, you can investigate transaction spikes, possible performance regressions, average transaction duration, etc. Together, Discover and Performance offer multiple views of errors and data.  
 
 ## Event Details
