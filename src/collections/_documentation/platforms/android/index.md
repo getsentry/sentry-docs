@@ -624,6 +624,25 @@ If you want to have control over what breadcrumbs are attached to your data, you
 
 That allows the user to decide whether and how a breadcrumb should be sent.
 
+### Multi-Dex Support
+
+If you're using Multi-Dex and our SDK, we would recommend updating your Multi-Dex configuration:
+
+```groovy
+release {
+    multiDexKeepProguard file('multidex-config.pro')
+}
+```
+
+And, add to `multidex-config.pro` the following lines:
+
+```
+-keep class io.sentry.android.core.SentryAndroidOptions
+-keep class io.sentry.android.ndk.SentryNdk
+```
+
+If you experience issues like `Could not find class` on devices running the `Dalvik VM`, you may expand the above rules to keep the necessary classes in the main dex file.
+
 ## Integrating the NDK
 
 To use the Android NDK in your native code, include the Sentry NDK libraries into your project so that the compiler can link the libraries during the build.
@@ -690,22 +709,3 @@ Example of uploading all your .so files:
 sentry-cli login
 sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/merged_native_libs/{buildVariant}
 ```
-
-### Multi-Dex support
-
-If you're using Multi-Dex and our SDK, we would recommend updating your Multi-Dex configuration:
-
-```groovy
-release {
-    multiDexKeepProguard file('multidex-config.pro')
-}
-```
-
-And, add to `multidex-config.pro` the following lines:
-
-```
--keep class io.sentry.android.core.SentryAndroidOptions
--keep class io.sentry.android.ndk.SentryNdk
-```
-
-If you experience issues like `Could not find class` on devices running the `Dalvik VM`, you may expand the above rules to keep the necessary classes in the main dex file.
