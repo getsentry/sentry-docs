@@ -22,7 +22,7 @@ Learn more about how attachments impact your [quota]({%- link _documentation/acc
 
 Crash reports may contain sensitive information about the target system, such as environment variables, local pathnames, or in-memory representations of input fields, including passwords. By default, Sentry only uses crash report files to create events and immediately drops them. All sensitive information is stripped from the resulting events.
 
-All other types of attachments, such as log files or screen shots, are stored for 30 days when they are sent to Sentry. Note that Sentry does not apply data scrubbing to attachments.
+All other types of attachments, such as log files or screenshots, are stored for 30 days when sent to Sentry. Note that Sentry does not apply data scrubbing to attachments.
 
 ### Enabling Crash Report Storage
 
@@ -34,7 +34,7 @@ If you set a limit per issue, as in the example above, a limit of 10, Sentry wil
 
 ### Access to Attachments
 
-To limit access to attachments, navigate to your organization's **General Settings**, then select the *Attachments Access* dropdown to set appropriate access—any member of your organization, the organization billing owner, member, admin, manager, or owner. 
+To limit access to attachments, navigate to your organization's **General Settings**, then select the *Attachments Access* dropdown to set appropriate access — any member of your organization, the organization billing owner, member, admin, manager, or owner. 
 
 [{% asset attachments/attachments-access.png alt="Attachments Access" %}]({% asset attachments/attachments-access.png @path %})
 
