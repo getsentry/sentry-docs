@@ -317,7 +317,7 @@ A down arrow indicates sorting the column in descending order. An up arrow indic
 If you want to take the data elsewhere, click on the "Export" button to start the export. Depending on the amount of data, the wait times will vary. You'll get an email with the download link once they're ready.
 
 {% capture __alert_content -%}
-The results are limited to 10 million rows or 2GB, whichever comes first.
+The results are limited to 10 million rows or 1GB, whichever comes first.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
