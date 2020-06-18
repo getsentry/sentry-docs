@@ -625,13 +625,13 @@ When Sentry encounters a component named `root`, which is a top-level Vue instan
 and create a new activity named `Vue Application Render`. Once the activity has been created, it will wait until all of its child components render, and there aren't new rendering events triggered within the configured `timeout`, before marking the activity as completed.
 
 The described instrumentation functionality will give you very high-level information about the rendering performance of the Vue instance. However, the integration can also provide more fine-grained details about what actually happened during a specific activity.
-To do that, you need to specify which components you want to track and what hooks you want to listen to (you can find a list of all available hooks can [here](https://vuejs.org/v2/api/#Options-Lifecycle-Hooks)). You can also turn on tracking for all the components. However, it can be rather noisy if your app consists of hundreds of components. We encourage being more specific. If you don't provide hooks, Sentry will track a component's `mount` and `update` hooks.
+To do that, you need to specify which components to track and what hooks to listen to (you can find a list of all available hooks [here](https://vuejs.org/v2/api/#Options-Lifecycle-Hooks)). You can also turn on tracking for all the components. However, it may be rather noisy if your app consists of hundreds of components. We encourage being more specific. If you don't provide hooks, Sentry will track a component's `mount` and `update` hooks.
 
 Note that we don't use `before` and `-ed` pairs for hooks, and you should provide a simple verb instead. For example, `update` is correct. `beforeUpdate` and `updated` are incorrect.
 
 To set up the Vue Tracing Integration, you will first need to configure the AM Tracing integration itself. For details on how to do this, see the [JavaScript]({%- link _documentation/performance/distributed-tracing.md -%}#javascript) section above.
 Once you've configured the Tracing integration, move on to configuring the Vue integration itself.
-Sentry's new tracing capabilities are built into the original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
+Sentry built the new tracing capabilities into the original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
 
 The most basic configuration for tracing your Vue app, which would track only the top-level component, looks like this:
 
