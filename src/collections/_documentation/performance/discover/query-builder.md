@@ -158,69 +158,37 @@ standard_fields:
    type: string
    name: "user.username"
 ---
-
-Navigate to any query page from the Discover homepage in these ways:
+From the Discover Homepage, you can build a query in three ways. 
 
 - Click on "Build a new query"
-- Click on any pre-built or saved queries
+- Click on the ellipsis of an existing saved query card to "Duplicate"
+- Go into any existing query
+  1. Click on "Save as..." in the top right
+  2. Enter a new display name
+  3. Click "Save"  
+  
+## The Main Building Blocks
+  
+There are 4 main building blocks that impact the results of your saved query. You can use a combination of these to narrow down your event search.
 
-On the query's results page, you'll find the graph, table, and facet maps. The Query Builder enables the user to create custom views of the events sent to Sentry.io. You can add any tags/fields as columns, aggregate with columns, and sort with columns.
+  1. Global Selection Header
+  2. Search Conditions 
+  3. Interactive Graph
+  4. Table Columns
+  
+## Global Selection Header
 
-## Sharing Query Views
-
-Share your queries as often as you want. You can share URLs to other users who also have access to the same organization. As each part of the query is built, the results update, and the URL is updated so that in-progress searches can be shared in email/chat.
-
-## Saved Query
-
-Although search queries are shareable, you can save them as saved queries. Saved queries are visible to the entire organization. In other words, saved queries **are not** scoped to the user's account. You can find saved queries on the Discover homepage with the avatar of whoever built it. Circular Sentry logos indicate pre-built queries. You can use either a pre-built query or an existing saved query to create a new saved query.
-
-### Creating a new Saved Query
-
-You may create a new saved query in one of the following ways:
-
-- From a pre-built query:
-    1. Click on "Save as..." in the top right
-    2. Enter the name of your saved query
-    3. Click "Save"
-- From a saved query:
-    1. Make changes to a saved query
-    2. Click on "Save as..." in the top right
-    3. Enter the name of your saved query
-    4. Click "Save"
-
-### Saving Changes
-
-Changes to a saved query **will not** automatically be saved. An exception to this rule is renaming a saved query. Note that the state is still reflected in the URL so that you can share the URLs even though they're not saved. If you've made any unsaved changes to a saved query, you can click on the "Update Query" button in the top right corner.
-
-### Renaming a Saved Query
-
-1. Click on the saved query name with the pencil icon 
-2. Enter a new name
-3. Click "Enter" or click outside to confirm changes
-4. The name is automatically saved
-
-### Deleting a Saved Query
-
-{% capture __alert_content -%}
-Deleting a saved query is irreversible.
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Warning"
-    content=__alert_content
-    level="warning"
-%}
-
-From an existing saved query, click on the garbage bin icon in the top right-hand corner. After deleting a saved query, you'll be redirected back to the homepage.
+Similar to the other parts of Sentry, you can specify which projects, environment and date range you want to zoom in on. For more on the global selection header, go to 
 
 ## Search Conditions
 
 You can use conditions to filter events from results by fields or tags.
 
-### Available Fields
+**Available Fields** 
 
 Events have a number of built-in fields as well as custom tags.
 
-#### Standard fields
+**Standard fields**
 
 <table class="table">
 {%- for category in page.standard_fields -%}
@@ -236,11 +204,11 @@ Events have a number of built-in fields as well as custom tags.
 {%- endfor -%}
 </table>
 
-### Syntax
+**Syntax**
 
 The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _documentation/workflow/search.md -%}). To add a search condition, click on the search input box above the graph, add a search condition, and press "Enter."
 
-### Searching on Aggregated Fields/Tags
+**Searching on Aggregated Fields/Tags**
 
 You can add search conditions on aggregated fields/tags (for example, `count(id)`) in one of the following ways:
 
@@ -249,24 +217,24 @@ You can add search conditions on aggregated fields/tags (for example, `count(id)
 - Lower bounds: `count(id):>99` or `count(id):>=99`
 - Combination of upper and lower bounds: `count(id):>10 count(id):<20`
 
-## Results Table
-
-The results of the table are generated based on the following components:
-
-- Selected columns
-    - Columns may either be a known field, or a tag
-    - Columns may have an aggregation function applied to them
-    - Sort order depends on the column selected
-- Search conditions
-- Global selection header (projects, environment, dates)
-
-### Graph
+## Interactive Graph
 
 Each Discover query has a graph that displays a visual summary of the data presented in the results table. Releases are overlaid, clickable, and the data corresponding to the previous period is also shown. Additionally, you can zoom in on specific slices to drill into a spike or problem area.  
 
-By default, the y-axis shows the count of events over time. However, you can display  `count` or `count_unique` on almost any column if you add it as a column in the query builder. Note that the y-axis will reset to another available option if you remove the column from the table.
+By default, the y-axis shows the count of events over time. However, you can display  `count` or `count_unique` on almost any column if you add it as a column in the query builder. Note that the y-axis will reset to another available option if you 
+remove the column from the table.
 
-### Aggregation functions
+## Table Columns
+
+1. Columns may either be a known tag or field (i.e. browser)
+2. Columns may have a stacking function applied to them
+- Sort order depends on the column selected
+
+You can add any tags/fields as columns, stack events with columns, and sort with columns.
+
+If you don't apply functions to any of the applicable columns, or if they're not present, Sentry doesn't stack the event rows. If aggregate functions are present, Discover results group by unaggregated columns (tags, events). The unaggregated columns act as grouping keys and combine rows that have the same values as summary rows. Each summary row has the corresponding values in the specified columns. Aggregate functions (`avg`, `count`, `count_unique`) are optional. 
+
+### Stacking functions
 
 - `avg`
 - `count`
@@ -339,7 +307,9 @@ Many queries will result in observing aggregated data. Some typical results migh
 
 Seeing these aggregations will indicate where to focus your attention. You can click on any cell in the `count(id)` column and expand the results from that specific row. In doing so, you can view the individual events within that aggregation and see the tag distribution, event volume, or continue to drill down and investigate further.
 
-### Facet Maps
+### Tag Summary (Facet Maps)
+
+The tag value links displayed on the Event Details can be used to refine your search results further. Clicking on any tag link will take you to a new Discover query with the clicked tag value added as a condition. If you were looking at an aggregated result, the new query will have all aggregations removed. This allows you to drill into aggregated results and explore your data more quickly.
 
 Each query result is displayed in tandem with a facet map representing a distribution of tags corresponding with that query result.
 
@@ -348,3 +318,30 @@ Each query result is displayed in tandem with a facet map representing a distrib
 The top 10 tag keys and their values are shown by occurrence and dynamically update when you change any of your conditions. For example, if you choose a different project or date range, the facet map will automatically update based on the new results. 
 
 You can also hover over each value to see the exact distribution for a given tag and click on them to add to your [filter conditions](#search-conditions) and see a new query result.  
+
+
+
+## Additional Actions
+
+**Editing or updating queries**
+
+If you need to edit any of these queries, go into the query, make the desired changes and a button will appear in the top right asking you to update the query. Keep in mind, edits to the query conditions **will not** be automatically saved.
+
+To rename a saved query, click on the pencil icon by the header and enter the desired display name. Click "enter" or outside of the area to confirm.  
+
+**Sharing queries**
+
+Share your queries as often as you want. You can share URLs with other users who also have access to the same organization. As each part of the query is built, the results update, and the URL is updated so that in-progress searches can be shared in email, chat, etc.
+
+**Deleting queries**
+
+{% capture __alert_content -%}
+Deleting a saved query is irreversible.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Warning"
+    content=__alert_content
+    level="warning"
+%}
+
+On the Discover Homepage, each saved query card has an ellipsis that will open a context menu. Delete the query from here. You can also delete the query within Query Results view by clicking the trash can in the upper right. 
