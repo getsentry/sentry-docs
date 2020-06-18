@@ -7,16 +7,12 @@ Sentry for Serverless captures error events along by using an SDK within your ap
 
 You can use following integrations to automatically or manually report errors into Sentry:
 
-- AWS Lambda
-    - Python
-    - Node
-    - Go
-- GCP Cloud Functions
-    - Python
-    - Node
-- Other Serverless Providers
-    - Python Generic Decorator
-    - Go
+* AWS Lambda
+    * [Python]({% link _documentation/platforms/python/aws_lambda.md %})
+    * [Node]({% link _documentation/platforms/node/aws_lambda.md %})
+* Other Serverless Providers
+    * [Python Generic Decorator]({% link _documentation/platforms/python/generic.md %})
+    * [Go]({% link _documentation/platforms/go/serverless.md %})
 
 ## Additional Data Reporting
 

@@ -48,8 +48,8 @@ If you are using another web framework inside of AWS Lambda, the framework might
 
 With the AWS Lambda integration enabled, the Python SDK will:
 
-* Automatically report all uncaught exceptions from your lambda functions including a link to the cloudwatch logs, the function details and sys.argv for the function. You can add more context as described [here](https://docs.sentry.io/platforms/python/#setting-context) 
+* Automatically report all uncaught exceptions from your lambda functions including a link to the cloudwatch logs, the function details and sys.argv for the function. You can add more context as described [here]({% link _documentation/platforms/python/index.md %}#setting-context) 
 
 * {% include platforms/python/request-data.md %}
 
-* Reference other serverless integrations [here]({% link _documentation/platforms/python/generic.md %})
+* Reference other serverless integrations [here]({% link _documentation/serverless/index.md %})
