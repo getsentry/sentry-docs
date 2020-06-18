@@ -10,6 +10,9 @@ You can use following integrations to automatically or manually report errors in
 * AWS Lambda
     * [Python]({% link _documentation/platforms/python/aws_lambda.md %})
     * [Node]({% link _documentation/platforms/node/aws_lambda.md %})
+* GCP Functions
+    * [Python]({% link _documentation/platforms/python/generic.md %})
+    * [Node] ({% link _documentation/platforms/node/gcp_functions.md %})
 * Other Serverless Providers
     * [Python Generic Decorator]({% link _documentation/platforms/python/generic.md %})
     * [Go]({% link _documentation/platforms/go/serverless.md %})
