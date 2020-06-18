@@ -18,7 +18,7 @@ Learn more about performance monitoring in:
 
 Sentry provides several tools to explore your application's performance data and uncover problems.
 
-The **Performance homepage** is our center for monitoring how your application is doing. Here, you can view a list of all of your endpoints and transactions and view a summary of any transaction in your application. Learn more about the [Homepage]({% link _documentation/performance/performance-homepage.md %}).
+The **Performance homepage** is our center for monitoring how your application is doing. Here, you can view a list of all your endpoints and transactions and view a summary of any transaction in your application. Learn more about the [Homepage]({% link _documentation/performance/performance-homepage.md %}).
 
 [{% asset performance/performance-homepage-main-example.png alt="Example of Performance in Product UI" %}]({% asset performance/performance-homepage-main-example.png @path %})
 
