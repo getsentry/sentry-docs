@@ -17,7 +17,7 @@ $ npm install @sentry/browser
 
 {%- capture __config_content -%}
 
-```
+```javascript
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
 ```
 
