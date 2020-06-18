@@ -12,55 +12,7 @@ Learn more about performance monitoring in:
 - [Metrics]({% link _documentation/performance/performance-metrics.md %}): provides insight into user experience of your application based on custom thresholds
 - [Discover]({% link _documentation/performance/discover/index.md %}): view data across environments with pre-built queries. Customers subscribed to the Team or Business plan can use Discover to view comprehensive information sent to Sentry.
 
-## Getting Started with Performance for JavaScript
-
-To get started with performance monitoring, first install the `@sentry/tracing package:`
-
-```bash
-npm install --save @sentry/tracing
-```
-
-Next, initialize the integration in your call to `Sentry.init`:
-
-```jsx
-import * as Sentry from '@sentry/browser';
-import { Integrations as ApmIntegrations } from '@sentry/tracing';
-Sentry.init({
-  dsn: '"___PUBLIC_DSN___"',
-  release: 'my-project-name@' + process.env.npm_package_version,
-  integrations: [
-    new ApmIntegrations.Tracing(),
-  ],
-  tracesSampleRate: 0.25, // must be present and non-zero
-});
-```
-
-Performance data is transmitted using a new event type called called "transactions", which you can learn about in [Distributing Tracing]({%- link _documentation/performance/distributed-tracing.md %}#traces-transactions-and-spans). **To sample transactions, you must set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions.
-
-Learn more about sampling in [Using Your SDK to Filter Events]({%- link _documentation/error-reporting/configuration/filtering.md %}).
-
-## Getting Started with Performance for Python
-
-<!---note this will be a toggle to select between JS and Python)-->
-
-To get started with performance monitoring, first install the `@sentry/tracing package:`
-
-```
-import sentry_sdk
-```
-
-Next, initialize the integration in your call to `Sentry.init`:
-
-```
-sentry_sdk.init(
-    "___PUBLIC_DSN___", 
-    traces_sample_rate = 0.25
-)
-```
-
-Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributing Tracing]({%- link _documentation/performance/distributed-tracing.md %}#traces-transactions-and-spans). **To sample transactions, you must set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured traces.
-
-Learn more about sampling in [Using Your SDK to Filter Events]({%- link _documentation/error-reporting/configuration/filtering.md %}).
+{% include components/platform_content.html content_dir='getting-started' %}
 
 ## Navigating Performance Data
 
