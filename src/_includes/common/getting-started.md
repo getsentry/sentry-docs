@@ -49,7 +49,9 @@ Once this is done, all unhandled exceptions are automatically captured by Sentry
 
 **Important: Note your DSN.** The *DSN* (Data Source Name) tells the SDK where to send the error, associating errors with the project you just created. If you forget your DSN, log in to Sentry and view your organization's *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI. The DSN includes the protocol, public key, server address, and project identifier, using this format:
 
-```https://<Public Key>@<Sentry Server Address>/<Project Identifier>```
+```
+https://<Public Key>@<Sentry Server Address>/<Project Identifier>
+```
 
 ## Verify Setup
 
