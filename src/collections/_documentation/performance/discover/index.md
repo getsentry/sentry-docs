@@ -28,7 +28,7 @@ Query cards with Sentry avatars are pre-built and cannot be removed.
 
 Query cards with a user avatar indicate saved queries. The user who creates a saved query will automatically have their avatar attached to the query card. These are viewable by anyone in your organization. In other words, saved queries **are not** scoped to the user's account. 
 
-**Build a new query**
+**Build a New Query**
 
 From the Discover Homepage, you can build a query in three ways. 
 
@@ -41,11 +41,11 @@ From the Discover Homepage, you can build a query in three ways.
 
 Apply new search conditions or table columns to modify the results of the query. Save the query and assign a custom display name. For the full details, see [documentation on the Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}).
 
-**Search for a query**
+**Search for a Query**
 
 Looking for a specific query? Use the search bar on the homepage to find the query name. 
 
-**Sort queries**
+**Sort Queries**
 
 The dropdown in the top right will allow you to sort by attributes.
 
@@ -56,17 +56,17 @@ The dropdown in the top right will allow you to sort by attributes.
 - Date Created (Oldest)
 - Most Outdated
 
-**Edit or update queries**
+**Edit Queries**
 
-If you need to edit any of these queries, go into the query, make the desired changes and a button will appear in the top right asking you to update the query. Keep in mind, edits to the query conditions **will not** be automatically saved.
+If you need to edit any of these queries, go into the query, make the desired changes and a button will appear in the top right asking you to save/update the query. Keep in mind, edits to the query conditions **will not** be automatically saved.
 
 To rename a saved query, click on the pencil icon by the header and enter the desired display name. Click "enter" or outside of the area to confirm.  
 
-**Share queries**
+**Share Queries**
 
 Share your queries as often as you want. You can share URLs with other users who also have access to the same organization. As each part of the query is built, the results update, and the URL is updated so that in-progress searches can be shared in email, chat, etc.
 
-**Delete queries**
+**Delete Queries**
 
 {% capture __alert_content -%}
 Deleting a saved query is irreversible.

@@ -167,9 +167,7 @@ From the Discover Homepage, you can build a query in three ways.
   2. Enter a new display name
   3. Click "Save"  
   
-## The Main Building Blocks
-  
-There are 4 main building blocks that impact the results of your saved query. You can use a combination of these to narrow down your event search.
+There are 4 main building blocks that impact the results of your saved query. You can use a combination of these to narrow down your search.
 
   1. Global Selection Header
   2. Search Conditions 
@@ -178,17 +176,11 @@ There are 4 main building blocks that impact the results of your saved query. Yo
   
 ## Global Selection Header
 
-Similar to the other parts of Sentry, you can specify which projects, environment and date range you want to zoom in on. For more on the global selection header, go to 
+Specify which projects, environments and date range you want to zoom in on at the top of the page. This can also be found in other parts of Sentry as a top level filter. 
 
 ## Search Conditions
 
-You can use conditions to filter events from results by fields or tags.
-
-**Available Fields** 
-
-Events have a number of built-in fields as well as custom tags.
-
-**Standard fields**
+All events have built-in key fields or [custom tags](#custom-tags). Use the search bar to enter these keys and assign them values. This will filter down your list of events. Here are the built-in key fields. 
 
 <table class="table">
 {%- for category in page.standard_fields -%}
@@ -206,86 +198,60 @@ Events have a number of built-in fields as well as custom tags.
 
 **Syntax**
 
-The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _documentation/workflow/search.md -%}). To add a search condition, click on the search input box above the graph, add a search condition, and press "Enter."
+The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _documentation/workflow/search.md -%}). After you enter a key field from above or a custom tag, you can use any of the referenced syntax. For example, `count(id)` gives you the number of times an event occurs. This can be written in the following ways: 
 
-**Searching on Aggregated Fields/Tags**
-
-You can add search conditions on aggregated fields/tags (for example, `count(id)`) in one of the following ways:
-
-- Exact match: `count(id):99`
-- Upper bounds: `count(id):<99` or `count(id):<=99`
-- Lower bounds: `count(id):>99` or `count(id):>=99`
-- Combination of upper and lower bounds: `count(id):>10 count(id):<20`
+- Exact match (is equal to): `count(id):99`
+- Upper bounds (is less than or equal to): `count(id):<99` or `count(id):<=99`
+- Lower bounds (is more than or equal to): `count(id):>99` or `count(id):>=99`
+- Combination bounds (is more and less than): `count(id):>10 count(id):<20`
 
 ## Interactive Graph
 
-Each Discover query has a graph that displays a visual summary of the data presented in the results table. Releases are overlaid, clickable, and the data corresponding to the previous period is also shown. Additionally, you can zoom in on specific slices to drill into a spike or problem area.  
+Each query has a interactive graph that reflects the data presented in the table below. To zoom in, simply click and drag over the area you want to investigate. You can also customize the display and the Y-Axis. This will be saved with your query.
 
-By default, the y-axis shows the count of events over time. However, you can display  `count` or `count_unique` on almost any column if you add it as a column in the query builder. Note that the y-axis will reset to another available option if you 
-remove the column from the table.
+**Display Options**
+- Total Period 
+- Previous Period
+- Release Markers
+- Top 5 Period
+- Total Daily
+- Top 5 Daily
+
+**Y-Axis Options**
+- Count
+- Average Transaction Duration
+- p75
+- p95
+- Unique User Count
 
 ## Table Columns
 
-1. Columns may either be a known tag or field (i.e. browser)
-2. Columns may have a stacking function applied to them
-- Sort order depends on the column selected
+Above the table, click "Columns" to open a modal. This will show you a list of all the columns in the results table. You can add, delete and move basic key field columns or [custom tag](#custom-tags) columns. With the same view, you can also stack events with any of the following functions: 
 
-You can add any tags/fields as columns, stack events with columns, and sort with columns.
+**Stacking Functions**
+- `avg(...)`
+- `count(...)`
+- `count_unique(...)`
+- `max(...)`
+- `min(...)`
+- `sum(...)`
 
-If you don't apply functions to any of the applicable columns, or if they're not present, Sentry doesn't stack the event rows. If aggregate functions are present, Discover results group by unaggregated columns (tags, events). The unaggregated columns act as grouping keys and combine rows that have the same values as summary rows. Each summary row has the corresponding values in the specified columns. Aggregate functions (`avg`, `count`, `count_unique`) are optional. 
+Each function will ask you to assign a parameter. Some are required while others are optional. Functions will stack events based on the same values. If no functions are applied, the events in your Query Results will remain individually listed. Once you are done editing the columns, click "Apply" and results will be reflected in the Query Results. Keep in mind, the table may horizontall scroll if too many columns are added.  
 
-### Stacking functions
-
-- `avg`
-- `count`
-- `count_unique`
-- `max`
-- `min`
-- `sum`
-
-### Add Columns
-
-1. Click on "Add Column" to open the modal to add a new column
-2. Select and choose a field or a tag from the "Column Type" dropdown
-3. Optionally, add an aggregate function
-4. Click the "Create column" button
-5. Your new column will be added to the right-most side of the table. You may need to scroll towards the right to see it.
-
-### Edit Columns
-
-1. Click on "Edit Columns" in the top right-hand corner of the table to enter the edit state of the table
-2. Hover your mouse cursor over the header of the desired column to edit
-3. Click on the pencil icon
-4. A modal will open for you to edit the column
-5. Click the "Update column" button
-6. Optionally, click on the "Save & Close" button in the top right-hand corner of the table to exit the edit state of the table
-
-### Delete Columns
-
-1. Click on "Edit Columns" in the top right-hand corner of the table to enter the edit state of the table
-2. Hover your mouse cursor over the header of the desired column to delete
-3. Click on the garbage bin icon
-4. The table may refresh
-5. Optionally click on the "Save & Close" button in the top right-hand corner of the table to exit the edit state of the table
-
-### Resize Columns
+**Resizing Columns**
 
 You can resize columns by hovering over the column boundary, and clicking & dragging the boundary to resize the column to the desired width.
 
-### Sorting Columns
+**Sorting Columns**
 
-1. Hover your mouse cursor over the header of the desired column to sort
-2. Click on the header
-3. The table may refresh
+Click on the column header you would like to sort. A down arrow sorts the column in descending order and an up arrow sorts the column in ascending order. This may refresh the table.
 
-A down arrow indicates sorting the column in descending order. An up arrow indicates sorting the column in ascending order.
+**Export CSV**
 
-### Download CSV
-
-If you want to take the data elsewhere, click on the "Export" button to start the export. Depending on the amount of data, the wait times will vary. You'll get an email with the download link once they're ready.
+If you want to take the data elsewhere, click on "Export" for a CSV file.
 
 {% capture __alert_content -%}
-The results are limited to 10 million rows or 1GB, whichever comes first.
+Depending on the amount of data, the wait times can vary. The results are limited to 10 million rows or 1GB, whichever comes first.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -293,21 +259,22 @@ The results are limited to 10 million rows or 1GB, whichever comes first.
     level="info"
 %}
 
-#### Verifying the Download
 
-The download page contains a `SHA1` checksum of the file, which you can use to verify its integrity with the following command:
+For a large export, you'll receive an email with the download link once it's ready. This will require further verification on the Sentry Download page. This contains a `SHA1` checksum of the file, which you can use to verify it's integrity with the following command:
 
 ```bash
 echo "<SHA1 checksum> <downloaded CSV name>" | sha1sum -c -
 ```
 
-### Expand Row Aggregates
+## Additional Actions
+
+**Cell Filters**
 
 Many queries will result in observing aggregated data. Some typical results might look like the count of errors rolled up by project, URL, or release.
 
 Seeing these aggregations will indicate where to focus your attention. You can click on any cell in the `count(id)` column and expand the results from that specific row. In doing so, you can view the individual events within that aggregation and see the tag distribution, event volume, or continue to drill down and investigate further.
 
-### Tag Summary (Facet Maps)
+**Tag Summary Filters**
 
 The tag value links displayed on the Event Details can be used to refine your search results further. Clicking on any tag link will take you to a new Discover query with the clicked tag value added as a condition. If you were looking at an aggregated result, the new query will have all aggregations removed. This allows you to drill into aggregated results and explore your data more quickly.
 
@@ -320,16 +287,13 @@ The top 10 tag keys and their values are shown by occurrence and dynamically upd
 You can also hover over each value to see the exact distribution for a given tag and click on them to add to your [filter conditions](#search-conditions) and see a new query result.  
 
 
+**Edit Queries**
 
-## Additional Actions
-
-**Editing or updating queries**
-
-If you need to edit any of these queries, go into the query, make the desired changes and a button will appear in the top right asking you to update the query. Keep in mind, edits to the query conditions **will not** be automatically saved.
+If you need to edit any of these queries, go into the query, make the desired changes and a button will appear in the top right asking you to save/update the query. Keep in mind, edits to the query conditions **will not** be automatically saved.
 
 To rename a saved query, click on the pencil icon by the header and enter the desired display name. Click "enter" or outside of the area to confirm.  
 
-**Sharing queries**
+**Share Queries**
 
 Share your queries as often as you want. You can share URLs with other users who also have access to the same organization. As each part of the query is built, the results update, and the URL is updated so that in-progress searches can be shared in email, chat, etc.
 
