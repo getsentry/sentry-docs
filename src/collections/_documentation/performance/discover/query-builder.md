@@ -180,7 +180,7 @@ Specify which projects, environments and date range you want to zoom in on at th
 
 ## Filter by Search Conditions
 
-All events have built-in key fields or [custom tags](#custom-tags). Use the search bar to enter these keys and assign them values. This will filter down your list of events. Here are the built-in key fields. 
+All events have built-in key fields or custom [tags]({%- link _documentation/enriching-error-data/additional-data.md -%}). Use the search bar to enter these keys and assign them values. This will filter down your list of events. Here are the built-in key fields. 
 
 <table class="table">
 {%- for category in page.standard_fields -%}
@@ -234,7 +234,7 @@ Each query has a interactive graph that reflects the data presented in the table
 
 ## Filter by Table Columns
 
-Above the table, click "Columns" to open a modal. This will show you a list of all the columns in the results table. You can add, delete and move basic key field columns or [custom tag](#custom-tags) columns. With the same view, you can also stack events with any of the following functions: 
+Above the table, click "Columns" to open a modal. This will show you a list of all the columns in the results table. You can add, delete and move basic key field columns or custom [tags]({%- link _documentation/enriching-error-data/additional-data.md -%}) columns. With the same view, you can also stack events with any of the following functions: 
 
 **Stacking Functions**
 - `avg(...)`
@@ -280,7 +280,7 @@ Each cell in the table will have an ellipsis appear on hover. This will open a c
 
 [{% asset discover/discover-table-cell.png alt="Menu showing additional options to add to filter or exclude from filter" %}]({% asset discover/discover-table-cell.png @path %})
 
-## Other Query Actions
+## Additional Query Actions
 
 **Edit Queries**
 
