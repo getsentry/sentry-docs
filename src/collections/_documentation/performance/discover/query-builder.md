@@ -174,11 +174,11 @@ There are 4 main building blocks that impact the results of your saved query. Yo
   3. Interactive Graph
   4. Table Columns
   
-## Global Selection Header
+## Filter by Global Selection Header
 
 Specify which projects, environments and date range you want to zoom in on at the top of the page. This can also be found in other parts of Sentry as a top level filter. 
 
-## Search Conditions
+## Filter by Search Conditions
 
 All events have built-in key fields or [custom tags](#custom-tags). Use the search bar to enter these keys and assign them values. This will filter down your list of events. Here are the built-in key fields. 
 
@@ -203,9 +203,17 @@ The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _docu
 - Exact match (is equal to): `count(id):99`
 - Upper bounds (is less than or equal to): `count(id):<99` or `count(id):<=99`
 - Lower bounds (is more than or equal to): `count(id):>99` or `count(id):>=99`
-- Combination bounds (is more and less than): `count(id):>10 count(id):<20`
+- Multiple bounds (is more and less than): `count(id):>10 count(id):<20`
 
-## Interactive Graph
+**Tag Summary Filters**
+
+Every event has a list of tag values. The tag summary (or facet map) is a visualization of the top 10 keys sorted by frequency. The most common tag value is listed directly above the bar in the description and percentage. Hover over each section in a bar to see the exact distribution for that tag. 
+
+Click on any of these sections to further refine your search. For example, clicking on a section that represents Chrome in a browser bar will automatically update the tag summary and then add Chrome to the search conditions.
+
+[{% asset discover/discover-facet-map.png alt="Facet map for transaction and handled tags. Map looks like a bar with gradient colors." %}]({% asset discover/discover-facet-map.png @path %})
+
+## Filter by Interactive Graph
 
 Each query has a interactive graph that reflects the data presented in the table below. To zoom in, simply click and drag over the area you want to investigate. You can also customize the display and the Y-Axis. This will be saved with your query.
 
@@ -224,7 +232,7 @@ Each query has a interactive graph that reflects the data presented in the table
 - p95
 - Unique User Count
 
-## Table Columns
+## Filter by Table Columns
 
 Above the table, click "Columns" to open a modal. This will show you a list of all the columns in the results table. You can add, delete and move basic key field columns or [custom tag](#custom-tags) columns. With the same view, you can also stack events with any of the following functions: 
 
@@ -266,26 +274,13 @@ For a large export, you'll receive an email with the download link once it's rea
 echo "<SHA1 checksum> <downloaded CSV name>" | sha1sum -c -
 ```
 
-## Additional Actions
-
 **Cell Filters**
 
-Many queries will result in observing aggregated data. Some typical results might look like the count of errors rolled up by project, URL, or release.
+Each cell in the table will have an ellipsis appear on hover. This will open a context menu with additional filtering capabilities depending on the value type. For example, you can selectively target a transaction to the search conditions bar by clicking on "Add to filter". 
 
-Seeing these aggregations will indicate where to focus your attention. You can click on any cell in the `count(id)` column and expand the results from that specific row. In doing so, you can view the individual events within that aggregation and see the tag distribution, event volume, or continue to drill down and investigate further.
+[{% asset discover/discover-table-cell.png alt="Menu showing additional options to add to filter or exclude from filter" %}]({% asset discover/discover-table-cell.png @path %})
 
-**Tag Summary Filters**
-
-The tag value links displayed on the Event Details can be used to refine your search results further. Clicking on any tag link will take you to a new Discover query with the clicked tag value added as a condition. If you were looking at an aggregated result, the new query will have all aggregations removed. This allows you to drill into aggregated results and explore your data more quickly.
-
-Each query result is displayed in tandem with a facet map representing a distribution of tags corresponding with that query result.
-
-[{% asset discover/discover-facet-map.png alt="Facet map for transaction and handled tags. Map looks like a bar with gradient colors." %}]({% asset discover/discover-facet-map.png @path %})
-
-The top 10 tag keys and their values are shown by occurrence and dynamically update when you change any of your conditions. For example, if you choose a different project or date range, the facet map will automatically update based on the new results. 
-
-You can also hover over each value to see the exact distribution for a given tag and click on them to add to your [filter conditions](#search-conditions) and see a new query result.  
-
+## Other Query Actions
 
 **Edit Queries**
 
@@ -309,3 +304,5 @@ Deleting a saved query is irreversible.
 %}
 
 On the Discover Homepage, each saved query card has an ellipsis that will open a context menu. Delete the query from here. You can also delete the query within Query Results view by clicking the trash can in the upper right. 
+
+For more details on how to view saved queries, see [documentation on Discover]({%- link _documentation/performance/discover/index.md -%})
