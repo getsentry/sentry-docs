@@ -1,16 +1,16 @@
 ## Getting Started with Performance for JavaScript
 
-To get started with performance monitoring, first install the `@sentry/tracing` package:
+To get started with performance monitoring, first install the `@sentry/apm` package:
 
 ```bash
-npm install --save @sentry/tracing
+npm install --save @sentry/apm
 ```
 
 Next, initialize the integration in your call to `Sentry.init`:
 
 ```jsx
 import * as Sentry from '@sentry/browser';
-import { Integrations as ApmIntegrations } from '@sentry/tracing';
+import { Integrations as ApmIntegrations } from '@sentry/apm';
 Sentry.init({
   dsn: '"___PUBLIC_DSN___"',
   release: 'my-project-name@' + process.env.npm_package_version,
