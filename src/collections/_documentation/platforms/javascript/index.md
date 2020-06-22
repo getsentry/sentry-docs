@@ -142,7 +142,7 @@ module.exports = {
 
 {% include components/alert.html
   title="Note"
-  content="Make sure the `SentryWebpackPlugin` is setup as the last running plugin, otherwise it could happen that the resulting source maps that the pluging receives are not the final one."
+  content="Make sure the `SentryWebpackPlugin` is set up as the last running plugin, otherwise, it could happen that the resulting source maps that the plugin receives are not the final one."
   level="warning"
 %}
 
