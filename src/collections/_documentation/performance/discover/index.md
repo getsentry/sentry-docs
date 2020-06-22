@@ -26,7 +26,7 @@ Query cards with Sentry avatars are pre-built and cannot be removed.
 
 ## Saved Queries
 
-Query cards with a user avatar indicate saved queries. The user who creates a saved query will automatically have their avatar attached to the query card. These are viewable by anyone in your organization. In other words, saved queries **are not** scoped to the user's account. 
+Query cards with a user avatar indicate saved queries. The user who created a saved query will have their avatar display on the query card. Saved Queries are viewable by anyone in your organization, and **are not** scoped to the user's account. 
 
 **Build a New Query**
 
