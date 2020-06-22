@@ -167,7 +167,7 @@ From the Discover Homepage, you can build a query in three ways.
   2. Enter a new display name
   3. Click "Save"  
   
-There are 4 main building blocks that impact the results of your saved query. You can use a combination of these to narrow down your search.
+There are four main building blocks that impact the results of your saved query. You can use a combination of these to narrow down your search.
 
   1. Global Selection Header
   2. Search Conditions 
@@ -176,7 +176,7 @@ There are 4 main building blocks that impact the results of your saved query. Yo
   
 ## Filter by Global Selection Header
 
-Specify which projects, environments and date range you want to zoom in on at the top of the page. This can also be found in other parts of Sentry as a top level filter. 
+Specify which projects, environments, and date range you want to zoom in on at the top of the page. This can also be found in other parts of Sentry as a top level filter. 
 
 ## Filter by Search Conditions
 
