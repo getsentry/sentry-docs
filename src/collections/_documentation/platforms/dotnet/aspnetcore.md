@@ -195,6 +195,6 @@ Opt-in to capture values from [System.Diagnostic.Activity](https://github.com/do
 
 ### Samples
 
-* A [simple example](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.AspNetCore.Basic) without MVC.
-* An [example](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.AspNetCore.Mvc) using MVC and most of the SDK features.
+* A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Basic) without MVC.
+* An [example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Mvc) using MVC and most of the SDK features.
 * For [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs

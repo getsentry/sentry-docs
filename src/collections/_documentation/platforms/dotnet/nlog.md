@@ -184,4 +184,4 @@ Any additional tags to apply to each logged message.
 
 ### Samples
 
-* A [simple example](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.NLog).
+* A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.NLog).

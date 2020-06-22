@@ -160,5 +160,5 @@ A list of filters which are invoked before processing any log message. This allo
 
 ### Samples
 
-* A [simple example](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.ME.Logging) using simply the `LoggerFactory`.
-* An [example](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.GenericHost) using the _generic host_.
+* A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.ME.Logging) using simply the `LoggerFactory`.
+* An [example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.GenericHost) using the _generic host_.
