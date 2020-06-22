@@ -92,5 +92,5 @@ Whether or not this integration should initialize the SDK. If you intend to call
 
 ### Samples
 
-* A [simple example](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.Serilog).
-* An [example with ASP.NET Core](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.AspNetCore.Serilog).
+* A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.Serilog).
+* An [example with ASP.NET Core](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Serilog).
