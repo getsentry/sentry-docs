@@ -51,7 +51,7 @@ Use the `process.env.npm_package_version`:
 
 ```js
 Sentry.init({ 
-dsn: '_____Public DSN_____',
+dsn: '___PUBLIC_DSN___',
 release: 'my-project-name@' + process.env.npm_package_version,
 });
 ```
