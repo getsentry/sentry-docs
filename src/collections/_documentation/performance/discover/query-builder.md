@@ -158,69 +158,29 @@ standard_fields:
    type: string
    name: "user.username"
 ---
-
-Navigate to any query page from the Discover homepage in these ways:
+From the Discover Homepage, you can build a query in three ways. 
 
 - Click on "Build a new query"
-- Click on any pre-built or saved queries
+- Click on the ellipsis of an existing saved query card to "Duplicate"
+- Go into any existing query
+  1. Click on "Save as..." in the top right
+  2. Enter a new display name
+  3. Click "Save"  
+  
+There are four main building blocks that impact the results of your saved query. You can use a combination of these to narrow down your search.
 
-On the query's results page, you'll find the graph, table, and facet maps. The Query Builder enables the user to create custom views of the events sent to Sentry.io. You can add any tags/fields as columns, aggregate with columns, and sort with columns.
+  1. Global Selection Header
+  2. Search Conditions 
+  3. Interactive Graph
+  4. Table Columns
+  
+## Filter by Global Selection Header
 
-## Sharing Query Views
+Specify which projects, environments, and date range you want to zoom in on at the top of the page. This can also be found in other parts of Sentry as a top level filter. 
 
-Share your queries as often as you want. You can share URLs to other users who also have access to the same organization. As each part of the query is built, the results update, and the URL is updated so that in-progress searches can be shared in email/chat.
+## Filter by Search Conditions
 
-## Saved Query
-
-Although search queries are shareable, you can save them as saved queries. Saved queries are visible to the entire organization. In other words, saved queries **are not** scoped to the user's account. You can find saved queries on the Discover homepage with the avatar of whoever built it. Circular Sentry logos indicate pre-built queries. You can use either a pre-built query or an existing saved query to create a new saved query.
-
-### Creating a new Saved Query
-
-You may create a new saved query in one of the following ways:
-
-- From a pre-built query:
-    1. Click on "Save as..." in the top right
-    2. Enter the name of your saved query
-    3. Click "Save"
-- From a saved query:
-    1. Make changes to a saved query
-    2. Click on "Save as..." in the top right
-    3. Enter the name of your saved query
-    4. Click "Save"
-
-### Saving Changes
-
-Changes to a saved query **will not** automatically be saved. An exception to this rule is renaming a saved query. Note that the state is still reflected in the URL so that you can share the URLs even though they're not saved. If you've made any unsaved changes to a saved query, you can click on the "Update Query" button in the top right corner.
-
-### Renaming a Saved Query
-
-1. Click on the saved query name with the pencil icon 
-2. Enter a new name
-3. Click "Enter" or click outside to confirm changes
-4. The name is automatically saved
-
-### Deleting a Saved Query
-
-{% capture __alert_content -%}
-Deleting a saved query is irreversible.
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Warning"
-    content=__alert_content
-    level="warning"
-%}
-
-From an existing saved query, click on the garbage bin icon in the top right-hand corner. After deleting a saved query, you'll be redirected back to the homepage.
-
-## Search Conditions
-
-You can use conditions to filter events from results by fields or tags.
-
-### Available Fields
-
-Events have a number of built-in fields as well as custom tags.
-
-#### Standard fields
+All events have built-in key fields or custom [tags]({%- link _documentation/enriching-error-data/additional-data.md -%}). Use the search bar to enter these keys and assign them values. This will filter down your list of events. Here are the built-in key fields. 
 
 <table class="table">
 {%- for category in page.standard_fields -%}
@@ -236,88 +196,70 @@ Events have a number of built-in fields as well as custom tags.
 {%- endfor -%}
 </table>
 
-### Syntax
+**Syntax**
 
-The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _documentation/workflow/search.md -%}). To add a search condition, click on the search input box above the graph, add a search condition, and press "Enter."
+The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _documentation/workflow/search.md -%}). After you enter a key field from above or a custom tag, you can use any of the referenced syntax. For example, `count(id)` gives you the number of times an event occurs. This can be written in the following ways: 
 
-### Searching on Aggregated Fields/Tags
+- Exact match (is equal to): `count(id):99`
+- Upper bounds (is less than or equal to): `count(id):<99` or `count(id):<=99`
+- Lower bounds (is more than or equal to): `count(id):>99` or `count(id):>=99`
+- Multiple bounds (is more and less than): `count(id):>10 count(id):<20`
 
-You can add search conditions on aggregated fields/tags (for example, `count(id)`) in one of the following ways:
+**Tag Summary Filters**
 
-- Exact match: `count(id):99`
-- Upper bounds: `count(id):<99` or `count(id):<=99`
-- Lower bounds: `count(id):>99` or `count(id):>=99`
-- Combination of upper and lower bounds: `count(id):>10 count(id):<20`
+Every event has a list of tag values. The tag summary (or facet map) is a visualization of the top 10 keys sorted by frequency. The most common tag value is listed directly above the bar in the description and percentage. Hover over each section in a bar to see the exact distribution for that tag. 
 
-## Results Table
+Click on any of these sections to further refine your search. For example, clicking on a section that represents Chrome in a browser bar will automatically update the tag summary and then add Chrome to the search conditions.
 
-The results of the table are generated based on the following components:
+[{% asset discover/discover-facet-map.png alt="Facet map for transaction and handled tags. Map looks like a bar with gradient colors." %}]({% asset discover/discover-facet-map.png @path %})
 
-- Selected columns
-    - Columns may either be a known field, or a tag
-    - Columns may have an aggregation function applied to them
-    - Sort order depends on the column selected
-- Search conditions
-- Global selection header (projects, environment, dates)
+## Filter by Interactive Graph
 
-### Graph
+Each query has a interactive graph that reflects the data presented in the table below. To zoom in, simply click and drag over the area you want to investigate. You can also customize the display and the Y-Axis. This will be saved with your query.
 
-Each Discover query has a graph that displays a visual summary of the data presented in the results table. Releases are overlaid, clickable, and the data corresponding to the previous period is also shown. Additionally, you can zoom in on specific slices to drill into a spike or problem area.  
+**Display Options**
+- Total Period 
+- Previous Period
+- Release Markers
+- Top 5 Period
+- Total Daily
+- Top 5 Daily
 
-By default, the y-axis shows the count of events over time. However, you can display  `count` or `count_unique` on almost any column if you add it as a column in the query builder. Note that the y-axis will reset to another available option if you remove the column from the table.
+**Y-Axis Options**
+- Count
+- Average Transaction Duration
+- p75
+- p95
+- Unique User Count
 
-### Aggregation functions
+## Filter by Table Columns
 
-- `avg`
-- `count`
-- `count_unique`
-- `max`
-- `min`
-- `sum`
+Above the table, click "Columns" to open a modal. This will show you a list of all the columns in the results table. You can add, delete and move basic key field columns or custom [tags]({%- link _documentation/enriching-error-data/additional-data.md -%}) columns. With the same view, you can also stack events with any of the following functions: 
 
-### Add Columns
+**Stacking Functions**
+- `avg(...)`
+- `count(...)`
+- `count_unique(...)`
+- `max(...)`
+- `min(...)`
+- `sum(...)`
 
-1. Click on "Add Column" to open the modal to add a new column
-2. Select and choose a field or a tag from the "Column Type" dropdown
-3. Optionally, add an aggregate function
-4. Click the "Create column" button
-5. Your new column will be added to the right-most side of the table. You may need to scroll towards the right to see it.
+Each function will ask you to assign a parameter. Some are required while others are optional. Functions will stack events based on the same values. If no functions are applied, the events in your Query Results will remain individually listed. Once you are done editing the columns, click "Apply" and results will be reflected in the Query Results. Keep in mind, the table may horizontall scroll if too many columns are added.  
 
-### Edit Columns
-
-1. Click on "Edit Columns" in the top right-hand corner of the table to enter the edit state of the table
-2. Hover your mouse cursor over the header of the desired column to edit
-3. Click on the pencil icon
-4. A modal will open for you to edit the column
-5. Click the "Update column" button
-6. Optionally, click on the "Save & Close" button in the top right-hand corner of the table to exit the edit state of the table
-
-### Delete Columns
-
-1. Click on "Edit Columns" in the top right-hand corner of the table to enter the edit state of the table
-2. Hover your mouse cursor over the header of the desired column to delete
-3. Click on the garbage bin icon
-4. The table may refresh
-5. Optionally click on the "Save & Close" button in the top right-hand corner of the table to exit the edit state of the table
-
-### Resize Columns
+**Resizing Columns**
 
 You can resize columns by hovering over the column boundary, and clicking & dragging the boundary to resize the column to the desired width.
 
-### Sorting Columns
+**Sorting Columns**
 
-1. Hover your mouse cursor over the header of the desired column to sort
-2. Click on the header
-3. The table may refresh
+Click on the column header you would like to sort. A down arrow sorts the column in descending order and an up arrow sorts the column in ascending order. This may refresh the table.
 
-A down arrow indicates sorting the column in descending order. An up arrow indicates sorting the column in ascending order.
+**Export CSV**
 
-### Download CSV
-
-If you want to take the data elsewhere, click on the "Export" button to start the export. Depending on the amount of data, the wait times will vary. You'll get an email with the download link once they're ready.
+If you want to take the data elsewhere, click on "Export" for a CSV file.
 
 {% capture __alert_content -%}
-The results are limited to 10 million rows or 1GB, whichever comes first.
+Depending on the amount of data, the wait times can vary. The results are limited to 10 million rows or 1GB, whichever comes first.
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -325,26 +267,42 @@ The results are limited to 10 million rows or 1GB, whichever comes first.
     level="info"
 %}
 
-#### Verifying the Download
 
-The download page contains a `SHA1` checksum of the file, which you can use to verify its integrity with the following command:
+For a large export, you'll receive an email with the download link once it's ready. This will require further verification on the Sentry Download page. This contains a `SHA1` checksum of the file, which you can use to verify it's integrity with the following command:
 
 ```bash
 echo "<SHA1 checksum> <downloaded CSV name>" | sha1sum -c -
 ```
 
-### Expand Row Aggregates
+**Cell Filters**
 
-Many queries will result in observing aggregated data. Some typical results might look like the count of errors rolled up by project, URL, or release.
+Each cell in the table will have an ellipsis appear on hover. This will open a context menu with additional filtering capabilities depending on the value type. For example, you can selectively target a transaction to the search conditions bar by clicking on "Add to filter". 
 
-Seeing these aggregations will indicate where to focus your attention. You can click on any cell in the `count(id)` column and expand the results from that specific row. In doing so, you can view the individual events within that aggregation and see the tag distribution, event volume, or continue to drill down and investigate further.
+[{% asset discover/discover-table-cell.png alt="Menu showing additional options to add to filter or exclude from filter" %}]({% asset discover/discover-table-cell.png @path %})
 
-### Facet Maps
+## Additional Query Actions
 
-Each query result is displayed in tandem with a facet map representing a distribution of tags corresponding with that query result.
+**Edit Queries**
 
-[{% asset discover/discover-facet-map.png alt="Facet map for transaction and handled tags. Map looks like a bar with gradient colors." %}]({% asset discover/discover-facet-map.png @path %})
+If you need to edit any of these queries, go into the query, make the desired changes and a button will appear in the top right asking you to save/update the query. Keep in mind, edits to the query conditions **will not** be automatically saved.
 
-The top 10 tag keys and their values are shown by occurrence and dynamically update when you change any of your conditions. For example, if you choose a different project or date range, the facet map will automatically update based on the new results. 
+To rename a saved query, click on the pencil icon by the header and enter the desired display name. Click "enter" or outside of the area to confirm.  
 
-You can also hover over each value to see the exact distribution for a given tag and click on them to add to your [filter conditions](#search-conditions) and see a new query result.  
+**Share Queries**
+
+Share your queries as often as you want. You can share URLs with other users who also have access to the same organization. As each part of the query is built, the results update, and the URL is updated so that in-progress searches can be shared in email, chat, etc.
+
+**Deleting queries**
+
+{% capture __alert_content -%}
+Deleting a saved query is irreversible.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Warning"
+    content=__alert_content
+    level="warning"
+%}
+
+On the Discover Homepage, each saved query card has an ellipsis that will open a context menu. Delete the query from here. You can also delete the query within Query Results view by clicking the trash can in the upper right. 
+
+For more details on how to view saved queries, see [documentation on Discover]({%- link _documentation/performance/discover/index.md -%})
