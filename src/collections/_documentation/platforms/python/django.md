@@ -117,4 +117,4 @@ def my_custom_page_not_found_view(*args, **kwargs):
 
 The error message you send to Sentry will have the usual request data attached.
 
-Refer to [Customizing Error Views](https://docs.djangoproject.com/en/2.0/topics/http/views/#customizing-error-views) from the Django documentation for more information.
+Refer to [Customizing Error Views](https://docs.djangoproject.com/en/3.0/topics/http/views/#customizing-error-views) from the Django documentation for more information.

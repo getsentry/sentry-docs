@@ -14,22 +14,20 @@ In addition to using [`beforeSend`]({% link _documentation/data-management/sensi
 
 **Advanced Data Scrubbing is available only if your organization is enabled as an Early Adopter.** To enable this option, navigate to your organization's settings and enable the "Early Adopter" option. Turning on this option allows access to features prior to full release, and can be disabled at any time.
 
-Early adopters have access to a new option in both organization settings as well as the setting of each project. Go to your project- or organization-settings and click _Data Privacy_ (or _Security
-and Privacy_) in the sidebar. Scrolling down, you will find a new section _Data Privacy Rules_.
+Early adopters have access to a new option in both organization settings as well as the setting of each project. Go to your project- or organization-settings and click _Security and Privacy_ in the sidebar. Scrolling down, you will find a new section _Advanced Data Scrubbing_.
 
-Note that everything you configure there will have direct impact on all new events, just as all the other data privacy-related settings do. However, it is not possible to break or undo any other data privacy settings that you may have configured. In other words, it is only possible to accidentally remove too much data, not too little.
+Note that everything you configure there will have direct impact on all new events, just as all the other data privacy-related settings do. However, it is not possible to break or undo any other data scrubbing settings that you may have configured. In other words, it is only possible to accidentally remove too much data, not too little.
 
 If you have any questions related to this feature, feel free to contact us at `markus@sentry.io`.
 
 ## A Basic Example
 
-Go to your project- or organization-settings and click _Data Privacy_ (or _Security and Privacy_) in the sidebar. Scrolling down, you will find a new section _Data Privacy Rules_.
+Go to your project- or organization-settings and click _Security and Privacy_ in the sidebar. Scrolling down, you will find a new section _Advanced Data Scrubbing_.
 
-Click on _Add Rule_. This already adds a very simple rule:
-
-```
-[Mask] [credit card numbers] from [    ]
-```
+1. Click on _Add Rule_. You will be presented with a new dialog.
+2. Select _Mask_ as _Method_.
+3. Select _Credit card numbers_ as _Data Type_.
+4. Enter `$string` as _Source_.
 
 As soon as you hit _Save_, we will attempt to find all creditcard numbers in your events going forward, and replace them with a series of `******`, keeping only the last 4 digits.
 
@@ -90,6 +88,12 @@ Selectors allow you to restrict rules to certain parts of the event. This is use
 * `tags.server_name` to scrub the tag `server_name`
 
 All key names are treated case-insensitively.
+
+### Using an event ID to auto-complete sources
+
+Above the _Source_ input field you will find another input field for an event ID. Providing a value there allows for better auto-completion of arbitrary _Additional Data_ fields and variable names.
+
+The event ID is purely optional and the value is not saved as part of your settings. Data scrubbing settings always apply to all events within a project/organization going forward.
 
 ### Advanced source names
 

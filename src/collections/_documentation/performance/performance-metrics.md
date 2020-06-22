@@ -23,6 +23,9 @@ Apdex is an industry-standard metric used to track and measure user satisfaction
     - **Frustrated**: Users are frustrated with the app when their page load times are greater than T.
     - **Apdex**: (Number of Satisfactory Requests + (Number of Tolerable Requests/2)) / (Number of Total Requests)
     
+## Failure Rate
+`failure_rate()` indicates the percentage of unsuccessful transactions. Sentry treats transactions with a status other than “ok,” “canceled,” and “unknown” as failures. For more details, see a [list of possible status values](https://develop.sentry.dev/sdk/event-payloads/span/).
+    
 ## P75 Threshold
 The P75 Threshold indicates that 25% of transaction durations are greater than the threshold. For example, if the P75 threshold is set to 10 milliseconds, then 25% of transactions exceeded that threshold, taking longer than 10 milliseconds.
 

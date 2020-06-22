@@ -89,7 +89,7 @@ To configure Issue sync, navigate to Organization Settings > **Integrations**, a
 
 #### Resolve in Commit
 
-Once you send commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you send commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -167,7 +167,7 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 
 #### Resolving in Commit
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -230,7 +230,7 @@ openssl x509 -pubkey -noout -in bitbucket_publickey.cer  > bitbucket_publickey.p
 
 ##### III. Connect your Bitbucket Server application with Sentry
 {% capture __alert_content -%}
-Make sure you have whitelisted [Sentry's IP ranges.](https://docs.sentry.io/ip-ranges/)
+Confirm [Sentry's IP ranges]({%- link _documentation/meta/ip-ranges.md -%}) are whitelisted.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -259,7 +259,7 @@ You’ll also see that the author of the suspect commit will be listed as a sugg
 
 #### Resolving in Commit
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -425,7 +425,7 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 
 #### Resolving in Commit/Pull Request
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -433,7 +433,7 @@ Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
+You can also resolve issues with pull requests by including `fixes &lt;SENTRY-SHORT-ID&gt;` in the title or description.
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
 
@@ -458,7 +458,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 
 ###### Add new GitHub App
 
-1. Make sure you've whitelisted Sentry’s outbound request [IPs addresses](https://docs.sentry.io/ip-ranges/) for your GitHub Enterprise instance.
+1. Confirm [Sentry's IP ranges]({%- link _documentation/meta/ip-ranges.md -%}) are whitelisted for your GitHub Enterprise instance.
 2. In your GitHub Enterprise organization, navigate to Settings > Developer Settings > **GitHub Apps** and click to add a new **New GitHub App**.
 
     [{% asset github-e-new-app.png %}]({% asset github-e-new-app.png @path %})
@@ -555,14 +555,14 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 
 #### Resolving in Commit/Pull Request
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
+You can also resolve issues with pull requests by including `fixes &lt;SENTRY-SHORT-ID&gt;` in the title or description.
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
 
@@ -676,9 +676,9 @@ Here is where you can find info for [suspect commit setup]({%- link _documentati
 
 #### Resolve via Commit or PR
 
-Once you've added a repository (see configuration step 8), you can start resolving issues by including `fixes <SHORT-ID>` in your commit messages. You might want to type something in the commit like: "this fixes MyApp-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes <SHORT-ID>` in the title or description. This will automatically resolve the issue in the next release. 
+Once you've added a repository (see configuration step 8), you can start resolving issues by including `fixes &lt;SHORT-ID&gt;` in your commit messages. You might want to type something in the commit like: "this fixes MyApp-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes &lt;SHORT-ID&gt;` in the title or description. This will automatically resolve the issue in the next release. 
 
-A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
+A `&lt;SHORT-ID&gt;` may look something like 'BACKEND-C' in the image below.
 
 [{% asset gitlab/short-id.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/short-id.png @path %})
 
@@ -686,7 +686,7 @@ A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
 
 FAQ:
 - I'm using GitLab on-premise. Do I need to whitelist Sentry's IP addresses?
-    - Yes. You can find our IP ranges [ here ]({%- link ip-ranges.md -%}).
+    - Yes. You can find our IP ranges [ here ]({%- link _documentation/meta/ip-ranges.md -%}).
 - Do you support subgroups?
     - Currently, we only support subgroups for users using GitLab 11.6 or higher.
 - My repositories are hosted under my user account, not a group account. Can I still use this integration?
@@ -815,7 +815,7 @@ openssl x509 -pubkey -noout -in jira_publickey.cer  > jira_publickey.pem
 
 ##### III. Connect your Jira Server application with Sentry
 {% capture __alert_content -%}
-Make sure you have whitelisted [Sentry's IP ranges.](https://docs.sentry.io/ip-ranges/)
+Confirm [Sentry's IP ranges]({%- link _documentation/meta/ip-ranges.md -%}) are whitelisted.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -1137,7 +1137,8 @@ Follow the instructions in the link below:
 <https://help.split.io/hc/en-us/articles/360029879431>
 
 ## Troubleshooting
+
 If you're having trouble setting up Sentry with your on-premise integration like JIRA Server, Bitbucket Server, GitHub Enterprise, or Gitlab:
 - Ensure that the installation URL you provided is a fully qualified domain name (FQDN), which is resolvable on the internet.
-- Double-check that the IP addresses Sentry uses to make outbound requests are whitelisted <https://docs.sentry.io/ip-ranges/>.
+- Double-check that the IP addresses Sentry uses to make outbound requests are whitelisted <{%- link _documentation/meta/ip-ranges.md -%}>.
 - Make sure that Sentry's access to your installation URL is not path restricted.

@@ -57,7 +57,7 @@ The [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will guide you t
 
 The following changes will be performed:
 
-- add the sentry-java package for native crash reporting on Android
+- add the sentry-android package for native crash reporting on Android
 - add the sentry-cocoa package for native crash reporting on iOS
 - enable the Sentry Gradle build step for Android
 - patch *_MainApplication.java_* for Android
@@ -91,6 +91,10 @@ When you use Xcode, you can hook directly into the build process to upload debug
 ## Android Specifics
 
 For Android, we hook into Gradle for the source map build process. When you run `react-native link`, the Gradle files are automatically updated. When you run `./gradlew assembleRelease` source maps are automatically built and uploaded to Sentry.
+
+If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build.
+
+To disable this feature, set `org.gradle.configureondemand=false` or remove it as its default value is disabled, do this in the `gradle.properties` file.
 
 <!-- WIZARD -->
 ## Connecting the SDK to Sentry

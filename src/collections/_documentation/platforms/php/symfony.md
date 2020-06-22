@@ -77,9 +77,18 @@ current `Scope` and enrich you Sentry events.
 
 ## Configuration
 This is an example of the bundle configuration with all the possible options and example values:
+
+N.B. The `register_error_listener` and `monolog` configuration options are available since [sentry/sentry-symfony:^3.2.0](https://github.com/getsentry/sentry-symfony/releases/tag/3.2.0)
+
 ```yaml
 sentry:
     dsn: '___PUBLIC_DSN___'
+    register_error_listener: true
+    monolog:
+        error_handler:
+            enabled: false
+            level: DEBUG
+            bubble: true
     options:
         attach_stacktrace: true 
         before_breadcrumb: '@sentry.callback.before_breadcrumb'

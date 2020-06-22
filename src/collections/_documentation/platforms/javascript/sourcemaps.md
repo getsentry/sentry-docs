@@ -234,7 +234,7 @@ While making source maps available to Sentry from your servers is the easiest in
 For these reasons, it is recommended to upload source maps to Sentry beforehand (see [above](#uploading-source-maps-to-sentry)).
 
 {% capture __alert_content -%}
-While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs, [IP Ranges]({%- link ip-ranges.md -%}#ip-ranges).
+While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs, [IP Ranges]({%- link _documentation/meta/ip-ranges.md -%}).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Working Behind a Firewall"
@@ -427,6 +427,10 @@ Often users hit this limit because they are transmitting source files at an inte
 The Sentry API currently only works with source maps and source files that are uploaded as plain text (UTF-8 encoded). If the files are uploaded in a compressed format (for example, gzip), they will be not be interpreted correctly.
 
 This sometimes occurs with build scripts and plugins that produce pre-compressed minified files. For example, Webpack’s [compression plugin](https://github.com/webpack/compression-webpack-plugin). You’ll need to disable such plugins and perform the compression _after_ the generated source maps / source files have been uploaded to Sentry.
+
+### Verify workers are sharing the same volume as web (if runing as docker on premise)
+
+Sentry does source map calculation in its workers. This means the workers need access to the files uploaded through the front end. Double check that the cron workers and web workers can read/write files from the same disk.
 
 ## Additional Resources
 

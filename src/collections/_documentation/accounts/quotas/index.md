@@ -160,7 +160,7 @@ In some cases, the data you’re receiving in Sentry is hard to filter, or you d
 
 Explore these by navigating to **[Project] » Project Settings » Inbound Filters**. Commonly-set filters are discussed here for your quick reference. For additional information and examples, see [Inbound Data Filters in our guide to Manage Your Event Stream]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%}#inbound-data-filters). Commonly-set filters include:
 
-*IP Blacklist.* If you have a rogue client, Sentry supports blocking an IP from sending data. Navigate to **[Project] » Project Settings » Inbound Filters** to add the IP addresses (or subnets) to **Filter errors from these IP addresses**.
+*IP Filters.* If you have a rogue client, Sentry supports blocking an IP from sending data. Navigate to **[Project] » Project Settings » Inbound Filters** to add the IP addresses (or subnets) to **Filter errors from these IP addresses**.
 
 *Filter by Release.* If you discover a problematic release causing excessive noise, Sentry supports ignoring all events from that release. Navigate to **[Project] » Project Settings » Inbound Filters**, then add the releases to **Filter errors from these releases**.
 

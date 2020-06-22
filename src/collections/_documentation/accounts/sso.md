@@ -10,7 +10,7 @@ Single Sign-On (or SSO) allows you to manage your organization’s entire member
 Before you get around to actually turning on SSO, you’ll want to keep in mind that once it’s activated, all existing users will need to link their account before they are able to continue using Sentry. Because of that we recommend coordinating with your team during off-peak hours. That said, it’s super quick to link accounts, so we don’t consider it a true hurdle.
 
 {% capture __alert_content -%}
-SSO is not available on free, trial or certain grandfathered plans.
+SSO is not available on free, trial or certain other plans.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
