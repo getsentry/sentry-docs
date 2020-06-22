@@ -60,7 +60,7 @@ The dropdown in the top right will allow you to sort by attributes.
 
 If you need to edit any of these queries, go into the query, make the desired changes and a button will appear in the top right asking you to save/update the query. Keep in mind, edits to the query conditions **will not** be automatically saved.
 
-To rename a saved query, click on the pencil icon by the header and enter the desired display name. Click "enter" or outside of the area to confirm.  
+To rename a saved query, click on the pencil icon by the header and enter the desired display name. Click "enter" or outside of the area to save the updated name.  
 
 **Share Queries**
 
