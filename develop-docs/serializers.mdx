@@ -19,15 +19,15 @@ from rest_framework import serializers
 from sentry.api.serializers.rest_framework import ValidationError
 
 class ExampleSerializer(serializers.Serializer):
-	name = serializers.CharField()
+    name = serializers.CharField()
     age = serializers.IntegerField(required=False)
     type = serializers.CharField()
 
-	def validate_type(self, attrs, source):
-		type = attrs[source]
-		if type not in ['bear', 'rabbit', 'puppy']:
-			raise ValidationError('%s is not a valid type' % type)
-		return attrs
+    def validate_type(self, attrs, source):
+        type = attrs[source]
+        if type not in ['bear', 'rabbit', 'puppy']:
+            raise ValidationError('%s is not a valid type' % type)
+	return attrs
 ```
 
 **Field Checking**
@@ -48,25 +48,25 @@ In an endpoint, this is the typical use of a Django Rest Framework Serializer
 
 ```python
 class ExampleEndpoint(Endpoint):
-	def post(self, request):
-		serializer = ExampleSerializer(request.DATA)
-		if not serializer.is_valid():
-			return Response(serializer.errors, status=400)
+    def post(self, request):
+        serializer = ExampleSerializer(request.DATA)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
 
-    result = serializer.object
-		
-		#Assuming Example is a model with the same fields 
-		try:
-			with transaction.atomic():
-				Example.objects.create(
-						name=result['name'],
-						age=result.get('age'),
-						type=result['type'],
-				)
-		except IntegrityError:
-			return Response('This example already exists', status=409)
-		
-		return Response(serialize(result, request.user), status=201)
+        result = serializer.object
+
+        #Assuming Example is a model with the same fields 
+        try:
+            with transaction.atomic():
+                Example.objects.create(
+                    name=result['name'],
+                    age=result.get('age'),
+                    type=result['type'],
+                )
+        except IntegrityError:
+            return Response('This example already exists', status=409)
+
+        return Response(serialize(result, request.user), status=201)
 ```
 
 **Validating Data**
@@ -95,27 +95,27 @@ from rest_framework import serializers
 from sentry.api.serializers.rest_framework import ValidationError
 
 class ExampleSerializer(serializer.ModelSerializer):
-	name = serializers.CharField()
-  age = serializers.IntegerField(required=False)
-  type = serializers.CharField()
-	
-	class Meta:
-		model = Example
+    name = serializers.CharField()
+    age = serializers.IntegerField(required=False)
+    type = serializers.CharField()
+
+    class Meta:
+        model = Example
  
-	def validate_type(self, attrs, source):
-		type = attrs[source]
-		if type not in ['bear', 'rabbit', 'puppy']:
-			raise ValidationError('%s is not a valid type' % type)
-		return attrs
+    def validate_type(self, attrs, source):
+        type = attrs[source]
+        if type not in ['bear', 'rabbit', 'puppy']:
+            raise ValidationError('%s is not a valid type' % type)
+        return attrs
 
 class ExampleEndpoint(Endpoint):
-	def post(self, request):
-		serializer = ExampleSerializer(request.DATA)
-		if not serializer.is_valid():
-			return Response(serializer.errors, status=400)
+    def post(self, request):
+        serializer = ExampleSerializer(request.DATA)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
 
-    example = serializer.save()
-		return Response(serialize(example, request.user), status=201)
+        example = serializer.save()
+        return Response(serialize(example, request.user), status=201)
 ```
 
 ## Model Serializer
@@ -125,23 +125,23 @@ class ExampleEndpoint(Endpoint):
 ```python
 @register(Example)
 class ExampleSerializer(Serializer):
-	def get_attrs(self, item_list, user):
-			attrs = {}
-			types = ExampleTypes.objects.filter(
-				type_name__in=[i.type for i in item_list]
-			)
-			for item in item_list:
-				attrs[item] = {}
-				attrs[item]['type'] = [t for t in types if t.name == item.type_name]
-			return attrs
+    def get_attrs(self, item_list, user):
+        attrs = {}
+        types = ExampleTypes.objects.filter(
+            type_name__in=[i.type for i in item_list]
+        )
 
-	def serialize(self, obj, attrs, user):
-		return {
-			'name':obj.name,
-			'type':attrs['type'],
-			'age': obj.age,
-		}
+        for item in item_list:
+            attrs[item] = {}
+            attrs[item]['type'] = [t for t in types if t.name == item.type_name]
+	    return attrs
 
+    def serialize(self, obj, attrs, user):
+        return {
+            'name':obj.name,
+            'type':attrs['type'],
+            'age': obj.age,
+        }
 ```
 
 **Registering Model Serializers** 
