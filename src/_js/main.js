@@ -2,7 +2,7 @@ import 'bootstrap';
 import UserContentUI from './lib/UserContentUI';
 import Tracking from './lib/Tracking';
 import User from './lib/User';
-import DynamicLoad from './lib/DynamicLoad';
+// import DynamicLoad from './lib/DynamicLoad';
 import './lib/PlatformContent';
 import './lib/HeaderLinker';
 import './lib/Search';
@@ -20,7 +20,7 @@ $(document).on('page.didUpdate', function(event) {
 $(function() {
   UserContentUI.init();
   Tracking.init();
-  new DynamicLoad().registerHandlers();
+  // new DynamicLoad().registerHandlers();
 
   window.User = new User();
   window.User.init();
