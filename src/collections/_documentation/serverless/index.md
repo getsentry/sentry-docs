@@ -3,7 +3,7 @@ title: 'Serverless'
 sidebar_order: 0
 ---
 
-Sentry for Serverless captures error events along by using an SDK within your application’s runtime (as opposed to logs to filter error events). These are platform specific and allow Sentry to have a deep understanding of how your application behavior including the ability to add additional context during runtime and applying pin filters.
+Sentry for Serverless captures error events using platform specific SDKs within your application’s runtime (as opposed to using logs to parse error events). The SDKs allow Sentry to have a deep understanding of your application behavior including the ability to add additional context during runtime and reducing noise.
 
 You can use following integrations to automatically or manually report errors into Sentry:
 
@@ -11,10 +11,10 @@ You can use following integrations to automatically or manually report errors in
     * [Python]({% link _documentation/platforms/python/aws_lambda.md %})
     * [Node]({% link _documentation/platforms/node/aws_lambda.md %})
 * GCP Functions
-    * [Python]({% link _documentation/platforms/python/generic.md %})
-    * [Node] ({% link _documentation/platforms/node/gcp_functions.md %})
+    * [Python]({% link _documentation/platforms/python/gcp_functions.md %})
+    * [Node]({% link _documentation/platforms/node/gcp_functions.md %})
 * Other Serverless Providers
-    * [Python Generic Decorator]({% link _documentation/platforms/python/generic.md %})
+    * [Python Serverless Decorator]({% link _documentation/platforms/python/generic.md %})
     * [Go]({% link _documentation/platforms/go/serverless.md %})
 
 ## Additional Data Reporting

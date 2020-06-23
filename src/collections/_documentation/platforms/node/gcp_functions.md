@@ -3,14 +3,12 @@ title: GCP Functions
 sidebar_order: 8
 ---
 
-In the `package.json`, install the sentry SDK as a dependency:
-
+Install our Sentry SDK as a dependency In the `package.json`:
 ```jsx
 "@sentry/node": "^5.16.1"
 ```
 
-To set up Sentry error logging for a Lambda function, build a wrapper:
-
+To set up Sentry error logging for a gcp cloud function, build a wrapper:
 ```jsx
 "use strict"
 
