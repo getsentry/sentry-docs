@@ -1,6 +1,6 @@
 ---
 title: Distributed Tracing
-sidebar_order: 2
+sidebar_order: 3
 ---
 
 {% capture __alert_content -%}

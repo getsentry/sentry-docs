@@ -1,6 +1,4 @@
-## Getting Started with Performance for JavaScript
-
-To get started with performance monitoring, first install the `@sentry/tracing` package:
+To get started with performance monitoring using Sentry's JavaScript SDK, first install the `@sentry/tracing` package:
 
 ```bash
 npm install --save @sentry/tracing
