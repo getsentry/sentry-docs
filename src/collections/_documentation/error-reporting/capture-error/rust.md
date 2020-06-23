@@ -1,4 +1,4 @@
-In Rust you can capture any `std::error::Error` type. 
+In Rust, you can capture any `std::error::Error` type. 
 
 ```rust
 let result = match function_returns_error() {
