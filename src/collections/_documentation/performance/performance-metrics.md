@@ -1,6 +1,6 @@
 ---
 title: 'Performance Metrics'
-sidebar_order: 0
+sidebar_order: 1
 ---
 {% capture __alert_content -%}
 Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [performance-feedback@sentry.io](mailto:performance-feedback@sentry.io).

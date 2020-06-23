@@ -1,5 +1,5 @@
 ---
-title: Performance Monitoring
+title: Getting Started
 sidebar_order: 0
 ---
 
@@ -11,6 +11,8 @@ Learn more about performance monitoring in:
 - [Distributed Tracing]({% link _documentation/performance/distributed-tracing.md %}): diagnose problems and view interactions across your software systems
 - [Metrics]({% link _documentation/performance/performance-metrics.md %}): provides insight into user experience of your application based on custom thresholds
 - [Discover]({% link _documentation/performance/discover/index.md %}): view data across environments with pre-built queries. Customers subscribed to the Team or Business plan can use Discover to view comprehensive information sent to Sentry.
+
+## Install
 
 {% include components/platform_content.html content_dir='getting-started' %}
 
