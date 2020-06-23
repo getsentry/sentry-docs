@@ -1,4 +1,4 @@
-## Getting Started with Performance for Python
+To get started with performance monitoring using Sentry's Python SDK, first install the `@sentry/apm` package:
 
 ```
 import sentry_sdk

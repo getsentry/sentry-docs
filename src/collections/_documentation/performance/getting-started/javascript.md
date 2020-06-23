@@ -1,6 +1,4 @@
-## Getting Started with Performance for JavaScript
-
-To get started with performance monitoring, first install the `@sentry/apm` package:
+To get started with performance monitoring using Sentry's JavaScript SDK, first install the `@sentry/apm` package:
 
 ```bash
 npm install --save @sentry/apm
