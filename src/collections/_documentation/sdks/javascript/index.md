@@ -83,7 +83,7 @@ Next, initialize the integration in your call to `Sentry.init`:
 import * as Sentry from '@sentry/browser';
 import { Integrations as ApmIntegrations } from '@sentry/tracing';
 Sentry.init({
-  dsn: '<https://bc367fd982144d75923219dca8f35ad1@o1.ingest.sentry.io/2783252>',
+  dsn: '___PUBLIC_DSN___',
   release: 'my-project-name@' + process.env.npm_package_version,
   integrations: [
     new ApmIntegrations.Tracing(),
