@@ -19,6 +19,6 @@ Sentry.init({
 });
 ```
 
-Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributing Tracing]({%- link _documentation/performance/distributed-tracing.md %}#traces-transactions-and-spans). **To sample transactions, you must set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions.
+Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing]({%- link _documentation/performance/distributed-tracing.md %}#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions.
 
 Learn more about sampling in [Using Your SDK to Filter Events]({%- link _documentation/error-reporting/configuration/filtering.md %}).
