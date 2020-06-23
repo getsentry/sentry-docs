@@ -3,7 +3,7 @@ You should `init` the Sentry browser SDK as soon as possible during your applica
 ```jsx
 import React from 'react';
 import ReactDOM from 'react-dom';
-import * as Sentry from '@sentry/browser';
+import * as Sentry from '@sentry/react';
 import App from './App';
 
 Sentry.init({dsn: "___PUBLIC_DSN___"});
