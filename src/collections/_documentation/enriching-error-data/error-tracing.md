@@ -6,7 +6,7 @@ sidebar_order: 5
 With error tracing, you can correlate errors from multiple services and uncover a significant story surrounding a break. Using a unique identifier allows you to trace an error and pinpoint the service and code behaving unexpectedly. 
 
 ## Error Tracing and Sentry Configuration
-The following steps demonstrate a potential use-case that involves an example web application with a JavaScript front-end and a Node.js server. The examples assume that both services are already configured with Sentry's [JavaScript SDK]({% link _documentation/platforms/javascript/index.md %}).
+The following steps demonstrate a potential use-case that involves an example web application with a JavaScript front-end and a Node.js server. The examples assume that both services are already configured with Sentry's [JavaScript SDK](/platforms/javascript/).
 
 #### Step 1: Generate a unique transaction ID
 Generate a unique transaction identifier and set as a Sentry tag in the service issuing the request. This unique identifier could be a transaction ID or a session ID created when the web application first loads. Set this value as a Sentry tag using the Sentry SDK. Below, the example uses a `transactionId` as a unique identifier:

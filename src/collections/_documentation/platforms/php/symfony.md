@@ -65,7 +65,7 @@ If you're using the Symfony Flex plugin, you'll find this file already created f
 
 ## Customization
 
-The [Sentry 2.0 SDK]({% link _documentation/platforms/php/index.md %}#php-specific-options) uses the 
+The [Sentry 2.0 SDK](/platforms/php/#php-specific-options) uses the 
 [Unified API](https://develop.sentry.dev/sdk/unified-api/), hence it uses the concept of `Scope`s to 
 hold information about the current state of the app, and attach it to any event that is reported. 
 This bundle has three listeners (`RequestListener`, `SubRequestListener`, and `ConsoleListener`) that add some easy 
@@ -133,8 +133,8 @@ disable it in the `test` and `dev` environments.
 
 ### Options
 All the possibile configurations under the `options` key map directly to the correspondent options from the base SDK;
-you can read more about those in the [Unified API configuration docs]({% link _documentation/error-reporting/configuration/index.md %}),
-and on the [PHP specific SDK docs]({% link _documentation/platforms/php/index.md %}#php-specific-options).
+you can read more about those in the [Unified API configuration docs](/error-reporting/configuration/),
+and on the [PHP specific SDK docs](/platforms/php/#php-specific-options).
 
 Below you can find additional documentation that is specific to the bundle usage, or information about the sensible default
 values that you can use in some cases.

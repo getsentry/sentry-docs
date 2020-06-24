@@ -690,7 +690,7 @@ Sentry.withScope(function(scope) {
 For more information, see [Setting the Level](#setting-the-level).
 
 ### Lazy Loading Sentry
-We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration). As noted there, if you want to use `defer`, you can, though keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). Therefore, if you do this, you'll need to a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), which will guarantee that it’s executed before any of the others.
+We recommend using our bundled CDN version for the browser as explained [here](/error-reporting/quickstart/?platform=browser#pick-a-client-integration). As noted there, if you want to use `defer`, you can, though keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). Therefore, if you do this, you'll need to a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), which will guarantee that it’s executed before any of the others.
 
 We also offer an alternative we call the _Loader_. You install by just adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
 
@@ -714,7 +714,7 @@ It's a small wrapper around our SDK. The _Loader_ does a few things:
 - It lazy injects our SDK into your website.
 - After you've loaded the SDK, the Loader will send everything to Sentry.
 
-By default, the _Loader_ contains all information needed for our SDK to function, like the `DSN`.  In case you want to set additional [options]({% link _documentation/error-reporting/configuration/index.md %}) you have to set them like this:
+By default, the _Loader_ contains all information needed for our SDK to function, like the `DSN`.  In case you want to set additional [options](/error-reporting/configuration/) you have to set them like this:
 
 
 ```javascript

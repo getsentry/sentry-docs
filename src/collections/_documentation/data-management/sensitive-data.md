@@ -132,7 +132,7 @@ As mentioned earlier, configure scrubbing within SDK if possible so that sensiti
 
 ### Advanced server-side data scrubbing
 
-We are currently betatesting additional features around server-side data scrubbing. For more information see [_Advanced Data Scrubbing_]({% link _documentation/data-management/advanced-datascrubbing.md %}).
+We are currently betatesting additional features around server-side data scrubbing. For more information see [_Advanced Data Scrubbing_](/data-management/advanced-datascrubbing/).
 
 ## Restricting Emails
 
