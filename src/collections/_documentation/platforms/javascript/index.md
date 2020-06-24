@@ -594,17 +594,29 @@ Sentry.init({
 
 The first thing to do is consider constructing a whitelist of domains which might raise acceptable exceptions.
 
-If your scripts are loaded from `cdn.example.com` and your site is `example.com` it’d be reasonable to set `whitelistUrls` to:
+If your scripts are loaded from `cdn.example.com` and your site is `example.com` it’d be reasonable to set `allowUrls` to:
 
 ```javascript
 Sentry.init({
-  whitelistUrls: [
+  allowUrls: [
     /https?:\/\/((cdn|www)\.)?example\.com/
   ]
 });
 ```
 
-There is also `blacklistUrls` if you want to block specific URLs forever.
+There is also `denyUrls` if you want to block specific URLs forever.
+
+{% capture __alert %}
+Prior to version 5.17.0, `allowUrls` and `denyUrls` were called `whitelistUrls` and `blacklistUrls` respectively.
+These options are still supported due to backward compatibility reasons, however, they will be removed in version 6.0.
+For more information, please see our [Inclusive Language Policy](https://develop.sentry.dev/inclusion/).
+{% endcapture %}
+
+{% include components/alert.html
+  title="Note"
+  content=__alert
+  level="warning"
+%}
 
 The community has compiled a list of common ignore rules for everyday things, like Facebook, Chrome extensions, etc. So it’s recommended to at least check these out and see if they apply to you. [Here is the original gist](https://gist.github.com/impressiver/5092952). This is not the default value of our SDK; it's just a highlight of an extensive example of what it could be.
 
@@ -633,7 +645,7 @@ Sentry.init({
       // See http://toolbar.conduit.com/Developer/HtmlAndGadget/Methods/JSInjection.aspx
       'conduitPage'
     ],
-    blacklistUrls: [
+    denyUrls: [
       // Facebook flakiness
       /graph\.facebook\.com/i,
       // Facebook blocked
@@ -767,10 +779,10 @@ to `integrations` option. For example, to turn off browser capturing console cal
 
 _Import name: `Sentry.Integrations.InboundFilters`_
 
-This integration allows developers to ignore specific errors based on the type or message, as well as blacklist/whitelist URLs that originate from the exception.
-It ignores errors, which message starts with `Script error` or `Javascript error: Script error` by default. More on this in our ["What the heck is "Script error"?"](https://blog.sentry.io/2016/05/17/what-is-script-error) blog post. Also, keep in mind that blacklist and whitelist work only for captured exceptions, not raw message events.
+This integration allows developers to ignore specific errors based on the type or message, as well as deny/allow URLs that originate from the exception.
+It ignores errors, which message starts with `Script error` or `Javascript error: Script error` by default. More on this in our ["What the heck is "Script error"?"](https://blog.sentry.io/2016/05/17/what-is-script-error) blog post. Also, keep in mind that denying and allowing specific events, work only for captured exceptions, not raw message events.
 
-To configure the integration, use `ignoreErrors`, `blacklistUrls`, and `whitelistUrls` SDK options directly. All three options accept an array of strings or RegExp patterns. When provided with a string, they’ll partially match the URL in case of `backlistUrls` and `whitelistUrl`, or two variants in case of `ignoreErrors` - `message` itself, and `${type}: {message}` format. When given RegExp, it will use the `RegExp.test` method instead, which you can use to achieve an exact match if desired.
+To configure the integration, use `ignoreErrors`, `denyUrls`, and `allowUrls` SDK options directly. All three options accept an array of strings or RegExp patterns. When provided with a string, they’ll partially match the URL in case of `denyUrls` and `allowUrls`, or two variants in case of `ignoreErrors` - `message` itself, and `${type}: {message}` format. When given RegExp, it will use the `RegExp.test` method instead, which you can use to achieve an exact match if desired.
 
 ##### FunctionToString
 
