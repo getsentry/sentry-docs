@@ -465,6 +465,33 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 
 *NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your set up. If you do not whitelist the `sentry-trace` header, the request might be blocked.
 
+*beforeNavigation Option*
+
+{% version_added 5.18.0 %}
+
+For `pageload` and `navigation` transactions, the `Tracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigation` option to the `Tracing` integration. This option allows you to pass in a function that takes in the location at the time of navigation and returns a new transaction name.
+
+`beforeNavigation` is useful if you would like to leverage the routes from a custom routing library like `React Router` or if you want to reduce the cardinality of particular transactions.
+
+```javascript
+import * as Sentry from '@sentry/browser';
+import { Integrations as ApmIntegrations } from '@sentry/apm';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    new ApmIntegrations.Tracing({
+      beforeNavigate: (location) => {        
+        // The normalizeTransactionName function uses the given URL to
+        // generate a new transaction name.
+        return normalizeTransactionName(location.href);
+      },
+    }),
+  ],
+  tracesSampleRate: 0.25,
+});
+```
+
 #### Manual Instrumentation
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
