@@ -1,1 +1,1 @@
--  [_integrating with the Python ecosystem_]({% link _documentation/platforms/python/index.md %})
+-  [_integrating with the Python ecosystem_](/platforms/python/)

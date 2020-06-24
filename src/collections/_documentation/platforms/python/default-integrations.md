@@ -68,7 +68,7 @@ Adds `sys.argv` as an `extra` attribute to each event.
 ## Logging
 *Import name: `sentry_sdk.integrations.logging.LoggingIntegration`*
 
-See [_Logging_]({% link _documentation/platforms/python/logging.md %})
+See [_Logging_](/platforms/python/logging/)
 
 ## Threading
 *Import name: `sentry_sdk.integrations.threading.ThreadingIntegration`*

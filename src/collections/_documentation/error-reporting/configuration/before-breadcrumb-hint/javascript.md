@@ -15,4 +15,4 @@ Sentry.init({
 });
 ```
 
-For information about which hints are available see [hints in JavaScript]({% link _documentation/platforms/javascript/index.md %}#hints).
+For information about which hints are available see [hints in JavaScript](/platforms/javascript/#hints).

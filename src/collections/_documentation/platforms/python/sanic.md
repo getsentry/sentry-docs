@@ -57,5 +57,5 @@ A Python version of 3.6 or greater is also required.
 * {% include platforms/python/request-data.md %}
 
 * Logging with any logger will create breadcrumbs when
-  the [Logging]({% link _documentation/platforms/python/logging.md %})
+  the [Logging](/platforms/python/logging/)
   integration is enabled (done by default).
