@@ -252,4 +252,4 @@ If you enable tracing in services with multiple entry points, we recommend choos
 
 ## Viewing Trace Data
 
-Though both Performance and [Discover]({%- link _documentation/performance-monitoring/discover-queries/index.md -%}), you can view trace data. 
+Though [Performance]({%- link _documentation/performance-monitoring/performance/index.md -%}) and [Discover]({%- link _documentation/performance-monitoring/discover-queries/index.md -%}), you can view trace data in the event details.

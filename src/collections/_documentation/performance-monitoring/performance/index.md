@@ -13,7 +13,7 @@ The search bar operates similar to the one in the Discover [Query Builder]({% li
 
 ## Graphs
 
-Compare graphs side by side to find any correlations. For example, if an Apdex score dips significantly during a given time period, you'll be able to visualize whether if throughput spiked in the same time interval. The global header and search conditions will also enable you to filter these graphs down even further. Options for displays are listed below.
+Compare graphs side by side to find any relevant correlations. For example, if an Apdex score dips significantly during a given time period, you'll be able to visualize whether if throughput spiked in the same time interval. The global header and search conditions will also enable you to filter these graphs down even further. Display options are listed below.
 
 - [Apdex]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#apdex)
 - [Transactions Per Minute (TPM)]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#throughput-total-tpm-tps)

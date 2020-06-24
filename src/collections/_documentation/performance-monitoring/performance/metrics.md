@@ -38,6 +38,9 @@ A word of caution when looking at averages and percentiles: In most cases, you'l
 
 The problem of small sample size (and the resulting inability to be usefully accurate) will happen more often for some metrics than others, and sample size will also vary by row. For example, it takes less data to calculate a meaningful average than it does to calculate an equally meaningful 95th percentile. Further, a row representing requests to `/settings/my-awesome-org/` will likely contain many times as many transactions as one representing requests to `/settings/my-awesome-org/projects/best-project-ever/`.
 
+### P50 Threshold
+The P50 Threshold indicates that 50% of transaction durations are greater than the threshold. This is also the median. For example, if the P50 threshold is set to 10 milliseconds, then 50% of transactions exceeded that threshold, taking longer than 10 milliseconds. 
+
 ### P75 Threshold
 The P75 Threshold indicates that 25% of transaction durations are greater than the threshold. For example, if the P75 threshold is set to 10 milliseconds, then 25% of transactions exceeded that threshold, taking longer than 10 milliseconds.
 
