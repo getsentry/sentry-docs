@@ -3,56 +3,64 @@ title: 'Event Detail'
 sidebar_order: 5
 ---
 
-**Transaction Details** lets you examine an individual transaction event in detail. Here spans are visualized to help you identify slow HTTP requests, slow database queries, and other bottlenecks. You can also jump to other transactions within the trace, and identify associated errors. Learn more about [Distributed Tracing](/performance-monitoring/distributed-tracing/) and the [Transaction Details page](/performance-monitoring/distributed-tracing/#transaction-detail-viewpage).
-
-## Viewing Trace Data
-
-You can see a list of transaction events by clicking on the "Transactions" pre-built query in [Discover](/performance-monitoring/discover-queries/), or by using a search condition `event.type:transaction` in the [Discover Query Builder](/performance-monitoring/discover-queries/query-builder/) view.
-
-### Transaction List View
-
-The results of either of the above queries are presented in a list view, where each entry represents a group of one or more transactions. Data about each group is displayed in table form, and comes in two flavors: value-based (such as transaction name), and aggregate (such as average duration). The choice of which kinds of data to display is configurable, and can be changed by clicking 'Edit Columns' at the top right of the table. Bear in mind that adding or removing any value-based columns may affect the way the results are grouped.
-
-This view also includes a timeseries graph, aggregating all results of the query, as well as a summary of the most common tags associated with those results (either via your Sentry instance's [global context](/enriching-error-data/additional-data/) or via each transaction's root span). From this view, you can also filter the transactions list, either by restricting the time window or by adding attributes to the query (or both!).
-
-_Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore cannot be searched.
-
-For more details about the transaction list view, see the full documentation on [Discover's Query Builder](/performance-monitoring/discover-queries/query-builder/), and for more about transaction metrics, see [Metrics](/performance-monitoring/performance/metrics/#transaction-metrics).
-
-### Transaction Detail View
-
-When you open a transaction event in Discover (by clicking on the icon at the left side of the row), you'll see the **span view** at the top of the page. Other information the SDK captured as part of the transaction event (such as the transaction's tags and automatically collected breadcrumbs) is displayed underneath and to the right of the span view.
+From [Performance](/performance-monitoring/performance/index) and [Discover](/performance-monitoring/discover-queries/index), you can drill all the way down into an event span detail. This will acclerate your ability to debug slow HTTP requests, database queries and other bottlenecks.
 
 [{% asset performance/perf-event-detail.png alt="Discover span showing the map of the transactions (aka minimap) and the black dashed handlebars for adjusting the window selection." %}]({% asset performance/perf-event-detail.png @path %})
 
-#### Using the Span View
+Information about this specific event is located in the sidebar, listing out the specific Event ID, date and time of occurence, project and downloadable JSON package. More can be found under Event Tag Details. You'll also get a breakdown of operations, of which will correspond to the waterfall span view as a legend.
 
-The span view is a split view where the left-hand side shows the transaction's span tree, and the right-hand side represents each span as a colored rectangle. Within the tree view, Sentry identifies spans by their `op` and `description` values. If a span doesn't have a description, Sentry uses the span's id as a fallback. The first span listed is always the transaction's root span, from which all other spans in the transaction descend.
+{% capture __alert_content -%}
+Currently, only root transactions are searchable. Any span data that inherits from it's root are not. 
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Warning"
+    content=__alert_content
+    level="warning"
+%}
 
-At the top of the span view is a minimap, which shows which specific portion of the transaction you're viewing.
+## Span View
 
-_Zooming In on a Transaction_
+### Search
 
-As shown in the Discover span screenshot above, you can click and drag your mouse cursor across the minimap (top of the span view). You can also adjust the window selection by dragging the handlebars (black dashed lines). 
+Looking for a specific span in this transaction? Use the search bar to find an `operation` or `description`. 
 
-_Missing Instrumentation_
+### Minimap
 
-Sentry may indicate that gaps between spans are "Missing Instrumentation." This means that there is time in the transaction that isn't accounted for by any of the transaction's spans, and likely means that you need to manually instrument that part of your process.
+The minimap reflects the entirety of the transaction broken into spans. You can either click and drag your cursor across the minimap to zoom in or adjust the window selection by dragging the handlebar in from the side. This will affect the range you see in the waterfall view. 
 
-_Viewing Span Details_
+### Waterfall
 
-Clicking on a row in the span view expands the details of that span. From here, you can see all attached properties, such as tags and data.
+The waterfall view is a split view where the left reflects the transaction's span tree, and the right reflects each span as a horizontal bar (colors represent the operation). Within the tree, Sentry identifies spans by their `operation` and `description` values. If a span doesn't have a description, Sentry uses the span's ID as a fallback. The first span listed is always the transaction's root span, from which all other spans in the transaction descend. 
+
+**Missing Instrumentation** 
+
+Gaps between spans may be marked as "Missing Instrumentation". This means that there is a duration in the transaction that isn't accounted for by any of the transaction's spans, and likely means that you need to manually instrument that part of your process. Go back to the [performance setup](/performance-monitoring/setup) for details. 
+
+**Span Details**
+
+Clicking on a span row expands the details of that span. From here, you can see all attached properties, such as tags and other field data. This includes the ability to search all transactions within a given trace by clicking on "Search by Trace". To learn more about distributed tracing, [read the docs](/performance-monitoring/distributed-tracing/). 
 
 [{% asset performance/span-details.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-details.png @path %})
 
-_Searching by Trace ID_
+{% capture __alert_content -%}
+On the [Team plan](https://sentry.io/pricing/), results will only be shown for one project at a time. Further, each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view. Therefore, you may not see all transactions in a given trace in your results list.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="info"
+%}
 
-You can search for all of the transactions in a given trace by expanding any of the span details and clicking on "Search by Trace".
+**Traversing Transactions**
 
-_Note:_ On the [Team plan](https://sentry.io/pricing/), results will only be shown for one project at a time. Further, each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view. Therefore, you may not see all transactions in a given trace in your results list.
+Some spans within a transaction may be the parent of another transaction. Under these circumstances, expanding the span details may reveal a 
+"View Child" or "View Children" button with the Span ID. These will potentially lead to another transaction or a list of transactions. 
 
-_Traversing to Child Transactions_
-
-Some spans within a transaction may be the parent of another transaction. When you expand the span details for such spans, you'll see the "View Child" button, which, when clicked, will lead to the child transaction's details view.
-
-_Note:_ Traversing between transactions in this way is only available on the [Business plan](https://sentry.io/pricing/). Further, each transaction belongs to a specific project, and you will only be able to see the "View Child" button if the child transaction belongs to a project you have permission to view.
+{% capture __alert_content -%}
+Traversing between transactions in this way is only available on the [Business plan](https://sentry.io/pricing/). Further, each transaction belongs to a specific project, and you will only be able to see the "View Child" or "View Children" button if the child transaction belongs to a project you have permission to view.
+{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="info"
+%}

@@ -38,7 +38,7 @@ When viewing transactions, you may want to create more curated views. Click on "
 
 ## Related Issues Table
 
-This will show you all related issues to this transaction, meaning any errors that have occured off of these transactions. 
+This will show you all related issues, meaning any errors that are associated with this transaction. 
 
 ## Stats Sidebar
 
