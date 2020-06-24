@@ -626,12 +626,6 @@ const app = new Koa()
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [
-      // enable HTTP calls tracing
-      new Sentry.Integrations.Http({ tracing: true }),
-      // enable Express.js middleware tracing
-      new Apm.Integrations.Express({ app })
-  ],
   tracesSampleRate: 0.25
 });
 
