@@ -180,7 +180,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with re
 
 ### Bitbucket Server
 
-You can use the data from your Bitbucket Server commits to help find and fix bugs faster. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
+You can use the data from your Bitbucket Server commits to help find and fix bugs faster. [Troubleshooting](/workflow/integrations/global-integrations/#troubleshooting-2)
 
 #### Installing Bitbucket Server with Sentry
 
@@ -443,7 +443,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 ### GitHub Enterprise
 
-You can use the data from your GitHub Enterprise commits to help find and fix bugs faster. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
+You can use the data from your GitHub Enterprise commits to help find and fix bugs faster. [Troubleshooting](/workflow/integrations/global-integrations/#troubleshooting-2)
 
 #### Configure GitHub Enterprise
 
@@ -568,7 +568,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 ### GitLab
 
-Sentry’s GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
+Sentry’s GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry. [Troubleshooting](/workflow/integrations/global-integrations/troubleshooting-2)
 
 #### Configure GitLab
 

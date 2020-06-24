@@ -1,1 +1,1 @@
--  [_integrating with the Rust ecosystem_]({% link _documentation/platforms/rust/index.md %})
+-  [_integrating with the Rust ecosystem_](/platforms/rust/)
