@@ -7,13 +7,13 @@ Sentry users with admin permissions or higher can create alerts. To confirm or s
 
 ## For Errors
 
-Sentry automatically groups individual error events into Issues based on stack trace and other factors. For more details about grouping, see [Grouping & Fingerprints]({%- link _documentation/data-management/event-grouping/index.md -%}).
+Sentry automatically groups individual error events into Issues based on stack trace and other factors. For more details about grouping, see the [full documentation on Grouping & Fingerprints]({%- link _documentation/data-management/event-grouping/index.md -%}).
 
 Sentry has two types of alerts you can use for errors:
 
 [Issue Alerts](#issue-alerts)
 
-: notifies you when individual Sentry [Issues]({%- link _documentation/data-management/event-grouping/index.md -%}) match your alerting criteria, such as an Issue happening more frequently than usual.
+: Notifies you when individual Sentry [Issues]({%- link _documentation/data-management/event-grouping/index.md -%}) match your alerting criteria, such as an Issue happening more frequently than usual.
 
 [Metric Alerts](#metric-alerts)
 
@@ -30,32 +30,32 @@ Sentry has two types of alerts you can use for errors:
 
 ## Metric Alerts
 
-As mentioned [above](#for-errors), a metric is the value of an aggregate function like `count()` or `avg()` applied to your event data. Typical uses of metric alerts are detecting a spike in the overall number of errors in a project, or a violation of a performance metric like latency, apdex, failure rate, and throughput.
+As mentioned [above](#for-errors), a metric is the value of an aggregate function like `count()` or `avg()` applied to your event data. Typical uses of metric alerts include detecting a spike in the overall number of errors in a project, or a violation of a performance metric like latency, apdex, failure rate, and throughput.
 
 ### Alert Builder
 
 A metric alert has, at most, two triggers. The first is a critical trigger, which is required. The second is a warning trigger, which is optional. Triggers are independent of one another; however, the warning (optional) must be reached before the critical (required) trigger.
 
-Sentry evaluates triggers approximately every minute from the highest severity to lowest. Sentry creates an alert with the severity of the matched trigger (warning or critical). If an alert is already active, its status is updated. Admins can resolve alerts manually, or automatically by setting the resolution threshold.
+Sentry evaluates triggers approximately every minute from the highest severity to lowest. Sentry creates an alert with the severity of the matched trigger (warning or critical). If an alert is already active, its status is updated. Admins can resolve alerts manually or automatically by setting the resolution threshold.
 
 When an alert is created or changes status, the actions associated with the trigger are executed. The available actions are:
 
 - Send an email (to a member or team). If sent to a member, the member's personal project alert opt-out settings are overridden.
-- Send a Slack notification
+- Send a Slack notification.
 
 ### Alert Stream
 
-Alerts can be accessed via the **Alerts** sidebar item.
+You can access alerts via the **Alerts** sidebar item.
 
 [{% asset notifications/alert-stream2.png alt="Alert stream illustrates alert duration, trends, severity, time duration and percentage of users affected." %}]({% asset notifications/alert-stream2.png @path %})
 
 ### Alert Details
 
-In this page, you can view a single instance of an alert from the time the alert is created to when the alert is resolved, or the current time if the alert is still active.
+In this page, you can view a single instance of an alert from when the alert is created to when the alert is resolved, or the current time if the alert is still active.
 
 [{% asset notifications/alert_details.png alt="Alert details illustrates a graph showing errors." %}]({% asset notifications/alert_details.png @path %})
 
-The "subscribe" button subscribes you to workflow notifications for the alert, which include status changes and comments.
+The "subscribe" button subscribes you to workflow notifications for the alert, including status changes and comments.
 
 ## Issue Alerts
 
