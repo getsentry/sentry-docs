@@ -3,12 +3,13 @@ title: 'Transaction Summary'
 sidebar_order: 4
 ---
 
-Every transaction has a summary view that gives you a better understanding of how it's health is overall. With this view, you'll find graphs, stats, facet maps, related issues and more. 
+Every transaction has a summary view that gives you a better understanding of how it's health is overall. With this view, you'll find graphs, instances of these events, stats, facet maps, related errors and more. 
 
 [{% asset performance/perf-summary.png alt="Example of Transaction Summary" %}]({% asset performance/perf-summary.png @path %})
 
 ## Key Transaction
-Set personal "Key Transactions" from the Transaction Summary page. After setting a "Key Transaction," you can view the transactions in a dedicated tab on the Performance Homepage. These "Key Transactions" are not currently shared and limited to ten per user.
+
+If you find an important transaction you want to return to, click "Key Transaction" in the upper right corner to star it. This will be saved so you can view this from your [Performance Homepage](/performance-monitoring/performance/index). Keep in mind any key transaction you mark will not be shared with others in your organization and are limited to ten per user. 
 
 ## Graphs
 
@@ -25,18 +26,20 @@ This graph shows the [average transaction duration](/performance-monitoring/perf
 
 ## Transaction Table
 
-On initial load, the table displays the slowest occurrences of the transaction along with the Event ID, User, Transaction Duration, and Timestamp of the event. Click on the Event ID to open the [event detail](/performance-monitoring/performance/event-detail/) for the transaction. The table updates dynamically if you change any of the selections in the global header or when you drill in on a latency segment -- applicable when viewing the Latency Histogram.
+On initial load, the table displays the slowest occurrences of the transaction along with the Event ID, User, Transaction Duration, and Timestamp of the event. Click on the Event ID to open the [event detail](/performance-monitoring/performance/event-detail/) for the transaction. Other sets of transactions you can browse through are below.
 
 - Slowest Transactions
 - Fastest Transactions
 - Recent Transactions
 
-When viewing transactions, you may want to create more curated views. Click on "Open in Discover" above the table to create a custom query to investigate further. For more details, see the full documentation on Discover [Query Builder](/performance-monitoring/discover-queries/query-builder/).
+The table also updates dynamically if you change any of the selections in the global header or when you drill in on a latency segment (applicable when viewing the Latency Histogram).
+
+When viewing transactions, you may want to create more curated views. Click on "Open in Discover" above the table to create a custom query to investigate further. For more details, see the full documentation for the Discover [Query Builder](/performance-monitoring/discover-queries/query-builder/).
 
 ## Related Issues Table
 
-This will show you all related issues to this transaction, meaning any errors that have occured related to 
+This will show you all related issues to this transaction, meaning any errors that have occured off of these transactions. 
 
 ## Stats Sidebar
 
-The sidebar contains helpful supplementary information about this transaction's [Apdex](/performance-monitoring/performance/metrics/#apdex), [User Misery](/performance-monitoring/performance/metrics/#user-misery), Latency, Throughput and more. 
+The sidebar contains helpful supplementary information about this transaction's [Apdex](/performance-monitoring/performance/metrics/#apdex), [User Misery](/performance-monitoring/performance/metrics/#user-misery), Latency, Throughput and more. Find a Tag Summary (facet map) here to see common tags related to this transaction.
