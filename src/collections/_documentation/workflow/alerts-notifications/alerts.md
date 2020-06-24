@@ -202,5 +202,5 @@ Each project has three options: Default, On, or Off. Selecting default uses your
     - No, all filters are event-based. For example, configurations don't exist for alerting only if an issue is X days old, or assigned to Y, or alerted-on-before, etc.
 - What is the difference between Delete, Delete & Discard, and Ignore?
     - Delete - Deleting an issue deletes all data associated with it, and creates a new issue if an event with the same fingerprint happens again. Alerts and workflow notifications for this new issue behave just like notifications for any new issue.
-    - [Delete & Discard](https://docs.sentry.io/accounts/quotas/#filter-by-issue) - when you delete and discard an issue, all notifications for the issue will stop
+    - Delete & Discard - when you delete and discard an issue, all notifications for the issue will stop
     - Ignore - While an issue is ignored, all alerts for that issue are muted. You can also ignore an issue until certain conditions are met — for example, "ignore for 30 minutes." Keep in mind; **an ignored issue will still count towards your quota.**
