@@ -1,13 +1,13 @@
 ---
-title: 'Transaction Event Detail'
+title: 'Event Detail'
 sidebar_order: 5
 ---
 
-From [Performance](/performance-monitoring/performance/index) and [Discover](/performance-monitoring/discover-queries/index), you can drill all the way down into an event span detail. This will acclerate your ability to debug slow HTTP requests, database queries and other bottlenecks.
+From [Performance](/performance-monitoring/performance/index) and [Discover](/performance-monitoring/discover-queries/index), you can drill all the way down into a span for a single transaction and traverse multiple directions. This will acclerate your ability to debug slow HTTP requests, database queries, identify associated errors and root out other bottlenecks.
 
 [{% asset performance/perf-event-detail.png alt="Discover span showing the map of the transactions (aka minimap) and the black dashed handlebars for adjusting the window selection." %}]({% asset performance/perf-event-detail.png @path %})
 
-Information about this specific event is located in the sidebar, listing out the specific Event ID, date and time of occurence, project and downloadable JSON package. More can be found under Event Tag Details. You'll also get a breakdown of operations, of which will correspond to the waterfall span view as a legend.
+Information about this specific event is located in the sidebar, listing out the Event ID, date and time of occurence, project and downloadable JSON package. More can be found under Event Tag Details. You'll also get a breakdown of operations, of which will correspond to the waterfall span view as a legend.
 
 {% capture __alert_content -%}
 Currently, only root transactions are searchable. Any span data that inherits from it's root are not. 
