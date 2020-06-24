@@ -98,7 +98,7 @@ The type assigned to the breadcrumb that is logged by the touch event.
 ### `maxComponentTreeSize`
 `number`
 
-The max number of components to display when logging a touch's component tree.
+The max number/depth of components to display when logging a touch's component tree. The default is 20.
 
 ### `ignoredDisplayNames`
 `string[]`
