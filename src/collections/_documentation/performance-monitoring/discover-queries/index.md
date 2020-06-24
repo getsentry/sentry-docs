@@ -84,11 +84,7 @@ On the Discover Homepage, each saved query card has an ellipsis that will open a
 
 To view query results, click into any query card. You'll find a graph, table, and toggleable tag summary (or facet map). The search bar at the top enables you to see the search conditions entered. The table reflects the events with sortable columns. 
 
-<<<<<<< HEAD:src/collections/_documentation/performance-monitoring/discover-queries/index.md
 If the first column shows an icon (as seen above), it means the events have been stacked. Click on the icon to view the full list of events. Each event will have an event ID you can click on for more details. For more about how to build a query, go to [the Query Builder](/performance-monitoring/discover-queries/query-builder/). 
-=======
-If the first column shows an icon (as seen above), it means the events have been stacked. Click on the icon to view the full list of events. Each event will have an event ID you can click on for more details. For more about how to build a query, go to [the Query Builder](/performance/discover/query-builder/). 
->>>>>>> master:src/collections/_documentation/performance/discover/index.md
 
 ## Event Details
 
