@@ -1,5 +1,5 @@
 ---
-title: 'Event Detail'
+title: 'Transaction Event Detail'
 sidebar_order: 5
 ---
 
@@ -20,9 +20,7 @@ Currently, only root transactions are searchable. Any span data that inherits fr
 
 ## Span View
 
-### Search
-
-Looking for a specific span in this transaction? Use the search bar to find an `operation` or `description`. 
+[{% asset performance/span-details.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-details.png @path %})
 
 ### Minimap
 
@@ -32,18 +30,18 @@ The minimap reflects the entirety of the transaction broken into spans. You can 
 
 The waterfall view is a split view where the left reflects the transaction's span tree, and the right reflects each span as a horizontal bar (colors represent the operation). Within the tree, Sentry identifies spans by their `operation` and `description` values. If a span doesn't have a description, Sentry uses the span's ID as a fallback. The first span listed is always the transaction's root span, from which all other spans in the transaction descend. 
 
-**Missing Instrumentation** 
+_Missing Instrumentation_ 
 
 Gaps between spans may be marked as "Missing Instrumentation". This means that there is a duration in the transaction that isn't accounted for by any of the transaction's spans, and likely means that you need to manually instrument that part of your process. Go back to the [performance setup](/performance-monitoring/setup) for details. 
 
-**Span Details**
+_Tracing through Span Details_
 
-Clicking on a span row expands the details of that span. From here, you can see all attached properties, such as tags and other field data. This includes the ability to search all transactions within a given trace by clicking on "Search by Trace". To learn more about distributed tracing, [read the docs](/performance-monitoring/distributed-tracing/). 
-
-[{% asset performance/span-details.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-details.png @path %})
+Clicking on a span row expands the details of that span. From here, you can see all attached properties, such as tags and other field data. With the Trace ID, you'll be able to view all transactions within that given trace. Click "Search by Trace" to view that Discover list. Learn more about [distributed tracing](/performance-monitoring/distributed-tracing/) in our docs. 
 
 {% capture __alert_content -%}
-On the [Team plan](https://sentry.io/pricing/), results will only be shown for one project at a time. Further, each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view. Therefore, you may not see all transactions in a given trace in your results list.
+
+The trace view may be limited to one project at a time if you're on the [Team plan](https://sentry.io/pricing/). Further, project permissions may affect access to some of these transactions.
+
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -51,13 +49,14 @@ On the [Team plan](https://sentry.io/pricing/), results will only be shown for o
     level="info"
 %}
 
-**Traversing Transactions**
+_Traversing Transactions_
 
-Some spans within a transaction may be the parent of another transaction. Under these circumstances, expanding the span details may reveal a 
-"View Child" or "View Children" button with the Span ID. These will potentially lead to another transaction or a list of transactions. 
+Some spans within a transaction may be the parent of another transaction. Under these circumstances, some Span IDs will have a "View Child" or "View Children" button. These will potentially lead to another transaction or a list of transactions. 
 
 {% capture __alert_content -%}
-Traversing between transactions in this way is only available on the [Business plan](https://sentry.io/pricing/). Further, each transaction belongs to a specific project, and you will only be able to see the "View Child" or "View Children" button if the child transaction belongs to a project you have permission to view.
+
+Traversing between parent and child transactions is only available on the [Business plan](https://sentry.io/pricing/). Further, project permissions may affect access to some of these transactions.
+
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"

@@ -34,11 +34,11 @@ On initial load, the table displays the slowest occurrences of the transaction a
 
 The table also updates dynamically if you change any of the selections in the global header or when you drill in on a latency segment (applicable when viewing the Latency Histogram).
 
-When viewing transactions, you may want to create more curated views. Click on "Open in Discover" above the table to create a custom query to investigate further. For more details, see the full documentation for the Discover [Query Builder](/performance-monitoring/discover-queries/query-builder/).
+When viewing transactions, you may want to create more curated views. Click "Open in Discover" above the table to create a custom query to investigate further. For more details, see the full documentation for the Discover [Query Builder](/performance-monitoring/discover-queries/query-builder/).
 
-## Related Issues Table
+## Related Issues
 
-This will show you all related issues, meaning any errors that are associated with this transaction. 
+This table will show you all related issues. In other words, any errors that are associated with this transaction. Click "Open in Issues" to see the full list. 
 
 ## Stats Sidebar
 
