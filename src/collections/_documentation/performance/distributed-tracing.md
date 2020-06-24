@@ -469,7 +469,7 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 
 {% version_added 5.18.0 %}
 
-For `pageload` and `navigation` transactions, the `Tracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, a `beforeNavigation` option can be supplied to the `Tracing` integration. This option allows for you to pass in a function that takes in the location at the time of navigation and should return a new transaction name.
+For `pageload` and `navigation` transactions, the `Tracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigation` option to the `Tracing` integration. This option allows you to pass in a function that takes in the location at the time of navigation and returns a new transaction name.
 
 This is useful if you would like to leverage the routes from a custom routing library like `React Router` or if you want to reduce the cardinality of certain transactions.
 
