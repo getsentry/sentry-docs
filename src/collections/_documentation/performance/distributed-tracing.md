@@ -652,7 +652,7 @@ app.use(async (ctx, next) => {
   ctx.__sentry_transaction = transaction
   await next()
   
-  // if using koa router, a nicer way to capture transaction using th ematched route
+  // if using koa router, a nicer way to capture transaction using the matched route
   if (ctx._matchedRoute) {
     const mountPath = ctx.mountPath || ''
     transaction.setName(`${ctx.method} ${mountPath}${ctx._matchedRoute}`)
