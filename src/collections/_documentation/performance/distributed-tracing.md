@@ -471,7 +471,7 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 
 For `pageload` and `navigation` transactions, the `Tracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigation` option to the `Tracing` integration. This option allows you to pass in a function that takes in the location at the time of navigation and returns a new transaction name.
 
-This is useful if you would like to leverage the routes from a custom routing library like `React Router` or if you want to reduce the cardinality of certain transactions.
+`beforeNavigation` is useful if you would like to leverage the routes from a custom routing library like `React Router` or if you want to reduce the cardinality of particular transactions.
 
 ```javascript
 import * as Sentry from '@sentry/browser';
