@@ -40,6 +40,6 @@ When viewing transactions, you may want to create more curated views. Click "Ope
 
 This table will show you all related issues. In other words, any errors that are associated with this transaction. Click "Open in Issues" to see the full list. 
 
-## Stats Sidebar
+## Metrics Sidebar
 
 The sidebar contains helpful supplementary information about this transaction's [Apdex](/performance-monitoring/performance/metrics/#apdex), [User Misery](/performance-monitoring/performance/metrics/#user-misery), Latency, Throughput and more. Find a Tag Summary (facet map) here to see common tags related to this transaction.
