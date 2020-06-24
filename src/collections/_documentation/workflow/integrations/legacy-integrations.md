@@ -41,7 +41,7 @@ Create or link issues in Asana based on Sentry events.
 
 ## Issue Notifications
 
-Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}) to properly route notifications to a specific integration.
+Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**](/workflow/alerts-notifications/alerts/) to properly route notifications to a specific integration.
 
 ### Hipchat
 
@@ -74,7 +74,7 @@ Configuring Data Forwarding is done by visiting **[Project] » Settings » Data 
 
 Integration with Amazon SQS makes it quick and easy to pipe exceptions back into your own systems.
 
-The payload for Amazon is identical is our standard API event payload, and will evolve over time. For more details on the format of this data, see our [API documentation]({%- link _documentation/api/events/get-project-event-details.md -%}).
+The payload for Amazon is identical is our standard API event payload, and will evolve over time. For more details on the format of this data, see our [API documentation](/api/events/get-project-event-details/).
 
 ### Heroku
 
@@ -142,7 +142,7 @@ You’ll start getting rich commit information and deploy emails with each new r
 
 ### Splunk
 
-Connect Splunk to Sentry with the [Data Forwarding]({%- link _documentation/data-management/data-forwarding.md -%}) feature.
+Connect Splunk to Sentry with the [Data Forwarding](/data-management/data-forwarding/) feature.
 
 {% capture __alert_content -%}
 We only support Splunk Cloud plans. We do not support Splunk Enterprise plans.

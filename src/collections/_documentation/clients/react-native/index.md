@@ -26,7 +26,7 @@ $ npm install react-native-sentry --save
 $ react-native link react-native-sentry
 ```
 
-The _link_ step will pull in the native dependency and patch your project accordingly. If you are using expo you don’t have to (or can’t) run that link step. For more information about that see [_Using Sentry with Expo_]({%- link _documentation/clients/react-native/expo.md -%}).
+The _link_ step will pull in the native dependency and patch your project accordingly. If you are using expo you don’t have to (or can’t) run that link step. For more information about that see [_Using Sentry with Expo_](/clients/react-native/expo/).
 
 On linking the new [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will help you to configure your project and change files accordingly.
 
@@ -40,7 +40,7 @@ Upon linking the following changes will be performed:
 -   configure Sentry for the supplied DSN in your _index.js/App.js_ files
 -   store build credentials in _ios/sentry.properties_ and _android/sentry.properties_.
 
-To see what is happening during linking you can refer to [_Manual Setup_]({%- link _documentation/clients/react-native/manual-setup.md -%}) which will give you all the details.
+To see what is happening during linking you can refer to [_Manual Setup_](/clients/react-native/manual-setup/) which will give you all the details.
 
 Note that we only support `react-native >= 0.38` at the moment.
 <!-- ENDWIZARD -->
@@ -78,16 +78,16 @@ You can pass additional configuration options to the `config()` method if you wa
 
 ## Mixed Stack Traces
 
-Currently we only support mixed stack traces on iOS. By default this feature is disabled. We recommend testing your app thoroughly when activating this, to turn it on `deactivateStacktraceMerging: false` see: [_Additional Configuration_]({%- link _documentation/clients/react-native/config.md -%}).
+Currently we only support mixed stack traces on iOS. By default this feature is disabled. We recommend testing your app thoroughly when activating this, to turn it on `deactivateStacktraceMerging: false` see: [_Additional Configuration_](/clients/react-native/config/).
 
 ## Deep Dive
 
--   [Additional Configuration]({%- link _documentation/clients/react-native/config.md -%})
--   [Using Sentry with Expo]({%- link _documentation/clients/react-native/expo.md -%})
--   [Using Sentry with CodePush]({%- link _documentation/clients/react-native/codepush.md -%})
--   [Source maps for Other Platforms]({%- link _documentation/clients/react-native/sourcemaps.md -%})
--   [Setup With CocoaPods]({%- link _documentation/clients/react-native/cocoapods.md -%})
--   [Using RAM Bundles]({%- link _documentation/clients/react-native/ram-bundles.md -%})
--   [Manual Setup]({%- link _documentation/clients/react-native/manual-setup.md -%})
-    -   [iOS]({%- link _documentation/clients/react-native/manual-setup.md -%}#ios)
-    -   [Android]({%- link _documentation/clients/react-native/manual-setup.md -%}#android)
+-   [Additional Configuration](/clients/react-native/config/)
+-   [Using Sentry with Expo](/clients/react-native/expo/)
+-   [Using Sentry with CodePush](/clients/react-native/codepush/)
+-   [Source maps for Other Platforms](/clients/react-native/sourcemaps/)
+-   [Setup With CocoaPods](/clients/react-native/cocoapods/)
+-   [Using RAM Bundles](/clients/react-native/ram-bundles/)
+-   [Manual Setup](/clients/react-native/manual-setup/)
+    -   [iOS](/clients/react-native/manual-setup/#ios)
+    -   [Android](/clients/react-native/manual-setup/#android)

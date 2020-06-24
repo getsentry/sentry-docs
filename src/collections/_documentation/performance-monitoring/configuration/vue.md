@@ -11,7 +11,7 @@ To do that, you need to specify which components to track and what hooks to list
 
 Note that we don't use `before` and `-ed` pairs for hooks, and you should provide a simple verb instead. For example, `update` is correct. `beforeUpdate` and `updated` are incorrect.
 
-To set up the Vue Tracing Integration, you will first need to configure the AM Tracing integration itself. For details on how to do this, see the [JavaScript]({%- link _documentation/performance-monitoring/distributed-tracing.md -%}#javascript) section above.
+To set up the Vue Tracing Integration, you will first need to configure the AM Tracing integration itself. For details on how to do this, see the [JavaScript](/performance-monitoring/distributed-tracing/#javascript) section above.
 Once you've configured the Tracing integration, move on to configuring the Vue integration itself.
 Sentry built the new tracing capabilities into the original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
 

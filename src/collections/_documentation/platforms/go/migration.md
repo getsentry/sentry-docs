@@ -78,7 +78,7 @@ sentry.Init(sentry.ClientOptions{
 })
 ```
 
-Available options: see [Configuration]({%- link _documentation/platforms/go/config.md -%}) section.
+Available options: see [Configuration](/platforms/go/config/) section.
 
 #### Providing SSL Certificates
 

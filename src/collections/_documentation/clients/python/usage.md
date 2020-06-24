@@ -22,7 +22,7 @@ except ZeroDivisionError:
 
 ## Reporting an Event
 
-To report an arbitrary event you can use the [`capture()`]({%- link _documentation/clients/python/api.md -%}#raven.Client.capture "raven.Client.capture") method. This is the most low-level method available. In most cases you would want to use the [`captureMessage()`]({%- link _documentation/clients/python/api.md -%}#raven.Client.captureMessage "raven.Client.captureMessage") method instead however which directly reports a message:
+To report an arbitrary event you can use the [`capture()`](/clients/python/api/#raven.Client.capture "raven.Client.capture") method. This is the most low-level method available. In most cases you would want to use the [`captureMessage()`](/clients/python/api/#raven.Client.captureMessage "raven.Client.captureMessage") method instead however which directly reports a message:
 
 ```python
 client.captureMessage('Something went fundamentally wrong')
@@ -33,7 +33,7 @@ client.captureMessage('Something went fundamentally wrong')
 
 The raven client internally keeps a thread local mapping that can carry additional information. Whenever a message is submitted to Sentry that additional data will be passed along.
 
-For instance if you use a web framework, you can use this to inject additional information into the context. The basic primitive for this is the [`context`]({%- link _documentation/clients/python/api.md -%}#raven.Client.context "raven.Client.context") attribute. It provides a _merge()_ and _clear()_ function that can be used:
+For instance if you use a web framework, you can use this to inject additional information into the context. The basic primitive for this is the [`context`](/clients/python/api/#raven.Client.context "raven.Client.context") attribute. It provides a _merge()_ and _clear()_ function that can be used:
 
 ```python
 def handle_request(request):

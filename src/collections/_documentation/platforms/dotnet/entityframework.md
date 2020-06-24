@@ -5,7 +5,7 @@ sidebar_order: 8
 
 Sentry has an integration with `EntityFramework` through the of the [Sentry.EntityFramework NuGet package](https://www.nuget.org/packages/Sentry.EntityFramework).
 
-> Looking for `EntityFramework Core`? That integration is achieved through the [Sentry.Extensions.Logging]({%- link _documentation/platforms/dotnet/microsoft-extensions-logging.md -%}) package.
+> Looking for `EntityFramework Core`? That integration is achieved through the [Sentry.Extensions.Logging](/platforms/dotnet/microsoft-extensions-logging/) package.
 
 
 ## Installation

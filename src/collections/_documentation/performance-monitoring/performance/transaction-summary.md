@@ -13,7 +13,7 @@ Set personal "Key Transactions" from the Transaction Summary page. After setting
 ## Graphs
 
 ### Duration Breakdown 
-By graphing [P50]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#p50-threshold), [P75]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#p75-threshold), [P95]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#p95-threshold), [P99]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#p99-threshold), and P100 durations distinctly, you can utilize this display to see their transaction performance over time. Toggle the display of each segment by clicking on the legend (including Releases). Also, zoom in on specific slices to investigate spikes or possible performance regressions from a release.
+By graphing [P50](/performance-monitoring/performance/metrics/#p50-threshold), [P75](/performance-monitoring/performance/metrics/#p75-threshold), [P95](/performance-monitoring/performance/metrics/#p95-threshold), [P99](/performance-monitoring/performance/metrics/#p99-threshold), and P100 durations distinctly, you can utilize this display to see their transaction performance over time. Toggle the display of each segment by clicking on the legend (including Releases). Also, zoom in on specific slices to investigate spikes or possible performance regressions from a release.
 
 ### Latency Histogram
 
@@ -21,17 +21,17 @@ Visualize the frequency of transactions that occur within each response time seg
 
 ### Duration Percentiles
 
-This graph shows the [average transaction duration]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#average-transaction-duration) across distinct percentiles. For example, see how different the P50 and P99 response time durations are for a given transaction and understand the rate of increase between segments.
+This graph shows the [average transaction duration](/performance-monitoring/performance/metrics/#average-transaction-duration) across distinct percentiles. For example, see how different the P50 and P99 response time durations are for a given transaction and understand the rate of increase between segments.
 
 ## Transaction Table
 
-On initial load, the table displays the slowest occurrences of the transaction along with the Event ID, User, Transaction Duration, and Timestamp of the event. Click on the Event ID to open the [event detail]({%- link _documentation/performance-monitoring/performance/event-detail.md -%}) for the transaction. The table updates dynamically if you change any of the selections in the global header or when you drill in on a latency segment -- applicable when viewing the Latency Histogram.
+On initial load, the table displays the slowest occurrences of the transaction along with the Event ID, User, Transaction Duration, and Timestamp of the event. Click on the Event ID to open the [event detail](/performance-monitoring/performance/event-detail/) for the transaction. The table updates dynamically if you change any of the selections in the global header or when you drill in on a latency segment -- applicable when viewing the Latency Histogram.
 
 - Slowest Transactions
 - Fastest Transactions
 - Recent Transactions
 
-When viewing transactions, you may want to create more curated views. Click on "Open in Discover" above the table to create a custom query to investigate further. For more details, see the full documentation on Discover [Query Builder]({%- link _documentation/performance-monitoring/discover-queries/query-builder.md -%}).
+When viewing transactions, you may want to create more curated views. Click on "Open in Discover" above the table to create a custom query to investigate further. For more details, see the full documentation on Discover [Query Builder](/performance-monitoring/discover-queries/query-builder/).
 
 ## Related Issues Table
 
@@ -39,4 +39,4 @@ This will show you all related issues to this transaction, meaning any errors th
 
 ## Stats Sidebar
 
-The sidebar contains helpful supplementary information about this transaction's [Apdex]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#apdex), [User Misery]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#user-misery), Latency, Throughput and more. 
+The sidebar contains helpful supplementary information about this transaction's [Apdex](/performance-monitoring/performance/metrics/#apdex), [User Misery](/performance-monitoring/performance/metrics/#user-misery), Latency, Throughput and more. 

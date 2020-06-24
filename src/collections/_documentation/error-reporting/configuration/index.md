@@ -12,7 +12,7 @@ initialized.
 ## Common Options
 
 The list of common options across SDKs.  These work more or less the same in all SDKs, but some
-subtle differences will exist to better support the platform. Options which can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically. See [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects) for more information. 
+subtle differences will exist to better support the platform. Options which can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically. See [Working with Projects](/cli/configuration/#sentry-cli-working-with-projects) for more information. 
 
 {:.config-key}
 ### `dsn`
@@ -96,7 +96,7 @@ This feature is `off` by default.
 {% unsupported browser javascript node %}
 If this flag is enabled, certain personally identifiable information is added by active integrations. By default no such data is sent.
 
-If possible, it's recommended to turn on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_]({%- link _documentation/data-management/sensitive-data.md -%}).
+If possible, it's recommended to turn on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_](/data-management/sensitive-data/).
 {% endunsupported %}
 
 {:.config-key}

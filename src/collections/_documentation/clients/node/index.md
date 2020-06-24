@@ -28,7 +28,7 @@ $ npm install raven --save
 <!-- WIZARD configuration -->
 ## Configuring the Client
 
-Next you need to initialize the Raven client and configure it to use your [Sentry DSN]({%- link _documentation/error-reporting/quickstart.md -%}#configure-the-dsn):
+Next you need to initialize the Raven client and configure it to use your [Sentry DSN](/error-reporting/quickstart/#configure-the-dsn):
 
 ```javascript
 var Raven = require('raven');
@@ -37,7 +37,7 @@ Raven.config('___PUBLIC_DSN___').install();
 
 At this point, Raven is set up to capture and report any uncaught exceptions.
 
-You can optionally pass an object of configuration options as the 2nd argument to _Raven.config_. For more information, see [_Configuration_]({%- link _documentation/clients/node/config.md -%}).
+You can optionally pass an object of configuration options as the 2nd argument to _Raven.config_. For more information, see [_Configuration_](/clients/node/config/).
 <!-- ENDWIZARD -->
 
 <!-- WIZARD reporting-errors -->
@@ -62,7 +62,7 @@ Raven.context(function () {
 });
 ```
 
-For more information on reporting errors, see [_Usage_]({%- link _documentation/clients/node/usage.md -%}).
+For more information on reporting errors, see [_Usage_](/clients/node/usage/).
 
 ## Adding Context
 
@@ -87,7 +87,7 @@ This can also be used to set `tags` and `extra` keys for associated tags and ext
 
 You can update the context data with `mergeContext` or retrieve it with `getContext`. When an exception is captured by a wrapper, the current context state will be passed as options to `captureException`.
 
-See [context/wrap]({%- link _documentation/clients/node/usage.md -%}#raven-node-additional-context) for more.
+See [context/wrap](/clients/node/usage/#raven-node-additional-context) for more.
 
 ## Breadcrumbs
 
@@ -114,31 +114,31 @@ Raven can be configured to automatically capture breadcrubs for certain events i
 > -   console log statements
 > -   postgres queries
 
-For more information, see [Recording Breadcrumbs]({%- link _documentation/clients/node/usage.md -%}#raven-recording-breadcrumbs).
+For more information, see [Recording Breadcrumbs](/clients/node/usage/#raven-recording-breadcrumbs).
 
 ## Dealing with Minified Source Code
 
-Raven and Sentry support [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you provide source maps in addition to your minified files that data becomes available in Sentry. For more information see [Source Maps]({%- link _documentation/clients/node/sourcemaps.md -%}#raven-node-sourcemaps).
+Raven and Sentry support [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you provide source maps in addition to your minified files that data becomes available in Sentry. For more information see [Source Maps](/clients/node/sourcemaps/#raven-node-sourcemaps).
 
 ## Middleware and Integrations
 
-If you’re using Node.js with a web server framework/library like Connect, Express, or Koa, it is recommended to configure one of Raven’s server middleware integrations. See [_Integrations_]({%- link _documentation/clients/node/integrations.md -%}).
+If you’re using Node.js with a web server framework/library like Connect, Express, or Koa, it is recommended to configure one of Raven’s server middleware integrations. See [_Integrations_](/clients/node/integrations/).
 
 ## Deep Dive
 
 For more detailed information about how to get most out of Raven there is additional documentation available that covers all the rest:
 
--   [Configuration]({%- link _documentation/clients/node/config.md -%})
--   [Usage]({%- link _documentation/clients/node/usage.md -%})
--   [Integrations]({%- link _documentation/clients/node/integrations.md -%})
-    -   [Connect]({%- link _documentation/clients/node/integrations.md -%}#connect)
-    -   [Express]({%- link _documentation/clients/node/integrations.md -%}#express)
-    -   [Koa]({%- link _documentation/clients/node/integrations.md -%}#koa)
-    -   [Loopback]({%- link _documentation/clients/node/integrations.md -%}#loopback)
-    -   [Sails]({%- link _documentation/clients/node/integrations.md -%}#sails)
--   [Source Maps]({%- link _documentation/clients/node/sourcemaps.md -%})
--   [Source Maps]({%- link _documentation/clients/node/typescript.md -%})
--   [CoffeeScript]({%- link _documentation/clients/node/coffeescript.md -%})
+-   [Configuration](/clients/node/config/)
+-   [Usage](/clients/node/usage/)
+-   [Integrations](/clients/node/integrations/)
+    -   [Connect](/clients/node/integrations/#connect)
+    -   [Express](/clients/node/integrations/#express)
+    -   [Koa](/clients/node/integrations/#koa)
+    -   [Loopback](/clients/node/integrations/#loopback)
+    -   [Sails](/clients/node/integrations/#sails)
+-   [Source Maps](/clients/node/sourcemaps/)
+-   [Source Maps](/clients/node/typescript/)
+-   [CoffeeScript](/clients/node/coffeescript/)
 
 Resources:
 

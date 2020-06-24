@@ -17,7 +17,7 @@ This integration adds to the event request data like:
  * URL, 
  * query string 
 
-If the [`send_default_pii` option]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php#send-default-pii) 
+If the [`send_default_pii` option](/error-reporting/configuration/?platform=php#send-default-pii) 
 is enabled, it will also send PII information like:
  * user IP address
  * cookies

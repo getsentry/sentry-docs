@@ -7,7 +7,7 @@ A release is a version of your code that you deploy to an environment. When you 
 
 After configuring your SDK, setting up releases is a 2-step process:
 
-1. [Create Release and Associate Commits]({%- link _documentation/workflow/releases/index.md -%}#create-release)
-2. [Tell Sentry When You Deploy a Release]({%- link _documentation/workflow/releases/index.md -%}#create-deploy)
+1. [Create Release and Associate Commits](/workflow/releases/#create-release)
+2. [Tell Sentry When You Deploy a Release](/workflow/releases/#create-deploy)
 
 For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).

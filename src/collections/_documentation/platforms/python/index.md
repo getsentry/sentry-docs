@@ -22,7 +22,7 @@ The SDK provides support for Python 2.7 and 3.4 or later. [Integrations](#integr
 
 ### Migrating from Raven
 
-If you are migrating from [raven-python](https://github.com/getsentry/raven-python), have a look at [our migration guide]({%- link _documentation/platforms/python/migration.md -%}) before continuing.
+If you are migrating from [raven-python](https://github.com/getsentry/raven-python), have a look at [our migration guide](/platforms/python/migration/) before continuing.
 
 ### Connecting the SDK to Sentry
 
@@ -139,7 +139,7 @@ with configure_scope() as scope:
     scope.set_tag("page_locale", "de-at")
 ```
 
-For more information, see the [Tagging Events section]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) in Context.
+For more information, see the [Tagging Events section](/enriching-error-data/additional-data/#tags) in Context.
 
 ### Setting the Level
 
@@ -161,7 +161,7 @@ For some very advanced use cases, you can override the Sentry default grouping u
 If you wish to append information, thus making the grouping slightly less aggressive, you can do that as well by adding the special string `{{default}}` as one of the items.
 {% endraw %}
 
-For code samples, see the [Grouping & Fingerprints]({%- link _documentation/data-management/event-grouping/index.md -%}?platform=python#use-cases) page.
+For code samples, see the [Grouping & Fingerprints](/data-management/event-grouping/?platform=python#use-cases) page.
 
 For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
@@ -183,8 +183,8 @@ sentry_sdk.init(
 
 For more information, see:
 
-- [Sentry’s complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
-- [Full documentation on Environments]({%- link _documentation/enriching-error-data/environments.md -%})
+- [Sentry’s complete list of Common Options across SDKs](/error-reporting/configuration/)
+- [Full documentation on Environments](/enriching-error-data/environments/)
 
 ### Breadcrumbs
 
@@ -204,7 +204,7 @@ add_breadcrumb(
 
 For more information, see:
 
-- [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
+- [Full documentation on Breadcrumbs](/enriching-error-data/breadcrumbs/)
 - [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
 ### Filter Events & Custom Logic
@@ -225,7 +225,7 @@ sentry_sdk.init(
 
 For more information, see:
 
-- [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%})
+- [Full documentation on Filtering Events](/error-reporting/configuration/filtering/)
 - [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 
 ### Integrations
@@ -234,44 +234,44 @@ For more information, see:
 
 #### Web Frameworks
 
-- [Django]({%- link _documentation/platforms/python/django.md -%})
-- [Flask]({%- link _documentation/platforms/python/flask.md -%})
-- [Sanic]({%- link _documentation/platforms/python/sanic.md -%})
-- [Pyramid]({%- link _documentation/platforms/python/pyramid.md -%})
-- [AIOHTTP]({%- link _documentation/platforms/python/aiohttp.md -%})
-- [Tornado]({%- link _documentation/platforms/python/tornado.md -%})
-- [Bottle]({%- link _documentation/platforms/python/bottle.md -%})
-- [Tryton]({%- link _documentation/platforms/python/tryton.md -%})
-- [Falcon]({%- link _documentation/platforms/python/falcon.md -%})
-- [Generic WSGI]({%- link _documentation/platforms/python/wsgi.md -%})
-- [Generic ASGI]({%- link _documentation/platforms/python/asgi.md -%})
+- [Django](/platforms/python/django/)
+- [Flask](/platforms/python/flask/)
+- [Sanic](/platforms/python/sanic/)
+- [Pyramid](/platforms/python/pyramid/)
+- [AIOHTTP](/platforms/python/aiohttp/)
+- [Tornado](/platforms/python/tornado/)
+- [Bottle](/platforms/python/bottle/)
+- [Tryton](/platforms/python/tryton/)
+- [Falcon](/platforms/python/falcon/)
+- [Generic WSGI](/platforms/python/wsgi/)
+- [Generic ASGI](/platforms/python/asgi/)
 
 #### Task Queues
 
-- [Celery]({%- link _documentation/platforms/python/celery.md -%})
-- [RQ (Redis Queue)]({%- link _documentation/platforms/python/rq.md -%})
+- [Celery](/platforms/python/celery/)
+- [RQ (Redis Queue)](/platforms/python/rq/)
 
 #### Data
-- [Apache Beam]({%- link _documentation/platforms/python/beam.md -%})
-- [PySpark]({%- link _documentation/platforms/python/pyspark.md -%})
+- [Apache Beam](/platforms/python/beam/)
+- [PySpark](/platforms/python/pyspark/)
 
 #### Serverless
 
-- [AWS Lambda]({%- link _documentation/platforms/python/aws_lambda.md -%})
-- [Generic Serverless]({%- link _documentation/platforms/python/serverless.md -%})
+- [AWS Lambda](/platforms/python/aws_lambda/)
+- [Generic Serverless](/platforms/python/serverless/)
 
 #### Other Integrations
 
-- [Logging]({%- link _documentation/platforms/python/logging.md -%})
-- [GNU Backtrace]({%- link _documentation/platforms/python/gnu_backtrace.md -%})
-- [Redis]({%- link _documentation/platforms/python/redis.md -%})
-- [SQLAlchemy]({%- link _documentation/platforms/python/sqlalchemy.md -%})
+- [Logging](/platforms/python/logging/)
+- [GNU Backtrace](/platforms/python/gnu_backtrace/)
+- [Redis](/platforms/python/redis/)
+- [SQLAlchemy](/platforms/python/sqlalchemy/)
 
 ### Default Integrations
 
 System integrations are integrations enabled by default that integrate into the standard library or the interpreter itself. Sentry documents them so you can see what they do and that they can be disabled if they cause issues. To disable system integrations, set `default_integrations=False` when calling `init()`.
 
-For more information, see full documentation on [Default Integrations]({%- link _documentation/platforms/python/default-integrations.md -%}).
+For more information, see full documentation on [Default Integrations](/platforms/python/default-integrations/).
 
 ## Hints
 

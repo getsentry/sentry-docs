@@ -179,7 +179,7 @@ Transactions share most of their properties (start and end time, tags, and so fo
 
 Transactions also have one additional property not included in spans, called `transaction_name`, which is used in the UI to identify the transaction. Common examples of `transaction_name` values include endpoint paths (like `/store/checkout/` or `api/v2/users/&lt;user_id&gt;/`) for backend request transactions, task names (like `data.cleanup.delete_inactive_users`) for cron job transactions, and URLs (like `https://docs.sentry.io/performance-monitoring/distributed-tracing/`) for page-load transactions.
 
-_Note:_ Before the transaction is sent, the `tags` and `data` properties will get merged with data from the global scope. (Global scope data is set either in `Sentry.init()` - for things like `environment` and `release` - or by using `Sentry.configureScope()`, `Sentry.setTag()`, `Sentry.setUser()`, and `Sentry.setExtra()`. See the [Additional Data]({%- link _documentation/enriching-error-data/additional-data.md -%}) docs for more information.)
+_Note:_ Before the transaction is sent, the `tags` and `data` properties will get merged with data from the global scope. (Global scope data is set either in `Sentry.init()` - for things like `environment` and `release` - or by using `Sentry.configureScope()`, `Sentry.setTag()`, `Sentry.setUser()`, and `Sentry.setExtra()`. See the [Additional Data](/enriching-error-data/additional-data/) docs for more information.)
 
 #### Spans
 
@@ -232,7 +232,7 @@ Individual spans aren't sent to Sentry; rather, the entire transaction is sent a
 
 When you enable sampling in your tracing setup, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of `0.25` would result in approximately 250 transactions (25%) being sent to Sentry each minute. (The number is approximate because each request is either tracked or not, independently and pseudorandomly, with a 25% probability. So in the same way that 100 fair coins, when flipped, result in approximately 50 heads, the SDK will "decide" to collect a trace in approximately 250 cases.) Because you know the sampling percentage, you can then extrapolate your total traffic volume.
 
-When collecting traces, we **strongly recommend** sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you'll more easily prevent yourself from exceeding your organization's [event quota]({%- link _documentation/accounts/quotas/index.md -%}), which will help you manage costs.
+When collecting traces, we **strongly recommend** sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you'll more easily prevent yourself from exceeding your organization's [event quota](/accounts/quotas/), which will help you manage costs.
 
 When choosing a sampling rate, the goal is to not collect _too_ much data (given the reasons above) but also to collect enough data that you are able to draw meaningful conclusions. If you're not sure what rate to choose, we recommend starting with a low value and gradually increasing it as you learn more about your traffic patterns and volume, until you've found a rate which lets you balance performance and cost concerns with data accuracy.
 
@@ -252,4 +252,4 @@ If you enable tracing in services with multiple entry points, we recommend choos
 
 ## Viewing Trace Data
 
-Though [Performance]({%- link _documentation/performance-monitoring/performance/index.md -%}) and [Discover]({%- link _documentation/performance-monitoring/discover-queries/index.md -%}), you can view trace data in the event details.
+Though [Performance](/performance-monitoring/performance/) and [Discover](/performance-monitoring/discover-queries/), you can view trace data in the event details.

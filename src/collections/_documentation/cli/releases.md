@@ -6,7 +6,7 @@ sidebar_order: 2
 The `sentry-cli` tool can be used for release management on Sentry. It allows you to create, edit and delete releases as well as upload release artifacts for them. Note that releases are global per organization. If you want the releases in different projects to be treated as separate entities, make the version name unique across the organization. For example, if you have projectA and projectB that share version numbers, you can name the releases `projectA-1.0` and `projectB-1.0` respectively.
 
 {% capture __alert_content -%}
-Because releases work on projects you will need to specify the organization and project you are working with. For more information about this refer to [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects).
+Because releases work on projects you will need to specify the organization and project you are working with. For more information about this refer to [Working with Projects](/cli/configuration/#sentry-cli-working-with-projects).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -48,7 +48,7 @@ VERSION=`sentry-cli releases propose-version`
 
 ## Commit Integration {#sentry-cli-commit-integration}
 
-If you have [repositories configured]({%- link _documentation/workflow/releases/index.md -%}#link-a-repository) within your Sentry organization you can associate commits with your release.
+If you have [repositories configured](/workflow/releases/#link-a-repository) within your Sentry organization you can associate commits with your release.
 
 There are two modes in which you can use this. One is the fully automatic mode. If you are deploying from a git repository and sentry-cli can discover the git repository from the current working directory you can set the commits with the `--auto` flag:
 
@@ -80,7 +80,7 @@ sentry-cli releases set-commits "$VERSION" --commit "my-repo@from..to"
 
 ## Managing Release Artifacts
 
-When you are working with JavaScript and other platforms, you can upload release artifacts to Sentry which are then considered during processing. The most common release artifact are [source maps]({%- link _documentation/clients/javascript/sourcemaps.md -%}#raven-js-sourcemaps) for which `sentry-cli` has specific support.
+When you are working with JavaScript and other platforms, you can upload release artifacts to Sentry which are then considered during processing. The most common release artifact are [source maps](/clients/javascript/sourcemaps/#raven-js-sourcemaps) for which `sentry-cli` has specific support.
 
 To manage release artfacts the `sentry-cli releases files` command can be used which itself provides various sub commands.
 

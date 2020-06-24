@@ -5,7 +5,7 @@ sidebar_order: 0
 
 If you've enjoyed our error monitoring abilities so far, wait till you hear about performance monitoring. You'll wonder why we didn't come up with this sh*t sooner.  
 
-After this quick setup, you'll have access to [Performance]({% link _documentation/performance-monitoring/performance/index.md %}) and [Discover]({% link _documentation/performance-monitoring/discover-queries/index.md %}). Not only will these tools empower you to see everything from macro-level [metrics]({% link _documentation/performance-monitoring/performance/metrics.md %}) to micro-level [spans]({% link _documentation/performance-monitoring/performance/event-detail.md %}), but you'll be able to cross-reference [transactions with related issues]({% link _documentation/performance-monitoring/performance/transaction-summary.md %}), customize [queries]({% link _documentation/performance-monitoring/discover-queries/query-builder.md %}) based on your personal needs, and substantially more. 
+After this quick setup, you'll have access to [Performance](/performance-monitoring/performance/) and [Discover](/performance-monitoring/discover-queries/). Not only will these tools empower you to see everything from macro-level [metrics](/performance-monitoring/performance/metrics/) to micro-level [spans](/performance-monitoring/performance/event-detail/), but you'll be able to cross-reference [transactions with related issues](/performance-monitoring/performance/transaction-summary/), customize [queries](/performance-monitoring/discover-queries/query-builder/) based on your personal needs, and substantially more. 
 
 The world will be your data oyster. 
 

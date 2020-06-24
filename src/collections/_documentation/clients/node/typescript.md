@@ -4,7 +4,7 @@ sidebar_order: 3
 robots: noindex
 ---
 
-Please read [Source Maps docs]({%- link _documentation/clients/node/sourcemaps.md -%}) first to learn how to configure Raven SDK, upload artifacts to our servers or use Webpack (if you’re willing to use _ts-loader_ for your TypeScript compilation).
+Please read [Source Maps docs](/clients/node/sourcemaps/) first to learn how to configure Raven SDK, upload artifacts to our servers or use Webpack (if you’re willing to use _ts-loader_ for your TypeScript compilation).
 
 Using Raven and Source Maps with TypeScript unfortunatelly requires slightly more configuration.
 

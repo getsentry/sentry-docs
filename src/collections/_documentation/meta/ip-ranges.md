@@ -18,7 +18,7 @@ Sentry is served from a single IP address for all web traffic and all event acce
 35.188.42.15/32
 ```
 
-In some circumstances the Hosted Sentry infrastructure might send HTTP requests your way. Primarily this is relevant to [_JavaScript Source Maps_]({%- link _documentation/clients/javascript/sourcemaps.md -%}), but also affects things like webhooks and other integrations.
+In some circumstances the Hosted Sentry infrastructure might send HTTP requests your way. Primarily this is relevant to [_JavaScript Source Maps_](/clients/javascript/sourcemaps/), but also affects things like webhooks and other integrations.
 
 Sentry uses the following IP addresses to make outbound requests:
 

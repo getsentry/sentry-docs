@@ -9,7 +9,7 @@ This gives you an overview of the public API that raven-python exposes.
 
 {: #raven.Client}_class_ `raven.``Client`(_dsn=None_, _**kwargs_)
 
-: The client needs to be instanciated once and can then be used for submitting events to the Sentry server. For information about the configuration of that client and which parameters are accepted see [Configuring the Client]({%- link _documentation/clients/python/advanced.md -%}#python-client-config).
+: The client needs to be instanciated once and can then be used for submitting events to the Sentry server. For information about the configuration of that client and which parameters are accepted see [Configuring the Client](/clients/python/advanced/#python-client-config).
 
   {: #raven.Client.capture}`capture`(_event_type_, _data=None_, _date=None_, _time_spent=None_, _extra=None_, _stack=False_, _tags=None_, _**kwargs_)
 
@@ -62,7 +62,7 @@ This gives you an overview of the public API that raven-python exposes.
   `level=None, category=None, data=None,`
   `type=None, processor=None)`
 
-  : Manually captures a breadcrumb in the internal buffer for the current client’s context. Instead of using this method you are encouraged to instead use the [`raven.breadcrumbs.record()`]({%- link _documentation/clients/python/breadcrumbs.md -%}#raven.breadcrumbs.record "raven.breadcrumbs.record") function which records to the correct client automatically.
+  : Manually captures a breadcrumb in the internal buffer for the current client’s context. Instead of using this method you are encouraged to instead use the [`raven.breadcrumbs.record()`](/clients/python/breadcrumbs/#raven.breadcrumbs.record "raven.breadcrumbs.record") function which records to the correct client automatically.
 
   {: #raven.Client.send}`send`(_**data_)
 

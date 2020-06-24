@@ -3,21 +3,21 @@ title: 'Event Detail'
 sidebar_order: 5
 ---
 
-**Transaction Details** lets you examine an individual transaction event in detail. Here spans are visualized to help you identify slow HTTP requests, slow database queries, and other bottlenecks. You can also jump to other transactions within the trace, and identify associated errors. Learn more about [Distributed Tracing]({% link _documentation/performance-monitoring/distributed-tracing.md %}) and the [Transaction Details page]({% link _documentation/performance-monitoring/distributed-tracing.md %}#transaction-detail-viewpage).
+**Transaction Details** lets you examine an individual transaction event in detail. Here spans are visualized to help you identify slow HTTP requests, slow database queries, and other bottlenecks. You can also jump to other transactions within the trace, and identify associated errors. Learn more about [Distributed Tracing](/performance-monitoring/distributed-tracing/) and the [Transaction Details page](/performance-monitoring/distributed-tracing/#transaction-detail-viewpage).
 
 ## Viewing Trace Data
 
-You can see a list of transaction events by clicking on the "Transactions" pre-built query in [Discover]({%- link _documentation/performance-monitoring/discover-queries/index.md -%}), or by using a search condition `event.type:transaction` in the [Discover Query Builder]({%- link _documentation/performance-monitoring/discover-queries/query-builder.md -%}) view.
+You can see a list of transaction events by clicking on the "Transactions" pre-built query in [Discover](/performance-monitoring/discover-queries/), or by using a search condition `event.type:transaction` in the [Discover Query Builder](/performance-monitoring/discover-queries/query-builder/) view.
 
 ### Transaction List View
 
 The results of either of the above queries are presented in a list view, where each entry represents a group of one or more transactions. Data about each group is displayed in table form, and comes in two flavors: value-based (such as transaction name), and aggregate (such as average duration). The choice of which kinds of data to display is configurable, and can be changed by clicking 'Edit Columns' at the top right of the table. Bear in mind that adding or removing any value-based columns may affect the way the results are grouped.
 
-This view also includes a timeseries graph, aggregating all results of the query, as well as a summary of the most common tags associated with those results (either via your Sentry instance's [global context]({%- link _documentation/enriching-error-data/additional-data.md -%}) or via each transaction's root span). From this view, you can also filter the transactions list, either by restricting the time window or by adding attributes to the query (or both!).
+This view also includes a timeseries graph, aggregating all results of the query, as well as a summary of the most common tags associated with those results (either via your Sentry instance's [global context](/enriching-error-data/additional-data/) or via each transaction's root span). From this view, you can also filter the transactions list, either by restricting the time window or by adding attributes to the query (or both!).
 
 _Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore cannot be searched.
 
-For more details about the transaction list view, see the full documentation on [Discover's Query Builder]({%- link _documentation/performance-monitoring/discover-queries/query-builder.md -%}), and for more about transaction metrics, see [Metrics]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#transaction-metrics).
+For more details about the transaction list view, see the full documentation on [Discover's Query Builder](/performance-monitoring/discover-queries/query-builder/), and for more about transaction metrics, see [Metrics](/performance-monitoring/performance/metrics/#transaction-metrics).
 
 ### Transaction Detail View
 

@@ -5,11 +5,11 @@ title: Teams
 ---
 
 
-- [List an Organization&#39;s Teams]({%- link _documentation/api/teams/get-organization-teams.md -%})
-- [Create a new Team]({%- link _documentation/api/teams/post-organization-teams.md -%})
-- [Retrieve a Team]({%- link _documentation/api/teams/get-team-details.md -%})
-- [Update a Team]({%- link _documentation/api/teams/put-team-details.md -%})
-- [Delete a Team]({%- link _documentation/api/teams/delete-team-details.md -%})
-- [List a Team&#39;s Projects]({%- link _documentation/api/teams/get-team-projects.md -%})
-- [Create a New Project]({%- link _documentation/api/teams/post-team-projects.md -%})
-- [Retrieve Event Counts for a Team]({%- link _documentation/api/teams/get-team-stats.md -%})
+- [List an Organization&#39;s Teams](/api/teams/get-organization-teams/)
+- [Create a new Team](/api/teams/post-organization-teams/)
+- [Retrieve a Team](/api/teams/get-team-details/)
+- [Update a Team](/api/teams/put-team-details/)
+- [Delete a Team](/api/teams/delete-team-details/)
+- [List a Team&#39;s Projects](/api/teams/get-team-projects/)
+- [Create a New Project](/api/teams/post-team-projects/)
+- [Retrieve Event Counts for a Team](/api/teams/get-team-stats/)

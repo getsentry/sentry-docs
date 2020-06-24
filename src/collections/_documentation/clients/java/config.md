@@ -4,7 +4,7 @@ sidebar_order: 1
 ---
 
 {% capture __alert_content -%}
-Sentry’s library and framework integration documentation explains how to to do the initial Sentry configuration for each of the supported integrations. The configuration below can be used in combination with any of the integrations **once you set Sentry up with the integration**. Please check [the integration documentation]({%- link _documentation/clients/java/integrations.md -%}#integrations) before you attempt to do any advanced configuration.{%- endcapture -%}
+Sentry’s library and framework integration documentation explains how to to do the initial Sentry configuration for each of the supported integrations. The configuration below can be used in combination with any of the integrations **once you set Sentry up with the integration**. Please check [the integration documentation](/clients/java/integrations/#integrations) before you attempt to do any advanced configuration.{%- endcapture -%}
 {%- include components/alert.html
     title="Note"
     content=__alert_content

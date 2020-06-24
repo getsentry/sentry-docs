@@ -7,7 +7,7 @@ Sentry supports un-minifying JavaScript via source maps. This lets you view sour
 
 ## Specify the release
 
-If you are uploading source map artifacts yourself, you must [specify the release]({%- link _documentation/workflow/releases/index.md -%}) in your SDK.  Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API]({%- link _documentation/api/releases/index.md -%}), [sentry-cli]({%- link _documentation/cli/index.md -%}) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
+If you are uploading source map artifacts yourself, you must [specify the release](/workflow/releases/) in your SDK.  Sentry will use the release name to associate digested event data with the files you’ve uploaded via the [releases API](/api/releases/), [sentry-cli](/cli/) or [sentry-webpack-plugin](https://github.com/getsentry/sentry-webpack-plugin). This step is optional if you are hosting source maps on the remote server.
 
 ## Generating a Source Map
 
@@ -37,7 +37,7 @@ $ npm install --save-dev @sentry/webpack-plugin
 $ yarn add --dev @sentry/webpack-plugin
 ```
 
-To allow the plugin to upload source maps automatically, create a `.sentryclirc` or configure environment variables as described in the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}). Then, add the plugin to your `webpack.config.js`:
+To allow the plugin to upload source maps automatically, create a `.sentryclirc` or configure environment variables as described in the [CLI configuration docs](/cli/configuration/). Then, add the plugin to your `webpack.config.js`:
 
 ```javascript
 const SentryWebpackPlugin = require('@sentry/webpack-plugin');
@@ -121,11 +121,11 @@ Source maps can be either:
 
 ### Uploading Source Maps to Sentry
 
-Except for [webpack]({%- link _documentation/platforms/javascript/sourcemaps.md -%}#webpack), the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
+Except for [webpack](/platforms/javascript/sourcemaps/#webpack), the recommended way to upload source maps is using [Sentry CLI](/cli/). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs](/cli/configuration/) to set up your project.
 
 Now you need to set up your build system to create a release, and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (for example, app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
-Sentry uses [**Releases**]({%- link _documentation/workflow/releases/index.md -%}) to match the correct source maps to your events. To create a new release, run the following command (for example, during publishing):
+Sentry uses [**Releases**](/workflow/releases/) to match the correct source maps to your events. To create a new release, run the following command (for example, during publishing):
 
 ```sh
 $ sentry-cli releases new <release_name>
@@ -160,7 +160,7 @@ You don't have to upload the source files (referenced by source maps), but **wit
     level="warning"
 %}
 
-Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
+Additional information can be found in the [Releases API documentation](/api/releases/).
 
 {% capture __alert_content -%}
 It’s not uncommon for a web application to be accessible at multiple origins. For example:
@@ -234,7 +234,7 @@ While making source maps available to Sentry from your servers is the easiest in
 For these reasons, it is recommended to upload source maps to Sentry beforehand (see [above](#uploading-source-maps-to-sentry)).
 
 {% capture __alert_content -%}
-While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs, [IP Ranges]({%- link _documentation/meta/ip-ranges.md -%}).
+While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs, [IP Ranges](/meta/ip-ranges/).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Working Behind a Firewall"
@@ -256,7 +256,7 @@ Source maps can sometimes be tricky to get going. If you’re having trouble, tr
 
 In order for uploaded source maps to be located and applied, the release needs to be created by the CLI or API (and the correct artifacts uploaded with it), and the name of that newly-created release needs to be specified in your SDK configuration.
 
-To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors]({%- link _documentation/workflow/releases/index.md -%}#tag-errors). If this is properly set up you'll see "Release: my_example_release". 
+To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors](/workflow/releases/#tag-errors). If this is properly set up you'll see "Release: my_example_release". 
 
 ### Verify artifacts are uploaded
 
@@ -308,7 +308,7 @@ then your uploaded artifact should be named `https://example.com/dist/maps/scrip
 
 If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - for example, `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
 
-If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the [`rewriteFrames`]({%- link _documentation/platforms/javascript/index.md -%}#rewriteframes) integration to change your `abs_path` values.
+If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the [`rewriteFrames`](/platforms/javascript/#rewriteframes) integration to change your `abs_path` values.
 
 #### Using sentry-cli
 
@@ -345,7 +345,7 @@ sentry-cli releases files VERSION upload-sourcemaps . --url-prefix 'http://local
 
 #### Using the API
 
-You can alternately [use our API]({%- link _documentation/api/releases/post-organization-release-files.md -%}) to upload artifacts, following the same naming convention explained here.
+You can alternately [use our API](/api/releases/post-organization-release-files/) to upload artifacts, following the same naming convention explained here.
 
 
 
@@ -434,6 +434,6 @@ Sentry does source map calculation in its workers. This means the workers need a
 
 ## Additional Resources
 
-* [Using sentry-cli to Upload Source Maps]({%- link _documentation/cli/releases.md -%}#sentry-cli-sourcemaps)
+* [Using sentry-cli to Upload Source Maps](/cli/releases/#sentry-cli-sourcemaps)
 * [Debuggable JavaScript with Source Maps](http://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps.html)
 * [4 Reasons Why Your Source Maps Are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
