@@ -2,7 +2,7 @@
 title: 'Metrics'
 sidebar_order: 3
 ---
-Performance metrics provide insight about how users experience your application. You set the target thresholds, then identify how your application is performing. For example, you can track metrics such as Latency and [Throughput](#throughput-total-rpm-rps) in [Discover]({%- link _documentation/performance-monitoring/discover-queries/index.md -%}) or Performance. By identifying useful thresholds by which to measure your application, you have a quantifiable measure of your application's health and can more easily identify when errors occur or if performance issues are emerging.
+Metrics provide insight about how users are experiencing your application. In [Performance]({% link _documentation/performance-monitoring/performance/index.md %}), we'll set you up with a few of the basic metrics to get you started. For further customizations on target threshholds, feel free to build out a query using the Discover [Query Builder]({% link _documentation/performance-monitoring/discover-queries/query-builder.md %}). By identifying useful thresholds by which to measure your application, you have a quantifiable measurement of your application's health. This means you can more easily identify when errors occur or if performance issues are emerging.
 
 ## Apdex
 Apdex is an industry-standard metric used to track and measure user satisfaction based on response times in your application. The Apdex score provides the ratio of satisfactory, tolerable, and frustrated requests in a specific transaction or endpoint. This metric provides a standard for you to compare transaction performance, understand which ones may require additional optimization or investigation, and set targets or goals for performance.
@@ -16,23 +16,13 @@ Apdex is an industry-standard metric used to track and measure user satisfaction
     
 ## Failure Rate
 `failure_rate()` indicates the percentage of unsuccessful transactions. Sentry treats transactions with a status other than “ok,” “canceled,” and “unknown” as failures. For more details, see a [list of possible status values](https://develop.sentry.dev/sdk/event-payloads/span/).
-    
-## P75 Threshold
-The P75 Threshold indicates that 25% of transaction durations are greater than the threshold. For example, if the P75 threshold is set to 10 milliseconds, then 25% of transactions exceeded that threshold, taking longer than 10 milliseconds.
-
-## P95 Threshold
-The P95 Threshold indicates that 5% of transaction durations are greater than the threshold. For example, if the P95 threshold is 50 milliseconds, then 5% of transactions exceeded that threshold, taking longer than 50 milliseconds.
-
-## P99 Threshold
-The P99 Threshold indicates that 1% of transaction durations are greater than the threshold. For example, if the P99 threshold is 5 seconds, then 1% of transactions exceeded that threshold, taking longer than 5 seconds.
 
 ## Throughput (Total, TPM, TPS)
 Throughput indicates the number of transactions over a given time range (Total), average transactions per minute (TPM), or average transactions per second (TPS).
 
-## Transaction Metrics
-By enabling [tracing]({%- link _documentation/performance-monitoring/distributed-tracing.md -%}), you can see a number of the metrics available as column choices in the [transaction list view]({%- link _documentation/performance-monitoring/distributed-tracing.md -%}#transaction-list-view).
+## Latency
 
-### Duration
+### Average Transaction Duration
 
 Average Transaction Duration indicates the average response time for all occurrences of a given transaction.
 
@@ -48,7 +38,16 @@ A word of caution when looking at averages and percentiles: In most cases, you'l
 
 The problem of small sample size (and the resulting inability to be usefully accurate) will happen more often for some metrics than others, and sample size will also vary by row. For example, it takes less data to calculate a meaningful average than it does to calculate an equally meaningful 95th percentile. Further, a row representing requests to `/settings/my-awesome-org/` will likely contain many times as many transactions as one representing requests to `/settings/my-awesome-org/projects/best-project-ever/`.
 
-### Frequency
+### P75 Threshold
+The P75 Threshold indicates that 25% of transaction durations are greater than the threshold. For example, if the P75 threshold is set to 10 milliseconds, then 25% of transactions exceeded that threshold, taking longer than 10 milliseconds.
+
+### P95 Threshold
+The P95 Threshold indicates that 5% of transaction durations are greater than the threshold. For example, if the P95 threshold is 50 milliseconds, then 5% of transactions exceeded that threshold, taking longer than 50 milliseconds.
+
+### P99 Threshold
+The P99 Threshold indicates that 1% of transaction durations are greater than the threshold. For example, if the P99 threshold is 5 seconds, then 1% of transactions exceeded that threshold, taking longer than 5 seconds.
+
+## Frequency
 
 The following functions aggregate transaction counts and the rate at which transactions are recorded:
 

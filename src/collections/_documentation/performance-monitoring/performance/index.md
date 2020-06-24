@@ -7,9 +7,9 @@ The Performance Homepage is the main view you can go to search or browse for tra
 
 [{% asset performance/perf-homepage.png alt="Example of Performance in Product UI" %}]({% asset performance/perf-homepage.png @path %})
 
-## Search Conditions
+## Filter by Search Conditions
 
-The search bar operates similar to the one in the Discover [Query Builder]({% link _documentation/performance-monitoring/discover-queries/query-builder.md %}#filter-by-search-conditions). For example, refine your search to a specific release by using Release as a key field and the version as a value.
+The search bar operates similar to the one in the Discover [Query Builder]({% link _documentation/performance-monitoring/discover-queries/query-builder.md %}#filter-by-search-conditions). For example, you can refine your search to a specific release by using `release:` as a key field and the version as a value.
 
 ## Graphs
 
