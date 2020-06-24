@@ -7,30 +7,30 @@ Sentry users with admin permissions or higher can create alerts. To confirm or s
 
 ## For Errors
 
-Sentry automatically groups individual error events into Issues based on stack trace and other factors. For more details about grouping, see [Grouping & Fingerprints](https://docs.sentry.io/data-management/event-grouping/). 
+Sentry automatically groups individual error events into Issues based on stack trace and other factors. For more details about grouping, see [Grouping & Fingerprints]({%- link _documentation/data-management/event-grouping/index.md -%}).
 
 Sentry has two types of alerts you can use for errors:
 
-Issue Alerts [ link to the issue alerts section ]
+[Issue Alerts](#issue-alerts)
 
-: notifies you when individual Sentry [Issues](https://docs.sentry.io/data-management/event-grouping/) match your alerting criteria, such as an Issue happening more frequently than usual.
+: notifies you when individual Sentry [Issues]({%- link _documentation/data-management/event-grouping/index.md -%}) match your alerting criteria, such as an Issue happening more frequently than usual.
 
-Metric Alerts [ link to the metric alerts section ]
+[Metric Alerts](#metric-alerts)
 
 : A metric is the value of an aggregate function like `count()` or `avg()` applied to your event data. Metric alerts can be used on error data to compute the number of events or the number of users affected by events in your project over a period of time. You can filter events by attributes and tags, which can be particularly useful when a set of events is not grouped into a single issue, making issue alerts unsuitable to use.
 
 ## For Performance Monitoring
 
-Metric Alerts [ link to the metric alerts section ] can be used on performance data, allowing you to set alerts on the following metrics:
+[Metric Alerts](#metric-alerts) can be used on performance data, allowing you to set alerts on the following metrics:
 
-- Latency: min, max, average, [percentile](https://docs.sentry.io/performance/performance-metrics/#p75-threshold)
-- [Apdex](https://docs.sentry.io/performance/performance-metrics/#apdex)
-- [Failure rate](https://docs.sentry.io/performance/performance-metrics/#failure-rate)
-- [Transaction volume](https://docs.sentry.io/performance/performance-metrics/#transaction-frequency)
+- Latency: min, max, average, [percentile]({%- link _documentation/performance/performance-metrics.md -%}#p75-threshold)
+- [Apdex]({%- link _documentation/performance/performance-metrics.md -%}#apdex)
+- [Failure rate]({%- link _documentation/performance/performance-metrics.md -%}#failure-rate)
+- [Transaction volume]({%- link _documentation/performance/performance-metrics.md -%}#transaction-frequency)
 
 ## Metric Alerts
 
-As mentioned [LINK: above], a metric is the value of an aggregate function like count() or avg() applied to your event data. Typical uses of metric alerts are detecting a spike in the overall number of errors in a project, or a violation of a performance metric like latency, apdex, failure rate, and throughput.
+As mentioned [above](#for-errors), a metric is the value of an aggregate function like `count()` or `avg()` applied to your event data. Typical uses of metric alerts are detecting a spike in the overall number of errors in a project, or a violation of a performance metric like latency, apdex, failure rate, and throughput.
 
 ### Alert Builder
 
@@ -59,7 +59,7 @@ The "subscribe" button subscribes you to workflow notifications for the alert, w
 
 ## Issue Alerts
 
-Issue alerts are applicable to errors only, and fire whenever any issue in the project matches the specified criteria, such as a resolved issue re-appearing or an issue affecting many users.
+Issue alerts apply to errors only, and fire whenever any issue in the project matches the specified criteria, such as a resolved issue re-appearing or an issue affecting many users.
 
 ### **Conditions**
 
