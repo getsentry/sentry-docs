@@ -34,7 +34,7 @@ _Missing Instrumentation_
 
 Gaps between spans may be marked as "Missing Instrumentation". This means that there is a duration in the transaction that isn't accounted for by any of the transaction's spans, and likely means that you need to manually instrument that part of your process. Go back to the [performance setup](/performance-monitoring/setup) for details. 
 
-_Tracing through Span Details_
+### Span Details
 
 Clicking on a span row expands the details of that span. From here, you can see all attached properties, such as tags and other field data. With the Trace ID, you'll be able to view all transactions within that given trace. Click "Search by Trace" to view that Discover list. Learn more about [distributed tracing](/performance-monitoring/distributed-tracing/) in our docs. 
 
