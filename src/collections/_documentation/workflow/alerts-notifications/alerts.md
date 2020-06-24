@@ -45,7 +45,7 @@ When an alert is created or changes status, the actions associated with the trig
 
 ### Alert Stream
 
-You can access alerts via the **Alerts** sidebar item.
+Access alerts via the **Alerts** sidebar item.
 
 [{% asset notifications/alert-stream2.png alt="Alert stream illustrates alert duration, trends, severity, time duration and percentage of users affected." %}]({% asset notifications/alert-stream2.png @path %})
 
