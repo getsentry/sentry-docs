@@ -188,7 +188,7 @@ Transactions share most of their properties (start and end time, tags, and so fo
 
 Transactions also have one additional property not included in spans, called `transaction_name`, which is used in the UI to identify the transaction. Common examples of `transaction_name` values include endpoint paths (like `/store/checkout/` or `api/v2/users/&lt;user_id&gt;/`) for backend request transactions, task names (like `data.cleanup.delete_inactive_users`) for cron job transactions, and URLs (like `https://docs.sentry.io/performance/distributed-tracing/`) for page-load transactions.
 
-_Note:_ Before the transaction is sent, the `tags` and `data` properties will get merged with data from the global scope. (Global scope data is set either in `Sentry.init()` - for things like `environment` and `release` - or by using `Sentry.configureScope()`, `Sentry.setTag()`, `Sentry.setUser()`, and `Sentry.setExtra()`. See the [Additional Data]({%- link _documentation/enriching-error-data/additional-data.md -%}) docs for more information.)
+_Note:_ Before the transaction is sent, the `tags` and `data` properties will get merged with data from the global scope. (Global scope data is set either in `Sentry.init()` - for things like `environment` and `release` - or by using `Sentry.configureScope()`, `Sentry.setTag()`, `Sentry.setUser()`, and `Sentry.setExtra()`. See the [Additional Data](/enriching-error-data/additional-data/) docs for more information.)
 
 #### Spans
 
@@ -241,7 +241,7 @@ Individual spans aren't sent to Sentry; rather, the entire transaction is sent a
 
 When you enable sampling in your tracing setup, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of `0.25` would result in approximately 250 transactions (25%) being sent to Sentry each minute. (The number is approximate because each request is either tracked or not, independently and pseudorandomly, with a 25% probability. So in the same way that 100 fair coins, when flipped, result in approximately 50 heads, the SDK will "decide" to collect a trace in approximately 250 cases.) Because you know the sampling percentage, you can then extrapolate your total traffic volume.
 
-When collecting traces, we **strongly recommend** sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you'll more easily prevent yourself from exceeding your organization's [event quota]({%- link _documentation/accounts/quotas/index.md -%}), which will help you manage costs.
+When collecting traces, we **strongly recommend** sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you'll more easily prevent yourself from exceeding your organization's [event quota](/accounts/quotas/), which will help you manage costs.
 
 When choosing a sampling rate, the goal is to not collect _too_ much data (given the reasons above) but also to collect enough data that you are able to draw meaningful conclusions. If you're not sure what rate to choose, we recommend starting with a low value and gradually increasing it as you learn more about your traffic patterns and volume, until you've found a rate which lets you balance performance and cost concerns with data accuracy.
 
@@ -261,17 +261,17 @@ If you enable tracing in services with multiple entry points, we recommend choos
 
 ## Viewing Trace Data
 
-You can see a list of transaction events by clicking on the "Transactions" pre-built query in [Discover]({%- link _documentation/performance/discover/index.md -%}), or by using a search condition `event.type:transaction` in the [Discover Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}) view.
+You can see a list of transaction events by clicking on the "Transactions" pre-built query in [Discover](/performance/discover/), or by using a search condition `event.type:transaction` in the [Discover Query Builder](/performance/discover/query-builder/) view.
 
 ### Transaction List View
 
 The results of either of the above queries are presented in a list view, where each entry represents a group of one or more transactions. Data about each group is displayed in table form, and comes in two flavors: value-based (such as transaction name), and aggregate (such as average duration). The choice of which kinds of data to display is configurable, and can be changed by clicking 'Edit Columns' at the top right of the table. Bear in mind that adding or removing any value-based columns may affect the way the results are grouped.
 
-This view also includes a timeseries graph, aggregating all results of the query, as well as a summary of the most common tags associated with those results (either via your Sentry instance's [global context]({%- link _documentation/enriching-error-data/additional-data.md -%}) or via each transaction's root span). From this view, you can also filter the transactions list, either by restricting the time window or by adding attributes to the query (or both!).
+This view also includes a timeseries graph, aggregating all results of the query, as well as a summary of the most common tags associated with those results (either via your Sentry instance's [global context](/enriching-error-data/additional-data/) or via each transaction's root span). From this view, you can also filter the transactions list, either by restricting the time window or by adding attributes to the query (or both!).
 
 _Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore cannot be searched.
 
-For more details about the transaction list view, see the full documentation on [Discover's Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}), and for more about transaction metrics, see [Performance Metrics]({%- link _documentation/performance/performance-metrics.md -%}#transaction-metrics).
+For more details about the transaction list view, see the full documentation on [Discover's Query Builder](/performance/discover/query-builder/), and for more about transaction metrics, see [Performance Metrics](/performance/performance-metrics/#transaction-metrics).
 
 ### Transaction Detail View
 
@@ -656,7 +656,7 @@ To do that, you need to specify which components to track and what hooks to list
 
 Note that we don't use `before` and `-ed` pairs for hooks, and you should provide a simple verb instead. For example, `update` is correct. `beforeUpdate` and `updated` are incorrect.
 
-To set up the Vue Tracing Integration, you will first need to configure the AM Tracing integration itself. For details on how to do this, see the [JavaScript]({%- link _documentation/performance/distributed-tracing.md -%}#javascript) section above.
+To set up the Vue Tracing Integration, you will first need to configure the AM Tracing integration itself. For details on how to do this, see the [JavaScript](/performance/distributed-tracing/#javascript) section above.
 Once you've configured the Tracing integration, move on to configuring the Vue integration itself.
 Sentry built the new tracing capabilities into the original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
 

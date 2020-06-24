@@ -13,7 +13,7 @@ Configuring Data Forwarding is done by visiting **[Project] » Settings » Data 
 
 Integration with Amazon SQS makes it quick and easy to pipe exceptions back into your own systems.
 
-The payload for Amazon is identical is our standard API event payload, and will evolve over time. For more details on the format of this data, see our [API documentation]({%- link _documentation/api/events/get-project-event-details.md -%}).
+The payload for Amazon is identical is our standard API event payload, and will evolve over time. For more details on the format of this data, see our [API documentation](/api/events/get-project-event-details/).
 
 ## Segment {#id2}
 
@@ -43,4 +43,4 @@ The Segment integration will generate _Error Captured_ events within your data p
 
 ## Splunk
 
-For details on the Splunk integration, visit the dedicated [_Splunk integration documentation_]({%- link _documentation/workflow/integrations/legacy-integrations.md -%}#splunk).
+For details on the Splunk integration, visit the dedicated [_Splunk integration documentation_](/workflow/integrations/legacy-integrations/#splunk).

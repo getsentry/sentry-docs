@@ -22,7 +22,7 @@ Query cards with Sentry avatars are pre-built and cannot be removed.
 
 - All Events: Users can see the raw error stream for any group of projects. This replaces the Events feature and gives users the ability to add additional columns and change groupings to achieve their desired breakdown.
 - Errors by Title: Users can see their most frequently occurring errors by the total number of raw errors, as well as the total number of users affected.
-- Errors by URL: Users can see the pages that generated the most errors and different types of issues. As a reminder, issues are a group of fingerprinted Events. For more details, see the [full documentation on fingerprinting]({%- link _documentation/data-management/event-grouping/index.md -%}).
+- Errors by URL: Users can see the pages that generated the most errors and different types of issues. As a reminder, issues are a group of fingerprinted Events. For more details, see the [full documentation on fingerprinting](/data-management/event-grouping/).
 
 ## Saved Queries
 
@@ -39,7 +39,7 @@ From the Discover Homepage, you can build a query in three ways.
   2. Enter a display name
   3. Click "Save"
 
-Apply new search conditions or table columns to modify the results of the query. Save the query and assign a custom display name. For the full details, see [documentation on the Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}).
+Apply new search conditions or table columns to modify the results of the query. Save the query and assign a custom display name. For the full details, see [documentation on the Query Builder](/performance/discover/query-builder/).
 
 **Search for a Query**
 
@@ -84,7 +84,7 @@ On the Discover Homepage, each saved query card has an ellipsis that will open a
 
 To view query results, click into any query card. You'll find a graph, table, and toggleable tag summary (or facet map). The search bar at the top enables you to see the search conditions entered. The table reflects the events with sortable columns. 
 
-If the first column shows an icon (as seen above), it means the events have been stacked. Click on the icon to view the full list of events. Each event will have an event ID you can click on for more details. For more about how to build a query, go to [the Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}). 
+If the first column shows an icon (as seen above), it means the events have been stacked. Click on the icon to view the full list of events. Each event will have an event ID you can click on for more details. For more about how to build a query, go to [the Query Builder](/performance/discover/query-builder/). 
 
 ## Event Details
 

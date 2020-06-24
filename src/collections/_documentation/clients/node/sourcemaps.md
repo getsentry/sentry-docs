@@ -75,7 +75,7 @@ Raven.config('your-dsn', {
 
 Note: You dont _have_ to use _RELEASE_ environment variables. You can provide them in any way you want.
 
-Additional information can be found in the [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
+Additional information can be found in the [Releases API documentation](/api/releases/).
 
 ## Updating Raven configuration to support Source Maps
 
@@ -105,4 +105,4 @@ Raven.config('your-dsn', {
 
 There’s one very important thing to note here. This config assumes, that you’ll bundle your application into a single file. That’s why we are using _path.basename_ to get the filename.
 
-If you are not doing this, eg. you are using TypeScript and upload all your compiled files separately to the server, then we need to be a little smarter about this. Please refer to [TypeScript usage docs]({%- link _documentation/clients/node/typescript.md -%}) to see a more complex and detailed example.
+If you are not doing this, eg. you are using TypeScript and upload all your compiled files separately to the server, then we need to be a little smarter about this. Please refer to [TypeScript usage docs](/clients/node/typescript/) to see a more complex and detailed example.

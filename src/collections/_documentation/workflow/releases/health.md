@@ -41,8 +41,8 @@ The release details page focuses on an individual release. Elements of the relea
 
 [{% asset releases/release_details.png alt="View of the release details page showing an overview graph, files changed, and other details." %}]({% asset releases/release_details.png @path %})
 
-For more information about Sentry's Mobile features, see the full documentation for [Android SDK]({%- link _documentation/platforms/android/index.md -%}), [iOS SDK]({%- link _documentation/platforms/cocoa/index.md -%}) and
-[React Native SDK]({%- link _documentation/platforms/react-native/index.md -%}).
+For more information about Sentry's Mobile features, see the full documentation for [Android SDK](/platforms/android/), [iOS SDK](/platforms/cocoa/) and
+[React Native SDK](/platforms/react-native/).
 
 ## Getting Started
 
@@ -52,17 +52,17 @@ Currently, we support the health functionality for Android, iOS and React Native
 
 To benefit from the health data you must use at least version 2.1.0 of the Android SDK, and enable the collection of release health metrics in the AndroidManifest.xml file.
 
-For more details, see the [full documentation on using Release Health with Android]({%- link _documentation/platforms/android/index.md -%}#release-health).
+For more details, see the [full documentation on using Release Health with Android](/platforms/android/#release-health).
 
 ### iOS
 To benefit from the health data you must use at least version 5.0.0 of the Cocoa SDK and enable the collection of the release health metrics in the initialization options of the SDK.
 
-For more details, see the [full documentation on using Release Health with iOS.]({%- link _documentation/platforms/cocoa/index.md -%}#release-health).
+For more details, see the [full documentation on using Release Health with iOS.](/platforms/cocoa/#release-health).
 
 ### React Native
 To benefit from the health data you must use at least version 1.4.0 of the React Native SDK and enable the collection of the release health metrics in the initialization options of the SDK.
 
-For more details, see the [full documentation on using Release Health with React Native.]({%- link _documentation/platforms/react-native/index.md -%}#release-health).
+For more details, see the [full documentation on using Release Health with React Native.](/platforms/react-native/#release-health).
 
 ## Data Filtering
 
@@ -113,7 +113,7 @@ Number of users that started the application at least once in the specified time
 
 The fatal error that caused the crash of the application. Errors that did not cause the end of the application should not be included.  
 Sentry considers every error event with the field `level` set to `fatal` or the field `handled` set to `false` as a Crashed state.
-For more details about the error levels, see the documentation on [Enriching Error Data]({%- link _documentation/enriching-error-data/additional-data.md -%}#setting-the-level). 
+For more details about the error levels, see the documentation on [Enriching Error Data](/enriching-error-data/additional-data/#setting-the-level). 
 
 #### Crash Free User
 

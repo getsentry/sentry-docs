@@ -3,7 +3,7 @@ title: Create a New Sentry Project
 sidebar_order: 1
 ---
 
-In this tutorial, you create a new `Project` in your Sentry account. Projects allow you to scope events to a distinct application in your organization and assign responsibility and ownership to specific users and teams within your organization. You can create a project for a particular language or framework used in your application. For example, you might have separate projects for your API server and frontend client. For more information see [Best Practices for Creating Projects]({%- link _documentation/guides/getting-started/index.md -%}#4-create-projects)
+In this tutorial, you create a new `Project` in your Sentry account. Projects allow you to scope events to a distinct application in your organization and assign responsibility and ownership to specific users and teams within your organization. You can create a project for a particular language or framework used in your application. For example, you might have separate projects for your API server and frontend client. For more information see [Best Practices for Creating Projects](/guides/getting-started/#4-create-projects)
 
 ## Step 1: Create the project
 
@@ -43,7 +43,7 @@ In this tutorial, you create a new `Project` in your Sentry account. Projects al
 
 ## Step 2: Create an alert rule
 
-You can create various alert rules per project and let Sentry know when, how, and whom you want to notify when errors occur in your application. **Alert rules** consist of **Conditions** and **Actions**, which are performed when the associated conditions are met. For more information, see [Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}). When creating a new project, you can select to create it with an alert rule that notifies all project team members (via email) the first time a new **issue** appears. This means that the next time a **similar error** occurs, the notification is not triggered since the error is not "new."
+You can create various alert rules per project and let Sentry know when, how, and whom you want to notify when errors occur in your application. **Alert rules** consist of **Conditions** and **Actions**, which are performed when the associated conditions are met. For more information, see [Alerts](/workflow/alerts-notifications/alerts/). When creating a new project, you can select to create it with an alert rule that notifies all project team members (via email) the first time a new **issue** appears. This means that the next time a **similar error** occurs, the notification is not triggered since the error is not "new."
 
 In this step, you create a new Alert rule notifying **every time** an event occurs, even if it's associated with an already existing **issue**. In a real-life scenario you'd probably add additional conditions, as you wouldn't want to be notified **every time** an event happens in your frontend code on your end user's browsers.
 
@@ -67,4 +67,4 @@ In this step, you create a new Alert rule notifying **every time** an event occu
 
 ## Next
 
-[Introduce Sentry SDK to your Frontend Code]({%- link _documentation/guides/integrate-frontend/initialize-sentry-sdk.md -%})
+[Introduce Sentry SDK to your Frontend Code](/guides/integrate-frontend/initialize-sentry-sdk/)

@@ -180,7 +180,7 @@ Specify which projects, environments, and date range you want to zoom in on at t
 
 ## Filter by Search Conditions
 
-All events have built-in key fields or custom [tags]({%- link _documentation/enriching-error-data/additional-data.md -%}). Use the search bar to enter these keys and assign them values. This will filter down your list of events. Here are the built-in key fields. 
+All events have built-in key fields or custom [tags](/enriching-error-data/additional-data/). Use the search bar to enter these keys and assign them values. This will filter down your list of events. Here are the built-in key fields. 
 
 <table class="table">
 {%- for category in page.standard_fields -%}
@@ -198,7 +198,7 @@ All events have built-in key fields or custom [tags]({%- link _documentation/enr
 
 **Syntax**
 
-The Query Builder syntax is identical to [Sentry's Search syntax]({%- link _documentation/workflow/search.md -%}). After you enter a key field from above or a custom tag, you can use any of the referenced syntax. For example, `count(id)` gives you the number of times an event occurs. This can be written in the following ways: 
+The Query Builder syntax is identical to [Sentry's Search syntax](/workflow/search/). After you enter a key field from above or a custom tag, you can use any of the referenced syntax. For example, `count(id)` gives you the number of times an event occurs. This can be written in the following ways: 
 
 - Exact match (is equal to): `count(id):99`
 - Upper bounds (is less than or equal to): `count(id):<99` or `count(id):<=99`
@@ -234,7 +234,7 @@ Each query has a interactive graph that reflects the data presented in the table
 
 ## Filter by Table Columns
 
-Above the table, click "Columns" to open a modal. This will show you a list of all the columns in the results table. You can add, delete and move basic key field columns or custom [tags]({%- link _documentation/enriching-error-data/additional-data.md -%}) columns. With the same view, you can also stack events with any of the following functions: 
+Above the table, click "Columns" to open a modal. This will show you a list of all the columns in the results table. You can add, delete and move basic key field columns or custom [tags](/enriching-error-data/additional-data/) columns. With the same view, you can also stack events with any of the following functions: 
 
 **Stacking Functions**
 - `avg(...)`
@@ -305,4 +305,4 @@ Deleting a saved query is irreversible.
 
 On the Discover Homepage, each saved query card has an ellipsis that will open a context menu. Delete the query from here. You can also delete the query within Query Results view by clicking the trash can in the upper right. 
 
-For more details on how to view saved queries, see [documentation on Discover]({%- link _documentation/performance/discover/index.md -%})
+For more details on how to view saved queries, see [documentation on Discover](/performance/discover/)
