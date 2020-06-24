@@ -3,7 +3,7 @@ title: 'Discover Queries'
 sidebar_order: 4
 ---
 
-Discover provides visibility into your data across environments by building upon and enriching your error data. This feature will allow you to query and unlock deeper insights into the health of your entire system and answer critical business questions --- all in one place.
+Discover provides visibility into your data across environments by building upon and enriching your error data. This feature will allow you to query and unlock deeper insights into the health of your entire system and answer critical business questions --- all in one place. Customers subscribed to the Team or Business plan can use Discover to view comprehensive information sent to Sentry.
 
 [{% asset discover/discover-homepage.png alt="Full view of the Discover Homepage with query cards and button to build new queries." %}]({% asset discover/discover-homepage.png @path %})
 

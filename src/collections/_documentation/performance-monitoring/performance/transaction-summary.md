@@ -5,6 +5,8 @@ sidebar_order: 4
 
 Navigate to the Transaction Summary page by clicking on any transaction on the Performance Homepage. On the Transaction Summary page, you'll find graphs, a list of slowest transactions, facet maps, and summary statistics about the transaction.
 
+[{% asset performance/perf-summary.png alt="Example of Performance in Product UI" %}]({% asset performance/perf-summary.png @path %})
+
 ## Graphs
 Duration Breakdown 
 : By graphing P50, [P75]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#p75-threshold), [P95]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#p95-threshold), [P99]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#p99-threshold), and P100 durations distinctly, you can utilize this display to see their transaction performance over time. Toggle the display of each segment by clicking on the legend (including Releases). Also, zoom in on specific slices to investigate spikes or possible performance regressions from a release.

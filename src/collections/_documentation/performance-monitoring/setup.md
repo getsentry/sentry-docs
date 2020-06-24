@@ -3,17 +3,11 @@ title: Setup
 sidebar_order: 0
 ---
 
-Performance monitoring helps developers measure Apdex, Throughput, and trace slow transactions down to the poor performing API call or DB query. Available for both JavaScript and Python SDKs, performance monitoring helps you both diagnose problems and measure your application's overall health. 
+If you've enjoyed our error monitoring abilities so far, wait till you hear about performance monitoring. You'll wonder why we didn't come up with this sh*t sooner.  
 
-Learn more about performance monitoring in:
+After this quick setup, you'll have access to [Performance]({% link _documentation/performance-monitoring/performance/index.md %}) and [Discover]({% link _documentation/performance-monitoring/discover-queries/index.md %}). Not only will these tools empower you to see everything from macro-level [metrics]({% link _documentation/performance-monitoring/performance/metrics.md %}) to micro-level [spans]({% link _documentation/performance-monitoring/performance/event-detail.md %}), but you'll be able to cross-reference [transactions with related issues]({% link _documentation/performance-monitoring/performance/transaction-summary.md %}), customize [queries]({% link _documentation/performance-monitoring/discover-queries/query-builder.md %}) based on your personal needs, and substantially more. 
 
-- [Homepage]({% link _documentation/performance-monitoring/performance/index.md %}): displays a high-level report of application health, including problematic transactions and both Apdex and Throughput graphs
-- [Distributed Tracing]({% link _documentation/performance-monitoring/distributed-tracing.md %}): diagnose problems and view interactions across your software systems
-- [Metrics]({% link _documentation/performance-monitoring/performance/metrics.md %}): provides insight into user experience of your application based on custom thresholds
-- [Discover]({% link _documentation/performance-monitoring/discover-queries/index.md %}): view data across environments with pre-built queries. Customers subscribed to the Team or Business plan can use Discover to view comprehensive information sent to Sentry.
-
-
-To set up tracing, 
+The world will be your data oyster. 
 
 {% capture __alert_content -%}
 Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [performance-feedback@sentry.io](mailto:performance-feedback@sentry.io).
@@ -30,6 +24,6 @@ Supported SDKs for Tracing:
     level="warning"
 %}
 
-## Install
+## Install and Configure an SDK
 
 {% include components/platform_content.html content_dir='configuration' %}

@@ -3,15 +3,6 @@ title: Distributed Tracing
 sidebar_order: 3
 ---
 
-{% capture __alert_content -%}
-Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [performance-feedback@sentry.io](mailto:performance-feedback@sentry.io).
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Note"
-    content=__alert_content
-    level="warning"
-%}
-
 Enabling tracing augments your existing error data by capturing interactions among your software systems. With tracing, Sentry tracks your software performance, measuring things like throughput and latency, and can also display the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution, helping you both diagnose problems and measure your application's overall health more easily. Tracing in Sentry provides insights such as:
 
 - What occurred for a specific error event or issue
@@ -48,11 +39,11 @@ A **trace** represents the record of the entire operation you want to measure or
 
 Each trace consists of one or more tree-like structures called **transactions**, the nodes of which are called **spans**. In most cases, each transaction represents a single instance of a service being called, and each span within that transaction represents that service performing a single unit of work, whether calling a function within that service or making a call to a different service. Here's an example trace, broken down into transactions and spans:
 
-[{% asset performance/trace-transactions-spans-generic.png alt="Diagram illustrating how a trace is composed of multiple transactions, and each transaction is composed of multiple spans." %}]({% asset performance/trace-transactions-spans-generic.png @path %})
+[{% asset performance/diagram-transaction-trace.png alt="Diagram illustrating how a trace is composed of multiple transactions, and each transaction is composed of multiple spans." %}]({% asset performance/diagram-transaction-trace.png @path %})
 
 Because a transaction has a tree structure, top-level spans can themselves be broken down into smaller spans, mirroring the way that one function may call a number of other, smaller functions; this is expressed using the parent-child metaphor, so that every span may be the **parent span** to multiple other **child spans**. Further, since all trees must have a single root, one span in every transaction always represents the transaction itself, with all other spans in the transaction descending from that root span. Here's a zoomed-in view of one of the transactions from the diagram above:
 
-[{% asset performance/span-parent-child-relationship.png alt="Diagram illustrating the parent-child relationship between spans within a single transaction." %}]({% asset performance/span-parent-child-relationship.png @path %})
+[{% asset performance/diagram-transaction-spans.png alt="Diagram illustrating the parent-child relationship between spans within a single transaction." %}]({% asset performance/diagram-transaction-spans.png @path %})
 
 To make all of this more concrete, let's consider our example web app again.
 
@@ -95,7 +86,7 @@ Each transaction would be broken down into **spans** as follows:
 
 Let's pause here to make an important point: Some, though not all, of the spans listed here in the browser transaction have a direct correspondence to backend transactions listed earlier. Specifically, each request span in the browser transaction corresponds to a separate request transaction in the backend. In this situation, when a span in one service gives rise to a transaction in a subsequent service, we call the original span a parent span to _both_ the transaction and its root span. In the diagram below, the squggly lines represent this parent-child relationship.
 
-[{% asset performance/trace-transactions-spans-concrete-example.png alt="Diagram illustrating the trace-transaction-span relationship illustrated above, now applied to the example." %}]({% asset performance/trace-transactions-spans-concrete-example.png @path %})
+[{% asset performance/diagram-transaction-example.png alt="Diagram illustrating the trace-transaction-span relationship illustrated above, now applied to the example." %}]({% asset performance/diagram-transaction-example.png @path %})
 
 In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service, which means that every root span other than the browser transaction root has a parent span (albeit in a different service). 
 
@@ -261,52 +252,4 @@ If you enable tracing in services with multiple entry points, we recommend choos
 
 ## Viewing Trace Data
 
-You can see a list of transaction events by clicking on the "Transactions" pre-built query in [Discover]({%- link _documentation/performance-monitoring/discover-queries/index.md -%}), or by using a search condition `event.type:transaction` in the [Discover Query Builder]({%- link _documentation/performance-monitoring/discover-queries/query-builder.md -%}) view.
-
-### Transaction List View
-
-The results of either of the above queries are presented in a list view, where each entry represents a group of one or more transactions. Data about each group is displayed in table form, and comes in two flavors: value-based (such as transaction name), and aggregate (such as average duration). The choice of which kinds of data to display is configurable, and can be changed by clicking 'Edit Columns' at the top right of the table. Bear in mind that adding or removing any value-based columns may affect the way the results are grouped.
-
-This view also includes a timeseries graph, aggregating all results of the query, as well as a summary of the most common tags associated with those results (either via your Sentry instance's [global context]({%- link _documentation/enriching-error-data/additional-data.md -%}) or via each transaction's root span). From this view, you can also filter the transactions list, either by restricting the time window or by adding attributes to the query (or both!).
-
-_Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore cannot be searched.
-
-For more details about the transaction list view, see the full documentation on [Discover's Query Builder]({%- link _documentation/performance-monitoring/discover-queries/query-builder.md -%}), and for more about transaction metrics, see [Metrics]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#transaction-metrics).
-
-### Transaction Detail View
-
-When you open a transaction event in Discover (by clicking on the icon at the left side of the row), you'll see the **span view** at the top of the page. Other information the SDK captured as part of the transaction event (such as the transaction's tags and automatically collected breadcrumbs) is displayed underneath and to the right of the span view.
-
-[{% asset performance/perf-event-detail.png alt="Discover span showing the map of the transactions (aka minimap) and the black dashed handlebars for adjusting the window selection." %}]({% asset performance/perf-event-detail.png @path %})
-
-#### Using the Span View
-
-The span view is a split view where the left-hand side shows the transaction's span tree, and the right-hand side represents each span as a colored rectangle. Within the tree view, Sentry identifies spans by their `op` and `description` values. If a span doesn't have a description, Sentry uses the span's id as a fallback. The first span listed is always the transaction's root span, from which all other spans in the transaction descend.
-
-At the top of the span view is a minimap, which shows which specific portion of the transaction you're viewing.
-
-_Zooming In on a Transaction_
-
-As shown in the Discover span screenshot above, you can click and drag your mouse cursor across the minimap (top of the span view). You can also adjust the window selection by dragging the handlebars (black dashed lines). 
-
-_Missing Instrumentation_
-
-Sentry may indicate that gaps between spans are "Missing Instrumentation." This means that there is time in the transaction that isn't accounted for by any of the transaction's spans, and likely means that you need to manually instrument that part of your process.
-
-_Viewing Span Details_
-
-Clicking on a row in the span view expands the details of that span. From here, you can see all attached properties, such as tags and data.
-
-[{% asset performance/span-details.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-details.png @path %})
-
-_Searching by Trace ID_
-
-You can search for all of the transactions in a given trace by expanding any of the span details and clicking on "Search by Trace".
-
-_Note:_ On the [Team plan](https://sentry.io/pricing/), results will only be shown for one project at a time. Further, each transaction belongs to a specific project, and you will only be able to see transactions belonging to projects you have permission to view. Therefore, you may not see all transactions in a given trace in your results list.
-
-_Traversing to Child Transactions_
-
-Some spans within a transaction may be the parent of another transaction. When you expand the span details for such spans, you'll see the "View Child" button, which, when clicked, will lead to the child transaction's details view.
-
-_Note:_ Traversing between transactions in this way is only available on the [Business plan](https://sentry.io/pricing/). Further, each transaction belongs to a specific project, and you will only be able to see the "View Child" button if the child transaction belongs to a project you have permission to view.
+Though both Performance and [Discover]({%- link _documentation/performance-monitoring/discover-queries/index.md -%}), you can view trace data. 
