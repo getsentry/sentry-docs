@@ -18,9 +18,9 @@ Compare graphs side by side to find any relevant correlations. For example, if a
 - [Apdex]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#apdex)
 - [Transactions Per Minute (TPM)]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#throughput-total-tpm-tps)
 - [Failure Rate]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#failure-rate)
-- p50 Duration
-- p95 Duration
-- p99 Duration
+- [p50 Duration]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#p50-threshold)
+- [p95 Duration]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#p95-threshold)
+- [p99 Duration]({%- link _documentation/performance-monitoring/performance/metrics.md -%}#p99-threshold)
 
 ## Transaction Table
 
@@ -38,7 +38,4 @@ Below the graphs are a list of the transactions that follow the global header an
 
 ## Key Transactions
 
-Have transactions you return time and time again? Bookmark them in the [summary view]({% link _documentation/performance-monitoring/performance/transaction-summary.md %})
-
-
- are transactions that you bookmark and can view in a separate dedicated tab. You may want to bookmark a Transaction as a "Key Transaction" if you monitor performance on a particular transaction or group of transactions. You can set a Transaction as a "Key Transaction" on the Transaction Summary page. The "All Transactions" view also displays these transactions.
+If you have transactions you return time and time again, you can mark each one off as a key transaction in their corresponding [summary views]({% link _documentation/performance-monitoring/performance/transaction-summary.md %}). This will enable you to have a shortcut to view Key Transactions only by toggling the tab in the upper right corner of the homepage. 
