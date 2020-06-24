@@ -615,6 +615,93 @@ app.use(function processItems(req, res, next) {
   })
 });
 ```
+### Koa
+Creates and attach a transaction to each context
+
+```javascript
+const Sentry = require("@sentry/node")
+const { Span } = require('@sentry/apm')
+const Koa = require('koa')
+const app = new Koa()
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+      // enable HTTP calls tracing
+      new Sentry.Integrations.Http({ tracing: true }),
+      // enable Express.js middleware tracing
+      new Apm.Integrations.Express({ app })
+  ],
+  tracesSampleRate: 0.25
+});
+
+// this tracing middleware creates a transaction per request, this 
+app.use(async (ctx, next) => {
+  // captures span of upstream app
+  const sentryTraceId =  ctx.request.get('sentry-trace')
+  let traceId
+  let parentSpanId
+
+  if (sentryTraceId) {
+    const span = Span.fromTraceparent(sentryTraceId)
+    if (span) {
+      traceId = span.traceId
+      parentSpanId = span.parentSpanId
+    }
+  }
+  const transaction = Sentry.startTransaction({
+    name: `${ctx.method} ${ctx.url}`,
+    op: 'http.server',
+    parentSpanId,
+    traceId,
+  })
+  ctx.__sentry_transaction = transaction
+  await next()
+  
+  // if using koa router, a nicer way to capture transaction using th ematched route
+  if (ctx._matchedRoute) {
+    const mountPath = ctx.mountPath || ''
+    transaction.setName(`${ctx.method} ${mountPath}${ctx._matchedRoute}`)
+  }
+
+  transaction.setHttpStatus(ctx.status)
+  transaction.finish()
+})
+
+// usual error handler
+app.on('error', (err, ctx) => { 
+  Sentry.withScope(function (scope) {
+    scope.addEventProcessor(function (event) {
+      return Sentry.Handlers.parseRequest(event, ctx.request)
+    })
+    Sentry.captureException(err)
+  })
+})
+
+// the rest of your app
+```
+
+#### Subsequent manual child transactions
+The following example creates a transaction for a part of the code that contains an expensive operation, and sends the result to Sentry, you will need to use the transaction stored in the context
+
+```javascript
+const myMiddleware = async (ctx, next) => {
+  let span
+  const transaction = ctx.__sentry_transaction
+  if (transaction) {
+    span = transaction.startChild({
+      description: route,
+      op: 'myMiddleware',
+    })
+  }
+  await myExpensiveOperation()
+  if (span) {
+    span.finish()
+  }
+  return next()
+}
+
+```
 
 ### Vue.js
 
