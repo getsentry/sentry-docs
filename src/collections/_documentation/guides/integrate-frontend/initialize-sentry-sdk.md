@@ -7,8 +7,8 @@ In this tutorial, you import the React demo code into your local development env
 
 > **Note:** If you're using your own source code you can skip this section and instead
 >
-> * Follow the instructions on [Getting Started]({%- link _documentation/error-reporting/quickstart.md -%}?platform=browser). Notice that you can select the desired platform.
-> * Continue with the [Next section]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%}).
+> * Follow the instructions on [Getting Started](/error-reporting/quickstart/?platform=browser). Notice that you can select the desired platform.
+> * Continue with the [Next section](/guides/integrate-frontend/generate-first-error/).
 
 ## Prerequisites
 
@@ -39,13 +39,13 @@ The demo app source code requires a **NodeJS** development environment to instal
 
 ## Step 2: Install the SDK
 
-Sentry captures data by using a platform-specific SDK within your application runtime. To use the SDK, import and configure it in your source code. The demo project uses React and Browser JS. The quickest way to get started is by using the CDN hosted version of the JavaScript browser SDK, however, you can [NPM install]({%- link _documentation/error-reporting/quickstart.md -%}?platform=browsernpm) the browser library as well.
+Sentry captures data by using a platform-specific SDK within your application runtime. To use the SDK, import and configure it in your source code. The demo project uses React and Browser JS. The quickest way to get started is by using the CDN hosted version of the JavaScript browser SDK, however, you can [NPM install](/error-reporting/quickstart/?platform=browsernpm) the browser library as well.
 
 1. Open the `index.html` file (located under _./frontend-monitoring/public/_)
 
     ![Import and Configure SDK]({% asset guides/integrate-frontend/initialize-sentry-sdk-03.png @path %})
 
-    > Notice that we import and initialize the SDK as early as possible in our code. When initializing the SDK, we provide the desired configuration. The only mandatory configuration option is the **DSN** key, however, the SDK supports multiple other configuration options. For more information see [Configuration]({%- link _documentation/error-reporting/configuration/index.md -%}).
+    > Notice that we import and initialize the SDK as early as possible in our code. When initializing the SDK, we provide the desired configuration. The only mandatory configuration option is the **DSN** key, however, the SDK supports multiple other configuration options. For more information see [Configuration](/error-reporting/configuration/).
 
 2. In the Sentry SDK configuration, enter the `DSN` key value you copied from the project created in the previous section.
 
@@ -84,4 +84,4 @@ To build and run the Demo application on your localhost:
 
 ## Next
 
-[Capture your First Error]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%})
+[Capture your First Error](/guides/integrate-frontend/generate-first-error/)

@@ -12,7 +12,7 @@ A release is a version of your code that is deployed to an environment. When you
 -   Resolve issues by including the issue number in your commit message
 -   Receive email notifications when your code gets deployed
 
-Additionally, releases are used for applying [source maps]({%- link _documentation/platforms/javascript/sourcemaps.md -%}) to minified JavaScript to view original, untransformed source code.
+Additionally, releases are used for applying [source maps](/platforms/javascript/sourcemaps/) to minified JavaScript to view original, untransformed source code.
 
 ## Setting up Releases
 
@@ -55,7 +55,7 @@ This step is optional - you can manually supply Sentry with your own commit meta
 Using one of Sentry's repository integrations (e.g. GitHub, GitLab, Bitbucket, etc.) is the easiest way to connect your commit metadata to Sentry. For a list of available integrations, go to Organization Settings > Integrations.
 
 {% capture __alert_content -%}
-You need to be an Owner or Manager of your Sentry organization to set up or configure an integration. Read more about [roles in Sentry]({%- link _documentation/accounts/membership.md -%}).
+You need to be an Owner or Manager of your Sentry organization to set up or configure an integration. Read more about [roles in Sentry](/accounts/membership/).
 {%- endcapture -%}
 {%- include components/alert.html
   content=__alert_content
@@ -86,7 +86,7 @@ In your release process, add a step to create a release object in Sentry and ass
 
 There are 2 ways of doing this:
 
-1.  Using Sentry’s [Command Line Interface]({%- link _documentation/cli/index.md -%}#sentry-cli) (**recommended**)
+1.  Using Sentry’s [Command Line Interface](/cli/#sentry-cli) (**recommended**)
 2.  Using the API
 
 ##### Using the CLI
@@ -105,7 +105,7 @@ sentry-cli releases set-commits --auto $VERSION
 ```
 
 {% capture __alert_content %}
-You need to make sure you’re using [Auth Tokens]({%- link _documentation/api/auth.md -%}#auth-tokens), **not** [API Keys]({%- link _documentation/api/auth.md -%}#api-keys), which are deprecated.
+You need to make sure you’re using [Auth Tokens](/api/auth/#auth-tokens), **not** [API Keys](/api/auth/#api-keys), which are deprecated.
 {% endcapture %}
 {%- include components/alert.html
   content=__alert_content
@@ -121,7 +121,7 @@ If you want more control over which commits to associate, or are unable to execu
 
 Here we are associating commits (or refs) between `from` and `to` with the current release, `from` being the previous release’s commit. The repository name `my-repo` should match the name you entered when linking the repo in the previous step, and is of the form `owner-name/repo-name`. The `from` commit is optional and we’ll use the previous release’s commit as the baseline if it is excluded.
 
-For more information, see the [CLI docs]({%- link _documentation/cli/releases.md -%}).
+For more information, see the [CLI docs](/cli/releases/).
 
 ###### Finalizing Releases
 
@@ -193,7 +193,7 @@ res = requests.post(
 )
 ```
 
-For more information, see the [API reference]({%- link _documentation/api/releases/post-organization-releases.md -%}).
+For more information, see the [API reference](/api/releases/post-organization-releases/).
 
 {% include components/alert.html
   title='Troubleshooting'
@@ -203,7 +203,7 @@ For more information, see the [API reference]({%- link _documentation/api/releas
 
 #### After Associating Commits
 
-After this step, **suspect commits** and **suggested assignees** will start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and [ownership rules]({%- link _documentation/workflow/issue-owners.md -%}).
+After this step, **suspect commits** and **suggested assignees** will start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and [ownership rules](/workflow/issue-owners/).
 
 {% asset suspect-commits-highlighted.png %}
 
@@ -225,7 +225,7 @@ When Sentry sees this commit, we’ll reference the commit in the issue, and whe
 
 #### Alternatively: Without a Repository Integration
 
-If you don't want Sentry to connect to your repository, or you're using an unsupported repository provider or VCS (e.g. Perforce), you can alternatively tell Sentry about your raw commit metadata via the API using the [create release endpoint]({%- link _documentation/api/releases/post-organization-releases.md -%}).
+If you don't want Sentry to connect to your repository, or you're using an unsupported repository provider or VCS (e.g. Perforce), you can alternatively tell Sentry about your raw commit metadata via the API using the [create release endpoint](/api/releases/post-organization-releases/).
 
 ##### Formatting Commit Metadata
 
@@ -314,7 +314,7 @@ curl https://sentry.io/api/0/organizations/your-organization-name/releases/ \
  '
 ```
 
-For more information, see the [API reference]({%- link _documentation/api/releases/post-organization-releases.md -%}).
+For more information, see the [API reference](/api/releases/post-organization-releases/).
 
 
 ### Tell Sentry When You Deploy a Release {#create-deploy}
@@ -323,14 +323,14 @@ Tell Sentry when you deploy a release and we’ll automatically send an email to
 
 {% asset deploy-emails.png %}
 
-You must have environment [context]({%- link _documentation/enriching-error-data/additional-data.md -%}) set in your SDK in order to use this feature. To let Sentry know you’ve deployed, just send an additional request after creating a release:
+You must have environment [context](/enriching-error-data/additional-data/) set in your SDK in order to use this feature. To let Sentry know you’ve deployed, just send an additional request after creating a release:
 
 ```bash
 sentry-cli releases deploys VERSION new -e ENVIRONMENT
 ```
 
-You can also use our [API]({%- link _documentation/api/releases/post-release-deploys.md -%}) to create a deploy.
+You can also use our [API](/api/releases/post-release-deploys/) to create a deploy.
 
 ## Release Artifacts
 
-JavaScript and iOS projects can utilize release artifacts to unminify or symbolicate error stack traces. To learn more, please check out our [iOS]({%- link _documentation/clients/cocoa/index.md -%}#sentry-cocoa-debug-symbols) and [JavaScript]({%- link _documentation/platforms/javascript/sourcemaps.md -%}) docs.
+JavaScript and iOS projects can utilize release artifacts to unminify or symbolicate error stack traces. To learn more, please check out our [iOS](/clients/cocoa/#sentry-cocoa-debug-symbols) and [JavaScript](/platforms/javascript/sourcemaps/) docs.

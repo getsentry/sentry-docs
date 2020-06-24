@@ -41,7 +41,7 @@ Azure DevOps should now be enabled for all projects under your Sentry organizati
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -147,7 +147,7 @@ Bitbucket should now be enabled for all projects under your Sentry organization.
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -230,7 +230,7 @@ openssl x509 -pubkey -noout -in bitbucket_publickey.cer  > bitbucket_publickey.p
 
 ##### III. Connect your Bitbucket Server application with Sentry
 {% capture __alert_content -%}
-Confirm [Sentry's IP ranges]({%- link _documentation/meta/ip-ranges.md -%}) are whitelisted.
+Confirm [Sentry's IP ranges](/meta/ip-ranges/) are whitelisted.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -247,7 +247,7 @@ Bitbucket should now be authorized for all projects under your Sentry organizati
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -403,7 +403,7 @@ The GitHub integration is available for all projects under your Sentry organizat
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -439,7 +439,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with a 
 
 #### GitHub SSO
 
-[Enable Single Sign-on]({%- link _documentation/accounts/sso.md -%})
+[Enable Single Sign-on](/accounts/sso/)
 
 ### GitHub Enterprise
 
@@ -458,7 +458,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 
 ###### Add new GitHub App
 
-1. Confirm [Sentry's IP ranges]({%- link _documentation/meta/ip-ranges.md -%}) are whitelisted for your GitHub Enterprise instance.
+1. Confirm [Sentry's IP ranges](/meta/ip-ranges/) are whitelisted for your GitHub Enterprise instance.
 2. In your GitHub Enterprise organization, navigate to Settings > Developer Settings > **GitHub Apps** and click to add a new **New GitHub App**.
 
     [{% asset github-e-new-app.png %}]({% asset github-e-new-app.png @path %})
@@ -535,7 +535,7 @@ GitHub Enterprise should now be enabled for all projects under your Sentry organ
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -652,7 +652,7 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
 
 Commit tracking allows you to hone in on problematic commits. With commit tracking, you can better isolate what might be problematic by leveraging information from releases like tags and metadata.
 
-Once you've configured both [release and commit tracking]({%- link _documentation/workflow/releases/index.md -%}), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
+Once you've configured both [release and commit tracking](/workflow/releases/), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
 
 [{% asset gitlab/last-commit-in-releases.png alt="Dashboard with last commit highlighted" %}]({% asset gitlab/last-commit-in-releases.png @path %})
 
@@ -662,7 +662,7 @@ When you investigate deeper into that commit, you can leverage information from 
 
 Broadly, this lets you isolate problems in order to see which commits might be problematic.
 
-Learn more about [release and commit tracking]({%- link _documentation/workflow/releases/index.md -%}).
+Learn more about [release and commit tracking](/workflow/releases/).
 
 #### Suspect Commit
 
@@ -672,7 +672,7 @@ One special benefit of using Sentry's Commit Tracking is the ability to know the
 
 [{% asset gitlab/highlighting-suspect-commits.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/highlighting-suspect-commits.png @path %})
 
-Here is where you can find info for [suspect commit setup]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Here is where you can find info for [suspect commit setup](/workflow/releases/#link-repository).
 
 #### Resolve via Commit or PR
 
@@ -686,7 +686,7 @@ A `&lt;SHORT-ID&gt;` may look something like 'BACKEND-C' in the image below.
 
 FAQ:
 - I'm using GitLab on-premise. Do I need to whitelist Sentry's IP addresses?
-    - Yes. You can find our IP ranges [ here ]({%- link _documentation/meta/ip-ranges.md -%}).
+    - Yes. You can find our IP ranges [ here ](/meta/ip-ranges/).
 - Do you support subgroups?
     - Currently, we only support subgroups for users using GitLab 11.6 or higher.
 - My repositories are hosted under my user account, not a group account. Can I still use this integration?
@@ -815,7 +815,7 @@ openssl x509 -pubkey -noout -in jira_publickey.cer  > jira_publickey.pem
 
 ##### III. Connect your Jira Server application with Sentry
 {% capture __alert_content -%}
-Confirm [Sentry's IP ranges]({%- link _documentation/meta/ip-ranges.md -%}) are whitelisted.
+Confirm [Sentry's IP ranges](/meta/ip-ranges/) are whitelisted.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -879,7 +879,7 @@ If you hit a 4xx or 5xx error during or after setting up the Jira Server integra
 
 ## Issue Notifications
 
-Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}) to properly route notifications to a specific integration.
+Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**](/workflow/alerts-notifications/alerts/) to properly route notifications to a specific integration.
 
 ### Slack
 
@@ -1140,5 +1140,5 @@ Follow the instructions in the link below:
 
 If you're having trouble setting up Sentry with your on-premise integration like JIRA Server, Bitbucket Server, GitHub Enterprise, or Gitlab:
 - Ensure that the installation URL you provided is a fully qualified domain name (FQDN), which is resolvable on the internet.
-- Double-check that the IP addresses Sentry uses to make outbound requests are whitelisted <{%- link _documentation/meta/ip-ranges.md -%}>.
+- Double-check that the IP addresses Sentry uses to make outbound requests are whitelisted </meta/ip-ranges/>.
 - Make sure that Sentry's access to your installation URL is not path restricted.

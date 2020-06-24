@@ -9,8 +9,7 @@ It supports macOS, Windows and Linux (limited), and features an uploader to
 submit minidumps to a configured URL right when the process crashes.
 
 {% capture __alert_content -%}
-Sentry offers a higher-level [Native SDK]({%- link
-_documentation/platforms/native/index.md -%}) that has an integration with
+Sentry offers a higher-level [Native SDK](/platforms/native/) that has an integration with
 Crashpad. If you're setting up Crashpad for the first time, you might save some
 time this way!
 {%- endcapture -%}

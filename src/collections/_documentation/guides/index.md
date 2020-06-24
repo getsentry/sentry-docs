@@ -6,22 +6,22 @@ sidebar_order: 0
 
 ## Best Practices
 
-* [Set up your Sentry Account]({%- link _documentation/guides/getting-started/index.md -%})
+* [Set up your Sentry Account](/guides/getting-started/)
 
-* [Manage your Event Stream]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%})
+* [Manage your Event Stream](/accounts/quotas/manage-event-stream-guide/)
 
-* [Put your Data to Work]({%- link _documentation/guides/enrich-data/index.md -%})
+* [Put your Data to Work](/guides/enrich-data/)
 
-* [Alert Notifications]({%- link _documentation/guides/alert-notifications/index.md -%})
+* [Alert Notifications](/guides/alert-notifications/)
 
-* [Grouping & Fingerprints]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
+* [Grouping & Fingerprints](/guides/grouping-and-fingerprints/)
 
-* [Moving on Up - Switch to Hosted Sentry]({%- link _documentation/guides/migration/index.md -%})
+* [Moving on Up - Switch to Hosted Sentry](/guides/migration/)
 
 ## Tutorials
 
 Step-by-step guides to getting started with error monitoring for your apps on:
 
-* [Frontend]({%- link _documentation/guides/integrate-frontend/index.md -%})
+* [Frontend](/guides/integrate-frontend/)
 
 * Backend

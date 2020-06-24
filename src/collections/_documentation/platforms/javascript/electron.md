@@ -18,7 +18,7 @@ This will guide you through the installation and configuration process and sugge
 
 ## Configuring the Client
 
-Start by configuring the SDK as described in the [quickstart guide]({%- link _documentation/error-reporting/quickstart.md -%}?platform=electron#configure-the-sdk). This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the main process and all renderer processes to also catch errors during startup.
+Start by configuring the SDK as described in the [quickstart guide](/error-reporting/quickstart/?platform=electron#configure-the-sdk). This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the main process and all renderer processes to also catch errors during startup.
 
 ## Browser integration
 
@@ -86,7 +86,7 @@ To get symbolicated stack traces for native crashes, you have to upload debug sy
 $ node sentry-symbols.js
 ```
 
-If your app uses a custom Electron fork, contains modules with native extensions or spawns subprocesses, you have to upload those symbols manually using Sentry CLI. For more information, see [_Native Usage_]({%- link _documentation/platforms/javascript/electron.md -%}).
+If your app uses a custom Electron fork, contains modules with native extensions or spawns subprocesses, you have to upload those symbols manually using Sentry CLI. For more information, see [_Native Usage_](/platforms/javascript/electron/).
 
 {% capture __alert_content -%}
 It is currently not possible to send events from native code (such as a C++ extension). However, crashes will still be reported to Sentry if they happen in a process where the SDK has been configured. Also, crash reports from sub processes will not be reported automatically on all platforms. This feature will be added in a future SDK update.
@@ -99,7 +99,7 @@ It is currently not possible to send events from native code (such as a C++ exte
 
 ## Dealing with Minified Source Code
 
-The Electron SDK supports [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you upload source maps in addition to your minified files that data becomes available in Sentry. For more information see [_Source Maps_]({%- link _documentation/platforms/javascript/electron.md  -%}).
+The Electron SDK supports [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you upload source maps in addition to your minified files that data becomes available in Sentry. For more information see [_Source Maps_](/platforms/javascript/electron/).
 
 ## Native
 
@@ -129,10 +129,9 @@ are deploying to, depending on your needs.
 
 If your application contains custom native extensions or you wish to symbolicate
 crashes from a spawned child process, upload their debug information manually
-during your build or release process. See [_Debug Information Files_]({%- link
-_documentation/workflow/debug-files.md -%}) for a detailed description of how to
+during your build or release process. See [_Debug Information Files_](/workflow/debug-files/) for a detailed description of how to
 set up Sentry for native development. Additionally, see [_Uploading Debug
-Information_]({%- link _documentation/cli/dif.md -%}) for the upload process.
+Information_](/cli/dif/) for the upload process.
 
 ### Child Processes
 
@@ -164,7 +163,7 @@ crashReporter.start({
 
 ## Source Maps
 
-To find out why Sentry needs your source maps and how to provide them visit: [Source Maps]({%- link _documentation/platforms/javascript/sourcemaps.md -%}) 
+To find out why Sentry needs your source maps and how to provide them visit: [Source Maps](/platforms/javascript/sourcemaps/) 
 
 ### Native Application
 

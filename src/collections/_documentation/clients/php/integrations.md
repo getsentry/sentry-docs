@@ -373,9 +373,9 @@ Install the `sentry/sentry-symfony` package:
 $ composer require sentry/sentry-symfony:^2
 ```
 {% capture markdown_content %}
-This documentation refers to the v2.x of the bundle. This version does not support the newest [Unified API client]({%- link _documentation/platforms/php/index.md -%}).
+This documentation refers to the v2.x of the bundle. This version does not support the newest [Unified API client](/platforms/php/).
 
-You can upgrade to [the newer version]({%- link _documentation/platforms/php/symfony.md -%}) if you're on PHP 7.1+ and Symfony 3.4+.
+You can upgrade to [the newer version](/platforms/php/symfony/) if you're on PHP 7.1+ and Symfony 3.4+.
 {% endcapture %}
 
 {% include components/alert.html

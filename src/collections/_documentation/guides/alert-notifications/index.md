@@ -37,4 +37,4 @@ For more information, take a look at the [Notifications](https://docs.sentry.io/
 
 ## Next
 
-[Creating Custom Alert Notifications]({%- link _documentation/guides/alert-notifications/creating-custom-rules.md -%})
+[Creating Custom Alert Notifications](/guides/alert-notifications/creating-custom-rules/)

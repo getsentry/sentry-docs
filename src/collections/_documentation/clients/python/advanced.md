@@ -75,7 +75,7 @@ dsn = '___DSN___'
 
 : The HTTP transport class to use. By default this is an asynchronous worker thread that runs in-process.
 
-For more information see [_Transports_]({%- link _documentation/clients/python/transports.md -%}).
+For more information see [_Transports_](/clients/python/transports/).
 
 `site`
 
@@ -245,7 +245,7 @@ For example, if you have HTTP 404 (page not found) errors, and you’d prefer th
 {% raw %}client.captureException(fingerprint=['{{ default }}', 'http://my-url/']){% endraw %}
 ```
 
-For more information, see [Customize Grouping with Fingerprints]({%- link _documentation/data-management/event-grouping/index.md -%}).
+For more information, see [Customize Grouping with Fingerprints](/data-management/event-grouping/).
 
 ## Sampling Messages
 

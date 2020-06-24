@@ -62,7 +62,7 @@ raven.Capture(packet, nil)
 ## Additional Data
 
 All `Capture*` calls can take additional arguments which can help you make more sense out of your reports.
-To read more about it, see [Context]({%- link _documentation/clients/go/context.md -%}) section.
+To read more about it, see [Context](/clients/go/context/) section.
 
 ## Event Sampling
 

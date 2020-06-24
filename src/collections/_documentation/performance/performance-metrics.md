@@ -11,7 +11,7 @@ Sentry's Performance features are currently in beta. For more details about acce
     level="warning"
 %}
 
-Performance metrics provide insight about how users experience your application. You set the target thresholds, then identify how your application is performing. For example, you can track metrics such as Latency and [Throughput](#throughput-total-rpm-rps) in [Discover]({%- link _documentation/performance/discover/index.md -%}) or Performance. By identifying useful thresholds by which to measure your application, you have a quantifiable measure of your application's health and can more easily identify when errors occur or if performance issues are emerging.
+Performance metrics provide insight about how users experience your application. You set the target thresholds, then identify how your application is performing. For example, you can track metrics such as Latency and [Throughput](#throughput-total-rpm-rps) in [Discover](/performance/discover/) or Performance. By identifying useful thresholds by which to measure your application, you have a quantifiable measure of your application's health and can more easily identify when errors occur or if performance issues are emerging.
 
 ## Apdex
 Apdex is an industry-standard metric used to track and measure user satisfaction based on response times in your application. The Apdex score provides the ratio of satisfactory, tolerable, and frustrated requests in a specific transaction or endpoint. This metric provides a standard for you to compare transaction performance, understand which ones may require additional optimization or investigation, and set targets or goals for performance.
@@ -42,7 +42,7 @@ Throughput indicates the number of transactions over a given time range (Total),
 User Misery is a user-weighted performance metric to assess the relative magnitude of your application performance. While you can examine the ratio of various response time threshold levels with [Apdex](#apdex), User Misery counts the number of unique users who were frustrated based on the specified response time threshold. User Misery highlights transactions that have the highest impact on users.
 
 ## Transaction Metrics
-By enabling [tracing]({%- link _documentation/performance/distributed-tracing.md -%}), you can see a number of the metrics available as column choices in the [transaction list view]({%- link _documentation/performance/distributed-tracing.md -%}#transaction-list-view).
+By enabling [tracing](/performance/distributed-tracing/), you can see a number of the metrics available as column choices in the [transaction list view](/performance/distributed-tracing/#transaction-list-view).
 
 ### Transaction Duration
 
@@ -69,4 +69,4 @@ The following functions aggregate transaction counts and the rate at which trans
 - average requests (transactions) per second
 - average requests (transactions) per minute
 
-Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data]({%- link _documentation/performance/distributed-tracing.md -%}#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 requests to that endpoint each second. (20 because you're collecting 25% - or 1/4 - of your data, so your real volume is 4 times what you're seeing in Sentry.)
+Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data](/performance/distributed-tracing/#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 requests to that endpoint each second. (20 because you're collecting 25% - or 1/4 - of your data, so your real volume is 4 times what you're seeing in Sentry.)

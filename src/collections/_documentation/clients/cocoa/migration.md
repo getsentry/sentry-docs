@@ -21,7 +21,7 @@ robots: noindex
     ```ruby
     github "getsentry/sentry-cocoa" "3"
     ```
--   Public API We changed a lot of the public API, please checkout [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%}#advanced) for more examples about that.
+-   Public API We changed a lot of the public API, please checkout [Advanced Usage](/clients/cocoa/advanced/#advanced) for more examples about that.
 
 ## Upgrade from 3.x.x to 4.x.x {#upgrade-from-3-x-x-to-4-x-x}
 

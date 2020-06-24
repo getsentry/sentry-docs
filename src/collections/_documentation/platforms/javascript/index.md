@@ -48,7 +48,7 @@ Sentry.init({ dsn: '___PUBLIC_DSN___' });
 ```
 
 For more configuration options, see:
-- [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
+- [Sentry's complete list of Common Options across SDKs](/error-reporting/configuration/)
 
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
@@ -87,7 +87,7 @@ By default, Sentry for JavaScript captures unhandled promise rejections, as desc
 
 Configuration may be required if you are using a third-party library to implement promises.
 
-Most promise libraries have a global hook for capturing unhandled errors. Disable default behavior by changing the `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into each event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
+Most promise libraries have a global hook for capturing unhandled errors. Disable default behavior by changing the `onunhandledrejection` option to `false` in your [GlobalHandlers](/platforms/javascript/#globalhandlers) integration and manually hook into each event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 ## Releases
 
@@ -122,7 +122,7 @@ $ npm install --save-dev @sentry/webpack-plugin
 $ yarn add --dev @sentry/webpack-plugin
 ```
 
-To allow the plugin to upload source maps automatically, create a `.sentryclirc` or configure environment variables as described in the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}). Then, add the plugin to your `webpack.config.js`:
+To allow the plugin to upload source maps automatically, create a `.sentryclirc` or configure environment variables as described in the [CLI configuration docs](/cli/configuration/). Then, add the plugin to your `webpack.config.js`:
 
 ```javascript
 const SentryWebpackPlugin = require('@sentry/webpack-plugin');
@@ -183,11 +183,11 @@ Source maps can be either:
 2.  Served publicly over HTTP alongside your source files.
 
 #### Uploading Source Maps to Sentry
-Except for [Webpack]({%- link _documentation/platforms/javascript/sourcemaps.md -%}#webpack), the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
+Except for [Webpack](/platforms/javascript/sourcemaps/#webpack), the recommended way to upload source maps is using [Sentry CLI](/cli/). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs](/cli/configuration/) to set up your project.
 
 Now you need to set up your build system to create a release and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
-Sentry uses [**Releases**]({%- link _documentation/workflow/releases/index.md -%}) to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
+Sentry uses [**Releases**](/workflow/releases/) to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
 
 ```sh
 $ sentry-cli releases new <release_name>
@@ -222,7 +222,7 @@ For convenience, you can alternatively pass the `--finalize` flag to the `new` c
 
 You don't _have_ to upload the source files (ref’d by source maps), but without them, the grouping algorithm will not be as strong, and the UI will not show any contextual source.
 
-For more information, see [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
+For more information, see [Releases API documentation](/api/releases/).
 
 {% capture __alert_content -%}
 It’s not uncommon for a web application to be accessible at multiple origins. For example:
@@ -265,7 +265,7 @@ Here are some things you can check in addition to the validation step:
 
 For more information, see:
 
-- [Full Documentation on Source Maps]({%- link _documentation/platforms/javascript/sourcemaps.md -%})
+- [Full Documentation on Source Maps](/platforms/javascript/sourcemaps/)
 - [Debuggable JavaScript in Production with Source Maps](https://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps)
 - [4 Reasons Why Your Source Maps are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
 - [Debug Your Node.js Projects with Source Maps](https://blog.sentry.io/2019/02/20/debug-node-source-maps)
@@ -302,7 +302,7 @@ While making source maps available to Sentry from your servers is the most natur
 For these reasons, it is recommended to upload source maps to Sentry beforehand (see below).
 
 {% capture __alert_content -%}
-While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs see: [IP Ranges]({%- link _documentation/meta/ip-ranges.md -%}).
+While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs see: [IP Ranges](/meta/ip-ranges/).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Working Behind a Firewall"
@@ -520,8 +520,7 @@ Sentry.configureScope(scope => scope.clear())
 ```
 
 For more information, see:
-- [Full documentation on Scopes and Hubs]({%- link
-_documentation/enriching-error-data/scopes.md -%})
+- [Full documentation on Scopes and Hubs](/enriching-error-data/scopes/)
 - [Debug Tough Front End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues).
 
 ## Supported Browsers {#browser-table}
@@ -567,7 +566,7 @@ window.addEventListener('resize', function(event){
 ```
 
 For more information, see:
-- [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
+- [Full documentation on Breadcrumbs](/enriching-error-data/breadcrumbs/)
 - [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
 ### Truncating strings on the event
@@ -665,7 +664,7 @@ Sentry.init({
 ```
 
 For more information, see:
-- [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%})
+- [Full documentation on Filtering Events](/error-reporting/configuration/filtering/)
 - [Tips for Reducing JavaScript Error Noise](https://blog.sentry.io/2017/03/27/tips-for-reducing-javascript-error-noise.html)
 - [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 
@@ -760,7 +759,7 @@ Sentry provides the ability to collect additional feedback from the user upon hi
 [{% asset js-index/sentry-dialog.png alt="Modal popup asking user for more context on what occured before the break." %}]({% asset js-index/sentry-dialog.png @path %})
 
 For more information, see:
-- [Full documentation on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%})
+- [Full documentation on User Feedback](/enriching-error-data/user-feedback/)
 - [Introducing User Feedback](https://blog.sentry.io/2016/04/21/introducing-user-feedback)
 
 ### SDK Integrations

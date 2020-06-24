@@ -74,8 +74,7 @@ export SENTRY_PROPERTIES=../sentry.properties
 ``` 
 
 For bitcode enabled builds via iTunes Connect, additional steps are required.
-Follow the instructions at [With Bitcode]({%- link
-_documentation/clients/cocoa/dsym.md -%}#dsym-with-bitcode) to set up uploads of
+Follow the instructions at [With Bitcode](/clients/cocoa/dsym/#dsym-with-bitcode) to set up uploads of
 symbols for all build variants.
 
 Note that uploading of debug simulator builds by default is disabled for speed reasons. If you do want to also generate debug symbols for debug builds you can pass `--allow-fetch` as a parameter to `react-native-xcode` in the above mentioned build phase.
