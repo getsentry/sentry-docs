@@ -606,6 +606,18 @@ Sentry.init({
 
 There is also `denyUrls` if you want to block specific URLs forever.
 
+{% capture __alert %}
+Prior to version 5.17.0, `allowUrls` and `denyUrls` were called `whitelistUrls` and `blacklistUrls` respectively.
+These options are still supported due to backward compatibility reasons, however, they will be removed in version 6.0.
+For more information, please see our [Inclusive Language Policy](https://develop.sentry.dev/inclusion/).
+{% endcapture %}
+
+{% include components/alert.html
+  title="Note"
+  content=__alert
+  level="warning"
+%}
+
 The community has compiled a list of common ignore rules for everyday things, like Facebook, Chrome extensions, etc. So it’s recommended to at least check these out and see if they apply to you. [Here is the original gist](https://gist.github.com/impressiver/5092952). This is not the default value of our SDK; it's just a highlight of an extensive example of what it could be.
 
 ```javascript
