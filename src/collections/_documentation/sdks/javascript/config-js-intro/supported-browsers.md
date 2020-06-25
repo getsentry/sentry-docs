@@ -2,8 +2,6 @@
 title: Supported Browsers
 excerpt: ""
 ---
-
-# Supported Browserss
 Sentry's JavaScript SDK supports the following browsers:
 
 <table>
@@ -97,13 +95,18 @@ Sentry's JavaScript SDK supports the following browsers:
   </tbody>
 </table>
 
-**Support for <= IE 11**
-Prior to version 5.7.0, our SDK needed some polyfills for older browsers like IE 11 and lower. If you are using it, please upgrade to the latest version or add the script tag below before loading our SDK.
+## Support for <= IE 11
+
+Prior to version 5.7.0, our JavaScript SDK needed some polyfills for older browsers like IE 11 and lower. If you are using it, please upgrade to the latest version or add the script tag below before loading our SDK.
 
 ```bash
 <script src="https://polyfill.io/v3/polyfill.min.js?features=Promise%2CObject.assign%2CString.prototype.includes%2CNumber.isNaN"></script>
 ```
 
-We need `Promise`, `Object.assign`, `Number.isNaN` and `String.prototype.includes` polyfill.
+We need the following polyfill:
+- `Promise`
+- `Object.assign`
+- `Number.isNaN` 
+- `String.prototype.includes`
 
-Additionally, you need to define a valid HTML doctype on top of your HTML page to make sure IE does not go into compatibility mode.
+Additionally, remember to define a valid HTML doctype on top of your HTML page to make sure IE does not go into compatibility mode.

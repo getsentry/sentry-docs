@@ -2,9 +2,7 @@
 title: Lazy Loading Sentry
 excerpt: ""
 ---
-# Lazy Loading Sentry
-
-We recommend using our bundled CDN version for the browser as explained in [installation](sdks/javascript) instructions for our JavaScript SDK. In addition, if you want to use `defer`, you can, though any errors that occur in scripts that execute before the SDK script executes won’t be caught (because the SDK won’t be initialized yet). If you opt to use `defer`, you’ll need to: 
+We recommend using our bundled CDN version for the browser as explained in the [installation](sdks/javascript/index.md) instructions for our JavaScript SDK. In addition, if you want to use `defer`, you can, though any errors that occur in scripts that execute before the SDK script executes won’t be caught (because the SDK won’t be initialized yet). If you opt to use `defer`, you’ll need to: 
 
 1. Place the script tag for the browser SDK first
 2. Mark it, and all of your other scripts, `defer` (but not `async`), which will guarantee that it’s executed before any of the others.
@@ -23,7 +21,7 @@ Go into the Sentry web UI, view *Settings -> Projects -> Client Keys (DSN),* the
 
 [{% asset js-loader-settings.png %}]({% asset js-loader-settings.png @path %})
 
-**What the Loader Provides**
+### What the Loader Provides
 
 The Loader is a small wrapper around our SDK, which does a few things:
 
@@ -32,7 +30,7 @@ The Loader is a small wrapper around our SDK, which does a few things:
 - It lazy injects our SDK into your website.
 - After you’ve loaded the SDK, the Loader will send everything to Sentry.
 
-By default, the Loader contains all information needed for our SDK to function, like the `DSN`. In case you want to set additional [options](/sdks/javascript/config-js-basics.md) you have to set them like this:
+By default, the Loader contains all information needed for our SDK to function, like the `DSN`. In case you want to set additional [options](config-js-basics) you have to set them like this:
 
 `onLoad` is a function that only the Loader provides; Loader will call it once it injects the SDK into the website. The Loader `init()` works a bit differently as well; instead of just setting the options, we merge the options internally, only for convenience, so you don’t have to set the `DSN` again because the Loader already contains it.
 

@@ -1,18 +1,21 @@
 ---
-title: Configuration Options
+title: JavaScript
 excerpt: ""
 ---
 
 {%- capture __config-page_content -%}
 
-- [Source Maps](_platforms/javascript/sourcemaps.md)]
-Learn more about the Sentry JavaScript SDK's automatic fetching of source code and source maps by scraping the URLs within the stack trace
+- **[Source Maps](platforms/javascript/sourcemaps)**
 
-- [Supported Browsers](_sdks/javascript/supported-browsers.md)
-We support a variety of browsers; check out our list on this page.
+    Learn more about the Sentry JavaScript SDK's automatic fetching of source code and source maps by scraping the URLs within the stack trace.
 
-- [Lazy Loading the Sentry SDK](_sdks/javascript/lazy-load-sentry.md)
-We recommend using our bundled CDN version for the browser. However, if you use `defer`, learn more about its effect on capturing errors on this page.
+- **[Supported Browsers](supported-browsers)**
+
+    We support a variety of browsers; check out our list.
+
+- **[Lazy Loading the Sentry SDK](lazy-load-sentry)**
+
+    We recommend using our bundled CDN version for the browser. However, if you use `defer`, learn more about its effect on capturing errors.
 
 {%- endcapture -%}
 
