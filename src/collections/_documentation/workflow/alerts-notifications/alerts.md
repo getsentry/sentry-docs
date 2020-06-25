@@ -17,7 +17,7 @@ Sentry has two types of alerts you can use for errors:
 
 [Metric Alerts](#metric-alerts)
 
-: A metric is the value of an aggregate function like `count()` or `avg()` applied to your event data. Metric alerts can be used on error data to compute the number of events or the number of users affected by events in your project over a period of time. You can filter events by attributes and tags, which can be particularly useful when a set of events is not grouped into a single issue, making issue alerts unsuitable to use.
+: Metric alerts can be used on error data to compute the number of events or the number of users affected by events in your project over a period of time. A metric is the value of an aggregate function like `count()` or `avg()` applied to your event data. You can filter events by attributes and tags, which is particularly useful for aggregating across events that aren't grouped into a single Issue. When this happens, metric alerts are the most useful form of an alert.
 
 ## For Performance Monitoring
 
@@ -51,7 +51,7 @@ Access alerts via the **Alerts** sidebar item.
 
 ### Alert Details
 
-In this page, you can view a single instance of an alert from when the alert is created to when the alert is resolved, or the current time if the alert is still active.
+In this page, you can view a single instance of alert from its creation to its resolution, or the current time if the alert is still active.
 
 [{% asset notifications/alert_details.png alt="Alert details illustrates a graph showing errors." %}]({% asset notifications/alert_details.png @path %})
 
@@ -59,7 +59,7 @@ The "subscribe" button subscribes you to workflow notifications for the alert, i
 
 ## Issue Alerts
 
-Issue alerts apply to errors only, and fire whenever any issue in the project matches the specified criteria, such as a resolved issue re-appearing or an issue affecting many users.
+Issue alerts apply only to errors, and fire whenever any issue in the project matches the specified criteria, such as a resolved issue re-appearing or an issue affecting many users.
 
 ### **Conditions**
 
