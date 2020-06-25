@@ -29,7 +29,7 @@ Rules generally consist of three parts:
 
 ## Methods
 
-- _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely or replace it with an empty string depending on technical constraints.
+- _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely, or replace it with an empty string depending on technical constraints.
 - _Mask_: Replace all characters with `*`.
 - _Hash_: Replace the matched substring with a hashed value.
 - _Replace_: Replace the matched substring with a constant _placeholder_ value (defaulting to `[Filtered]`).
