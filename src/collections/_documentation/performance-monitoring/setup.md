@@ -3,11 +3,7 @@ title: Setup
 sidebar_order: 0
 ---
 
-If you've enjoyed our error monitoring abilities so far, wait till you hear about performance monitoring. You'll wonder why we didn't come up with this sh*t sooner.  
-
-After this quick setup, you'll have access to [Performance](/performance-monitoring/performance/) and [Discover](/performance-monitoring/discover-queries/). Not only will these tools empower you to see everything from macro-level [metrics](/performance-monitoring/performance/metrics/) to micro-level [spans](/performance-monitoring/performance/event-detail/), but you'll be able to cross-reference [transactions with related issues](/performance-monitoring/performance/transaction-summary/), customize [queries](/performance-monitoring/discover-queries/query-builder/) based on your personal needs, and substantially more. 
-
-The world will be your data oyster. 
+After this quick setup, you'll have access to [Performance](/performance-monitoring/performance/) and [Discover](/performance-monitoring/discover-queries/). These tools will empower you to see everything from macro-level [metrics](/performance-monitoring/performance/metrics/) to micro-level [spans](/performance-monitoring/performance/event-detail/), but you'll be able to cross-reference [transactions with related issues](/performance-monitoring/performance/transaction-summary/), customize [queries](/performance-monitoring/discover-queries/query-builder/) based on your personal needs, and substantially more. 
 
 {% capture __alert_content -%}
 Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [performance-feedback@sentry.io](mailto:performance-feedback@sentry.io).
