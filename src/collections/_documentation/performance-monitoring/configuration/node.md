@@ -1,6 +1,6 @@
-### Node.js
+To access our tracing features, you will need to install our Tracing integration.
 
-To access our tracing features, you will need to install our Tracing integration:
+## Node
 
 ```bash
 $ npm install @sentry/node
@@ -23,9 +23,9 @@ Sentry.init({
 });
 ```
 
-#### Automatic Instrumentation
+### Automatic Instrumentation
 
-It’s possible to add tracing to all popular frameworks; however, we provide pre-written handlers only for Express.
+It’s possible to add tracing to all popular frameworks; however, we only provide pre-written handlers for Express.
 
 ```javascript
 const Sentry = require("@sentry/node");
@@ -62,9 +62,9 @@ Spans are instrumented for the following operations within a transaction:
 - `get` calls using native `http` and `https` modules
 - Middleware (Express.js only)
 
-#### Manual Transactions
+### Manual Instrumentation
 
-To manually instrument a certain region of your code, you can create a transaction to capture it.
+To manually instrument a specific region of your code, you can create a transaction to capture it.
 
 The following example creates a transaction for a part of the code that contains an expensive operation (for example, `processItem`), and sends the result to Sentry:
 
