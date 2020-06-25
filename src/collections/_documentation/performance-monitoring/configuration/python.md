@@ -17,7 +17,7 @@ Performance data is transmitted using a new event type called "transactions," wh
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
 
-## Python
+**Python**
 
 To send traces, set the `traces_sample_rate` to a nonzero value. The following configuration will capture 25% of your transactions:
 
@@ -30,7 +30,7 @@ sentry_sdk.init(
 )
 ```
 
-### Automatic Instrumentation
+**Automatic Instrumentation**
 
 Many integrations for popular frameworks automatically capture transactions. If you already have any of the following frameworks set up for Sentry error reporting, you will start to see traces immediately:
 
@@ -57,7 +57,7 @@ sentry_sdk.init(
 )
 ```
 
-### Manual Instrumentation
+**Manual Instrumentation**
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
 
@@ -74,7 +74,7 @@ while True:
       process_item(item)
 ```
 
-#### Adding More Spans to the Transaction
+**Adding More Spans to the Transaction**
 
 The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add all newly created spans as child operations to that transaction. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction.
 
