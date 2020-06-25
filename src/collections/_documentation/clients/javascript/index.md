@@ -7,7 +7,7 @@ robots: noindex
 Raven.js is the official browser JavaScript client for Sentry. It automatically reports uncaught JavaScript exceptions triggered from a browser environment, and provides a rich API for reporting your own errors.
 
 {% capture __alert_content -%}
-If you’re using Node.js on the server, you’ll need [raven-node]({%- link _documentation/clients/node/index.md -%}).{%- endcapture -%}
+If you’re using Node.js on the server, you’ll need [raven-node](/clients/node/).{%- endcapture -%}
 {%- include components/alert.html
     title="Node.js"
     content=__alert_content
@@ -23,11 +23,11 @@ The easiest way to load Raven.js is to load it directly from our CDN. This scrip
 <script src="https://cdn.ravenjs.com/3.26.4/raven.min.js" crossorigin="anonymous"></script>
 ```
 
-For installation using npm or other package managers, see [_Installation_]({%- link _documentation/clients/javascript/install.md -%}).
+For installation using npm or other package managers, see [_Installation_](/clients/javascript/install/).
 
 ## Configuring the Client
 
-Next you need to configure Raven.js to use your [Sentry DSN]({%- link _documentation/error-reporting/quickstart.md -%}#configure-the-dsn):
+Next you need to configure Raven.js to use your [Sentry DSN](/error-reporting/quickstart/#configure-the-dsn):
 
 ```javascript
 Raven.config('___PUBLIC_DSN___').install()
@@ -43,7 +43,7 @@ Raven.context(function () {
 
 At this point, Raven is ready to capture any uncaught exception.
 
-Once you have Raven up and running, it is highly recommended to check out [_Configuration_]({%- link _documentation/clients/javascript/config.md -%}) and [_Usage_]({%- link _documentation/clients/javascript/usage.md -%}).
+Once you have Raven up and running, it is highly recommended to check out [_Configuration_](/clients/javascript/config/) and [_Usage_](/clients/javascript/usage/).
 
 ## Manually Reporting Errors
 
@@ -59,7 +59,7 @@ try {
 }
 ```
 
-There are more ways to report errors. For a complete guide on this see [Reporting Errors Correctly]({%- link _documentation/clients/javascript/usage.md -%}#raven-js-reporting-errors).
+There are more ways to report errors. For a complete guide on this see [Reporting Errors Correctly](/clients/javascript/usage/#raven-js-reporting-errors).
 <!-- ENDWIZARD -->
 
 ## Adding Context
@@ -75,7 +75,7 @@ Raven.setUserContext({
 
 If at any point, the user becomes unauthenticated, you can call `Raven.setUserContext()` with no arguments to remove their data.
 
-Other similar methods are `Raven.setExtraContext` and `Raven.setTagsContext` as well as `Raven.context`. See [Passing Additional Data]({%- link _documentation/clients/javascript/usage.md -%}#raven-js-additional-context) for more info.
+Other similar methods are `Raven.setExtraContext` and `Raven.setTagsContext` as well as `Raven.context`. See [Passing Additional Data](/clients/javascript/usage/#raven-js-additional-context) for more info.
 
 ## Breadcrumbs
 
@@ -89,11 +89,11 @@ By default, Raven.js instruments browser built-ins and DOM events to automatical
 > -   console log statements
 > -   previous errors
 
-You can also record your own breadcrumbs. For more information, see [Recording Breadcrumbs]({%- link _documentation/clients/javascript/usage.md -%}#raven-js-recording-breadcrumbs).
+You can also record your own breadcrumbs. For more information, see [Recording Breadcrumbs](/clients/javascript/usage/#raven-js-recording-breadcrumbs).
 
 ## Dealing with Minified Source Code
 
-Raven and Sentry support [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you provide source maps in addition to your minified files that data becomes available in Sentry. For more information see [Source Maps]({%- link _documentation/clients/javascript/sourcemaps.md -%}#raven-js-sourcemaps).
+Raven and Sentry support [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you provide source maps in addition to your minified files that data becomes available in Sentry. For more information see [Source Maps](/clients/javascript/sourcemaps/#raven-js-sourcemaps).
 
 ## Browser Compatibility
 
@@ -124,18 +124,18 @@ For unlisted browsers (e.g. IE7), Raven.js is designed to fail gracefully. Inclu
 
 For more detailed information about how to get most out of Raven.js there is additional documentation available that covers all the rest:
 
--   [Installation]({%- link _documentation/clients/javascript/install.md -%})
--   [Configuration]({%- link _documentation/clients/javascript/config.md -%})
--   [Usage]({%- link _documentation/clients/javascript/usage.md -%})
--   [Integrations]({%- link _documentation/clients/javascript/integrations.md -%})
-    -   [AngularJS]({%- link _documentation/clients/javascript/integrations.md -%}#angularjs)
-    -   [Angular]({%- link _documentation/clients/javascript/integrations.md -%}#angular)
-    -   [Backbone]({%- link _documentation/clients/javascript/integrations.md -%}#backbone)
-    -   [Ember]({%- link _documentation/clients/javascript/integrations.md -%}#ember)
-    -   [React]({%- link _documentation/clients/javascript/integrations.md -%}#react)
-    -   [Vue.js (2.0)]({%- link _documentation/clients/javascript/integrations.md -%}#vue)
--   [Source Maps]({%- link _documentation/clients/javascript/sourcemaps.md -%})
--   [Tips and Tricks]({%- link _documentation/clients/javascript/tips.md -%})
+-   [Installation](/clients/javascript/install/)
+-   [Configuration](/clients/javascript/config/)
+-   [Usage](/clients/javascript/usage/)
+-   [Integrations](/clients/javascript/integrations/)
+    -   [AngularJS](/clients/javascript/integrations/#angularjs)
+    -   [Angular](/clients/javascript/integrations/#angular)
+    -   [Backbone](/clients/javascript/integrations/#backbone)
+    -   [Ember](/clients/javascript/integrations/#ember)
+    -   [React](/clients/javascript/integrations/#react)
+    -   [Vue.js (2.0)](/clients/javascript/integrations/#vue)
+-   [Source Maps](/clients/javascript/sourcemaps/)
+-   [Tips and Tricks](/clients/javascript/tips/)
 
 Resources:
 

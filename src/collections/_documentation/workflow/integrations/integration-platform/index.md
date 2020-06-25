@@ -13,7 +13,7 @@ In Sentry, navigate to Organization Settings > Developer Settings. From here, yo
 
 ### Permissions
 
-Permissions specify what level of access your service requires of Sentry resources. For public integrations, Sentry will prompt users to approve of these permissions upon installation. For more information, see the [full documentation on Permissions]({%- link _documentation/api/permissions.md -%}).
+Permissions specify what level of access your service requires of Sentry resources. For public integrations, Sentry will prompt users to approve of these permissions upon installation. For more information, see the [full documentation on Permissions](/api/permissions/).
 
 [{% asset integration-platform-index/permissions.png alt="Form that allows developer to set what permissions they'll need from their user." %}]({% asset integration-platform-index/permissions.png @path %})
 
@@ -21,10 +21,10 @@ You cannot create an integration or change an existing integration to have permi
 
 ### Using Auth Tokens
 
-Auth Tokens are passed using an auth header, and are used to authenticate as a user account with the API. The [Public Integration](#public-integrations) requires an OAuth flow for tokens. The [Internal Integration](#internal-integrations) automatically generates tokens after installation. For more information, see the [full documentation on Authentication]({%- link _documentation/api/auth.md -%}).
+Auth Tokens are passed using an auth header, and are used to authenticate as a user account with the API. The [Public Integration](#public-integrations) requires an OAuth flow for tokens. The [Internal Integration](#internal-integrations) automatically generates tokens after installation. For more information, see the [full documentation on Authentication](/api/auth/).
 
 ### Integration Webhooks
-Webhooks allow your service to get requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
+Webhooks allow your service to get requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks](/workflow/integrations/integration-platform/webhooks/).
 
 ## Public Integrations
 
@@ -127,7 +127,7 @@ The data you can expect back for both the initial grant code exchange and subseq
 
 **How to use for requests**
 
-When making requests to the Sentry API, you use the token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration. 
+When making requests to the Sentry API, you use the token just like you would when you're typically making [API requests](/api/auth/). Tokens are associated with the installation, meaning they have access to the Sentry organization that installed your integration. 
 
 **Expiration**
 
@@ -224,15 +224,15 @@ Continuing from our example, here we're implementing the Webhook URL endpoint, /
         return resp.json()
 ```
 
-For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
+For more information, see the [full documentation on Webhooks](/workflow/integrations/integration-platform/webhooks/).
 
 ### Alerts
 
-There is an option called Alert Rule Action for the integration platform. What this means is that, when enabled, your integration will show up as a service in the action section when creating a new alert rule. For more information, see the [full documentation on Alert Rules]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}).
+There is an option called Alert Rule Action for the integration platform. What this means is that, when enabled, your integration will show up as a service in the action section when creating a new alert rule. For more information, see the [full documentation on Alert Rules](/workflow/alerts-notifications/alerts/).
 
 [{% asset integration-platform-index/alert-rules.png alt="Dropdown menu of options for alert rules." %}]({% asset integration-platform-index/alert-rules.png @path %})
 
-For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via &lt;your service&gt;` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
+For your service to receive webhooks for alert rules, users must add to existing rules or create new ones that have `Send a notification via &lt;your service&gt;` as an action in the rule. Once that's set up, you'll start receiving webhook requests for triggered alerts. For more information about the request and payload, see the [full documentation on Webhooks](/workflow/integrations/integration-platform/webhooks/).
 
 ### Published State
 
@@ -264,7 +264,7 @@ You can have up to 20 tokens at a time for any given internal integration.
 
 **How to use for requests**
 
-When making requests to the Sentry API, you use the token just like you would when you're typically making [API requests]({%- link _documentation/api/auth.md -%}). Tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed). 
+When making requests to the Sentry API, you use the token just like you would when you're typically making [API requests](/api/auth/). Tokens are associated with the Sentry organization that created the integration (and therefore was automatically installed). 
 
 **Expiration**
 
@@ -274,11 +274,11 @@ Tokens never expire, but you can manually revoke them.
 
 ### Webhooks and Alerts
 
-Alerts are the same as public integrations -- see [Alerts](#alerts) for general information and see [Webhook Alerts]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}#webhook-alerts) for more detail on the request and payload. 
+Alerts are the same as public integrations -- see [Alerts](#alerts) for general information and see [Webhook Alerts](/workflow/integrations/integration-platform/webhooks/#webhook-alerts) for more detail on the request and payload. 
 
 ### Integration Webhooks
 
-Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
+Since internal integrations are automatically installed (and uninstallation is essentially deleting the whole integration), there are no [un]installation webhooks. For more information, see the [full documentation on Webhooks](/workflow/integrations/integration-platform/webhooks/).
 
 ## UI Components
 
@@ -295,10 +295,10 @@ Through a JSON-Schema based system, you can have Sentry render a way for Users t
 }
 ```
 
-For more information, see the [full documentation on UI Components]({%- link _documentation/workflow/integrations/integration-platform/ui-components.md -%}).
+For more information, see the [full documentation on UI Components](/workflow/integrations/integration-platform/ui-components/).
 
 ## Webhooks
-Webhooks allows your service to receive requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks]({%- link _documentation/workflow/integrations/integration-platform/webhooks.md -%}).
+Webhooks allows your service to receive requests about specific resources, depending on your selection. For more information, see the [full documentation on Webhooks](/workflow/integrations/integration-platform/webhooks/).
 
 ## Authorized Origins
 It is possible to use Auth Tokens from the browser if you whitelist the origins of the pages making the requests. In the field that is called `Authorized JavaScript Origins`, add each origin you want to be separated by a newline (for example, docs.sentry.io). You do not need the protocol in the origin (http or https). At this moment, you cannot use any wildcard characters (for example, `*.sentry.io`), so if you have multiple subdomains, you will need to add them individually.

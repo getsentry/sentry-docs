@@ -1,1 +1,1 @@
--  [_integrating with the Go ecosystem_]({% link _documentation/platforms/go/index.md %})
+-  [_integrating with the Go ecosystem_](/platforms/go/)

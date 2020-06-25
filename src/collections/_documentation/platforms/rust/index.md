@@ -9,8 +9,7 @@ protocol for Rust and provides convenient helpers for sending common types of
 events to Sentry.
 
 The Rust SDK follows the new unified SDK architecture.  To get started have a
-look at the [quickstart]({% link _documentation/error-reporting/quickstart.md
-%}?platform=rust) docs and the crates [API Docs](https://docs.rs/sentry).
+look at the [quickstart](/error-reporting/quickstart/?platform=rust) docs and the crates [API Docs](https://docs.rs/sentry).
 
 ## Quick Start
 
@@ -29,7 +28,7 @@ A list of integrations and their feature flags can be found
 
 Apart from those, the Rust SDK also supports the following application frameworks:
 
-* [actix-web 0.7]({% link _documentation/platforms/rust/actix.md %})
+* [actix-web 0.7](/platforms/rust/actix/)
 
 ## More Information
 

@@ -20,7 +20,7 @@ The SDK allows you to set various types of data that will then be attached to ev
     - `Release` and `Environment` - are predefined data fields available as SDK configuration options.
     - `User Context` - comprised of a set of predefined data fields. Setting any one of those (when applicable), allows Sentry to construct a user identity and define user uniqueness.
 
-For detailed information, see [Enriching Error Data]({%- link _documentation/enriching-error-data/additional-data.md -%})
+For detailed information, see [Enriching Error Data](/enriching-error-data/additional-data/)
 
 ## Utilizing your Data
 
@@ -43,7 +43,7 @@ These can all come in handy in both issue and metric alerts, for instance:
 
     ![Additional Data for Metric Alerts]({% asset guides/enrich-data/006.png @path %})
 
-For more information, see [Alerts]({%- link _documentation/workflow/alerts-notifications/index.md -%}#alerts).
+For more information, see [Alerts](/workflow/alerts-notifications/#alerts).
 
 ### Filter, Search & Order Issues
 
@@ -55,7 +55,7 @@ In your Issue stream:
 
 ![Issues View]({% asset guides/enrich-data/003.png @path %})
 
-For more information, see [Search]({%- link _documentation/workflow/search.md -%}).
+For more information, see [Search](/workflow/search/).
 
 ### Discover
 
@@ -65,7 +65,7 @@ For instance, the Discover query below displays all the errors (total of 143 eve
 
 ![Discover Query]({% asset guides/enrich-data/004.png @path %})
 
-For more information, see [Discover]({%- link _documentation/performance/discover/index.md -%}).
+For more information, see [Discover](/performance/discover/).
 
 ### Issue Ownership
 
@@ -75,17 +75,17 @@ This means that by adding meaningful **custom tags** to your errors, you'll be a
 
 ![Issue Owner Tag Rule]({% asset guides/enrich-data/005.png @path %})
 
-For more information, see [Issue Owners]({%- link _documentation/workflow/issue-owners.md -%}).
+For more information, see [Issue Owners](/workflow/issue-owners/).
 
 ### Release Workflows
 
 Configuring the release version ID on the SDK will associate every error that happens in your application runtime with a specific release version of your code. This way you know exactly when an error was introduced into your source code. It also unlocks these powerful features and workflows:  
 
-1. **Suspect Commits & Suggested Assignee** - With a release in place, Sentry can suggest suspect commits that might have an introduced the error to your code and through that commit also suggest the author as an assignee. For more information, see [Commit Tracking]({%- link _documentation/workflow/integrations/global-integrations.md -%}#commit-tracking-3).
-2. **Resolve with Release** - When you mark an Issue as resolved in a specific release, new events of that issue occurring in previous releases will be ignored and will not trigger any notifications. For more information, see [Resolve in Commit]({%- link _documentation/workflow/integrations/global-integrations.md -%}#resolve-in-commit).
+1. **Suspect Commits & Suggested Assignee** - With a release in place, Sentry can suggest suspect commits that might have an introduced the error to your code and through that commit also suggest the author as an assignee. For more information, see [Commit Tracking](/workflow/integrations/global-integrations/#commit-tracking-3).
+2. **Resolve with Release** - When you mark an Issue as resolved in a specific release, new events of that issue occurring in previous releases will be ignored and will not trigger any notifications. For more information, see [Resolve in Commit](/workflow/integrations/global-integrations/#resolve-in-commit).
 3. **Regression Notifications** - In case you marked an issue as resolved in a release and new events are still occurring in that same release or any future releases, Sentry will consider that a regression and will notify you.
-4. **Release Health** (Currently available on the Android and iOS SDKs) - Sentry can monitor the health of your releases by observing various metrics like user adoption, session duration, crash-free users and sessions, and others. For more information, see [Health]({%- link _documentation/workflow/releases/health.md -%}).
+4. **Release Health** (Currently available on the Android and iOS SDKs) - Sentry can monitor the health of your releases by observing various metrics like user adoption, session duration, crash-free users and sessions, and others. For more information, see [Health](/workflow/releases/health/).
 
 ![Release]({% asset guides/enrich-data/001.png @path %})
 
-For more information, see [Releases]({%- link _documentation/workflow/releases/index.md -%}).
+For more information, see [Releases](/workflow/releases/).

@@ -22,7 +22,7 @@ def my_function(event, context):
 ```
 
 {% capture __alert_content -%}
-If you are using another web framework inside of AWS Lambda, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [*Integrations*]({% link _documentation/platforms/python/index.md %}#integrations) for more information.
+If you are using another web framework inside of AWS Lambda, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [*Integrations*](/platforms/python/#integrations) for more information.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -41,4 +41,4 @@ With the AWS Lambda integration enabled, the Python SDK will:
 
 * {% include platforms/python/request-data.md %}
 
-* Generally the behavior is quite similar to the [generic serverless integration]({% link _documentation/platforms/python/serverless.md %}).
+* Generally the behavior is quite similar to the [generic serverless integration](/platforms/python/serverless/).

@@ -3,11 +3,11 @@ title: Permissions
 sidebar_order: 3
 ---
 
-If you're building on top of Sentry's API (i.e using [Auth Tokens]({%- link _documentation/api/auth.md -%})), you'll need certain scopes to access
+If you're building on top of Sentry's API (i.e using [Auth Tokens](/api/auth/)), you'll need certain scopes to access
 different API endpoints.
 
 If you're looking for information on membership roles please visit the
-[membership]({%- link _documentation/accounts/membership.md -%}) documentation.
+[membership](/accounts/membership/) documentation.
 
 ### Organizations
 
@@ -24,7 +24,7 @@ If you're looking for information on membership roles please visit the
 {% capture markdown_content %}
 The `project:releases` scope will give you access to both **project**
 and **organization** release endpoints. The available endpoints are listed in the
-[Releases]({%- link _documentation/api/releases/index.md -%}) section of the API Documentation.
+[Releases](/api/releases/) section of the API Documentation.
 {% endcapture %}
 {% include components/alert.html
   title="Note"
@@ -65,7 +65,7 @@ Events in sentry are immutable and can only be deleted by deleting the whole iss
 | **GET/PUT/POST/DELETE**  | `project:releases` |
 
 {% capture markdown_content %}
-Be aware that if you're using `sentry-cli` to [manage your releases]({%- link _documentation/cli/releases.md -%}), you'll need a token which also has `org:read` scope.
+Be aware that if you're using `sentry-cli` to [manage your releases](/cli/releases/), you'll need a token which also has `org:read` scope.
 {% endcapture %}
 {% include components/alert.html
   title="Note"

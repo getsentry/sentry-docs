@@ -54,7 +54,7 @@ To initialize the SDK manually:
 
 Please note that the new SDK will send with each event a release version in a different format than the previous SDK.
 
-If you are using the [GitHub]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github) or [GitLab]({%- link _documentation/workflow/integrations/global-integrations.md -%}#gitlab) integrations, you need to do one of the following:
+If you are using the [GitHub](/workflow/integrations/global-integrations/#github) or [GitLab](/workflow/integrations/global-integrations/#gitlab) integrations, you need to do one of the following:
 
 - Use the new format LINK: ([https://docs.sentry.io/platforms/android/#releases](https://docs.sentry.io/platforms/android/#releases))
 - Set the release in your `AndroidManifest.xml`

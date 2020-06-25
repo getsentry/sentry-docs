@@ -6,13 +6,11 @@ sidebar_order: 3
 Debug information files allow Sentry to extract stack traces and provide more
 information about crash reports for most compiled platforms. `sentry-cli` can be
 used to validate and upload debug information files. For more general
-information, refer to [_Debug Information Files_]({%- link
-_documentation/workflow/debug-files.md -%}).
+information, refer to [_Debug Information Files_](/workflow/debug-files/).
 
 {% capture __alert_content -%}
 Source maps, while also being debug information files, are handled differently
-in Sentry. For more information see [Source Maps in sentry-cli]({%- link
-_documentation/cli/releases.md -%}#sentry-cli-sourcemaps).
+in Sentry. For more information see [Source Maps in sentry-cli](/cli/releases/#sentry-cli-sourcemaps).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -86,14 +84,13 @@ Files that have already been upload are skipped automatically.
 
 We recommend uploading debug information files when publishing or releasing your
 application. Alternatively, files can be uploaded during the build process. See
-[_Debug Information Files_]({%- link _documentation/workflow/debug-files.md -%})
+[_Debug Information Files_](/workflow/debug-files/)
 for more information.
 
 {% capture __alert_content -%}
 You need to specify the organization and project you are working with because
 debug information files work on projects. For more information about this refer
-to [Working with Projects]({%- link _documentation/cli/configuration.md
--%}#sentry-cli-working-with-projects).
+to [Working with Projects](/cli/configuration/#sentry-cli-working-with-projects).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -247,8 +244,7 @@ when you only release some of the builds you are creating).
 {% capture __alert_content -%}
 You need to specify the organization and project you are working with because
 ProGuard files work on projects. For more information about this refer to
-[Working with Projects]({%- link _documentation/cli/configuration.md
--%}#sentry-cli-working-with-projects).
+[Working with Projects](/cli/configuration/#sentry-cli-working-with-projects).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"

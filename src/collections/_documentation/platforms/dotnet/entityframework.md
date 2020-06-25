@@ -5,7 +5,7 @@ sidebar_order: 8
 
 Sentry has an integration with `EntityFramework` through the of the [Sentry.EntityFramework NuGet package](https://www.nuget.org/packages/Sentry.EntityFramework).
 
-> Looking for `EntityFramework Core`? That integration is achieved through the [Sentry.Extensions.Logging]({%- link _documentation/platforms/dotnet/microsoft-extensions-logging.md -%}) package.
+> Looking for `EntityFramework Core`? That integration is achieved through the [Sentry.Extensions.Logging](/platforms/dotnet/microsoft-extensions-logging/) package.
 
 
 ## Installation
@@ -29,7 +29,7 @@ This package extends `Sentry` main SDK. That means that besides the EF features,
 * Queries as breadcrumbs
 * Validation errors
 
-All queries executed are added as breadcrumbs and are sent with any event which happens on the same [scope]({% link _documentation/enriching-error-data/scopes.md %}). Besides that, validation errors are also included as `Extra`.
+All queries executed are added as breadcrumbs and are sent with any event which happens on the same [scope](/enriching-error-data/scopes/). Besides that, validation errors are also included as `Extra`.
 
 
 ## Configuration

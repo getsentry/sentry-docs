@@ -9,4 +9,4 @@ def before_breadcrumb(crumb, hint):
 sentry_sdk.init(before_breadcrumb=before_breadcrumb)
 ```
 
-For information about which hints are available see [hints in Python]({% link _documentation/platforms/python/index.md %}#hints).
+For information about which hints are available see [hints in Python](/platforms/python/#hints).

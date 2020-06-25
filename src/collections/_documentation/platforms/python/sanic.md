@@ -7,9 +7,16 @@ sidebar_order: 9
 
 <!-- WIZARD -->
 The Sanic integration adds support for the [Sanic Web
-Framework](https://github.com/huge-success/sanic). We support all LTS versions
-of Sanic starting from `0.8`. Additionally, a Python version of 3.6 or greater
-is required.
+Framework](https://github.com/huge-success/sanic). We support the following versions:
+
+* `0.8`
+* `18.12`
+* `19.12`
+* Any version of the form `x.12` (LTS versions).
+
+**We do not support the latest version of Sanic.** Versions between LTS releases [have introduced breaking changes in the past](https://github.com/huge-success/sanic/issues/1532) without prior notice, so we cannot support them as they are too fast of a moving target.
+
+A Python version of 3.6 or greater is also required.
 
 1. Install `sentry-sdk` from PyPI:
 
@@ -50,5 +57,5 @@ is required.
 * {% include platforms/python/request-data.md %}
 
 * Logging with any logger will create breadcrumbs when
-  the [Logging]({% link _documentation/platforms/python/logging.md %})
+  the [Logging](/platforms/python/logging/)
   integration is enabled (done by default).

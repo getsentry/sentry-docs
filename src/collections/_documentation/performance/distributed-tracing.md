@@ -188,7 +188,7 @@ Transactions share most of their properties (start and end time, tags, and so fo
 
 Transactions also have one additional property not included in spans, called `transaction_name`, which is used in the UI to identify the transaction. Common examples of `transaction_name` values include endpoint paths (like `/store/checkout/` or `api/v2/users/&lt;user_id&gt;/`) for backend request transactions, task names (like `data.cleanup.delete_inactive_users`) for cron job transactions, and URLs (like `https://docs.sentry.io/performance/distributed-tracing/`) for page-load transactions.
 
-_Note:_ Before the transaction is sent, the `tags` and `data` properties will get merged with data from the global scope. (Global scope data is set either in `Sentry.init()` - for things like `environment` and `release` - or by using `Sentry.configureScope()`, `Sentry.setTag()`, `Sentry.setUser()`, and `Sentry.setExtra()`. See the [Additional Data]({%- link _documentation/enriching-error-data/additional-data.md -%}) docs for more information.)
+_Note:_ Before the transaction is sent, the `tags` and `data` properties will get merged with data from the global scope. (Global scope data is set either in `Sentry.init()` - for things like `environment` and `release` - or by using `Sentry.configureScope()`, `Sentry.setTag()`, `Sentry.setUser()`, and `Sentry.setExtra()`. See the [Additional Data](/enriching-error-data/additional-data/) docs for more information.)
 
 #### Spans
 
@@ -241,7 +241,7 @@ Individual spans aren't sent to Sentry; rather, the entire transaction is sent a
 
 When you enable sampling in your tracing setup, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of `0.25` would result in approximately 250 transactions (25%) being sent to Sentry each minute. (The number is approximate because each request is either tracked or not, independently and pseudorandomly, with a 25% probability. So in the same way that 100 fair coins, when flipped, result in approximately 50 heads, the SDK will "decide" to collect a trace in approximately 250 cases.) Because you know the sampling percentage, you can then extrapolate your total traffic volume.
 
-When collecting traces, we **strongly recommend** sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you'll more easily prevent yourself from exceeding your organization's [event quota]({%- link _documentation/accounts/quotas/index.md -%}), which will help you manage costs.
+When collecting traces, we **strongly recommend** sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you'll more easily prevent yourself from exceeding your organization's [event quota](/accounts/quotas/), which will help you manage costs.
 
 When choosing a sampling rate, the goal is to not collect _too_ much data (given the reasons above) but also to collect enough data that you are able to draw meaningful conclusions. If you're not sure what rate to choose, we recommend starting with a low value and gradually increasing it as you learn more about your traffic patterns and volume, until you've found a rate which lets you balance performance and cost concerns with data accuracy.
 
@@ -261,17 +261,17 @@ If you enable tracing in services with multiple entry points, we recommend choos
 
 ## Viewing Trace Data
 
-You can see a list of transaction events by clicking on the "Transactions" pre-built query in [Discover]({%- link _documentation/performance/discover/index.md -%}), or by using a search condition `event.type:transaction` in the [Discover Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}) view.
+You can see a list of transaction events by clicking on the "Transactions" pre-built query in [Discover](/performance/discover/), or by using a search condition `event.type:transaction` in the [Discover Query Builder](/performance/discover/query-builder/) view.
 
 ### Transaction List View
 
 The results of either of the above queries are presented in a list view, where each entry represents a group of one or more transactions. Data about each group is displayed in table form, and comes in two flavors: value-based (such as transaction name), and aggregate (such as average duration). The choice of which kinds of data to display is configurable, and can be changed by clicking 'Edit Columns' at the top right of the table. Bear in mind that adding or removing any value-based columns may affect the way the results are grouped.
 
-This view also includes a timeseries graph, aggregating all results of the query, as well as a summary of the most common tags associated with those results (either via your Sentry instance's [global context]({%- link _documentation/enriching-error-data/additional-data.md -%}) or via each transaction's root span). From this view, you can also filter the transactions list, either by restricting the time window or by adding attributes to the query (or both!).
+This view also includes a timeseries graph, aggregating all results of the query, as well as a summary of the most common tags associated with those results (either via your Sentry instance's [global context](/enriching-error-data/additional-data/) or via each transaction's root span). From this view, you can also filter the transactions list, either by restricting the time window or by adding attributes to the query (or both!).
 
 _Note:_ Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore cannot be searched.
 
-For more details about the transaction list view, see the full documentation on [Discover's Query Builder]({%- link _documentation/performance/discover/query-builder.md -%}), and for more about transaction metrics, see [Performance Metrics]({%- link _documentation/performance/performance-metrics.md -%}#transaction-metrics).
+For more details about the transaction list view, see the full documentation on [Discover's Query Builder](/performance/discover/query-builder/), and for more about transaction metrics, see [Performance Metrics](/performance/performance-metrics/#transaction-metrics).
 
 ### Transaction Detail View
 
@@ -465,6 +465,33 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 
 *NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your set up. If you do not whitelist the `sentry-trace` header, the request might be blocked.
 
+*beforeNavigation Option*
+
+{% version_added 5.18.0 %}
+
+For `pageload` and `navigation` transactions, the `Tracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigation` option to the `Tracing` integration. This option allows you to pass in a function that takes in the location at the time of navigation and returns a new transaction name.
+
+`beforeNavigation` is useful if you would like to leverage the routes from a custom routing library like `React Router` or if you want to reduce the cardinality of particular transactions.
+
+```javascript
+import * as Sentry from '@sentry/browser';
+import { Integrations as ApmIntegrations } from '@sentry/apm';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    new ApmIntegrations.Tracing({
+      beforeNavigate: (location) => {        
+        // The normalizeTransactionName function uses the given URL to
+        // generate a new transaction name.
+        return normalizeTransactionName(location.href);
+      },
+    }),
+  ],
+  tracesSampleRate: 0.25,
+});
+```
+
 #### Manual Instrumentation
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
@@ -614,4 +641,123 @@ app.use(function processItems(req, res, next) {
       next();
   })
 });
+```
+
+### Vue.js
+
+The Vue Tracing Integration allows you to track rendering performance during an initial application load.
+
+Sentry injects a handler inside Vue's `beforeCreate` mixin, providing access to a Vue component during its life cycle stages.
+When Sentry encounters a component named `root`, which is a top-level Vue instance (as in `new Vue({})`), we use our AM Tracing integration,
+and create a new activity named `Vue Application Render`. Once the activity has been created, it will wait until all of its child components render, and there aren't new rendering events triggered within the configured `timeout`, before marking the activity as completed.
+
+The described instrumentation functionality will give you very high-level information about the rendering performance of the Vue instance. However, the integration can also provide more fine-grained details about what actually happened during a specific activity.
+To do that, you need to specify which components to track and what hooks to listen to (you can find a list of all available hooks [here](https://vuejs.org/v2/api/#Options-Lifecycle-Hooks)). You can also turn on tracking for all the components. However, it may be rather noisy if your app consists of hundreds of components. We encourage being more specific. If you don't provide hooks, Sentry will track a component's `mount` and `update` hooks.
+
+Note that we don't use `before` and `-ed` pairs for hooks, and you should provide a simple verb instead. For example, `update` is correct. `beforeUpdate` and `updated` are incorrect.
+
+To set up the Vue Tracing Integration, you will first need to configure the AM Tracing integration itself. For details on how to do this, see the [JavaScript](/performance/distributed-tracing/#javascript) section above.
+Once you've configured the Tracing integration, move on to configuring the Vue integration itself.
+Sentry built the new tracing capabilities into the original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
+
+The most basic configuration for tracing your Vue app, which would track only the top-level component, looks like this:
+
+```js
+import * as Sentry from "@sentry/browser";
+import { Vue as VueIntegration } from "@sentry/integrations";
+import { Integrations } from "@sentry/apm";
+import Vue from "vue";
+
+Sentry.init({
+  // ...
+  integrations: [
+    new Integrations.Tracing(),
+    new VueIntegration({
+      Vue,
+      tracing: true
+    })
+  ],
+  tracesSampleRate: 1
+});
+```
+
+If you want to track child components, and see more details about the rendering process, configure the integration to track them all:
+
+```js
+new VueIntegration({
+  Vue,
+  tracing: true,
+  tracingOptions: {
+    trackComponents: true
+  }
+})
+```
+
+Or, you can choose more granularity:
+
+```js
+new VueIntegration({
+  Vue,
+  tracing: true,
+  tracingOptions: {
+    trackComponents: ["App", "RwvHeader", "RwvFooter", "RwvArticleList", "Pagination"]
+  }
+})
+```
+
+If you want to know if some components are, for example, removed during the initial page load, add a `destroy` hook to the default:
+
+```js
+new VueIntegration({
+  Vue,
+  tracing: true,
+  tracingOptions: {
+    trackComponents: ["App", "RwvHeader", "RwvFooter", "RwvArticleList", "Pagination"],
+    hooks: ['mount', 'update', 'destroy']
+  }
+})
+```
+
+You can specify how long a top-level activity should wait for the last component to render.
+Every new rendering cycle is debouncing the timeout, and it starts counting from the beginning. Once the timeout is reached, tracking is completed, and all the information is sent to Sentry.
+
+```js
+new VueIntegration({
+  Vue,
+  tracing: true,
+  tracingOptions: {
+    trackComponents: true,
+    timeout: 4000
+  }
+})
+```
+
+#### Configuration
+
+```js
+/**
+ * When set to `true`, enables tracking of components lifecycle performance.
+ * Default: false
+ */
+tracing: boolean;
+tracingOptions: {
+  /**
+   * Decides whether to track components by hooking into its lifecycle methods.
+   * Can be either set to `boolean` to enable/disable tracking for all of them.
+   * Or to an array of specific component names (case-sensitive).
+   * Default: false
+   */
+  trackComponents: boolean | string[];
+  /**
+   * How long to wait (in ms) until the tracked root activity is marked as finished and sent to Sentry
+   * Default: 2000
+   */
+  timeout: number;
+  /**
+   * List of hooks to keep track of during component lifecycle.
+   * Available hooks: 'activate' | 'create' | 'destroy' | 'mount' | 'update'
+   * Based on https://vuejs.org/v2/api/#Options-Lifecycle-Hooks
+   */
+  hooks: string[];
+}
 ```

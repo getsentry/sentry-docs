@@ -22,15 +22,15 @@ supports interoperability with C, such as the Foreign Function Interface (FFI).
 Sentry also offers higher-level SDKs for platforms with built-in support for
 native crashes:
 
-- [_Cocoa_]({%- link _documentation/clients/cocoa/index.md -%})
-- [_Electron_]({%- link _documentation/platforms/javascript/electron.md -%})
+- [_Cocoa_](/clients/cocoa/)
+- [_Electron_](/platforms/javascript/electron/)
 
 In case you would like to integrate Sentry into a third-party framework directly
 without using the Native SDK, see the following resources:
 
-- [_Google Breakpad_]({%- link _documentation/platforms/native/breakpad.md -%})
-- [_Google Crashpad_]({%- link _documentation/platforms/native/crashpad.md -%})
-- [_Unreal Engine 4_]({%- link _documentation/platforms/native/ue4.md -%})
+- [_Google Breakpad_](/platforms/native/breakpad/)
+- [_Google Crashpad_](/platforms/native/crashpad/)
+- [_Unreal Engine 4_](/platforms/native/ue4/)
 
 ## Integrating the SDK
 
@@ -251,7 +251,7 @@ issues or quick access to finding related events.
 sentry_set_tag("server_name", "caroline");
 ```
 
-For more information, see the [Tagging Events section]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) in Context.
+For more information, see the [Tagging Events section](/enriching-error-data/additional-data/#tags) in Context.
 
 ### Setting the Level
 
@@ -285,10 +285,8 @@ sentry_init(options);
 
 For more information, see:
 
-- [Sentry’s complete list of Common Options across SDKs]({%- link
-  _documentation/error-reporting/configuration/index.md -%})
-- [Full documentation on Environments]({%- link
-  _documentation/enriching-error-data/environments.md -%})
+- [Sentry’s complete list of Common Options across SDKs](/error-reporting/configuration/)
+- [Full documentation on Environments](/enriching-error-data/environments/)
 
 ### Breadcrumbs
 
@@ -309,8 +307,7 @@ sentry_add_breadcrumb(crumb);
 
 For more information, see:
 
-- [Full documentation on Breadcrumbs]({%- link
-  _documentation/enriching-error-data/breadcrumbs.md -%})
+- [Full documentation on Breadcrumbs](/enriching-error-data/breadcrumbs/)
 - [Debug Issues Faster with
   Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
@@ -344,8 +341,7 @@ executing thread. For this reason, consider avoiding heavy work in
 
 For more information, see:
 
-- [Full documentation on Filtering Events]({%- link
-  _documentation/error-reporting/configuration/filtering.md -%})
+- [Full documentation on Filtering Events](/error-reporting/configuration/filtering/)
 - [Manage Your Flow of Errors Using Inbound
   Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 

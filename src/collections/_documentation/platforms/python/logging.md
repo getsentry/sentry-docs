@@ -57,8 +57,7 @@ logger.error("hi")  # no error sent to sentry
 ```
 
 You can also use `before-send` and `before-breadcrumb` to ignore
-only certain messages. See [_Filtering Events_]({%- link
-_documentation/error-reporting/configuration/filtering.md -%}) for more information.
+only certain messages. See [_Filtering Events_](/error-reporting/configuration/filtering/) for more information.
 
 ## Options
 

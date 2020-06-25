@@ -142,7 +142,7 @@ try {
 
 ### Release Health
 
-Monitor the [health of releases]({%- link _documentation/workflow/releases/health.md -%}) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/health.md -%}#crash), and [session data]({%- link _documentation/workflow/releases/health.md -%}#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+Monitor the [health of releases](/workflow/releases/health/) by observing user adoption, usage of the application, percentage of [crashes](/workflow/releases/health/#crash), and [session data](/workflow/releases/health/#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
 To benefit from the health data you must use at least version 1.4.0 of the React Native SDK, and enable the collection of release health metrics when initializing the SDK:
 
@@ -169,7 +169,7 @@ Sentry.init({
 });
 ```
 
-For more details, see the [full documentation on Release Health]({%- link _documentation/workflow/releases/health.md -%}).
+For more details, see the [full documentation on Release Health](/workflow/releases/health/).
 
 ### Identification of the User
 
@@ -178,17 +178,17 @@ By default, we don't apply the user identification provided to the SDK via the A
 ### More options
 
 This SDK is based on our browser JavaScript. That means that all functions available for JavaScript are also available in this SDK. For more examples:
-- [Adding Context]({%- link _documentation/platforms/javascript/index.md -%}#adding-context)
-- [JavaScript Advanced Usage]({%- link _documentation/platforms/javascript/index.md -%}#advanced-usage)
+- [Adding Context](/platforms/javascript/#adding-context)
+- [JavaScript Advanced Usage](/platforms/javascript/#advanced-usage)
 
 ## Deep Dive
 
--   [Using Sentry with Expo]({%- link _documentation/platforms/react-native/expo.md -%})
--   [Using Sentry with CodePush]({%- link _documentation/platforms/react-native/codepush.md -%})
--   [Source Maps for Other Platforms]({%- link _documentation/platforms/react-native/sourcemaps.md -%})
--   [Setup With CocoaPods]({%- link _documentation/platforms/react-native/cocoapods.md -%})
--   [Using RAM Bundles]({%- link _documentation/platforms/react-native/ram-bundles.md -%})
--   [Hermes]({%- link _documentation/platforms/react-native/hermes.md -%})
--   [Manual Setup]({%- link _documentation/platforms/react-native/manual-setup.md -%})
-    -   [iOS]({%- link _documentation/platforms/react-native/manual-setup.md -%}#ios)
-    -   [Android]({%- link _documentation/platforms/react-native/manual-setup.md -%}#android)
+-   [Using Sentry with Expo](/platforms/react-native/expo/)
+-   [Using Sentry with CodePush](/platforms/react-native/codepush/)
+-   [Source Maps for Other Platforms](/platforms/react-native/sourcemaps/)
+-   [Setup With CocoaPods](/platforms/react-native/cocoapods/)
+-   [Using RAM Bundles](/platforms/react-native/ram-bundles/)
+-   [Hermes](/platforms/react-native/hermes/)
+-   [Manual Setup](/platforms/react-native/manual-setup/)
+    -   [iOS](/platforms/react-native/manual-setup/#ios)
+    -   [Android](/platforms/react-native/manual-setup/#android)

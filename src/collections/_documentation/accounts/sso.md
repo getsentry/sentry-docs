@@ -98,4 +98,4 @@ When prompted with the Rippling Metadata URL, copy this into the Sentry Rippling
 
 #### Custom SAML2 Integration
 
-For other SAML2 SSO providers not listed above, Sentry provides  generic connectors for [SAML2 based authentication]({%- link _documentation/accounts/saml2.md -%}), which may be configured manually.
+For other SAML2 SSO providers not listed above, Sentry provides  generic connectors for [SAML2 based authentication](/accounts/saml2/), which may be configured manually.

@@ -1,5 +1,5 @@
 You need to call `init` in your `main` and every `renderer` process you spawn.
-For more details about Electron [click here]({%- link _documentation/platforms/javascript/electron.md -%})  
+For more details about Electron [click here](/platforms/javascript/electron/)  
 
 ```javascript
 import * as Sentry from '@sentry/electron';
