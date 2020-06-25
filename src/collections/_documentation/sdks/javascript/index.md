@@ -111,4 +111,4 @@ install_content=__install_content
  
  Next steps:
  
- - [Manage your SDK Configuration]{% link _documentation/sdks/javascript/config-js-intro.md}
+ - [Configuration Options](/sdks/javascript/config-js-intro.md})
