@@ -65,7 +65,7 @@ For instance, the Discover query below displays all the errors (total of 143 eve
 
 ![Discover Query]({% asset guides/enrich-data/004.png @path %})
 
-For more information, see [Discover](/performance/discover/).
+For more information, see [Discover](/performance-monitoring/discover-queries/).
 
 ### Issue Ownership
 

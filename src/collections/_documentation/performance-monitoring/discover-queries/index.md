@@ -1,9 +1,9 @@
 ---
-title: 'Discover'
-sidebar_order: 3
+title: 'Discover Queries'
+sidebar_order: 4
 ---
 
-Our Discover tool provides visibility into your data across environments by building upon and enriching your error data. This feature will allow you to query and unlock deeper insights into the health of your entire system and answer critical business questions --- all in one place.
+Discover provides visibility into your data across environments by building upon and enriching your error data. This feature will allow you to query and unlock deeper insights into the health of your entire system and answer critical business questions --- all in one place. Customers subscribed to the Team or Business plan can use Discover to view comprehensive information sent to Sentry.
 
 [{% asset discover/discover-homepage.png alt="Full view of the Discover Homepage with query cards and button to build new queries." %}]({% asset discover/discover-homepage.png @path %})
 
@@ -39,7 +39,7 @@ From the Discover Homepage, you can build a query in three ways.
   2. Enter a display name
   3. Click "Save"
 
-Apply new search conditions or table columns to modify the results of the query. Save the query and assign a custom display name. For the full details, see [documentation on the Query Builder](/performance/discover/query-builder/).
+Apply new search conditions or table columns to modify the results of the query. Save the query and assign a custom display name. For the full details, see [documentation on the Query Builder](/performance-monitoring/discover-queries/query-builder/).
 
 **Search for a Query**
 
@@ -84,7 +84,7 @@ On the Discover Homepage, each saved query card has an ellipsis that will open a
 
 To view query results, click into any query card. You'll find a graph, table, and toggleable tag summary (or facet map). The search bar at the top enables you to see the search conditions entered. The table reflects the events with sortable columns. 
 
-If the first column shows an icon (as seen above), it means the events have been stacked. Click on the icon to view the full list of events. Each event will have an event ID you can click on for more details. For more about how to build a query, go to [the Query Builder](/performance/discover/query-builder/). 
+If the first column shows an icon (as seen above), it means the events have been stacked. Click on the icon to view the full list of events. Each event will have an event ID you can click on for more details. For more about how to build a query, go to [the Query Builder](/performance-monitoring/discover-queries/query-builder/). 
 
 ## Event Details
 
@@ -92,4 +92,4 @@ If the first column shows an icon (as seen above), it means the events have been
 
 Navigate to the Event Details page from **Discover > [Saved Query] > Event Detail**. You'll find all the relevant details about a single event. For every event, you will see the ID, timestamp, and link to view the normalized JSON payload that Sentry received. 
 
-The Event Detail view varies depending on event type (i.e. error, transaction, csp). For example, errors may have a related issue shown in the sidebar. This panel gives you a quick glance at the event volume for that issue and lets you quickly navigate to the related issue. You may also find stack traces, breadcrumbs and more in these views.
+The Event Detail view varies depending on event type (error, transaction, csp). [Transaction event details](/performance-monitoring/performance/event-detail/) may have an entirely different view from error event details (as shown above). For example, errors may have a related issue shown in the sidebar. This gives you a quick glance at the event volume for that issue and lets you quickly navigate to the related issue. You may also find stack traces, breadcrumbs, and more in these views. 

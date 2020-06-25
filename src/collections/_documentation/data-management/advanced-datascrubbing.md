@@ -164,7 +164,7 @@ Select known parts of the schema using the following:
 * `$logentry` matches the `logentry` attribute of an event.
 * `$thread` matches a single thread instance in `{"threads": {"values": [...]}}`
 * `$breadcrumb` matches a single breadcrumb in `{"breadcrumbs": {"values": [...]}}`
-* `$span` matches a [trace span](/performance/distributed-tracing/#traces-transactions-and-spans)
+* `$span` matches a [trace span](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans)
 * `$sdk` matches the SDK context in `{"sdk": ...}`
 
 ### Escaping Special Characters

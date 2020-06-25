@@ -255,7 +255,7 @@ Once Sentry receives an event with the updated release version, a new release ob
 
 With the releases you can:
 
-- Build queries and reports in the [Discover](/performance/discover/) page to correlate bugs with releases
+- Build queries and reports in the [Discover](/performance-monitoring/discover-queries/) page to correlate bugs with releases
 - Filter events and issues by the release version directly in the tag search on the Issues and Events pages
 - Check what new issues were introduced with the new release
 
