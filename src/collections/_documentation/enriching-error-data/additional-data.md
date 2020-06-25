@@ -28,7 +28,7 @@ Context includes additional diagnostic information attached to an event. By defa
 
 ## Predefined Data
 
-The most common types of predefined data (where applicable) are level, [release]({%- link _documentation/workflow/releases/index.md -%}), [environment]({%- link _documentation/enriching-error-data/environments.md -%}), logger, [fingerprint]({%- link _documentation/data-management/event-grouping/index.md -%}), user, request, device, OS, runtime, app, browser, gpu, monitor, and [traces]({%- link _documentation/performance/distributed-tracing.md -%}).
+The most common types of predefined data (where applicable) are level, [release](/workflow/releases/), [environment](/enriching-error-data/environments/), logger, [fingerprint](/data-management/event-grouping/), user, request, device, OS, runtime, app, browser, gpu, monitor, and [traces](/performance/distributed-tracing/).
 
 To improve searchability, Sentry will turn the data or specific attributes on the data into tags. For example, `level` is available as a tag, and so is a user's email via the `user.email` tag. If Sentry is captures some predefined data but doesn't expose it as a tag, you can always set a [custom tag](#tags) for it.
 
@@ -64,7 +64,7 @@ You can set the severity of an event to one of five values: `fatal`, `error`,�
 
 {% include components/platform_content.html content_dir='set-level' %}
 
-For more details about how to set predefined properties, see the [platform-specific documentation]({%- link _documentation/platforms/index.md -%}).
+For more details about how to set predefined properties, see the [platform-specific documentation](/platforms/).
 
 ## Custom Data
 
@@ -78,7 +78,7 @@ Most SDKs support configuring tags by configuring the scope:
 
 {% include components/platform_content.html content_dir='set-tag' %}
 
-Sentry promotes several pieces of predefined data to tags. We strongly recommend you don't set custom tags with these reserved names. But if you do, you can search for them with a [special tag syntax]({%- link _documentation/workflow/search.md -%}).
+Sentry promotes several pieces of predefined data to tags. We strongly recommend you don't set custom tags with these reserved names. But if you do, you can search for them with a [special tag syntax](/workflow/search/).
 
 ### Context
 
@@ -106,7 +106,7 @@ For more details, see the [full documentation on SDK data handling](https://dev
 
 Sentry holds context in the current scope, and thus context clears out at the end of each operation (for example, requests). You can also push and pop your scopes to apply context data to a specific code block or function.
 
-For more details, see the [full documentation on Scopes and Hubs]({%- link _documentation/enriching-error-data/scopes.md -%}).
+For more details, see the [full documentation on Scopes and Hubs](/enriching-error-data/scopes/).
 
 ## Debugging Additional Data
 

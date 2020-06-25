@@ -1,3 +1,3 @@
--  [_adding Google Breakpad_]({% link _documentation/platforms/native/index.md %}#google-breakpad)
--  [_adding Google Crashpad_]({% link _documentation/platforms/native/index.md %}#google-crashpad)
--  [_integrating with Unreal Engine 4_]({%- link _documentation/platforms/native/ue4.md -%})
+-  [_adding Google Breakpad_](/platforms/native/#google-breakpad)
+-  [_adding Google Crashpad_](/platforms/native/#google-crashpad)
+-  [_integrating with Unreal Engine 4_](/platforms/native/ue4/)

@@ -12,7 +12,7 @@ initialized.
 ## Common Options
 
 The list of common options across SDKs.  These work more or less the same in all SDKs, but some
-subtle differences will exist to better support the platform. Options which can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically. See [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects) for more information. 
+subtle differences will exist to better support the platform. Options which can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically. See [Working with Projects](/cli/configuration/#sentry-cli-working-with-projects) for more information. 
 
 {:.config-key}
 ### `dsn`
@@ -42,7 +42,7 @@ if you have the chance it's a better idea to manually set it.  That way it's gua
 in sync with your deploy integrations or source map uploads.
 
 Release names are just strings but some formats are detected by Sentry and might be rendered
-differently.  For more information have a look at [the releases documentation]({% link _documentation/workflow/releases/index.md %}).
+differently.  For more information have a look at [the releases documentation](/workflow/releases/).
 
 By default the SDK will try to read this value from the `SENTRY_RELEASE` environment
 variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE` if
@@ -96,7 +96,7 @@ This feature is `off` by default.
 {% unsupported browser javascript node %}
 If this flag is enabled, certain personally identifiable information is added by active integrations. By default no such data is sent.
 
-If possible, it's recommended to turn on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_]({%- link _documentation/data-management/sensitive-data.md -%}).
+If possible, it's recommended to turn on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_](/data-management/sensitive-data/).
 {% endunsupported %}
 
 {:.config-key}

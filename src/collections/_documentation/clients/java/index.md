@@ -3,10 +3,10 @@ title: Java
 sidebar_relocation: platforms
 ---
 
-Sentry for Java is a collection of modules provided by Sentry. At its core, Sentry for Java provides a raw client for sending events to Sentry. To begin, we **highly recommend** you use one of the library or framework integrations listed under Installation. Otherwise, [manual usage]({%- link _documentation/clients/java/usage.md -%}) is another option. 
+Sentry for Java is a collection of modules provided by Sentry. At its core, Sentry for Java provides a raw client for sending events to Sentry. To begin, we **highly recommend** you use one of the library or framework integrations listed under Installation. Otherwise, [manual usage](/clients/java/usage/) is another option. 
 
 {% capture __alert_content -%}
-As of June 2017, the old `Raven` library is no longer maintained. We recommended you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry`. [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `Raven` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
+As of June 2017, the old `Raven` library is no longer maintained. We recommended you [migrate](/clients/java/migration/) to `sentry`. [Check out the migration guide](/clients/java/migration/) for more information. If you are still using `Raven` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
 {%-endcapture-%}
 {%- include components/alert.html
     title="Note"
@@ -24,16 +24,16 @@ Getting started with Sentry is a three step process:
 
 ## Installation {#install}
 
-Once you've configured one of the integrations below, you can _also_ use Sentry's [static API]({%- link _documentation/clients/java/usage.md -%}) in order to do things like record breadcrumbs, set the current user, or manually send events.
+Once you've configured one of the integrations below, you can _also_ use Sentry's [static API](/clients/java/usage/) in order to do things like record breadcrumbs, set the current user, or manually send events.
 
--   [Android]({%- link _documentation/clients/java/integrations.md -%}#android)
--   [Proguard/R8]({%- link _documentation/clients/java/integrations.md -%}#proguard)
--   [Google App Engine]({%- link _documentation/clients/java/integrations.md -%}#google-app-engine)
--   [java.util.logging]({%- link _documentation/clients/java/integrations.md -%}#javautillogging)
--   [Log4j 1.x]({%- link _documentation/clients/java/integrations.md -%}#log4j-1x)
--   [Log4j 2.x]({%- link _documentation/clients/java/integrations.md -%}#log4j-2x)
--   [Logback]({%- link _documentation/clients/java/integrations.md -%}#logback)
--   [Spring]({%- link _documentation/clients/java/integrations.md -%}#spring)
+-   [Android](/clients/java/integrations/#android)
+-   [Proguard/R8](/clients/java/integrations/#proguard)
+-   [Google App Engine](/clients/java/integrations/#google-app-engine)
+-   [java.util.logging](/clients/java/integrations/#javautillogging)
+-   [Log4j 1.x](/clients/java/integrations/#log4j-1x)
+-   [Log4j 2.x](/clients/java/integrations/#log4j-2x)
+-   [Logback](/clients/java/integrations/#logback)
+-   [Spring](/clients/java/integrations/#spring)
 
 ## Configuration {#config}
 
@@ -71,13 +71,13 @@ Sentry.init("https://public:private@host:port/1");
 
 ### Configuration Methods
 
-There are multiple ways to configure the Java SDK, but all of them take the same options. See the [configuration methods documentation]({%- link _documentation/clients/java/config.md -%}) for how to use each configuration method and how the option names might differ between them.
+There are multiple ways to configure the Java SDK, but all of them take the same options. See the [configuration methods documentation](/clients/java/config/) for how to use each configuration method and how the option names might differ between them.
 
 ## Next Steps
  
--   [Context & Breadcrumbs]({%- link _documentation/clients/java/context.md -%})
--   [Manual Usage]({%- link _documentation/clients/java/usage.md -%})
--   [Migration from Raven Java]({%- link _documentation/clients/java/migration.md -%})
+-   [Context & Breadcrumbs](/clients/java/context/)
+-   [Manual Usage](/clients/java/usage/)
+-   [Migration from Raven Java](/clients/java/migration/)
 
 ## Resources
 

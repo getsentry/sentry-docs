@@ -62,18 +62,18 @@ $client->user_context(array(
 ));
 ```
 
-For more information see [Providing Request Context]({%- link _documentation/clients/php/config.md -%}#sentry-php-request-context).
+For more information see [Providing Request Context](/clients/php/config/#sentry-php-request-context).
 
 ## Deep Dive
 
 Want more? Have a look at the full documentation for more information.
 
--   [Usage]({%- link _documentation/clients/php/usage.md -%})
--   [Configuration]({%- link _documentation/clients/php/config.md -%})
--   [Integrations]({%- link _documentation/clients/php/integrations.md -%})
-    -   [Laravel]({%- link _documentation/clients/php/integrations.md -%}#laravel)
-    -   [Monolog]({%- link _documentation/clients/php/integrations.md -%}#monolog)
-    -   [Symfony]({%- link _documentation/clients/php/integrations.md -%}#symfony2)
+-   [Usage](/clients/php/usage/)
+-   [Configuration](/clients/php/config/)
+-   [Integrations](/clients/php/integrations/)
+    -   [Laravel](/clients/php/integrations/#laravel)
+    -   [Monolog](/clients/php/integrations/#monolog)
+    -   [Symfony](/clients/php/integrations/#symfony2)
 
 Resources:
 

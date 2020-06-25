@@ -3,7 +3,7 @@ title: Goroutines
 sidebar_order: 5
 ---
 
-A goroutine is a lightweight thread managed by the Go runtime. Goroutines can run concurrently, and because of this, every goroutine has to keep track of its own Sentry-related data locally. Otherwise, there is a chance that you will override your data stored in the Scope. More on this in [Scopes and Hubs]({%- link _documentation/enriching-error-data/scopes.md -%}?platform={{ include.platform }}) section.
+A goroutine is a lightweight thread managed by the Go runtime. Goroutines can run concurrently, and because of this, every goroutine has to keep track of its own Sentry-related data locally. Otherwise, there is a chance that you will override your data stored in the Scope. More on this in [Scopes and Hubs](/enriching-error-data/scopes/?platform={{ include.platform }}) section.
 
 The easiest way to handle this, is to create a new `Hub` for every goroutine you start, however this would require you to rebind the current `Client` and handle `Scope` yourself. That is why we provide a helper method called `Clone`. It takes care of creating a `Hub`, cloning existing `Scope` and reassigning it alongside `Client` to newly create instance.
 

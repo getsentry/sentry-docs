@@ -7,7 +7,7 @@ If you want to move to the new sentry-python SDK we provided a short guide here 
 
 ## Installation
 
-The installation is now the same regardless of framework or library you integrate with. There are no alternative initialization routines other than `sentry_sdk.init`. For integration-specific instructions please refer to [our list of integrations for the new SDK]({%- link _documentation/platforms/python/index.md -%}#integrations).
+The installation is now the same regardless of framework or library you integrate with. There are no alternative initialization routines other than `sentry_sdk.init`. For integration-specific instructions please refer to [our list of integrations for the new SDK](/platforms/python/#integrations).
 
 **Old**:
 
@@ -114,4 +114,4 @@ impossible to further improve them for a usecase without breaking somebody
 else's usecase. There is no easy search-and-replace type solution in the new
 SDK.
 
-We encourage you to consider alternative options outlined at [_Filtering Events_]({%- link _documentation/error-reporting/configuration/filtering.md -%}).
+We encourage you to consider alternative options outlined at [_Filtering Events_](/error-reporting/configuration/filtering/).

@@ -24,4 +24,4 @@ $ export SENTRY_PROPERTIES=./ios/sentry.properties
 $ sentry-cli react-native appcenter YourApp ios ./build/CodePush --dist YourBuildNumber
 ```
 
-Exporting the `SENTRY_PROPERTIES` will tell sentry-cli to use the properties in your project. Alternatively, you can either pass it via parameters or a global settings file. To find more about this refer to [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects).
+Exporting the `SENTRY_PROPERTIES` will tell sentry-cli to use the properties in your project. Alternatively, you can either pass it via parameters or a global settings file. To find more about this refer to [Working with Projects](/cli/configuration/#sentry-cli-working-with-projects).

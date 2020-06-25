@@ -13,7 +13,7 @@ There are two great examples for data scrubbing that every company should think 
 
 ## Default PII
 
-Our newer SDKs do not purposefully send PII to stay on the safe side. This behavior is controlled by an option called [`send-default-pii`]({%- link _documentation/error-reporting/configuration/index.md -%}#send-default-pii -%}).
+Our newer SDKs do not purposefully send PII to stay on the safe side. This behavior is controlled by an option called [`send-default-pii`](/error-reporting/configuration/#send-default-pii -%}).
 
 Turning this option on is required for certain features in Sentry to work, but also means you will need to be even more careful about what data is being sent to Sentry (using the options below).
 
@@ -41,7 +41,7 @@ Sentry.init({
 - Be **aware** of what is being attached to the event and **code review SDK changes,** including context carefully
     - Context → Tags (including User-context) + extra-info + breadcrumbs
 
-For more details, see [_Filtering Events_]({%- link _documentation/error-reporting/configuration/filtering.md -%}).
+For more details, see [_Filtering Events_](/error-reporting/configuration/filtering/).
 
 ### Examples
 
@@ -132,7 +132,7 @@ As mentioned earlier, configure scrubbing within SDK if possible so that sensiti
 
 ### Advanced server-side data scrubbing
 
-We are currently betatesting additional features around server-side data scrubbing. For more information see [_Advanced Data Scrubbing_]({% link _documentation/data-management/advanced-datascrubbing.md %}).
+We are currently betatesting additional features around server-side data scrubbing. For more information see [_Advanced Data Scrubbing_](/data-management/advanced-datascrubbing/).
 
 ## Restricting Emails
 

@@ -44,7 +44,7 @@ Those configuration options are documented below:
   }
   ```
 
-  Can also be defined with `Raven.setRelease('721e41770371db95eee98ca2707686226b993eda')`. To learn more about configuring releases and deploys, click [here]({%- link _documentation/workflow/releases/index.md -%}).
+  Can also be defined with `Raven.setRelease('721e41770371db95eee98ca2707686226b993eda')`. To learn more about configuring releases and deploys, click [here](/workflow/releases/).
 
 `environment`
 
@@ -70,7 +70,7 @@ Those configuration options are documented below:
 
 `tags`
 
-: Additional [tags]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) to assign to each event.
+: Additional [tags](/enriching-error-data/additional-data/#tags) to assign to each event.
 
   ```javascript
   {
