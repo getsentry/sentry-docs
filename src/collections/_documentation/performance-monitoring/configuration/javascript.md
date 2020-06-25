@@ -19,11 +19,11 @@ Sentry.init({
 });
 ```
 
-Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions.
+Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions.
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
 
-### JavaScript
+## JavaScript
 
 To access our tracing features, you will need to install our Tracing package `@sentry/apm`:
 
@@ -38,12 +38,12 @@ Alternatively, instead of npm packages, you can use our pre-built CDN bundle tha
 <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" crossorigin="anonymous"></script>
 ```
 
-#### Automatic Instrumentation
+### Automatic Instrumentation
 
 For `@sentry/browser`, we provide an integration called `Tracing` that does
 automatic instrumentation creating `pageload` and `navigation` transactions
 containing spans for XHR/fetch requests and Performance API entries such as
-marks, measures and resource timings.
+marks, measures, and resource timings.
 
 The `Tracing` integration is specific to `@sentry/browser` and does not work
 with `@sentry/node`.
@@ -63,17 +63,17 @@ Sentry.init({
 });
 ```
 
-*NOTE:* The `Tracing` integration is available then under `Sentry.Integrations.Tracing` when using the CDN bundle.
+*NOTE:* The `Tracing` integration is available under `Sentry.Integrations.Tracing` when using the CDN bundle.
 
 To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
 
 You can pass many different options to the `Tracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box.
 
-For all possible options see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/apm.tracingoptions.html).
+For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/apm.tracingoptions.html).
 
-*tracingOrigins Option*
+**tracingOrigins Option**
 
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there in order to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace.
+The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace.
 
 *Example:*
 
@@ -83,9 +83,9 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 - Therefore, the option needs to be configured like this: `new ApmIntegrations.Tracing({tracingOrigins: ['api.example.com']})`
 - Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
 
-*NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your set up. If you do not whitelist the `sentry-trace` header, the request might be blocked.
+*NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not whitelist the `sentry-trace` header, the request might be blocked.
 
-*beforeNavigation Option*
+**beforeNavigation Option**s
 
 {% version_added 5.18.0 %}
 
@@ -111,10 +111,10 @@ Sentry.init({
 });
 ```
 
-#### Manual Instrumentation
+### Manual Instrumentation
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
-This is valid for both JavaScript Browser and Node and works independent of the `Tracing` integration.
+This is valid for both JavaScript Browser and Node and works independently of the `Tracing` integration.
 
 ```javascript
 const transaction = Sentry.startTransaction({name: 'test-transaction'});
@@ -124,7 +124,7 @@ span.finish(); // Remember that only finished spans will be sent with the transa
 transaction.finish(); // Finishing the transaction will send it to Sentry
 ```
 
-Here is a different example. If you want to create a transaction for a user interaction on you page, you need to do the following:
+Here is a different example. If you want to create a transaction for a user interaction on your page, you need to do the following:
 
 ```javascript
 // Let's say this function is invoked when a user clicks on the checkout button of your shop
@@ -149,9 +149,9 @@ shopCheckout() {
 }
 ```
 
-This example will send a transaction `shopCheckout` to Sentry, the transaction will contain a `task` span that measures how long `processAndValidateShoppingCart` took. Finally, the call to `transaction.finish()` will finish the transaction and send it to Sentry.
+This example will send a transaction `shopCheckout` to Sentry. The transaction will contain a `task` span that measures how long `processAndValidateShoppingCart` took. Finally, the call to `transaction.finish()` will finish the transaction and send it to Sentry.
 
-#### Adding Additional Spans to the Transaction
+**Adding Additional Spans to the Transaction**
 
 The next example contains the implementation of the hypothetical `processItem ` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add to it all newly created spans as child operations. Keep in mind that each individual span needs to be manually finished; otherwise, that span will not show up in the transaction.
 
