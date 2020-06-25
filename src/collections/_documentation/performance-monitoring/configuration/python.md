@@ -13,11 +13,11 @@ sentry_sdk.init(
 )
 ```
 
-Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured traces.
+Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured traces.
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
 
-### Python
+## Python
 
 To send traces, set the `traces_sample_rate` to a nonzero value. The following configuration will capture 25% of your transactions:
 
@@ -30,7 +30,7 @@ sentry_sdk.init(
 )
 ```
 
-#### Automatic Instrumentation
+### Automatic Instrumentation
 
 Many integrations for popular frameworks automatically capture transactions. If you already have any of the following frameworks set up for Sentry error reporting, you will start to see traces immediately:
 
@@ -46,7 +46,7 @@ Spans are instrumented for the following operations within a transaction:
 - Spawned subprocesses
 - Redis operations
 
-If you want to enable all relevant transactions automatically, you can use this alternative configuration (currently in alpha):
+If you want to automatically enable all relevant transactions, you can use this alternative configuration (currently in alpha):
 
 ```python
 import sentry_sdk
@@ -57,7 +57,7 @@ sentry_sdk.init(
 )
 ```
 
-#### Manual Instrumentation
+### Manual Instrumentation
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
 
