@@ -32,7 +32,7 @@ Rules generally consist of three parts:
 - _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely or replace it with an empty string depending on technical constraints.
 - _Mask_: Replace all characters with `*`.
 - _Hash_: Replace the matched substring with a hashed value.
-- _Replace_: Replace the matched substring with a constant placeholder value such as `[Filtered]` or `[creditcard]`. Right now this value cannot be configured.
+- _Replace_: Replace the matched substring with a constant _placeholder_ value (defaulting to `[Filtered]`).
 
 ## Data Types
 
@@ -83,7 +83,7 @@ All key names are treated case-insensitively.
 
 Above the _Source_ input field you will find another input field for an event ID. Providing a value there allows for better auto-completion of arbitrary _Additional Data_ fields and variable names.
 
-The event ID is purely optional and the value is not saved as part of your settings. Data scrubbing settings always apply to all events within a project/organization going forward.
+The event ID is purely optional and the value is not saved as part of your settings. Data scrubbing settings always apply to all new events within a project/organization (going forward).
 
 ### Advanced source names
 
