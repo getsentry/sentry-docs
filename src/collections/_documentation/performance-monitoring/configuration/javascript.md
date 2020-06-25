@@ -23,7 +23,7 @@ Performance data is transmitted using a new event type called "transactions," wh
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
 
-## JavaScript
+**JavaScript**
 
 To access our tracing features, you will need to install our Tracing package `@sentry/apm`:
 
@@ -38,7 +38,7 @@ Alternatively, instead of npm packages, you can use our pre-built CDN bundle tha
 <script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" crossorigin="anonymous"></script>
 ```
 
-### Automatic Instrumentation
+**Automatic Instrumentation**
 
 For `@sentry/browser`, we provide an integration called `Tracing` that does
 automatic instrumentation creating `pageload` and `navigation` transactions
@@ -111,7 +111,7 @@ Sentry.init({
 });
 ```
 
-### Manual Instrumentation
+**Manual Instrumentation**
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
 This is valid for both JavaScript Browser and Node and works independently of the `Tracing` integration.

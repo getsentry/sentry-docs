@@ -1,7 +1,9 @@
 ---
 title: Setup
 sidebar_order: 0
---- 
+---
+
+test 
 
 After this quick setup, you'll have access to [Performance](/performance-monitoring/performance/) and [Discover](/performance-monitoring/discover-queries/). These tools will empower you to see everything from macro-level [metrics](/performance-monitoring/performance/metrics/) to micro-level [spans](/performance-monitoring/performance/event-detail/), but you'll be able to cross-reference [transactions with related issues](/performance-monitoring/performance/transaction-summary/), customize [queries](/performance-monitoring/discover-queries/query-builder/) based on your personal needs, and substantially more. 
 
