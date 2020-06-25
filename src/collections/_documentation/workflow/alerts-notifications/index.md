@@ -3,56 +3,26 @@ title: Alerts & Notifications
 sidebar_order: 0
 ---
 
-Sentry notifications are broadly categorized into alerts and non-alert notifications. Alerts can be sent to many supported [integrations](/workflow/integrations/#webhook-alerts). Non-alert notifications only go to email.
+Sentry categorizes notifications broadly into alerts and non-alert notifications. 
 
 ## Alerts
 
-Issue Alerts warn you about problematic _individual Sentry Issues_. An issue alert fires once for every _issue_ that matches its conditions.
+[Alerts](/workflow/alerts-notifications/alerts) notify you about problems in your application and can be sent to many supported integrations. You can set alerts on both errors and performance data.
 
-Metric Alerts allow you to filter, aggregate, and set thresholds across _all events in your project_, regardless of the Sentry Issue.
+- **Errors**: Sentry automatically groups individual error events into Issues based on stack trace and other factors. You can then set alerts on changes in those issues (such as new issues or issues affecting many users), or on the raw events (such as frequency of events with a given tag).
 
-### Metric Alerts
+- **Performance**: You can alert on performance metrics like latency, apdex, failure rate, and throughput.
 
-{% capture __alert_content -%}
-Metric Alerts are currently in beta and available for [Team and Business plans](https://sentry.io/pricing/). For more information about access to Metric Alerts, feel free to reach out at [alerting-feedback@sentry.io](mailto:alerting-feedback@sentry.io).
-{%- endcapture -%}
-{%- include components/alert.html
-    title="Note"
-    content=__alert_content
-    level="warning"
-%}
-
-Use Metric Alerts to:
-- Alert on service-level metrics. Is my service affecting more than X users?
-- Alert on events across issues. How many errors on the signup page?
-- Alert when a metric goes below a threshold. For example, when the number of active users has drastically dropped.
-- Create alerts more quickly and intuitively, using a visual interface that allows you to explore and refine.
-
-For more details, see the [full documentation on Metric Alerts](/workflow/alerts-notifications/alerts/#metric-alerts).
-
-### Issue Alerts
-
-Use Issue Alerts to:
-- Alert when an individual issue is problematic. Any new bug on the checkout page? Any single issue affecting more than X users?
-- Alert on issue-specific concepts. For example, new issues and regressions.
-- Combine multiple conditions with the `OR` and `NONE` operators.
-- Alert based on [Issue Owner rules](/workflow/issue-owners/).
-
-For more details about Issue Alerts, see the [full documentation on Issue Alerts](/workflow/alerts-notifications/alerts/#issue-alerts).
-
-{% capture __alert_content -%}
-Some alert settings apply to all the alerts at the project level. Other alert settings are specific to the alert. You can tweak your [personal alerts settings](/workflow/alerts-notifications/alerts/#alert-subscription) to control which alerts you receive.
-{%- endcapture -%}
-{%- include components/alert.html
-    content=__alert_content
-%}
+For more details, see the [full documentation on Alerts](/workflow/alerts-notifications/alerts).
 
 ## Non-Alert Notifications
 
-Non-alert notifications are all other types of Sentry notifications such as:
+[Non-alert notifications](/workflow/alerts-notifications/notifications) are all other types of Sentry notifications such as:
 
-- Workflow notifications - Activity involving user actions and state changes on issues and alerts. This includes things like resolution, assignment, comments, and regressions.
-- Deploy notifications - When a release is [deployed](/workflow/alerts-notifications/notifications/#deploy), Sentry automatically sends an email to users who have committed to the release.
-- Quota & Usage notifications -  Emails about quota approaching/exceeded and spike protection
+- **Workflow notifications**: Activity involving user actions and state changes on issues. This includes things like resolution, assignment, comments, and regressions.
 
-For more details, see the [full documentation on Notifications](/workflow/alerts-notifications/notifications/).
+- **Deploy notifications**: When a release is [deployed](/workflow/alerts-notifications/notifications/#deploy), Sentry automatically sends an email to users who have committed to the release.
+
+- **Quota & Usage notifications**: Emails about quota approaching/exceeded and spike protection
+
+For more details, see the [full documentation on Notifications](/workflow/alerts-notifications/notifications).
