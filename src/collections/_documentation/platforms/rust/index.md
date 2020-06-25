@@ -27,7 +27,7 @@ and libraries.
 A list of integrations and their feature flags can be found
 [in the integration API docs](https://docs.rs/sentry/0/sentry/integrations/index.html).
 
-Apart from those, Sentry-Rust also supports the following application frameworks:
+Apart from those, the Rust SDK also supports the following application frameworks:
 
 * [actix-web 0.7]({% link _documentation/platforms/rust/actix.md %})
 
