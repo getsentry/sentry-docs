@@ -39,6 +39,16 @@ const App = () => {
 export default AppRegistry.registerComponent("Your Amazing App", () => Sentry.withTouchEventBoundary(App));;
 ```
 
+{% capture __alert_content -%}
+While you can track specific sections of your app by wrapping each section with the boundary, do not nest them or the touches could be tracked multiple times along with possible undefined behavior.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Multiple Boundaries"
+  content=__alert_content
+  level="warning"
+  deep_link="multiple-boundaries"
+%}
+
 ## How Touches are Tracked Automatically
 Each touch event that occurs will be automatically logged as a breadcrumb, and will be displayed on the dashboard when an event occurs along with the component tree that the touch event occurred in. This component tree is logged using the `name` property of each component, which by default is the name given to it when it was defined or the name given to it by React Native such as "View" or "ScrollView".
 
