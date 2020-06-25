@@ -23,7 +23,7 @@ const App = () => {
 export default AppRegistry.registerComponent("Your Amazing App", () => App);;
 ```
 
-## Using the `withTouchEventBoundary` Wrapper
+## Using the `withTouchEventBoundary` Higher-Order Component
 
 At the root of your app, usually `App.js`, wrap the app component with `Sentry.withTouchEventBoundary`:
 
@@ -71,7 +71,7 @@ YourCoolComponent.displayName = "CoolComponent";
 
 ## Options
 
-You can pass specific options to configure the boundary either as props to the `Sentry.TouchEventBoundary` component or as the second argument to the `Sentry.withTouchEventBoundary` wrapper.
+You can pass specific options to configure the boundary either as props to the `Sentry.TouchEventBoundary` component or as the second argument to the `Sentry.withTouchEventBoundary` higher-order component (HOC).
 
 ```jsx
 (
