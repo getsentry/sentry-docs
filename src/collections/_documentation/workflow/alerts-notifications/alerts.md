@@ -7,13 +7,13 @@ Sentry users with admin permissions or higher can create alerts. To confirm or s
 
 ## For Errors
 
-Sentry automatically groups individual error events into Issues based on stack trace and other factors. For more details about grouping, see the [full documentation on Grouping & Fingerprints]({%- link _documentation/data-management/event-grouping/index.md -%}).
+Sentry automatically groups individual error events into Issues based on stack trace and other factors. For more details about grouping, see the [full documentation on Grouping & Fingerprints](/data-management/event-grouping/index).
 
 Sentry has two types of alerts you can use for errors:
 
 [Issue Alerts](#issue-alerts)
 
-: Notifies you when individual Sentry [Issues]({%- link _documentation/data-management/event-grouping/index.md -%}) match your alerting criteria, such as an Issue happening more frequently than usual.
+: Notifies you when individual Sentry [Issues](/data-management/event-grouping/index) match your alerting criteria, such as an Issue happening more frequently than usual.
 
 [Metric Alerts](#metric-alerts)
 
@@ -23,10 +23,10 @@ Sentry has two types of alerts you can use for errors:
 
 [Metric Alerts](#metric-alerts) can be used on performance data, allowing you to set alerts on the following metrics:
 
-- Latency: min, max, average, [percentile]({%- link _documentation/performance/performance-metrics.md -%}#p75-threshold)
-- [Apdex]({%- link _documentation/performance/performance-metrics.md -%}#apdex)
-- [Failure rate]({%- link _documentation/performance/performance-metrics.md -%}#failure-rate)
-- [Transaction volume]({%- link _documentation/performance/performance-metrics.md -%}#transaction-frequency)
+- Latency: min, max, average, [percentile](/performance/performance-metrics/#p75-threshold)
+- [Apdex](/performance/performance-metrics/#apdex)
+- [Failure rate](/performance/performance-metrics/#failure-rate)
+- [Transaction volume](/performance/performance-metrics/#transaction-frequency)
 
 ## Metric Alerts
 
@@ -110,6 +110,7 @@ In the example, the alert will not fire because an event cannot satisfy both of 
 The following actions are available:
 
 - Send an email
+<<<<<<< HEAD
     - Send email to either [Issue Owners](/workflow/issue-owners/), Team, or [Member](/accounts/membership/#member)
 - Send a notification to all legacy integrations
     - [Legacy integrations](/workflow/integrations/legacy-integrations/), also known as Plugins, are configured per project 
@@ -117,6 +118,15 @@ The following actions are available:
     - This includes:
         - Legacy integrations
         - Integrations built using the [Integration platform](/workflow/integrations/integration-platform/) (includes published integrations, internal integrations, unpublished integrations)
+=======
+    - Send email to either [Issue Owners](/workflow/issue-owners), Team, or [Member](/accounts/membership/#member)
+- Send a notification to all legacy integrations
+    - [Legacy integrations](/workflow/integrations/legacy-integrations), also known as Plugins, are configured per project 
+- Send a notification via an integration
+    - This includes:
+        - Legacy integrations
+        - Integrations built using the [Integration platform](/workflow/integrations/integration-platform/index) (includes published integrations, internal integrations, unpublished integrations)
+>>>>>>> updated alerts page to new link structure
     -  If no legacy integrations or integrations built using the integration platform are enabled, this option is hidden.
 - Send a notification to a global integration, which includes
     - [PagerDuty](/workflow/integrations/global-integrations/#pagerduty)
@@ -124,7 +134,11 @@ The following actions are available:
 
 [{% asset notifications/alert-actions2.png alt="The alert condition in this example shows the conditions are conflicting with each other." %}]({% asset notifications/alert-actions2.png @path %})
 
+<<<<<<< HEAD
 For more details, see [Legacy Integrations](/workflow/integrations/legacy-integrations/) (via “Service” as any individual integration) that can send Notifications.
+=======
+For more details, see [Legacy Integrations](/workflow/integrations/legacy-integrations) (via “Service” as any individual integration) that can send Notifications.
+>>>>>>> updated alerts page to new link structure
 
 By default, [issue owners](/workflow/alerts-notifications/alerts/#issue-owners) receive alert emails. If an issue owner is not configured or not found, the email will either not send or send to all project members as defined in **Project Settings > Issue Owners**.
 
