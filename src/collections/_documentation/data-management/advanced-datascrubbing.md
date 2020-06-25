@@ -4,7 +4,7 @@ sidebar_order: 4
 keywords: ["pii", "gdpr", "personally identifiable data", "compliance"]
 ---
 
-In addition to using [`beforeSend`]({% link _documentation/data-management/sensitive-data.md %}#custom-event-processing-in-the-sdk) in your SDK or our [regular server-side data scrubbing features]({% link _documentation/data-management/sensitive-data.md %}#server-side-scrubbing) to redact sensitive data, Advanced Data Scrubbing is an alternative way to redact sensitive information just before it is saved in Sentry. It allows you to:
+In addition to using [`beforeSend`](/data-management/sensitive-data/#custom-event-processing-in-the-sdk) in your SDK or our [regular server-side data scrubbing features](/data-management/sensitive-data/#custom-event-processing-in-the-sdk#server-side-scrubbing) to redact sensitive data, Advanced Data Scrubbing is an alternative way to redact sensitive information just before it is saved in Sentry. It allows you to:
 
 * Define custom regular expressions to match on sensitive data
 * Detailed tuning on which parts of an event to scrub
@@ -154,7 +154,7 @@ Select known parts of the schema using the following:
 * `$logentry` matches the `logentry` attribute of an event.
 * `$thread` matches a single thread instance in `{"threads": {"values": [...]}}`
 * `$breadcrumb` matches a single breadcrumb in `{"breadcrumbs": {"values": [...]}}`
-* `$span` matches a [trace span]({% link _documentation/performance/distributed-tracing.md %}#traces-transactions-and-spans)
+* `$span` matches a [trace span](/performance/distributed-tracing/#traces-transactions-and-spans)
 * `$sdk` matches the SDK context in `{"sdk": ...}`
 
 ### Escaping Special Characters
