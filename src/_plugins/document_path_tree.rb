@@ -6,7 +6,15 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
       [100, "zzzzz"]
     end
   end
-  
+
+  def show_item(item)
+    if !item["document"].nil?
+      !item["document"].data["hide"]
+    else
+      true
+    end
+  end
+
   def tree_for(docs, root)
     tree = []
 
@@ -35,6 +43,7 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
 
       if !items.nil?
         items.sort_by! { |i| sort_key(i) }
+        items.filter! { |i| show_item(i) }
       end
 
       hash = {

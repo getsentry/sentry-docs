@@ -1,3 +1,7 @@
+---
+hide: true
+---
+
 To access our tracing features, you will need to install our Tracing integration.
 
 **Node**
