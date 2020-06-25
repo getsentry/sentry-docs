@@ -3,7 +3,7 @@ title: 'Transaction Summary'
 sidebar_order: 4
 ---
 
-Every transaction has a summary view that gives you a better understanding of how it's health is overall. With this view, you'll find graphs, instances of these events, stats, facet maps, related errors and more. 
+Every transaction has a summary view that gives you a better understanding of how its overall health. With this view, you'll find graphs, instances of these events, stats, facet maps, related errors, and more. 
 
 [{% asset performance/perf-summary.png alt="Example of Transaction Summary" %}]({% asset performance/perf-summary.png @path %})
 
