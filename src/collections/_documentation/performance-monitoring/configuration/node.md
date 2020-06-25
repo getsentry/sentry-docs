@@ -1,13 +1,13 @@
 To access our tracing features, you will need to install our Tracing integration.
 
-## Node
+**Node**
 
 ```bash
 $ npm install @sentry/node
 $ npm install @sentry/apm
 ```
 
-#### Sending Traces
+**Sending Traces**
 
 To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 25% of all your transactions:
 
@@ -23,7 +23,7 @@ Sentry.init({
 });
 ```
 
-### Automatic Instrumentation
+**Automatic Instrumentation**
 
 It’s possible to add tracing to all popular frameworks; however, we only provide pre-written handlers for Express.
 
@@ -62,7 +62,7 @@ Spans are instrumented for the following operations within a transaction:
 - `get` calls using native `http` and `https` modules
 - Middleware (Express.js only)
 
-### Manual Instrumentation
+**Manual Instrumentation**
 
 To manually instrument a specific region of your code, you can create a transaction to capture it.
 
