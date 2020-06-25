@@ -25,7 +25,7 @@ sentry::capture_message("Hello World!", sentry::Level::Info);
 and libraries.
 
 A list of integrations and their feature flags can be found
-[here in the API docs](https://docs.rs/sentry/0/sentry/integrations/index.html).
+[in the integration API docs](https://docs.rs/sentry/0/sentry/integrations/index.html).
 
 Apart from those, Sentry-Rust also supports the following application frameworks:
 
