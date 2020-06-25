@@ -1,6 +1,6 @@
 The Vue Tracing Integration allows you to track rendering performance during an initial application load.
 
-## Vue.js
+**Vue.js**
 
 Sentry injects a handler inside Vue's `beforeCreate` mixin, providing access to a Vue component during its life cycle stages.
 When Sentry encounters a component named `root`, which is a top-level Vue instance (as in `new Vue({})`), we use our AM Tracing integration,
@@ -87,7 +87,7 @@ new VueIntegration({
 })
 ```
 
-#### Configuration
+**Configuration**
 
 ```js
 /**
