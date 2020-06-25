@@ -17,13 +17,13 @@ To use Sentry with your React application, you will need to use `@sentry/react` 
 
 {% include_relative getting-started-install/react.md %}
 
-### Connecting the SDK to Sentry
+## Connecting the SDK to Sentry
 
 After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
 {% include_relative getting-started-dsn/react.md %}
 
-On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
+On its own, `@sentry/react` will report any uncaught exceptions triggered from your application.
 
 You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button:
 
@@ -32,7 +32,7 @@ return <button onClick={methodDoesNotExist}>Break the world</button>;
 ```
 <!-- ENDWIZARD -->
 
-### Error Boundaries
+## Error Boundaries
 
 If you’re using React 16 or above, Error Boundaries are an important tool for defining the behavior of your application in the face of errors. The `@sentry/react` package exposes an error boundary component that automatically sends Javascript errors from inside a React component tree to Sentry.
 
@@ -72,35 +72,77 @@ class App extends React.Component {
 export default App;
 ```
 
-#### Configuration
+### ErrorBoundary Options
 
-The ErrorBoundary component exposes a props that can be passed in for extra confugration
+The ErrorBoundary component exposes a variety props that can be passed in for extra configuration. There are no required options, but it is highly recommended that a fallback component be set.
 
-```ts
-/** If a Sentry report dialog should be rendered on error */
-  showDialog?: boolean;
-  /**
-   * Options to be passed into the Sentry report dialog.
-   * No-op if {@link showDialog} is false.
-   */
-  dialogOptions?: Sentry.ReportDialogOptions;
-  // tslint:disable no-null-undefined-union
-  /**
-   * A fallback component that gets rendered when the error boundary encounters an error.
-   *
-   * Can either provide a React Component, or a function that returns React Component as
-   * a valid fallback prop. If a function is provided, the function will be called with
-   * the error, the component stack, and an function that resets the error boundary on error.
-   *
-   */
-  fallback?: React.ReactNode | FallbackRender;
-  // tslint:enable no-null-undefined-union
-  /** Called with the error boundary encounters an error */
-  onError?(error: Error, componentStack: string): void;
-  /** Called on componentDidMount() */
-  onMount?(): void;
-  /** Called if resetError() is called from the fallback render props function  */
-  onReset?(error: Error | null, componentStack: string | null): void;
-  /** Called on componentWillUnmount() */
-  onUnmount?(error: Error | null, componentStack: string | null): void;
+#### `showDialog` (boolean)
+
+If a [Sentry User Feedback Widget]({%- link _documentation/enriching-error-data/user-feedback.md -%}?platform={{ include.platform }}) should be rendered when the Error Boundary catches an error.
+
+#### `dialogOptions` (Object)
+
+Options that are passed into the Sentry User Feedback Widget. See all possible customization options [here]({%- link _documentation/enriching-error-data/user-feedback.md -%}?platform={{ include.platform }}#customizing-the-widget)
+
+#### `fallback` (React.ReactNode or Function)
+
+A fallback component that gets rendered when the error boundary encounters an error. Can either provide a React Component, or a function that returns React Component as a valid fallback prop. If a function is provided, the function will be called with the error and the component stack at time of error, and a function that resets the error boundary to it's regular state.
+
+#### `onError` (Function)
+
+A function that gets called when the Error Boundary encounter an error. `onError` is useful if you want to propogate the error into a state management library like Redux, or if you want to check any side effects that could have occured due to the error.
+
+#### `onMount` (Function)
+
+A function that gets called on ErrorBoundary `componentDidMount()`
+
+#### `onUnmount` (Function)
+
+A function that gets called on ErrorBoundary `componentWillUnmount()`
+
+### ErrorBoundary Usage
+
+#### Setting a Fallback Function (Render Props)
+
+Below is an example where a fallback prop, using the [render props approach](https://reactjs.org/docs/render-props.html), is used to display a fallback UI on error, and gracefully return to a normal component state when reset.
+
+```jsx
+import React from 'react';
+import * as Sentry from '@sentry/react';
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      message: "This is my app",
+    };
+  }
+
+  render() {
+    return (
+      <Sentry.ErrorBoundary fallback={({ error, componentStack, resetError }) => (
+          <React.Fragment>
+            <div>You have encountered an error</div>
+            <div>{error.toString()}</div>
+            <div>{componentStack}</div>
+            <button
+              onClick={() => {
+                this.setState({ message: "This is my app" });
+                resetError();
+              }}
+            >
+              Click here to reset!
+            </button>
+          </React.Fragment>
+        )}>
+        <div>{this.state.message}</div>
+        {/* on click, this button sets an Object as a message, not a string. */}
+        {/* which will cause an error to occur in the component tree */}
+        <button onClick={() => this.setState({ message: {text: "Hello World"} })}>Click here to change message!</button>
+      </Sentry.ErrorBoundary>
+    )
+  }
+}
+
+export default App;
 ```
