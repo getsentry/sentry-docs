@@ -2,10 +2,10 @@
 title: 'Metrics'
 sidebar_order: 3
 ---
-Metrics provide insight about how users are experiencing your application. In [Performance](/performance-monitoring/performance/), we'll set you up with a few of the basic metrics to get you started. For further customizations on target threshholds, feel free to build out a query using the Discover [Query Builder](/performance-monitoring/discover-queries/query-builder/). By identifying useful thresholds by which to measure your application, you have a quantifiable measurement of your application's health. This means you can more easily identify when errors occur or if performance issues are emerging.
+Metrics provide insight about how users are experiencing your application. In [Performance](/performance-monitoring/performance/), we'll set you up with a few of the basic metrics to get you started. For further customizations on target thresholds, feel free to build out a query using the Discover [Query Builder](/performance-monitoring/discover-queries/query-builder/). By identifying useful thresholds to measure your application, you have a quantifiable measurement of your application's health. This means you can more easily identify when errors occur or if performance issues are emerging.
 
 ## Apdex
-Apdex is an industry-standard metric used to track and measure user satisfaction based on response times in your application. The Apdex score provides the ratio of satisfactory, tolerable, and frustrated requests in a specific transaction or endpoint. This metric provides a standard for you to compare transaction performance, understand which ones may require additional optimization or investigation, and set targets or goals for performance.
+Apdex is an industry-standard metric used to track and measure user satisfaction based on your application response times. The Apdex score provides the ratio of satisfactory, tolerable, and frustrated requests in a specific transaction or endpoint. This metric provides a standard for you to compare transaction performance, understand which ones may require additional optimization or investigation, and set targets or goals for performance.
 
 - Below are the components of Apdex and its formula:
     - **T**: Threshold for the target response time.
@@ -32,7 +32,7 @@ The following functions aggregate transaction durations:
 - various percentiles (by default, the pre-built Transactions query shows the 75th and 95th percentiles, but there are many other options, including a custom percentile)
 - maximum
 
-One use case for tracking these statistics is to help you identify transactions that are slower than your organization's target Service Level Agreements (SLAs).
+One use-case for tracking these statistics is to help you identify transactions that are slower than your organization's target Service Level Agreements (SLAs).
 
 A word of caution when looking at averages and percentiles: In most cases, you'll want to set up tracing so that only [a fraction](#data-sampling) of possible traces are actually sent to Sentry, to avoid overwhelming your system. Further, you may want to filter your transaction data by date or other factors, or you may be tracing a relatively uncommon operation. For all of these reasons, you may end up with average and percentile data that is directionally correct, but not accurate. (To use the most extreme case as an example, if only a single transaction matches your filters, you can still compute an "average" duration, even though that's clearly not what is usually meant by "average.")
 
