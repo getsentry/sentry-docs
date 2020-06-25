@@ -6,7 +6,7 @@ keywords: ["flutter"]
 
 To report to Sentry you’ll need to use a language-specific SDK. The Sentry team builds and maintains these for most popular languages, but there’s also a large ecosystem supported by the community.
 
-If your use-case is very specific, or not covered by Sentry, you'll find documentation on how to report events on your own using our [_SDK API_]({%- link _documentation/development/sdk-dev/index.md -%}).
+If your use-case is very specific, or not covered by Sentry, you'll find documentation on how to report events on your own using our [_SDK API_](https://develop.sentry.dev/sdk/overview/).
 
 ## Languages
 
@@ -23,7 +23,7 @@ These SDKs are [maintained and supported](https://forum.sentry.io) by the Sentry
 * [_C++_](https://github.com/nlohmann/crow)
 * [_Clojure_](https://github.com/sethtrain/raven-clj#alternatives)
 * [_Crystal_](https://github.com/Sija/raven.cr)
-* [_Flutter_]({% link _documentation/platforms/flutter/index.md %})
+* [_Flutter_](/platforms/flutter/)
 * [_Grails_](https://github.com/agorapulse/grails-sentry)
 * [_Kubernetes_](https://github.com/getsentry/sentry-kubernetes)
 * [_Lua_](https://github.com/cloudflare/raven-lua)
@@ -36,6 +36,6 @@ These SDKs are [maintained and supported](https://forum.sentry.io) by the Sentry
 
 ## Other platforms
 
-Some platforms have been phased out or have been replaced with new SDKs. For those legacy integrations head over to the [legacy clients]({% link _documentation/clients/index.md %}) page.
+Some platforms have been phased out or have been replaced with new SDKs. For those legacy integrations head over to the [legacy clients](/clients/) page.
 
 Your favorite language or framework still cannot be found? Then we encourage you to start a discussion about supporting it on our [community forum](https://forum.sentry.io).

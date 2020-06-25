@@ -20,8 +20,4 @@ This step-by-step guide walks you through the flow of setting up and configuring
 
 ## Next
 
-[Create a Sentry Project]({%- link _documentation/guides/integrate-frontend/create-new-project.md -%})
-
-***
-
-<!-- ![Guide Flow]({% asset guides/integrate-frontend/configure-launch-react-demo.gif @path %}) -->
+[Create a Sentry Project](/guides/integrate-frontend/create-new-project/)

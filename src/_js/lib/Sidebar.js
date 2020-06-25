@@ -9,10 +9,12 @@ $(document).on('page.didUpdate', function(event) {
   const pathname = trimEndSlash(location.pathname);
 
   let $active = $links
-    .filter((i, l) => pathname === trimEndSlash($(l).attr('href')))
+    .filter(
+      (i, l) => l.href && pathname === trimEndSlash($(l).attr('href') || '')
+    )
     .last();
 
-  if($active.length > 0) {
+  if ($active.length > 0) {
     $active[0].scrollIntoView();
   }
 

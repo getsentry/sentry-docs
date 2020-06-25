@@ -7,9 +7,9 @@ Symfony is supported via the [sentry-symfony](https://github.com/getsentry/sentr
 
 <!-- WIZARD -->
 {% capture markdown_content %}
-This documentation refers to the v3.0 of the bundle. This version supports the newest [Unified API client]({%- link _documentation/platforms/php/index.md -%}).
+This documentation refers to the v3.0 of the bundle. This version supports the newest [Unified API client](/platforms/php/).
 
-You can continue to use [the previous versions]({%- link _documentation/clients/php/integrations.md -%}#symfony-2) if you're still using Symfony 2.
+You can continue to use [the previous versions](/clients/php/integrations/#symfony-2) if you're still using Symfony 2.
 {% endcapture %}
 
 {% include components/alert.html
@@ -65,8 +65,8 @@ If you're using the Symfony Flex plugin, you'll find this file already created f
 
 ## Customization
 
-The [Sentry 2.0 SDK]({% link _documentation/platforms/php/index.md %}#php-specific-options) uses the 
-[Unified API]({% link _documentation/development/sdk-dev/unified-api.md %}), hence it uses the concept of `Scope`s to 
+The [Sentry 2.0 SDK](/platforms/php/#php-specific-options) uses the 
+[Unified API](https://develop.sentry.dev/sdk/unified-api/), hence it uses the concept of `Scope`s to 
 hold information about the current state of the app, and attach it to any event that is reported. 
 This bundle has three listeners (`RequestListener`, `SubRequestListener`, and `ConsoleListener`) that add some easy 
 default information. Those listeners normally are executed with a priority of `1` to allow easier customization with 
@@ -77,9 +77,18 @@ current `Scope` and enrich you Sentry events.
 
 ## Configuration
 This is an example of the bundle configuration with all the possible options and example values:
+
+N.B. The `register_error_listener` and `monolog` configuration options are available since [sentry/sentry-symfony:^3.2.0](https://github.com/getsentry/sentry-symfony/releases/tag/3.2.0)
+
 ```yaml
 sentry:
     dsn: '___PUBLIC_DSN___'
+    register_error_listener: true
+    monolog:
+        error_handler:
+            enabled: false
+            level: DEBUG
+            bubble: true
     options:
         attach_stacktrace: true 
         before_breadcrumb: '@sentry.callback.before_breadcrumb'
@@ -124,8 +133,8 @@ disable it in the `test` and `dev` environments.
 
 ### Options
 All the possibile configurations under the `options` key map directly to the correspondent options from the base SDK;
-you can read more about those in the [Unified API configuration docs]({% link _documentation/error-reporting/configuration/index.md %}),
-and on the [PHP specific SDK docs]({% link _documentation/platforms/php/index.md %}#php-specific-options).
+you can read more about those in the [Unified API configuration docs](/error-reporting/configuration/),
+and on the [PHP specific SDK docs](/platforms/php/#php-specific-options).
 
 Below you can find additional documentation that is specific to the bundle usage, or information about the sensible default
 values that you can use in some cases.

@@ -52,7 +52,7 @@ Visiting this route will trigger an error that will be captured by Sentry.
   object to capture some more data.
 
 * Logging with `app.logger` or *any* logger will create breadcrumbs when
-  the [Logging]({% link _documentation/platforms/python/logging.md %})
+  the [Logging](/platforms/python/logging/)
   integration is enabled (done by default).
 
 ## Options
@@ -69,11 +69,11 @@ You can pass the following keyword arguments to `FlaskIntegration()`:
 
   In the above code, you would set the transaction to:
 
-  * `/myurl/<foo>` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
+  * `/myurl/&lt;foo&gt;` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
   * `myendpoint` if you set `transaction_style="endpoint"`
 
   The default is `"endpoint"`.
 
 ## User Feedback
 
-You can use the user feedback feature with this integration.  For more information see [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md %}?platform=flask).
+You can use the user feedback feature with this integration.  For more information see [User Feedback](/enriching-error-data/user-feedback/?platform=flask).

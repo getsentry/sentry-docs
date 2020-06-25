@@ -4,32 +4,42 @@ sidebar_order: 1
 example_environment: "staging"
 ---
 
-As of Sentry 9, you can easily filter issues, releases, and user feedback by environment. On the top right of your screen, you’ll see a dropdown of different environments. Toggling between environments will allow you to see issue data, release data, and user feedback data filtered by environment.
+Environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI. On that page, you can view information about a specific environment, focusing on the most recent release. If you’re using a multi-staged release process, you can also select a different default environment and set conditions that match the `environment` attribute to restrict alerts to only specific release stages. Sentry environments are available for most features — excluding Dashboards.
 
-[{% asset environment_filter.png %}]({% asset environment_filter.png @path %})
+Use projects to separate different services or applications, and environments to separate different environments or release stages within each. If you've selected one or more projects in the global header of Sentry's web UI, the environment selector shows only environments associated with events from the selected projects.
 
-## Inside the Environment Filter
+[{% asset environments/env_dropdown.png alt="A project's All Environments dropdown expanded to show production and staging as options." %}]({% asset environments/env_dropdown.png @path %})
 
-**Issues**
+Environments are unique to each organization. Environment settings, however, are defined per project since you can hide environments per project.
 
-Sentry defines an issue as a grouping of similar events. If one or more events within an issue are tagged with a certain environment, that issue will appear in your view when filtered by that environment. For example, if an issue is composed of one event tagged with `Production` and one event tagged with `Staging`, the issue will appear in your view when filtering by `Production` as well as by `Staging`.
+## Creating Environments
 
-In addition, the environment filter affects all issue-related metrics like count of users affected, times series graphs, and event count.
+Sentry automatically creates environments when it receives an event with the environment tag. Environments are case sensitive. The environment name can't contain newlines or spaces, can't be the string "None", or exceed 64 characters. You can't delete environments, but you can [hide](#hidden-environments) them.
 
-**Releases**
+```python
+import sentry_sdk
 
-You can filter releases by which environment they’ve been deployed to (to learn more about configuring releases and deploys, click [here]({%- link _documentation/workflow/releases/index.md -%})). For example, a release linked to a `QA` deploy and a `Prod` deploy will appear in your view when filtering by `QA` as well as `Prod`. All issue-related metrics within a given release will be affected by the environment filter.
+sentry_sdk.init(environment="staging")
+```
 
-## Hiding environments
+## **Environment Filter**
 
-If a certain environment is not a useful filter for your team, you can hide the environment from your environments dropdown by navigating to your project settings > Environments, and selecting ‘Hide’. Data sent from that environment will still be visible under _All Environments_, and will still count against your quota.
+### **Issues**
 
-If you want to change the name of a given environment, you will have to modify your SDK configuration. _This will not change environment names for past data._
+If an issue has events from multiple environments, the issue will appear when you select any of those environments. Sentry defines an issue as a grouping of similar events. If you tag one or more events within an issue with a specific environment, that issue will appear in your view when filtered by that environment. For example, if an issue is composed of one event tagged with `Production` and one event tagged with `Staging`, the issue will appear in your view when filtering by `Production`, as well as by `Staging`.
 
-## How to send environment data
+Also, the environment filter affects all issue-related metrics, such as the count of users affected, times series graphs, and event count.
 
-Environment data is sent to Sentry by tagging issues via your SDK:
+### **Releases**
 
-{% include components/platform_content.html content_dir='set-environment' %}
+A release by itself is not associated with an environment but can be deployed to different environments. When you select an environment on the releases page, it shows releases that were deployed to that environment. For example, a release deployed to the `QA` and `Prod` environment will appear in your view when filtering by `QA`, as well as `Prod`. All issue-related metrics within a given release will be affected by the environment filter. A deploy must have an environment.
 
-There are a few restrictions -- the environment name cannot contain newlines or spaces, cannot be the string "None", or exceed 64 characters.
+For more details about configuring releases and deploys, see the [full documentation on Releases]([https://docs.sentry.io/workflow/releases/](https://docs.sentry.io/workflow/releases/)).
+
+## Hidden Environments
+
+Since you can't delete environments, Sentry has an option to hide it from the UI. Hiding environments can be useful when you're no longer sending events from an environment, or you've accidentally created an environment you no longer want. You can hide environments from your environments dropdown by navigating to **Project Settings > Environments**, and selecting "Hide", but events sent to that environment **will still count against your quota**.
+
+If a project is hidden, you won't see that environment in the environment selector, unless another project with events from the same environment is also selected (and doesn't have it hidden in its project settings).
+
+[{% asset environments/env_hidden.png alt="The Manage Environments page has two tabs for Environments and Hidden." width="600" %}]({% asset environments/env_hidden.png @path %})

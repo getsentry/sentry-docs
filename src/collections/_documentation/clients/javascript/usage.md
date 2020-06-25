@@ -102,7 +102,7 @@ The `captureMessage`, `captureException`, `context`, and `wrap` functions all al
 
 `tags`
 
-: [Tags]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) to assign to the event.
+: [Tags](/enriching-error-data/additional-data/#tags) to assign to the event.
 
   ```javascript
   Raven.wrap({
@@ -185,7 +185,7 @@ Raven.captureBreadcrumb({
 });
 ```
 
-To learn more about what types of data can be collected via breadcrumbs, see the [breadcrumbs client API specification]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}).
+To learn more about what types of data can be collected via breadcrumbs, see the [breadcrumbs client API specification](/enriching-error-data/breadcrumbs/).
 
 Note that you can also disable automatic breadcrumb collection entirely or disable specific collectors:
 
@@ -197,7 +197,7 @@ Raven.config('___PUBLIC_DSN___', {
 });
 ```
 
-For more on configuring breadcrumbs, see [_Configuration_]({%- link _documentation/clients/javascript/config.md -%}).
+For more on configuring breadcrumbs, see [_Configuration_](/clients/javascript/config/).
 
 ## Getting Back an Event ID
 
@@ -229,7 +229,7 @@ try {
 }
 ```
 
-For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
+For more details on this feature, see the [_User Feedback guide_](/enriching-error-data/user-feedback/).
 
 ## Verify Raven Setup
 
@@ -253,7 +253,7 @@ If you’re hosting your scripts on another domain and things don’t get caught
 
 To help mitigate this, we can tell the browser that these scripts are safe and we’re allowing them to expose their errors to us.
 
-In your `<script>` tag, specify the `crossorigin` attribute:
+In your `&lt;script&gt;` tag, specify the `crossorigin` attribute:
 
 ```html
 <script src="//cdn.example.com/script.js" crossorigin="anonymous"></script>
@@ -304,7 +304,7 @@ For example, if you have HTTP 404 (page not found) errors, and you’d prefer th
 {% raw %}Raven.captureException(ex, {fingerprint: ['{{ default }}', 'http://my-url/']});{% endraw %}
 ```
 
-For more information, see [Customize Grouping with Fingerprints]({%- link _documentation/data-management/event-grouping/index.md -%}).
+For more information, see [Customize Grouping with Fingerprints](/data-management/event-grouping/).
 
 ## Preventing Abuse
 

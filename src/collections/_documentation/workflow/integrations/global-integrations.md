@@ -41,7 +41,7 @@ Azure DevOps should now be enabled for all projects under your Sentry organizati
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -89,7 +89,7 @@ To configure Issue sync, navigate to Organization Settings > **Integrations**, a
 
 #### Resolve in Commit
 
-Once you send commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you send commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -147,7 +147,7 @@ Bitbucket should now be enabled for all projects under your Sentry organization.
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -167,7 +167,7 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 
 #### Resolving in Commit
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -180,7 +180,7 @@ When Sentry sees this, we’ll automatically annotate the matching issue with re
 
 ### Bitbucket Server
 
-You can use the data from your Bitbucket Server commits to help find and fix bugs faster. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
+You can use the data from your Bitbucket Server commits to help find and fix bugs faster. [Troubleshooting](/workflow/integrations/global-integrations/#troubleshooting-2)
 
 #### Installing Bitbucket Server with Sentry
 
@@ -230,7 +230,7 @@ openssl x509 -pubkey -noout -in bitbucket_publickey.cer  > bitbucket_publickey.p
 
 ##### III. Connect your Bitbucket Server application with Sentry
 {% capture __alert_content -%}
-Make sure you have whitelisted [Sentry's IP ranges.](https://docs.sentry.io/ip-ranges/)
+Confirm [Sentry's IP ranges](/meta/ip-ranges/) are whitelisted.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -247,7 +247,7 @@ Bitbucket should now be authorized for all projects under your Sentry organizati
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -259,7 +259,7 @@ You’ll also see that the author of the suspect commit will be listed as a sugg
 
 #### Resolving in Commit
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -403,7 +403,7 @@ The GitHub integration is available for all projects under your Sentry organizat
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -425,7 +425,7 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 
 #### Resolving in Commit/Pull Request
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
@@ -433,17 +433,17 @@ Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
+You can also resolve issues with pull requests by including `fixes &lt;SENTRY-SHORT-ID&gt;` in the title or description.
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
 
 #### GitHub SSO
 
-[Enable Single Sign-on]({%- link _documentation/accounts/sso.md -%})
+[Enable Single Sign-on](/accounts/sso/)
 
 ### GitHub Enterprise
 
-You can use the data from your GitHub Enterprise commits to help find and fix bugs faster. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
+You can use the data from your GitHub Enterprise commits to help find and fix bugs faster. [Troubleshooting](/workflow/integrations/global-integrations/#troubleshooting-2)
 
 #### Configure GitHub Enterprise
 
@@ -458,7 +458,7 @@ Sentry owner or manager permissions, and GitHub owner permissions are required t
 
 ###### Add new GitHub App
 
-1. Make sure you've whitelisted Sentry’s outbound request [IPs addresses](https://docs.sentry.io/ip-ranges/) for your GitHub Enterprise instance.
+1. Confirm [Sentry's IP ranges](/meta/ip-ranges/) are whitelisted for your GitHub Enterprise instance.
 2. In your GitHub Enterprise organization, navigate to Settings > Developer Settings > **GitHub Apps** and click to add a new **New GitHub App**.
 
     [{% asset github-e-new-app.png %}]({% asset github-e-new-app.png @path %})
@@ -535,7 +535,7 @@ GitHub Enterprise should now be enabled for all projects under your Sentry organ
 
 #### Commit Tracking
 
-Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
 
 #### Suspect Commits and Suggested Assignees
 
@@ -555,20 +555,20 @@ Once you’ve navigated to a specific issue, you’ll find the **Linked Issues**
 
 #### Resolving in Commit/Pull Request
 
-Once you are sending commit data, you can start resolving issues by including `fixes <SENTRY-SHORT-ID>` in your commit messages. For example, a commit message might look like:
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
 
 ```
 Prevent empty queries on users
 Fixes MYAPP-317
 ```
 
-You can also resolve issues with pull requests by including `fixes <SENTRY-SHORT-ID>` in the title or description.
+You can also resolve issues with pull requests by including `fixes &lt;SENTRY-SHORT-ID&gt;` in the title or description.
 
 When Sentry sees this, we’ll automatically annotate the matching issue with a reference to the commit or pull request, and, later, when that commit or pull request is part of a release, we’ll mark the issue as resolved.
 
 ### GitLab
 
-Sentry’s GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry. [Troubleshooting]({% link _documentation/workflow/integrations/global-integrations.md %}#troubleshooting-2)
+Sentry’s GitLab integration helps you find and fix bugs faster by using data from your GitLab commits. Additionally, you can streamline your triaging process by creating a GitLab issue directly from Sentry. [Troubleshooting](/workflow/integrations/global-integrations/troubleshooting-2)
 
 #### Configure GitLab
 
@@ -652,7 +652,7 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
 
 Commit tracking allows you to hone in on problematic commits. With commit tracking, you can better isolate what might be problematic by leveraging information from releases like tags and metadata.
 
-Once you've configured both [release and commit tracking]({%- link _documentation/workflow/releases/index.md -%}), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
+Once you've configured both [release and commit tracking](/workflow/releases/), you'll be able to see more thorough information about a release: who made commits, which issues were newly introduced by this release, and which deploys were impacted.
 
 [{% asset gitlab/last-commit-in-releases.png alt="Dashboard with last commit highlighted" %}]({% asset gitlab/last-commit-in-releases.png @path %})
 
@@ -662,7 +662,7 @@ When you investigate deeper into that commit, you can leverage information from 
 
 Broadly, this lets you isolate problems in order to see which commits might be problematic.
 
-Learn more about [release and commit tracking]({%- link _documentation/workflow/releases/index.md -%}).
+Learn more about [release and commit tracking](/workflow/releases/).
 
 #### Suspect Commit
 
@@ -672,13 +672,13 @@ One special benefit of using Sentry's Commit Tracking is the ability to know the
 
 [{% asset gitlab/highlighting-suspect-commits.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/highlighting-suspect-commits.png @path %})
 
-Here is where you can find info for [suspect commit setup]({%- link _documentation/workflow/releases/index.md -%}#link-repository).
+Here is where you can find info for [suspect commit setup](/workflow/releases/#link-repository).
 
 #### Resolve via Commit or PR
 
-Once you've added a repository (see configuration step 8), you can start resolving issues by including `fixes <SHORT-ID>` in your commit messages. You might want to type something in the commit like: "this fixes MyApp-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes <SHORT-ID>` in the title or description. This will automatically resolve the issue in the next release. 
+Once you've added a repository (see configuration step 8), you can start resolving issues by including `fixes &lt;SHORT-ID&gt;` in your commit messages. You might want to type something in the commit like: "this fixes MyApp-AB12" or "Fixes MyApp-317". The keyword to include is **fixes**. You can also resolve issues with pull requests by including `fixes &lt;SHORT-ID&gt;` in the title or description. This will automatically resolve the issue in the next release. 
 
-A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
+A `&lt;SHORT-ID&gt;` may look something like 'BACKEND-C' in the image below.
 
 [{% asset gitlab/short-id.png alt="Issue detail highlighting suspect commits" %}]({% asset gitlab/short-id.png @path %})
 
@@ -686,7 +686,7 @@ A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
 
 FAQ:
 - I'm using GitLab on-premise. Do I need to whitelist Sentry's IP addresses?
-    - Yes. You can find our IP ranges [ here ]({%- link ip-ranges.md -%}).
+    - Yes. You can find our IP ranges [ here ](/meta/ip-ranges/).
 - Do you support subgroups?
     - Currently, we only support subgroups for users using GitLab 11.6 or higher.
 - My repositories are hosted under my user account, not a group account. Can I still use this integration?
@@ -815,7 +815,7 @@ openssl x509 -pubkey -noout -in jira_publickey.cer  > jira_publickey.pem
 
 ##### III. Connect your Jira Server application with Sentry
 {% capture __alert_content -%}
-Make sure you have whitelisted [Sentry's IP ranges.](https://docs.sentry.io/ip-ranges/)
+Confirm [Sentry's IP ranges](/meta/ip-ranges/) are whitelisted.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -879,7 +879,7 @@ If you hit a 4xx or 5xx error during or after setting up the Jira Server integra
 
 ## Issue Notifications
 
-Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}) to properly route notifications to a specific integration.
+Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**](/workflow/alerts-notifications/alerts/) to properly route notifications to a specific integration.
 
 ### Slack
 
@@ -899,41 +899,41 @@ Sentry owner or manager permissions are required to install this integration. Sl
 
 1. In Sentry, navigate to Organization Settings > **Integrations**.
 
-1. At the top of the page, you’ll see the available Global Integrations list, which includes Slack. Click **Install** to integrate Sentry with your Slack workspace(s).
+1. When you enter the page, the integrations list displays, which includes Slack. Use the search bar to filter quickly for the Slack integration. 
+Click **Slack** to navigate to the details page for this integration.
 
-    [{% asset slack-all-integrations-page.png %}]({% asset slack-all-integrations-page.png @path %})
+    [{% asset slack-integration-directory.png %}]({% asset slack-integration-directory.png @path %})
 
 1. Click **Add workspace**.
 
-    [{% asset slack-auth-choose-workspace.png %}]({% asset slack-auth-choose-workspace.png @path %})
+    [{% asset slack-overview-details-page.png %}]({% asset slack-overview-details-page.png @path %})
 
-    You can toggle the Slack workspace you want to connect in the dropdown menu in the upper right corner of the authentication window. To set up multiple workspaces, go through this process for each separate workspace.
 
-1. After you've connected to the correct workspace, click **Continue**.
+1. Toggle to the Slack workspace to which you want to connect using the dropdown menu in the upper right corner of the authentication window, then select **Allow**. Repeat this process if you are connecting to multiple workspaces.
 
-1. On the next page, you can choose the scope of channels you’d like Sentry to access. You can specify all public channels or choose specific channels. Then click **Install**.
+    [{% asset slack-allow-install.png %}]({% asset slack-allow-install.png @path %})
 
-    [{% asset slack-auth-channel-pref.png %}]({% asset slack-auth-channel-pref.png @path %})
+1. Your integration details page will refresh and show the Slack workspace you just added.
 
-1. Your Organization Integrations page will refresh and show the Slack workspace you just added.
+    [{% asset slack-install-success.png %}]({% asset slack-install-success.png @path %})
 
-    [{% asset slack-add-workspace-success.png %}]({% asset slack-add-workspace-success.png @path %})
+Your Slack integration is now available to all projects in your Sentry organization. To enable Slack notification for private channels, add the Slack app to the channel. One quick method: use `@sentry` to invite the Sentry bot the Slack channel.
 
-    You’ll also see the Sentry app join the Slack channels you specified right away.
-
-    [{% asset slack-sentry-integration-in-channel.png %}]({% asset slack-sentry-integration-in-channel.png @path %})
-
-Now your Slack integration is available to all projects in your Sentry organization. See the next section to configure your notification settings.
+In the next section, we'll walk you through configuring your notification settings.
 
 #### Configure Alert Rules
 
-1. Confirm your Slack workspace is configured globally for your Sentry organization by navigating to Organization Settings > **Integrations**.
+1. Confirm your Slack workspace is configured globally for your Sentry organization by navigating to Organization Settings > **Integrations**. Click on **Configuration(s)** to go to the configuration details page. 
 
-    [{% asset slack-add-workspace-success.png %}]({% asset slack-add-workspace-success.png @path %})
+    [{% asset slack-directory-installed.png %}]({% asset slack-directory-installed.png @path %})
+    
+1. Select the Slack workspace to configure from the list, then click **Configure**.
 
-1. Click **Configure** and you’ll see the available Slack workspaces for your project. From this page, you can click on **Add Alert Rule** for this project to go directly to your Alert Rule settings.
+    [{% asset slack-install-success.png %}]({% asset slack-install-success.png @path %})
 
-    [{% asset slack-global-integration-project-settings-add-alert.png %}]({% asset slack-global-integration-project-settings-add-alert.png @path %})
+1. Click **Add Alert Rule** for this project to navigate to Alert Rule settings.
+
+    [{% asset slack-project-configuration.png %}]({% asset slack-project-configuration.png @path %})
 
     You can also access **Alerts** from your **Project Settings**. From here, you can configure when notifications are sent to your Slack workspace(s).
 
@@ -943,23 +943,77 @@ Now your Slack integration is available to all projects in your Sentry organizat
 
     [{% asset slack-alert-rules.png %}]({% asset slack-alert-rules.png @path %})
 
-    For any existing Alert Rules, you can edit the rule to update the Slack channel routing. When you click **Edit Rule**, under **Take these actions** you can specify your Slack channel(s):
+    Update the Slack channel routing by for existing Alert Rules by choosing Slack as the action under **Perform these actions**:
 
     [{% asset slack-alert-rule-edit.png %}]({% asset slack-alert-rule-edit.png @path %})
 
-    After selecting **Send a notification to the {workspace} Slack workspace to {channel} and include tags {tags}**, you can specify the workspace, channel(s), and tags you’d like to include with your Alert Rule.
+    After selecting **Send a Slack notification**, specify the workspace, channel(s), and tags you’d like to include with your Alert Rule.
 
-    [{% asset slack-alert-rule-for-one-workspace.png %}]({% asset slack-alert-rule-for-one-workspace.png @path %})
+    [{% asset slack-alert-rule-edit-channels.png %}]({% asset slack-alert-rule-edit-channels.png @path %})
 
     You can add Alert Rules routing to as many Slack channels as you’d like.
 
 1. Then once you receive a Slack notification, you can use the Resolve, Ignore, or Assign buttons to update the Issue in Sentry.
 
     [{% asset slack-alert-message.png %}]({% asset slack-alert-message.png @path %})
+    
+#### Deleting the legacy project-based Slack integration
 
-#### Deleting the legacy Slack integration
+We recommend disabling the legacy project-based integration after setting up the global integration.
 
-Once you configure the global Slack integration and Alert Rules, you can disable the old Slack integration. You’ll need to go to each project that has it enabled and disable it. We recommend disabling the legacy integration after setting up the global integration.
+Once you configure the global Slack integration and Alert Rules, you can disable the old project-based Slack integration. Go to each project that has the old project-based Slack enabled and disable it. If you're looking to upgrade your global integration, please refer to the information below under **Upgrading Slack**.
+
+### Upgrading Slack
+
+#### How do I know if I need to upgrade? 
+
+You need to upgrade if you installed the global Slack integration on a Sentry organization before May 8, 2020. Unsure whether or not that includes your organization? Please visit your integration's page via **Organization Settings > Integrations**. You will see a call to action for the Slack integration. 
+
+[{% asset slack-migration-integration-directory.png %}]({% asset slack-migration-integration-directory.png @path %})
+
+Please note we are still rolling this out, if you don't see this yet you may be in a later wave.
+
+If you installed the Slack integration on a Sentry organization after May 8, 2020, your integration will be up-to-date, and no upgrade is needed.
+
+#### Why do I need to upgrade?
+
+Sentry built its previous Slack integration on top of Slack's workspace apps. Unfortunately, Slack deprecated the workspace apps shortly afterward. You can find more details about that decision on [the Slack blog](https://medium.com/slack-developer-blog/an-update-on-workspace-apps-aabc9e42a98b). 
+
+While we were able to maintain the integration in the past, our workspace app relies on Slack APIs that will soon deprecate. We now need to move to Slack's newly supported bot app framework.
+
+
+#### What changes after my integration is upgraded?
+
+Previously, Slack workspace apps allowed you to give Sentry access to whichever channels you chose, including public or specific channels -- which could be either public or private.
+
+Bot apps in Slack work differently. By default, the Sentry bot will be able to post alerts in public channels, but in order to be able to post to private channels, you'll need to add the bot to that specific channel.
+
+In terms of your alert rule configurations, if your current Slack integration only uses public channels, then nothing needs to change after you upgrade.
+
+Going forward, if you want to add private channels to alert rules, you'll need to add the Sentry bot to the channel first before making the Sentry rule. 
+
+If you have any private channels currently used in your alert rules, for the alerts to work, you'll need to add the Sentry bot after you've upgraded. In the upgrade flow, you'll have a chance to review which private channels you're using. Sentry will send a message to each channel, once you've upgraded, as a reminder to add the Sentry bot to that channel.
+
+#### How do I upgrade?
+
+1. Go to your Slack configurations page in Sentry. Click **Upgrade Now**.
+    [{% asset slack-migration-configurations.png %}]({% asset slack-migration-configurations.png @path %})
+
+2. Click **Continue**.
+    [{% asset slack-migration-intro.png %}]({% asset slack-migration-intro.png @path %})
+
+3. If you have any private channels in use, you'll see them listed.
+    [{% asset slack-migration-private-channels.png %}]({% asset slack-migration-private-channels.png @path %})
+    
+    Otherwise, you'll see:
+    [{% asset slack-migration-no-private-channels.png %}]({% asset slack-migration-no-private-channels.png @path %})
+    
+    Either way, when you're ready, Click **Upgrade**.
+
+
+#### When do I need to migrate by?
+
+All Sentry organizations will have until October 1, 2020, to upgrade their Slack integration. If you have any questions or concerns, please email us at [partners@sentry.io](mailto:partners@sentry.io).
 
 ## Incident Management
 
@@ -1083,7 +1137,8 @@ Follow the instructions in the link below:
 <https://help.split.io/hc/en-us/articles/360029879431>
 
 ## Troubleshooting
+
 If you're having trouble setting up Sentry with your on-premise integration like JIRA Server, Bitbucket Server, GitHub Enterprise, or Gitlab:
 - Ensure that the installation URL you provided is a fully qualified domain name (FQDN), which is resolvable on the internet.
-- Double-check that the IP addresses Sentry uses to make outbound requests are whitelisted <https://docs.sentry.io/ip-ranges/>.
+- Double-check that the IP addresses Sentry uses to make outbound requests are whitelisted </meta/ip-ranges/>.
 - Make sure that Sentry's access to your installation URL is not path restricted.

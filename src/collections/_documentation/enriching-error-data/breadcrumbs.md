@@ -67,4 +67,4 @@ hint.  The function can modify the breadcrumb or decide to discard it entirely:
 
 {% include components/platform_content.html content_dir='before-breadcrumb' %}
 
-For information about what can be done with the hint see [_Filtering Events_]({% link _documentation/error-reporting/configuration/filtering.md %}#before-breadcrumb).
+For information about what can be done with the hint see [_Filtering Events_](/error-reporting/configuration/filtering/#before-breadcrumb).

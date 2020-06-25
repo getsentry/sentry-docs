@@ -48,7 +48,7 @@ Sentry.init({ dsn: '___PUBLIC_DSN___' });
 ```
 
 For more configuration options, see:
-- [Sentry's complete list of Common Options across SDKs]({%- link _documentation/error-reporting/configuration/index.md -%})
+- [Sentry's complete list of Common Options across SDKs](/error-reporting/configuration/)
 
 ### Verifying Your Setup
 Great! Now that you've completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
@@ -61,7 +61,17 @@ Then, you can see the error in your dashboard:
 [{% asset js-index/error-message.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/error-message.png @path %})
 
 ## Capturing Errors
-In most situations, you can capture errors automatically with `captureException()`.
+Automatically and manually capture errors, exceptions, and rejections.
+
+### Automatically Capture Errors
+By including and configuring Sentry, the SDK will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
+
+[{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
+
+Note: Browsers may take security measures when serving script files from different origins that can block error reporting. If you find errors are not being reported accurately, please see the troubleshooting section on [Cross-Origin Resource Sharing (CORS)](#cors-attributes-and-headers).
+    
+### Manually Capture Errors
+In most situations, you can capture errors manually with `captureException()`.
 
 ```javascript
 try {
@@ -72,19 +82,12 @@ try {
 ```
 For additional functionality, see [SDK Integrations](#sdk-integrations).
 
-### Automatically Capturing Errors
-By including and configuring Sentry, the SDK will automatically attach global handlers to capture uncaught exceptions and unhandled rejections.
-
-[{% asset js-index/automatically-capture-errors.png alt="Stack trace of a captured error" %}]({% asset js-index/automatically-capture-errors.png @path %})
-
-Keep in mind; browsers are taking some security measures when serving script files from different origins. For errors to always make their way to Sentry, make sure that you configure CORS headers and add appropriate script attributes. For more information, refer to our [What the heck is "Script error"?](https://blog.sentry.io/2016/05/17/what-is-script-error#the-fix-cors-attributes-and-headers) blog post.
-
-### Automatically Capturing Errors with Promises
-By default, Sentry for JavaScript captures unhandled promise rejections as described in the official ECMAScript 6 standard.
+### Automatically Capture Errors with Promises
+By default, Sentry for JavaScript captures unhandled promise rejections, as described in the official ECMAScript 6 standard.
 
 Configuration may be required if you are using a third-party library to implement promises.
 
-Most promise libraries have a global hook for capturing unhandled errors. You may want to disable default behavior by changing `onunhandledrejection` option to `false` in your [GlobalHandlers]({%- link _documentation/platforms/javascript/index.md -%}#globalhandlers) integration and manually hook into such event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
+Most promise libraries have a global hook for capturing unhandled errors. Disable default behavior by changing the `onunhandledrejection` option to `false` in your [GlobalHandlers](/platforms/javascript/#globalhandlers) integration and manually hook into each event handler and call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 ## Releases
 
@@ -119,7 +122,7 @@ $ npm install --save-dev @sentry/webpack-plugin
 $ yarn add --dev @sentry/webpack-plugin
 ```
 
-To allow the plugin to upload source maps automatically, create a `.sentryclirc` or configure environment variables as described in the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}). Then, add the plugin to your `webpack.config.js`:
+To allow the plugin to upload source maps automatically, create a `.sentryclirc` or configure environment variables as described in the [CLI configuration docs](/cli/configuration/). Then, add the plugin to your `webpack.config.js`:
 
 ```javascript
 const SentryWebpackPlugin = require('@sentry/webpack-plugin');
@@ -136,6 +139,12 @@ module.exports = {
   ]
 };
 ```
+
+{% include components/alert.html
+  title="Note"
+  content="Make sure the `SentryWebpackPlugin` is set up as the last running plugin, otherwise, it could happen that the resulting source maps that the plugin receives are not the final one."
+  level="warning"
+%}
 
 Alternatively, if you prefer to upload source maps manually, Webpack needs to be configured to output source maps:
 
@@ -174,11 +183,11 @@ Source maps can be either:
 2.  Served publicly over HTTP alongside your source files.
 
 #### Uploading Source Maps to Sentry
-Except for [Webpack]({%- link _documentation/platforms/javascript/sourcemaps.md -%}#webpack), the recommended way to upload source maps is using [Sentry CLI]({%- link _documentation/cli/index.md -%}). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs]({%- link _documentation/cli/configuration.md -%}) to set up your project.
+Except for [Webpack](/platforms/javascript/sourcemaps/#webpack), the recommended way to upload source maps is using [Sentry CLI](/cli/). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs](/cli/configuration/) to set up your project.
 
 Now you need to set up your build system to create a release and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
-Sentry uses [**Releases**]({%- link _documentation/workflow/releases/index.md -%}) to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
+Sentry uses [**Releases**](/workflow/releases/) to match the correct source maps to your events. To create a new release, run the following command (e.g. during publishing):
 
 ```sh
 $ sentry-cli releases new <release_name>
@@ -213,7 +222,7 @@ For convenience, you can alternatively pass the `--finalize` flag to the `new` c
 
 You don't _have_ to upload the source files (ref’d by source maps), but without them, the grouping algorithm will not be as strong, and the UI will not show any contextual source.
 
-For more information, see [Releases API documentation]({%- link _documentation/api/releases/index.md -%}).
+For more information, see [Releases API documentation](/api/releases/).
 
 {% capture __alert_content -%}
 It’s not uncommon for a web application to be accessible at multiple origins. For example:
@@ -256,7 +265,7 @@ Here are some things you can check in addition to the validation step:
 
 For more information, see:
 
-- [Full Documentation on Source Maps]({%- link _documentation/platforms/javascript/sourcemaps.md -%})
+- [Full Documentation on Source Maps](/platforms/javascript/sourcemaps/)
 - [Debuggable JavaScript in Production with Source Maps](https://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps)
 - [4 Reasons Why Your Source Maps are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
 - [Debug Your Node.js Projects with Source Maps](https://blog.sentry.io/2019/02/20/debug-node-source-maps)
@@ -293,7 +302,7 @@ While making source maps available to Sentry from your servers is the most natur
 For these reasons, it is recommended to upload source maps to Sentry beforehand (see below).
 
 {% capture __alert_content -%}
-While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs see: [IP Ranges]({%- link ip-ranges.md -%}#ip-ranges).
+While the recommended solution is to upload your source artifacts to Sentry, sometimes it’s necessary to allow communication from Sentry’s internal IPs. For more information on Sentry’s public IPs see: [IP Ranges](/meta/ip-ranges/).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Working Behind a Firewall"
@@ -310,49 +319,6 @@ If you want to keep your source maps secret and choose not to upload your source
 You can also set context when manually triggering events.
 
 {% include platforms/event-contexts.md %}
-
-### Extra Context {#extra-context}
-In addition to the structured context that Sentry understands, you can send arbitrary key/value pairs of data which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
-
-```javascript
-Sentry.setExtra("character_name", "Mighty Fighter");
-```
-
-{% capture __alert_content -%}
-**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data. Sentry does not recommend this, as application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you'll get an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay `pending` forever (e.g. in Chrome).
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="warning"
-%}
-
-### Unsetting Context
-Context is held in the current scope and thus is cleared out at the end of each operation --- request, etc. You can also push and pop your own scopes to apply context data to a specific code block or function.
-
-There are two different scopes for unsetting context --- a global scope which Sentry does not discard at the end of an operation, and a scope that can be created by the user.
-
-```javascript
-// This will be changed for all future events
-Sentry.setUser(someUser);
-
-// This will be changed only for the error caught inside and automatically discarded afterward
-Sentry.withScope(function(scope) {
-  scope.setUser(someUser);
-  Sentry.captureException(error);
-});
-```
-
-If you want to remove globally configured data from the scope, you can call:
-
-```javascript
-Sentry.configureScope(scope => scope.clear())
-```
-
-For more information, see:
-- [Full documentation on Scopes and Hubs]({%- link
-_documentation/enriching-error-data/scopes.md -%})
-- [Debug Tough Front End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues).
 
 ### Capturing the User
 Sending users to Sentry will unlock many features, primarily the ability to drill down into the number of users affecting an issue, as well as to get a broader sense about the quality of the application.
@@ -444,7 +410,7 @@ The following example will split up the default group Sentry would create (repre
 function makeRequest(path, options) {
     return fetch(path, options).catch(function(err) {
         Sentry.withScope(function(scope) {
-          scope.setFingerprint(['{{default}}', path]);
+          scope.setFingerprint(['{{ "{{default"}}}}', path]);
           Sentry.captureException(err);
         });
     });
@@ -460,6 +426,102 @@ Sentry.withScope(function(scope) {
   Sentry.captureException(err);
 });
 ```
+
+### Extra Context {#extra-context}
+In addition to the structured context that Sentry understands, you can send a key paired with a data object which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
+
+```javascript
+Sentry.setContext("character_attributes", {
+  name: "Mighty Fighter",
+  age: 19,
+  attack_type: "melee"
+});
+```
+
+{% capture __alert_content -%}
+**Be aware of maximum payload size** - There are times, when you may want to send the whole application state as extra data. We don't recommend sending the whole application state as extra data because the state can exceed the 200kB maximum Sentry allows for individual payloads. If the payload size exceeds the maximum allowed, you'll receive an `HTTP Error 413 Payload Too Large` server response. If you set `keepalive: true` as a `fetch` parameter, the request will staying `pending` forever (for example, in Google Chrome).
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+### Passing Context Directly
+
+Starting in version `5.16.0` of our JavaScript SDKs, some of the contextual data can be provided directly to `captureException` and `captureMessage` calls.
+Provided data will be merged with the one that is already stored inside the current scope, unless explicitly cleared using a callback method.
+
+This functionality works in three different variations:
+
+- plain object containing updatable attributes
+- scope instance that we will extract the attributes from
+- callback function that will receive the current scope as an argument and allow for modifications
+
+We allow the following context keys to be passed: `tags`, `extra`, `contexts`, `user`, `level`, `fingerprint`.
+
+#### Example Usages
+
+```javascript
+Sentry.captureException(new Error("something went wrong"), {
+  tags: {
+    section: "articles",
+  }
+});
+```
+
+```javascript
+// Explicitly clear what has been already stored on the scope
+Sentry.captureException(new Error("clean as never"), (scope) => {
+  scope.clear();
+  scope.setTag("clean", "slate");
+  return scope;
+});
+```
+
+```javascript
+// Use Scope instance to pass the data (its attributes will still merge with the global scope)
+const scope = new Sentry.Scope();
+scope.setTag("section", "articles");
+Sentry.captureException(new Error("something went wrong"), scope);
+```
+
+```javascript
+// Use Scope instance to pass the data and ignore globally configured Scope attributes
+const scope = new Sentry.Scope();
+scope.setTag("section", "articles");
+Sentry.captureException(new Error("something went wrong"), () => scope);
+```
+
+### Unsetting Context
+Context is held in the current scope and thus is cleared out at the end of each operation --- request and so forth. You can also push and pop your own scopes to apply context data to a specific code block or function.
+
+Sentry supports two different scopes for unsetting context:
+
+- a global scope, which Sentry does not discard at the end of an operation
+- a scope created by the user
+
+```javascript
+// This will be changed for all future events
+Sentry.setUser(someUser);
+
+// This will be changed only for the error caught inside the `withScope` callback
+// and automatically restored to the previous value afterward
+Sentry.withScope(function(scope) {
+  scope.setUser(someUser);
+  Sentry.captureException(error);
+});
+```
+
+If you want to remove globally configured data from the scope, you can call:
+
+```javascript
+Sentry.configureScope(scope => scope.clear())
+```
+
+For more information, see:
+- [Full documentation on Scopes and Hubs](/enriching-error-data/scopes/)
+- [Debug Tough Front End Errors by Giving Sentry More Clues](https://blog.sentry.io/2019/01/17/debug-tough-front-end-errors-sentry-clues).
 
 ## Supported Browsers {#browser-table}
 
@@ -504,7 +566,7 @@ window.addEventListener('resize', function(event){
 ```
 
 For more information, see:
-- [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
+- [Full documentation on Breadcrumbs](/enriching-error-data/breadcrumbs/)
 - [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
 ### Truncating strings on the event
@@ -531,17 +593,29 @@ Sentry.init({
 
 The first thing to do is consider constructing a whitelist of domains which might raise acceptable exceptions.
 
-If your scripts are loaded from `cdn.example.com` and your site is `example.com` it’d be reasonable to set `whitelistUrls` to:
+If your scripts are loaded from `cdn.example.com` and your site is `example.com` it’d be reasonable to set `allowUrls` to:
 
 ```javascript
 Sentry.init({
-  whitelistUrls: [
+  allowUrls: [
     /https?:\/\/((cdn|www)\.)?example\.com/
   ]
 });
 ```
 
-There is also `blacklistUrls` if you want to block specific URLs forever.
+There is also `denyUrls` if you want to block specific URLs forever.
+
+{% capture __alert %}
+Prior to version 5.17.0, `allowUrls` and `denyUrls` were called `whitelistUrls` and `blacklistUrls` respectively.
+These options are still supported due to backward compatibility reasons, however, they will be removed in version 6.0.
+For more information, please see our [Inclusive Language Policy](https://develop.sentry.dev/inclusion/).
+{% endcapture %}
+
+{% include components/alert.html
+  title="Note"
+  content=__alert
+  level="warning"
+%}
 
 The community has compiled a list of common ignore rules for everyday things, like Facebook, Chrome extensions, etc. So it’s recommended to at least check these out and see if they apply to you. [Here is the original gist](https://gist.github.com/impressiver/5092952). This is not the default value of our SDK; it's just a highlight of an extensive example of what it could be.
 
@@ -570,7 +644,7 @@ Sentry.init({
       // See http://toolbar.conduit.com/Developer/HtmlAndGadget/Methods/JSInjection.aspx
       'conduitPage'
     ],
-    blacklistUrls: [
+    denyUrls: [
       // Facebook flakiness
       /graph\.facebook\.com/i,
       // Facebook blocked
@@ -590,7 +664,7 @@ Sentry.init({
 ```
 
 For more information, see:
-- [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%})
+- [Full documentation on Filtering Events](/error-reporting/configuration/filtering/)
 - [Tips for Reducing JavaScript Error Noise](https://blog.sentry.io/2017/03/27/tips-for-reducing-javascript-error-noise.html)
 - [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 
@@ -615,7 +689,7 @@ Sentry.withScope(function(scope) {
 For more information, see [Setting the Level](#setting-the-level).
 
 ### Lazy Loading Sentry
-We recommend using our bundled CDN version for the browser as explained [here]({% link _documentation/error-reporting/quickstart.md %}?platform=browser#pick-a-client-integration). As noted there, if you want to use `defer`, you can, though keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). Therefore, if you do this, you'll need to a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), which will guarantee that it’s executed before any of the others.
+We recommend using our bundled CDN version for the browser as explained [here](/error-reporting/quickstart/?platform=browser#pick-a-client-integration). As noted there, if you want to use `defer`, you can, though keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). Therefore, if you do this, you'll need to a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), which will guarantee that it’s executed before any of the others.
 
 We also offer an alternative we call the _Loader_. You install by just adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
 
@@ -639,7 +713,7 @@ It's a small wrapper around our SDK. The _Loader_ does a few things:
 - It lazy injects our SDK into your website.
 - After you've loaded the SDK, the Loader will send everything to Sentry.
 
-By default, the _Loader_ contains all information needed for our SDK to function, like the `DSN`.  In case you want to set additional [options]({% link _documentation/error-reporting/configuration/index.md %}) you have to set them like this:
+By default, the _Loader_ contains all information needed for our SDK to function, like the `DSN`.  In case you want to set additional [options](/error-reporting/configuration/) you have to set them like this:
 
 
 ```javascript
@@ -685,7 +759,7 @@ Sentry provides the ability to collect additional feedback from the user upon hi
 [{% asset js-index/sentry-dialog.png alt="Modal popup asking user for more context on what occured before the break." %}]({% asset js-index/sentry-dialog.png @path %})
 
 For more information, see:
-- [Full documentation on User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%})
+- [Full documentation on User Feedback](/enriching-error-data/user-feedback/)
 - [Introducing User Feedback](https://blog.sentry.io/2016/04/21/introducing-user-feedback)
 
 ### SDK Integrations
@@ -704,10 +778,10 @@ to `integrations` option. For example, to turn off browser capturing console cal
 
 _Import name: `Sentry.Integrations.InboundFilters`_
 
-This integration allows developers to ignore specific errors based on the type or message, as well as blacklist/whitelist URLs that originate from the exception.
-It ignores errors, which message starts with `Script error` or `Javascript error: Script error` by default. More on this in our ["What the heck is "Script error"?"](https://blog.sentry.io/2016/05/17/what-is-script-error) blog post. Also, keep in mind that blacklist and whitelist work only for captured exceptions, not raw message events.
+This integration allows developers to ignore specific errors based on the type or message, as well as deny/allow URLs that originate from the exception.
+It ignores errors, which message starts with `Script error` or `Javascript error: Script error` by default. More on this in our ["What the heck is "Script error"?"](https://blog.sentry.io/2016/05/17/what-is-script-error) blog post. Also, keep in mind that denying and allowing specific events, work only for captured exceptions, not raw message events.
 
-To configure it, use `ignoreErrors`, `blacklistUrls`, and `whitelistUrls` SDK options directly.
+To configure the integration, use `ignoreErrors`, `denyUrls`, and `allowUrls` SDK options directly. All three options accept an array of strings or RegExp patterns. When provided with a string, they’ll partially match the URL in case of `denyUrls` and `allowUrls`, or two variants in case of `ignoreErrors` - `message` itself, and `${type}: {message}` format. When given RegExp, it will use the `RegExp.test` method instead, which you can use to achieve an exact match if desired.
 
 ##### FunctionToString
 
@@ -722,7 +796,22 @@ This integration allows the SDK to provide original functions and method names, 
 _Import name: `Sentry.Integrations.TryCatch`_
 
 This integration wraps native time and events APIs (`setTimeout`, `setInterval`, `requestAnimationFrame`,
-`addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions.
+`addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions. By default, the Sentry SDK wraps all possible APIs.
+
+Available options:
+
+```javascript
+{
+  setTimeout: boolean;             // Wrap `setTimeout` callback functions
+  setInterval: boolean;            // Wrap `setInterval` callback functions
+  requestAnimationFrame: boolean;  // Wrap `requestAnimationFrame` callback functions
+  XMLHttpRequest: boolean;         // Wrap `XMLHttpRequest.send` callback functions
+  eventTarget: boolean | string[]; // Wrap EventTarget API callback functions. Can provide an
+                                   // array to only wrap callbacks on specific event targets. 
+                                   // For a list of targets wrapped by default, see
+                                   // https://github.com/getsentry/sentry-javascript/blob/master/packages/browser/src/integrations/trycatch.ts
+}
+```
 
 ##### Breadcrumbs
 
@@ -986,6 +1075,42 @@ basic stack trace. This exception is stored here for further data extraction.
 `xhr`
 
 : For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API. This holds the original xhr object.
+
+## Troubleshooting
+
+### CORS Attributes and Headers
+
+To gain visibility into a JavaScript exception thrown from scripts originating from different origins, do two things:
+
+1. Add a `crossorigin=”anonymous”` script attribute
+
+    ```javascript
+    <script src="http://another-domain.com/app.js" crossorigin="anonymous"></script>
+    ```
+
+    The script attribute tells the browser to fetch the target file "anonymously." Potentially user-identifying information like cookies or HTTP credentials won't be transmitted by the browser to the server when requesting this file.
+
+2. Add a Cross-Origin HTTP header
+
+    ```javascript
+    Access-Control-Allow-Origin: *
+    ```
+    Cross-Origin Resource Sharing (CORS) is a set of APIs (mostly HTTP headers) that dictate how files ought to be downloaded and served across origins.
+    
+    By setting `Access-Control-Allow-Origin: *`, the server is indicating to browsers that any origin can fetch this file. Alternatively, you can restrict it to a known origin you control:
+    
+    ```javascript
+    Access-Control-Allow-Origin: https://www.example.com
+    ```
+    
+    Most community CDNs properly set an Access-Control-Allow-Origin header.
+
+    ```bash
+    $ curl --head https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.js | \
+    grep -i "access-control-allow-origin"
+
+    Access-Control-Allow-Origin: *
+    ```
 
 ## Additional Resources
 - [Optimizing the Sentry Workflow](https://blog.sentry.io/2018/03/06/the-sentry-workflow)

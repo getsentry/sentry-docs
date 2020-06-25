@@ -34,6 +34,7 @@ To this:
 
 ```bash
 export NODE_BINARY=node
+export EXTRA_PACKAGER_ARGS="--sourcemap-output $DERIVED_FILE_DIR/main.jsbundle.map"
 export SENTRY_PROPERTIES=../sentry.properties
 
 # If you are using RN 0.46+
@@ -58,8 +59,7 @@ export SENTRY_PROPERTIES=../sentry.properties
 ``` 
 
 For bitcode enabled builds via iTunes Connect, additional steps are required.
-Follow the instructions in [Sentry's bitcode documentation]({%- link
-_documentation/clients/cocoa/dsym.md -%}#dsym-with-bitcode) to set up uploads of
+Follow the instructions in [Sentry's bitcode documentation](/clients/cocoa/dsym/#dsym-with-bitcode) to set up uploads of
 symbols for all build variants.
 
 By default, uploading of debug simulator builds is disabled for speed reasons. If you want to generate debug symbols for debug builds, you can pass `--allow-fetch` as a parameter to `react-native-xcode` in the above mentioned build phase.

@@ -41,7 +41,7 @@ Create or link issues in Asana based on Sentry events.
 
 ## Issue Notifications
 
-Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}) to properly route notifications to a specific integration.
+Alert notifications in Sentry can be routed to many supported integrations, but by default are aimed at email. You will need to configure a project’s [**Alert Rules**](/workflow/alerts-notifications/alerts/) to properly route notifications to a specific integration.
 
 ### Hipchat
 
@@ -74,7 +74,7 @@ Configuring Data Forwarding is done by visiting **[Project] » Settings » Data 
 
 Integration with Amazon SQS makes it quick and easy to pipe exceptions back into your own systems.
 
-The payload for Amazon is identical is our standard API event payload, and will evolve over time. For more details on the format of this data, see our [API documentation]({%- link _documentation/api/events/get-project-event-details.md -%}).
+The payload for Amazon is identical is our standard API event payload, and will evolve over time. For more details on the format of this data, see our [API documentation](/api/events/get-project-event-details/).
 
 ### Heroku
 
@@ -117,21 +117,24 @@ heroku labs:enable runtime-dyno-metadata -a <app name>
 
 This exposes the `HEROKU_SLUG_COMMIT` environment variable, which most Sentry SDKs will automatically detect and use for configuration.
 
-Next you’ll want to add your repository and setup a deploy hook.
+Next, you’ll want to add your repository and set up a deploy hook:
 
-1.  Start by connecting your repository to your Sentry organization so that we can automatically retrieve your commit data.
+1.  Start by connecting your repository to your Sentry organization so we automatically retrieve your commit data. Find your repository integration (GitHub, GitLab, Bitbucket, for example) in **Settings > Integrations**. From the Configurations tab, click "Configure".
 
-    [{% asset add-repo.png %}]({% asset add-repo.png @path %})
+    [{% asset heroku-configure-repo-integration.png %}]({% asset heroku-configure-repo-integration.png @path %})
     
-2.  Enable the Heroku integration in your Sentry Project Settings.
-
-    [{% asset enable-heroku.png %}]({% asset enable-heroku.png @path %})
+    On the Configure page, click "Add Repository" then select the repository you want to use.
     
-3.  In the Heroku Plugin Configuration, specify which repository and deploy environment to be associated with your Sentry project.
+    [{% asset heroku-repo-add.png %}]({% asset heroku-repo-add.png @path %})
+2.  Find the Heroku integration in **Settings > Integrations**, and click "Add to Project" then select the project you want to use with Heroku.
+
+    [{% asset heroku-integration-detail.png %}]({% asset heroku-integration-detail.png @path %})
+    
+3.  In the Heroku integration configuration, specify which repository and deploy environment to be associated with your Sentry project.
 
     [{% asset heroku-project-config.png %}]({% asset heroku-project-config.png @path %})
     
-4.  Navigate to your Project’s Release Tracking settings and copy the deploy hook command to your Heroku config.
+4.  Navigate to your project’s Release settings and copy the deploy hook command to your Heroku config.
 
     [{% asset heroku-config.png %}]({% asset heroku-config.png @path %})
 
@@ -139,7 +142,7 @@ You’ll start getting rich commit information and deploy emails with each new r
 
 ### Splunk
 
-Connect Splunk to Sentry with the [Data Forwarding]({%- link _documentation/data-management/data-forwarding.md -%}) feature.
+Connect Splunk to Sentry with the [Data Forwarding](/data-management/data-forwarding/) feature.
 
 {% capture __alert_content -%}
 We only support Splunk Cloud plans. We do not support Splunk Enterprise plans.

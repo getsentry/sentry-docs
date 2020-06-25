@@ -3,15 +3,13 @@ title: Minidump
 ---
 
 Sentry can process Minidump crash reports, a memory dump used on Windows and by
-open-source libraries like [_Breakpad_]({%- link
-_documentation/platforms/native/breakpad.md -%}) or [_Crashpad_]({%- link
-_documentation/platforms/native/crashpad.md -%}). You can either choose to
+open-source libraries like [_Breakpad_](/platforms/native/breakpad/) or [_Crashpad_](/platforms/native/crashpad/). You can either choose to
 generate and upload minidumps yourself or use a higher-level SDK for platforms
 with built-in support for native crashes:
 
-- [_Native (C/C++)_]({%- link _documentation/platforms/native/index.md -%})
-- [_Cocoa_]({%- link _documentation/clients/cocoa/index.md -%})
-- [_Electron_]({%- link _documentation/platforms/javascript/electron.md -%})
+- [_Native (C/C++)_](/platforms/native/)
+- [_Cocoa_](/clients/cocoa/)
+- [_Electron_](/platforms/javascript/electron/)
 
 In order to receive symbolicated stack traces, you have to upload debug
 information to Sentry. For more information, see [Debug Information Files]({%-
@@ -60,9 +58,9 @@ Depending on your operating system and programming language, there are various
 alternatives to create minidumps and upload them to Sentry. See the following
 resources for libraries that support generating minidump crash reports:
 
-- [Native SDK]({%- link _documentation/platforms/native/index.md -%})
-- [Google Breakpad]({%- link _documentation/platforms/native/breakpad.md -%})
-- [Google Crashpad]({%- link _documentation/platforms/native/crashpad.md -%})
+- [Native SDK](/platforms/native/)
+- [Google Breakpad](/platforms/native/breakpad/)
+- [Google Crashpad](/platforms/native/crashpad/)
 
 If you have already integrated a library that generates minidumps and would just
 like to upload them to Sentry, you need to configure the _Minidump Endpoint
@@ -114,8 +112,7 @@ $ curl -X POST \
   -F 'sentry[tags][mytag]=value'
 ```
 
-For the full list of supported values, see [_Event Payloads_]({%- link
-_documentation/development/sdk-dev/event-payloads/index.md -%}) and linked
+For the full list of supported values, see [_Event Payloads_](https://develop.sentry.dev/sdk/event-payloads/) and linked
 documents.
 
 ## Event Attachments (Preview)
@@ -137,3 +134,14 @@ $ curl -X POST \
   -F some_file=@some_file.txt \
   -F db_log=@db.log
 ```
+
+## Size Limits
+
+Event ingestion imposes limits on the size and number of fields in multipart
+uploads. These limits are subject to future change and defined currently as:
+
+- *20MB* for a compressed minidump request
+- *50MB* for the full body after decompression
+- *50MB* for all files combined
+- *50MB* for each file individually
+- *1MB* for event payloads

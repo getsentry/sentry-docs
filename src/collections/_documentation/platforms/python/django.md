@@ -49,7 +49,7 @@ Visiting this route will trigger an error that will be captured by Sentry.
 
 A Django application using [Channels 2.0](https://channels.readthedocs.io/en/latest/) will be correctly instrumented under Python 3.7. For older versions of Python you'll have to install `aiocontextvars` from PyPI or your application will not start.
 
-If you experience memory leaks in your channels consumers while using the SDK, you need to wrap your entire application in Sentry's [ASGI middleware]({% link _documentation/platforms/python/asgi.md %}).
+If you experience memory leaks in your channels consumers while using the SDK, you need to wrap your entire application in Sentry's [ASGI middleware](/platforms/python/asgi/).
 
 Unfortunately the SDK is not able to do so by itself, as [Channels is missing some hooks for instrumentation](https://github.com/django/channels/issues/1348).
 
@@ -63,7 +63,7 @@ Unfortunately the SDK is not able to do so by itself, as [Channels is missing so
 
 * The Sentry Python SDK will attach SQL queries as breadcrumbs.
 
-* Logging with any logger will create breadcrumbs when the [Logging]({% link _documentation/platforms/python/logging.md %})
+* Logging with any logger will create breadcrumbs when the [Logging](/platforms/python/logging/)
   integration is enabled (done by default).
 
 ## Options
@@ -90,7 +90,7 @@ You can pass the following keyword arguments to `DjangoIntegration()`:
 
 ## User Feedback
 
-You can use the user feedback feature with this integration.  For more information see [User Feedback]({% link _documentation/enriching-error-data/user-feedback.md %}?platform=django).
+You can use the user feedback feature with this integration.  For more information see [User Feedback](/enriching-error-data/user-feedback/?platform=django).
 
 ## Reporting other status codes
 
@@ -117,4 +117,4 @@ def my_custom_page_not_found_view(*args, **kwargs):
 
 The error message you send to Sentry will have the usual request data attached.
 
-Refer to [Customizing Error Views](https://docs.djangoproject.com/en/2.0/topics/http/views/#customizing-error-views) from the Django documentation for more information.
+Refer to [Customizing Error Views](https://docs.djangoproject.com/en/3.0/topics/http/views/#customizing-error-views) from the Django documentation for more information.

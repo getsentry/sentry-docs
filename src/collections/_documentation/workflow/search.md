@@ -8,7 +8,7 @@ example_tag_value: de-at
 Search is available on several major Sentry views: Issues, Events, and Releases.
 
 {% capture __alert_content -%}
-Discover is Sentry's powerful query builder for aggregating raw event data and has its own unique syntax not covered here. For more information, see [full Discover documentation]({%- link _documentation/performance/discover/index.md -%}).
+Discover is Sentry's powerful query builder for aggregating raw event data and has its own unique syntax not covered here. For more information, see [full Discover documentation](/performance-monitoring/discover-queries/).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -132,7 +132,7 @@ Below is a list of Issue-level tokens reserved and known to Sentry:
 
 : Restrict results to issues first seen within the given release.
 
-  Exact match on the version of a release.
+  Exact match on the version of a release, or `first-release:latest` to pick the most recent release.
 
 `has`
 
@@ -197,8 +197,7 @@ Below is a list of Event-level tokens reserved and known to Sentry:
 
 : Restrict results to events tagged with the given release.
 
-  Exact match on the version of a release.
-
+  Exact match on the version of a release, or `release:latest` to pick the most recent release.
 
 `user.id`
 `user.email`
@@ -263,7 +262,7 @@ Several common uses for tags include:
 -   The version of your platform (for example, iOS 5.0)
 -   The user’s language
 
-For more information, see [full documentation on Tagging Events]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags).
+For more information, see [full documentation on Tagging Events](/enriching-error-data/additional-data/#tags).
 
 ## Premade Searches
 

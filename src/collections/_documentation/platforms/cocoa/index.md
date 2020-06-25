@@ -3,14 +3,6 @@ title: Cocoa
 ---
 
 <!-- WIZARD -->
-{% capture __alert_content -%}
-Version `5.0.0` is in beta. If you are not comfortable installing our `beta` SDK, our latest stable version can be found here. [4.x]({%- link _documentation/clients/cocoa/index.md -%})
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Note"
-  content=__alert_content
-  level="info"
-%}
 
 This is the documentation for our Cocoa SDK (Swift and Objective-C).
 If you are migrating from an older version, please consider our [Migration Guide](https://github.com/getsentry/sentry-cocoa/blob/master/MIGRATION.md). Also always make sure to follow the [changelog](https://github.com/getsentry/sentry-cocoa/blob/master/CHANGELOG.md)
@@ -31,7 +23,7 @@ platform :ios, '8.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
-    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.0.0-beta.5'
+    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{% sdk_version sentry.cocoa %}'
 end
 ```
 <!-- {% sdk_version sentry.cocoa %} -->
@@ -43,7 +35,7 @@ Afterwards run `pod install`.
 To integrate Sentry into your Xcode project using Carthage, specify it in your _Cartfile_:
 
 ```ruby
-github "getsentry/sentry-cocoa" "5.0.0-beta.5"
+github "getsentry/sentry-cocoa" "{% sdk_version sentry.cocoa %}"
 ```
 
 Run `carthage update` to download the framework and drag the built _Sentry.framework_ into your Xcode project.
@@ -66,8 +58,8 @@ Make sure you initalize the SDK as soon as possible in your application lifecycl
 
 Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by uploading dSYM files using one of two methods, dependent on your setup:
 
--   [With Bitcode]({%- link _documentation/platforms/cocoa/dsym.md -%}#dsym-with-bitcode)
--   [Without Bitcode]({%- link _documentation/platforms/cocoa/dsym.md -%}#dsym-without-bitcode)
+-   [With Bitcode](/platforms/cocoa/dsym/#dsym-with-bitcode)
+-   [Without Bitcode](/platforms/cocoa/dsym/#dsym-without-bitcode)
 
 <!-- ENDWIZARD -->
 
@@ -81,7 +73,7 @@ If everything is working correctly, this message should appear within seconds in
 
 ## Crash Handling
 
-Our SDK hooks into all signal and exception handlers, except for MacOS. If you are using MacOS, please see the additional step provided in [Advanced Usage]({%- link _documentation/platforms/cocoa/usage.md -%})
+Our SDK hooks into all signal and exception handlers, except for MacOS. If you are using MacOS, please see the additional step provided in [Advanced Usage](/platforms/cocoa/usage/)
 To try it out, the SDK provides a test crash function:
 
 {% include components/platform_content.html content_dir='crash' %}
@@ -92,9 +84,9 @@ Crashes are submitted only upon re-launch of the application. To view the crash 
 
 ## Release Health
 
-Monitor the [health of releases]({%- link _documentation/workflow/releases/health.md -%}) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/health.md -%}#crash), and [session data]({%- link _documentation/workflow/releases/health.md -%}#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+Monitor the [health of releases](/workflow/releases/health/) by observing user adoption, usage of the application, percentage of [crashes](/workflow/releases/health/#crash), and [session data](/workflow/releases/health/#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
-To benefit from the health data you must use at least version 5.0.0 Beta 4 of the Cocoa SDK and enable the collection of the release health metrics by adding `"enableAutoSessionTracking": true` into options during the initialization of the SDK.
+To benefit from the health data you must use at least version 5.0.0 of the Cocoa SDK and enable the collection of the release health metrics by adding `"enableAutoSessionTracking": true` into options during the initialization of the SDK.
 
 {% include components/platform_content.html content_dir='enableAutoSessionTracking' %}
 
@@ -108,11 +100,11 @@ By default, the session is terminated once the application is in the background 
 
 By default, we don’t apply the user identification provided to the SDK via the API. Instead, we use the installation ID generated with the first use of the application. The ID doesn’t contain any private or public data of your users or any public or shared data of their device.
 
-For more details, see [full documentation on Release Health]({%- link _documentation/workflow/releases/health.md -%}).
+For more details, see the [full documentation on Release Health](/workflow/releases/health/).
 
 ## Deep Dive
 
--   [Uploading Debug Symbols]({%- link _documentation/platforms/cocoa/dsym.md -%})
-    -   [With Bitcode]({%- link _documentation/platforms/cocoa/dsym.md -%}#with-bitcode)
-    -   [Without Bitcode]({%- link _documentation/platforms/cocoa/dsym.md -%}#without-bitcode)
--   [Advanced Usage]({%- link _documentation/platforms/cocoa/usage.md -%})
+-   [Uploading Debug Symbols](/platforms/cocoa/dsym/)
+    -   [With Bitcode](/platforms/cocoa/dsym/#with-bitcode)
+    -   [Without Bitcode](/platforms/cocoa/dsym/#without-bitcode)
+-   [Advanced Usage](/platforms/cocoa/usage/)

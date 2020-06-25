@@ -3,23 +3,20 @@ title: Enable Readable Stack Traces in your Errors
 sidebar_order: 4
 ---
 
- A `release version` is a dynamic identifier that changes whenever you ship a new version of your code. When you give Sentry information about your releases, you unlock several features, including source mapping of JavaScript stack traces upon ingestion. For more information, see [Releases](https://docs.sentry.io/workflow/releases/?platform=browser).
+A `release version` is a dynamic identifier that changes whenever you ship a new version of your code. When you give Sentry information about your releases, you unlock several features, including source mapping of minified JavaScript stack traces upon ingestion. For more information, see [Releases](https://docs.sentry.io/workflow/releases/?platform=browser).
+In this section, we will:
 
-## Description & Objectives
-
- In this tutorial, we will:
-
- 1. Utilize the `Sentry Command Line Interface` (CLI) **during the build process** to update your Sentry account by:
+1. Utilize the `Sentry CLI` **during the build process** to update your Sentry account by:
     - Creating a new release version
     - Uploading the project's latest source maps (and associate them with the new release version)
 
 2. Add the release version to the Sentry SDK configuration --- this will associate any error captured by the SDK in our app to this specific release. Sentry will use the release's uploaded source maps to unminify the error's stack trace.
 
-**Note:** As part of the **Continuous Integration workflow** for this app demo, we're using a `Makefile` to handle the `sentry-cli` related tasks through `make` targets. If you're using a different code base, you can still apply the settings and commands described below to your specific setup or run them directly in a command-line shell as part of your build process. For more information, see [Command Line Interface](https://docs.sentry.io/cli/).
+**Note:** As part of the **CI/CD workflow** for this app demo, we're using a `Makefile` to handle the `sentry-cli` related tasks through `make` targets. If you're using a different code base, you can still apply the settings and commands described below to your specific setup or run them directly in a command-line shell as part of your build process. For more information, see [Command Line Interface](https://docs.sentry.io/cli/).
 
-## Step 1: Prepare the Build Environment
+## Step 1: Prepare the build environment
 
-We use the `Makefile` in the `sentry-react-demo` project to handle Sentry related tasks utilizing the `sentry-cli`. The CLI is already available through the project dependencies (see `package.json`) and requires several parameters to be available to run.
+We use the `Makefile` in the `frontend-monitoring` project to handle Sentry related tasks utilizing the `sentry-cli`. The CLI is already available through the project dependencies (see `package.json`) and requires several parameters to be available to run.
 
 1. Open the `Makefile`
 
@@ -28,37 +25,41 @@ We use the `Makefile` in the `sentry-react-demo` project to handle Sentry relate
     ![Initial Makefile]({% asset guides/integrate-frontend/upload-source-maps-010.png @path %})
 
 3. To find the SENTRY_ORG and SENTRY_PROJECT values
-    - Open your Sentry account and click **Projects**
-    - Your Organization ID is part of the browser URL (for example, https://sentry.io/organizations/**SENTRY_ORG**/issues/?project=1523617)
+    - Open your Sentry account and click `Settings > Projects`
+    - Your Organization ID is part of the browser URL (for example, https://sentry.io/settings/**SENTRY_ORG**/projects/)
     - The SENTRY_PROJECT value is the name that appears in the project tile
 
         ![Sentry CLI variables]({% asset guides/integrate-frontend/upload-source-maps-011.png @path %})
     - Copy the values and paste them in the Makefile
 
-4. To create a `SENTRY_AUTH_TOKEN`, click on the Company Org name from the top of the left side panel to open the Org and User Settings
-    - Select `API Keys`
-    - Click on `Create New Token` from the Auth Tokens page 
+4. To create a `SENTRY_AUTH_TOKEN`
+    - Click on the `Developer Settings` menu option name from the left side panel to create a new integration and org-level auth token
+    - Click on `New Internal Integration`
 
         ![Create Auth Token 1]({% asset guides/integrate-frontend/upload-source-maps-04.png @path %})
 
-    - Accept the selected token scopes and click `Create Token`
+    - Enter a `Name`
+    - Under `Permissions` set `Release:Admin` and `Organization:Read & Write`
 
-        ![Create Auth Token 2]({% asset guides/integrate-frontend/upload-source-maps-05.png @path %})
+        ![Token Permissions]({% asset guides/integrate-frontend/upload-source-maps-016.png @path %})
 
-    - Once the token is created, click on the copy icon to copy the token value and paste it in the Makefile
+    - Click on `Save Changes`
+    - Once the save is successfully confirmed, scroll down to the bottom of the page and copy the allocated token under `TOKENS`
 
-        ![Create Auth Token 3]({% asset guides/integrate-frontend/upload-source-maps-06.png @path %})
+         ![Create Auth Token 2]({% asset guides/integrate-frontend/upload-source-maps-05.png @path %})
+
+    - Paste the token in the Makefile
 
 5. The Makefile should look like this:
 
     ![Sentry CLI variables]({% asset guides/integrate-frontend/upload-source-maps-012.png @path %})
 
-## Step 2: Create a Release & Upload Source Maps
+## Step 2: Create a release and upload source maps
 
 Now we can invoke the `sentry-cli` to let Sentry know we have a new release and upload the project's source maps to it.
 
-- You can set a custom release version to suit your delivery processes or let the Sentry CLI propose a version.
-- To build the `sentry-react-demo` project, we use the `react-scripts` package that also generates source maps under _./build/static/js/_
+- You can set a custom release version to suit your naming conventions or let the Sentry CLI propose a version.
+- To build the `frontend-monitoring` project, we use the `react-scripts` package that also generates source maps under _./build/static/js/_
 
 1. In the Makefile, add a new environment variable for the release version, utilizing Sentry CLI to propose the version value
 
@@ -67,20 +68,19 @@ Now we can invoke the `sentry-cli` to let Sentry know we have a new release and 
     ```
 
 2. At the bottom of the Makefile, paste the following targets utilizing the Sentry CLI to:
-    - Create a new release (object) in your Sentry account
-    - Upload the project's source maps to the new release 
+    - Create a new release entity in your Sentry account
+    - Upload the project's source maps to the new release
 
     ```bash
     create_release:
         sentry-cli releases -o $(SENTRY_ORG) new -p $(SENTRY_PROJECT) $(REACT_APP_RELEASE_VERSION)
-
 
     upload_sourcemaps:
         sentry-cli releases -o $(SENTRY_ORG) -p $(SENTRY_PROJECT) files $(REACT_APP_RELEASE_VERSION) \
             upload-sourcemaps --url-prefix "~/static/js" --validate build/static/js
     ```
 
-    The Makefile contains a `setup_release` target that is invoked from the `package.json` file when running  `$ npm run deploy ` to build and run the project.  We'll use this target to invoke all the release related tasks.
+    The Makefile contains a `setup_release` target that is invoked from the `package.json` file when running  `$ npm run deploy` to build and run the project.  We'll use this target to invoke all the release related tasks.
 
 3. Replace the existing `setup_release` with:
 
@@ -107,21 +107,23 @@ Now we can invoke the `sentry-cli` to let Sentry know we have a new release and 
 
     > **Note:** the release version environment variable is set in the project.json during build time and is injected into the generated markup.
 
-## Step 3: Try your Change --- Generate Another Error
+## Step 3: Try your changes --- generate another error
 
 1. If your terminal is still serving the demo app on localhost, click `^C` to shut down the local server
 
-2.  Build, deploy, and rerun the project by running:
+2. Build, deploy, and rerun the project by running:
 
     ```Node
     > npm run deploy
     ```
 
+    > Note: A Makefile is generally unforgiving when it comes to indentation. If you're getting unexpected errors while running the above command, make sure the `sentry-cli` commands are properly prefixed with a `tab`.
+
 3. Take a look at the terminal log. Notice that the minified scripts and source maps were uploaded to the release version.
 
     ![Release Created]({% asset guides/integrate-frontend/upload-source-maps-07.png @path %})
 
-4. In your browser, make sure that the dev console is open and perform an **Empty Cache and Hard Reload** to make sure the updated code is being served.
+4. In your browser, make sure that the dev console is open and perform an `Empty Cache and Hard Reload` to make sure the updated code is being served.
 
     ![Release Created]({% asset guides/integrate-frontend/upload-source-maps-08.png @path %})
 
@@ -129,19 +131,21 @@ Now we can invoke the `sentry-cli` to let Sentry know we have a new release and 
 
 6. Check your Email for the alert about the new error and click **View on Sentry** to open the issue page
 
-7. Notice that the error stack trace is now available 
+7. Notice that
+    - The event is now tagged with the `Release ID`
+    - The error stack trace is now un-minified and includes the file name, method name, line and column number, and source code context in every stack frame
 
     ![Release Created]({% asset guides/integrate-frontend/upload-source-maps-09.png @path %})
 
-## Step 4: Explore the Release
+## Step 4: Explore the release
 
-Creating a release version and uploading the source maps through the Sentry CLI, creates a **Release** object in your Sentry account.
+Creating a release version and uploading the source maps through the Sentry CLI, creates a `Release` entity in your Sentry account.
 
 1. Click on `Releases` from the left side panel, notice that a new release version was created
 
     ![Release Created]({% asset guides/integrate-frontend/upload-source-maps-013.png @path %})
 
-2. Click on the release, notice that the error in your app has been associated with this release and is listed as a **New Issue in this Release**
+2. Click on the release, notice that the error in your app has been associated with this release and is listed as a **New Issue**
 
     ![Release Created]({% asset guides/integrate-frontend/upload-source-maps-014.png @path %})
 
@@ -149,10 +153,8 @@ Creating a release version and uploading the source maps through the Sentry CLI,
 
     ![Release Created]({% asset guides/integrate-frontend/upload-source-maps-015.png @path %})
 
-****
-
 ## Next
 
 Now that we have all the information we need about the error and a clear stack trace, the next thing is to assign the right developer to handle it.
 
-[Integrate your Source Code Repository]({%- link _documentation/guides/integrate-frontend/configure-scms.md -%})
+[Enable Suspect Commits](/guides/integrate-frontend/configure-scms/)

@@ -4,7 +4,7 @@ sidebar_order: 4
 keywords: ["pii", "gdpr", "personally identifiable data", "compliance"]
 ---
 
-In addition to using [`beforeSend`]({% link _documentation/data-management/sensitive-data.md %}#custom-event-processing-in-the-sdk) in your SDK or our [server-side data scrubbing features]({% link _documentation/data-management/sensitive-data.md %}#server-side-scrubbing) to redact sensitive data, we are currently beta-testing ways to give you more granular control over server-side data scrubbing of your events. Additional functionality includes:
+In addition to using [`beforeSend`](/data-management/sensitive-data/#custom-event-processing-in-the-sdk) in your SDK or our [server-side data scrubbing features](/data-management/sensitive-data/#server-side-scrubbing) to redact sensitive data, we are currently beta-testing ways to give you more granular control over server-side data scrubbing of your events. Additional functionality includes:
 
 * Define custom regular expressions to match on sensitive data
 * Detailed tuning on which parts of an event to scrub
@@ -14,39 +14,37 @@ In addition to using [`beforeSend`]({% link _documentation/data-management/sensi
 
 **Advanced Data Scrubbing is available only if your organization is enabled as an Early Adopter.** To enable this option, navigate to your organization's settings and enable the "Early Adopter" option. Turning on this option allows access to features prior to full release, and can be disabled at any time.
 
-Early adopters have access to a new option in both organization settings as well as the setting of each project. Go to your project- or organization-settings and click _Data Privacy_ (or _Security
-and Privacy_) in the sidebar. Scrolling down, you will find a new section _Data Privacy Rules_.
+Early adopters have access to a new option in both organization settings as well as the setting of each project. Go to your project- or organization-settings and click _Security and Privacy_ in the sidebar. Scrolling down, you will find a new section _Advanced Data Scrubbing_.
 
-Note that everything you configure there will have direct impact on all new events, just as all the other data privacy-related settings do. However, it is not possible to break or undo any other data privacy settings that you may have configured. In other words, it is only possible to accidentally remove too much data, not too little.
+Note that everything you configure there will have direct impact on all new events, just as all the other data privacy-related settings do. However, it is not possible to break or undo any other data scrubbing settings that you may have configured. In other words, it is only possible to accidentally remove too much data, not too little.
 
 If you have any questions related to this feature, feel free to contact us at `markus@sentry.io`.
 
 ## A Basic Example
 
-Go to your project- or organization-settings and click _Data Privacy_ (or _Security and Privacy_) in the sidebar. Scrolling down, you will find a new section _Data Privacy Rules_.
+Go to your project- or organization-settings and click _Security and Privacy_ in the sidebar. Scrolling down, you will find a new section _Advanced Data Scrubbing_.
 
-Click on _Add Rule_. This already adds a very simple rule:
-
-```
-[Mask] [credit card numbers] from [    ]
-```
+1. Click on _Add Rule_. You will be presented with a new dialog.
+2. Select _Mask_ as _Method_.
+3. Select _Credit card numbers_ as _Data Type_.
+4. Enter `$string` as _Source_.
 
 As soon as you hit _Save_, we will attempt to find all creditcard numbers in your events going forward, and replace them with a series of `******`, keeping only the last 4 digits.
 
 Rules generally consist of three parts:
 
-- A [_Redaction Method_](#redaction-methods): What to do.
-- A [_Rule Type_](#rule-types): What to look for.
-- A [_Selector_](#selectors): Where to look.
+- A [_Method_](#methods): What to do.
+- A [_Data Type_](#data-types): What to look for.
+- A [_Source_](#sources): Where to look.
 
-## Redaction Methods
+## Methods
 
 - _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely or replace it with an empty string depending on technical constraints.
 - _Mask_: Replace all characters with `*`. For creditcards this replaces everything but the last 4 digits.
 - _Hash_: Replace the matched substring with a hashed value.
 - _Replace_: Replace the matched substring with a constant placeholder value such as `[Filtered]` or `[creditcard]`. Right now this value cannot be configured.
 
-## Rule Types
+## Data Types
 
 - _Regex Matches_: Custom Perl-style regex (PCRE).
 - _Credit Card Numbers_: Any substrings that look like credit card numbers.
@@ -60,11 +58,11 @@ Rules generally consist of three parts:
 - _US social security numbers_: 9-digit social security numbers for the USA.
 - _Usernames in filepaths_: For example `myuser` in `/Users/myuser/file.txt`, `C:/Users/myuser/file.txt`, `C:/Documents and Settings/myuser/file.txt`, `/home/myuser/file.txt`, ...
 - _MAC Addresses_
-- _Anything_: Matches any value. This is useful if you want to remove a certain JSON key by path using [_Selectors_](#selectors) regardless of the value.
+- _Anything_: Matches any value. This is useful if you want to remove a certain JSON key by path using [_Sources_](#sources) regardless of the value.
 
 {% capture __alert_content -%}
 
-Sentry does not know if a local variable that looks like a credit card number actually is one. As such, you need to expect not only false-positives but also false-negatives. [_Selectors_](#selectors) can help you in limiting the scope in which your rule runs.
+Sentry does not know if a local variable that looks like a credit card number actually is one. As such, you need to expect not only false-positives but also false-negatives. [_Sources_](#sources) can help you in limiting the scope in which your rule runs.
 
 {%- endcapture -%}
 {%- include components/alert.html
@@ -74,7 +72,7 @@ Sentry does not know if a local variable that looks like a credit card number ac
 %}
 
 
-## Selectors
+## Sources
 
 Selectors allow you to restrict rules to certain parts of the event. This is useful to unconditionally remove certain data by event attribute, and can also be used to conservatively test rules on real data. A few examples:
 
@@ -91,7 +89,13 @@ Selectors allow you to restrict rules to certain parts of the event. This is use
 
 All key names are treated case-insensitively.
 
-### Writing a Selector
+### Using an event ID to auto-complete sources
+
+Above the _Source_ input field you will find another input field for an event ID. Providing a value there allows for better auto-completion of arbitrary _Additional Data_ fields and variable names.
+
+The event ID is purely optional and the value is not saved as part of your settings. Data scrubbing settings always apply to all events within a project/organization going forward.
+
+### Advanced source names
 
 Data scrubbing always works on the raw event payload. Keep in mind that some fields in the UI may be called differently in the JSON schema. When looking at an event there should always be a link called "JSON" present that allows you to see what the data scrubber sees.
 
@@ -128,9 +132,9 @@ Since the "error message" is taken from the `exception`'s `value`, and the "mess
 
 ### Boolean Logic
 
-You can combine selectors using boolean logic.
+You can combine sources using boolean logic.
 
-* Prefix with `!` to invert the selector. `foo` matches the JSON key `foo`, while `!foo` matches everything but `foo`.
+* Prefix with `!` to invert the source. `foo` matches the JSON key `foo`, while `!foo` matches everything but `foo`.
 * Build the conjunction (AND) using `&&`, such as: `foo && !extra.foo` to match the key `foo` except when inside of `extra`.
 * Build the disjunction (OR) using `||`, such as: `foo || bar` to match `foo` or `bar`.
 
@@ -160,7 +164,7 @@ Select known parts of the schema using the following:
 * `$logentry` matches the `logentry` attribute of an event.
 * `$thread` matches a single thread instance in `{"threads": {"values": [...]}}`
 * `$breadcrumb` matches a single breadcrumb in `{"breadcrumbs": {"values": [...]}}`
-* `$span` matches a [trace span]({% link _documentation/performance/performance-glossary.md %}#span)
+* `$span` matches a [trace span](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans)
 * `$sdk` matches the SDK context in `{"sdk": ...}`
 
 ### Escaping Special Characters

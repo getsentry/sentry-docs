@@ -43,10 +43,6 @@ The SDK enables all integrations by default. To disable any of them:
 
 This integration is the core part of the SDK. It hooks into all signal and exception handlers to capture uncaught errors or crashes. This integration is also responsible for adding most of the device information to events. If it is disabled, you will not receive crash reports, nor will events contain much device data.
 
-#### SentryUIKitMemoryWarningIntegration
-
-This integration only functions in apps where UIKit is available. The integration will send an event to Sentry when `UIApplicationDidReceiveMemoryWarningNotification` is received.
-
 #### SentryAutoBreadcrumbTrackingIntegration
 
 This integration will swizzle some methods to create breadcrumbs e.g.: for `UIApplicationDidReceiveMemoryWarningNotification`, `sendAction:to:from:forEvent:` (UI interactions) or `viewDidAppear:` those breadcrumbs will be attached to your events.

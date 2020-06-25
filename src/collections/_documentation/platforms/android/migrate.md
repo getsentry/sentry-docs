@@ -3,9 +3,9 @@ title: Migration
 sidebar_order: 1
 ---
 
-## Migrating from `sentry-android 1.x` to `sentry-android 2.0`
+## Migrating from `sentry-android 1.x` to `sentry-android 2.x`
 
-With Sentry Android, we've updated the API to resemble the [Unified API]({%- link _documentation/development/sdk-dev/unified-api.md -%}) more closely. And now that the SDK isn't built on top of `sentry-java`, Sentry Android has more Android-specific features.
+With Sentry Android, we've updated the API to resemble the [Unified API](https://develop.sentry.dev/sdk/unified-api/) more closely. And now that the SDK isn't built on top of `sentry-java`, Sentry Android has more Android-specific features.
 
 If you want to upgrade from the previous version of the SDK, please check the following sections of changes that may need updating in your code.
 
@@ -54,7 +54,7 @@ To initialize the SDK manually:
 
 Please note that the new SDK will send with each event a release version in a different format than the previous SDK.
 
-If you are using the [GitHub]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github) or [GitLab]({%- link _documentation/workflow/integrations/global-integrations.md -%}#gitlab) integrations, you need to do one of the following:
+If you are using the [GitHub](/workflow/integrations/global-integrations/#github) or [GitLab](/workflow/integrations/global-integrations/#gitlab) integrations, you need to do one of the following:
 
 - Use the new format LINK: ([https://docs.sentry.io/platforms/android/#releases](https://docs.sentry.io/platforms/android/#releases))
 - Set the release in your `AndroidManifest.xml`
@@ -159,21 +159,4 @@ Sentry.getContext().addExtra("extra", "thing");
 
 ```java
 Sentry.setExtra("extra", "thing");
-```
-
-### Multi-Dex support
-
-If you're using Multi-Dex and our SDK, we would recommend updating your Multi-Dex configuration:
-
-```groovy
-release {
-    multiDexKeepProguard file('multidex-config.pro')
-}
-```
-
-And, add to `multidex-config.pro` the following lines:
-
-```
--keep class io.sentry.android.core.SentryAndroidOptions
--keep class io.sentry.android.ndk.SentryNdk
 ```

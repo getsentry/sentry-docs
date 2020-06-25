@@ -3,7 +3,15 @@ title: Cocoa
 robots: noindex
 ---
 
-This is the documentation for our official clients for Cocoa (Swift and Objective-C). Starting with version `3.0.0` we’ve switched our internal code from Swift to Objective-C to maximize compatibility. Also we trimmed the public API of our SDK to a minimum. Check out [Migration Guide]({%- link _documentation/clients/cocoa/migration.md -%}#migration) or [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%}#advanced) for details.
+{% capture __alert_content -%}
+A new Cocoa SDK has superseded this deprecated version. Sentry preserves this documentation for customers using the old client. We recommend using the [updated Cocoa SDK](/platforms/cocoa/) for new projects.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
+This is the documentation for our official clients for Cocoa (Swift and Objective-C). Starting with version `3.0.0` we’ve switched our internal code from Swift to Objective-C to maximize compatibility. Also we trimmed the public API of our SDK to a minimum. Check out [Migration Guide](/clients/cocoa/migration/#migration) or [Advanced Usage](/clients/cocoa/advanced/#advanced) for details.
 
 ## Getting Started
 Getting started with Sentry is a three step process:
@@ -29,7 +37,7 @@ platform :ios, '8.0'
 use_frameworks!
 
 target 'YourApp' do
-    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '{% sdk_version sentry.cocoa %}'
+    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '4.5.0'
 end
 ```
 
@@ -40,7 +48,7 @@ Afterwards run `pod install`. In case you encounter problems with dependencies a
 To integrate Sentry into your Xcode project using Carthage, specify it in your _Cartfile_:
 
 ```ruby
-github "getsentry/sentry-cocoa" "{% sdk_version sentry.cocoa %}"
+github "getsentry/sentry-cocoa" "4.5.0"
 ```
 
 Run `carthage update` to download the framework and drag the built _Sentry.framework_ into your Xcode project.
@@ -95,8 +103,8 @@ if (nil != error) {
 
 Before you can start capturing crashes you will need to tell Sentry about the debug information by uploading dSYM files. Depending on your setup this can be done in different ways:
 
--   [With Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#dsym-with-bitcode)
--   [Without Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#dsym-without-bitcode)
+-   [With Bitcode](/clients/cocoa/dsym/#dsym-with-bitcode)
+-   [Without Bitcode](/clients/cocoa/dsym/#dsym-without-bitcode)
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
@@ -124,18 +132,18 @@ Crashes are only submitted upon re-launching the application. To see the crash i
 
 ## Deep Dive
 
--   [Migration Guide]({%- link _documentation/clients/cocoa/migration.md -%})
-    -   [Upgrade from 2.x.x to 3.0.x]({%- link _documentation/clients/cocoa/migration.md -%}#upgrade-from-2-x-x-to-3-0-x)
--   [Uploading Debug Symbols]({%- link _documentation/clients/cocoa/dsym.md -%})
-    -   [With Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#with-bitcode)
-    -   [Without Bitcode]({%- link _documentation/clients/cocoa/dsym.md -%}#without-bitcode)
--   [Advanced Usage]({%- link _documentation/clients/cocoa/advanced.md -%})
-    -   [Capturing uncaught exceptions on macOS]({%- link _documentation/clients/cocoa/advanced.md -%}#capturing-uncaught-exceptions-on-macos)
-    -   [Sending Events]({%- link _documentation/clients/cocoa/advanced.md -%}#sending-events)
-    -   [Client Information]({%- link _documentation/clients/cocoa/advanced.md -%}#client-information)
-    -   [User Feedback]({%- link _documentation/clients/cocoa/advanced.md -%}#user-feedback)
-    -   [Breadcrumbs]({%- link _documentation/clients/cocoa/advanced.md -%}#breadcrumbs)
-    -   [Change event before sending it]({%- link _documentation/clients/cocoa/advanced.md -%}#change-event-before-sending-it)
-    -   [Change request before sending it]({%- link _documentation/clients/cocoa/advanced.md -%}#change-request-before-sending-it)
-    -   [Adding stack trace to message]({%- link _documentation/clients/cocoa/advanced.md -%}#adding-stacktrace-to-message)
-    -   [Event Sampling]({%- link _documentation/clients/cocoa/advanced.md -%}#event-sampling)
+-   [Migration Guide](/clients/cocoa/migration/)
+    -   [Upgrade from 2.x.x to 3.0.x](/clients/cocoa/migration/#upgrade-from-2-x-x-to-3-0-x)
+-   [Uploading Debug Symbols](/clients/cocoa/dsym/)
+    -   [With Bitcode](/clients/cocoa/dsym/#with-bitcode)
+    -   [Without Bitcode](/clients/cocoa/dsym/#without-bitcode)
+-   [Advanced Usage](/clients/cocoa/advanced/)
+    -   [Capturing uncaught exceptions on macOS](/clients/cocoa/advanced/#capturing-uncaught-exceptions-on-macos)
+    -   [Sending Events](/clients/cocoa/advanced/#sending-events)
+    -   [Client Information](/clients/cocoa/advanced/#client-information)
+    -   [User Feedback](/clients/cocoa/advanced/#user-feedback)
+    -   [Breadcrumbs](/clients/cocoa/advanced/#breadcrumbs)
+    -   [Change event before sending it](/clients/cocoa/advanced/#change-event-before-sending-it)
+    -   [Change request before sending it](/clients/cocoa/advanced/#change-request-before-sending-it)
+    -   [Adding stack trace to message](/clients/cocoa/advanced/#adding-stacktrace-to-message)
+    -   [Event Sampling](/clients/cocoa/advanced/#event-sampling)

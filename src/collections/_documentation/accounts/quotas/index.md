@@ -20,7 +20,7 @@ Sentry completes a thorough evaluation of each event to determine if it counts t
 
 1. **SDK configuration**
 
-      The SDK configuration either allows the event or filters the event out. For more information, see [Outbound Filters in our guide to Manage Your Event Stream]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%}#outbound-filters) or [Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%}).
+      The SDK configuration either allows the event or filters the event out. For more information, see [Outbound Filters in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#outbound-filters) or [Filtering Events](/error-reporting/configuration/filtering/).
 
 2. **SDK sample rate**
 
@@ -28,26 +28,26 @@ Sentry completes a thorough evaluation of each event to determine if it counts t
 
 3. **Quota availability**
 
-      Events that exceed your quota are not sent. To add to your quota or review what happens when you exceed it, see [Increasing Quotas]({%- link _documentation/accounts/quotas/index.md -%}#increasing-quotas).
+      Events that exceed your quota are not sent. To add to your quota or review what happens when you exceed it, see [Increasing Quotas](/accounts/quotas/#increasing-quotas).
 
 4. **Event repetition**
   -   If you have intervened to Delete and Discard an issue, then _future_ events with the same fingerprint do not count toward your quota.
   -   If the previous event was resolved, this event counts toward your quota because it may represent a regression in your code.
-  -   If you have intervened to ignore alerts about events with the same fingerprint, this event counts toward your quota because the event is still occurring. For more information, see [Inbound Filters]({%- link _documentation/accounts/quotas/index.md -%}#inbound-data-filters).
+  -   If you have intervened to ignore alerts about events with the same fingerprint, this event counts toward your quota because the event is still occurring. For more information, see [Inbound Filters](/accounts/quotas/#inbound-data-filters).
 
 5. **Spike protection**
 
-      Sentry’s spike protection prevents huge overages from consuming your event capacity. For more information, see [Spike Protection]({%- link _documentation/accounts/quotas/index.md -%}#spike-protection).
+      Sentry’s spike protection prevents huge overages from consuming your event capacity. For more information, see [Spike Protection](/accounts/quotas/#spike-protection).
 
 In addition, depending on your project’s configuration and the plan you subscribe to, Sentry may also check:
 
 6. **Rate limit for the project**
 
-      If the rate limit for the project has been exceeded, and your subscription allows, the event will not be counted. For more information, see [Rate Limiting in our guide to Manage Your Event Stream]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%}#4-rate-limiting) or  [Rate Limiting Projects]({%- link _documentation/accounts/quotas/index.md -%}#id1).
+      If the rate limit for the project has been exceeded, and your subscription allows, the event will not be counted. For more information, see [Rate Limiting in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#4-rate-limiting) or  [Rate Limiting Projects](/accounts/quotas/#id1).
 
 7. **Inbound filters**
 
-      If any inbound filter is set for this type of event, and your subscription allows, the event will not be counted. For more information, see [Inbound Filters in our guide to Manage Your Event Stream]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%}#inbound-data-filters) or [Inbound Data Filter]({%- link _documentation/accounts/quotas/index.md -%}#inbound-data-filters).
+      If any inbound filter is set for this type of event, and your subscription allows, the event will not be counted. For more information, see [Inbound Filters in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#inbound-data-filters) or [Inbound Data Filter](/accounts/quotas/#inbound-data-filters).
 
 After these checks are processed, the event counts toward your quota. It is accepted into Sentry, where it persists and is stored.
 
@@ -130,7 +130,7 @@ After these checks are processed, the event counts toward your quota. It is acce
 
 Add to your quota at any time during your billing period, either by upgrading to a higher tier or by increasing your on-demand capacity. While the available plans fit most individual and business needs, Sentry is designed to handle large throughput. If your team needs more, we’re happy to help. Reach out to our sales team at [sales@sentry.io](mailto:sales%40sentry.io) to learn more about increasing capacity.
 
-If you’ve exceeded your quota threshold, the server will respond with a 429 HTTP status code. However, if this is your first time exceeding quota, you'll be entered into a one-time grace period. For more information, see this [Help article](https://help.sentry.io/hc/en-us/articles/115000154554-What-happens-when-I-run-out-of-event-capacity-and-a-grace-period-is-triggered-). In addition, you can specify a spending cap for on-demand capacity if you need additional events; for example, if you’re rolling out a new version and anticipate more events this month. For more information, see [On-Demand Spending Cap]({%- link _documentation/accounts/pricing.md -%}#on-demand-cap).
+If you’ve exceeded your quota threshold, the server will respond with a 429 HTTP status code. However, if this is your first time exceeding quota, you'll be entered into a one-time grace period. For more information, see this [Help article](https://help.sentry.io/hc/en-us/articles/115000154554-What-happens-when-I-run-out-of-event-capacity-and-a-grace-period-is-triggered-). In addition, you can specify a spending cap for on-demand capacity if you need additional events; for example, if you’re rolling out a new version and anticipate more events this month. For more information, see [On-Demand Spending Cap](/accounts/pricing/#on-demand-cap).
 
 ## Rate Limiting Projects {#id1}
 
@@ -138,7 +138,7 @@ Per-key rate limits allow you to set the maximum volume of events a key will acc
 
 For example, you may have a project in production that generates a lot of noise. A rate limit allows you to set the maximum amount of data to “500 events per minute”. Additionally, you can create a second key for the same project for your staging environment, which is unlimited, ensuring your QA process is still untouched.
 
-To set up rate limits, navigate to **[Project] » Client Keys » Configure**. Select an individual key or create a new one, then you’ll be able to define a rate limit as well as view a breakdown of events received by that key. For additional information and examples, see [Rate Limiting in our guide to Manage Your Event Stream]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%}#4-rate-limiting).
+To set up rate limits, navigate to **[Project] » Client Keys » Configure**. Select an individual key or create a new one, then you’ll be able to define a rate limit as well as view a breakdown of events received by that key. For additional information and examples, see [Rate Limiting in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#4-rate-limiting).
 
 {% include components/alert.html
     title="Note"
@@ -158,9 +158,9 @@ In some cases, the data you’re receiving in Sentry is hard to filter, or you d
 -     From specific release versions of your code
 -     From certain IP addresses.
 
-Explore these by navigating to **[Project] » Project Settings » Inbound Filters**. Commonly-set filters are discussed here for your quick reference. For additional information and examples, see [Inbound Data Filters in our guide to Manage Your Event Stream]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%}#inbound-data-filters). Commonly-set filters include:
+Explore these by navigating to **[Project] » Project Settings » Inbound Filters**. Commonly-set filters are discussed here for your quick reference. For additional information and examples, see [Inbound Data Filters in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#inbound-data-filters). Commonly-set filters include:
 
-*IP Blacklist.* If you have a rogue client, Sentry supports blocking an IP from sending data. Navigate to **[Project] » Project Settings » Inbound Filters** to add the IP addresses (or subnets) to **Filter errors from these IP addresses**.
+*IP Filters.* If you have a rogue client, Sentry supports blocking an IP from sending data. Navigate to **[Project] » Project Settings » Inbound Filters** to add the IP addresses (or subnets) to **Filter errors from these IP addresses**.
 
 *Filter by Release.* If you discover a problematic release causing excessive noise, Sentry supports ignoring all events from that release. Navigate to **[Project] » Project Settings » Inbound Filters**, then add the releases to **Filter errors from these releases**.
 

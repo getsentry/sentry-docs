@@ -7,11 +7,19 @@ The Sentry Java SDK comes with support for some frameworks and libraries so that
 
 ## Android
 
+{% capture __alert_content -%}
+A new Android SDK has superseded this deprecated version. Sentry preserves this documentation for customers using the old client. We recommend using the [updated Android SDK](/platforms/android/) for new projects.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 ### Features
 
-The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options]({%- link _documentation/clients/java/config.md -%}), and more. Adding version `1.7.30` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
+The Sentry Android SDK is built on top of the main Java SDK and supports all of the same features, [configuration options](/clients/java/config/), and more. Adding version `1.7.30` of the Android SDK to a sample application that doesn’t even use Proguard only increased the release `.apk` size by approximately 200KB.
 
-Events will be [buffered to disk]({%- link _documentation/clients/java/config.md -%}#buffering-events-to-disk) (in the application’s cache directory) by default. This allows events to be sent at a later time if the device does not have connectivity when an event is created. This can be disabled by [setting the option]({%- link _documentation/clients/java/config.md -%}#configuration) `buffer.enabled` to `false`.
+Events will be [buffered to disk](/clients/java/config/#buffering-events-to-disk) (in the application’s cache directory) by default. This allows events to be sent at a later time if the device does not have connectivity when an event is created. This can be disabled by [setting the option](/clients/java/config/#configuration) `buffer.enabled` to `false`.
 
 An `UncaughtExceptionHandler` is configured so that crash events will be stored to disk and sent the next time the application is run.
 
@@ -77,7 +85,7 @@ public class MainApplication extends Application {
 }
 ```
 
-You can optionally configure other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
+You can optionally configure other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#configuration) for ways you can do this.
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- WIZARD android -->
@@ -137,7 +145,7 @@ public class MyClass {
 
 ### ProGuard
 
-To use ProGuard with Sentry, you will need to upload the ProGuard mapping files to Sentry by using our Gradle integration (recommended) or manually by using [_sentry-cli_]({%- link _documentation/cli/dif.md -%}#proguard-mapping-upload)
+To use ProGuard with Sentry, you will need to upload the ProGuard mapping files to Sentry by using our Gradle integration (recommended) or manually by using [_sentry-cli_](/cli/dif/#proguard-mapping-upload)
 
 #### Gradle Integration
 
@@ -152,14 +160,15 @@ And declare a dependency in your toplevel `build.gradle`:
 ```groovy
 buildscript {
     dependencies {
-        classpath 'io.sentry:sentry-android-gradle-plugin:1.7.30'
+        // https://github.com/getsentry/sentry-android-gradle-plugin/releases
+        classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
     }
 }
 ```
 
-The plugin will then automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assembleRelease`. The credentials for the upload step are loaded via environment variables _or_ from a `sentry.properties` file in your project root. The `sentry.properties` in your project root that configures `sentry-cli` is **different** than the one you include in your application resources to configure the Sentry SDK at runtime (as seen in the [configuration documentation]({%- link _documentation/clients/java/config.md -%})).
+The plugin will then automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assembleRelease`. The credentials for the upload step are loaded via environment variables _or_ from a `sentry.properties` file in your project root. The `sentry.properties` in your project root that configures `sentry-cli` is **different** than the one you include in your application resources to configure the Sentry SDK at runtime (as seen in the [configuration documentation](/clients/java/config/)).
 
-For more information [see the sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values). At the very minimum you will need something like this:
+For more information [see the sentry-cli documentation](/cli/configuration/#configuration-values). At the very minimum you will need something like this:
 
 ```gradle
 defaults.project=___PROJECT_NAME___
@@ -205,7 +214,7 @@ First, you need to add the following to your ProGuard rules file:
 
 After ProGuard files are generated you will need to embed the UUIDs of the ProGuard mapping files in a properties file named `sentry-debug-meta.properties` in the assets folder. The Java SDK will look for the UUIDs there to link events to the correct mapping files on the server side.
 
-**Sentry calculates UUIDs for ProGuard files.** For more information about how this works, see [ProGuard UUIDs]({%- link _documentation/workflow/debug-files.md -%}#proguard-uuids).
+**Sentry calculates UUIDs for ProGuard files.** For more information about how this works, see [ProGuard UUIDs](/workflow/debug-files/#proguard-uuids).
 
 `sentry-cli` can write the `sentry-debug-meta.properties` file for you:
 
@@ -321,12 +330,12 @@ http://public:private@host:port/1?async.gae.connectionid=MyConnection
 
 ## java.util.logging
 
-The `sentry` library provides a [java.util.logging Handler](http://docs.oracle.com/javase/7/docs/api/java/util/logging/Handler.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page]({%- link _documentation/clients/java/usage.md -%}#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
+The `sentry` library provides a [java.util.logging Handler](http://docs.oracle.com/javase/7/docs/api/java/util/logging/Handler.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](/clients/java/usage/#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
 
 The source for `sentry` can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry).
 
 {% capture __alert_content -%}
-The old `raven` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven`, you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
+The old `raven` library is no longer maintained. It is highly recommended that you [migrate](/clients/java/migration/) to `sentry` (which this documentation covers). [Check out the migration guide](/clients/java/migration/) for more information. If you are still using `raven`, you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/raven.rst).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -384,7 +393,7 @@ When starting your application, add the `java.util.logging.config.file` to the s
 $ java -Djava.util.logging.config.file=/path/to/app.properties MyClass
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#configuration) for ways you can do this.
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
@@ -430,12 +439,12 @@ public class MyClass {
 
 ## Log4j 1.x
 
-The `sentry-log4j` library provides [Log4j 1.x](https://logging.apache.org/log4j/1.2/) support for Sentry via an [Appender](https://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/Appender.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page]({%- link _documentation/clients/java/usage.md -%}#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
+The `sentry-log4j` library provides [Log4j 1.x](https://logging.apache.org/log4j/1.2/) support for Sentry via an [Appender](https://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/Appender.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](/clients/java/usage/#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
 
 The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-log4j).
 
 {% capture __alert_content -%}
-The old `raven-log4j` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j`, you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j.rst).
+The old `raven-log4j` library is no longer maintained. It is highly recommended that you [migrate](/clients/java/migration/) to `sentry-log4j` (which this documentation covers). [Check out the migration guide](/clients/java/migration/) for more information. If you are still using `raven-log4j`, you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j.rst).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -523,7 +532,7 @@ Alternatively, using the `log4j.xml` format:
 </log4j:configuration>
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#configuration) for ways you can do this.
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
@@ -602,12 +611,12 @@ Sentry uses asynchronous communication by default, and so it is unnecessary to u
 
 ## Log4j 2.x
 
-The `sentry-log4j2` library provides [Log4j 2.x](https://logging.apache.org/log4j/2.x/) support for Sentry via an [Appender](https://logging.apache.org/log4j/2.x/log4j-core/apidocs/org/apache/logging/log4j/core/Appender.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page]({%- link _documentation/clients/java/usage.md -%}#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
+The `sentry-log4j2` library provides [Log4j 2.x](https://logging.apache.org/log4j/2.x/) support for Sentry via an [Appender](https://logging.apache.org/log4j/2.x/log4j-core/apidocs/org/apache/logging/log4j/core/Appender.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](/clients/java/usage/#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
 
 The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-log4j2).
 
 {% capture __alert_content -%}
-The old `raven-log4j2` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-log4j2` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-log4j2`, you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j2.rst).
+The old `raven-log4j2` library is no longer maintained. It is highly recommended that you [migrate](/clients/java/migration/) to `sentry-log4j2` (which this documentation covers). [Check out the migration guide](/clients/java/migration/) for more information. If you are still using `raven-log4j2`, you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/log4j2.rst).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -669,7 +678,7 @@ Example configuration using the `log4j2.xml` format:
 </configuration>
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#configuration) for ways you can do this.
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
@@ -751,12 +760,12 @@ public class MyClass {
 
 ## Logback
 
-The `sentry-logback` library provides [Logback](http://logback.qos.ch/) support for Sentry via an [Appender](http://logback.qos.ch/apidocs/ch/qos/logback/core/Appender.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page]({%- link _documentation/clients/java/usage.md -%}#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
+The `sentry-logback` library provides [Logback](http://logback.qos.ch/) support for Sentry via an [Appender](http://logback.qos.ch/apidocs/ch/qos/logback/core/Appender.html) that sends logged exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](/clients/java/usage/#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
 
 The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-logback).
 
 {% capture __alert_content -%}
-The old `raven-logback` library is no longer maintained. It is highly recommended that you [migrate]({%- link _documentation/clients/java/migration.md -%}) to `sentry-logback` (which this documentation covers). [Check out the migration guide]({%- link _documentation/clients/java/migration.md -%}) for more information. If you are still using `raven-logback` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/logback.rst).
+The old `raven-logback` library is no longer maintained. It is highly recommended that you [migrate](/clients/java/migration/) to `sentry-logback` (which this documentation covers). [Check out the migration guide](/clients/java/migration/) for more information. If you are still using `raven-logback` you can [find the old documentation here](https://github.com/getsentry/sentry-java/blob/raven-java-8.x/docs/modules/logback.rst).
 {%- endcapture -%}
 {%- include components/alert.html
     title="Note"
@@ -826,7 +835,7 @@ Example configuration using the `logback.xml` format:
 </configuration>
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#setting-the-dsn) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#setting-the-dsn) for ways you can do this.
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 <!-- ENDWIZARD -->
 
@@ -947,7 +956,7 @@ public class MyClass {
 
 ## Spring
 
-The `sentry-spring` library provides [Spring](https://spring.io/) support for Sentry via a [HandlerExceptionResolver](https://docs.spring.io/spring/docs/4.3.9.RELEASE/javadoc-api/org/springframework/web/servlet/HandlerExceptionResolver.html) that sends exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page]({%- link _documentation/clients/java/usage.md -%}#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
+The `sentry-spring` library provides [Spring](https://spring.io/) support for Sentry via a [HandlerExceptionResolver](https://docs.spring.io/spring/docs/4.3.9.RELEASE/javadoc-api/org/springframework/web/servlet/HandlerExceptionResolver.html) that sends exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](/clients/java/usage/#usage-example), in order to do things like record breadcrumbs, set the current user, or manually send events.
 
 The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring).
 
@@ -1012,7 +1021,7 @@ public HandlerExceptionResolver sentryExceptionResolver() {
 }
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#setting-the-dsn) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#setting-the-dsn) for ways you can do this.
 
 #### Spring Boot HTTP Data
 

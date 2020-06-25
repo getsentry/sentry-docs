@@ -10,7 +10,7 @@ Single Sign-On (or SSO) allows you to manage your organization’s entire member
 Before you get around to actually turning on SSO, you’ll want to keep in mind that once it’s activated, all existing users will need to link their account before they are able to continue using Sentry. Because of that we recommend coordinating with your team during off-peak hours. That said, it’s super quick to link accounts, so we don’t consider it a true hurdle.
 
 {% capture __alert_content -%}
-SSO is not available on free, trial or certain grandfathered plans.
+SSO is not available on free, trial or certain other plans.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -31,6 +31,8 @@ Every member who creates a new account via SSO will be given global organization
 ## Security
 
 Our SSO implementation prioritizes security. We aggressively monitor linked accounts and will disable them within any reasonable sign that the account’s access may have been revoked. Generally this will be transparent to you, but if the provider is functioning in an unexpected way you may experience more frequent re-authorization requests.
+
+Sessions last for [Django's default session length](https://docs.djangoproject.com/en/1.11/topics/http/sessions/#using-cookie-based-sessions), which is 2 weeks. We do not support customizing the session length.
 
 ## Providers
 
@@ -96,4 +98,4 @@ When prompted with the Rippling Metadata URL, copy this into the Sentry Rippling
 
 #### Custom SAML2 Integration
 
-For other SAML2 SSO providers not listed above, Sentry provides  generic connectors for [SAML2 based authentication]({%- link _documentation/accounts/saml2.md -%}), which may be configured manually.
+For other SAML2 SSO providers not listed above, Sentry provides  generic connectors for [SAML2 based authentication](/accounts/saml2/), which may be configured manually.

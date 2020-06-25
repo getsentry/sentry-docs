@@ -35,7 +35,7 @@ Messages logged from assemblies with the name starting with `Sentry` will not ge
 * Store log messages as breadcrumbs
 * Send events to sentry
 
-Two separate settings define the minimum log level to keep the log entry as a `Breadcrumb` and to send an `Event` to Sentry. The events include any stored breadcrumb on that [scope]({% link _documentation/enriching-error-data/scopes.md %}).
+Two separate settings define the minimum log level to keep the log entry as a `Breadcrumb` and to send an `Event` to Sentry. The events include any stored breadcrumb on that [scope](/enriching-error-data/scopes/).
 
 By default, Sentry will keep any message with log level `Info` or higher as a `Breadcrumb`.
 
@@ -184,4 +184,4 @@ Any additional tags to apply to each logged message.
 
 ### Samples
 
-* A [simple example](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.NLog).
+* A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.NLog).

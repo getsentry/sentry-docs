@@ -52,7 +52,7 @@ raven.SetEnvironment("staging")
 
 Sets the release. Release names are just strings, but the Sentry SDK may detect some formats,
 and the format might render differently.
-For more information have a look at [the releases documentation]({% link _documentation/workflow/releases/index.md %}).
+For more information have a look at [the releases documentation](/workflow/releases/).
 
 ```go
 raven.SetRelease("h3ll0w0rld")

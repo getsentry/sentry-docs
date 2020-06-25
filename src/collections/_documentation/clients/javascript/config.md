@@ -44,7 +44,7 @@ Those configuration options are documented below:
   }
   ```
 
-  Can also be defined with `Raven.setRelease('721e41770371db95eee98ca2707686226b993eda')`. To learn more about configuring releases and deploys, click [here]({%- link _documentation/workflow/releases/index.md -%}).
+  Can also be defined with `Raven.setRelease('721e41770371db95eee98ca2707686226b993eda')`. To learn more about configuring releases and deploys, click [here](/workflow/releases/).
 
 `environment`
 
@@ -70,7 +70,7 @@ Those configuration options are documented below:
 
 `tags`
 
-: Additional [tags]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) to assign to each event.
+: Additional [tags](/enriching-error-data/additional-data/#tags) to assign to each event.
 
   ```javascript
   {
@@ -80,7 +80,7 @@ Those configuration options are documented below:
 
 `whitelistUrls`
 
-: The inverse of `ignoreUrls`. Only report errors from whole URLs matching a regex pattern or an exact string. `whitelistUrls` should match the URL of your actual JavaScript files. It should match the URL of your site if and only if you are inlining code inside `<script>` tags. Not setting this value is equivalent to a catch-all and will not filter out any values.
+: The inverse of `ignoreUrls`. Only report errors from whole URLs matching a regex pattern or an exact string. `whitelistUrls` should match the URL of your actual JavaScript files. It should match the URL of your site if and only if you are inlining code inside `&lt;script&gt;` tags. Not setting this value is equivalent to a catch-all and will not filter out any values.
 
   ```javascript
   {

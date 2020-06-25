@@ -1,105 +1,97 @@
 ---
-title: Integrate your Source Code Repository
+title: Enable Suspect Commits
 sidebar_order: 5
 ---
 
-Now that you created a release, the next step is to integrate your GitHub repository. Sentry uses the repository metadata to help you resolve your issues faster. 
+Sentry uses commit metadata from your source code repositories to help you resolve your issues faster. This is done by suggesting **Suspect Commits** that might have introduced an error right in your issue details page. It also allows Sentry to display **Suggested Assignees** - the list of authors of those commits and suggest their assignment to resolve the issue.
 
-## Description & Objectives
+Now that you've created a release, you can tell Sentry which commits are associated with this latest version of your code --- this is called **Commit Tracking**.
 
-You can tell Sentry which commits are associated with your release --- this is called **Commit Tracking**.
-This allows Sentry to display:
+## Step 1: Integrate your GitHub account and repositories
 
-- **Suspect Commits** - commits which likely caused the issue, with a link to the commit itself.
-- **Suggested Assignees** - lists the authors of those commits and suggests their assignment to resolve the issue.
+1. To integrate GitHub with your Sentry org, follow the instructions in the [Global Integrations documentation](/workflow/integrations/global-integrations/#github)
 
-In this part, you will:
+2. For the last step, add the `frontend-monitoring` repository from your GitHub account
 
-- Integrate your Sentry organization with your GitHub account and repository --- this gives Sentry access to your commit metadata.
-- Set up commit tracking. In your release process, after creating the release object in Sentry, associate it with commits from your linked repository.
+   ![Add project repository]({% asset guides/integrate-frontend/configure-scms-01.png @path %})
 
-## Step 1: Integrate your GitHub Account & Repositories
+## Step 2: Set commit tracking
 
-1. To integrate GitHub with your Sentry org, follow the instructions in the [Global Integrations documentation](https://docs.sentry.io/workflow/integrations/global-integrations/#github)
+Now that you've set up releases in Sentry as part of your CI/CD process and integrated your source code repositories, you can associate commits from your linked repository to your releases.
 
-2. For the last step, add the `sentry-react-demo` repository from your GitHub account
+> **Note:** In the demo project, we use a Makefile to handle our build-related tasks. If you are not using the provided React demo code and do not have a Makefile, you could optionally run the `sentry-cli` commands used in this tutorial directly from the `command line` or integrate the commands into the relevant build script.
 
-    ![Add project repository]({% asset guides/integrate-frontend/configure-scms-01.png @path %})
-
-GitHub should now be enabled and available for all projects in your Sentry organization.
-
-## Step 2: Set Up Commit Tracking
-
-In the demo project, we use a Makefile to handle our build-related tasks. 
-> **Note:** If you are not using the provided React demo code and do not have a Makefile, you could optionally run the `sentry-cli` commands used in this tutorial directly from the `command line` or integrate the commands into the relevant build script.
-
-1. Open the `Makefile` in your project 
+1. Open the `Makefile` in your project
 
 2. Add the following target at the bottom of the file:
 
-    ```Shell
-    associate_commits:
-        sentry-cli releases -o $(SENTRY_ORG) -p $(SENTRY_PROJECT) set-commits --auto $(REACT_APP_RELEASE_VERSION)
-    ```
+   ```Shell
+   associate_commits:
+       sentry-cli releases -o $(SENTRY_ORG) -p $(SENTRY_PROJECT) set-commits --auto $(REACT_APP_RELEASE_VERSION)
+   ```
 
-    > The command associates commits with the release. The **--auto** flag automatically determines the repository name, and associates commits between the previous release’s commit and the current head commit with the release.
+   > The command associates commits with the release. The **auto** flag automatically determines the repository name, and associates commits between the previous release’s commit and the current head commit with the release.
 
 3. The new target `associate_commits` will be invoked as part of the `setup_release` target, add it at the end:
 
-    ``` Shell
-    setup_release: create_release upload_sourcemaps associate_commits
-    ```
+   ```Shell
+   setup_release: create_release upload_sourcemaps associate_commits
+   ```
 
-    Your Makefile should look like this:
+   Your Makefile should look like this:
 
-    ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-02.png @path %})
+   ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-02.png @path %})
 
 4. If your terminal is still serving the demo app on localhost, press `^C` to shut it down
 
 5. Build, serve, and restart the project on your localhost by running:
 
-    ``` Shell
-    $ npm run deploy
-    ```
+   ```Shell
+   > npm run deploy
+   ```
 
-    In the terminal log, notice that the sentry-cli identified the GitHub repository. 
+   In the terminal log, notice that the sentry-cli identified the GitHub repository.
 
-    ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-03.png @path %})
+   ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-03.png @path %})
 
-## Step 3: Suspect Commits and Suggested Assignees
+## Step 3: Suspect commits and suggested assignees
 
-Now suspect commits and suggested assignees should start appearing on the issue page. We determine these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and ownership rules.
+Now suspect commits and suggested assignees should start appearing on the issue page. Sentry determines these by tying together the commits in the release, files touched by those commits, files observed in the stack trace, authors of those files, and ownership rules.
 
 1. Refresh the browser and generate an error by adding products to your cart and clicking **Checkout**
 
-2. Check your Email for the alert about the new error and click **View on Sentry** to open the issue page
+2. Check your email for the alert about the new error. Notice that a new **Suspect Commits** section has been added to the email
 
-3. In the main panel, notice the `SUSPECT COMMITS` section now points to a commit that most likely introduced the error. You can click on the commit button to see the actual commit details on GitHub
+    ![Suspect Commits email]({% asset guides/integrate-frontend/configure-scms-08.png @path %})
 
-4. In the right-side panel, under `Suggested Assignees` --- you'll see that the author of the suspect commit is listed as a suggested assignee for this issue
+3. Click **View on Sentry** to open the issue page
 
-    ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-04.png @path %})
+4. In the main panel, notice the `SUSPECT COMMITS` section now points to a commit that most likely introduced the error. You can click on the commit button to see the actual commit details on GitHub
 
-    > You can assign the suggested assignee to the issue by clicking on the icon. However, in this case, the commit originates in the repository upstream, and the suggested assignee is not part of your organization.
-    > Alternatively, you can manually assign the issue to other users or teams assigned to the project.
+5. In the right-side panel, under `Suggested Assignees` --- you'll see that the author of the suspect commit is listed as a suggested assignee for this issue
 
-5. Click on the `ASSIGNEE` dropdown and select one of the project users or teams
+   ![Suggested Assignees]({% asset guides/integrate-frontend/configure-scms-04.png @path %})
 
-    ![Suspect Commit]({% asset guides/integrate-frontend/configure-scms-05.png @path %})
+   > You can assign the suggested assignee to the issue by clicking on the icon. However, in this case, the commit originates in the repository upstream, and the suggested assignee is not part of your organization.
+   > Alternatively, you can manually assign the issue to other users or teams assigned to the project.
 
-6. From the main panel, find the `release` tag and **hover over** the `i` icon
+6. Click on the `ASSIGNEE` dropdown and select one of the project users or teams
 
-7. In the release popup, notice the release now contains the commit data
+   ![Suspect Commit]({% asset guides/integrate-frontend/configure-scms-05.png @path %})
 
-    ![Assign Manually]({% asset guides/integrate-frontend/configure-scms-06.png @path %})
+7. From the main panel, find the `release` tag and **hover over** the `i` icon
 
-8. **Click** on the release `i` icon to open the release details page
+8. In the release popup, notice the release now contains the commit data
 
-9. Select the `Commits` tab. Notice that release now contains the associated list of commits
+   ![Assign Manually]({% asset guides/integrate-frontend/configure-scms-06.png @path %})
 
-    ![Updated Makefile]({% asset guides/integrate-frontend/configure-scms-07.png @path %})
+9. Click on the release `i` icon to open the release details page
+
+10. Select the `Commits` tab. Notice that release now contains the associated list of commits
+
+    ![Release with Commits]({% asset guides/integrate-frontend/configure-scms-07.png @path %})
 
 ## More Information
 
-- [Create Release and Associate Commits](https://docs.sentry.io/workflow/releases/?platform=javascript#create-release)
-- [Global Integrations](https://docs.sentry.io/workflow/integrations/global-integrations/)
+- [Create Release and Associate Commits](/workflow/releases/#create-release)
+- [Global Integrations](/workflow/integrations/global-integrations/)

@@ -33,7 +33,7 @@ An issue can be in one of the following three states:
         2. Submitting a fix with the associated issue ID
         3. When the project’s auto-resolve feature is configured
 
-    - Auto-resolve is located in **Project Settings > General Settings**. For more details about submitting a fix, see documentation on [resolving issues]({%- link _documentation/workflow/releases/index.md -%}#after-associating-commits).
+    - Auto-resolve is located in **Project Settings > General Settings**. For more details about submitting a fix, see documentation on [resolving issues](/workflow/releases/#after-associating-commits).
     
         [{% asset notifications/auto-resolve.png alt="A slider to indicate whether the auto resolve is disabled or not." %}]({% asset notifications/auto-resolve.png @path %})
 
@@ -47,7 +47,7 @@ Workflow emails are sent for issue state changes.
 
 ## Deploy
 
-Deploy emails are sent to users who have committed to the release that was deployed. For more details, see [deploy documentation]({%- link _documentation/workflow/releases/index.md -%}#create-deploy).
+Deploy emails are sent to users who have committed to the release that was deployed. For more details, see [deploy documentation](/workflow/releases/#create-deploy).
 
 [{% asset deploy-emails.png alt="An example of an email describing deployed features." %}]({% asset deploy-emails.png @path %})
 

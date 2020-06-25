@@ -28,7 +28,7 @@ Context includes additional diagnostic information attached to an event. By defa
 
 ## Predefined Data
 
-The most common types of predefined data (where applicable) are level, [release]({%- link _documentation/workflow/releases/index.md -%}), [environment]({%- link _documentation/enriching-error-data/environments.md -%}), logger, [fingerprint]({%- link _documentation/data-management/event-grouping/index.md -%}), user, request, device, OS, runtime, app, browser, gpu, monitor, and [traces]({%- link _documentation/performance/distributed-tracing.md -%}).
+The most common types of predefined data (where applicable) are level, [release](/workflow/releases/), [environment](/enriching-error-data/environments/), logger, [fingerprint](/data-management/event-grouping/), user, request, device, OS, runtime, app, browser, gpu, monitor, and [traces](/performance-monitoring/distributed-tracing/).
 
 To improve searchability, Sentry will turn the data or specific attributes on the data into tags. For example, `level` is available as a tag, and so is a user's email via the `user.email` tag. If Sentry is captures some predefined data but doesn't expose it as a tag, you can always set a [custom tag](#tags) for it.
 
@@ -64,7 +64,7 @@ You can set the severity of an event to one of five values: `fatal`, `error`,�
 
 {% include components/platform_content.html content_dir='set-level' %}
 
-For more details about how to set predefined properties, see the [platform-specific documentation]({%- link _documentation/platforms/index.md -%}).
+For more details about how to set predefined properties, see the [platform-specific documentation](/platforms/).
 
 ## Custom Data
 
@@ -78,7 +78,7 @@ Most SDKs support configuring tags by configuring the scope:
 
 {% include components/platform_content.html content_dir='set-tag' %}
 
-Sentry promotes several pieces of predefined data to tags. We strongly recommend you don't set custom tags with these reserved names. But if you do, you can search for them with a [special tag syntax]({%- link _documentation/workflow/search.md -%}).
+Sentry promotes several pieces of predefined data to tags. We strongly recommend you don't set custom tags with these reserved names. But if you do, you can search for them with a [special tag syntax](/workflow/search/).
 
 ### Context
 
@@ -90,9 +90,9 @@ Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries
 
 In the past, custom context was called "extra" and set via a method like setExtra(), which is deprecated.
 
-Custom data set using `setExtra` appears in the "Additional Data" section of an event. In contrast, each key set using `setContext` gets its own section on the issue page, with the section title being the key name.
+Custom data set using `setExtra` appears in the "Additional Data" section of an event. By contrast, each key set using `setContext` gets its own section on the issue page, with the section title being the key name.
 
-For more details about predefined and custom contexts, see the [full documentation on Context Interface]({%- link _documentation/development/sdk-dev/event-payloads/contexts.md -%}). 
+For more details about predefined and custom contexts, see the [full documentation on Context Interface](https://develop.sentry.dev/sdk/event-payloads/contexts). 
 
 ### Context Size Limits
 
@@ -100,13 +100,13 @@ Maximum payload size: There are times when you may want to send the whole applic
 
 Sentry will try its best to accommodate the data you send, but Sentry will trim large context payloads or truncate the payloads entirely. 
 
-For more details, see the [full documentation on SDK data handling]({%- link _documentation/development/sdk-dev/data-handling.md -%}).
+For more details, see the [full documentation on SDK data handling](https://develop.sentry.dev/sdk/data-handling/).
 
 ### Unsetting Context
 
 Sentry holds context in the current scope, and thus context clears out at the end of each operation (for example, requests). You can also push and pop your scopes to apply context data to a specific code block or function.
 
-For more details, see the [full documentation on Scopes and Hubs]({%- link _documentation/enriching-error-data/scopes.md -%}).
+For more details, see the [full documentation on Scopes and Hubs](/enriching-error-data/scopes/).
 
 ## Debugging Additional Data
 
@@ -114,4 +114,4 @@ You can view the JSON payload of an event to see how Sentry stores additional da
 
 [{% asset additional-data/event_JSON.png alt="Red box highlighting where to find the JSON connected to an event." width="400"%}]({% asset additional-data/event_JSON.png @path %})
 
-For more details, see the [full documentation on Event Payload]({%- link _documentation/development/sdk-dev/event-payloads/index.md -%}).
+For more details, see the [full documentation on Event Payload](https://develop.sentry.dev/sdk/event-payloads/).

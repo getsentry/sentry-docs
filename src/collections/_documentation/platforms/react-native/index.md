@@ -57,7 +57,7 @@ The [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will guide you t
 
 The following changes will be performed:
 
-- add the sentry-java package for native crash reporting on Android
+- add the sentry-android package for native crash reporting on Android
 - add the sentry-cocoa package for native crash reporting on iOS
 - enable the Sentry Gradle build step for Android
 - patch *_MainApplication.java_* for Android
@@ -71,10 +71,18 @@ The following changes will be performed:
 If you are upgrading from an earlier version of react-native-sentry you should unlink the package to ensure the generated code is updated to the latest version:
 
 ```bash
-$ react-native unlink react-native-sentry
+react-native unlink react-native-sentry
 ```
 
-After that remove `react-native-sentry` from your `package.json` and follow the installation instructions.
+After that remove `react-native-sentry` from your `package.json`:
+
+```bash
+npm uninstall react-native-sentry --save
+# or
+yarn remove react-native-sentry
+```
+
+You can then follow the installation instructions above.
 
 ## iOS Specifics
 
@@ -83,6 +91,10 @@ When you use Xcode, you can hook directly into the build process to upload debug
 ## Android Specifics
 
 For Android, we hook into Gradle for the source map build process. When you run `react-native link`, the Gradle files are automatically updated. When you run `./gradlew assembleRelease` source maps are automatically built and uploaded to Sentry.
+
+If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build.
+
+To disable this feature, set `org.gradle.configureondemand=false` or remove it as its default value is disabled, do this in the `gradle.properties` file.
 
 <!-- WIZARD -->
 ## Connecting the SDK to Sentry
@@ -128,25 +140,55 @@ try {
 }
 ```
 
-## Setting Release / Dist
+### Release Health
+
+Monitor the [health of releases](/workflow/releases/health/) by observing user adoption, usage of the application, percentage of [crashes](/workflow/releases/health/#crash), and [session data](/workflow/releases/health/#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+
+To benefit from the health data you must use at least version 1.4.0 of the React Native SDK, and enable the collection of release health metrics when initializing the SDK:
 
 ```javascript
-Sentry.setRelease('release');
-Sentry.setDist('dist');
+import * as Sentry from '@sentry/react-native';
+    
+Sentry.init({ 
+  dsn: '___PUBLIC_DSN___',
+  enableAutoSessionTracking: true,
+});
 ```
 
-Since this SDK is unified, all function that are available for JavaScript are also available in this SDK, for more examples:
-- [Adding Context]({%- link _documentation/platforms/javascript/index.md -%}#adding-context)
-- [JavaScript Advanced Usage]({%- link _documentation/platforms/javascript/index.md -%}#advanced-usage)
+The SDK automatically manages the start and end of sessions when the application is started, goes to background, returns to the foreground, etc.
+By default, the session terminates once the application is in the background for more than 30 seconds. To change the timeout, use the option `sessionTrackingIntervalMillis`. For example:
+
+```javascript
+import * as Sentry from '@sentry/react-native';
+    
+Sentry.init({ 
+  dsn: '___PUBLIC_DSN___',
+  enableAutoSessionTracking: true,
+  // Sessions close after app is 10 seconds in the background.
+  sessionTrackingIntervalMillis: 10000,
+});
+```
+
+For more details, see the [full documentation on Release Health](/workflow/releases/health/).
+
+### Identification of the User
+
+By default, we don't apply the user identification provided to the SDK via the API. Instead, we use the installation ID generated with the first use of the application. The ID doesn't contain any private or public data of your users or any public or shared data of their device.
+
+### More options
+
+This SDK is based on our browser JavaScript. That means that all functions available for JavaScript are also available in this SDK. For more examples:
+- [Adding Context](/platforms/javascript/#adding-context)
+- [JavaScript Advanced Usage](/platforms/javascript/#advanced-usage)
 
 ## Deep Dive
 
--   [Using Sentry with Expo]({%- link _documentation/platforms/react-native/expo.md -%})
--   [Using Sentry with CodePush]({%- link _documentation/platforms/react-native/codepush.md -%})
--   [Source Maps for Other Platforms]({%- link _documentation/platforms/react-native/sourcemaps.md -%})
--   [Setup With CocoaPods]({%- link _documentation/platforms/react-native/cocoapods.md -%})
--   [Using RAM Bundles]({%- link _documentation/platforms/react-native/ram-bundles.md -%})
--   [Hermes]({%- link _documentation/platforms/react-native/hermes.md -%})
--   [Manual Setup]({%- link _documentation/platforms/react-native/manual-setup.md -%})
-    -   [iOS]({%- link _documentation/platforms/react-native/manual-setup.md -%}#ios)
-    -   [Android]({%- link _documentation/platforms/react-native/manual-setup.md -%}#android)
+-   [Using Sentry with Expo](/platforms/react-native/expo/)
+-   [Using Sentry with CodePush](/platforms/react-native/codepush/)
+-   [Source Maps for Other Platforms](/platforms/react-native/sourcemaps/)
+-   [Setup With CocoaPods](/platforms/react-native/cocoapods/)
+-   [Using RAM Bundles](/platforms/react-native/ram-bundles/)
+-   [Hermes](/platforms/react-native/hermes/)
+-   [Manual Setup](/platforms/react-native/manual-setup/)
+    -   [iOS](/platforms/react-native/manual-setup/#ios)
+    -   [Android](/platforms/react-native/manual-setup/#android)
