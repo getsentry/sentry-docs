@@ -3,11 +3,11 @@ title: 'Event Detail'
 sidebar_order: 5
 ---
 
-From [Performance](/performance-monitoring/performance/index) and [Discover](/performance-monitoring/discover-queries/index), you can drill all the way down into a span for a single transaction and traverse multiple directions. This will acclerate your ability to debug slow HTTP requests, database queries, identify associated errors and root out other bottlenecks.
+From [Performance](/performance-monitoring/performance/index) and [Discover](/performance-monitoring/discover-queries/index), you can drill all the way down into a span for a single transaction and traverse multiple directions. This will accelerate your ability to debug slow HTTP requests, database queries, identify associated errors, and root out other bottlenecks.
 
 [{% asset performance/perf-event-detail.png alt="Discover span showing the map of the transactions (aka minimap) and the black dashed handlebars for adjusting the window selection." %}]({% asset performance/perf-event-detail.png @path %})
 
-Information about this specific event is located in the sidebar, listing out the Event ID, date and time of occurence, project and downloadable JSON package. More can be found under Event Tag Details. You'll also get a breakdown of operations, of which will correspond to the waterfall span view as a legend.
+Information about this specific event is located in the sidebar, listing out the Event ID, date and time of occurrence, project, and downloadable JSON package. More can be found under Event Tag Details. You'll also get a breakdown of operations, which will correspond to the waterfall span view as a legend.
 
 {% capture __alert_content -%}
 Currently, only root transactions are searchable. Any span data that inherits from it's root are not. 
@@ -32,7 +32,7 @@ The waterfall view is a split view where the left reflects the transaction's spa
 
 _Missing Instrumentation_ 
 
-Gaps between spans may be marked as "Missing Instrumentation". This means that there is a duration in the transaction that isn't accounted for by any of the transaction's spans, and likely means that you need to manually instrument that part of your process. Go back to the [performance setup](/performance-monitoring/setup) for details. 
+Gaps between spans may be marked as "Missing Instrumentation." TThis means a duration in the transaction that isn't accounted for by any of the transaction's spans. It likely means that you need to manually instrument that part of your process. Go back to the [performance setup](/performance-monitoring/setup) for details. 
 
 ### Span Details
 
