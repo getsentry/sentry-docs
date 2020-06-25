@@ -19,7 +19,7 @@ sentry_sdk.init(dsn="___PUBLIC_DSN___")
 def my_function(...): ...
 ```
 
-Use the generic integration by calling the `serverless_function` decorator. Decorators wrap a function and modify its behavior. Then, deploy and test the function.
+Use the generic integration by calling the `serverless_function` decorator. Decorators wrap a function and modify its behavior. Then, deploy and test the function. Checkout Sentry's [gcp sample apps](https://github.com/getsentry/examples/tree/master/gcp-cloud-functions/python) for detailed examples.
 
 {% capture __alert_content -%}
 
