@@ -59,6 +59,8 @@ sentry_sdk.init(
 
 **Manual Instrumentation**
 
+<!-- WIZARD python-tracing -->
+
 To manually instrument certain regions of your code, you can create a transaction to capture them.
 
 The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
@@ -91,3 +93,5 @@ def process_item(item):
       span.set_tag("http.status_code", response.status_code)
       span.set_data("http.foobarsessionid", get_foobar_sessionid())
 ```
+
+<!-- ENDWIZARD -->
