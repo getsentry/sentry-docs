@@ -306,4 +306,4 @@ Deleting a saved query is irreversible.
 On the Discover Homepage, each saved query card has an ellipsis that will open a context menu. Delete the query from here. You can also delete the query within Query Results view by clicking the trash can in the upper right. 
 
 query-builder.md
-For more details on how to view saved queries, see [documentation on Discover](/performance-monitoring/discover-queries/)
+For more details on how to view saved queries, see the [full documentation on Discover](/performance-monitoring/discover-queries/)
