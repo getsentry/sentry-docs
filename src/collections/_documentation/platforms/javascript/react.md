@@ -34,7 +34,7 @@ return <button onClick={methodDoesNotExist}>Break the world</button>;
 
 ## Error Boundaries
 
-If you’re using React 16 or above, Error Boundaries are an important tool for defining the behavior of your application in the face of errors. The `@sentry/react` package exposes an error boundary component that automatically sends Javascript errors from inside a React component tree to Sentry.
+If you’re using React 16 or above, Error Boundaries are an important tool for defining the behavior of your application in the face of errors. The `@sentry/react` package exposes an error boundary component that automatically sends JavaScript errors from inside a React component tree to Sentry.
 
 {% capture __alert_content -%}
 In development mode, React will rethrow errors caught within an error boundary. This will result in errors being reported twice to Sentry with the above setup, but this won’t occur in your production build.
