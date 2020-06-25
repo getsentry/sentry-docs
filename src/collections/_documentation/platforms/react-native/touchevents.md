@@ -4,7 +4,7 @@ title: 'Tracking Touch Events'
 
 {% version_added 1.5.0 %}
 
-To track touch events with the React Native SDK you will need at least version `1.5.0` and will have to wrap your app with a `TouchEventBoundary`. This can be done in two ways:
+To track touch events with the React Native SDK, you will need at least version `1.5.0` and will have to wrap your app with a `TouchEventBoundary`. You can track touch events in two ways:
 
 ## Wrapping with `TouchEventBoundary`
 At the root of your app, usually `App.js`, wrap the app component with `Sentry.TouchEventBoundary`:
@@ -39,7 +39,7 @@ const App = () => {
 export default AppRegistry.registerComponent("Your Amazing App", () => Sentry.withTouchEventBoundary(App));;
 ```
 
-# How Touches are Tracked
+#### How Touches are Tracked
 Each touch event that occurs will be automatically logged as a breadcrumb, and will be displayed on the dashboard when an event occurs along with the component tree that the touch event occurred in.
 
 ## Naming Specific Components
@@ -69,9 +69,9 @@ const YourCoolComponent = (props) => {
 YourCoolComponent.displayName = "CoolComponent";
 ```
 
-# Options
+## Options
 
-Options can be passed to configure the boundary either as props to the `Sentry.TouchEventBoundary` component or as the second argument to the `Sentry.withTouchEventBoundary` wrapper.
+You can pass specific options to configure the boundary either as props to the `Sentry.TouchEventBoundary` component or as the second argument to the `Sentry.withTouchEventBoundary` wrapper.
 
 ```jsx
 (
