@@ -1,13 +1,24 @@
-In Rust you can capture errors that implement the `Fail` trait or that are `failure::Error`
-objects:
+In Rust, you can capture any `std::error::Error` type. 
 
 ```rust
-use sentry::integrations::failure::capture_error;
-
-let result = match function_that_might_fail() {
+let result = match function_returns_error() {
     Ok(result) => result,
     Err(err) => {
-        capture_error(&err);
+        sentry::capture_error(&err);
+        return Err(err);
+    }
+};
+```
+
+Integrations may provide more specialized capturing methods.
+
+```rust
+use sentry::integrations::anyhow::capture_anyhow;
+
+let result = match function_returns_anyhow() {
+    Ok(result) => result,
+    Err(err) => {
+        capture_anyhow(&err);
         return Err(err);
     }
 };

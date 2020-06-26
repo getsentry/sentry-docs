@@ -176,7 +176,7 @@ happen as part of the `init()` call, in some others, different patterns apply.
 {:.config-key}
 ### `integrations`
 
-{% unsupported csharp aspnetcore rust %}
+{% unsupported csharp aspnetcore %}
 In some SDKs, the integrations are configured through this parameter on library initialization.
 For more information, have a look at the specific integration documentation.
 {% endunsupported %}
@@ -184,7 +184,7 @@ For more information, have a look at the specific integration documentation.
 {:.config-key}
 ### `default-integrations`
 
-{% unsupported csharp aspnetcore rust %}
+{% unsupported csharp aspnetcore %}
 This can be used to disable integrations that are added by default.  When set to `false` no
 default integrations are added.
 {% endunsupported %}
