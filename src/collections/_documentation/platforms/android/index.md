@@ -87,6 +87,17 @@ To initialize the SDK manually, disable the auto initialization. You can do so b
 </application>
 ```
 
+Or, to completely remove the merging of the `ContentProvider`:
+
+```xml
+<application>
+    <provider
+        android:name="io.sentry.android.core.SentryInitProvider"
+        android:authorities="${applicationId}.SentryInitProvider"
+        tools:node="remove" />
+</application>
+```
+
 The next step is to initialize the SDK directly in your code.
 
 The SDK can catch errors and crashes only after you've initialized it. So, we recommend calling `SentryAndroid.init` in the instance of the Application class right after the application is created. 
