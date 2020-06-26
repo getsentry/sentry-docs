@@ -30,7 +30,7 @@ def my_function(event, context):
     ...
 ```
 
-Create the deployment package in .zip format and upload it to AWS Lambda as a Lambda function. Checkout Sentry's [aws sample apps](http://tbd) for detailed examples. 
+Create the deployment package in .zip format and upload it to AWS Lambda as a Lambda function. Checkout Sentry's [aws sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/python) for detailed examples. 
 
 {% capture __alert_content -%}
 If you are using another web framework inside of AWS Lambda, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [*Integrations*](/platforms/python/#integrations) for more information.
@@ -48,8 +48,8 @@ If you are using another web framework inside of AWS Lambda, the framework might
 
 With the AWS Lambda integration enabled, the Python SDK will:
 
-* Automatically report all uncaught exceptions from your lambda functions including a link to the cloudwatch logs, the function details and sys.argv for the function. You can add more context as described [here]({% link _documentation/platforms/python/index.md %}#setting-context) 
+* Automatically report all uncaught exceptions from your lambda functions including a link to the cloudwatch logs, the function details and sys.argv for the function. You can add more context as described [here](/platforms/python#setting-context) 
 
 * {% include platforms/python/request-data.md %}
 
-* Reference other serverless integrations [here]({% link _documentation/serverless/index.md %})
+* Reference other serverless integrations [here](/serverless)

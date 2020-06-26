@@ -42,6 +42,6 @@ You can obtain the DSN using your Sentry account from your organization's *Setti
 
 Note: You need to call both `CaptureException` and `Flush` to report errors into Sentry.
 
-Create the deployment package in .zip format, then upload it to AWS Lambda as a Lambda function. Checkout Sentry’s [aws sample apps](http://tbd/) for detailed examples. Use  [JavaScript docs]({% link _documentation/platforms/javascript/index.md %}) for more configuration options.
+Create the deployment package in .zip format, then upload it to AWS Lambda as a Lambda function. Checkout Sentry’s [aws sample apps](http://tbd/) for detailed examples. Use  [JavaScript docs](/platforms/javascript/) for more configuration options.
 
-Reference other serverless integrations [here]({% link _documentation/serverless/index.md %})
+Reference other serverless integrations [here](/serverless/)
