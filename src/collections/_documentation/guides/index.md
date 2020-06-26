@@ -16,6 +16,8 @@ sidebar_order: 0
 
 * [Grouping & Fingerprints]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
 
+* [Discover your Errors]({%- link _documentation/guides/discover/index.md -%})
+
 * [Moving on Up - Switch to Hosted Sentry]({%- link _documentation/guides/migration/index.md -%})
 
 ## Tutorials
