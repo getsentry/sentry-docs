@@ -41,31 +41,39 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
 
       items = new_root.nil? ? nil : tree_for(docs_without_index, new_root)
 
+      should_hide = false
+
       if !items.nil?
         items.sort_by! { |i| sort_key(i) }
+
+        num_of_items_before = items.length()
         items.filter! { |i| show_item(i) }
+
+        should_hide = items.length() < num_of_items_before && items.length() == 0
       end
 
-      hash = {
-        "slug" => name,
-        "name" => document.nil? ? name : document.data["title"],
-        "document" => document.nil? ? nil : document,
-        "items" => items,
-        "parent_path" => new_root
-      }
+      if !should_hide
+        hash = {
+          "slug" => name,
+          "name" => document.nil? ? name : document.data["title"],
+          "document" => document.nil? ? nil : document,
+          "items" => items,
+          "parent_path" => new_root
+        }
 
-      tree.push hash
+        tree.push hash
+      end
     end
     tree
   end
-  
+
   def sort_tree(node)
     if !node["items"].nil?
       node["items"].sort_by! { |i| sort_key(i) }
       node["items"].each { |n| sort_tree(n) }
     end
   end
-  
+
   mapped = site.collections.map {|c| c[1].docs}
   documents = mapped.flatten()
   tree = tree_for(documents, "")
