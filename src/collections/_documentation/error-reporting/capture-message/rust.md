@@ -1,5 +1,3 @@
 ```rust
-use sentry::{capture_message, Level};
-
-capture_message("Something went wrong", Level::Info);
+sentry::capture_message("Something went wrong", sentry::Level::Info);
 ```

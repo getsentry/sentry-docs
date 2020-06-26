@@ -22,7 +22,7 @@ In your `Cargo.toml`:
 ```toml
 [dependencies]
 sentry = "{% sdk_version sentry.rust %}"
-sentry-actix = "{% package_version cargo:sentry-actix %}"
+sentry-actix = "{% sdk_version sentry.rust %}"
 ```
 
 And your Rust code:
@@ -45,7 +45,6 @@ fn failing(_req: &HttpRequest) -> Result<String, Error> {
 fn main() {
     let _guard = sentry::init("___PUBLIC_DSN___");
     env::set_var("RUST_BACKTRACE", "1");
-    sentry::integrations::panic::register_panic_handler();
 
     server::new(|| {
         App::new()

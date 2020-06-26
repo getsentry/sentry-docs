@@ -1,3 +1,7 @@
+---
+hide_from_sidebar: true
+---
+
 To access our tracing features, you will need to install our Tracing integration.
 
 **Node**
@@ -64,6 +68,8 @@ Spans are instrumented for the following operations within a transaction:
 
 **Manual Instrumentation**
 
+<!-- WIZARD node-tracing -->
+
 To manually instrument a specific region of your code, you can create a transaction to capture it.
 
 The following example creates a transaction for a part of the code that contains an expensive operation (for example, `processItem`), and sends the result to Sentry:
@@ -83,3 +89,5 @@ app.use(function processItems(req, res, next) {
   })
 });
 ```
+
+<!-- ENDWIZARD -->
