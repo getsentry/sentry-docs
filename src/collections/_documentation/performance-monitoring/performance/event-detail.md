@@ -24,11 +24,11 @@ Currently, only root transactions are searchable. Any span data that inherits fr
 
 You can view span data using either of these methods:
 
-1. Click the "Related Transaction" button from the Issue Details page to open the Transaction summary. This will maintain the context of the current error event.
+1. Scroll down to the "Trace Details" context panel in either the Issue Details or the Discover Event Details page, and click on the "View Summary" button. This will maintain the context of the current Sentry event.
 
 2. Select the [Performance Homepage](/performance-monitoring/performance/index), then click the affected transaction to display the trace data.
 
-_Note_: Users on the Team or Business plans can also view a list of transaction events by clicking on the "Transactions" pre-built query in [Discover](/performance-monitoring/discover-queries/index) or by performing a search with the event.type:transaction condition the Discover Query Builder view.
+_Note_: Users on the Team or Business plans can also view a list of transaction events by clicking on the "Transactions" pre-built query in [Discover](/performance-monitoring/discover-queries/index) or by performing a search with the `event.type:transaction` condition the Discover Query Builder view.
 
 The span view is a split view where the left-hand side shows the transaction’s span tree, and the right-hand side represents each span as a colored rectangle. Within the tree view, Sentry identifies spans by their `op` and `description` values. If a span doesn’t have a description, Sentry uses the span’s id as a fallback. The first span listed is always the transaction’s root span, from which all other spans in the transaction descend.
 
@@ -85,6 +85,29 @@ addGlobalEventProcess(event => {
 	event.transaction = sanitizeTransactionName(event.transaction);
   }
   return event;
+});
+```
+
+For browser JavaScript applications using the `Tracing` integration, the `beforeNavigate` option  can be used to better group navigation/pageload transactions together based on URL.
+
+```javascript
+import * as Sentry from '@sentry/browser';
+import { Integrations as ApmIntegrations } from '@sentry/apm';
+
+Sentry.init({
+	// ...
+  integrations: [
+    new ApmIntegrations.Tracing({
+      beforeNavigate: (location) => {        
+        // You could use your UI's routing library to find the matching
+		// route template here. We don't have one right now, so do some basic
+		// parameter replacements.
+        return location.pathname
+        .replace(/\d+/g, '<digits>')
+        .replace(/[a-f0-9]{32}/g, '<hash>');
+      },
+    }),
+  ],
 });
 ```
 
