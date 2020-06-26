@@ -47,7 +47,7 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
         items.sort_by! { |i| sort_key(i) }
 
         num_of_items_before = items.length()
-        items.filter! { |i| show_item(i) }
+        items.select! { |i| show_item(i) }
 
         should_hide_from_sidebar = items.length() < num_of_items_before && items.length() == 0
       end
