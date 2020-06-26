@@ -86,7 +86,7 @@ Options that are passed into the Sentry User Feedback Widget. See all possible c
 
 #### `fallback` (React.ReactNode or Function)
 
-A fallback component that gets rendered when the error boundary encounters an error. Can either provide a React Component, or a function that returns React Component as a valid fallback prop. If a function is provided, the function will be called with the error and the component stack at time of error, and a function that resets the error boundary to it's regular state.
+A fallback component that gets rendered when the error boundary encounters an error. You can can either provide a React Component, or a function that returns a React Component as a valid fallback prop. If you provide a function, Sentry will call the function with the error and the component stack at the time of the error.
 
 #### `onError` (Function)
 
