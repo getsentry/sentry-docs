@@ -23,8 +23,6 @@ sidebar_order: 1
 
 5) Now that the sample code is available locally, open the `Django` project in your preferred code editor
 
----
-
 ## Step 2: Install the SDK
 
 Sentry captures data by using a platform specific SDK within your application runtime. To use the SDK, import and configure it in your source code.
@@ -51,8 +49,6 @@ Refer to the [doc](https://docs.sentry.io/error-reporting/quickstart/?platform=p
     from sentry_sdk.integrations.django import DjangoIntegration
    ```
 
----
-
 ## Step 3: Install Dependencies & Run the Demo App
 
 To build and run the Demo application on your localhost
@@ -61,41 +57,39 @@ To build and run the Demo application on your localhost
 
 2. Using brew install Python3 if you haven't already using:
    ```bash
-   $ brew install python3
+    brew install python3
    ```
 3. Install virtualenv and virtualenvwrapper:
    ```bash
-   $ pip3 install virtualenv virtualenvwrapper
-   $ echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
-   $ exec bash
+    pip3 install virtualenv virtualenvwrapper
+    echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
+    exec bash
    ```
-4. Install Sentry's command line tool to use release tracking and Github integration for commit data:
+4. Install Sentry's command line tool to use release tracking and GitHub integration for commit data:
    ```bash
-   $ npm install -g @sentry/cli
+    npm install -g @sentry/cli
    ```
 5. Setup and activate a Python 3 virtual environment in the project root.
 
    > (You can name the virtual environment whatever you feel that is appropriate, in our case we named it sentry-demo-django)
 
    ```bash
-   $ mkvirtualenv --python=python3 sentry-demo-django
+    mkvirtualenv --python=python3 sentry-demo-django
    ```
 
 6. To activate the virtual environment run:
    ```bash
-   $ workon sentry-demo-django
+    workon sentry-demo-django
    ```
 7. Running the following command will install relevant python libraries and run django server
 
    ```bash
-   $ make deploy
+    make deploy
    ```
 
    ![Deploy & Serve]({% asset guides/integrate-backend/run_django_server.png @path %})
 
    > Once the deploy finishes successfully, you'll see the confirmation in your terminal
-
----
 
 ## Next
 
