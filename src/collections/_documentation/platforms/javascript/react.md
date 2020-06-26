@@ -7,7 +7,7 @@ keywords: ["reactjs"]
 To use Sentry with your React application, you will need to use `@sentry/react` (Sentry’s Browser React SDK).
 
 {% capture __alert_content -%}
-`@sentry/react` is a is a wrapper around the `@sentry/browser` package, with added functionality related to React. All methods available in the `@sentry/browser` package also can also be imported from `@sentry/react`.
+`@sentry/react` is a wrapper around the `@sentry/browser` package, with added functionality related to React. All methods available in the `@sentry/browser` package can also be imported from `@sentry/react`.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -34,7 +34,7 @@ return <button onClick={methodDoesNotExist}>Break the world</button>;
 
 ## Error Boundaries
 
-If you’re using React 16 or above, Error Boundaries are an important tool for defining the behavior of your application in the face of errors. The `@sentry/react` package exposes an error boundary component that automatically sends JavaScript errors from inside a React component tree to Sentry.
+If you're using React 16 or above, Error Boundaries are an essential tool for defining your application's behavior in the face of errors. The `@sentry/react` package exposes an error boundary component that automatically sends JavaScript errors from inside a React component tree to Sentry.
 
 {% capture __alert_content -%}
 In development mode, React will rethrow errors caught within an error boundary. This will result in errors being reported twice to Sentry with the above setup, but this won’t occur in your production build.
@@ -45,7 +45,7 @@ In development mode, React will rethrow errors caught within an error boundary. 
   level="warning"
 %}
 
-In the example below, when the `<Example />` component hits an error, the `<Sentry.ErrorBoundary>` component will send data about that error and the component tree to Sentry, and open a user feedback dialog, and render a fallback UI.
+In the example below, when the `<Example />` component hits an error, the `<Sentry.ErrorBoundary>` component will send data about that error and the component tree to Sentry, open a user feedback dialog, and render a fallback UI.
 
 ```jsx
 import React from 'react';
@@ -74,7 +74,7 @@ export default App;
 
 ### ErrorBoundary Options
 
-The ErrorBoundary component exposes a variety props that can be passed in for extra configuration. There are no required options, but it is highly recommended that a fallback component be set.
+The ErrorBoundary component exposes a variety of props that can be passed in for extra configuration. There are no required options, but we highly recommend that you set a fallback component.
 
 #### `showDialog` (boolean)
 
@@ -90,7 +90,7 @@ A fallback component that gets rendered when the error boundary encounters an er
 
 #### `onError` (Function)
 
-A function that gets called when the Error Boundary encounter an error. `onError` is useful if you want to propogate the error into a state management library like Redux, or if you want to check any side effects that could have occured due to the error.
+A function that gets called when the Error Boundary encounters an error. `onError` is useful if you want to propagate the error into a state management library like Redux, or if you want to check any side effects that could have occurred due to the error.
 
 #### `onMount` (Function)
 
@@ -104,7 +104,7 @@ A function that gets called on ErrorBoundary `componentWillUnmount()`
 
 #### Setting a Fallback Function (Render Props)
 
-Below is an example where a fallback prop, using the [render props approach](https://reactjs.org/docs/render-props.html), is used to display a fallback UI on error, and gracefully return to a normal component state when reset.
+Below is an example where a fallback prop, using the [render props approach](https://reactjs.org/docs/render-props.html), is used to display a fallback UI on error, and gracefully return to a standard component state when reset.
 
 ```jsx
 import React from 'react';
