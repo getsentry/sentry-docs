@@ -1,5 +1,5 @@
 ---
-hide: true
+hide_from_sidebar: true
 ---
 
 To access our tracing features, you will need to install our Tracing integration.

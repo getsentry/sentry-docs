@@ -9,7 +9,7 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
 
   def show_item(item)
     if !item["document"].nil?
-      !item["document"].data["hide"]
+      !item["document"].data["hide_from_sidebar"]
     else
       true
     end
@@ -41,7 +41,7 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
 
       items = new_root.nil? ? nil : tree_for(docs_without_index, new_root)
 
-      should_hide = false
+      should_hide_from_sidebar = false
 
       if !items.nil?
         items.sort_by! { |i| sort_key(i) }
@@ -49,10 +49,10 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
         num_of_items_before = items.length()
         items.filter! { |i| show_item(i) }
 
-        should_hide = items.length() < num_of_items_before && items.length() == 0
+        should_hide_from_sidebar = items.length() < num_of_items_before && items.length() == 0
       end
 
-      if !should_hide
+      if !should_hide_from_sidebar
         hash = {
           "slug" => name,
           "name" => document.nil? ? name : document.data["title"],
