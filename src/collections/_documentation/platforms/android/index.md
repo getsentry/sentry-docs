@@ -87,7 +87,7 @@ To initialize the SDK manually, disable the auto initialization. You can do so b
 </application>
 ```
 
-or to completely remove the merging of the `ContentProvider`:
+Or, to completely remove the merging of the `ContentProvider`:
 
 ```xml
 <application>
