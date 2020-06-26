@@ -2,15 +2,17 @@
 hide_from_sidebar: true
 ---
 
-To get started with performance monitoring using Sentry's Python SDK, first install the `@sentry/apm` package:
+To get started with performance monitoring using Sentry's Python SDK, first install the `sentry_sdk` package:
 
 ```
-import sentry_sdk
+$ pip install sentry_sdk
 ```
 
 Next, initialize the integration in your call to `Sentry.init`:
 
-```
+```python
+import sentry_sdk
+
 sentry_sdk.init(
     "___PUBLIC_DSN___", 
     traces_sample_rate = 0.25
