@@ -60,6 +60,54 @@ Then, you can see the error in your dashboard:
 
 [{% asset js-index/error-message.png alt="Error in Unresolved Issues with title This is my fake error message" %}]({% asset js-index/error-message.png @path %})
 
+{% capture __alert_content -%}
+When you are using our CDN, it may happen, that some people will use ad-blocking or script-blocking extensions. When this happens, our SDK won't be fetched and initialized properly. Because of this, any call to SDKs API will fail and may cause your application to misbehave. If this could apply to your use-case, read the section below on how to mitigate this issue.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Dealing with Ad-Blockers"
+  content=__alert_content
+  level="warning"
+%}
+
+The best way to deal with script-blocking extensions is to use the SDK package directly through the `npm` and bundle it with your application.
+This way, you can be sure, that the code will be always there as you expect it to be.
+
+The second way is to download the SDK from our CDN and host it yourself, this way SDK will still be separated from the rest of your code, but you'll be certain that it won't be blocked, as it's origin will be the same as the origin of your website.
+
+You can easily fetch it using `curl` or any other similar tool:
+
+```sh
+$ curl https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.min.js -o sentry.browser.{% sdk_version sentry.javascript.browser %}.min.js -s
+```
+
+The last option, is to use `Proxy` guard, that will make sure that your code won't break, even when you will call our SDK which was blocked.
+`Proxy` is supported by all browser except Internet Explorer, however there are no extensions in these browsers anyway. Also if `Proxy` is not in any of your user's browser, it will be silently skipped, so you don't have to worry about it breaking anything.
+
+The snippet should be placed just **above** the `<script>` tag containing our CDN bundle.
+
+The snippet in a readable format presents like this:
+
+```js
+if ("Proxy" in window) {
+  var handler = {
+    get: function(_, key) {
+      return new Proxy(function(cb) {
+        if (key === "flush" || key === "close") return Promise.resolve();
+        if (typeof cb === "function") return cb(window.Sentry);
+        return window.Sentry;
+      }, handler);
+    }
+  };
+  window.Sentry = new Proxy({}, handler);
+}
+```
+
+And here is more useful, minified snippet, that you can copy-paste directly:
+
+```html
+<script>if("Proxy"in window){var n={get:function(o,e){return new Proxy(function(n){return"flush"===e||"close"===e?Promise.resolve():"function"==typeof n?n(window.Sentry):window.Sentry},n)}};window.Sentry=new Proxy({},n)}</script>
+```
+
 ## Capturing Errors
 Automatically and manually capture errors, exceptions, and rejections.
 
