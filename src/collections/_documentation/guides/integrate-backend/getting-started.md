@@ -1,0 +1,102 @@
+---
+title: Getting Started
+sidebar_order: 1
+---
+
+## Step 1: Get the Code
+
+1. Open the sample [code repository](https://github.com/sentry-demos/django) on GitHub
+
+2. Click on `Fork` and select the target GitHub account you wish this repository to be forked in to
+
+   ![Fork Repository]({% asset guides/integrate-backend/fork_django.png @path %})
+
+3) Once the fork is complete, click on `Clone or download` and copy the repository HTTPS url
+
+   ![Clone Repository]({% asset guides/integrate-backend/clone_django.png @path %})
+
+4) Clone the forked repository to your local environment
+
+   ```bash
+   > git clone <repository HTTPS url>
+   ```
+
+5) Now that the sample code is available locally, open the `Django` project in your preferred code editor
+
+---
+
+## Step 2: Install the SDK
+
+Sentry captures data by using a platform specific SDK within your application runtime. To use the SDK, import and configure it in your source code.
+
+The demo project uses Django for the backend code and REACT for the frontend code. Please refer to the frontend guide on how to set up your front end code.
+
+Refer to the [doc](https://docs.sentry.io/error-reporting/quickstart/?platform=python) on how to get started.
+
+1. Open the `settings.py` file (located under \_./django/myproject/settings.py)
+
+   ![Import and Configure SDK]({% asset guides/integrate-backend/sentry_init.png @path %})
+
+2. After importing Sentry to the app, it is important to import the Django integration as well. Integrations extend the functionality of the SDK for some common frameworks and libraries.
+
+   ```python
+   sentry_sdk.init(
+       dsn="YOUR_DSN",
+   ```
+
+3. In the Sentry SDK configuration, enter the `dsn` key value you copied from the project created in the previous tutorial.
+
+   ```python
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+   ```
+
+---
+
+## Step 3: Install Dependencies & Run the Demo App
+
+To build and run the Demo application on your localhost
+
+1. Open a shell terminal and change directory to the `django` project folder
+
+2. Using brew install Python3 if you haven't already using:
+   ```bash
+   $ brew install python3
+   ```
+3. Install virtualenv and virtualenvwrapper:
+   ```bash
+   $ pip3 install virtualenv virtualenvwrapper
+   $ echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
+   $ exec bash
+   ```
+4. Install Sentry's command line tool to use release tracking and Github integration for commit data:
+   ```bash
+   $ npm install -g @sentry/cli
+   ```
+5. Setup and activate a Python 3 virtual environment in the project root.
+
+   > (You can name the virtual environment whatever you feel that is appropriate, in our case we named it sentry-demo-django)
+
+   ```bash
+   $ mkvirtualenv --python=python3 sentry-demo-django
+   ```
+
+6. To activate the virtual environment run:
+   ```bash
+   $ workon sentry-demo-django
+   ```
+7. Running the following command will install relevant python libraries and run django server
+
+   ```bash
+   $ make deploy
+   ```
+
+   ![Deploy & Serve]({% asset guides/integrate-backend/run_django_server.png @path %})
+
+   > Once the deploy finishes successfully, you'll see the confirmation in your terminal
+
+---
+
+## Next
+
+[Configuring Sentry]({%- link _documentation/guides/integrate-backend/configuration_options.md -%})
