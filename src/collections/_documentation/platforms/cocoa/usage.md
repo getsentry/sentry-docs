@@ -46,6 +46,3 @@ This integration is the core part of the SDK. It hooks into all signal and excep
 #### SentryAutoBreadcrumbTrackingIntegration
 
 This integration will swizzle some methods to create breadcrumbs e.g.: for `UIApplicationDidReceiveMemoryWarningNotification`, `sendAction:to:from:forEvent:` (UI interactions) or `viewDidAppear:` those breadcrumbs will be attached to your events.
-
-
-
