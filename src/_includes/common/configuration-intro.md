@@ -18,7 +18,7 @@ Sentry's {{ include.sdk_name }} SDK includes many configuration options that are
 
     Learn more about how to configure the {{ include.sdk_name }} SDK. These options are set when the SDK is first initialized, passed to the `init()` as an object. In addition, this page discusses the Hooks `beforeSend` and `beforeBreadcrumb` in addition to transport options.
 
-- **Filter Events Reported to Sentry**(/sdks/javascript/config-js/filter-js)
+- **[Filter Events Reported to Sentry](/sdks/javascript/config-js/filter-js)**
 
     Learn more about how to filter events reported to Sentry, using either the SDK, product filtering options, or both.
 

@@ -42,7 +42,9 @@ init({
 
 {%- capture __filter-sample-rate_content -%}
 
+```js
 Sentry.init({ sampleRate: 0.25 })
+```
 
 {%- endcapture -%}
 

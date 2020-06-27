@@ -111,4 +111,4 @@ install_content=__install_content
  
  Next steps:
  
- - [Configuration Options](/sdks/javascript/config-js)
+ - [Configuration Options](/sdks/javascript/config-js-intro)

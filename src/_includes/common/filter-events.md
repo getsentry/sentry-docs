@@ -53,15 +53,15 @@ Rate limits allow you to set the maximum volume of events a project will accept 
 
 Under `[Project Settings] » Client Keys » Configure`, you can create multiple DSN keys per-project and assign different (or no) limits to each key. This will allow you to dynamically allocate keys (with varying thresholds) depending on Release, Environment, and so forth.
 
-For example, you may have a project in production that generates a lot of noise. A rate limit allows you to set the maximum amount of data to “500 events per minute”. Additionally, you can create a second key for the same project for your staging environment, which is unlimited, ensuring your QA process is still untouched.
+For example, you may have a project in production that generates a lot of noise. A rate limit allows you to set the maximum amount of data to 500 events per minute, for instance. Additionally, you can create a second key for the same project for your staging environment, which is unlimited, ensuring your QA process is still untouched.
 
 <!-- TO DO: add screen shot-->
 
-# Configure your SDK to Filter Events
+## Configure your SDK to Filter Events
 
 Configure your SDK to filter events by using the `beforeSend` callback method and configuring, enabling, or disabling integrations.
 
-## Using `before-send`
+### Using `before-send`
 
 All Sentry SDKs support the `beforeSend` callback method. `before-send` is called immediately before the event is sent to the server, so it’s the final place where you can edit its data. It receives the event object as a parameter, so you can use that to modify the event’s data or drop it completely (by returning `null`) based on custom logic and the data available on the event.
 
@@ -76,13 +76,13 @@ Typically a `hint` holds the original exception so that additional data can be e
 <!-- Guideline: add a code sample that supports this example for the SDK your are documenting -->
 
 
-Note also that breadcrumbs can be filtered, as discussed in Understand Breadcrumbs <!-- TO DO : add link>
+Note also that breadcrumbs can be filtered, as discussed in Understand Breadcrumbs <!-- TO DO : add link-->
 
 **Event hints**
 
 When the SDK creates an event or breadcrumb for transmission, that transmission is typically created from some sort of source object. For instance, an error event is typically created from a log record or exception instance. For better customization, SDKs send these objects to certain callbacks (`before-send`, `before-breadcrumb` or the event processor system in the SDK).
 
-### Sampling
+#### Sampling
 
 If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events. 
 
@@ -97,9 +97,14 @@ For Sentry's Performance features (which are currently in Beta), we **strongly 
 
 When choosing a sampling rate, the goal is to not collect *too* much data, but to collect enough data that you are able to draw meaningful conclusions. If you’re not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume, until you’ve found a rate which lets you balance performance and cost concerns with data accuracy.
 
-## Using Hints
+### Using Hints
 
-Hints are available in two places: `beforeSend`/`beforeBreadcrumb` and `eventProcessors`. Event and Breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected. 
+Hints are available in two places: 
+
+1. `beforeSend` / `beforeBreadcrumb` 
+2. `eventProcessors` 
+
+Event and Breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected. 
 
 For events, those are things such as `event_id`,  `originalException`,  `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that you attach. 
 
@@ -110,34 +115,20 @@ In this example, the fingerprint is forced to a common value if an exception of 
 {{ include.filter-hint_content }}
 <!-- Guideline: add a code sample that supports the SDK your are documenting -->
 
-### Hints for Events
+#### Hints for Events
 
-`originalException`
+`originalException`     The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
 
-The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
+`syntheticException`    When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction.
 
-`syntheticException`
+#### Hints for Breadcrumbs
 
-When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction.
+`event` For breadcrumbs created from browser events, the Sentry SDK often supplies the event to the breadcrumb as a hint. This, for instance, can be used to extract data from the target DOM element into a breadcrumb.
 
-### Hints for Breadcrumbs
+`level` / `input`   For breadcrumbs created from console log interceptions. This holds the original console log level and the original input data to the log function.
 
-`event`
+`response` / `input`    For breadcrumbs created from HTTP requests. This holds the response object (from the fetch API) and the input parameters to the fetch function.
 
-For breadcrumbs created from browser events, the Sentry SDK often supplies the event to the breadcrumb as a hint. This, for instance, can be used to extract data from the target DOM element into a breadcrumb.
+`request` / `response` / `event`    For breadcrumbs created from HTTP requests. This holds the request and response object (from the node HTTP API) as well as the node event (`response` or `error`).
 
-`level` / `input`
-
-For breadcrumbs created from console log interceptions. This holds the original console log level and the original input data to the log function.
-
-`response` / `input`
-
-For breadcrumbs created from HTTP requests. This holds the response object (from the fetch API) and the input parameters to the fetch function.
-
-`request` / `response` / `event`
-
-For breadcrumbs created from HTTP requests. This holds the request and response object (from the node HTTP API) as well as the node event (`response` or `error`).
-
-`xhr`
-
-For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API. This holds the original xhr object.
+`xhr`   For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API. This holds the original xhr object.
