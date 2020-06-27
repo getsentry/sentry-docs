@@ -1,6 +1,6 @@
 ---
-title: Introduce Sentry SDK to your Backend Code
-sidebar_order: 0
+title: Backend Error Monitoring
+sidebar_order: 1
 ---
 
 In this tutorial you will import the backend app source code into your local development environment, add the Sentry SDK and initialize it. **Please** view the [frontend guide](https://docs.sentry.io/guides/integrate-frontend/create-new-project/) to learn more about how to create a project and alert rules.
@@ -8,7 +8,7 @@ In this tutorial you will import the backend app source code into your local dev
 > **Note:** If you're using your own source code you can skip this tutorial and instead
 >
 > - Follow the instructions within [this doc](https://docs.sentry.io/error-reporting/quickstart/?platform=python). Notice that you can select the desired platform.
-> - Continue with the [Next tutorial]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%})
+> - Continue with the [Next tutorial]({%- link _documentation/guides/tutorials/integrate-frontend/generate-first-error.md -%})
 
 ---
 
@@ -21,6 +21,6 @@ The demo app source code requires a **Python** development environment to build 
 - [Sentry-Cli](https://docs.sentry.io/cli/)
 - [NPM](https://www.npmjs.com/)
 
----
+## Next
 
-[Getting Started]({%- link _documentation/guides/integrate-backend/getting-started.md -%})
+[Getting Started]({%- link _documentation/guides/tutorials/integrate-backend/getting-started.md -%})

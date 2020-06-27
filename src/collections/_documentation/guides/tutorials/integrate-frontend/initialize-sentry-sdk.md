@@ -8,7 +8,7 @@ In this tutorial, you import the React demo code into your local development env
 > **Note:** If you're using your own source code you can skip this section and instead
 >
 > * Follow the instructions on [Getting Started]({%- link _documentation/error-reporting/quickstart.md -%}?platform=browser). Notice that you can select the desired platform.
-> * Continue with the [Next section]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%}).
+> * Continue with the [Next section]({%- link _documentation/guides/tutorials/integrate-frontend/generate-first-error.md -%}).
 
 ## Prerequisites
 
@@ -84,4 +84,4 @@ To build and run the Demo application on your localhost:
 
 ## Next
 
-[Capture your First Error]({%- link _documentation/guides/integrate-frontend/generate-first-error.md -%})
+[Capture your First Error]({%- link _documentation/guides/tutorials/integrate-frontend/generate-first-error.md -%})

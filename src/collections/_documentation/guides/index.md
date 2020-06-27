@@ -17,11 +17,3 @@ sidebar_order: 0
 * [Grouping & Fingerprints]({%- link _documentation/guides/grouping-and-fingerprints/index.md -%})
 
 * [Moving on Up - Switch to Hosted Sentry]({%- link _documentation/guides/migration/index.md -%})
-
-## Tutorials
-
-Step-by-step guides to getting started with error monitoring for your apps on:
-
-* [Frontend]({%- link _documentation/guides/integrate-frontend/index.md -%})
-
-* Backend

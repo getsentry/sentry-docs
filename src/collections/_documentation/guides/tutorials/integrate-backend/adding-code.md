@@ -46,4 +46,6 @@ Integrating the frontend code and backend code is relatively straightforward. Th
 
 ![Import and Configure SDK]({% asset guides/integrate-backend/issue_with_transaction_id.png @path %})
 
-[Configuring Sentry]({%- link _documentation/guides/integrate-backend/handled_vs_unhandled.md -%})
+## Next
+
+[Handled VS Unhandled]({%- link _documentation/guides/tutorials/integrate-backend/handled_vs_unhandled.md -%})

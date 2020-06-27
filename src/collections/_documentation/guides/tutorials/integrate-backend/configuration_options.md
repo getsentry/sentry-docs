@@ -9,7 +9,7 @@ Sentry has many configurations options to help enhance your experince using Sent
 
 ## Releases
 
-A `release` is a version of your code that is deployed to an environment. Releases are great when figuring out if there is a regression in your code, holding accountability, resolving issues within Sentry, and staying up to date with your deployments. Releases need to be set up within your SDK and if you want extra features such as associated commits and suspect commits, you can integrate your repo with Sentry. Sentry currently supports integrations with GitHub, BitBucket, Azure DevOps, GitLab, and much more. For a complete list of our integrations, check out our [integration's doc](https://docs.sentry.io/workflow/integrations/global-integrations/)
+A `release` is a version of your code that is deployed to an environment. Releases are great when figuring out if there is a regression in your code, holding accountability, resolving issues within Sentry, and staying up to date with your deployments. Releases need to be set up within your SDK and if you want extra features such as suspect commits and suggested assignee, you can integrate your repo with Sentry. Sentry currently supports integrations with GitHub, BitBucket, Azure DevOps, GitLab, and many others. For a complete list of our integrations, check out our docs on [Integrations](https://docs.sentry.io/workflow/integrations/global-integrations/)
 
 1. In the file `settings.py` within the initial setup of Sentry, add the configuration option `release` and set it to a value of your choice.
 
@@ -33,7 +33,9 @@ A `release` is a version of your code that is deployed to an environment. Releas
 
 ## Breadcrumbs
 
-`Breadcrumbs` are a trail of events which led to the issue. Breadcrumbs are very helpful in reproducing issues. Since breadcrumbs are the events that led to the error, you can follow the trail of events to reproduce the issue. Breadcrumbs are easy to implemnent and for more information, check out our doc on [breadcrumbs](https://docs.sentry.io/enriching-error-data/breadcrumbs/?platform=python).
+`Breadcrumbs` are a trail of events which led to the issue. Breadcrumbs are very helpful in reproducing issues. Since breadcrumbs are the events that led to the error, you can follow the trail of events to reproduce the issue. For more information, see [Breadcrumbs](https://docs.sentry.io/enriching-error-data/breadcrumbs/?platform=python).
+
+In this part, we'll add breadcrumbs to our app.
 
 1. Import breadCrumbs to the app.
 
@@ -43,10 +45,10 @@ A `release` is a version of your code that is deployed to an environment. Releas
 
 2. Add the `add_breadcrumb` to any function you wish to add it to but for our example, we are going add it to the `process_order` function found in `views.py`.
 
-![Import and Configure SDK]({% asset guides/integrate-backend/breadcrumbs.png @path %})
+   ![Import and Configure SDK]({% asset guides/integrate-backend/breadcrumbs.png @path %})
 
-3. Since these are custom breadcrumbs, you can customize the details you want to add within the breadcrumbs.
-   `Category` is defined to be the event label on how you want to categorize it. You can categorize it to be `auth` or anything meaningful to you. `Level` allows you know to know how severe the issue is. The level can be set to `error, fatal, warning, info or debug`. `Message` is a string you can pass in to help describe the event.
+3. Since these are custom breadcrumbs, you can customize the details you want to add to the breadcrumb.
+   `Category` is defined to be the event label on how you want to categorize it. You can categorize it to be `auth` or anything meaningful to you. `Level` allows you to know how severe the issue is. The level can be set to `error, fatal, warning, info or debug`. `Message` is a string you can pass in to help describe the event.
 
 ## Environment
 
@@ -62,6 +64,6 @@ A `release` is a version of your code that is deployed to an environment. Releas
 
    **Note** you can set your environment to any environment and it does not have to be hardcoded.
 
----
+## Next
 
-[Integrating Frontend and Backend code together]({%- link _documentation/guides/integrate-backend/adding-code.md -%})
+[Integrating Frontend and Backend code together]({%- link _documentation/guides/tutorials/integrate-backend/adding-code.md -%})

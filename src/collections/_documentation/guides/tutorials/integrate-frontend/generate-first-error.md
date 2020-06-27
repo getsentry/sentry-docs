@@ -48,4 +48,4 @@ Now that the Demo App is up and running on your local environment integrated wit
 
 ## Next
 
-[Enable Readable Stack Traces in your Errors]({%- link _documentation/guides/integrate-frontend/upload-source-maps.md -%})
+[Enable Readable Stack Traces in your Errors]({%- link _documentation/guides/tutorials/integrate-frontend/upload-source-maps.md -%})
