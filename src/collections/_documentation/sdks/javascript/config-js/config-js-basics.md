@@ -1,5 +1,5 @@
 ---
-title: Configuration Basic Options
+title: JavaScript
 excerpt: ""
 ---
 {%- capture __config_basic_content -%}

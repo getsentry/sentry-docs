@@ -14,11 +14,11 @@ If you have questions, please ask Fiona or Daniel.
 
 Sentry's {{ include.sdk_name }} SDK includes many configuration options that are automatically set. You can configure your SDK using the options outlined in these pages:
 
-- **[Basic Options](https://docs.sentry.io/_src/documentation/_includes/common/configuration-basics.md)** 
+- **[Basic Options](/sdks/javascript/config-js/config-js-basics)** 
 
     Learn more about how to configure the {{ include.sdk_name }} SDK. These options are set when the SDK is first initialized, passed to the `init()` as an object. In addition, this page discusses the Hooks `beforeSend` and `beforeBreadcrumb` in addition to transport options.
 
-- **Filter Events Reported to Sentry**
+- **Filter Events Reported to Sentry**(/sdks/javascript/config-js/filter-js)
 
     Learn more about how to filter events reported to Sentry, using either the SDK, product filtering options, or both.
 
@@ -27,6 +27,6 @@ Sentry's {{ include.sdk_name }} SDK includes many configuration options that are
 Guideline: Create the `include` statement that links to the pages specific to the SDK you are documenting. For example, here we link to Source Maps, Lazy Loading, Shutdown and Draining, and Supported Browsers for JavaScript
 --> 
 
-- **[Shutdown and Draining](configuration-shutdown-draining)**
+- **[Shutdown and Draining](/sdks/javascript/config-js/config-js-shutdown-drain)**
 
     Learn more about the default behavior of our {{ include.sdk_name }} SDK if the application shuts down unexpectedly.

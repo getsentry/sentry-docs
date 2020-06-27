@@ -130,7 +130,7 @@ This function is called with an SDK-specific breadcrumb object before the breadc
 
 ## **Transport Options**
 
-Guideline: Adopt the appropriate transport option for the SDK; modify the descriptions below to be specific to the SDK you're documenting.
+<!--Guideline: Adopt the appropriate transport option for the SDK; modify the descriptions below to be specific to the SDK you're documenting. -->
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
