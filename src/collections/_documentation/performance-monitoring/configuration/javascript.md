@@ -40,13 +40,9 @@ Alternatively, instead of npm packages, you can use our pre-built CDN bundle tha
 
 **Automatic Instrumentation**
 
-For `@sentry/browser`, we provide an integration called `Tracing` that does
-automatic instrumentation creating `pageload` and `navigation` transactions
-containing spans for XHR/fetch requests and Performance API entries such as
-marks, measures, and resource timings.
+For `@sentry/browser`, we provide an integration called `Tracing` that does automatic instrumentation in the browser. The `Tracing` integration creates `pageload` and `navigation` transactions containing spans for XHR/fetch requests and Performance API entries such as marks, measures, and resource timings.
 
-The `Tracing` integration is specific to `@sentry/browser` and does not work
-with `@sentry/node`.
+The `Tracing` integration is specific to `@sentry/browser` and does not work with `@sentry/node`.
 
 The `Tracing` integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
 
@@ -66,6 +62,8 @@ Sentry.init({
 *NOTE:* The `Tracing` integration is available under `Sentry.Integrations.Tracing` when using the CDN bundle.
 
 To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
+
+By default, the `pageload` and `navigation` transactions set a transaction name using `window.location.pathname`.
 
 You can pass many different options to the `Tracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box.
 
@@ -100,10 +98,12 @@ Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: [
     new ApmIntegrations.Tracing({
-      beforeNavigate: (location) => {        
-        // The normalizeTransactionName function uses the given URL to
-        // generate a new transaction name.
-        return normalizeTransactionName(location.href);
+      beforeNavigate: location => {
+        // Here we are doing some basic parameter replacements, but we recommend
+        // using your UI's routing library to find the matching route template here
+        return location.pathname
+          .replace(/\d+/g, '<digits>')
+          .replace(/[a-f0-9]{32}/g, '<hash>');
       },
     }),
   ],

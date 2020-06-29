@@ -654,6 +654,21 @@ And, add to `multidex-config.pro` the following lines:
 
 If you experience issues like `Could not find class` on devices running the `Dalvik VM`, you may expand the above rules to keep the necessary classes in the main dex file.
 
+### AndroidX Support
+
+Sentry uses the AndroidX libraries for detecting when the Application is either in the background or in the foreground. This is necessary for having an accurate result across all the Android OS versions.
+
+We check at runtime for availability, so if you're not using AndroidX libraries, you can remove them from Sentry's transitive dependencies.
+
+```groovy
+implementation ('io.sentry:sentry-android:{version}') {
+    exclude group: 'androidx.lifecycle', module: 'lifecycle-process'
+    exclude group: 'androidx.lifecycle', module: 'lifecycle-common-java8'
+}
+```
+
+Be aware that by removing those transitive dependencies, the automatic session tracking won't work, but you can still do it manually by calling the public APIs `startSession` and `endSession`.
+
 ## Integrating the NDK
 
 To use the Android NDK in your native code, include the Sentry NDK libraries into your project so that the compiler can link the libraries during the build.
