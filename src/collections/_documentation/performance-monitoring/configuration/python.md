@@ -8,7 +8,7 @@ To get started with performance monitoring using Sentry's Python SDK, first inst
 $ pip install sentry_sdk
 ```
 
-Next, initialize the integration in your call to `Sentry.init`:
+Next, initialize the integration in your call to `sentry_sdk.init`:
 
 ```python
 import sentry_sdk
