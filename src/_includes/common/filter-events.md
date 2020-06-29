@@ -9,8 +9,6 @@ If you have questions, please ask Fiona or Daniel.
 
 **The objective for this page is that a developer can view easily the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
 -->
-# Filtering Events Reported to Sentry
-
 While sending all application errors to Sentry ensures you’ll be notified in real-time when errors occur in your code, often applications generate many errors, thus many notifications. The Sentry SDKs have several configuration options you can use to filter unwanted errors from leaving your application’s runtime. In addition, the Sentry web UI also offers methods to filter events.
 
 ## Use Projects to Filter Events

@@ -9,9 +9,6 @@ If you have questions, please ask Fiona or Daniel.
 
 **The objective for this page is that a developer can view easily the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
 -->
-
-# Configuration Options
-
 Sentry's {{ include.sdk_name }} SDK includes many configuration options that are automatically set. You can configure your SDK using the options outlined in these pages:
 
 - **[Basic Options](/sdks/{{ include.root_link }}/config/basics)** 

@@ -9,7 +9,6 @@ If you have questions, please ask Fiona or Daniel.
 
 **The objective for this page is that a developer can view easily the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
 -->
-# Basic Configuration Options
 
 The {{ include.sdk_name }} SDK is configurable using a variety of options. These options are set when the SDK is first initialized, passed to the `init()` as an object:
 
@@ -17,7 +16,7 @@ The {{ include.sdk_name }} SDK is configurable using a variety of options. These
 
 These options can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
-`dsn`
+`dsn` 
 
 The *DSN* tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will not send any events.
 
@@ -31,7 +30,7 @@ Turns debug mode on or off. If debug is enabled, the SDK will attempt to print o
 
 Sets the release. The SDK will try to automatically configure a release out of the box if it's provided by `window.SENTRY_RELEASE`, but it's best to set it manually to guarantee that the release is in sync with your deploy integrations or source map uploads.
 
-Release names are strings, but some formats are detected by Sentry and might be rendered differently. For more information have a look at [the releases documentation](https://docs.sentry.io/workflow/releases/).
+Release names are strings, but some formats are detected by Sentry and might be rendered differently. For more information have a look at [the releases documentation](/workflow/releases/).
 
 `environment`
 
@@ -41,7 +40,7 @@ By default the SDK will try to read this value from the `window` environment va
 
 `error_types`
 
-Sets which errors are reported. It takes the same values as PHP’s `[error_reporting](https://www.php.net/manual/errorfunc.configuration.php#ini.error-reporting)` configuration parameter.
+Sets which errors are reported. It takes the same values as PHP’s `[error_reporting]`(https://www.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting) configuration parameter.
 
 By default all types of errors are be reported (equivalent to `E_ALL`).
 
@@ -63,13 +62,13 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 If this flag is enabled, certain personally identifiable information is added by active integrations. By default no such data is sent.
 
-If possible, we recommend that you turn this feature on to send all such data by default, and manually remove what you don’t want to send using our features for managing *[Sensitive Data](https://docs.sentry.io/data-management/sensitive-data/)*.
+If possible, we recommend that you turn this feature on to send all such data by default, and manually remove what you don’t want to send using our features for managing [Sensitive Data](/data-management/sensitive-data/).
 
 `serverName`
 
 Can be used to supply a “server name.” When provided, the name of the server is sent along and persisted in the event. For many integrations the server name actually corresponds to the device hostname even in situations where the machine is not actually a server. Most SDKs will attempt to auto-discover this value.
 
-`blacklistUrls`
+`blocklistUrls`
 
 A list of strings or regex patterns that match error URLs that should not be sent to Sentry. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
 
@@ -110,7 +109,7 @@ For many platform SDKs integrations can be configured alongside it. On some plat
 
 `integrations`
 
-In <SDK name>, the integrations are configured through this parameter on library initialization. 
+In {{ include.sdk_name }}, the integrations are configured through this parameter on library initialization. 
 
 `defaultIntegrations`
 
@@ -138,8 +137,9 @@ Transports are used to send events to Sentry. Transports can be customized to so
 
 Switches out the transport used to send events. 
 
-In <this SDK> for example, it can be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
+In {{ include.sdk_name }} for example, it can be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
+<!--Guideline: As needed, add a code snippet for this platform-->
 ```
 <code snippet for this platform/language>
 ```

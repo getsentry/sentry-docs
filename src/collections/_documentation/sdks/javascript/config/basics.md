@@ -1,5 +1,5 @@
 ---
-title: JavaScript
+title: Basic Configuration Options
 excerpt: ""
 ---
 {%- capture __config_basic_content -%}
@@ -15,7 +15,7 @@ Sentry.init({
 {%- endcapture -%}
 
 {%- include common/configuration-basics.md 
-sdk_name=page.title
+sdk_name="JavaScript"
 
 config_basic_content=__config_basic_content 
  -%}

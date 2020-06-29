@@ -111,9 +111,6 @@ Guideline: Create the `include` statement that provides SDK specific installatio
 
 Performance data is transmitted using a new event type called `transactions`<!--next phase: link to Distributing Tracing-->. **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions. Learn more about sampling in Using Your SDK to Filter Events<!--next phase: add link to this content for the SDK you are documenting-->.
 
-Next steps:
-
-- Manage your SDK Configuration<!--add link to the config page for the SDK you are documenting-->
 - Learn more about enriching event data <!--next phase:add link-->
 - Review and manage integrations <!--next phase:add link-->
 - Review common problems <!--next phase:add link-->

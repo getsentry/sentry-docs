@@ -7,7 +7,6 @@ Guideline: This page is common to all SDKs; it is stored in the common folder, n
 
 If you have questions, please ask Fiona or Daniel. 
 -->
-# Shutdown and Draining
 
 The default behavior of most {{ include.sdk_name }} SDKs is to send out events over the network asynchronously in the background. This means that some events might be lost if the application shuts down unexpectedly. Our JavaScript SDK provides mechanisms to cope with this:
 

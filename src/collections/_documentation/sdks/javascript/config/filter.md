@@ -1,5 +1,5 @@
 ---
-title: JavaScript
+title: Filtering Events Reported to Sentry
 excerpt: ""
 ---
 
@@ -67,7 +67,7 @@ init({
 {%- endcapture -%}
 
 {%- include common/filter-events.md 
-sdk_name=page.title
+sdk_name="JavaScript"
 
 filter-init_content=__filter-init_content 
 filter-example_content=__filter-example_content

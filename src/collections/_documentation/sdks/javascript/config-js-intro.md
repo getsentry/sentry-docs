@@ -1,5 +1,5 @@
 ---
-title: JavaScript
+title: Manage Configuration Options
 excerpt: ""
 ---
 
@@ -22,7 +22,7 @@ excerpt: ""
 
 
 {%- include common/configuration-intro.md 
-sdk_name=page.title
+sdk_name="JavaScript"
 
 config-page_content=__config-page_content
 root_link="javascript"
