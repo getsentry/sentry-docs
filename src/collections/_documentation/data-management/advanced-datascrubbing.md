@@ -147,25 +147,25 @@ You can combine sources using boolean logic.
 
 Select subsections by JSON-type using the following:
 
-* `$string` matches any string value
-* `$number` matches any integer or float value
-* `$datetime` matches any field in the event that represents a timestamp
-* `$array` matches any JSON array value
-* `$object` matches any JSON object
+* `$string`: Matches any string value
+* `$number`: Matches any integer or float value
+* `$datetime`: Matches any field in the event that represents a timestamp
+* `$array`: Matches any JSON array value
+* `$object`: Matches any JSON object
 
 Select known parts of the schema using the following:
 
-* `$error` matches a single exception instance in `{"exception": {"values": [...]}}`
-* `$stack` matches a stack trace instance
-* `$frame` matches a frame in a stack trace
-* `$http` matches the HTTP request context of an event
-* `$user` matches the user context of an event
-* `$message` matches the top-level log message in `{"logentry": {"formatted": ...}}`
-* `$logentry` matches the `logentry` attribute of an event.
-* `$thread` matches a single thread instance in `{"threads": {"values": [...]}}`
-* `$breadcrumb` matches a single breadcrumb in `{"breadcrumbs": {"values": [...]}}`
-* `$span` matches a [trace span](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans)
-* `$sdk` matches the SDK context in `{"sdk": ...}`
+* `$error`: Matches a single exception instance. Alias for `exception.values.*`
+* `$stack`: Matches a stack trace instance. Alias for `stacktrace || $error.stacktrace || $thread.stacktrace`
+* `$frame`: Matches a frame in a stack trace. Alias for `$stacktrace.frames.*`
+* `$http`: Matches the HTTP request context of an event. Alias for `request`
+* `$user`: Matches the user context of an event. Alias for `user`
+* `$message`: Matches the top-level log message. Alias for `$logentry.formatted`
+* `$logentry`: Matches the `logentry` attribute of an event. Alias for `logentry`
+* `$thread`: Matches a single thread instance. Alias for `threads.values.*`
+* `$breadcrumb`: Matches a single breadcrumb. Alias for `breadcrumbs.values.*`
+* `$span`: Matches a [trace span](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). Alias for `spans.*`
+* `$sdk`: Matches the SDK context. Alias for `sdk`
 
 ### Escaping Special Characters
 
