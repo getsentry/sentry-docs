@@ -1,5 +1,5 @@
 ---
-title: JavaScript
+title: Shutdown and Draining
 excerpt: ""
 ---
 
@@ -14,7 +14,7 @@ Sentry.close(2000).then(function() { // perform something after close
 
 
 {%- include common/configuration-shutdown-draining.md 
-sdk_name=page.title
+sdk_name="JavaScript"
 
 shutdown_drain_content=__shutdown_drain_content 
  -%}

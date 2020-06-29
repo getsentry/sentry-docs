@@ -9,11 +9,11 @@ excerpt: ""
 
     Learn more about the Sentry JavaScript SDK's automatic fetching of source code and source maps by scraping the URLs within the stack trace.
 
-- **[Supported Browsers](/sdks/javascript/config-js/supported-browsers)**
+- **[Supported Browsers](/sdks/javascript/config/supported-browsers)**
 
     We support a variety of browsers; check out our list.
 
-- **[Lazy Loading](/sdks/javascript/config-js/lazy-load-sentry)**
+- **[Lazy Loading](/sdks/javascript/config/lazy-load-sentry)**
 
     We recommend using our bundled CDN version for the browser. However, if you use `defer`, learn more about its effect on capturing errors.
 
@@ -24,6 +24,7 @@ excerpt: ""
 {%- include common/configuration-intro.md 
 sdk_name=page.title
 
-config-page_content=__config-page_content 
+config-page_content=__config-page_content
+root_link="javascript"
  -%}
  
