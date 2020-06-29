@@ -220,7 +220,7 @@ In cases where you want to attach Spans to an already ongoing Transaction you ca
 
 ```javascript
 function myJsFunction() {
-  const transaction = Sentry.getCurrentHub().getScope().getTransaction();  
+  const transaction = Sentry.getCurrentHub().getScope().getTransaction();
   if (transaction) {
     let span = transaction.startChild({
       op: "encode",
