@@ -79,3 +79,7 @@ Categories are manually defined.
 ### Add a document
 
 Category hierarchy is automatically defined by folder structure. Add a markdown file to a folder within _src/collections/_documentation_. Order is alphabetical by default, or you may force sorting order by adding an `sidebar_order` integer value in the frontmatter of the document.
+
+## Updating Test Snapshots
+
+When adding new pages, use `yarn test -u` to update test snapshots.
