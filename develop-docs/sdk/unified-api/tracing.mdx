@@ -6,7 +6,7 @@ This document covers how unified SDKs should implement AM.
 Things listed here are in no specific order, cover the API shape and not how it should be internally implemented.
 Read this fully before asking questions.
 
-See [https://github.com/getsentry/sentry-javascript](https://github.com/getsentry/sentry-javascript) 
+See [https://github.com/getsentry/sentry-javascript](https://github.com/getsentry/sentry-javascript)
 
 or
 
@@ -17,6 +17,11 @@ or
     - `1.0` (100% delivery rate) means send all transactions
     - Value is expressed in `0.0` - `1.0` float, ranged from 0% to 100% rate
     - Default makes AM an opt-in feature
+    - Transactions should be sampled only by `tracesSampleRate`.
+      The `sampleRate` configuration is used for error events and should not
+      apply to transactions. Pay special attention not to incur in evaluating
+      the sampling decision twice for transaction events from their creation
+      until their delivery to Sentry.
 - Introduce `Sentry.startTransaction`
     - Internally this creates a `Transaction` and returns the instance
     - Users need to interact with the instance and keep track of it themselves
