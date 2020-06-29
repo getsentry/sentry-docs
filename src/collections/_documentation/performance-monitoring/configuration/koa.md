@@ -80,6 +80,7 @@ app.on('error', (err, ctx) => {
 ```
 
 #### Subsequent manual child transactions
+
 The following example creates a transaction for a part of the code that contains an expensive operation, and sends the result to Sentry, you will need to use the transaction stored in the context
 
 ```javascript
