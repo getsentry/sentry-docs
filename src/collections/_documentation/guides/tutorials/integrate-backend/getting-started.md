@@ -3,15 +3,33 @@ title: Getting Started
 sidebar_order: 1
 ---
 
+In this tutorial, you will import the backend app source code into your local development environment, add the Sentry SDK and initialize it. **Please** view the [frontend guide](https://docs.sentry.io/guides/integrate-frontend/create-new-project/) to learn more about how to create a project and alert rules.
+
+> **Note:** If you're using your own source code you can skip this tutorial and instead
+>
+> - Follow the instructions within [this doc](https://docs.sentry.io/error-reporting/quickstart/?platform=python). Notice that you can select the desired platform.
+> - Continue with the [Next tutorial]({%- link _documentation/guides/tutorials/integrate-frontend/generate-first-error.md -%})
+
+---
+
+## Prerequisites
+
+The demo app source code requires a **Python** development environment to build install and run the application. Make sure that you have the following in place:
+
+- A source code editor (like [VS-Code](https://code.visualstudio.com))
+- [Python3](https://www.python.org/download/releases/3.0/)
+- [Sentry-Cli](https://docs.sentry.io/cli/)
+- [NPM](https://www.npmjs.com/)
+
 ## Step 1: Get the Code
 
-1. Open the sample [code repository](https://github.com/sentry-demos/django) on GitHub
+1. Open the sample [code repository](https://github.com/sentry-tutorials/backend-monitoring) on GitHub
 
 2. Click on `Fork` and select the target GitHub account you wish this repository to be forked in to
 
    ![Fork Repository]({% asset guides/integrate-backend/fork_django.png @path %})
 
-3. Once the fork is complete, click on `Clone or download` and copy the repository HTTPS url
+3. Once the fork is complete, click on `Clone or download` and copy the repository HTTPS URL
 
    ![Clone Repository]({% asset guides/integrate-backend/clone_django.png @path %})
 
@@ -21,17 +39,17 @@ sidebar_order: 1
    > git clone <repository HTTPS url>
    ```
 
-5. Now that the sample code is available locally, open the `Django` project in your preferred code editor
+5. Now that the sample code is available locally, open the `backend-monitoring` project in your preferred code editor
 
 ## Step 2: Install the SDK
 
-Sentry captures data by using a platform specific SDK within your application runtime. To use the SDK, import and configure it in your source code.
+Sentry captures data by using a platform-specific SDK within your application runtime. To use the SDK, import and configure it in your source code.
 
 The demo project uses Django for the backend code and REACT for the frontend code. Please refer to the [frontend guide]({%- link _documentation/guides/tutorials/integrate-frontend/index.md -%}) on how to set up your front end code.
 
 Refer to the [doc](https://docs.sentry.io/error-reporting/quickstart/?platform=python) on how to get started.
 
-1. Open the `settings.py` file (located under \_./django/myproject/settings.py). This is where we initialize and configure the Sentry SDK in our application.
+1. Open the `settings.py` file (located under \_./backend-monitoring/myproject/settings.py). This is where we initialize and configure the Sentry SDK in our application.
 
    <!-- ![Import and Configure SDK]({% asset guides/integrate-backend/sentry_init.png @path %}) -->
 

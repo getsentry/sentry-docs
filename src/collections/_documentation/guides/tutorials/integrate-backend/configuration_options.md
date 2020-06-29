@@ -3,7 +3,7 @@ title: Configuration Options
 sidebar_order: 2
 ---
 
-Sentry has many configurations options to help enhance your experince using Sentry. The options can help provide additional data needed to debug issues even faster or help control what is sent to Sentry by filtering.
+Sentry has many configurations options to help enhance your experience using Sentry. The options can help provide additional data needed to debug issues even faster or help control what is sent to Sentry by filtering.
 
 > **Note:** View the full list of configuration options [here](https://docs.sentry.io/error-reporting/configuration/?platform=python).
 
@@ -13,11 +13,11 @@ A `release` is a version of your code that is deployed to an environment. Releas
 
 1. In the file `settings.py` within the initial setup of Sentry, add the configuration option `release` and set it to a value of your choice.
 
-> If you are not interested connecting Sentry's releases to an integration, you can skip the following steps.
+> If you are not interested in connecting Sentry's releases to an integration, you can skip the following steps.
 
 2. The value assigned to the release within the `Django-demo` app is `os.environ.get("VERSION")`.
 
-3. Now that the release is set within the SDK, using [sentry-cli](https://docs.sentry.io/cli/) we can connect our repo with our app. Using the `Makefile` we first create release
+3. Now that the release is set within the SDK, using [sentry-cli](https://docs.sentry.io/cli/) we can connect our repo with our app. Using the `Makefile` we first create the release
    > `$(VERSION)` refers to the release's ID
    ```bash
    > create_release:
@@ -52,11 +52,11 @@ In this part, we'll add breadcrumbs to our app.
 
 ## Environment
 
-`Environment` is a powerful configuration that enables developers using Sentry to filter issues, releases, and userfeedback within the Issues Details page in the U/I. Sometimes there might be cases where you are focused on a particular environment and want to see issues related to that environment. Having the option to filter the environment, your workflow becomes a lot more clearer and the time it takes to debug issues you are focused on easier.
+`Environment` is a powerful configuration that enables developers using Sentry to filter issues, releases, and user feedback within the Issues Details page in the U/I. Sometimes there might be cases where you are focused on a particular environment and want to see issues related to that environment. Having the option to filter the environment, your workflow becomes a lot more clearer and the time it takes to debug issues you are focused on easier.
 
-1. In the `views.py` file, in the initializatio of (`sentry_sdk.init()`), add the configuration option `environment`.
+1. In the `views.py` file, in the initialization of (`sentry_sdk.init()`), add the configuration option `environment`.
 
-2. Set the `environment` variable to any value you feel is appropriate. In our example, I've set it to `Production` indiciating the issue occurred within the production.
+2. Set the `environment` variable to any value you feel is appropriate. In our example, I've set it to `Production` indicating the issue occurred within the production.
 
    ```python
     environment:"Production"
@@ -66,4 +66,4 @@ In this part, we'll add breadcrumbs to our app.
 
 ## Next
 
-[Integrating Frontend and Backend code together]({%- link _documentation/guides/tutorials/integrate-backend/adding-code.md -%})
+[Handled vs Unhandled Errors]({%- link _documentation/guides/tutorials/integrate-backend/handled_vs_unhandled.md -%})

@@ -1,11 +1,11 @@
 ---
 title: Integrating the Backend with the FrontEnd
-sidebar_order: 3
+sidebar_order: 4
 ---
 
 Now that the Demo App is up and running on your local environment integrated with the Sentry SDK, you're ready to integrate the front and backend together.
 
-> **Note:** If you're using your own source code, follow [Capturing your first event](https://docs.sentry.io/error-reporting/quickstart/?platform=python) to introduce an error to your source code and continue with [Step 2](#step-2-handle-the-error)
+> **Note:** If you're using your own source code, follow [Capturing your first event](https://docs.sentry.io/error-reporting/quickstart/?platform=python) to introduce an error to your source code.
 
 ## Integrating the Frontend and BackEnd
 
@@ -22,7 +22,7 @@ Integrating the frontend code and backend code is relatively straightforward. Th
 
    - **Note:** Please keep the tag fields consistent in both the frontend and backend app.
 
-**Note** The transactionID is generated from the trace. A trace represents the record of the entire operation you want to measure or track. A trace can be a single operation such as performing an action within an app or it can be a lot more indepth. For example, an action can be comitted within the frontend of your app which caused an error and your backend might respond back with an error as well. The trace_id is able to connect both the backend and frontend error together. This is valuable information knowing how the app in entirely connected which can enable a developer to debug both the front
+**Note** The transactionID is generated from the trace. A trace represents the record of the entire operation you want to measure or track. A trace can be a single operation such as performing an action within an app or it can be a lot more in-depth. For example, an action can be committed within the frontend of your app which caused an error and your backend might respond back with an error as well. The trace_id is able to connect both the backend and frontend error together. This is valuable information knowing how the app in entirely connected which can enable a developer to debug both the front
 
 ## Reporting an Error
 
@@ -45,7 +45,3 @@ Integrating the frontend code and backend code is relatively straightforward. Th
 4. Within the newest issue click on the `transaction_id` and you will be redirected to the Issues Stream with both issues related to one another displayed.
 
 ![Import and Configure SDK]({% asset guides/integrate-backend/issue_with_transaction_id.png @path %})
-
-## Next
-
-[Handled VS Unhandled]({%- link _documentation/guides/tutorials/integrate-backend/handled_vs_unhandled.md -%})

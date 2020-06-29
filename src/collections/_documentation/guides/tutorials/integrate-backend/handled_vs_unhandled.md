@@ -1,6 +1,6 @@
 ---
 title: Handled VS Unhandled
-sidebar_order: 4
+sidebar_order: 3
 ---
 
 Sentry is able to provide developers deep insight on handled and unhandled issues by using a simple captureException or captureMessage option. The configuration of this is very straightforward because regardless if you want to handle an error or not, you will be notified if an event triggered within your app sent to Sentry.
@@ -63,6 +63,10 @@ Unhandled Errors are generated during runtime when an issue is not caaught/handl
 
 **Note** If issue is handled there will be a tag that says `yes` or `no`. For unhandled issues, the tag will equal `no`. For handled issues, the tag will equal `yes`.
 
-![Import and Configure SDK]({% asset guides/integrate-backend/unhandled.png @path %})
+![Import and Configure SDK]({% asset guides/integrate-backend/error_with_all_tags.png @path %})
+
+## Next
+
+[Integrating Backend with the Frontend]({%- link _documentation/guides/tutorials/integrate-backend/adding-code.md -%})
 
 ---

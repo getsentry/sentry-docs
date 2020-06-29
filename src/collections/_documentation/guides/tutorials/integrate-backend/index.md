@@ -1,25 +1,22 @@
 ---
-title: Backend Error Monitoring
-sidebar_order: 1
+title: Monitor Errors in Backend Applications
+sidebar_order: 0
 ---
 
-In this tutorial you will import the backend app source code into your local development environment, add the Sentry SDK and initialize it. **Please** view the [frontend guide](https://docs.sentry.io/guides/integrate-frontend/create-new-project/) to learn more about how to create a project and alert rules.
+This step-by-step guide walks you through the flow of setting up and configuring your Sentry account to monitor errors in your backend application. After completing this guide, you should:
 
-> **Note:** If you're using your own source code you can skip this tutorial and instead
+- Add basic configurations
+- Send handled and unhandled issues to Sentry
+- Implement tracing between your frontend and backend app
+
+> **Note:** We provided the source code for a sample Django application to use along with this guide. This allows us to streamline the steps required to getting the maximum value out of integrating Sentry into your development workflow.
 >
-> - Follow the instructions within [this doc](https://docs.sentry.io/error-reporting/quickstart/?platform=python). Notice that you can select the desired platform.
-> - Continue with the [Next tutorial]({%- link _documentation/guides/tutorials/integrate-frontend/generate-first-error.md -%})
-
----
+> Alternatively, you can follow this guide as a reference and apply the relevant changes directly to your source code.
 
 ## Prerequisites
 
-The demo app source code requires a **Python** development environment to build install and run the application. Make sure that you have the following in place:
-
-- A source code editor (like [VS-Code](https://code.visualstudio.com))
-- [Python3](https://www.python.org/download/releases/3.0/)
-- [Sentry-Cli](https://docs.sentry.io/cli/)
-- [NPM](https://www.npmjs.com/)
+- A [Sentry](https://sentry.io) account, or [sign up](https://sentry.io/signup/) for one
+- A [GitHub](https://github.com/) account, or [sign up](https://github.com/join) for one
 
 ## Next
 
