@@ -12,6 +12,7 @@ Supported SDKs for Tracing
 - JavaScript Browser SDK ≥ 5.16.0
 - JavaScript Node SDK ≥ 5.16.0
 - Python SDK version ≥ 0.11.2
+- Javascript React SDK ≥ 5.18.1
 
 {%- endcapture -%}
 {%- include components/alert.html
