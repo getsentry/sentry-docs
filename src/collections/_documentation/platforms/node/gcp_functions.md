@@ -36,6 +36,5 @@ You can obtain the DSN using your Sentry account from your organization's *Setti
 
 Note: You need to call both `CaptureException` and `Flush` to report errors into Sentry.
 
-Checkout Sentry’s [gcp sample apps](http://tbd/) for detailed examples. For detailed configuration options, use  [JavaScript docs](/platforms/javascript/).
+Checkout Sentry’s [gcp sample apps](https://github.com/getsentry/examples/tree/master/gcp-cloud-functions/node) for detailed examples. For detailed configuration options, use [JavaScript docs](/platforms/javascript/).
 
-Reference other serverless integrations [here](/serverless/)

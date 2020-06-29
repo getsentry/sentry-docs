@@ -51,5 +51,3 @@ With the AWS Lambda integration enabled, the Python SDK will:
 * Automatically report all uncaught exceptions from your lambda functions including a link to the cloudwatch logs, the function details and sys.argv for the function. You can add more context as described [here](/platforms/python#setting-context) 
 
 * {% include platforms/python/request-data.md %}
-
-* Reference other serverless integrations [here](/serverless)

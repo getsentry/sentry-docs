@@ -5,7 +5,7 @@ sidebar_order: 7
 
 Create a deployment package on your local machine and install the required dependencies in the deployment package. For more information, see [Building an AWS Lambda deployment package for Node.js](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-deployment-package-nodejs/).
 
-Install our Node.js SDK using `pip`:
+Install our Node.js SDK using `npm`:
 
 ```basic
 npm install sentry_sdk
@@ -42,6 +42,5 @@ You can obtain the DSN using your Sentry account from your organization's *Setti
 
 Note: You need to call both `CaptureException` and `Flush` to report errors into Sentry.
 
-Create the deployment package in .zip format, then upload it to AWS Lambda as a Lambda function. Checkout Sentry’s [aws sample apps](http://tbd/) for detailed examples. Use  [JavaScript docs](/platforms/javascript/) for more configuration options.
+Create the deployment package in .zip format, then upload it to AWS Lambda as a Lambda function. Checkout Sentry’s [aws sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/node) for detailed examples. Use [JavaScript docs](/platforms/javascript/) for more configuration options.
 
-Reference other serverless integrations [here](/serverless/)

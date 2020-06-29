@@ -3,7 +3,7 @@ title: GCP Functions
 sidebar_order: 8
 ---
 
-Install our Sentry SDK in the `requirement.txt` section:
+Install our Sentry SDK in the `requirements.txt` section:
 ```python
 sentry_sdk
 ```
@@ -21,23 +21,6 @@ def my_function(...): ...
 
 Use the generic integration by calling the `serverless_function` decorator. Decorators wrap a function and modify its behavior. Then, deploy and test the function. Checkout Sentry's [gcp sample apps](https://github.com/getsentry/examples/tree/master/gcp-cloud-functions/python) for detailed examples.
 
-{% capture __alert_content -%}
-
-If you are using another web framework inside of AWS Lambda, the framework may catch exceptions before they are sent to Sentry. To avoid this, enable the framework-specific integration as well, if one exists. See [*Integrations*](/platforms/python/#integrations) for more information
-
-{%- endcapture -%}
-
-{%- include components/alert.html
-
-title="Note"
-
-content=__alert_content
-
-level="info"
-
-%}
-
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
 ## Behavior
 
@@ -48,7 +31,4 @@ level="info"
 The maximum amount of time to block overall is set by the [`shutdown_timeout` client option](/error-reporting/configuration?platform=python#shutdown-timeout).
 
 You can disable this aspect by decorating with `@serverless_function(flush=False)` instead.
-
-
-Reference other serverless integrations [here](/serverless/)
 
