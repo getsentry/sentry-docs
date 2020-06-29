@@ -656,7 +656,7 @@ If you experience issues like `Could not find class` on devices running the `Dal
 
 ### AndroidX Support
 
-We're using the AndroidX libraries for detecting when the Application is either on background or foreground, this is necessary for having an accurate result across all the Android OS versions.
+We're using the AndroidX libraries for detecting when the Application is either in background or in foreground, this is necessary for having an accurate result across all the Android OS versions.
 
 We check on runtime for its availability, so if you're not using the AndroidX libraries, you can remove them from Sentry's transitive dependencies.
 
