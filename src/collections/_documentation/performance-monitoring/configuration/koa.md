@@ -1,4 +1,4 @@
-### Koa
+**Koa**
 
 Creates and attach a transaction to each context
 
@@ -80,7 +80,7 @@ app.on('error', (err, ctx) => {
 // the rest of your app
 ```
 
-#### Subsequent manual child transactions
+**Subsequent manual child transactions**
 
 The following example creates a transaction for a part of the code that contains an expensive operation, and sends the result to Sentry, you will need to use the transaction stored in the context
 
