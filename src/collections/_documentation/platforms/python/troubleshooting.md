@@ -1,19 +1,60 @@
 ---
-title: Contextvars vs thread locals
+title: Troubleshooting
 sidebar_order: 11
 ---
 
-The Python SDK generally does its best to figure out how contextual data such
-as tags set with `sentry_sdk.set_tags` is supposed to flow along your control
-flow. In most usecases this is achieved perfectly fine using [thread
-locals](https://docs.python.org/3/library/threading.html#thread-local-data),
-but there are quite a few situations where this approach fails.
+We expect most users of the Python SDK not to run into any of the problems
+documented here.
 
-Read this document if you cannot figure out why context data is leaking across
-your HTTP requests, or when data is missing or popping up at the wrong place
-and time.
+Use the information in this page to help answer these questions:
 
-## Python 2: thread locals and gevent
+- "What do I do if scope data is leaking between requests?"
+- "What do I do if my transaction has nested spans when they should be parallel?"
+
+The short answer to those: check if your `contextvars` work and you clone the
+hub where needed.
+
+## Addressing Concurrency Issues
+
+Python supports several distinct solutions to concurrency, including threads and
+coroutines.
+
+The Python SDK does its best to figure out how contextual data such as tags set
+with `sentry_sdk.set_tags` is supposed to flow along your control flow. In most
+cases it works perfectly, but in a few situations some special care must be
+taken. This is specially true when working with a code base doing concurrency
+outside of the provided framework integrations.
+
+The general recommendation is to have one hub per "concurrency unit"
+(thread/coroutine/etc). The SDK ensures every thread has an independent hub. If
+you do concurrency with `asyncio` coroutines, clone the current hub for use
+within a block that runs concurrent code:
+
+```python
+with Hub(Hub.current):
+    # in this block Hub.current refers to a new clone
+    # of the original hub, with the same client and
+    # the same initial scope data.
+```
+
+Issues with `asyncio` have then an easy workaround: every `asyncio` coroutine
+that really does run concurrently with other coroutines needs to be made into a
+task, then the hub needs to be cloned and reassigned.
+
+See the [Threading](/platforms/python/default-integrations/#threading) section
+for a more complete example that involves cloning the current hub.
+
+## Context Variables vs Thread Locals
+
+The Python SDK uses [thread
+locals](https://docs.python.org/3/library/threading.html#thread-local-data) to
+keep contextual data where it belongs. There are a few situations where this
+approach fails.
+
+Read along if you cannot figure out why contextual data is leaking across HTTP
+requests, or data is missing or popping up at the wrong place and time.
+
+### Python 2: Thread Locals and gevent
 
 If the SDK is installed on Python 2, there is not much else to use than the
 aforementioned thread locals, so the SDK will use just that.
@@ -27,7 +68,7 @@ will work just fine** provided those libraries are configured to monkeypatch
 the stdlib. If you are only using those libraries in the context of running
 `gunicorn` that is the case, for example.
 
-## Python 3: Contextvars or thread locals
+### Python 3: Context Variables or Thread Locals
 
 Python 3 introduced `asyncio`, which, just like Twisted, had the problem of not
 having any concept of attaching contextual data to your control flow. That
@@ -42,7 +83,7 @@ attempt to use that module instead of thread locals if available.
 fully-functional backport of `contextvars`. The SDK will check for this package
 and use it instead of thread locals.
 
-## Contextvars vs gevent/eventlet
+## Context Variables vs gevent/eventlet
 
 If you are using `gevent` (older than 20.5) or `eventlet` in your application and
 have configured it to monkeypatch the stdlib, the SDK will abstain from using

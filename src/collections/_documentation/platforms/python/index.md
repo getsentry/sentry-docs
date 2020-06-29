@@ -289,10 +289,7 @@ The Python SDK provides some common [hints](/error-reporting/configuration/filte
 
 : An `httplib` request object for breadcrumbs created from HTTP requests.
 
-## Troubleshooting and known issues
+## Troubleshooting and Known Issues
 
-This section contains various gotchas that are inherent to the Python SDK's
-design, do not necessarily affect the majority of users and do not really fit
-anywhere else.
-
-- [Contextvars vs thread locals](/platforms/python/contextvars/)
+The [Troubleshooting](/platforms/python/troubleshooting/) page provides advice
+for solving known problems.
