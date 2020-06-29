@@ -16,7 +16,7 @@ This document clarifies concepts and frequently asked questions around pricing. 
 
 ### Events
 
-An event is an error, attachment, or transaction that’s sent to Sentry’s server for processing. Additional metadata around the event (breadcrumbs, user context, environment, traces) do not count separately.
+An event is an error, attachment, or transaction sent to Sentry’s server for processing. Additional metadata around the event (breadcrumbs, user context, environment, traces) do not count separately.
 
 ### Capacity
 
@@ -64,7 +64,7 @@ You are downgraded to your original plan, which has limited members and events. 
 
 You control who can see events. We allow you to add your team members, as well as share events with anonymous users should you wish to do so.
 
-`Events now include transactions, errors, and an attachments? What's the difference?`
+`Events now include transactions, errors, and attachments? What's the difference?`
 
 An *event* is one instance of you sending Sentry data. What can be captured as an error depends on your platform. In general, if you have something that looks like an exception, it will be sent to Sentry as an error event. *Attachments* are files uploaded in the same request, such as log files. In addition, the files within the crash uploaded to Sentry can be persisted by enabling storage of crash reports. A *transaction* represents a single instance of a service being called to support an operation you want to measure or track, like a page load.
 
@@ -295,9 +295,9 @@ New plans take effect immediately.
 
 `Can I buy a plan for only transactions?`
 
-Our minimum plan provides 150k transactions, 50k errors, and 1GB of attachments. If you need more of any of the three types of events we track, use the slider on our [pricing](https://sentry.io/pricing/) page to add what you need.
+Our minimum plan provides 100k transactions, 50k errors, and 1GB of attachments. If you need more of any of the three types of events we track, use the slider on our [pricing](https://sentry.io/pricing/) page to add what you need.
 
-`How do I manage my monthly spend?`
+`How do I manage my monthly spending?`
 
 The slider on the [pricing](https://sentry.io/pricing/) page allows you to choose the volume you'd like for each type of event - errors, transactions, or attachments storage.
 

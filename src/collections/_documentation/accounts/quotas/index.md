@@ -3,7 +3,7 @@ title: 'Quotas & Events'
 sidebar_order: 0
 ---
 
-Events and quotas are interconnected in Sentry. At the most basic, when you [subscribe to Sentry](https://sentry.io/pricing/), you pay for the number of events - errors, attachments, and transactions - to be tracked. Each of these type of events has a quota. When an event is accepted by Sentry, it counts toward your quota for that type of event.
+Events and quotas are interconnected in Sentry. At the most basic, when you [subscribe to Sentry](https://sentry.io/pricing/), you pay for the number of events - errors, attachments, and transactions - to be tracked. Each of these type of events has a quota. When Sentry accepts an event, it counts toward your quota for that type of event.
 
 Sentry’s flexibility means you can exercise fine-grained control over which events count toward your quota.
 
@@ -13,7 +13,7 @@ Let’s clarify a few terms to start:
 
 -   Event - an event is one instance of you sending Sentry data. Generally, this data is an error. Every event has a set of characteristics, called its fingerprint.
 -   Issue - an issue is a grouping of similar events, which all share the same fingerprint. For example, Sentry groups events together when they are triggered by the same part of your code. For more information, see [Grouping & Fingerprinting](https://docs.sentry.io/data-management/event-grouping/).
--   Attachment - Attachments are files uploaded in the same request, such as log files. Unless the option to store crash reports is enabled, Sentry will use the files only to create the event, then will drop the files. 
+-   Attachment - Attachments are files uploaded in the same request, such as log files. Unless the option to store crash reports is enabled, Sentry will use the files only to create the event, and then drop the files. 
 -   Transaction - A transaction represents a single instance of a service being called to support an operation your want to measure or track, like a page load.
 -   Quota - your quota is the monthly number of events - errors, attachments, and transactions - you pay Sentry to track.
 
@@ -40,13 +40,13 @@ Sentry completes a thorough evaluation of each event to determine if it counts t
 
 5. **Spike protection**
 
-      Sentry’s spike protection prevents huge overages from consuming your event capacity; spike protection is not current available for transactions. For more information, see [Spike Protection](/accounts/quotas/#spike-protection).
+      Sentry’s spike protection prevents huge overages from consuming your event capacity; spike protection is not currently available for transactions. For more information, see [Spike Protection](/accounts/quotas/#spike-protection).
 
 In addition, depending on your project’s configuration and the plan you subscribe to, Sentry may also check:
 
 6. **Rate limit for the project**
 
-      If the errror event rate limit for the project has been exceeded, and your subscription allows, the event will not be counted. For more information, see [Rate Limiting in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#4-rate-limiting) or  [Rate Limiting Projects](/accounts/quotas/#id1).
+      If the error event rate limit for the project has been exceeded, and your subscription allows, the event will not be counted. For more information, see [Rate Limiting in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#4-rate-limiting) or  [Rate Limiting Projects](/accounts/quotas/#id1).
 
 7. **Inbound filters**
 
