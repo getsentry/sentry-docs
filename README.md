@@ -44,19 +44,11 @@ The repository currently contains a Jekyll site (`./`) as well as a Gatsby site 
 
 - You can determine which engine is used by viewing source and looking for `"Rendered with"` in the HTML.
 
-- **Algolia does not index Gatsby yet** as we've not yet tested (as it likely wont work) indexing both in parallel.
-
 ## Development mode (Gatsby-specific)
 
 The following instructions assume you're in `./gatsby`.
 
-You'll need to configure the local environment for services like Algolia. To do this simply copy the example configuration:
-
-```bash
-cp .env.example .env.development
-```
-
-Nothing else to really see here yet. We'll update this when the Jekyll wrappers are gone.
+Nothing to really see here yet. We'll update this when the Jekyll wrappers are gone.
 
 ```bash
 $ yarn start
