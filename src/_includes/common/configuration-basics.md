@@ -18,13 +18,15 @@ The {{ include.sdk_name }} SDK is configurable using a variety of options. These
 These options can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
 {% if include.hide_dsn == nil %}
-:  `dsn` 
+`dsn` 
+
 The *DSN* tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will not send any events.
 
 In runtimes without a process environment (such as the browser SDK), the fallback of reading from the environment variable does not apply.
 {% endif %}
 {% if include.hide_debug == nil %}
-: `debug`
+`debug`
+
 Turns debug mode on or off. If debug is enabled, the SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It’s generally not recommended to turn it on in production, though turning debug mode on will not cause any safety concerns.
 {% endif %}
 {% if include.hide_release == nil %}
@@ -78,7 +80,7 @@ If possible, we recommend that you turn this feature on to send all such data by
 Can be used to supply a “server name.” When provided, the name of the server is sent along and persisted in the event. For many integrations the server name actually corresponds to the device hostname even in situations where the machine is not actually a server. Most SDKs will attempt to auto-discover this value.
 {% endif %}
 {% if include.hide_allow_urls == nil %}
-`blacklistUrls`
+`blocklistUrls`
 
 A list of strings or regex patterns that match error URLs that should not be sent to Sentry. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
 {% endif %}

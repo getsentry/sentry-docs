@@ -27,5 +27,5 @@ hide_with_locals=true
 hide_ca_certs=true
 hide_http_proxy=true
 hide_https_proxy=true
-hide_shudown_timeout=true
+hide_shutdown_timeout=true
  -%}
