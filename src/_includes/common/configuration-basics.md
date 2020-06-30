@@ -2,8 +2,9 @@
 Guideline: This page is comprehensive; select the Options specific to your SDK and delete the ones that do not apply; it is stored in the common folder, nested under _includes/common. To use, 
 
 1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
-2. Create a new config-<sdk>-basics.md file in _documentation/sdks/<platform-name> 
+2. Create a copy of "basics.md" file in _documentation/sdks/<platform-name> 
 3. Create the defined `include` statements and add them to the configuration-basics.md file
+4. Note that each of these terms is wrapped in an "if/then" statement; this is because not all of these options are included for every SDK. For those terms you do not wish to include, use the command `hide_<option>=true` in the SDK-specific page.
 
 If you have questions, please ask Fiona or Daniel. 
 
@@ -17,15 +18,13 @@ The {{ include.sdk_name }} SDK is configurable using a variety of options. These
 These options can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
 
 {% if include.hide_dsn == nil %}
-`dsn` 
-
+:  `dsn` 
 The *DSN* tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will not send any events.
 
 In runtimes without a process environment (such as the browser SDK), the fallback of reading from the environment variable does not apply.
 {% endif %}
 {% if include.hide_debug == nil %}
-`debug`
-
+: `debug`
 Turns debug mode on or off. If debug is enabled, the SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It’s generally not recommended to turn it on in production, though turning debug mode on will not cause any safety concerns.
 {% endif %}
 {% if include.hide_release == nil %}
@@ -128,7 +127,7 @@ For many platform SDKs integrations can be configured alongside it. On some plat
 
 In {{ include.sdk_name }}, the integrations are configured through this parameter on library initialization. 
 {% endif %}
-{% if include.hide_default_integerations == nil %}
+{% if include.hide_default_integrations == nil %}
 `defaultIntegrations`
 
 This can be used to disable integrations that are added by default. When set to `false` no default integrations are added.
@@ -148,7 +147,7 @@ This function is called with an SDK-specific breadcrumb object before the breadc
 {% endif %}
 ## **Transport Options**
 
-<!--Guideline: Adopt the appropriate transport option for the SDK; modify the descriptions below to be specific to the SDK you're documenting. -->
+<!--Guideline: Adopt the appropriate transport option for the SDK; modify the basics.md file to exclude options that don't apply to the SDK you're documenting. -->
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
