@@ -55,7 +55,7 @@ SentrySdk.Init(o => o.AddExceptionFilterForType<OperationCancelledException>());
 ```
 
 It works in the whole inheritance chain.  
-The example above will filter out also `TaskCancelledException` since it derives from `OperationCancelledException`.
+The example above will also filter out `TaskCancelledException` because it derives from `OperationCancelledException`.
 
 
 ## Automatically discovering release version
