@@ -1,7 +1,7 @@
 
 **Vue.js**
 
-To get started with performance monitoring for Vue.js, first install these packages:
+To get started with performance monitoring with Vue.js, first install these packages:
 
 ```bash
 # Using yarn

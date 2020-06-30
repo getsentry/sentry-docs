@@ -1,6 +1,6 @@
 **Koa**
 
-To get started with performance monitoring for Koa, first install these packages:
+To get started with performance monitoring with Koa, first install these packages:
 
 ```bash
 # Using yarn

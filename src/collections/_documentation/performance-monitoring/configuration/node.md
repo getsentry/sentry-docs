@@ -4,7 +4,7 @@ hide_from_sidebar: true
 
 **Node**
 
-To get started with performance monitoring for Node.js, first install these packages:
+To get started with performance monitoring with Node.js, first install these packages:
 
 ```bash
 # Using yarn
