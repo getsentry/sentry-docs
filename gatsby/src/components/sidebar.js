@@ -7,20 +7,50 @@ import SmartLink from './smartLink';
 
 const navQuery = graphql`
   query NavQuery {
-    allMarkdownRemark(sort: { order: ASC, fields: fields___slug }) {
+    allFile(
+      filter: {
+        absolutePath: { regex: "/(/docs/|/collections/_documentation/)/" }
+      }
+    ) {
       nodes {
-        fields {
-          slug
-          jekyllOnly
+        childMarkdownRemark {
+          frontmatter {
+            title
+            sidebar_order
+          }
+          fields {
+            slug
+            gatsbyOnly
+          }
         }
-        frontmatter {
-          title
-          sidebar_order
+        childMdx {
+          frontmatter {
+            title
+            sidebar_order
+          }
+          fields {
+            slug
+            gatsbyOnly
+          }
         }
       }
     }
   }
 `;
+
+const sortBy = (arr, comp) => {
+  return arr.sort((a, b) => {
+    const aComp = comp(a);
+    const bComp = comp(b);
+    if (aComp < bComp) {
+      return -1;
+    }
+    if (aComp > bComp) {
+      return 1;
+    }
+    return 0;
+  });
+};
 
 const NavLink = ({ to, title, children, remote, ...props }) => {
   const location = useLocation();
@@ -37,7 +67,7 @@ const NavLink = ({ to, title, children, remote, ...props }) => {
       <SmartLink to={to} className="d-block" data-sidebar-link remote={remote}>
         {title || children}
       </SmartLink>
-      {title && (
+      {title && children && !!children.length && (
         <ul className="list-unstyled" data-sidebar-tree>
           {children}
         </ul>
@@ -65,6 +95,26 @@ const toTree = nodeList => {
   return result[0].children;
 };
 
+const renderChildren = children => {
+  return sortBy(
+    children.filter(
+      ({ name, node }) => !!node.frontmatter.title && name !== ''
+    ),
+    n => n.node.frontmatter.sidebar_order
+  ).map(({ node, children }) => {
+    return (
+      <NavLink
+        to={node.fields.slug}
+        key={node.fields.slug}
+        title={node.frontmatter.title}
+        remote={!node.fields.gatsbyOnly}
+      >
+        {renderChildren(children)}
+      </NavLink>
+    );
+  });
+};
+
 const DynamicNav = ({ root, title, tree, collapse = false }) => {
   // TODO(dcramer): this still needs to build the tree
   // love that we cant use filters here...
@@ -81,7 +131,7 @@ const DynamicNav = ({ root, title, tree, collapse = false }) => {
       to={`/${root}/`}
       className={headerClassName}
       data-sidebar-link
-      remote
+      remote={!parentNode.node.fields.gatsbyOnly}
     >
       <h6>{title}</h6>
     </SmartLink>
@@ -96,20 +146,7 @@ const DynamicNav = ({ root, title, tree, collapse = false }) => {
       {header}
       {(!collapse || isActive) && (
         <ul className="list-unstyled" data-sidebar-tree>
-          {node.children
-            .filter(({ name, node }) => !!node.frontmatter.title && name !== '')
-            .sort(
-              (a, b) =>
-                a.node.frontmatter.sidebar_order -
-                b.node.frontmatter.sidebar_order
-            )
-            .map(({ node }) => {
-              return (
-                <NavLink to={node.fields.slug} key={node.fields.slug} remote>
-                  {node.frontmatter.title}
-                </NavLink>
-              );
-            })}
+          {renderChildren(node.children)}
         </ul>
       )}
     </li>
@@ -121,7 +158,18 @@ const Sidebar = () => {
     <StaticQuery
       query={navQuery}
       render={data => {
-        const tree = toTree(data.allMarkdownRemark.nodes);
+        const tree = toTree(
+          sortBy(
+            data.allFile.nodes
+              .filter(n => {
+                return !!(n.childMdx || n.childMarkdownRemark);
+              })
+              .map(n => {
+                return n.childMdx || n.childMarkdownRemark;
+              }),
+            n => n.fields.slug
+          )
+        );
         return (
           <ul className="list-unstyled" data-sidebar-tree>
             <DynamicNav
