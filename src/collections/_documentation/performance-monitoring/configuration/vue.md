@@ -1,6 +1,17 @@
-The Vue Tracing Integration allows you to track rendering performance during an initial application load.
 
 **Vue.js**
+
+To get started with performance monitoring with Vue.js, first install these packages:
+
+```bash
+# Using yarn
+$ yarn add @sentry/browser @sentry/integrations @sentry/apm
+
+# Using npm
+$ npm install @sentry/browser @sentry/integrations @sentry/apm
+```
+
+The Vue Tracing Integration allows you to track rendering performance during an initial application load.
 
 Sentry injects a handler inside Vue's `beforeCreate` mixin, providing access to a Vue component during its life cycle stages.
 When Sentry encounters a component named `root`, which is a top-level Vue instance (as in `new Vue({})`), we use our AM Tracing integration,

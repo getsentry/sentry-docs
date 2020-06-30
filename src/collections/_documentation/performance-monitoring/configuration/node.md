@@ -2,13 +2,16 @@
 hide_from_sidebar: true
 ---
 
-To access our tracing features, you will need to install our Tracing integration.
-
 **Node**
 
+To get started with performance monitoring with Node.js, first install these packages:
+
 ```bash
-$ npm install @sentry/node
-$ npm install @sentry/apm
+# Using yarn
+$ yarn add @sentry/node @sentry/apm
+
+# Using npm
+$ npm install @sentry/node @sentry/apm
 ```
 
 **Sending Traces**
