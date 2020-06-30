@@ -40,7 +40,7 @@ By default the SDK will try to read this value from the `window` environment va
 
 `error_types`
 
-Sets which errors are reported. It takes the same values as PHP’s `[error_reporting]`(https://www.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting) configuration parameter.
+Sets which errors are reported. It takes the same values as PHP’s [error_reporting](https://www.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting) configuration parameter.
 
 By default all types of errors are be reported (equivalent to `E_ALL`).
 
