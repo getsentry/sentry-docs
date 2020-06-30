@@ -1,7 +1,18 @@
-To get started with performance monitoring using Sentry's JavaScript SDK, first install the `@sentry/apm` package:
+
+To get started with performance monitoring using Sentry's JavaScript SDK, first install the `@sentry/browser` and `@sentry/apm` packages:
 
 ```bash
-npm install --save @sentry/apm
+# Using yarn
+$ yarn add @sentry/browser @sentry/apm
+
+# Using npm
+$ npm install @sentry/browser @sentry/apm
+```
+
+Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
+
+```html
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.apm.min.js %}" crossorigin="anonymous"></script>
 ```
 
 Next, initialize the integration in your call to `Sentry.init`:
@@ -23,20 +34,6 @@ Performance data is transmitted using a new event type called "transactions," wh
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
 
-**JavaScript**
-
-To access our tracing features, you will need to install our Tracing package `@sentry/apm`:
-
-```bash
-$ npm install @sentry/browser
-$ npm install @sentry/apm
-```
-
-Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
-
-```html
-<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" crossorigin="anonymous"></script>
-```
 
 **Automatic Instrumentation**
 
@@ -133,8 +130,8 @@ shopCheckout() {
   const transaction = Sentry.startTransaction('shopCheckout');
 
   // Assume this function makes an xhr/fetch call
-  const result = validateShoppingCartOnServer(); 
-  
+  const result = validateShoppingCartOnServer();
+
   const span = transaction.startChild({
     data: {
       result
