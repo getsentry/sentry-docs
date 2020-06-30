@@ -3,23 +3,23 @@ title: Getting Started
 sidebar_order: 1
 ---
 
-In this tutorial, you will import the backend app source code into your local development environment, add the Sentry SDK and initialize it. **Please** view the [frontend guide](https://docs.sentry.io/guides/integrate-frontend/create-new-project/) to learn more about how to create a project and alert rules.
+In this tutorial, you will import the backend app source code into your local development environment, add the Sentry SDK and initialize it.
 
 > **Note:** If you're using your own source code you can skip this tutorial and instead
 >
-> - Follow the instructions within [this doc](https://docs.sentry.io/error-reporting/quickstart/?platform=python). Notice that you can select the desired platform.
+> - Follow the instructions in the [Getting Started](https://docs.sentry.io/error-reporting/quickstart/?platform=python) docs. Notice that you can select the desired platform.
 > - Continue with the [Next tutorial]({%- link _documentation/guides/tutorials/integrate-frontend/generate-first-error.md -%})
-
----
 
 ## Prerequisites
 
-The demo app source code requires a **Python** development environment to build install and run the application. Make sure that you have the following in place:
+1. The demo app source code requires a **Python** development environment to build install and run the application. Make sure that you have the following in place:
 
-- A source code editor (like [VS-Code](https://code.visualstudio.com))
-- [Python3](https://www.python.org/download/releases/3.0/)
-- [Sentry-Cli](https://docs.sentry.io/cli/)
-- [NPM](https://www.npmjs.com/)
+   - A source code editor (like [VS-Code](https://code.visualstudio.com))
+   - [Python3](https://www.python.org/download/releases/3.0/)
+   - [Sentry-Cli](https://docs.sentry.io/cli/)
+   - [NPM](https://www.npmjs.com/)
+
+2. To start monitoring errors in your application you'll need to create a new project in your Sentry account. **Please** view the [frontend guide](https://docs.sentry.io/guides/integrate-frontend/create-new-project/) to learn more about how to create a project and define alert rules.
 
 ## Step 1: Get the Code
 
@@ -27,11 +27,9 @@ The demo app source code requires a **Python** development environment to build 
 
 2. Click on `Fork` and select the target GitHub account you wish this repository to be forked in to
 
-   ![Fork Repository]({% asset guides/integrate-backend/fork_django.png @path %})
-
 3. Once the fork is complete, click on `Clone or download` and copy the repository HTTPS URL
 
-   ![Clone Repository]({% asset guides/integrate-backend/clone_django.png @path %})
+   ![Clone Repository]({% asset guides/integrate-backend/fork_n_clone.png @path %})  
 
 4. Clone the forked repository to your local environment
 
@@ -45,22 +43,24 @@ The demo app source code requires a **Python** development environment to build 
 
 Sentry captures data by using a platform-specific SDK within your application runtime. To use the SDK, import and configure it in your source code.
 
-The demo project uses Django for the backend code and REACT for the frontend code. Please refer to the [frontend guide]({%- link _documentation/guides/tutorials/integrate-frontend/index.md -%}) on how to set up your front end code.
+<!-- The demo project uses Django for the backend code and REACT for the frontend code. Please refer to the [frontend guide]({%- link _documentation/guides/tutorials/integrate-frontend/index.md -%}) on how to set up your front end code. -->
 
-Refer to the [doc](https://docs.sentry.io/error-reporting/quickstart/?platform=python) on how to get started.
+<!-- Refer to the [doc](https://docs.sentry.io/error-reporting/quickstart/?platform=python) on how to get started. -->
 
-1. Open the `settings.py` file (located under \_./backend-monitoring/myproject/settings.py). This is where we initialize and configure the Sentry SDK in our application.
+1. To start working with the SDK in our Django app we install the `sentry-sdk` by defining the dependency in the `requirements.txt` file. The SDK documentation and release information is available in the [Sentry SDK](https://github.com/getsentry/sentry-python) GitHub repository.
+
+2. Open the `settings.py` file (located under \_./backend-monitoring/myproject/settings.py). This is where we initialize and configure the Sentry SDK in our application.
 
    <!-- ![Import and Configure SDK]({% asset guides/integrate-backend/sentry_init.png @path %}) -->
 
-2. After importing the Sentry SDK to the app, it is important to import the Sentry Django integration as well. Integrations extend the functionality of the SDK for some common frameworks and libraries.
+3. After importing the Sentry SDK to the app, it is important to import the Sentry Django integration as well. Integrations extend the functionality of the SDK for some common frameworks and libraries.
 
    ```python
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
    ```
 
-3. In the Sentry SDK configuration, enter the `dsn` key value you copied from the project created in the previous tutorial.
+4. In the Sentry SDK configuration, enter the `dsn` key value you copied from the project created in the previous tutorial.
 
    ```python
    sentry_sdk.init(
@@ -73,15 +73,15 @@ Refer to the [doc](https://docs.sentry.io/error-reporting/quickstart/?platform=p
 
 To build and run the Demo application on your localhost
 
-1. Open a shell terminal and change directory to the `django` project folder
+1. Open a shell terminal and change directory to the `backend-monitoring` project root folder
 
-2. Install Python3 if you haven't already by running the following:
+2. If you haven't installed Python3, do so by running the following:
 
    ```bash
     brew install python3
    ```
 
-3. Install virtualenv and virtualenvwrapper:
+3. Install `virtualenv` and `virtualenvwrapper`:
 
    ```bash
     pip3 install virtualenv virtualenvwrapper
@@ -97,11 +97,11 @@ To build and run the Demo application on your localhost
 
 5. Setup and activate a Python 3 virtual environment in the project root.
 
-   > (You can name the virtual environment whatever you feel that is appropriate, in our case we named it sentry-demo-django)
-
    ```bash
     mkvirtualenv --python=python3 sentry-demo-django
    ```
+
+   > You can name the virtual environment whatever you feel that is appropriate, in our case we named it sentry-demo-django
 
 6. To activate the virtual environment run:
 
@@ -109,15 +109,27 @@ To build and run the Demo application on your localhost
     workon sentry-demo-django
    ```
 
-7. Running the following command will install relevant python libraries and run django server
+7. Open the `Makefile` included in the project's root folder. The file is used here to mimic a CI/CD flow.
 
-   ```bash
-    make deploy
-   ```
+8. Follow the `deploy` target execution flow.
 
-   ![Deploy & Serve]({% asset guides/integrate-backend/run_django_server.png @path %})
+   Notice that in addition to installing Python requirements and running the server, we also utilize the `sentry-cli` to create a new Sentry Release, and associate commits to that release. Sentry will lookup through those commits when suggesting a suspect commit for your project issues.
 
-   > Once the deploy finishes successfully, you'll see the confirmation in your terminal
+9. To execute the `sentry-cli` commands, follow the instructions described [here]({%- link _documentation/guides/tutorials/integrate-frontend/upload-source-maps.md -%}#step-1-prepare-the-build-environment) to obtain the values for your `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` environment variables.
+
+   ![Makefile Config]({% asset guides/integrate-backend/makefile_config.png @path %})
+
+   > Note: The sentry-cli can be configured by providing these values either through environment variables or through a dedicated configuration file. For more information see [Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
+
+10. Run the following command to install the required Python libraries, set up the Sentry Release, and run the django server:
+
+      ```bash
+      make deploy
+      ```
+
+      > In the terminal, notice that a new release is created and the commits are associated.Once the deploy finishes successfully, you'll see the confirmation in your terminal
+
+      ![Deploy & Serve]({% asset guides/integrate-backend/run_django_server.png @path %})
 
 ## Next
 
