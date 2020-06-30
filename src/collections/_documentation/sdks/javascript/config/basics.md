@@ -3,9 +3,8 @@ title: Basic Configuration Options
 excerpt: ""
 ---
 {%- capture __config_basic_content -%}
-Add the Sentry SDK as a dependency using `yarn` or `npm`:
 
-```javascript
+```jsx
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   maxBreadcrumbs: 50,
