@@ -1,10 +1,10 @@
 <!--
-Guideline: This page is comprehensive; select the Options specific to your SDK and delete the ones that do not apply; it is stored in the common folder, nested under _includes/common. To use, 
+Guideline: This page is comprehensive; it is stored in the common folder, nested under _includes/common. To use, 
 
 1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
 2. Create a copy of "basics.md" file in _documentation/sdks/<platform-name> 
 3. Create the defined `include` statements and add them to the configuration-basics.md file
-4. Note that each of these terms is wrapped in an "if/then" statement; this is because not all of these options are included for every SDK. For those terms you do not wish to include, use the command `hide_<option>=true` in the SDK-specific page.
+4. Note that each of these terms is wrapped in an "if/then" statement; this is because not all of these options are included for every SDK. For those terms you do not wish to include, add the command `hide_<option>=true` in the SDK-specific page.
 
 If you have questions, please ask Fiona or Daniel. 
 

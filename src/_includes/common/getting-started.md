@@ -10,6 +10,12 @@ If you have questions, please ask Fiona or Daniel.
 **The objective for this page is that a developer can quickly complete an ideal integration.**
 -->
 
+{% include components/alert.html
+    title="Note"
+    content="This set of documentation is under development."
+    level="warning"
+%}
+
 Add Sentry's {{ include.sdk_name }} SDK to automatically report errors and exceptions in your application. 
 
 On this page, we provide concise information to get you up and running quickly. To learn more, use the links to in-depth content. Also, if you don't already have an account and Sentry project established, head over to [Sentry.io](https://sentry.io/signup/), then return to this page.
@@ -104,12 +110,16 @@ Performance monitoring helps developers measure Apdex, Throughput, and trace slo
 
 To get started with performance monitoring, first install the `@sentry/tracing` package:
 
+
+
 {{ include.performance-install_content }}
 <!--
-Guideline: Create the `include` statement that provides SDK specific installation information
+Guideline: Create the `include` statement that provides SDK specific installation information. This page is under development with the projects team currently.
 -->
 
-Performance data is transmitted using a new event type called `transactions`<!--next phase: link to Distributing Tracing-->. **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions. Learn more about sampling in Using Your SDK to Filter Events<!--next phase: add link to this content for the SDK you are documenting-->.
+Performance data is transmitted using a new event type called `transactions`<!--next phase: link to Distributing Tracing-->. **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions. Learn more about sampling in [Filter Events](/config/filter).
+
+**Next Steps:**
 
 - Learn more about enriching event data <!--next phase:add link-->
 - Review and manage integrations <!--next phase:add link-->

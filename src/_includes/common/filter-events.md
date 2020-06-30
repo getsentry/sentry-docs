@@ -2,8 +2,8 @@
 Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
 
 1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
-2. Create a new config-<sdk>-intro.md file in _documentation/sdks/<platform-name> 
-3. Create the defined `include` statements and add them to the configuration-intro.md file
+2. Create a new filter.md file in _documentation/sdks/<platform-name>/config folder
+3. Create the defined `include` statements and add them to the filter.md file
 
 If you have questions, please ask Fiona or Daniel. 
 
@@ -31,15 +31,14 @@ Inbound filters include:
 
 Once applied, you can track the filtered events (numbers and cause) using the graph provided at the top of the Inbound Data Filters view.
 
-<!-- TO DO: add screen shot-->
+![Built-in Inbound Filters]({% asset guides/manage-event-stream/03.png @path %})
 
 ### Proper Event Grouping
 
 Proper event grouping maintains a meaningful issue stream and reduces redundant notifications. Sentry groups similar *events* into unique *issues* based on their *fingerprint*. An event’s fingerprint relies firstly on its **stack trace**.
 
-For example, with JavaScript errors, a minified source code can result in a nondeterministic stack trace that could interfere with event grouping, which can be avoided by ensuring Sentry has access to your Source Maps and minified artifacts. 
-
-<!-- TO DO: add screen shot-->
+{{ include.filter-stack-trace }}
+<!-- Guideline: as appropriate, add the example and screen shot for the SDK your are documenting -->
 
 ### Apply Workflows
 
@@ -51,9 +50,7 @@ Rate limits allow you to set the maximum volume of events a project will accept 
 
 Under `[Project Settings] » Client Keys » Configure`, you can create multiple DSN keys per-project and assign different (or no) limits to each key. This will allow you to dynamically allocate keys (with varying thresholds) depending on Release, Environment, and so forth.
 
-For example, you may have a project in production that generates a lot of noise. A rate limit allows you to set the maximum amount of data to 500 events per minute, for instance. Additionally, you can create a second key for the same project for your staging environment, which is unlimited, ensuring your QA process is still untouched.
-
-<!-- TO DO: add screen shot-->
+For example, you may have a project in production that generates many alerts. A rate limit allows you to set the maximum amount of data to 500 events per minute, for instance. Additionally, you can create a second key for the same project for your staging environment, which is unlimited, ensuring your QA process is still untouched.
 
 ## Configure your SDK to Filter Events
 

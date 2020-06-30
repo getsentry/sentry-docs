@@ -2,7 +2,7 @@
 Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
 
 1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
-2. Create a new config-<sdk>-shutdown-drain.md file in _documentation/sdks/<platform-name> 
+2. Create a new shutdown-drain.md file in _documentation/sdks/<platform-name>/config directory 
 3. Create the defined `include` statements and add them to the your new file
 
 If you have questions, please ask Fiona or Daniel. 
