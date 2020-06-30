@@ -104,8 +104,8 @@ Sentry.init({
     new ApmIntegrations.Tracing({
       beforeNavigate: (location) => {        
         // You could use your UI's routing library to find the matching
-		// route template here. We don't have one right now, so do some basic
-		// parameter replacements.
+		    // route template here. We don't have one right now, so do some basic
+		    // parameter replacements.
         return location.pathname
         .replace(/\d+/g, '<digits>')
         .replace(/[a-f0-9]{32}/g, '<hash>');
