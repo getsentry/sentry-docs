@@ -1,24 +1,14 @@
 ---
-title: 'Advanced Data Scrubbing (Beta)'
+title: 'Advanced Data Scrubbing'
 sidebar_order: 4
 keywords: ["pii", "gdpr", "personally identifiable data", "compliance"]
 ---
 
-In addition to using [`beforeSend`](/data-management/sensitive-data/#custom-event-processing-in-the-sdk) in your SDK or our [server-side data scrubbing features](/data-management/sensitive-data/#server-side-scrubbing) to redact sensitive data, we are currently beta-testing ways to give you more granular control over server-side data scrubbing of your events. Additional functionality includes:
+In addition to using [`beforeSend`](/data-management/sensitive-data/#custom-event-processing-in-the-sdk) in your SDK or our [regular server-side data scrubbing features](/data-management/sensitive-data/#server-side-scrubbing) to redact sensitive data, Advanced Data Scrubbing is an alternative way to redact sensitive information just before it is saved in Sentry. It allows you to:
 
 * Define custom regular expressions to match on sensitive data
 * Detailed tuning on which parts of an event to scrub
 * Partial removal or hashing of sensitive data instead of deletion
-
-## Overview
-
-**Advanced Data Scrubbing is available only if your organization is enabled as an Early Adopter.** To enable this option, navigate to your organization's settings and enable the "Early Adopter" option. Turning on this option allows access to features prior to full release, and can be disabled at any time.
-
-Early adopters have access to a new option in both organization settings as well as the setting of each project. Go to your project- or organization-settings and click _Security and Privacy_ in the sidebar. Scrolling down, you will find a new section _Advanced Data Scrubbing_.
-
-Note that everything you configure there will have direct impact on all new events, just as all the other data privacy-related settings do. However, it is not possible to break or undo any other data scrubbing settings that you may have configured. In other words, it is only possible to accidentally remove too much data, not too little.
-
-If you have any questions related to this feature, feel free to contact us at `markus@sentry.io`.
 
 ## A Basic Example
 
@@ -29,7 +19,7 @@ Go to your project- or organization-settings and click _Security and Privacy_ in
 3. Select _Credit card numbers_ as _Data Type_.
 4. Enter `$string` as _Source_.
 
-As soon as you hit _Save_, we will attempt to find all creditcard numbers in your events going forward, and replace them with a series of `******`, keeping only the last 4 digits.
+As soon as you hit _Save_, we will attempt to find all creditcard numbers in your events going forward, and replace them with a series of `******`.
 
 Rules generally consist of three parts:
 
@@ -39,10 +29,10 @@ Rules generally consist of three parts:
 
 ## Methods
 
-- _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely or replace it with an empty string depending on technical constraints.
-- _Mask_: Replace all characters with `*`. For creditcards this replaces everything but the last 4 digits.
+- _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely, or replace it with an empty string depending on technical constraints.
+- _Mask_: Replace all characters with `*`.
 - _Hash_: Replace the matched substring with a hashed value.
-- _Replace_: Replace the matched substring with a constant placeholder value such as `[Filtered]` or `[creditcard]`. Right now this value cannot be configured.
+- _Replace_: Replace the matched substring with a constant _placeholder_ value (defaulting to `[Filtered]`).
 
 ## Data Types
 
@@ -93,7 +83,7 @@ All key names are treated case-insensitively.
 
 Above the _Source_ input field you will find another input field for an event ID. Providing a value there allows for better auto-completion of arbitrary _Additional Data_ fields and variable names.
 
-The event ID is purely optional and the value is not saved as part of your settings. Data scrubbing settings always apply to all events within a project/organization going forward.
+The event ID is purely optional and the value is not saved as part of your settings. Data scrubbing settings always apply to all new events within a project/organization (going forward).
 
 ### Advanced source names
 
