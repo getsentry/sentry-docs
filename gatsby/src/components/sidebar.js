@@ -100,8 +100,8 @@ const DynamicNav = ({ root, title, tree, collapse = false }) => {
             .filter(({ name, node }) => !!node.frontmatter.title && name !== '')
             .sort(
               (a, b) =>
-                (a.node.fields.sidebar_order || 10) -
-                (b.node.fields.sidebar_order || 10)
+                a.node.frontmatter.sidebar_order -
+                b.node.frontmatter.sidebar_order
             )
             .map(({ node }) => {
               return (
