@@ -32,7 +32,7 @@ On initial load, the table displays the slowest occurrences of the transaction a
 - Fastest Transactions
 - Recent Transactions
 
-The table also updates dynamically if you change any of the selections in the global header or when you drill in on a latency segment (applicable when viewing the Latency Histogram). Results are exportable with the "Export All" button. The choice of which kinds of data to display is configurable, and you can change them by clicking "Edit Columns" at the top right of the table. Note that adding or removing any value-based columns may affect the way that Sentry groups the results.
+The table also updates dynamically if you change any of the selections in the global header or when you drill in on a latency segment (applicable when viewing the Latency Histogram).
 
 When viewing transactions, you may want to create more curated views. Click "Open in Discover" above the table to create a custom query to investigate further. For more details, see the full documentation for the Discover [Query Builder](/performance-monitoring/discover-queries/query-builder/).
 
