@@ -21,7 +21,8 @@ const routes = [
       '/cli',
       '/api',
       '/guides',
-      '/support'
+      '/support',
+      '/sdks'
     ],
     address: 'http://localhost:9001'
   },
