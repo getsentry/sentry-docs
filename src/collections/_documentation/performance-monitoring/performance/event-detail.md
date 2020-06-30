@@ -78,13 +78,13 @@ Traversing between parent and child transactions is only available on the [Busin
 
 Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
 
-For example, a 200+ character tagged database query:
+For example, a 200+ character tagged request:
 
-`SELECT first_column, second_column, third_columns, fourth_column, fifth_column, sixth_column FROM this_is_a_long_table_name WHERE first_column=some_value AND second_column=some_other_value AND third_column=yet_another_value`
+`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=161803398874989484820458683436563811772030917980576`
 
-The 200+ character query above will become truncated to:
+The 200+ character request above will become truncated to:
 
-`SELECT first_column, second_column, third_columns, fourth_column, fifth_column, sixth_column FROM this_is_a_long_table_name WHERE first_column=some_value AND second_column=some_other_value AND third_c`
+`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
 
 Instead, using `span.set_tag` you could split the details of this query over several tags. This could be done over `columns`, `tables`, `conditions`, in this case, resulting in three different tags:
 
