@@ -20,17 +20,21 @@ Currently, only root transactions are searchable. Any span data that inherits fr
 
 ## Span View
 
+The span view is a split view where the left-hand side shows the transaction’s span tree, and the right-hand side represents each span as a colored rectangle. Within the tree view, Sentry identifies spans by their `op` and `description` values. If a span doesn’t have a description, Sentry uses the span’s id as a fallback. The first span listed is always the transaction’s root span, from which all other spans in the transaction descend.
+
 [{% asset performance/span-details.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-details.png @path %})
 
-You can view span data using either of these methods:
+To find these views, you can either go through the [Transaction Summary](/performance-monitoring/performance/transaction-summary) or [Query Builder](/performance-monitoring/discover-queries/query-builder/). Event IDs will be linked to open the corresponding Event Detail.
 
-1. Scroll down to the "Trace Details" context panel in either the Issue Details or the Discover Event Details page, and click on the "View Summary" button. This will maintain the context of the current Sentry event.
+**With Transaction Summary**
 
-2. Select the [Performance Homepage](/performance-monitoring/performance/index), then click the affected transaction to display the trace data.
+Select the [Performance Homepage](/performance-monitoring/performance/index), then click the affected transaction to display the trace data.
+
+**With Query Builder**
+
+Scroll down to the "Trace Details" context panel in either the Issue Details or the Discover Event Details page, and click on the "View Summary" button. This will maintain the context of the current Sentry event.
 
 _Note_: Users on the Team or Business plans can also view a list of transaction events by clicking on the "Transactions" pre-built query in [Discover](/performance-monitoring/discover-queries/index) or by performing a search with the `event.type:transaction` condition the Discover Query Builder view.
-
-The span view is a split view where the left-hand side shows the transaction’s span tree, and the right-hand side represents each span as a colored rectangle. Within the tree view, Sentry identifies spans by their `op` and `description` values. If a span doesn’t have a description, Sentry uses the span’s id as a fallback. The first span listed is always the transaction’s root span, from which all other spans in the transaction descend.
 
 ### Minimap
 
