@@ -163,7 +163,7 @@ In {{ include.sdk_name }} for example, it can be used to capture events for unit
 ```
 <code snippet for this platform/language>
 ```
-{% endif %}
+
 {% if include.hide_http_proxy == nil %}
 `httpProxy`
 
