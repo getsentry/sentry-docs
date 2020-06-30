@@ -213,3 +213,47 @@ Sentry.init({
   ],
 });
 ```
+
+**Adding Query Information and Parameters to Spans**
+
+Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
+
+For example, a 200+ character tagged request:
+
+`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=161803398874989484820458683436563811772030917980576`
+
+The 200+ character request above will become truncated to:
+
+`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
+
+Instead, using `span.setTag` splits the details of this request over several tags. This could be done over `baseUrl`, `endpoint`, `parameters`, in this case, resulting in three different tags:
+
+```javascript
+const span = transaction.startChild({
+  op: "request",
+  description: "setup form"
+});
+span.setTag("baseUrl", baseUrl);
+span.setTag("endpoint", endpoint);
+span.setTag("parameters", parameters);
+http.get(`${base_url}/${endpoint}/`, data=parameters);
+...
+```
+
+baseUrl
+
+: `https://empowerplant.io`
+
+endpoint
+
+: `api/0/projects/ep/setup_form`
+
+parameters
+
+: ```{
+"user_id": 314159265358979323846264338327,
+"tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
+"product_name": PlantToHumanTranslator,
+"product_id": 161803398874989484820458683436563811772030917980576,
+}
+```
