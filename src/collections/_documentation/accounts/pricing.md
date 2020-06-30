@@ -289,7 +289,7 @@ Trials include transactions and attachments as well as business features like cr
 
 Yes, you can keep your current plan and pricing.
 
-`If I opt into new plan, when does the new plan take effect?`
+`If I opt into a new plan, when does the new plan take effect?`
 
 New plans take effect immediately.
 
