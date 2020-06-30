@@ -240,7 +240,7 @@ sentry-cli releases new -p project1 -p project2 $VERSION
 # Associate commits with the release
 sentry-cli releases set-commits --auto $VERSION
 ```
-If you do not have a repo-based integration associated with your sentry organization, then the `--auto` flag will automatically use the git tree of your local repo, and associate commits between the previous release’s commit and the current head commit with the release. If this is the first release, we’ll use the latest 20 commits. This behaviour is configurable with the `--initial-depth` flag. 
+If you don't have a repo-based integration associated with your sentry organization, then the `--auto` flag will automatically use the git tree of your local repo, and associate commits between the previous release's commit and the current head commit with the release. If this is the first release, Sentry will use the latest 20 commits. This behavior is configurable with the `--initial-depth` flag. 
 
 Alternatively, you can use the `--local` flag to enable this behavior by default.
 ```bash
