@@ -1,8 +1,9 @@
 const { createFilePath } = require('gatsby-source-filesystem');
 
-exports.createSchemaCustomization = ({ actions }) => {
+exports.createSchemaCustomization = ({ actions, schema }) => {
   const { createTypes } = actions;
-  const typeDefs = `
+  const typeDefs = [
+    `
     type MarkdownRemark implements Node {
       frontmatter: Frontmatter
       fields: Fields
@@ -18,13 +19,29 @@ exports.createSchemaCustomization = ({ actions }) => {
       jekyllOnly: Boolean
       gatsbyOnly: Boolean
     }
-    
-    type Frontmatter {
-      title: String!
-      keywords: [String!]
-      sidebar_order: Int
-    }
-  `;
+  `,
+    schema.buildObjectType({
+      name: 'Frontmatter',
+      fields: {
+        title: {
+          type: 'String!'
+        },
+        keywords: {
+          type: '[String!]'
+        },
+        sidebar_order: {
+          type: 'Int',
+          resolve(source, args, context, info) {
+            // For a more generic solution, you could pick the field value from
+            // `source[info.fieldName]`
+            return source[info.fieldName] !== null
+              ? source[info.fieldName]
+              : 10;
+          }
+        }
+      }
+    })
+  ];
   createTypes(typeDefs);
 };
 
