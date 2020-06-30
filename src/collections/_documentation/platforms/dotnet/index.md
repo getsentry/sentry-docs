@@ -46,6 +46,17 @@ Of those, we run our unit/integration tests against:
   level="info"
 %}
 
+## Ignoring Exceptions
+
+You can simply ignore exceptions by their type when initializing the SDK:
+
+```csharp
+SentrySdk.Init(o => o.AddExceptionFilterForType<OperationCancelledException>());
+```
+
+It works in the whole inheritance chain.  
+The example above will filter out also `TaskCancelledException` since it derives from `OperationCancelledException`.
+
 
 ## Automatically discovering release version
 
