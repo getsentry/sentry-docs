@@ -113,7 +113,7 @@ Performance data is transmitted using a new event type called `transactions` <!-
 
 Next steps:
 
-- Manage your SDK Configuration <!--next phase:add link-->
+- Manage your SDK Configuration<!--add link to the config page for the SDK you are documenting-->
 - Learn more about enriching event data <!--next phase:add link-->
 - Review and manage integrations <!--next phase:add link-->
 - Review common problems <!--next phase:add link-->

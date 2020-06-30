@@ -108,3 +108,7 @@ verify_content=__verify_content
 config_content=__config_content 
 install_content=__install_content 
  -%}
+ 
+ Next steps:
+ 
+ - [Manage your SDK Configuration]{% link _documentation/sdks/javascript/config-js-intro.md}
