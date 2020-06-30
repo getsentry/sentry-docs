@@ -23,10 +23,10 @@ Sentry has two types of alerts you can use for errors:
 
 [Metric Alerts](#metric-alerts) can be used on performance data, allowing you to set alerts on the following metrics:
 
-- Latency: min, max, average, [percentile](/performance/performance-metrics/#p75-threshold)
-- [Apdex](/performance/performance-metrics/#apdex)
-- [Failure rate](/performance/performance-metrics/#failure-rate)
-- [Transaction volume](/performance/performance-metrics/#transaction-frequency)
+- Latency: min, max, average, [percentile](/performance-monitoring/performance/metrics/#p75-threshold)
+- [Apdex](/performance-monitoring/performance/metrics/#apdex)
+- [Failure rate](/performance-monitoring/performance/metrics/#failure-rate)
+- [Transaction volume](/performance-monitoring/performance/metrics/#frequency)
 
 ## Metric Alerts
 
