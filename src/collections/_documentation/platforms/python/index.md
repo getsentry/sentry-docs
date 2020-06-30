@@ -257,8 +257,9 @@ For more information, see:
 
 #### Serverless
 
-- [AWS Lambda](/platforms/python/aws_lambda/)
-- [Generic Serverless](/platforms/python/serverless/)
+- [AWS Lambda]({%- link _documentation/platforms/python/aws_lambda.md -%})
+- [GCP Functions]({%- link _documentation/platforms/python/gcp_functions.md -%})
+- [Serverless Decorator]({%- link _documentation/platforms/python/serverless.md -%})
 
 #### Other Integrations
 

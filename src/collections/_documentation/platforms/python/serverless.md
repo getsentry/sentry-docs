@@ -1,5 +1,5 @@
 ---
-title: Serverless
+title: Serverless Decorator
 sidebar_order: 9
 ---
 
