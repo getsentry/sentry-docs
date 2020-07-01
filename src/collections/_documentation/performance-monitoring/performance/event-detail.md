@@ -74,48 +74,6 @@ Traversing between parent and child transactions is only available on the [Busin
     level="info"
 %}
 
-**Adding Query Information and Parameters to Spans**
-
-Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
-
-For example, a 200+ character tagged request:
-
-`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=161803398874989484820458683436563811772030917980576`
-
-The 200+ character request above will become truncated to:
-
-`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
-
-Instead, using `span.set_tag` you could split the details of this query over several tags. This could be done over `columns`, `tables`, `conditions`, in this case, resulting in three different tags:
-
-```python
-import sentry_sdk
-
-...
-
-with sentry_sdk.start_span(op="db", transaction="query api") as span:
-    span.set_tag("columns", columns)
-    span.set_tag("tables", tables)
-    span.set_tag("conditions", conditions)
-    span.set_tag("query_format", query_format)
-    query_format = "SELECT {columns} FROM {tables} WHERE {conditions}"
-    query = query_format.format(
-        columns=columns,
-        tables=tables,
-        conditions=conditions,
-    )
-    ...
-```
-
-columns
-: `first_column, second_column, third_columns, fourth_column, fifth_column, sixth_column`
-
-tables
-: `this_is_a_long_table_name`
-
-conditions
-: `first_column=some_value AND second_column=some_other_value AND third_column=yet_another_value`
-
 ### Missing Instrumentation 
 
 Gaps between spans may be marked as "Missing Instrumentation." This means a duration in the transaction that isn't accounted for by any of the transaction's spans. It likely means that you need to manually instrument that part of your process. Go back to the [performance setup](/performance-monitoring/setup) for details. 

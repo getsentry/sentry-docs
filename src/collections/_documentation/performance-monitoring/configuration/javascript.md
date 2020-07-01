@@ -250,10 +250,11 @@ endpoint
 
 parameters
 
-: ```{
-"user_id": 314159265358979323846264338327,
-"tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
-"product_name": PlantToHumanTranslator,
-"product_id": 161803398874989484820458683436563811772030917980576,
-}
+: ```json
+    {
+        "user_id": 314159265358979323846264338327,
+        "tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
+        "product_name": "PlantToHumanTranslator",
+        "product_id": 161803398874989484820458683436563811772030917980576,
+    }
 ```
