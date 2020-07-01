@@ -22,7 +22,9 @@ const routes = [
       '/api',
       '/guides',
       '/support',
-      '/sdks'
+      '/sdks',
+      '/ssl',
+      '/_platforms,
     ],
     address: 'http://localhost:9001'
   },
