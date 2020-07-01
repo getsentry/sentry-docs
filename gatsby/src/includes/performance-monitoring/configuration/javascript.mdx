@@ -26,9 +26,7 @@ Sentry.init({
 
 Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
 
-```html
-<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.apm.min.js %}" crossorigin="anonymous"></script>
-```
+<JsCdnTag apm />
 
 Next, initialize the integration in your call to `Sentry.init`:
 
@@ -103,9 +101,7 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 
 *NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
 
-**beforeNavigation Option**s
-
-{% version_added 5.18.0 %}
+**beforeNavigation Option**
 
 For `pageload` and `navigation` transactions, the `Tracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigation` option to the `Tracing` integration. This option allows you to pass in a function that takes in the location at the time of navigation and returns a new transaction name.
 
@@ -267,34 +263,30 @@ The 200+ character request above will become truncated to:
 
 `https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
 
-Instead, using `span.setTag` splits the details of this request over several tags. This could be done over `baseUrl`, `endpoint`, `parameters`, in this case, resulting in three different tags:
+Instead, using `span.set_tag` and `span.set_data` preserves the details of this query using structured metadata. This could be done over `baseUrl`, `endpoint`, and `parameters`:
 
 ```javascript
+const baseUrl = "https://empowerplant.io";
+const endpoint = "/api/0/projects/ep/setup_form";
+const parameters = {
+  "user_id": 314159265358979323846264338327,
+  "tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
+  "product_name": PlantToHumanTranslator,
+  "product_id": 161803398874989484820458683436563811772030917980576,
+};
+
 const span = transaction.startChild({
   op: "request",
   description: "setup form"
 });
+
 span.setTag("baseUrl", baseUrl);
 span.setTag("endpoint", endpoint);
-span.setTag("parameters", parameters);
+span.setData("parameters", parameters);
+// you may also find some parameters to be valuable as tags
+span.setData("user_id", parameters.user_id);
 http.get(`${base_url}/${endpoint}/`, data=parameters);
 ```
 
-baseUrl
-
-: `https://empowerplant.io`
-
-endpoint
-
-: `api/0/projects/ep/setup_form`
-
-parameters
-
-: ```json
-    {
-        "user_id": 314159265358979323846264338327,
-        "tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
-        "product_name": "PlantToHumanTranslator",
-        "product_id": 161803398874989484820458683436563811772030917980576,
-    }
+http.get(`${base_url}/${endpoint}/`, data=parameters);
 ```
