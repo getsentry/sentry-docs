@@ -50,8 +50,6 @@ sentry_sdk.init(
 
 **Manual Instrumentation**
 
-<!-- WIZARD python-tracing -->
-
 To manually instrument certain regions of your code, you can create a transaction to capture them.
 
 The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
@@ -154,14 +152,26 @@ The 200+ character request above will become truncated to:
 
 `https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
 
-Instead, using `span.set_tag` splits the details of this query over several tags. This could be done over `base_url`, `endpoint`, `parameters`, in this case, resulting in three different tags:
+Instead, using `span.set_tag` and `span.set_data` preserves the details of this query using structured metadata. This could be done over `base_url`, `endpoint`, and `parameters`:
+
 ```python
 import sentry_sdk
-...
-with sentry_sdk.start_transaction(op="request", name="setup form") as transaction:
-    transaction.set_tag("base_url", base_url)
-    transaction.set_tag("endpoint", endpoint)
-    transaction.set_tag("parameters", parameters)
+
+# ...
+
+base_url = "https://empowerplant.io"
+endpoint = "/api/0/projects/ep/setup_form"
+parameters = {
+    "user_id": 314159265358979323846264338327,
+    "tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
+    "product_name": PlantToHumanTranslator,
+    "product_id": 161803398874989484820458683436563811772030917980576,
+}
+
+with sentry_sdk.start_span(op="request", transaction="setup form") as span:
+    span.set_tag("base_url", base_url)
+    span.set_tag("endpoint", endpoint)
+    span.set_data("parameters", parameters)
     make_request(
         "{base_url}/{endpoint}/".format(
             base_url=base_url,
@@ -169,24 +179,6 @@ with sentry_sdk.start_transaction(op="request", name="setup form") as transactio
         ),
         data=parameters
     )
-    ...
-```
 
-base_url
-
-: `https://empowerplant.io`
-
-endpoint
-
-: `api/0/projects/ep/setup_form`
-
-parameters
-
-: ```json
-    {
-        "user_id": 314159265358979323846264338327,
-        "tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
-        "product_name": "PlantToHumanTranslator",
-        "product_id": 161803398874989484820458683436563811772030917980576,
-    }
+    # ...
 ```
