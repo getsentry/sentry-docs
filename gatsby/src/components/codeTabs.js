@@ -1,4 +1,5 @@
 import React, { useState, useContext, useRef, useEffect } from "react";
+import CodeContext from "./codeContext";
 
 // human readable versions of names
 const LANGUAGES = {
@@ -14,34 +15,6 @@ const LANGUAGES = {
   yml: "YAML",
   yaml: "YAML"
 };
-
-export const CodeContext = React.createContext(null);
-
-// only fetch them once
-let cachedCodeKeywords = null;
-
-export function useCodeContextState(fetcher) {
-  let [codeKeywords, setCodeKeywords] = useState(null);
-  if (codeKeywords === null && cachedCodeKeywords !== null) {
-    setCodeKeywords(cachedCodeKeywords);
-    codeKeywords = cachedCodeKeywords;
-  }
-
-  useEffect(() => {
-    if (cachedCodeKeywords === null) {
-      fetcher().then(config => {
-        cachedCodeKeywords = config;
-        setCodeKeywords(config);
-      });
-    }
-  });
-
-  return {
-    codeKeywords,
-    sharedCodeSelection: useState(null),
-    sharedKeywordSelection: useState({})
-  };
-}
 
 function CodeTabs({ children }) {
   if (!Array.isArray(children)) {

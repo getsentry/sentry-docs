@@ -4,14 +4,15 @@ import copy from "copy-to-clipboard";
 import { MDXProvider } from "@mdx-js/react";
 import { Clipboard } from "react-feather";
 import { useOnClickOutside, useRefWithCallback } from "../utils";
-import { CodeContext } from "./codeTabs";
+import CodeContext from "./codeContext";
 
-const KEYWORDS_REGEX = /\b___([A-Z_][A-Z0-9_]*)\.([A-Z_][A-Z0-9_]*)___\b/g;
+const KEYWORDS_REGEX = /\b___([A-Z_][A-Z0-9_]*)___\b/g;
 
 function makeKeywordsClickable(children) {
   if (!Array.isArray(children)) {
     children = [children];
   }
+
   KEYWORDS_REGEX.lastIndex = 0;
 
   return children.reduce((arr, child) => {
@@ -30,8 +31,8 @@ function makeKeywordsClickable(children) {
       }
       arr.push(
         Selector({
-          group: match[1],
-          keyword: match[2],
+          group: "PROJECT",
+          keyword: match[1],
           key: lastIndex
         })
       );
@@ -81,7 +82,7 @@ function Selector({ keyword, group, ...props }) {
   const currentSelection = choices[currentSelectionIdx];
 
   if (!currentSelection) {
-    return null;
+    return keyword;
   }
 
   // this is not super clean but since we can depend on the span
