@@ -17,7 +17,7 @@ Next, initialize the integration in your call to `Sentry.init`. Make sure this h
 import * as Sentry from '@sentry/react';
 import { Integrations } from "@sentry/apm";
 Sentry.init({
-  dsn: '"___PUBLIC_DSN___"',
+  dsn: '___PUBLIC_DSN___',
   release: 'my-project-name@' + process.env.npm_package_version,
   integrations: [
     new Integrations.Tracing(),
