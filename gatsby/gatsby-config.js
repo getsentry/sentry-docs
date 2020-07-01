@@ -132,7 +132,7 @@ module.exports = {
   siteMetadata: {
     title: 'Sentry Documentation',
     homeUrl: 'https://sentry.io',
-    sitePath: 'docs.sentry.com',
+    sitePath: 'docs.sentry.io',
     description: '',
     author: '@getsentry'
   },
