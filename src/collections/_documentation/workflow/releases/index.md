@@ -224,7 +224,7 @@ When Sentry sees this commit, we’ll reference the commit in the issue, and whe
 %}
 
 #### Alternatively: Without a Repository Integration
-If you don’t want Sentry to connect to your repository, or you’re using an unsupported repository provider or VCS (e.g. Perforce), you can tell Sentry about your raw commit metadata via the CLI or the API using the [create release endpoint](/api/releases/post-organization-releases/).
+If you don’t want Sentry to connect to your repository, or you’re using an unsupported repository provider or VCS (e.g. Perforce), you can tell Sentry about your raw commit metadata via the CLI or the API.
 
 ##### Using the CLI
 ```bash
