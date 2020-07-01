@@ -72,6 +72,14 @@ If you also want to set a previous commit instead of letting the server use the 
 sentry-cli releases set-commits "$VERSION" --commit "my-repo@from..to"
 ```
 
+### Alternatively: Without a Repository Integration
+You can still use the `--auto` flag and the cli will automatically use the git tree of your local repo, and associate commits between the previous release's commit and the current head commit with the release. If this is the first release, Sentry will use the latest 20 commits. This behavior is configurable with the `--initial-depth` flag. 
+
+You can use the `--local` flag to enable this behavior by default.
+```bash
+sentry-cli releases set-commits --local $VERSION
+```
+
 {% include components/alert.html
   title='Troubleshooting'
   content='If you receive an "Unable to Fetch Commits" email, take a look at our [Help Center Article](https://help.sentry.io/hc/en-us/articles/360019866834-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits-).'
