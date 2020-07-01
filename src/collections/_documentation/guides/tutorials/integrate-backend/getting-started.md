@@ -7,8 +7,8 @@ In this tutorial, you will import the backend app source code into your local de
 
 > **Note:** If you're using your own source code you can skip this tutorial and instead
 >
-> - Follow the instructions in the [Getting Started](https://docs.sentry.io/error-reporting/quickstart/?platform=python) docs. Notice that you can select the desired platform.
-> - Continue with the [Next tutorial]({%- link _documentation/guides/tutorials/integrate-frontend/generate-first-error.md -%})
+> - Follow the instructions in our [Getting Started](https://docs.sentry.io/error-reporting/quickstart/?platform=python) docs. Notice that you can select the desired platform.
+> - Continue with [Configuration Options]({%- link _documentation/guides/tutorials/integrate-backend/configuration-options.md -%})
 
 ## Prerequisites
 
@@ -39,10 +39,13 @@ In this tutorial, you will import the backend app source code into your local de
 
 5. Now that the sample code is available locally, open the `backend-monitoring` project in your preferred code editor
 
-6. Open your Sentry account and navigate to your organization's integrations page `(https://sentry.io/settings/{YOUR-ORG-SLUG/}/integrations)` To enable the GitHub integration and add your backend-monitoring repository. For more information refer to [this link](https://docs.sentry.io/guides/integrate-frontend/configure-scms/#step-1-integrate-your-github-account-and-repositories).
-   Configuring your Source Code management solution and adding your repositories is required to enable commit tracking, for more information see [this link](https://docs.sentry.io/workflow/releases/?platform=node#associate-commits-with-a-release).
+## Step 2: Enable commit tracking for your repository
 
-## Step 2: Install the SDK
+Configuring your source code management solution and adding your code repositories is required to enable commit tracking, for more information see [this link](https://docs.sentry.io/workflow/releases/?platform=node#associate-commits-with-a-release).
+
+1. Open your Sentry account and navigate to `Settings > Integrations` to enable the GitHub integration and add your `backend-monitoring` repository. For more information follow the steps described in [Global Integrations > GitHub](https://docs.sentry.io/workflow/integrations/global-integrations/#github).
+
+## Step 3: Install the SDK
 
 Sentry captures data by using a platform-specific SDK within your application runtime. To use the SDK, import and configure it in your source code.
 
@@ -72,7 +75,7 @@ Sentry captures data by using a platform-specific SDK within your application ru
    )
    ```
 
-## Step 3: Install Dependencies & Run the Demo App
+## Step 4: Install Dependencies & Run the Demo App
 
 To build and run the Demo application on your localhost
 
@@ -114,17 +117,16 @@ To build and run the Demo application on your localhost
 
 7. Open the `Makefile` included in the project's root folder. The file is used here to mimic a CI/CD flow.
 
-   > Note commands mentioned within the Makefile will be explain in detail in the [configuration's page]({%- link _documentation/guides/tutorials/integrate-backend/configuration_options.md -%})
-
 8. Follow the `deploy` target execution flow.
 
-   Notice that in addition to installing Python requirements and running the server, we also utilize the `sentry-cli` to create a new Sentry Release, and associate commits to that release. Sentry will lookup through those commits when suggesting a suspect commit for your project issues.
+   > Notice that in addition to installing Python requirements and running the server, we also utilize the `sentry-cli` to create a new Sentry Release, and associate commits to that release. Sentry will lookup through those commits when suggesting a suspect commit for your project issues.
+   > Commands mentioned within the Makefile will be explain in detail in the next part [Configuration Options]({%- link _documentation/guides/tutorials/integrate-backend/configuration-options.md -%})
 
 9. To execute the `sentry-cli` commands, follow the instructions described [here]({%- link _documentation/guides/tutorials/integrate-frontend/upload-source-maps.md -%}#step-1-prepare-the-build-environment) to obtain the values for your `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` environment variables.
 
    ![Makefile Config]({% asset guides/integrate-backend/makefile_config.png @path %})
 
-   > Note: The sentry-cli can be configured by providing these values either through environment variables or through a dedicated configuration file. For more information see [Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
+   > The sentry-cli can be configured by providing these values either through environment variables or through a dedicated configuration file. For more information see [Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
 
 10. Run the following command to install the required Python libraries, set up the Sentry Release, and run the Django server:
 
@@ -138,4 +140,4 @@ To build and run the Demo application on your localhost
 
 ## Next
 
-[Configuration Options]({%- link _documentation/guides/tutorials/integrate-backend/configuration_options.md -%})
+[Configuration Options]({%- link _documentation/guides/tutorials/integrate-backend/configuration-options.md -%})

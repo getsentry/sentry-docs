@@ -1,0 +1,83 @@
+---
+title: Configuration Options
+sidebar_order: 2
+---
+
+Sentry has many configuration options to help enhance your experience using Sentry. The options can help provide additional data needed to debug issues even faster or help control what is sent to Sentry by filtering. For more information, see [Configuration](https://docs.sentry.io/error-reporting/configuration/?platform=python).
+
+## Releases
+
+A `release` is a version of your code that is deployed to an environment. Configuring the Release helps you figure out if there is a regression in your code, hold accountability, resolve issues within Sentry, and staying up to date with your deployments. Releases need to be configured within your SDK and then managed through the [sentry-cli](https://docs.sentry.io/cli/) to support extra features such as suspect commits and suggested assignee.
+
+Sentry currently supports integrations with GitHub, BitBucket, Azure DevOps, GitLab, and others. For a complete list of our integrations, check out our docs on [Integrations](https://docs.sentry.io/workflow/integrations/global-integrations/).
+
+Let's see how we set up the release in this project:
+
+1. Open the file `settings.py`. Notice that we add the `release` configuration option when initializing the SDK.
+
+   ```python
+   release=os.environ.get("VERSION"),
+   ```
+
+2. Open the `Makefile` you ran in the previous tutorial.
+
+   ![Makefile]({% asset guides/integrate-backend/makefile.png @path %})
+
+3. Notice that we're settings the release version name as an environment variable that is then used in the application's runtime. We're letting the CLI propose a name, but you'd probably want to apply your own naming conventions:
+
+   ```bash
+   VERSION=`sentry-cli releases propose-version`
+   ```
+
+4. Then we create the new release for our project with the proposed/selected name
+
+   ```bash
+   > create_release:
+      sentry-cli releases -o $(SENTRY_ORG) new -p $(SENTRY_PROJECT) $(VERSION)
+   ```
+
+5. In the previous tutorial we configured the GitHub integration, and added the code repository for Commit Tracking. Now we can associate commits from that repository to the new release, by running the command:
+
+   ```bash
+   > associate_commits:
+         sentry-cli releases -o $(SENTRY_ORG) -p $(SENTRY_PROJECT) \
+         set-commits $(VERSION) --commit "$(REPO)@$(VERSION)"
+   ```
+
+## Breadcrumbs
+
+`Breadcrumbs` are the trail of events which led up to the error. They can be quite useful when trying to reproduce an issue. The SDK tracks various types of Breadcrumbs by default (DB queries, Network events, Logging, etc) and you can add your own custom breadcrumbs as well. For more information, see [Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}?platform=python).
+
+Let's see how we add breadcrumbs to our app.
+
+1. Open the file `myapp > view.py`
+
+2. Notice we import `add_breadcrumb` from the SDK lib.
+
+   ```python
+   from sentry_sdk import add_breadcrumb
+   ```
+
+3. We create a custom breadcrumb in the `process_order` function. This breadcrumb will be added to the trail of breadcrumbs associated with any error triggered through that method call flow.
+
+   ![Import and Configure SDK]({% asset guides/integrate-backend/breadcrumbs.png @path %})
+
+   > For more information on customizing your breadcrumbs, see [Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}?platform=python).
+
+## Environment
+
+`Environment` is a powerful configuration option that enables developers using Sentry to perform various workflows (filter issues, trigger alerts, etc.0 based on the deployment environment in which the errors are occurring in.
+
+1. Open the `settings.py` file
+
+2. Notice that we initialize the SDK with the `environment` configuration option. Any event that will be captured by the SDK will be tagged with the configured environment value.
+
+   ```python
+    environment:"Production"
+   ```
+
+   > **Note** Environment values are freeform strings. The Sentry SDK or UI will not limit you to any specific value or format. In this example we hardcoded the value. In a real life app the value would probably be determined dynamically through a properties file, system, or environment variable.
+
+## Next
+
+[Handled vs Unhandled Errors]({%- link _documentation/guides/tutorials/integrate-backend/capturing-errors.md -%})
