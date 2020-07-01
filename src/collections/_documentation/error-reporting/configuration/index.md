@@ -110,14 +110,14 @@ will attempt to auto-discover this value.
 {% endunsupported %}
 
 {:.config-key}
-### `blocklist-urls`
+### `allow-urls`
 
 {% supported browser browsernpm %}
 A list of strings or regex patterns that match error URLs which should not be sent to Sentry.  By default, all errors will be sent.
 {% endsupported %}
 
 {:.config-key}
-### `whitelist-urls`
+### `deny-urls`
 
 {% supported browser browsernpm %}
 A legacy alias for a list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry.  By default, all errors
