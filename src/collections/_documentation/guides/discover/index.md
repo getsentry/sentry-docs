@@ -3,25 +3,24 @@ title: Discover your Errors
 sidebar_order: 5
 ---
 
-## Before We Start
 
-When creating a new Discover query you always start off with your raw event stream filtered by your Projects, Environments, and a time range - as you define in the top level filter. The search bar is similar to an SQL WHERE clause and provides advanced filtering based on your event tags and error data.
+When creating a new Discover query you always start off with your raw event stream filtered by the Projects, Environments, and a time range - as you define in the top level filter. The search bar is similar to an SQL WHERE clause and provides advanced filtering based on your event tags and error data.
 
 The event time graph will display the result set of events over time and the total number of events.
 
 ## Discover Issues
 
-The Sentry workflow (Alert - Triage - Resolve) notifies you in real time when your application breaks, and then provides all the information and tools to triage and resolve the error. With Discover, users can take a more proactive approach to find those major issues that break down their apps. The flow would look something like this:
+The Sentry workflow (Alert - Triage - Resolve) notifies you in real time when your application breaks, and then provides all the information and tools to triage and resolve the error. With Discover, users can take a more proactive approach to find the major issues that break their apps. The flow can look something like this:
 
 1. Open _Discover_ and click on _Build a new query_
 
 2. From the top level filter select the projects, environments, and time span of errors you'd like to query
 
-3. Sentry monitors different types of events for errors, performance, and more. To query issues filter by `event.type:error` in the search bar.
+3. Sentry monitors different types of events for errors, performance, etc. To query issues filter by `event.type:error` in the search bar.
 
     ![Filter by Error type]({% asset guides/discover/004.png @path %})
 
-4. Edit the results table columns to show number of event, unique issues, and impacted users per project
+4. Edit the results table columns to show the number of events [`count()`], unique issues [`count_unique(issue)`], and impacted users [`count_unique(user)`] per project
 
     ![Issues per project]({% asset guides/discover/001.png @path %})
 
@@ -31,7 +30,7 @@ The Sentry workflow (Alert - Triage - Resolve) notifies you in real time when yo
 
     ![Project with most issues]({% asset guides/discover/002.png @path %})
 
-7. Now let's see what those issues are. Change the table columns to show `issue` [id], `title` [of the issue], `count()` [number of events], and `count_unique(user)` [number of users impacted by the issue].
+7. Now let's see what those issues are. Change the table columns to show the issue id [`issue`], issue title [`title`], number of events [`count()`], and number of users impacted by the issue [`count_unique(user)`].
 
 8. Per line item/issue you can click on the issue name to open the issue details page and triage it. You can also click on _Open Stack_ to continue querying through the events stack in the context of a specific issue.
 
@@ -39,7 +38,7 @@ The Sentry workflow (Alert - Triage - Resolve) notifies you in real time when yo
 
 ## Discover Errors
 
-The true power of Discover lies in it's ability to query through the metadata of all your events, so you're no longer restricted to the context of _Issues_ or _Projects_ and can reveal trends and insights across all your applications.
+The true power of Discover lies in it's ability to query through the metadata of all your events, so you're no longer restricted to the context of _Issues_ or _Projects_ and can reveal trends and insights across all your applications. Let's look at some examples.
 
 ### Errors by URLs
 
@@ -50,7 +49,10 @@ Create a report looking into all the errors occurring in your applications URL e
 
 ![Errors by URL]({% asset guides/discover/005.png @path %})
 
-Dive deeper into any one of those URL endpoints by clicking on Add to filter and changing the table columns.
+- Look into any one of the URL endpoints by clicking on _Add to filter_ and changing the table columns.
+- Alternatively, filter URLs patterns using wild cards:
+
+![Wildcard filter]({% asset guides/discover/009.png @path %})
 
 ### Unhandled Error
 
@@ -68,14 +70,38 @@ To look deeper into one of the crash types
 
     ![Native Crashes]({% asset guides/discover/007.png @path %})
 
-
 ### Files with Most Errors
 
-- Search condition: `event.type:error has:`
-- Table columns: `url`, `platform.name`, `count()`
+To find out which files in your code base are generating the most errors, run the following query in Discover:
 
-### Errors per release over time OR latest release
+- Search condition: `event.type:error has:stack.filename`
+- Table columns: `stack.filename`, `count()`
 
+![By File Names]({% asset guides/discover/010.png @path %})
 
+You can continue exploring a specific filename by adding it to the filer and change the table columns to display the major error culprits in that file:
+
+![Culprits]({% asset guides/discover/008.png @path %})
+
+### Errors per release over time
+
+To find out how the health of a specific project is improving (or not) over time as you release new versions, run the following in Discover:
+
+- Search condition: `event.type:error`
+- Table columns: `release`, `count(), count_unique(issue)`
+
+![Issues per release]({% asset guides/discover/012.png @path %})
+
+Each table cell offers a dynamic context menu that allow you to easily continue exploring your data by automatically updating the search bar or the table columns, according too your selection. Actions like, adding or excluding values from the filter, opening a selected release, or viewing the underlying stack of issues:
+
+![Context menu]({% asset guides/discover/013.png @path %})
+
+## Additional Use Cases
+
+As you've probably noticed, Discover can be quite useful in gaining visibility and insights into your errors. For additional use cases take a look at the following:
+
+- [What issues are consuming my quota?]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%}#-what-issues-are-consuming-my-quota)
+- [Spike Protection was activated — what should I do?]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%}#-spike-protection-was-activated--what-should-i-do)
+- [Discover and Enriching your Error Data]({%- link _documentation/guides/enrich-data/index.md -%}#discover )
 
 
