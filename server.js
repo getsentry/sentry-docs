@@ -24,7 +24,7 @@ const routes = [
       '/support',
       '/sdks',
       '/ssl',
-      '/_platforms,
+      '/_platforms'
     ],
     address: 'http://localhost:9001'
   },
