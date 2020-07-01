@@ -3,17 +3,17 @@ title: Handled VS Unhandled
 sidebar_order: 3
 ---
 
-Sentry is able to provide developers deep insight on handled and unhandled issues by using a simple captureException or captureMessage option. The configuration of this is very straightforward because regardless if you want to handle an error or not, you will be notified if an event triggered within your app sent to Sentry.
+Sentry is able to provide developers with deep insight on handled and unhandled issues by using a simple captureException or captureMessage option. The configuration of this is very straightforward because regardless if you want to handle an error or not, you will be notified if an event is triggered within your app sent to Sentry.
 
 > **Note:** If you're using your own source code, follow [Capturing your first event](https://docs.sentry.io/error-reporting/quickstart/?platform=python) to introduce an error to your source code.
 
 ## Handled Errors
 
-Handled Errors are generated runtime errors excplicitly reported to Sentry though the SDk's captureException.
+Handled Errors are generated runtime errors explicitly reported to Sentry though the SDk's captureException.
 
 ## captureException
 
-1. Inorder to use the configuration option of captureException, you will need to import captureException
+1. In order to use the configuration option of captureException, you will need to import captureException
 
 ```python
    from sentry_sdk import capture_exception
@@ -23,12 +23,12 @@ Handled Errors are generated runtime errors excplicitly reported to Sentry thoug
 
 ![Import and Configure SDK]({% asset guides/integrate-backend/capture_exception.png @path %})
 
-3. Once the app runs and to trigger a handled issue is as simpple as clicking or going to this link
+3. Once the app runs and to trigger a handled issue is as simple as clicking or going to this link
    `http://localhost:8000/handled`.
 
 4. After the issue is triggered you can confirm by looking into your network tab and seeing an event_id produced by the issue.
 
-5. You can search for the specific event by using event_id found within the network tab in your Issues's Stream. Once you are directed to the event, you can get the information needed to learn more about the issue.
+5. You can search for the specific event by using event_id found within the network tab in your Issues' Stream. Once you are directed to the event, you can get the information needed to learn more about the issue.
 
 ## captureMessage
 
@@ -40,7 +40,7 @@ Handled Errors are generated runtime errors excplicitly reported to Sentry thoug
 
 2. You can place the capture_message option anywhere within your app. For the sake of this example, we've added it to the same function, `HandledErrorView` and replaced `capture_exception`.
 
-3. Once the app runs and to trigger a handled issue is as simpple as clicking or going to this link
+3. Once the app runs and to trigger a handled issue is as simple as clicking or going to this link
    `http://localhost:8000/handled`.
 
 4. Within your issues stream, you can find the exact issue using the event_id generated (mentioned above).
@@ -51,7 +51,7 @@ Handled Errors are generated runtime errors excplicitly reported to Sentry thoug
 
 ## Unhandled Errors
 
-Unhandled Errors are generated during runtime when an issue is not caaught/handled.
+Unhandled Errors are generated during runtime when an issue is not caught/handled.
 
 1. Unlike handled errors, no extra configuration is needed to be implemented within your SDK to send unhandled issues to Sentry.
 
@@ -61,7 +61,7 @@ Unhandled Errors are generated during runtime when an issue is not caaught/handl
 
 4. Using the event_id or simply looking at the issues that came in recently, you can view the unhandled issue.
 
-**Note** If issue is handled there will be a tag that says `yes` or `no`. For unhandled issues, the tag will equal `no`. For handled issues, the tag will equal `yes`.
+**Note** If an issue is handled there will be a tag that says `yes` or `no`. For unhandled issues, the tag will equal `no`. For handled issues, the tag will equal `yes`.
 
 ![Import and Configure SDK]({% asset guides/integrate-backend/error_with_all_tags.png @path %})
 

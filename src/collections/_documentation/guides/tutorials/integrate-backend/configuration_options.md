@@ -3,7 +3,7 @@ title: Configuration Options
 sidebar_order: 2
 ---
 
-Sentry has many configurations options to help enhance your experience using Sentry. The options can help provide additional data needed to debug issues even faster or help control what is sent to Sentry by filtering.
+Sentry has many configuration options to help enhance your experience using Sentry. The options can help provide additional data needed to debug issues even faster or help control what is sent to Sentry by filtering.
 
 > **Note:** View the full list of configuration options [here](https://docs.sentry.io/error-reporting/configuration/?platform=python).
 

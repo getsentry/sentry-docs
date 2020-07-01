@@ -29,7 +29,7 @@ In this tutorial, you will import the backend app source code into your local de
 
 3. Once the fork is complete, click on `Clone or download` and copy the repository HTTPS URL
 
-   ![Clone Repository]({% asset guides/integrate-backend/fork_n_clone.png @path %})  
+   ![Clone Repository]({% asset guides/integrate-backend/fork_n_clone.png @path %})
 
 4. Clone the forked repository to your local environment
 
@@ -38,6 +38,9 @@ In this tutorial, you will import the backend app source code into your local de
    ```
 
 5. Now that the sample code is available locally, open the `backend-monitoring` project in your preferred code editor
+
+6. Open your Sentry account and navigate to your organization's integrations page `(https://sentry.io/settings/{YOUR-ORG-SLUG/}/integrations)` To enable the GitHub integration and add your backend-monitoring repository. For more information refer to [this link](https://docs.sentry.io/guides/integrate-frontend/configure-scms/#step-1-integrate-your-github-account-and-repositories).
+   Configuring your Source Code management solution and adding your repositories is required to enable commit tracking, for more information see [this link](https://docs.sentry.io/workflow/releases/?platform=node#associate-commits-with-a-release).
 
 ## Step 2: Install the SDK
 
@@ -111,6 +114,8 @@ To build and run the Demo application on your localhost
 
 7. Open the `Makefile` included in the project's root folder. The file is used here to mimic a CI/CD flow.
 
+   > Note commands mentioned within the Makefile will be explain in detail in the [configuration's page]({%- link _documentation/guides/tutorials/integrate-backend/configuration_options.md -%})
+
 8. Follow the `deploy` target execution flow.
 
    Notice that in addition to installing Python requirements and running the server, we also utilize the `sentry-cli` to create a new Sentry Release, and associate commits to that release. Sentry will lookup through those commits when suggesting a suspect commit for your project issues.
@@ -121,15 +126,15 @@ To build and run the Demo application on your localhost
 
    > Note: The sentry-cli can be configured by providing these values either through environment variables or through a dedicated configuration file. For more information see [Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
 
-10. Run the following command to install the required Python libraries, set up the Sentry Release, and run the django server:
+10. Run the following command to install the required Python libraries, set up the Sentry Release, and run the Django server:
 
-      ```bash
-      make deploy
-      ```
+    ```bash
+    make deploy
+    ```
 
-      > In the terminal, notice that a new release is created and the commits are associated.Once the deploy finishes successfully, you'll see the confirmation in your terminal
+    > In the terminal, notice that a new release is created and the commits are associated. Once the deploy finishes successfully, you'll see the confirmation in your terminal
 
-      ![Deploy & Serve]({% asset guides/integrate-backend/run_django_server.png @path %})
+    ![Deploy & Serve]({% asset guides/integrate-backend/run_django_server.png @path %})
 
 ## Next
 
