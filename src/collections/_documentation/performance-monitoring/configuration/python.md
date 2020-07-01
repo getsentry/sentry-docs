@@ -75,9 +75,9 @@ import sentry_sdk
 while True:
   item = get_from_queue()
 
-  with sentry_sdk.start_span(op="task", transaction=item.get_transaction()):
+  with sentry_sdk.start_transaction(op="task", name=item.get_transaction_name()) as transaction:
       # process_item may create more spans internally (see next examples)
-      process_item(item)
+      process_item(item, transaction)
 ```
 
 **Adding More Spans to the Transaction**
@@ -89,10 +89,10 @@ You can choose the value of `op` and `description`.
 ```python
 import sentry_sdk
 
-def process_item(item):
+def process_item(item, transaction):
 
   # omitted code...
-  with sentry_sdk.start_span(op="http", description="GET /") as span:
+  with transaction.start_child(op="http", description="GET /") as span:
       response = my_custom_http_library.request("GET", "/")
       span.set_tag("http.status_code", response.status_code)
       span.set_data("http.foobarsessionid", get_foobar_sessionid())
@@ -105,7 +105,7 @@ def process_item(item):
 
 // TODO
 
-In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `undefined`. If you are using our Express integration by default we attach the Transaction to the Scope. So you could do something like this:
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Hub.current.scope.transaction`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `null`.
 
 ```python
 from sentry_sdk import Hub
@@ -130,10 +130,10 @@ Instead, using `span.set_tag` splits the details of this query over several tags
 ```python
 import sentry_sdk
 ...
-with sentry_sdk.start_span(op="request", transaction="setup form") as span:
-    span.set_tag("base_url", base_url)
-    span.set_tag("endpoint", endpoint)
-    span.set_tag("parameters", parameters)
+with sentry_sdk.start_transaction(op="request", name="setup form") as transaction:
+    transaction.set_tag("base_url", base_url)
+    transaction.set_tag("endpoint", endpoint)
+    transaction.set_tag("parameters", parameters)
     make_request(
         "{base_url}/{endpoint}/".format(
             base_url=base_url,
