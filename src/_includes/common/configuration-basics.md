@@ -1,4 +1,4 @@
-<!--
+{% comment %}
 Guideline: This page is comprehensive; it is stored in the common folder, nested under _includes/common. To use, 
 
 1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
@@ -9,7 +9,7 @@ Guideline: This page is comprehensive; it is stored in the common folder, nested
 If you have questions, please ask Fiona or Daniel. 
 
 **The objective for this page is that a developer can view easily the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
--->
+{% endcomment %}
 
 The {{ include.sdk_name }} SDK is configurable using a variety of options. These options are set when the SDK is first initialized, passed to the `init()` as an object:
 
@@ -149,7 +149,9 @@ This function is called with an SDK-specific breadcrumb object before the breadc
 {% endif %}
 ## **Transport Options**
 
-<!--Guideline: Adopt the appropriate transport option for the SDK; modify the basics.md file to exclude options that don't apply to the SDK you're documenting. -->
+{% comment %}
+Guideline: Adopt the appropriate transport option for the SDK; modify the basics.md file to exclude options that don't apply to the SDK you're documenting. 
+{% endcomment %}
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
@@ -160,10 +162,10 @@ Switches out the transport used to send events.
 
 In {{ include.sdk_name }} for example, it can be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 {% endif %}
-<!--Guideline: As needed, add a code snippet for this platform-->
-```
-<code snippet for this platform/language>
-```
+
+{% comment %}
+Guideline: As needed, add a code snippet for this platform
+{% endcomment %}
 
 {% if include.hide_http_proxy == nil %}
 `httpProxy`

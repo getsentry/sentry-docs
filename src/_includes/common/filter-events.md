@@ -1,4 +1,4 @@
-<!--
+{% comment %}
 Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
 
 1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
@@ -8,7 +8,8 @@ Guideline: This page is common to all SDKs; it is stored in the common folder, n
 If you have questions, please ask Fiona or Daniel. 
 
 **The objective for this page is that a developer can view easily the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
--->
+{% endcomment %}
+
 While sending all application errors to Sentry ensures you’ll be notified in real-time when errors occur in your code, often applications generate many errors, thus many notifications. The Sentry SDKs have several configuration options you can use to filter unwanted errors from leaving your application’s runtime. In addition, the Sentry web UI also offers methods to filter events.
 
 ## Use Projects to Filter Events
@@ -17,7 +18,7 @@ Sentry provides several methods to filter data server-side. Using Sentry's web U
 
 ### Inbound Data Filters
 
-Inbound data filters allow to determine which errors, if any, Sentry should ignore. Explore these by navigating to **[Project] » Project Settings » Inbound Filters.**
+Inbound data filters allow you to determine which errors, if any, Sentry should ignore. Explore these by navigating to **[Project] » Project Settings » Inbound Filters.**
 
 Inbound filters include:
 
