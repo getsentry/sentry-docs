@@ -100,6 +100,20 @@ def process_item(item):
 
 <!-- ENDWIZARD -->
 
+
+#### Retrieving a Transaction
+
+// TODO
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `undefined`. If you are using our Express integration by default we attach the Transaction to the Scope. So you could do something like this:
+
+```python
+from sentry_sdk import Hub
+transaction = Hub.current.scope.transaction
+```
+
+// TODO
+
 **Adding Query Information and Parameters to Spans**
 
 Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
