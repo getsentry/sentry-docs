@@ -1,11 +1,11 @@
-const path = require('path');
-const { createFilePath } = require('gatsby-source-filesystem');
+const path = require("path");
+const { createFilePath } = require("gatsby-source-filesystem");
 
 exports.onCreateWebpackConfig = ({ stage, actions }) => {
   actions.setWebpackConfig({
     resolve: {
       alias: {
-        '~src': path.join(path.resolve(__dirname, 'src'))
+        "~src": path.join(path.resolve(__dirname, "src"))
       }
     }
   });
@@ -19,12 +19,12 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
       frontmatter: Frontmatter
       fields: Fields
     }
-    
+
     type Mdx implements Node {
       frontmatter: Frontmatter
       fields: Fields
     }
-    
+
     type Fields {
       slug: String!
       jekyllOnly: Boolean
@@ -32,16 +32,16 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
     }
   `,
     schema.buildObjectType({
-      name: 'Frontmatter',
+      name: "Frontmatter",
       fields: {
         title: {
-          type: 'String!'
+          type: "String!"
         },
         keywords: {
-          type: '[String!]'
+          type: "[String!]"
         },
         sidebar_order: {
-          type: 'Int',
+          type: "Int",
           resolve(source, args, context, info) {
             // For a more generic solution, you could pick the field value from
             // `source[info.fieldName]`
@@ -58,24 +58,24 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
 
 exports.onCreateNode = ({ node, actions, getNode }) => {
   const { createNodeField } = actions;
-  if (node.internal.type === 'Mdx' || node.internal.type === 'MarkdownRemark') {
+  if (node.internal.type === "Mdx" || node.internal.type === "MarkdownRemark") {
     const value = createFilePath({ node, getNode });
     createNodeField({
-      name: 'slug',
+      name: "slug",
       node,
       value
     });
     createNodeField({
-      name: 'jekyllOnly',
+      name: "jekyllOnly",
       node,
       value: !!(
-        node.rawMarkdownBody && node.rawMarkdownBody.indexOf('{%') !== -1
+        node.rawMarkdownBody && node.rawMarkdownBody.indexOf("{%") !== -1
       )
     });
     createNodeField({
-      name: 'gatsbyOnly',
+      name: "gatsbyOnly",
       node,
-      value: node.fileAbsolutePath.indexOf('/src/docs') !== -1
+      value: node.fileAbsolutePath.indexOf("/src/docs") !== -1
     });
   }
 };
@@ -84,7 +84,7 @@ exports.createPages = async function({ actions, graphql, reporter }) {
   // TODO(dcramer): query needs rewritten when mdx is back
   const { data, errors } = await graphql(`
     query {
-      allFile {
+      allFile(filter: { absolutePath: { regex: "//docs//" } }) {
         nodes {
           id
           childMarkdownRemark {

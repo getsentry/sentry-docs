@@ -1,9 +1,10 @@
-import { withPrefix } from 'gatsby';
-import React from 'react';
-import { useLocation } from '@reach/router';
-import { StaticQuery, graphql } from 'gatsby';
+import { withPrefix } from "gatsby";
+import React from "react";
+import { useLocation } from "@reach/router";
+import { StaticQuery, graphql } from "gatsby";
 
-import SmartLink from './smartLink';
+import SmartLink from "./smartLink";
+import { sortBy } from "../utils";
 
 const navQuery = graphql`
   query NavQuery {
@@ -38,29 +39,15 @@ const navQuery = graphql`
   }
 `;
 
-const sortBy = (arr, comp) => {
-  return arr.sort((a, b) => {
-    const aComp = comp(a);
-    const bComp = comp(b);
-    if (aComp < bComp) {
-      return -1;
-    }
-    if (aComp > bComp) {
-      return 1;
-    }
-    return 0;
-  });
-};
-
 const NavLink = ({ to, title, children, remote, ...props }) => {
   const location = useLocation();
   const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
 
-  let className = 'toc-item';
+  let className = "toc-item";
   if (isActive) {
-    className += ' toc-active';
+    className += " toc-active";
   }
-  className += props.className ? ' ' + props.className : '';
+  className += props.className ? " " + props.className : "";
 
   return (
     <li className={className} data-sidebar-branch>
@@ -82,7 +69,7 @@ const toTree = nodeList => {
 
   nodeList.forEach(node => {
     const slug = node.fields.slug;
-    slug.split('/').reduce((r, name, i, a) => {
+    slug.split("/").reduce((r, name, i, a) => {
       if (!r[name]) {
         r[name] = { result: [] };
         r.result.push({ name, children: r[name].result, node });
@@ -98,7 +85,7 @@ const toTree = nodeList => {
 const renderChildren = children => {
   return sortBy(
     children.filter(
-      ({ name, node }) => !!node.frontmatter.title && name !== ''
+      ({ name, node }) => !!node.frontmatter.title && name !== ""
     ),
     n => n.node.frontmatter.sidebar_order
   ).map(({ node, children }) => {
@@ -119,13 +106,13 @@ const DynamicNav = ({ root, title, tree, collapse = false }) => {
   // TODO(dcramer): this still needs to build the tree
   // love that we cant use filters here...
   const node = tree.find(n => n.name === root);
-  const parentNode = node.children.find(n => n.name === '');
+  const parentNode = node.children.find(n => n.name === "");
 
   const location = useLocation();
   const isActive =
     location && location.pathname.indexOf(withPrefix(`/${root}/`)) === 0;
 
-  const headerClassName = 'sidebar-title d-flex align-items-center mb-0';
+  const headerClassName = "sidebar-title d-flex align-items-center mb-0";
   const header = parentNode ? (
     <SmartLink
       to={`/${root}/`}

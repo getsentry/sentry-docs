@@ -1,98 +1,25 @@
-import React from 'react';
-import { graphql } from 'gatsby';
-import { MDXProvider } from '@mdx-js/react';
-import { MDXRenderer } from 'gatsby-plugin-mdx';
+import React from "react";
+import { graphql } from "gatsby";
 
-import Alert from './alert';
-import SEO from './seo';
-import Header from './header';
-import Sidebar from './sidebar';
-import Navbar from './navbar';
-import SmartLink from './smartLink';
-import CodeBlock from './codeBlock';
-import CodeTabs, { CodeContext, useCodeContextState } from './codeTabs';
-import Break from './break';
+import Content from "./content";
+import SEO from "./seo";
+import Header from "./header";
+import Sidebar from "./sidebar";
+import Navbar from "./navbar";
+import SmartLink from "./smartLink";
+import TableOfContents from "./tableOfContents";
 
-import 'prismjs/themes/prism-tomorrow.css';
-import '~src/css/screen.scss';
-
-const mdxComponents = {
-  Alert,
-  a: SmartLink,
-  Link: SmartLink,
-  CodeBlock,
-  CodeTabs,
-  Break
-};
-
-const TableOfContents = ({ toc: { items } }) => {
-  if (!items) return null;
-
-  const recurseyMcRecurseFace = items =>
-    items.map(i => {
-      if (!i.title) return recurseyMcRecurseFace(i.items);
-      return (
-        <li className="toc-entry" key={i.url}>
-          <a href={i.url}>{i.title}</a>
-          {i.items && <ul>{recurseyMcRecurseFace(i.items)}</ul>}
-        </li>
-      );
-    });
-  return <ul className="section-nav">{recurseyMcRecurseFace(items)}</ul>;
-};
-
-function fetchCodeKeywords() {
-  return new Promise(resolve => {
-    function transformResults(projects) {
-      if (projects.length === 0) {
-        projects.push({
-          publicKey: 'e24732883e6fcdad45fd27341e61f8899227bb39',
-          dsnPublic:
-            'https://e24732883e6fcdad45fd27341e61f8899227bb39@o42.ingest.sentry.io/42',
-          id: 42,
-          organizationName: 'Example Org',
-          organizationId: 43,
-          organizationSlug: 'example-org',
-          projectSlug: 'example-project'
-        });
-      }
-      resolve({
-        PROJECT: projects.map(project => {
-          return {
-            DSN: project.dsnPublic,
-            ID: project.id,
-            SLUG: project.projectSlug,
-            ORG_SLUG: project.organizationSlug,
-            title: `${project.organizationName} / ${project.projectSlug}`
-          };
-        })
-      });
-    }
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://sentry.io/docs/api/user/');
-    xhr.withCredentials = true;
-    xhr.responseType = 'json';
-    xhr.onerror = () => {
-      transformResults([]);
-    };
-    xhr.onload = () => {
-      const { projects } = xhr.response;
-      transformResults(projects);
-    };
-    xhr.send(null);
-  });
-}
+import "~src/css/screen.scss";
 
 const GitHubCTA = ({ sourceInstanceName, relativePath }) => (
   <div className="github-cta">
     <small>
-      You can{' '}
+      You can{" "}
       <SmartLink
         to={`https://github.com/getsentry/develop/edit/master/src/${sourceInstanceName}/${relativePath}`}
       >
         edit this page
-      </SmartLink>{' '}
+      </SmartLink>{" "}
       on GitHub.
     </small>
   </div>
@@ -139,22 +66,12 @@ const Layout = ({
             <div className="row">
               <div
                 className={
-                  hasToc ? 'col-sm-8 col-md-12 col-lg-8 col-xl-9' : 'col-12'
+                  hasToc ? "col-sm-8 col-md-12 col-lg-8 col-xl-9" : "col-12"
                 }
               >
                 <h1 className="mb-3">{title}</h1>
                 <div id="main">
-                  <CodeContext.Provider
-                    value={useCodeContextState(fetchCodeKeywords)}
-                  >
-                    {child.internal.type === 'Mdx' ? (
-                      <MDXProvider components={mdxComponents}>
-                        <MDXRenderer>{child.body}</MDXRenderer>
-                      </MDXProvider>
-                    ) : (
-                      <div dangerouslySetInnerHTML={{ __html: child.html }} />
-                    )}
-                  </CodeContext.Provider>
+                  <Content file={file} />
 
                   <GitHubCTA
                     sourceInstanceName={file.sourceInstanceName}
@@ -176,7 +93,7 @@ const Layout = ({
           </section>
         </div>
       </main>
-      <div style={{ display: 'none' }}>Rendered with Gatsby</div>
+      <div style={{ display: "none" }}>Rendered with Gatsby</div>
     </div>
   );
 };
