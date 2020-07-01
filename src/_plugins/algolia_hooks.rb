@@ -8,7 +8,10 @@ module Jekyll
           platforms[key] = item["name"] unless platforms.has_key?(key)
         end
         doc_categories = Hash[context.data["documentation_categories"].collect { |item| [item["slug"], item["title"]] }]
-        records.each do |record|
+        records = records.map do |record|
+          if record[:gatsby]
+            return nil
+          end
           # Exclude certain frontmatter keys form indexing
           [
             :sidebar_order,
@@ -48,8 +51,9 @@ module Jekyll
               record[:categories].push doc_root
             end
           end
+          record
         end
-        records
+        records.compact
       end
 
     end
