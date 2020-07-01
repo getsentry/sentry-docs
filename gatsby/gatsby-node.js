@@ -1,4 +1,15 @@
+const path = require('path');
 const { createFilePath } = require('gatsby-source-filesystem');
+
+exports.onCreateWebpackConfig = ({ stage, actions }) => {
+  actions.setWebpackConfig({
+    resolve: {
+      alias: {
+        '~src': path.join(path.resolve(__dirname, 'src'))
+      }
+    }
+  });
+};
 
 exports.createSchemaCustomization = ({ actions, schema }) => {
   const { createTypes } = actions;

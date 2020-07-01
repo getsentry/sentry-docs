@@ -14,7 +14,7 @@ import CodeTabs, { CodeContext, useCodeContextState } from './codeTabs';
 import Break from './break';
 
 import 'prismjs/themes/prism-tomorrow.css';
-import '../css/screen.scss';
+import '~src/css/screen.scss';
 
 const mdxComponents = {
   Alert,
