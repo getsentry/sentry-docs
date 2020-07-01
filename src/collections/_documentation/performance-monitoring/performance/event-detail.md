@@ -10,7 +10,7 @@ From [Performance](/performance-monitoring/performance/index) and [Discover](/pe
 Information about this specific event is located in the sidebar, listing out the Event ID, date and time of occurrence, project, and downloadable JSON package. More can be found under Event Tag Details. You'll also get a breakdown of operations, which will correspond to the waterfall span view as a legend.
 
 {% capture __alert_content -%}
-Currently, only root transactions are searchable. Any span data that inherits from it's root are not. 
+Currently, only root transactions are searchable. Any span data that inherits from its root are not. 
 {%- endcapture -%}
 {%- include components/alert.html
     title="Warning"
@@ -20,19 +20,29 @@ Currently, only root transactions are searchable. Any span data that inherits fr
 
 ## Span View
 
+The span view is a split view where the left-hand side shows the transaction’s span tree, and the right-hand side represents each span as a colored rectangle. Within the tree view, Sentry identifies spans by their `op` and `description` values. If a span doesn’t have a description, Sentry uses the span’s id as a fallback. The first span listed is always the transaction’s root span, from which all other spans in the transaction descend.
+
 [{% asset performance/span-details.png alt="Span detail view shows the span id, trace id, parent span id, and other data such as tags." %}]({% asset performance/span-details.png @path %})
+
+To find these views, you can either go through the [Transaction Summary](/performance-monitoring/performance/transaction-summary) or [Query Builder](/performance-monitoring/discover-queries/query-builder/). Event IDs will be linked to open the corresponding Event Detail.
+
+**With Transaction Summary**
+
+Select the [Performance Homepage](/performance-monitoring/performance/index), then click the affected transaction to display the trace data.
+
+**With Query Builder**
+
+Scroll down to the "Trace Details" context panel in either the Issue Details or the Discover Event Details page, and click on the "View Summary" button. This will maintain the context of the current Sentry event.
+
+_Note_: Users on the Team or Business plans can also view a list of transaction events by clicking on the "Transactions" pre-built query in [Discover](/performance-monitoring/discover-queries/index) or by performing a search with the `event.type:transaction` condition the Discover Query Builder view.
 
 ### Minimap
 
-The minimap reflects the entirety of the transaction broken into spans. You can either click and drag your cursor across the minimap to zoom in or adjust the window selection by dragging the handlebar in from the side. This will affect the range you see in the waterfall view. 
+The minimap (top of the span view) reflects the entirety of the transaction broken into spans. You can either click and drag your cursor across the minimap to zoom in or adjust the window selection by dragging the handlebar (black dashed lines) in from the side. This will affect the range you see in the waterfall view. 
 
 ### Waterfall
 
 The waterfall view is a split view where the left reflects the transaction's span tree, and the right reflects each span as a horizontal bar (colors represent the operation). Within the tree, Sentry identifies spans by their `operation` and `description` values. If a span doesn't have a description, Sentry uses the span's ID as a fallback. The first span listed is always the transaction's root span, from which all other spans in the transaction descend. 
-
-_Missing Instrumentation_ 
-
-Gaps between spans may be marked as "Missing Instrumentation." TThis means a duration in the transaction that isn't accounted for by any of the transaction's spans. It likely means that you need to manually instrument that part of your process. Go back to the [performance setup](/performance-monitoring/setup) for details. 
 
 ### Span Details
 
@@ -49,7 +59,7 @@ The trace view may be limited to one project at a time if you're on the [Team pl
     level="info"
 %}
 
-_Traversing Transactions_
+**Traversing Transactions**
 
 Some spans within a transaction may be the parent of another transaction. Under these circumstances, some Span IDs will have a "View Child" or "View Children" button. These will potentially lead to another transaction or a list of transactions. 
 
@@ -63,3 +73,49 @@ Traversing between parent and child transactions is only available on the [Busin
     content=__alert_content
     level="info"
 %}
+
+**Adding Query Information and Parameters to Spans**
+
+Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
+
+For example, a 200+ character tagged request:
+
+`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=161803398874989484820458683436563811772030917980576`
+
+The 200+ character request above will become truncated to:
+
+`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
+
+Instead, using `span.set_tag` you could split the details of this query over several tags. This could be done over `columns`, `tables`, `conditions`, in this case, resulting in three different tags:
+
+```python
+import sentry_sdk
+
+...
+
+with sentry_sdk.start_span(op="db", transaction="query api") as span:
+    span.set_tag("columns", columns)
+    span.set_tag("tables", tables)
+    span.set_tag("conditions", conditions)
+    span.set_tag("query_format", query_format)
+    query_format = "SELECT {columns} FROM {tables} WHERE {conditions}"
+    query = query_format.format(
+        columns=columns,
+        tables=tables,
+        conditions=conditions,
+    )
+    ...
+```
+
+columns
+: `first_column, second_column, third_columns, fourth_column, fifth_column, sixth_column`
+
+tables
+: `this_is_a_long_table_name`
+
+conditions
+: `first_column=some_value AND second_column=some_other_value AND third_column=yet_another_value`
+
+### Missing Instrumentation 
+
+Gaps between spans may be marked as "Missing Instrumentation." This means a duration in the transaction that isn't accounted for by any of the transaction's spans. It likely means that you need to manually instrument that part of your process. Go back to the [performance setup](/performance-monitoring/setup) for details. 

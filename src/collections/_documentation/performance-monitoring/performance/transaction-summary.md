@@ -36,7 +36,9 @@ The table also updates dynamically if you change any of the selections in the gl
 
 When viewing transactions, you may want to create more curated views. Click "Open in Discover" above the table to create a custom query to investigate further. For more details, see the full documentation for the Discover [Query Builder](/performance-monitoring/discover-queries/query-builder/).
 
-## Metrics Sidebar
+_Note_: Currently, only transaction data - the transaction name and any attributes the transaction inherits from its root span - is searchable. Data contained in spans other than the root span is not indexed and therefore cannot be searched.
+
+## Related Issues
 
 The sidebar contains helpful supplementary information about this transaction's [User Misery](/performance-monitoring/performance/metrics/#user-misery), [Apdex](/performance-monitoring/performance/metrics/#apdex), [Throughput](/performance-monitoring/performance/metrics/#throughput-total-tpm-tps), [Latency](/performance-monitoring/performance/metrics/#latency), and more. You'll also find a Tag Summary (facet map) for a list of common tags related to this transaction.
 
