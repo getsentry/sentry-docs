@@ -30,7 +30,7 @@ On-demand capacity is billed at the end of each billing cycle. You are charged p
 
 Reserved capacity allows you to prepay for significant discounts. Your prepaid, reserved capacity is always applied before on-demand capacity. Unused reserved capacity expires at the end of each billing month.
 
-Every Sentry account includes a varying amount of reserved capacity. For example, our base team plan includes 50k errors, 100k transactions, and 1 GB of attachments per month.
+Every Sentry account includes a varying amount of reserved capacity. For example, our base Team plan includes 50k errors, 100k transactions, and 1 GB of attachments per month.
 
 ### Billing Cycles
 
