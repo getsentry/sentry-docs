@@ -224,10 +224,9 @@ When Sentry sees this commit, we’ll reference the commit in the issue, and whe
 %}
 
 #### Alternatively: Without a Repository Integration
+If you don’t want Sentry to connect to your repository, or you’re using an unsupported repository provider or VCS (e.g. Perforce), you can tell Sentry about your raw commit metadata via the CLI or the API using the [create release endpoint](/api/releases/post-organization-releases/).
 
-If you don't want Sentry to connect to your repository, or you're using an unsupported repository provider or VCS (e.g. Perforce), you can alternatively tell Sentry about your raw commit metadata via the API using the [create release endpoint](/api/releases/post-organization-releases/).
-
-#### Using the CLI
+##### Using the CLI
 ```bash
 # Assumes you're in a git repository
 export SENTRY_AUTH_TOKEN=...
@@ -247,9 +246,7 @@ Alternatively, you can use the `--local` flag to enable this behavior by default
 sentry-cli releases set-commits --local $VERSION
 ```
 
-
-
-##### Formatting Commit Metadata
+##### Using the API
 
 In order for Sentry to use your commits, you must format your commits to match this form:
 
