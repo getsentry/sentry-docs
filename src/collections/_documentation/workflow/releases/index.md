@@ -247,6 +247,7 @@ sentry-cli releases set-commits --local $VERSION
 ```
 
 ##### Using the API
+To tell Sentry about your commit metadata via the API use the [create release endpoint](/api/releases/post-organization-releases/).
 
 In order for Sentry to use your commits, you must format your commits to match this form:
 
