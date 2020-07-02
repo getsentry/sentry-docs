@@ -639,7 +639,7 @@ Sentry.init({
 
 #### Decluttering Sentry
 
-The first thing to do is consider constructing a whitelist of domains which might raise acceptable exceptions.
+The first thing to do is consider constructing an allowed list of domains which might raise acceptable exceptions.
 
 If your scripts are loaded from `cdn.example.com` and your site is `example.com` it’d be reasonable to set `allowUrls` to:
 
