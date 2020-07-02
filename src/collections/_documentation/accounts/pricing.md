@@ -55,18 +55,9 @@ Team and Business plans have the option to configure rate limits for each projec
 If your projects have a high volume of events, you can control how many errors Sentry receives by reviewing Sentry's guide to [Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/).
 
 ## FAQ
-
-`What happens when my trial expires?`
-
-You are downgraded to your original plan, which has limited members and events. We'll be reminding you to choose whether to adopt the updated plans Sentry offers to take advantage of Performance Monitoring.
-
-`Who sees my events?`
-
-You control who can see events. We allow you to add your team members, as well as share events with anonymous users should you wish to do so.
-
-`Events now include transactions, errors, and attachments? What's the difference?`
-
-An *event* is one instance of you sending Sentry data. What can be captured as an error depends on your platform. In general, if you have something that looks like an exception, it will be sent to Sentry as an error event. *Attachments* are files uploaded in the same request, such as log files. In addition, the files within the crash uploaded to Sentry can be persisted by enabling storage of crash reports. A *transaction* represents a single instance of a service being called to support an operation you want to measure or track, like a page load.
+{% comment %}
+The on-demand chart needs to sit as the first question to enable proper linking from the sign up page. 
+{% endcomment %}
 
 `Is there detailed information for each plan?`
 
@@ -280,6 +271,18 @@ Yes, the following table details costs for errors, transactions, and attachments
     </tr>
   </tbody>
 </table>
+
+`What happens when my trial expires?`
+
+You are downgraded to your original plan, which has limited members and events. We'll be reminding you to choose whether to adopt the updated plans Sentry offers to take advantage of Performance Monitoring.
+
+`Who sees my events?`
+
+You control who can see events. We allow you to add your team members, as well as share events with anonymous users should you wish to do so.
+
+`Events now include transactions, errors, and attachments? What's the difference?`
+
+An *event* is one instance of you sending Sentry data. What can be captured as an error depends on your platform. In general, if you have something that looks like an exception, it will be sent to Sentry as an error event. *Attachments* are files uploaded in the same request, such as log files. In addition, the files within the crash uploaded to Sentry can be persisted by enabling storage of crash reports. A *transaction* represents a single instance of a service being called to support an operation you want to measure or track, like a page load.
 
 `What is included in the free trial for current customers?`
 
