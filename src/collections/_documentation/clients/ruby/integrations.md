@@ -23,7 +23,7 @@ require 'sentry-raven-without-integrations'
 Raven.inject_only(:railties, :rack, :rake)
 ```
 
-To blacklist integrations:
+To deny integrations:
 
 ```ruby
 require 'sentry-raven-without-integrations'
