@@ -5,6 +5,46 @@ sidebar_order: 2000
 
 `@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the main process and renderers, as well as collect native crash reports (Minidumps).
 
+## Using it together with Webpack
+
+If you are seeing an issue similar to `TypeError: mod.require is not a function` it means webpack is bundling browser and node code togther. To fix this change the `init` code / include statements of Sentry to:
+
+```js
+const { init } = (process.type === 'browser'
+  ? require('@sentry/electron/dist/main')
+  : require('@sentry/electron/dist/renderer'))
+```
+
+Use the Webpack `DefinePlugin`:
+
+```js
+  // main process
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.type': '"browser"'
+    }),
+
+   // renderer process
+   new webpack.DefinePlugin({
+     'process.type': '"renderer"'
+   }),
+  ]
+```
+
+This means that when bundling each process, Webpack replaces `process.type` with a constant and then removes the inaccessible code:
+
+```js
+const { init } = ('browser' === 'browser'
+  ? require('@sentry/electron/dist/main')
+  : require('@sentry/electron/dist/renderer'))
+
+// becomes >
+
+const { init } = (true
+  ? require('@sentry/electron/dist/main')
+  : undefined)
+```
+
 ## Wizard
 
 Our Sentry Wizard can help with the setup process. Make sure you have installed the `@sentry/wizard` npm package globally, then run:
