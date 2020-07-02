@@ -7,7 +7,7 @@ sidebar_order: 2000
 
 ## Using it together with Webpack
 
-If you are seeing an issue similar to `TypeError: mod.require is not a function` it means webpack is bundling browser and node code togther. To fix this change the `init` code / include statements of Sentry to:
+If you are seeing an issue similar to `TypeError: mod.require is not a function` it means webpack is bundling browser and node code together. To fix this change the `init` code / include statements of Sentry to:
 
 ```js
 const { init } = (process.type === 'browser'
@@ -210,4 +210,3 @@ To find out why Sentry needs your source maps and how to provide them visit: [So
 To allow Sentry to match source code references to uploaded source maps or source files, make sure your tool outputs files relative to your project root folder and prefixes them either with `/` or with `~/`. Some tools do this automatically (e.g. Webpack), or have a configuration option (e.g. TypeScript). For others, please see the section on rewriting source maps before uploading.
 
 The SDK will rewrite stack traces before sending them to Sentry. If your application generates manual stack traces for some reason, make sure stack frames always contain relative paths from the project root starting with `~/` or `app:///`.
-
