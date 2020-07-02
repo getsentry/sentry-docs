@@ -15,7 +15,7 @@ const { init } = (process.type === 'browser'
   : require('@sentry/electron/dist/renderer'))
 ```
 
-Use the Webpack `DefinePlugin`:
+And use the Webpack's `DefinePlugin` plugin to specify the process type:
 
 ```js
   // main process
