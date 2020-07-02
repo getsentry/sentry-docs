@@ -25,8 +25,8 @@ The SDK includes multiple `Integrations` - functional plugins that you can confi
 
 The integration is enabled by default and adds the following configuration options to the SDK:
 
-- `whitelistUrls`: Domains that might raise acceptable exceptions represented in a regex pattern format.
-- `blacklistUrls`: A list of strings or regex patterns that match error URLs which should be blocked from sending events (Configuring both options on the SDK can be used to block **subdomains** of the domains listed in `whitelistUrls`).
+- `allowUrls`: Domains that might raise acceptable exceptions represented in a regex pattern format.
+- `denyUrls`: A list of strings or regex patterns that match error URLs which should be blocked from sending events (Configuring both options on the SDK can be used to block **subdomains** of the domains listed in `allowUrls`).
 - `ignoreErrors`: Instruct the SDK to never send an error to Sentry if it matches any of the listed error **messages**. If no message is available, the SDK will try to compare against an underlying **exception type and value**.
 
 For more information and code samples checkout:

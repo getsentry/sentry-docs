@@ -78,7 +78,7 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 - Therefore, the option needs to be configured like this: `new ApmIntegrations.Tracing({tracingOrigins: ['api.example.com']})`
 - Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
 
-*NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not whitelist the `sentry-trace` header, the request might be blocked.
+*NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
 
 **beforeNavigation Option**s
 
