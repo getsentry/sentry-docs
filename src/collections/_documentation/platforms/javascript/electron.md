@@ -5,6 +5,46 @@ sidebar_order: 2000
 
 `@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the main process and renderers, as well as collect native crash reports (Minidumps).
 
+## Webpack Configuration
+
+If you are seeing an issue similar to `TypeError: mod.require is not a function`, it means that Webpack is bundling your browser and node code together. To fix this, change the import statement of Sentry's `init` method to:
+
+```js
+const { init } = (process.type === 'browser'
+  ? require('@sentry/electron/dist/main')
+  : require('@sentry/electron/dist/renderer'))
+```
+
+And use the Webpack's `DefinePlugin` plugin to specify the process type:
+
+```js
+plugins: [
+  // main process
+  new webpack.DefinePlugin({
+    'process.type': '"browser"'
+  }),
+
+  // renderer process
+  new webpack.DefinePlugin({
+    'process.type': '"renderer"'
+  }),
+]
+```
+
+With these changes, when bundling the code for each of processes, Webpack will replace `process.type` with the constant and removes the inaccessible code:
+
+```js
+const { init } = ('browser' === 'browser'
+  ? require('@sentry/electron/dist/main')
+  : require('@sentry/electron/dist/renderer'))
+
+// becomes >
+
+const { init } = (true
+  ? require('@sentry/electron/dist/main')
+  : undefined)
+```
+
 ## Wizard
 
 Our Sentry Wizard can help with the setup process. Make sure you have installed the `@sentry/wizard` npm package globally, then run:
@@ -170,4 +210,3 @@ To find out why Sentry needs your source maps and how to provide them visit: [So
 To allow Sentry to match source code references to uploaded source maps or source files, make sure your tool outputs files relative to your project root folder and prefixes them either with `/` or with `~/`. Some tools do this automatically (e.g. Webpack), or have a configuration option (e.g. TypeScript). For others, please see the section on rewriting source maps before uploading.
 
 The SDK will rewrite stack traces before sending them to Sentry. If your application generates manual stack traces for some reason, make sure stack frames always contain relative paths from the project root starting with `~/` or `app:///`.
-
