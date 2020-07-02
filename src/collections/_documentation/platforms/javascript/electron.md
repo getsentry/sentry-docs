@@ -18,17 +18,17 @@ const { init } = (process.type === 'browser'
 And use the Webpack's `DefinePlugin` plugin to specify the process type:
 
 ```js
+plugins: [
   // main process
-  plugins: [
-    new webpack.DefinePlugin({
-      'process.type': '"browser"'
-    }),
+  new webpack.DefinePlugin({
+    'process.type': '"browser"'
+  }),
 
-   // renderer process
-   new webpack.DefinePlugin({
-     'process.type': '"renderer"'
-   }),
-  ]
+  // renderer process
+  new webpack.DefinePlugin({
+    'process.type': '"renderer"'
+  }),
+]
 ```
 
 This means that when bundling each process, Webpack replaces `process.type` with a constant and then removes the inaccessible code:
