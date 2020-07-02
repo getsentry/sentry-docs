@@ -7,7 +7,7 @@ sidebar_order: 2000
 
 ## Webpack Configuration
 
-If you are seeing an issue similar to `TypeError: mod.require is not a function` it means webpack is bundling browser and node code together. To fix this change the `init` code / include statements of Sentry to:
+If you are seeing an issue similar to `TypeError: mod.require is not a function`, it means that Webpack is bundling your browser and node code together. To fix this, change the import statement of Sentry's `init` method to:
 
 ```js
 const { init } = (process.type === 'browser'
