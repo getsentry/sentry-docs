@@ -31,7 +31,7 @@ plugins: [
 ]
 ```
 
-This means that when bundling each process, Webpack replaces `process.type` with a constant and then removes the inaccessible code:
+With these changes, when bundling the code for each of processes, Webpack will replace `process.type` with the constant and removes the inaccessible code:
 
 ```js
 const { init } = ('browser' === 'browser'
