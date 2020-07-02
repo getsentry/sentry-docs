@@ -26,7 +26,7 @@ $ yarn start
 
 You will now be able to access docs via http://localhost:3000.
 
-Note: This is running both the Jekyll (port 9001) and Gatsby (port 8000) servers, with a proxy routing requests between the two. 
+Note: This is running both the Jekyll (port 9001) and Gatsby (port 8000) servers, with a proxy routing requests between the two.
 
 ## The Great Gatsby Migration
 
@@ -43,6 +43,28 @@ The repository currently contains a Jekyll site (`./`) as well as a Gatsby site 
 - This is likely brittle. We want to move away from Jekyll as quickly as possible, so ideally all new content is done in Gatsby.
 
 - You can determine which engine is used by viewing source and looking for `"Rendered with"` in the HTML.
+
+## MDX Components + Markdown
+
+:pray: that MDX v2 fixes this.
+
+MDX has its flaws. When rendering components, any text inside of them is treated as raw text (_not_ markdown). To work around this you can use the `<markdown>` tag, but it also has its issues. Generally speaking, put an empty after the opening tag, and before the closing tag.
+
+```jsx
+// dont do this as parsing will hit weird breakages
+<markdown>
+foo bar
+</markdown>
+```
+
+```jsx
+// do this@
+<markdown>
+
+foo bar
+
+</markdown>
+```
 
 ## Development mode (Gatsby-specific)
 

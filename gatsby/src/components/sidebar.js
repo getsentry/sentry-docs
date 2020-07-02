@@ -18,6 +18,7 @@ const navQuery = graphql`
           frontmatter {
             title
             sidebar_order
+            gatsby
           }
           fields {
             slug
@@ -148,12 +149,11 @@ const Sidebar = () => {
         const tree = toTree(
           sortBy(
             data.allFile.nodes
-              .filter(n => {
-                return !!(n.childMdx || n.childMarkdownRemark);
-              })
-              .map(n => {
-                return n.childMdx || n.childMarkdownRemark;
-              }),
+              .filter(n => !!(n.childMdx || n.childMarkdownRemark))
+              .map(n => n.childMdx || n.childMarkdownRemark)
+              // hide jekyll docs which indicate they're converted to gatsby
+              // this avoids duplicating urls (which filter out in the tree, but might be the wrong node)
+              .filter(n => !n.frontmatter.gatsby),
             n => n.fields.slug
           )
         );

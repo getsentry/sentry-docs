@@ -29,6 +29,7 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
       slug: String!
       jekyllOnly: Boolean
       gatsbyOnly: Boolean
+      gatsby: Boolean
     }
   `,
     schema.buildObjectType({
