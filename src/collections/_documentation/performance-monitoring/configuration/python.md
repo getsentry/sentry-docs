@@ -2,7 +2,7 @@
 hide_from_sidebar: true
 ---
 
-To get started with performance monitoring using Sentry's Python SDK, first install the `sentry_sdk` package:
+To get started with performance monitoring using Sentry's Python SDK, first install `sentry_sdk`:
 
 ```python
 import sentry_sdk
@@ -17,7 +17,7 @@ sentry_sdk.init(
 )
 ```
 
-Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured traces.
+Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured traces.
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
 
