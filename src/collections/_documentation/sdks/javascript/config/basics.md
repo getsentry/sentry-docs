@@ -4,7 +4,7 @@ excerpt: ""
 ---
 {%- capture __config_basic_content -%}
 
-```jsx
+```js
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   maxBreadcrumbs: 50,

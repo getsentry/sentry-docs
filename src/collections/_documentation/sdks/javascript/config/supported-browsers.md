@@ -99,7 +99,7 @@ Sentry's JavaScript SDK supports the following browsers:
 
 Prior to version 5.7.0, our JavaScript SDK needed some polyfills for older browsers like IE 11 and lower. If you are using it, please upgrade to the latest version or add the script tag below before loading our SDK.
 
-```bash
+```html
 <script src="https://polyfill.io/v3/polyfill.min.js?features=Promise%2CObject.assign%2CString.prototype.includes%2CNumber.isNaN"></script>
 ```
 

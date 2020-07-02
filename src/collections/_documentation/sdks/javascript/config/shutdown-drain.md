@@ -5,7 +5,7 @@ excerpt: ""
 
 {%- capture __shutdown_drain_content -%}
 
-```jsx
+```js
 Sentry.close(2000).then(function() { // perform something after close
 });
 ```

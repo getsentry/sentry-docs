@@ -80,12 +80,12 @@ If possible, we recommend that you turn this feature on to send all such data by
 Can be used to supply a “server name.” When provided, the name of the server is sent along and persisted in the event. For many integrations the server name actually corresponds to the device hostname even in situations where the machine is not actually a server. Most SDKs will attempt to auto-discover this value.
 {% endif %}
 {% if include.hide_allow_urls == nil %}
-`blocklistUrls`
+`denyUrls`
 
 A list of strings or regex patterns that match error URLs that should not be sent to Sentry. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
 {% endif %}
 {% if include.hide_deny_urls == nil %}
-`whitelistUrls`
+`allowUrls`
 
 A list of strings or regex patterns that match error URLs that should exclusively be sent to Sentry. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `[https://bar.com/myfile/foo.com](https://bar.com/myfile/foo.com)` By default, all errors will be sent.
 {% endif %}

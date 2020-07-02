@@ -108,7 +108,7 @@ Guideline: add an `include` statement provides information particular to the SDK
 
 Performance monitoring helps developers measure Apdex, Throughput, and trace slow transactions down to the poor performing API call or DB query. Available for both JavaScript and Python SDKs, performance monitoring helps you both diagnose problems and measure your application's overall health. 
 
-To get started with performance monitoring, first install the `@sentry/tracing` package:
+To get started with performance monitoring, first install the `@sentry/apm` package:
 
 
 

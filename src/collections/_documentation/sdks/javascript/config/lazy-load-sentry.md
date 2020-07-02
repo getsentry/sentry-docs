@@ -10,7 +10,7 @@ We recommend using our bundled CDN version for the browser as explained in the 
 We also offer an alternative we call the *Loader*. You install by adding this script to your website instead of the SDK bundle. This line is everything you need; the script is <1kB gzipped and includes the `Sentry.init` call with your DSN.
 
 ```bash
-<script src="https://js.sentry-cdn.com/bc367fd982144d75923219dca8f35ad1.min.js" crossorigin="anonymous"></script>
+<script src="___PUBLIC_KEY___.min.js" crossorigin="anonymous"></script>
 ```
 
 ## **Select the SDK Version to Load**
@@ -36,7 +36,7 @@ By default, the Loader contains all information needed for our SDK to function
 
 As explained, the Loader lazy loads and injects our SDK into your website, but you can also tell the loader to fetch it immediately instead of only fetching it when you need it. Setting `data-lazy` to `no` will tell the Loader to inject the SDK as soon as possible:
 
-```bash
+```html
 <script> Sentry.forceLoad(); Sentry.onLoad(function() { // Use whatever Sentry.* function you want });
 </script>
 ```
