@@ -6,7 +6,7 @@ import { Clipboard } from "react-feather";
 import { useOnClickOutside, useRefWithCallback } from "../utils";
 import CodeContext from "./codeContext";
 
-const KEYWORDS_REGEX = /\b___([A-Z_][A-Z0-9_]*)___\b/g;
+const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
 
 function makeKeywordsClickable(children) {
   if (!Array.isArray(children)) {
@@ -31,8 +31,8 @@ function makeKeywordsClickable(children) {
       }
       arr.push(
         Selector({
-          group: "PROJECT",
-          keyword: match[1],
+          group: match[1] || "PROJECT",
+          keyword: match[2],
           key: lastIndex
         })
       );

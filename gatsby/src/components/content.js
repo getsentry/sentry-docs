@@ -10,6 +10,8 @@ import SmartLink from "./smartLink";
 import CodeBlock from "./codeBlock";
 import CodeTabs from "./codeTabs";
 import CodeContext, { useCodeContextState } from "./codeContext";
+import JsCdnTag from "./jsCdnTag";
+import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
 
 const mdxComponents = {
@@ -19,7 +21,9 @@ const mdxComponents = {
   CodeBlock,
   CodeTabs,
   Break,
-  PlatformContent
+  ParamTable,
+  PlatformContent,
+  JsCdnTag
 };
 
 export default ({ file }) => {
