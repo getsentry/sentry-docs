@@ -75,7 +75,7 @@ import sentry_sdk
 while True:
   item = get_from_queue()
 
-  with sentry_sdk.start_span(op="task", transaction=item.get_transaction()):
+  with sentry_sdk.start_transaction(op="task", name=item.get_transaction_name()):
       # process_item may create more spans internally (see next examples)
       process_item(item)
 ```
