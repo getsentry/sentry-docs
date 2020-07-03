@@ -92,5 +92,23 @@ app.use(function processItems(req, res, next) {
   })
 });
 ```
-
 <!-- ENDWIZARD -->
+
+#### Retrieving a Transaction
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `undefined`. If you are using our Express integration by default we attach the Transaction to the Scope. So you could do something like this:
+
+```javascript
+app.get("/success", function successHandler(req, res) {
+  const transaction = Sentry.getCurrentHub().getScope().getTransaction();
+  if (transaction) {
+    let span = transaction.startChild({
+      op: "encode",
+      description: "parseAvatarImages"
+    });
+    // Do something
+    span.finish();
+  }
+  res.status(200).end();
+});
+```

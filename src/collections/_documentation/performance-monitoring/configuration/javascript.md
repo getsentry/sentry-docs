@@ -214,6 +214,24 @@ Sentry.init({
 });
 ```
 
+**Retrieving a Transaction**
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `undefined`. If you are using our Tracing integration by default we attach the Transaction to the Scope. So you could do something like this:
+
+```javascript
+function myJsFunction() {
+  const transaction = Sentry.getCurrentHub().getScope().getTransaction();
+  if (transaction) {
+    let span = transaction.startChild({
+      op: "encode",
+      description: "parseAvatarImages"
+    });
+    // Do something
+    span.finish();
+  }
+}
+```
+
 **Adding Query Information and Parameters to Spans**
 
 Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
@@ -237,7 +255,6 @@ span.setTag("baseUrl", baseUrl);
 span.setTag("endpoint", endpoint);
 span.setTag("parameters", parameters);
 http.get(`${base_url}/${endpoint}/`, data=parameters);
-...
 ```
 
 baseUrl
