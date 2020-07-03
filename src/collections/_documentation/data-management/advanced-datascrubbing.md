@@ -21,6 +21,8 @@ Go to your project- or organization-settings and click _Security and Privacy_ in
 
 As soon as you hit _Save_, we will attempt to find all creditcard numbers in your events going forward, and replace them with a series of `******`.
 
+For a more verbose tutorial check out [this blogpost](https://blog.sentry.io/2020/07/02/sentry-data-wash-now-offering-advanced-scrubbing/).
+
 Rules generally consist of three parts:
 
 - A [_Method_](#methods): What to do.
