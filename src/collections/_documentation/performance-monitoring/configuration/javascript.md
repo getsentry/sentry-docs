@@ -21,7 +21,7 @@ Next, initialize the integration in your call to `Sentry.init`:
 import * as Sentry from '@sentry/browser';
 import { Integrations as ApmIntegrations } from '@sentry/apm';
 Sentry.init({
-  dsn: '"___PUBLIC_DSN___"',
+  dsn: '___PUBLIC_DSN___',
   release: 'my-project-name@' + process.env.npm_package_version,
   integrations: [
     new ApmIntegrations.Tracing(),
@@ -78,7 +78,7 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 - Therefore, the option needs to be configured like this: `new ApmIntegrations.Tracing({tracingOrigins: ['api.example.com']})`
 - Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
 
-*NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not whitelist the `sentry-trace` header, the request might be blocked.
+*NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
 
 **beforeNavigation Option**s
 
@@ -267,10 +267,11 @@ endpoint
 
 parameters
 
-: ```{
-"user_id": 314159265358979323846264338327,
-"tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
-"product_name": PlantToHumanTranslator,
-"product_id": 161803398874989484820458683436563811772030917980576,
-}
+: ```json
+    {
+        "user_id": 314159265358979323846264338327,
+        "tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
+        "product_name": "PlantToHumanTranslator",
+        "product_id": 161803398874989484820458683436563811772030917980576,
+    }
 ```

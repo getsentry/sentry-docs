@@ -24,10 +24,10 @@ Compare graphs side by side to find any relevant correlations. For example, if a
 
 ## Transaction Table
 
-Below the graphs are a list of transactions that may be filtered down based on global header and search condition filters. The provided columns offer details about each transaction. 
+Below the graphs are a list of transactions that may be filtered down based on global header and search condition filters. The provided columns offer details about each transaction.
 
 - Transaction Name
-- Project 
+- Project
 - [TPM](/performance-monitoring/performance/metrics/#throughput-total-rpm-rps)
 - [P50](/performance-monitoring/performance/metrics/#average-transaction-duration)
 - [P95](/performance-monitoring/performance/metrics/#p95-threshold)
@@ -38,4 +38,4 @@ Below the graphs are a list of transactions that may be filtered down based on g
 
 ## Key Transaction View
 
-If you have transactions you frequently return to;  you can mark each one off as a key transaction in their corresponding [summary views](/performance-monitoring/performance/transaction-summary/#key-transaction). This enables a shortcut to view only Key Transactions by toggling the tab in the upper right corner of the homepage.
+If you have transactions you frequently return to;  you can mark each one as a key transaction in their corresponding [summary views](/performance-monitoring/performance/transaction-summary/#key-transaction). This enables a shortcut to view only Key Transactions by toggling the tab in the upper right corner of the homepage.

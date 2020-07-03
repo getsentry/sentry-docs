@@ -11,7 +11,7 @@ When you [install](/error-reporting/quickstart/?platform=cordova) `sentry-cordov
 
 ## Configuration
 
-You will need to whitelist Sentry's domain in your `config.xml` like:
+You will need to allow Sentry's domain in your `config.xml` like:
 
 ```xml
 <access origin="sentry.io" />

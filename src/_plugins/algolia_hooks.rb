@@ -48,8 +48,9 @@ module Jekyll
               record[:categories].push doc_root
             end
           end
+          record
         end
-        records
+        records.reject { |r| r[:gatsby] }
       end
 
     end

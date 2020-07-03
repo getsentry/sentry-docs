@@ -224,10 +224,30 @@ When Sentry sees this commit, we’ll reference the commit in the issue, and whe
 %}
 
 #### Alternatively: Without a Repository Integration
+If you don’t want Sentry to connect to your repository, or you’re using an unsupported repository provider or VCS (e.g. Perforce), you can tell Sentry about your raw commit metadata via the CLI or the API.
 
-If you don't want Sentry to connect to your repository, or you're using an unsupported repository provider or VCS (e.g. Perforce), you can alternatively tell Sentry about your raw commit metadata via the API using the [create release endpoint](/api/releases/post-organization-releases/).
+##### Using the CLI
+```bash
+# Assumes you're in a git repository
+export SENTRY_AUTH_TOKEN=...
+export SENTRY_ORG=my-org
+VERSION=$(sentry-cli releases propose-version)
 
-##### Formatting Commit Metadata
+# Create a release
+sentry-cli releases new -p project1 -p project2 $VERSION
+
+# Associate commits with the release
+sentry-cli releases set-commits --auto $VERSION
+```
+If you don't have a repo-based integration associated with your sentry organization, then the `--auto` flag will automatically use the git tree of your local repo, and associate commits between the previous release's commit and the current head commit with the release. If this is the first release, Sentry will use the latest 20 commits. This behavior is configurable with the `--initial-depth` flag. 
+
+Alternatively, you can use the `--local` flag to enable this behavior by default.
+```bash
+sentry-cli releases set-commits --local $VERSION
+```
+
+##### Using the API
+To tell Sentry about your commit metadata via the API use the [create release endpoint](/api/releases/post-organization-releases/).
 
 In order for Sentry to use your commits, you must format your commits to match this form:
 

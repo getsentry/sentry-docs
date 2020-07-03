@@ -19,6 +19,7 @@ function getTabTitle(node) {
   return (match && match[1]) || "";
 }
 
+// TODO(dcramer): this should only operate on MDX
 module.exports = ({ markdownAST }, { className = "code-tabs-wrapper" }) => {
   let lastParent = null;
   let pendingCode = [];
