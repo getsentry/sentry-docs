@@ -3,17 +3,17 @@ title: 'Transaction Summary'
 sidebar_order: 4
 ---
 
-Every transaction has a summary view that gives you a better understanding of how its overall health. With this view, you'll find graphs, instances of these events, stats, facet maps, related errors, and more. 
+Every transaction has a summary view that gives you a better understanding of its overall health. With this view, you'll find graphs, instances of these events, stats, facet maps, related errors, and more. 
 
 [{% asset performance/perf-summary.png alt="Example of Transaction Summary" %}]({% asset performance/perf-summary.png @path %})
 
 ## Key Transaction
 
-If you find an important transaction you want to return to, click "Key Transaction" in the upper right corner to star it. This will be saved so you can view this from your [Performance Homepage](/performance-monitoring/performance/index). Keep in mind any key transaction you mark will not be shared with others in your organization and are limited to ten per user. 
+If you find an important transaction you want to return to, click "Key Transaction" in the upper right corner to star it. This will be saved so you can view this from your [Performance Homepage](/performance-monitoring/performance/index). Keep in mind any key transaction you mark will not be shared with others in your organization and are limited to ten per user.
 
 ## Graphs
 
-### Duration Breakdown 
+### Duration Breakdown
 By graphing [P50](/performance-monitoring/performance/metrics/#p50-threshold), [P75](/performance-monitoring/performance/metrics/#p75-threshold), [P95](/performance-monitoring/performance/metrics/#p95-threshold), [P99](/performance-monitoring/performance/metrics/#p99-threshold), and P100 durations distinctly, you can utilize this display to see their transaction performance over time. Toggle the display of each segment by clicking on the legend (including Releases). Also, zoom in on specific slices to investigate spikes or possible performance regressions from a release.
 
 ### Latency Histogram
@@ -44,4 +44,4 @@ The sidebar contains helpful supplementary information about this transaction's 
 
 ## Related Issues
 
-This table will show you all related issues. In other words, any errors that are associated with this transaction. Click "Open in Issues" to see the full list. 
+This table will show you all related issues. In other words, any errors that are associated with this transaction. Click "Open in Issues" to see the full list.
