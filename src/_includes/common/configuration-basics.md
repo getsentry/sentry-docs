@@ -32,7 +32,7 @@ Turns debug mode on or off. If debug is enabled, the SDK will attempt to print o
 {% if include.hide_release == nil %}
 `release`
 
-Sets the release. The SDK will try to automatically configure a release out of the box if it's provided by `window.SENTRY_RELEASE`, but it's best to set it manually to guarantee that the release is in sync with your deploy integrations or source map uploads.
+Sets the release. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable, but it's best to set it manually to guarantee that the release is in sync with your deploy integrations or source map uploads.
 
 Release names are strings, but some formats are detected by Sentry and might be rendered differently. For more information have a look at [the releases documentation](/workflow/releases/).
 {% endif %}
