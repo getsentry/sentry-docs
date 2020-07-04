@@ -17,6 +17,7 @@ In JavaScript, you can use a function to modify the event or return a completely
 
 ```js
 Sentry.init({
+  dsn: '___PUBLIC_DSN___',
   beforeSend(event) {
     // Modify the event here
     if (event.user) {
@@ -36,7 +37,8 @@ In JavaScript, you can use a function to modify the event or return a completely
 ```js
 import * as Sentry from '@sentry/browser';
 
-init({
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
   beforeSend(event, hint) {
     const error = hint.originalException;
     if (error && error.message && error.message.match(/database unavailable/i)) {
@@ -62,7 +64,8 @@ Sentry.init({ sampleRate: 0.25 })
 ```js
 import * as Sentry from '@sentry/browser';
 
-init({
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
   beforeSend(event, hint) {
     const error = hint.originalException;
     if (error && error.message && error.message.match(/database unavailable/i)) {

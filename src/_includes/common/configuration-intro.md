@@ -7,14 +7,14 @@ Guideline: This page is common to all SDKs; it is stored in the common folder, n
 
 If you have questions, please ask Fiona or Daniel. 
 
-**The objective for this page is that a developer can view easily the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
+**The objective for this page is that a developer can easily view the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
 {% endcomment %}
 
 Sentry's {{ include.sdk_name }} SDK includes many configuration options that are automatically set. You can configure your SDK using the options outlined in these pages:
 
 - **[Basic Options](/sdks/{{ include.root_link }}/config/basics)** 
 
-    Learn more about how to configure the {{ include.sdk_name }} SDK. These options are set when the SDK is first initialized, passed to the `init()` as an object. In addition, this page discusses the Hooks `beforeSend` and `beforeBreadcrumb` in addition to transport options.
+    Learn more about how to configure the {{ include.sdk_name }} SDK. These options are set when the SDK is first initialized, passed to the `init()` as an object. This page also discusses the Hooks `beforeSend` and `beforeBreadcrumb` as well as transport options.
 
 - **[Filter Events Reported to Sentry](/sdks/{{ include.root_link }}/config/filter)**
 

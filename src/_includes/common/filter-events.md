@@ -7,7 +7,7 @@ Guideline: This page is common to all SDKs; it is stored in the common folder, n
 
 If you have questions, please ask Fiona or Daniel. 
 
-**The objective for this page is that a developer can view easily the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
+**The objective for this page is that a developer can easily view the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
 {% endcomment %}
 
 While sending all application errors to Sentry ensures you’ll be notified in real-time when errors occur in your code, often applications generate many errors, thus many notifications. The Sentry SDKs have several configuration options you can use to filter unwanted errors from leaving your application’s runtime. In addition, the Sentry web UI also offers methods to filter events.
@@ -39,7 +39,9 @@ Once applied, you can track the filtered events (numbers and cause) using the gr
 Proper event grouping maintains a meaningful issue stream and reduces redundant notifications. Sentry groups similar *events* into unique *issues* based on their *fingerprint*. An event’s fingerprint relies firstly on its **stack trace**.
 
 {{ include.filter-stack-trace }}
-<!-- Guideline: as appropriate, add the example and screen shot for the SDK your are documenting -->
+{% comment %} 
+Guideline: as appropriate, add the example and screen shot for the SDK your are documenting
+{% endcomment %}
 
 ### Apply Workflows
 
@@ -62,17 +64,21 @@ Configure your SDK to filter events by using the `beforeSend` callback method an
 All Sentry SDKs support the `beforeSend` callback method. `before-send` is called immediately before the event is sent to the server, so it’s the final place where you can edit its data. It receives the event object as a parameter, so you can use that to modify the event’s data or drop it completely (by returning `null`) based on custom logic and the data available on the event.
 
 {{ include.filter-init_content }}
-<!-- Guideline: add the `init` call for the SDK your are documenting -->
+{% comment %}
+Guideline: add the `init` call for the SDK your are documenting
+{% endcomment %}
 
 The `before-send` callback is passed both the `event` and a second argument, `hint`, that holds one or more hints. 
 
 Typically a `hint` holds the original exception so that additional data can be extracted or grouping is affected. In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
 
 {{ include.filter-example_content }}
-<!-- Guideline: add a code sample that supports this example for the SDK your are documenting -->
+{% comment %}
+Guideline: add a code sample that supports this example for the SDK your are documenting
+{% endcomment %}
 
 
-Note also that breadcrumbs can be filtered, as discussed in Understand Breadcrumbs <!-- TO DO : add link-->
+Note also that breadcrumbs can be filtered, as discussed in Understand Breadcrumbs {% comment %} TO DO: add link {% endcomment %}
 
 **Event hints**
 
@@ -87,7 +93,9 @@ If a sample rate is defined for the SDK, the SDK evaluates whether this event sh
 When you enable sampling in your SDK, you choose a percentage of collected errors to send to Sentry. For example, to sample 25% of your events:
 
 {{ include.filter-sample-rate_content }}
-<!-- Guideline: add a code sample that supports sampling at 25% example for the SDK your are documenting -->
+{% comment %}
+Guideline: add a code sample that supports sampling at 25% example for the SDK your are documenting
+{% endcomment %}
 
 For Sentry's Performance features (which are currently in Beta), we **strongly recommend**  sampling your data for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you’ll more easily prevent yourself from exceeding your organization’s [event quota](/accounts/quotas/), which will help you manage costs.
 
@@ -109,13 +117,15 @@ For breadcrumbs, the use of `hints` is implementation dependent. For XHR request
 In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
 
 {{ include.filter-hint_content }}
-<!-- Guideline: add a code sample that supports the SDK your are documenting -->
+{% comment %}
+Guideline: add a code sample that supports the SDK your are documenting
+{% endcomment %}
 
 #### Hints for Events
 
-`originalException`     The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
+`originalException`  The original exception that caused the Sentry SDK to create the event. This is useful for changing how the Sentry SDK groups events or to extract additional information.
 
-`syntheticException`    When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction.
+`syntheticException` When a string or a non-error object is raised, Sentry creates a synthetic exception so you can get a basic stack trace. This exception is stored here for further data extraction.
 
 #### Hints for Breadcrumbs
 

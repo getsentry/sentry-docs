@@ -8,14 +8,14 @@ Guideline: This page is comprehensive; it is stored in the common folder, nested
 
 If you have questions, please ask Fiona or Daniel. 
 
-**The objective for this page is that a developer can view easily the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
+**The objective for this page is that a developer can easily view the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
 {% endcomment %}
 
 The {{ include.sdk_name }} SDK is configurable using a variety of options. These options are set when the SDK is first initialized, passed to the `init()` as an object:
 
 {{ include.config_basic_content }}
 
-These options can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically.
+These options can be read from an environment variable - `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE` - are read automatically.
 
 {% if include.hide_dsn == nil %}
 `dsn` 
@@ -41,7 +41,7 @@ Release names are strings, but some formats are detected by Sentry and might be 
 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the Sentry web UI (for example, `staging` as compared to `prod` or similar).
 
-By default the SDK will try to read this value from the `window` environment variable.
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable. Note that the variable for `@sentry/browser` is `window.SENTRY_ENVIRONMENT`.
 {% endif %}
 {% if include.hide_error_types == nil %}
 `error_types`
@@ -55,7 +55,7 @@ By default all types of errors are be reported (equivalent to `E_ALL`).
 
 Configures the sample rate as a percentage of events to be sent in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of events are sent. If set to `0.1` only 10% of events will be sent. Events are picked randomly.
 {% endif %}
-{% if include.hide_max_breadcrumbs== nil %}
+{% if include.hide_max_breadcrumbs == nil %}
 `maxBreadcrumbs`
 
 This variable controls the total amount of breadcrumbs that should be captured. This variable defaults to `100`.

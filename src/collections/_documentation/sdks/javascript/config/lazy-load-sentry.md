@@ -37,7 +37,11 @@ By default, the Loader contains all information needed for our SDK to function
 As explained, the Loader lazy loads and injects our SDK into your website, but you can also tell the loader to fetch it immediately instead of only fetching it when you need it. Setting `data-lazy` to `no` will tell the Loader to inject the SDK as soon as possible:
 
 ```html
-<script> Sentry.forceLoad(); Sentry.onLoad(function() { // Use whatever Sentry.* function you want });
+<script> 
+Sentry.onLoad(function() {
+    // Use whatever Sentry.* function you want
+  });
+  Sentry.forceLoad();
 </script>
 ```
 
