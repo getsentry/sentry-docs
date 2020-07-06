@@ -400,10 +400,12 @@ SDK.
 
 The Native SDK can use different backends that are responsible for capturing
 crashes. The backend is configured at build-time, using the `SENTRY_BACKEND`
-CMake option.
+CMake option, with support for the following options:
 
-The available options are `crashpad`, which is the default on Windows and macOS,
-`breakpad`, which is the default on Linux, and `inproc`, the default on Android.
+- `crashpad`, which is the default on Windows and macOS,
+- `breakpad`, which is the default on Linux,
+- `inproc`, the default on Android, and
+- `none`, that disables capturing crashes altogether.
 
 ### Google Crashpad
 
@@ -439,9 +441,8 @@ The crashpad handler executable must be shipped alongside your application so
 that it can be launched when initializing the SDK. The path is evaluated
 according to shell lookup rules at runtime.
 
-It is advised that users of the Native SDK specify both the path to the
-`crashpad_handler` executable as well as the path to the database directory
-manually.
+It is advised to specify both the path to the `crashpad_handler` executable
+as well as the path to the database directory manually.
 
 ## Event Attachments (Preview)
 
