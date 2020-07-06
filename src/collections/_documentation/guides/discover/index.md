@@ -3,13 +3,13 @@ title: Uncover Trends with Discover
 sidebar_order: 5
 ---
 
-Discover is a powerful query engine that allows you to query through all your error metadata across projects and applications. As you've probably noticed the Sentry SDKs installed in your applications capture huge amounts of events as reflected in the event stream in your Sentry account. Each event is and enriched with contextual data about the underlying error, platform, device, user, and more. Also, we highly encourage enriching your error data through the SDK by adding custom tags and configuring the release and environment. For more information see [Put your Data to Work](/guides/enrich-data/).
+Discover is a powerful query engine that allows you to query all your error metadata across projects and applications. As you've probably noticed the Sentry SDKs installed in your applications capture huge amounts of events as reflected in the event stream in your Sentry account. Each event is enriched with contextual data about the underlying error, platform, device, user, and more. Also, we highly encourage enriching your error data through the SDK by adding custom tags and configuring the release and environment. For more information see [Put your Data to Work](/guides/enrich-data/).
 
 Let's go over some examples of how to work with all this data to gain some useful insights into the health and stability of your applications.
 
 ## Discover Through Issues
 
-The Sentry workflow (Alert - Triage - Resolve) notifies you in real-time when your application breaks, and then provides all the information and tools to triage and resolve the error. With Discover, users can take a more proactive approach to find the major issues that break their apps. The flow looks something like this:
+The Sentry workflow (Alert - Triage - Resolve) notifies you in real-time when your application breaks, then provides all the information and tools to triage and resolve the error. With Discover, users can take a more proactive approach to find the major issues that break their apps. The flow looks something like this:
 
 1. Open _Discover_ and click on _Build a new query_.
 
