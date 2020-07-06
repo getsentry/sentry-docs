@@ -28,10 +28,10 @@ Adding custom **structured data** that is unique to your applications, users, an
 
 ### Alert Rules
 
-Targeted alerts are key to focusing attention when your app breaks and notifying exactly those people who can fix it. The more data you add to your errors the more flexibility you'll gain in creating those pinpointed alerts. The following data types can be incorporated in your alert rules by adding the relevant conditions to trigger the alert:
+Targeted alerts are key to focusing attention when your app breaks and notifying exactly the people who can fix it. The more data you add to your errors, the more flexibility you gain to create pinpointed alerts. The following data types can be incorporated in your alert rules by adding the relevant conditions to trigger the alert:
 
 - **User Context**: Once a certain issue has impacted a defined threshold of unique users.
-- **Custom Tags**: When events contain custom tag values that match your defined matchers. This also applies to the **Release** configuration option which is considered a (top-level) tag.
+- **Custom Tags**: When events contain custom tag values that match your defined values.
 - **Environment**: When events are occurring in a specific environment.
 
 These can all come in handy in both issue and metric alerts, for instance:

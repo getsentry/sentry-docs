@@ -16,6 +16,8 @@ sidebar_order: 0
 
 * [Grouping & Fingerprints](/guides/grouping-and-fingerprints/)
 
+* [Uncover Trends with Discover](/guides/discover/)
+
 * [Moving on Up - Switch to Hosted Sentry](/guides/migration/)
 
 ## Tutorials
