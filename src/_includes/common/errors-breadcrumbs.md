@@ -18,35 +18,43 @@ SDKs will automatically start recording breadcrumbs by enabling integrations. Fo
 
 Each crumb in the trail includes:
 
-`timestamp`
+Message
 
-A timestamp representing when the breadcrumb occurred. The format is either a string as defined in RFC 3339 or a numeric (integer or float) value representing the number of seconds that have elapsed since the Unix epoch.
+: A string describing the event. It is rendered as text with all whitespace preserved. Often used as a drop-in for a traditional log message.
 
-`type`
+Data
 
-A semi internal attribute `type` can control the type of the breadcrumb. By default, all breadcrumbs are recoded as `default`, which makes it appear as a log entry. Other types are available that influence how they are rendered:
+: A key-value mapping of metadata around the event. This is often used
+  instead of message, but may be used in addition. The Sentry UI will display all the data sent.
 
-- `default`: The default breadcrumb rendering
-- `http`: Renders the breadcrumb as HTTP request
-- `error`: Renders the breadcrumb as a hard error
+Category
 
-The type is not used exclusively to customize the rendering. We **do not recommend** changing the type from the default.
+: A category under which to label the event. This crumb is similar to a logger
+  name, and will let you more easily understand the area an event took place,
+  such as `auth`.
 
-`category`
+Level
 
-A category under which to label the event. This crumb is similar to a logger name, and will let you more easily understand the area an event took place, such as `auth`.
+: The severity of an event. The level is set to one of five values, which are, in order of severity: `fatal`, `error`, `warning`, `info`, and `debug.error`.  The default is `info`.
 
-`message`
+Type
 
-A string describing the event; it is rendered as text with all whitespace preserved. Often used as a drop-in for a traditional log message.
+: A semi-internal attribute `type` can control the type
+  of the breadcrumb. By default all breadcrumbs are recorded as `default`, which
+  makes them appear as a log entry. Other types are available that
+  influence how they are rendered:
 
-`data`
+  * `default`: The default breadcrumb rendering.
+  * `http`: Renders the breadcrumb as HTTP request.
+  * `error`: Renders the breadcrumb as a hard error.
 
-A key-value mapping of metadata around the event. This crumb is frequently used instead of message, but may also be used in addition. The Sentry UI will display all the data sent.
+  _The type is not exclusively used to customize the rendering.  We do not recommend changing
+   the type from the default._
 
-`level`
+Timestamp
 
-The severity of an event. The level is set to one of five values, which are, in order of severity: `fatal`, `error`, `warning`, `info`, and `debug.error`.  The default is `info`.
+: A timestamp representing when the breadcrumb occurred. The format is either a string as defined in RFC 3339 or a numeric (integer or float) value representing the number of seconds that have elapsed since the Unix epoch.
+
 
 ### How You Can Modify
 

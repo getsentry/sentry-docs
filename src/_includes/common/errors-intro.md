@@ -19,3 +19,13 @@ When your SDK sends an event to Sentry, the event is enriched with data that hel
 - **[Breadcrumbs](/sdks/{{ include.root_link }}/errors/breadcrumbs)** 
 
     Learn more about what Sentry uses to create a trail of events (breadcrumbs) that happened prior to an issue. 
+    
+- **[Environments](/enriching-error-data/environments/)**
+
+    Learn more about how environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI.
+    
+- **[Releases](workflow/releases/)**
+
+    Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source.
+    
+    
