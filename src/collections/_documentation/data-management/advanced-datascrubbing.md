@@ -38,7 +38,12 @@ Rules generally consist of three parts:
 
 ## Data Types
 
-- _Regex Matches_: Custom Perl-style regex (PCRE). For example: `[a-zA-Z0-9]+`. Do not write `/[a-zA-Z0-9]+/g`, as that will search for a literal `/` and `/g`.
+- _Regex Matches_: Custom regular expression. For example: `[a-zA-Z0-9]+`. Some notes:
+
+  - Do not write `/[a-zA-Z0-9]+/g`, as that will search for a literal `/` and `/g`.
+  - For case-insensitivity, prefix your regex with `(?i)`.
+  - If you're trying to use one of the popular regex "IDEs" like [regex101.com](https://regex101.com/), Golang is usually closest to how Sentry understands your regex.
+
 - _Credit Card Numbers_: Any substrings that look like credit card numbers.
 - _Password Fields_: Any substrings that look like they may contain passwords. Any string that mentions passwords, auth tokens or credentials, any variable that is called `password` or `auth`.
 - _IP Addresses_: Any substrings that look like valid IPv4 or IPv6 addresses.
