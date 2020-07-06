@@ -1092,17 +1092,9 @@ Vercel is an all-in-one platform with Global CDN supporting static & JAMstack de
 
 **Installation**
 
-1. In Sentry, navigate to **Organization Settings** > **Integrations**.
+1. Visit <https://vercel.com/integrations/sentry/add>
 
-2. Find Vercel in the list of the available Global Integrations list and click **Vercel**.
-
-    [{% asset vercel/vercel_install_sentry.png alt="Sentry modal showing Vercel installation." %}]({% asset vercel/vercel_install_sentry.png @path %})
-
-3. Click the "Vercel Marketplace" button at the top right to install the integration.
-
-    [{% asset vercel/vercel_marketplace.png alt="Sentry modal showing Vercel marketplace button." %}]({% asset vercel/vercel_marketplace.png @path %})
-
-4. Select your account and click "Add".
+2. Select your account and click "Add".
 
     [{% asset vercel/vercel_install.png alt="Sentry modal showing Vercel installation." %}]({% asset vercel/vercel_install.png @path %})
 
@@ -1116,7 +1108,16 @@ Vercel is an all-in-one platform with Global CDN supporting static & JAMstack de
 
     [{% asset vercel/vercel_link_project.png alt="Sentry modal showing linking Sentry project to Vercel project." %}]({% asset vercel/vercel_link_project.png @path %})
 
-This step will generate environment variables in the selected Vercel project. You can see these in Vercel in **Project Settings** > **General** > **Environment Variables**.
+  * This step will generate environment variables in the selected Vercel project. Having these set means you can skip the [CLI Configuration step](https://github.com/getsentry/sentry-webpack-plugin#cli-configuration) in the Sentry Webpack Plugin setup. You can see these in Vercel in **Project Settings** > **General** > **Environment Variables**.
+
+
+    [{% asset vercel/vercel_env_vars.png alt="Sentry modal showing linking Sentry project to Vercel project." %}]({% asset vercel/vercel_env_vars.png @path %})
+
+    * `SENTRY_ORG` - the name of your Sentry organization
+    * `SENTRY_PROJECT` - the name of your linked Sentry project
+    * `SENTRY_AUTH_TOKEN` - the auth token from the Vercel Internal Integration that was created upon installation
+    * `NEXT_PUBLIC_SENTRY_DSN` - the linked Sentry project's DSN
+    * `VERCEL_GITHUB_COMMIT_SHA`, `VERCEL_GITLAB_COMMIT_SHA`, or `VERCEL_BITBUCKET_COMMIT_SHA` - your source code provider's commit sha, used for creating releases and associating commits
 
 **Usage**
 
