@@ -24,8 +24,7 @@ the following formats:
 
 {% capture __alert_content -%}
 Source maps, while also being debug information files, are handled differently
-in Sentry. For more information see [Source Maps in sentry-cli]({%- link
-_documentation/cli/releases.md -%}#sentry-cli-sourcemaps).
+in Sentry. For more information see [Source Maps in sentry-cli](/cli/releases/#sentry-cli-sourcemaps).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -78,8 +77,7 @@ Sentry might not need all of the above information to process crash reports.
 Still, it is always a good idea to provide all available debug information.
 
 `sentry-cli` can be used to list properties of supported debug files and
-validate their contents. See [_Debug Information Files in sentry-cli_]({%- link
-_documentation/cli/dif.md -%}) for more information.
+validate their contents. See [_Debug Information Files in sentry-cli_](/cli/dif/) for more information.
 
 The remainder of this section describes the file formats in detail.
 
@@ -258,8 +256,7 @@ their debug identifiers. You can copy this identifier and search for the exact
 files that match it in the _Debug Files_ settings screen.
 
 `sentry-cli` can help to print properties of debug information files like their
-debug identifier. See [_Checking Debug Information Files_]({%- link
-_documentation/cli/dif.md -%}#checking-files) for more information.
+debug identifier. See [_Checking Debug Information Files_](/cli/dif/#checking-files) for more information.
 
 ### GNU Build Identifiers
 
@@ -345,7 +342,7 @@ $ sentry-cli upload-dif -o <org> -p <project> /path/to/files
 ```
 
 For all available options and more information refer to [_Uploading Debug
-Information_]({%- link _documentation/cli/dif.md -%}#uploading-files).
+Information_](/cli/dif/#uploading-files).
 
 {% capture __alert_content -%}
 Always ensure that debug files are uploaded before deploying or releasing your
@@ -660,8 +657,7 @@ unobfuscated source code at runtime.
 
 To get source context for native applications, source code needs to be uploaded
 alongside the debug information files. The recommended way to do this is by
-using `sentry-cli`. See [Creating Source Bundles]({%- link
-_documentation/cli/dif.md -%}#creating-source-bundles) for more information.
+using `sentry-cli`. See [Creating Source Bundles](/cli/dif/#creating-source-bundles) for more information.
 
 Source bundles show up as regular debug files on the _Debug Files_ settings
 page. They are designated as "source bundle" and feature a `sources` tag. To

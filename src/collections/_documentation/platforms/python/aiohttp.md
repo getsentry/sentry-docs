@@ -58,5 +58,5 @@ Framework](https://docs.aiohttp.org/en/stable/web.html). A Python version of
   issue](https://github.com/getsentry/sentry-python/issues/220).
 
 * Logging with any logger will create breadcrumbs when
-  the [Logging]({% link _documentation/platforms/python/logging.md %})
+  the [Logging](/platforms/python/logging/)
   integration is enabled (done by default).

@@ -17,10 +17,10 @@ to `integrations` option. For example: to change fatal error handler
 
 _Import name: `Sentry.Integrations.InboundFilters`_
 
-This integration allows developers to ignore specific errors based on the type of message, as well as blocklist/whitelist URLs from which the exception originated.
-Keep in mind that blocklist and whitelist work only for captured exceptions, not raw message events.
+This integration allows developers to ignore specific errors based on the type of message, as well as deny/allow URLs from which the exception originated.
+Keep in mind that denyUrl and allowUrl work only for captured exceptions, not raw message events.
 
-To configure it, use `ignoreErrors`, `blocklistUrls` and `whitelistUrls` SDK options directly.
+To configure it, use `ignoreErrors`, `denyUrls` and `allowUrls` SDK options directly.
 
 ### FunctionToString
 

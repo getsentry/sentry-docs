@@ -23,7 +23,7 @@ require 'sentry-raven-without-integrations'
 Raven.inject_only(:railties, :rack, :rake)
 ```
 
-To blacklist integrations:
+To deny integrations:
 
 ```ruby
 require 'sentry-raven-without-integrations'
@@ -59,7 +59,7 @@ gem "sentry-raven"
 
 ### Configuration
 
-Open up `config/application.rb` and configure the DSN, and any other [_settings_]({%- link _documentation/clients/ruby/config.md -%}) you need:
+Open up `config/application.rb` and configure the DSN, and any other [_settings_](/clients/ruby/config/) you need:
 
 ```ruby
 Raven.configure do |config|

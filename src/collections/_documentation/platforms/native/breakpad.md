@@ -7,8 +7,7 @@ title: 'Google Breakpad'
 As opposed to Crashpad, Breakpad uses in-process crash reporting. This is less robust and has several disadvantages over out-of-process crash reporting. Unless you have integrated Breakpad already, we strongly recommend you to consider using Crashpad instead.
 
 {% capture __alert_content -%}
-Sentry offers a higher-level [Native SDK]({%- link
-_documentation/platforms/native/index.md -%}) that has an integration with
+Sentry offers a higher-level [Native SDK](/platforms/native/) that has an integration with
 Breakpad. If you're setting up Breakpad for the first time, you might save some
 time this way!
 {%- endcapture -%}

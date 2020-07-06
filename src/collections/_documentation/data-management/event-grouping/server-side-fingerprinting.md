@@ -4,7 +4,7 @@ sidebar_order: 1
 ---
 
 Server-side fingerprinting is also configured with a config similar to
-[grouping enhancements]({% link _documentation/data-management/event-grouping/grouping-enhancements.md %}),
+[grouping enhancements](/data-management/event-grouping/grouping-enhancements/),
 but the syntax is slightly different. The matchers are the same
 but instead of flipping flags, a fingerprint is assigned that overrides the
 default grouping entirely.
@@ -24,7 +24,7 @@ The matchers are:
 - `value`: matches on an exception value
 - `message`: matches on a log message
 
-The matchers also include the following from Custom Grouping Enhancements. See [grouping enhancements]({% link _documentation/data-management/event-grouping/grouping-enhancements.md %}#rules) for more info on how they work:
+The matchers also include the following from Custom Grouping Enhancements. See [grouping enhancements](/data-management/event-grouping/grouping-enhancements/#rules) for more info on how they work:
 
 - `family`
 - `path`

@@ -87,6 +87,17 @@ To initialize the SDK manually, disable the auto initialization. You can do so b
 </application>
 ```
 
+Or, to completely remove the merging of the `ContentProvider`:
+
+```xml
+<application>
+    <provider
+        android:name="io.sentry.android.core.SentryInitProvider"
+        android:authorities="${applicationId}.SentryInitProvider"
+        tools:node="remove" />
+</application>
+```
+
 The next step is to initialize the SDK directly in your code.
 
 The SDK can catch errors and crashes only after you've initialized it. So, we recommend calling `SentryAndroid.init` in the instance of the Application class right after the application is created. 
@@ -175,7 +186,7 @@ public class DemoClass {
 
 ## ProGuard
 
-To use ProGuard with Sentry, upload the ProGuard mapping files by using our Gradle integration (**recommended**) or manually by using [sentry-cli]({%- link _documentation/cli/dif.md -%}#proguard-mapping-upload).
+To use ProGuard with Sentry, upload the ProGuard mapping files by using our Gradle integration (**recommended**) or manually by using [sentry-cli](/cli/dif/#proguard-mapping-upload).
 
 ### Gradle Integration
 
@@ -202,7 +213,7 @@ buildscript {
 
 The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard/R8. The credentials for the upload step are loaded via environment variables.
 
-For more information, see the [full sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values).
+For more information, see the [full sentry-cli documentation](/cli/configuration/#configuration-values).
 
 At the very minimum you will need something like this:
 
@@ -212,7 +223,7 @@ defaults.org=your-org
 auth.token=YOUR_AUTH_TOKEN
 ```
 
-You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options, see the [full sentry-cli documentation]({%- link _documentation/cli/configuration.md -%}#configuration-values).
+You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options, see the [full sentry-cli documentation](/cli/configuration/#configuration-values).
 
 ### Gradle Configuration
 
@@ -255,11 +266,11 @@ Once Sentry receives an event with the updated release version, a new release ob
 
 With the releases you can:
 
-- Build queries and reports in the [Discover]({%- link _documentation/performance/discover/index.md -%}) page to correlate bugs with releases
+- Build queries and reports in the [Discover](/performance-monitoring/discover-queries/) page to correlate bugs with releases
 - Filter events and issues by the release version directly in the tag search on the Issues and Events pages
 - Check what new issues were introduced with the new release
 
-With the releases and a [GitHub]({%- link _documentation/workflow/integrations/global-integrations.md -%}#github)/[GitLab]({%- link _documentation/workflow/integrations/global-integrations.md -%}#gitlab) integration, you can:
+With the releases and a [GitHub](/workflow/integrations/global-integrations/#github)/[GitLab](/workflow/integrations/global-integrations/#gitlab) integration, you can:
 
 - Determine the issues and regressions introduced in a new release
 - Receive suggestions about which commit caused an issue and who is likely responsible
@@ -307,7 +318,7 @@ SentryAndroid.init(this, options -> {
 
 ### Release Health
 
-Monitor the [health of releases]({%- link _documentation/workflow/releases/health.md -%}) by observing user adoption, usage of the application, percentage of [crashes]({%- link _documentation/workflow/releases/health.md -%}#crash), and [session data]({%- link _documentation/workflow/releases/health.md -%}#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
+Monitor the [health of releases](/workflow/releases/health/) by observing user adoption, usage of the application, percentage of [crashes](/workflow/releases/health/#crash), and [session data](/workflow/releases/health/#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
 To benefit from the health data you must use at least version 2.1.0 of the Android SDK, and enable the collection of release health metrics in the AndroidManifest.xml file.
 
@@ -344,7 +355,7 @@ By default, the session terminates once the application is in the background for
 
 If you want to track the sessions manually, use the API methods `startSession` and `endSession` on the Sentry class.
 
-For more details, see the [full documentation on Release Health]({%- link _documentation/workflow/releases/health.md -%}).
+For more details, see the [full documentation on Release Health](/workflow/releases/health/).
 
 ### Identification of the User
 
@@ -402,7 +413,7 @@ Most SDKs generally support configuring tags by configuring the scope:
 Sentry.setTag("tagKey", "tagValue");
 ```
 
-For more information, see [Tagging Events]({%- link _documentation/enriching-error-data/additional-data.md -%}#tags) in Context.
+For more information, see [Tagging Events](/enriching-error-data/additional-data/#tags) in Context.
 
 ### Setting the Level
 
@@ -419,7 +430,7 @@ Sentry uses a fingerprint to decide how to group errors into issues.
 
 For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be a list of strings.
 
-For code samples, see [Grouping & Fingerprints]({%- link _documentation/data-management/event-grouping/index.md -%}#use-cases).
+For code samples, see [Grouping & Fingerprints](/data-management/event-grouping/#use-cases).
 
 For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
@@ -643,6 +654,21 @@ And, add to `multidex-config.pro` the following lines:
 
 If you experience issues like `Could not find class` on devices running the `Dalvik VM`, you may expand the above rules to keep the necessary classes in the main dex file.
 
+### AndroidX Support
+
+Sentry uses the AndroidX libraries for detecting when the Application is either in the background or in the foreground. This is necessary for having an accurate result across all the Android OS versions.
+
+We check at runtime for availability, so if you're not using AndroidX libraries, you can remove them from Sentry's transitive dependencies.
+
+```groovy
+implementation ('io.sentry:sentry-android:{version}') {
+    exclude group: 'androidx.lifecycle', module: 'lifecycle-process'
+    exclude group: 'androidx.lifecycle', module: 'lifecycle-common-java8'
+}
+```
+
+Be aware that by removing those transitive dependencies, the automatic session tracking won't work, but you can still do it manually by calling the public APIs `startSession` and `endSession`.
+
 ## Integrating the NDK
 
 To use the Android NDK in your native code, include the Sentry NDK libraries into your project so that the compiler can link the libraries during the build.
@@ -701,7 +727,7 @@ Java_io_sentry_demo_NativeDemo_crash(JNIEnv *env, jclass cls) {
 }
 ```
 
-To symbolicate the stack trace from native code, we need to have access to the debug symbols of your application. Please check the full documentation on [uploading files]({%- link _documentation/workflow/debug-files.md -%}#uploading-files) to learn more about the upload of the debug symbols.
+To symbolicate the stack trace from native code, we need to have access to the debug symbols of your application. Please check the full documentation on [uploading files](/workflow/debug-files/#uploading-files) to learn more about the upload of the debug symbols.
 
 Example of uploading all your .so files:
 

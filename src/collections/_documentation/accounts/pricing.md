@@ -54,7 +54,7 @@ Business and Enterprise plans have the option to configure rate limits for each 
 
 ## Managing your event volume
 
-If your projects have a high volume of events, you can control how many errors Sentry receives by reviewing Sentry's guide to [Manage Your Event Stream]({%- link _documentation/accounts/quotas/manage-event-stream-guide.md -%}).
+If your projects have a high volume of events, you can control how many errors Sentry receives by reviewing Sentry's guide to [Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/).
 
 ## FAQ
 
@@ -90,6 +90,6 @@ Your plan will continue until the end of the current billing cycle. After this, 
 
 `Where can I find my previous invoices/receipts?`
 
-Users with the role of [Billing or Owner]({%- link _documentation/accounts/membership.md -%}) can find all previous invoices by going to the Organization dropdown (top-left) > Usage & Billing > Usage & Payments > Receipts.
+Users with the role of [Billing or Owner](/accounts/membership/) can find all previous invoices by going to the Organization dropdown (top-left) > Usage & Billing > Usage & Payments > Receipts.
 
 Note: You must have either `Billing` or `Owner` permissions to access and/or make changes to information on this page. If you don't have those permissions, or you are not a member of the organization in Sentry, please reach out to a Billing member or an Owner to obtain invoices.

@@ -6,7 +6,15 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
       [100, "zzzzz"]
     end
   end
-  
+
+  def show_item(item)
+    if !item["document"].nil?
+      !item["document"].data["hide_from_sidebar"]
+    else
+      true
+    end
+  end
+
   def tree_for(docs, root)
     tree = []
 
@@ -33,30 +41,39 @@ Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
 
       items = new_root.nil? ? nil : tree_for(docs_without_index, new_root)
 
+      should_hide_from_sidebar = false
+
       if !items.nil?
         items.sort_by! { |i| sort_key(i) }
+
+        num_of_items_before = items.length()
+        items.select! { |i| show_item(i) }
+
+        should_hide_from_sidebar = items.length() < num_of_items_before && items.length() == 0
       end
 
-      hash = {
-        "slug" => name,
-        "name" => document.nil? ? name : document.data["title"],
-        "document" => document.nil? ? nil : document,
-        "items" => items,
-        "parent_path" => new_root
-      }
+      if !should_hide_from_sidebar
+        hash = {
+          "slug" => name,
+          "name" => document.nil? ? name : document.data["title"],
+          "document" => document.nil? ? nil : document,
+          "items" => items,
+          "parent_path" => new_root
+        }
 
-      tree.push hash
+        tree.push hash
+      end
     end
     tree
   end
-  
+
   def sort_tree(node)
     if !node["items"].nil?
       node["items"].sort_by! { |i| sort_key(i) }
       node["items"].each { |n| sort_tree(n) }
     end
   end
-  
+
   mapped = site.collections.map {|c| c[1].docs}
   documents = mapped.flatten()
   tree = tree_for(documents, "")

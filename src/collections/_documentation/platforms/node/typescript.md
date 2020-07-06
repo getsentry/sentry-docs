@@ -3,7 +3,7 @@ title: TypeScript
 sidebar_order: 3
 ---
 
-Please read the [Source Maps docs]({%- link _documentation/platforms/node/sourcemaps.md -%}) first to learn how to configure Sentry SDK, upload artifacts to our servers, or use Webpack (if you’re willing to use _ts-loader_ for your TypeScript compilation).
+Please read the [Source Maps docs](/platforms/node/sourcemaps/) first to learn how to configure Sentry SDK, upload artifacts to our servers, or use Webpack (if you’re willing to use _ts-loader_ for your TypeScript compilation).
 
 ## Sentry SDK and Source Maps with TypeScript
 

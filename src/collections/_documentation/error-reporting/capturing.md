@@ -11,7 +11,7 @@ issue group or be added to an already existing one based on Sentry's grouping
 algorithm.  Separately to capturing you can also record "breadcrumbs" that lead
 up to an event.  Breadcrumbs are different in that they will not create an event
 in Sentry but will be buffered until the next event is sent.  For more information
-have a look at [the breadcrumbs documentation]({% link _documentation/enriching-error-data/breadcrumbs.md %}).
+have a look at [the breadcrumbs documentation](/enriching-error-data/breadcrumbs/).
 
 ## Capturing Errors / Exceptions
 
@@ -38,9 +38,6 @@ into.  For more information about that consult the API documentation of the SDK.
 
 ## Next Steps
 
-* Need to add extra data to your events? Have a look at [our context
-  documentation]({% link _documentation/enriching-error-data/additional-data.md %}).
+* Need to add extra data to your events? Have a look at [our context documentation](/enriching-error-data/additional-data/).
 
-* Captured too much data? Have a look at [filtering]({% link
-  _documentation/error-reporting/configuration/filtering.md %}) to remove spam
-  or sensitive information from your events.
+* Captured too much data? Have a look at [filtering](/error-reporting/configuration/filtering/) to remove spam or sensitive information from your events.

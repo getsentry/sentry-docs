@@ -1,1 +1,1 @@
--  [_integrating with the .NET ecosystem_]({% link _documentation/platforms/dotnet/index.md %})
+-  [_integrating with the .NET ecosystem_](/platforms/dotnet/)

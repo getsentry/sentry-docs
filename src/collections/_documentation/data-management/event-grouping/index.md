@@ -5,9 +5,9 @@ sidebar_order: 0
 
 All events have a fingerprint. Events with the same fingerprint are grouped together into an issue. By default, Sentry will run one of our built-in grouping algorithms to generate a fingerprint based on information available within the event such as `stacktrace`, `exception`, and `message`. To extend the default grouping behavior or change it completely, you can use a combination of the following options:
 
-1. [SDK Fingerprinting]({%- link _documentation/data-management/event-grouping/sdk-fingerprinting.md -%})
-2. [Server-side Fingerprinting]({%- link _documentation/data-management/event-grouping/server-side-fingerprinting.md -%})
-3. [Custom Grouping Enhancements]({%- link _documentation/data-management/event-grouping/grouping-enhancements.md -%})
+1. [SDK Fingerprinting](/data-management/event-grouping/sdk-fingerprinting/)
+2. [Server-side Fingerprinting](/data-management/event-grouping/server-side-fingerprinting/)
+3. [Custom Grouping Enhancements](/data-management/event-grouping/grouping-enhancements/)
 
 ## Grouping Algorithms
 
@@ -29,7 +29,7 @@ Depending on the information available, the following data can be used for each 
 
 This grouping usually works well, but two specific situations can throw it off if not dealt with:
 
-- Minimized JavaScript sourcecode will destroy the grouping in really bad ways. Because of this you should ensure that Sentry can access your [Source Maps]({%- link _documentation/platforms/javascript/index.md -%}#source-maps).
+- Minimized JavaScript sourcecode will destroy the grouping in really bad ways. Because of this you should ensure that Sentry can access your [Source Maps](/platforms/javascript/#source-maps).
 - If you modify your stack trace by introducing a new level through the use of decorators, your stack trace will change and so will the grouping. To handle this, many SDKs support hiding irrelevant stack trace frames. (For example, the Python SDK will skip all stack frames with a local variable called `__traceback_hide__` set to _True_).
 
 ### Grouping By Exception

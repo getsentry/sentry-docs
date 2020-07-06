@@ -57,6 +57,6 @@ One common case to not add the DSN to the XML configuration file (which would in
 
 ### Sample
 
-For a [sample app.config](https://github.com/getsentry/sentry-dotnet/blob/master/samples/Sentry.Samples.Log4Net/app.config) or a complete working [sample](https://github.com/getsentry/sentry-dotnet/tree/master/samples/Sentry.Samples.Log4Net) to see it in action.
+For a [sample app.config](https://github.com/getsentry/sentry-dotnet/blob/master/samples/Sentry.Samples.Log4Net/app.config) or a complete working [sample](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.Log4Net) to see it in action.
 
 ![Sample event in Sentry]({% asset log4net-sample.gif @path %})

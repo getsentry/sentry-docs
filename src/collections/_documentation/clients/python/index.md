@@ -42,7 +42,7 @@ except ZeroDivisionError:
 
 ## Adding Context
 
-Much of the usefulness of Sentry comes from additional context data with the events. The Python client makes this very convenient by providing methods to set thread local context data that is then submitted automatically with all events. For instance you can use [`user_context()`]({%- link _documentation/clients/python/api.md -%}#raven.Client.user_context "raven.Client.user_context") to set the information about the current user:
+Much of the usefulness of Sentry comes from additional context data with the events. The Python client makes this very convenient by providing methods to set thread local context data that is then submitted automatically with all events. For instance you can use [`user_context()`](/clients/python/api/#raven.Client.user_context "raven.Client.user_context") to set the information about the current user:
 
 ```python
 def handle_request(request):
@@ -55,32 +55,32 @@ def handle_request(request):
 
 Raven Python is more than that however. To dive deeper into what it does, how it works and how it integrates into other systems there is more to discover:
 
--   [Basic Usage]({%- link _documentation/clients/python/usage.md -%})
--   [Advanced Usage]({%- link _documentation/clients/python/advanced.md -%})
--   [Logging Breadcrumbs]({%- link _documentation/clients/python/breadcrumbs.md -%})
--   [Integrations]({%- link _documentation/clients/python/integrations.md -%})
-    -   [Bottle]({%- link _documentation/clients/python/integrations.md -%}#bottle)
-    -   [Celery]({%- link _documentation/clients/python/integrations.md -%}#celery)
-    -   [Django]({%- link _documentation/clients/python/integrations.md -%}#django)
-    -   [Flask]({%- link _documentation/clients/python/integrations.md -%}#flask)
-    -   [Amazon Web Services Lambda]({%- link _documentation/clients/python/integrations.md -%}#lambda)
-    -   [Logbook]({%- link _documentation/clients/python/integrations.md -%}#logbook)
-    -   [Logging]({%- link _documentation/clients/python/integrations.md -%}#logging)
-    -   [Pylons]({%- link _documentation/clients/python/integrations.md -%}#pylons)
-    -   [Pyramid]({%- link _documentation/clients/python/integrations.md -%}#pyramid)
-    -   [RQ]({%- link _documentation/clients/python/integrations.md -%}#rq)
-    -   [Tornado]({%- link _documentation/clients/python/integrations.md -%}#tornado)
-    -   [WSGI Middleware]({%- link _documentation/clients/python/integrations.md -%}#wsgi)
-    -   [ZConfig logging configuration]({%- link _documentation/clients/python/integrations.md -%}#zconfig)
-    -   [ZeroRPC]({%- link _documentation/clients/python/integrations.md -%}#zerorpc)
-    -   [Zope/Plone]({%- link _documentation/clients/python/integrations.md -%}#zope)
--   [Transports]({%- link _documentation/clients/python/transports.md -%})
--   [Supported Platforms]({%- link _documentation/clients/python/platform-support.md -%})
--   [API Reference]({%- link _documentation/clients/python/api.md -%})
+-   [Basic Usage](/clients/python/usage/)
+-   [Advanced Usage](/clients/python/advanced/)
+-   [Logging Breadcrumbs](/clients/python/breadcrumbs/)
+-   [Integrations](/clients/python/integrations/)
+    -   [Bottle](/clients/python/integrations/#bottle)
+    -   [Celery](/clients/python/integrations/#celery)
+    -   [Django](/clients/python/integrations/#django)
+    -   [Flask](/clients/python/integrations/#flask)
+    -   [Amazon Web Services Lambda](/clients/python/integrations/#lambda)
+    -   [Logbook](/clients/python/integrations/#logbook)
+    -   [Logging](/clients/python/integrations/#logging)
+    -   [Pylons](/clients/python/integrations/#pylons)
+    -   [Pyramid](/clients/python/integrations/#pyramid)
+    -   [RQ](/clients/python/integrations/#rq)
+    -   [Tornado](/clients/python/integrations/#tornado)
+    -   [WSGI Middleware](/clients/python/integrations/#wsgi)
+    -   [ZConfig logging configuration](/clients/python/integrations/#zconfig)
+    -   [ZeroRPC](/clients/python/integrations/#zerorpc)
+    -   [Zope/Plone](/clients/python/integrations/#zope)
+-   [Transports](/clients/python/transports/)
+-   [Supported Platforms](/clients/python/platform-support/)
+-   [API Reference](/clients/python/api/)
 
 Resources:
 
--   [Documentation]({%- link _documentation/clients/python/index.md -%})
+-   [Documentation](/clients/python/)
 -   [Bug Tracker](http://github.com/getsentry/raven-python/issues)
 -   [Code](http://github.com/getsentry/raven-python)
 -   [Mailing List](https://groups.google.com/group/getsentry)

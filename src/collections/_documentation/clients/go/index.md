@@ -4,7 +4,7 @@ robots: noindex
 ---
 
 {% capture __alert_content -%}
-The `raven-go` SDK is no longer maintained and was superseded by the `sentry-go` SDK. Learn more about the project on [GitHub](https://github.com/getsentry/sentry-go) and check out the [migration guide]({%- link _documentation/platforms/go/migration.md -%}).
+The `raven-go` SDK is no longer maintained and was superseded by the `sentry-go` SDK. Learn more about the project on [GitHub](https://github.com/getsentry/sentry-go) and check out the [migration guide](/platforms/go/migration/).
 {%- endcapture -%}
 {%- include components/alert.html
   level="warning"
@@ -33,7 +33,7 @@ $ go get github.com/getsentry/raven-go
 ## Configuration {#configure}
 
 To use `raven-go`, you’ll need to import the `raven` package, then initialize your DSN globally. If you specify the `SENTRY_DSN` environment variable, this will be done automatically for you. The release and environment can also be specified in the environment variables `SENTRY_RELEASE` and `SENTRY_ENVIRONMENT` respectively.
-More on this in [Configuration]({%- link _documentation/clients/go/config.md -%}) section.
+More on this in [Configuration](/clients/go/config/) section.
 
 ```go
 package main
@@ -50,11 +50,11 @@ func init() {
 
 For more detailed information about how to get the most out of `raven-go` there is additional documentation available that covers all the rest:
 
-- [Configuration]({%- link _documentation/clients/go/config.md -%})
-- [Usage]({%- link _documentation/clients/go/usage.md -%})
-- [Context]({%- link _documentation/clients/go/context.md -%})
-- [Integrations]({%- link _documentation/clients/go/integrations.md -%})
-  - [net/http]({%- link _documentation/clients/go/integrations.md -%})
+- [Configuration](/clients/go/config/)
+- [Usage](/clients/go/usage/)
+- [Context](/clients/go/context/)
+- [Integrations](/clients/go/integrations/)
+  - [net/http](/clients/go/integrations/)
 
 Resources:
 

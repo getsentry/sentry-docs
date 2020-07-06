@@ -1,0 +1,65 @@
+---
+title: 'Metrics'
+sidebar_order: 3
+---
+Metrics provide insight about how users are experiencing your application. In [Performance](/performance-monitoring/performance/), we'll set you up with a few of the basic metrics to get you started. For further customizations on target thresholds, feel free to build out a query using the Discover [Query Builder](/performance-monitoring/discover-queries/query-builder/). By identifying useful thresholds to measure your application, you have a quantifiable measurement of your application's health. This means you can more easily identify when errors occur or if performance issues are emerging.
+
+## Apdex
+Apdex is an industry-standard metric used to track and measure user satisfaction based on your application response times. The Apdex score provides the ratio of satisfactory, tolerable, and frustrated requests in a specific transaction or endpoint. This metric provides a standard for you to compare transaction performance, understand which ones may require additional optimization or investigation, and set targets or goals for performance.
+
+- Below are the components of Apdex and its formula:
+    - **T**: Threshold for the target response time.
+    - **Satisfactory**: Users are satisfied using the app when their page load times are less than or equal to T.
+    - **Tolerable**: Users consider the app tolerable to use when their page load times are between T and 4T.
+    - **Frustrated**: Users are frustrated with the app when their page load times are greater than T.
+    - **Apdex**: (Number of Satisfactory Requests + (Number of Tolerable Requests/2)) / (Number of Total Requests)
+    
+## Failure Rate
+`failure_rate()` indicates the percentage of unsuccessful transactions. Sentry treats transactions with a status other than “ok,” “canceled,” and “unknown” as failures. For more details, see a [list of possible status values](https://develop.sentry.dev/sdk/event-payloads/span/).
+
+## Throughput (Total, TPM, TPS)
+Throughput indicates the number of transactions over a given time range (Total), average transactions per minute (TPM), or average transactions per second (TPS).
+
+## Latency
+
+### Average Transaction Duration
+
+Average Transaction Duration indicates the average response time for all occurrences of a given transaction.
+
+The following functions aggregate transaction durations:
+
+- average
+- various percentiles (by default, the pre-built Transactions query shows the 75th and 95th percentiles, but there are many other options, including a custom percentile)
+- maximum
+
+One use-case for tracking these statistics is to help you identify transactions that are slower than your organization's target Service Level Agreements (SLAs).
+
+A word of caution when looking at averages and percentiles: In most cases, you'll want to set up tracing so that only [a fraction](#data-sampling) of possible traces are actually sent to Sentry, to avoid overwhelming your system. Further, you may want to filter your transaction data by date or other factors, or you may be tracing a relatively uncommon operation. For all of these reasons, you may end up with average and percentile data that is directionally correct, but not accurate. (To use the most extreme case as an example, if only a single transaction matches your filters, you can still compute an "average" duration, even though that's clearly not what is usually meant by "average.")
+
+The problem of small sample size (and the resulting inability to be usefully accurate) will happen more often for some metrics than others, and sample size will also vary by row. For example, it takes less data to calculate a meaningful average than it does to calculate an equally meaningful 95th percentile. Further, a row representing requests to `/settings/my-awesome-org/` will likely contain many times as many transactions as one representing requests to `/settings/my-awesome-org/projects/best-project-ever/`.
+
+### P50 Threshold
+The P50 Threshold indicates that 50% of transaction durations are greater than the threshold. This is also the median. For example, if the P50 threshold is set to 10 milliseconds, then 50% of transactions exceeded that threshold, taking longer than 10 milliseconds. 
+
+### P75 Threshold
+The P75 Threshold indicates that 25% of transaction durations are greater than the threshold. For example, if the P75 threshold is set to 10 milliseconds, then 25% of transactions exceeded that threshold, taking longer than 10 milliseconds.
+
+### P95 Threshold
+The P95 Threshold indicates that 5% of transaction durations are greater than the threshold. For example, if the P95 threshold is 50 milliseconds, then 5% of transactions exceeded that threshold, taking longer than 50 milliseconds.
+
+### P99 Threshold
+The P99 Threshold indicates that 1% of transaction durations are greater than the threshold. For example, if the P99 threshold is 5 seconds, then 1% of transactions exceeded that threshold, taking longer than 5 seconds.
+
+## Frequency
+
+The following functions aggregate transaction counts and the rate at which transactions are recorded:
+
+- count
+- count unique values (for a given field)
+- average requests (transactions) per second
+- average requests (transactions) per minute
+
+Each of these functions is calculated with respect to the collection of transactions within the given row, which means the numbers will change as you filter your data or change the time window. Also, if you have set up your SDK to [sample your data](/performance-monitoring/distributed-tracing/#data-sampling), remember that only the transactions that are sent to Sentry are counted. So if a row containing transactions representing requests to a given endpoint is calculated to be receiving 5 requests per second, and you've got a 25% sampling rate enabled, in reality you're getting approximately 20 requests to that endpoint each second. (20 because you're collecting 25% - or 1/4 - of your data, so your real volume is 4 times what you're seeing in Sentry.)
+
+## User Misery
+User Misery is a user-weighted performance metric to assess the relative magnitude of your application performance. While you can examine the ratio of various response time threshold levels with [Apdex](#apdex), User Misery counts the number of unique users who were frustrated based on the specified response time threshold. User Misery highlights transactions that have the highest impact on users.

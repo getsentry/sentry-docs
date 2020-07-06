@@ -1,24 +1,14 @@
 ---
-title: 'Advanced Data Scrubbing (Beta)'
+title: 'Advanced Data Scrubbing'
 sidebar_order: 4
 keywords: ["pii", "gdpr", "personally identifiable data", "compliance"]
 ---
 
-In addition to using [`beforeSend`]({% link _documentation/data-management/sensitive-data.md %}#custom-event-processing-in-the-sdk) in your SDK or our [server-side data scrubbing features]({% link _documentation/data-management/sensitive-data.md %}#server-side-scrubbing) to redact sensitive data, we are currently beta-testing ways to give you more granular control over server-side data scrubbing of your events. Additional functionality includes:
+In addition to using [`beforeSend`](/data-management/sensitive-data/#custom-event-processing-in-the-sdk) in your SDK or our [regular server-side data scrubbing features](/data-management/sensitive-data/#server-side-scrubbing) to redact sensitive data, Advanced Data Scrubbing is an alternative way to redact sensitive information just before it is saved in Sentry. It allows you to:
 
 * Define custom regular expressions to match on sensitive data
 * Detailed tuning on which parts of an event to scrub
 * Partial removal or hashing of sensitive data instead of deletion
-
-## Overview
-
-**Advanced Data Scrubbing is available only if your organization is enabled as an Early Adopter.** To enable this option, navigate to your organization's settings and enable the "Early Adopter" option. Turning on this option allows access to features prior to full release, and can be disabled at any time.
-
-Early adopters have access to a new option in both organization settings as well as the setting of each project. Go to your project- or organization-settings and click _Security and Privacy_ in the sidebar. Scrolling down, you will find a new section _Advanced Data Scrubbing_.
-
-Note that everything you configure there will have direct impact on all new events, just as all the other data privacy-related settings do. However, it is not possible to break or undo any other data scrubbing settings that you may have configured. In other words, it is only possible to accidentally remove too much data, not too little.
-
-If you have any questions related to this feature, feel free to contact us at `markus@sentry.io`.
 
 ## A Basic Example
 
@@ -29,7 +19,9 @@ Go to your project- or organization-settings and click _Security and Privacy_ in
 3. Select _Credit card numbers_ as _Data Type_.
 4. Enter `$string` as _Source_.
 
-As soon as you hit _Save_, we will attempt to find all creditcard numbers in your events going forward, and replace them with a series of `******`, keeping only the last 4 digits.
+As soon as you hit _Save_, we will attempt to find all creditcard numbers in your events going forward, and replace them with a series of `******`.
+
+For a more verbose tutorial check out [this blogpost](https://blog.sentry.io/2020/07/02/sentry-data-wash-now-offering-advanced-scrubbing/).
 
 Rules generally consist of three parts:
 
@@ -39,14 +31,14 @@ Rules generally consist of three parts:
 
 ## Methods
 
-- _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely or replace it with an empty string depending on technical constraints.
-- _Mask_: Replace all characters with `*`. For creditcards this replaces everything but the last 4 digits.
+- _Remove_: Remove the entire field. We may choose to either set it to `null`, remove it entirely, or replace it with an empty string depending on technical constraints.
+- _Mask_: Replace all characters with `*`.
 - _Hash_: Replace the matched substring with a hashed value.
-- _Replace_: Replace the matched substring with a constant placeholder value such as `[Filtered]` or `[creditcard]`. Right now this value cannot be configured.
+- _Replace_: Replace the matched substring with a constant _placeholder_ value (defaulting to `[Filtered]`).
 
 ## Data Types
 
-- _Regex Matches_: Custom Perl-style regex (PCRE).
+- _Regex Matches_: Custom Perl-style regex (PCRE). For example: `[a-zA-Z0-9]+`. Do not write `/[a-zA-Z0-9]+/g`, as that will search for a literal `/` and `/g`.
 - _Credit Card Numbers_: Any substrings that look like credit card numbers.
 - _Password Fields_: Any substrings that look like they may contain passwords. Any string that mentions passwords, auth tokens or credentials, any variable that is called `password` or `auth`.
 - _IP Addresses_: Any substrings that look like valid IPv4 or IPv6 addresses.
@@ -93,7 +85,7 @@ All key names are treated case-insensitively.
 
 Above the _Source_ input field you will find another input field for an event ID. Providing a value there allows for better auto-completion of arbitrary _Additional Data_ fields and variable names.
 
-The event ID is purely optional and the value is not saved as part of your settings. Data scrubbing settings always apply to all events within a project/organization going forward.
+The event ID is purely optional and the value is not saved as part of your settings. Data scrubbing settings always apply to all new events within a project/organization (going forward).
 
 ### Advanced source names
 
@@ -147,25 +139,25 @@ You can combine sources using boolean logic.
 
 Select subsections by JSON-type using the following:
 
-* `$string` matches any string value
-* `$number` matches any integer or float value
-* `$datetime` matches any field in the event that represents a timestamp
-* `$array` matches any JSON array value
-* `$object` matches any JSON object
+* `$string`: Matches any string value
+* `$number`: Matches any integer or float value
+* `$datetime`: Matches any field in the event that represents a timestamp
+* `$array`: Matches any JSON array value
+* `$object`: Matches any JSON object
 
 Select known parts of the schema using the following:
 
-* `$error` matches a single exception instance in `{"exception": {"values": [...]}}`
-* `$stack` matches a stack trace instance
-* `$frame` matches a frame in a stack trace
-* `$http` matches the HTTP request context of an event
-* `$user` matches the user context of an event
-* `$message` matches the top-level log message in `{"logentry": {"formatted": ...}}`
-* `$logentry` matches the `logentry` attribute of an event.
-* `$thread` matches a single thread instance in `{"threads": {"values": [...]}}`
-* `$breadcrumb` matches a single breadcrumb in `{"breadcrumbs": {"values": [...]}}`
-* `$span` matches a [trace span]({% link _documentation/performance/distributed-tracing.md %}#traces-transactions-and-spans)
-* `$sdk` matches the SDK context in `{"sdk": ...}`
+* `$error`: Matches a single exception instance. Alias for `exception.values.*`
+* `$stack`: Matches a stack trace instance. Alias for `stacktrace || $error.stacktrace || $thread.stacktrace`
+* `$frame`: Matches a frame in a stack trace. Alias for `$stacktrace.frames.*`
+* `$http`: Matches the HTTP request context of an event. Alias for `request`
+* `$user`: Matches the user context of an event. Alias for `user`
+* `$message`: Matches the top-level log message. Alias for `$logentry.formatted`
+* `$logentry`: Matches the `logentry` attribute of an event. Alias for `logentry`
+* `$thread`: Matches a single thread instance. Alias for `threads.values.*`
+* `$breadcrumb`: Matches a single breadcrumb. Alias for `breadcrumbs.values.*`
+* `$span`: Matches a [trace span](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). Alias for `spans.*`
+* `$sdk`: Matches the SDK context. Alias for `sdk`
 
 ### Escaping Special Characters
 
