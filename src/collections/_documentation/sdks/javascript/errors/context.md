@@ -47,14 +47,14 @@ Sentry.configureScope(function(scope) {
 {%- capture __errors_grouping_split
 
 ```js
-function makeRequest(path, options) {
-    return fetch(path, options).catch(function(err) {
-        Sentry.withScope(function(scope) {
-         scope.setFingerprint(['', path]);
-         Sentry.captureException(err);
+    function makeRequest(path, options) {
+        return fetch(path, options).catch(function(err) {
+          Sentry.withScope(function(scope) {
+             scope.setFingerprint(['', path]);
+             Sentry.captureException(err);
+            });
         });
-    });
-}
+    }
 ```
 {%- endcapture -%}
 
@@ -91,4 +91,4 @@ errors_grouping_split=__errors_grouping_split
 errors_grouping_merge=__errors_grouping_merge
 errors_configure_tags=__errors_configure_tags
 errors_configure_custom_data=__errors_configure_custom_data
- -%}
+-%}
