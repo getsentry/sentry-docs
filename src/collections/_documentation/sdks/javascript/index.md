@@ -67,7 +67,7 @@ We **highly recommend** you incorporate source maps with the Sentry JavaScript S
 When you’re using the Sentry JavaScript SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. However, you may disable the JavaScript source fetching by logging in to Sentry and toggling off `Allow JavaScript source fetching` in your organization's settings for Security & Privacy.
 
 Upload source maps using our Webpack plugin or TypeScript.
-<!--next phase: link to the the Webpack plugin and TypeScript content-->
+{% comment %}Next phase: link to the the Webpack plugin and TypeScript content{% endcomment %}
 
 {%- endcapture -%}
 
@@ -83,7 +83,7 @@ Next, initialize the integration in your call to `Sentry.init`:
 import * as Sentry from '@sentry/browser';
 import { Integrations as ApmIntegrations } from '@sentry/tracing';
 Sentry.init({
-  dsn: '<https://bc367fd982144d75923219dca8f35ad1@o1.ingest.sentry.io/2783252>',
+  dsn: '___PUBLIC_DSN___',
   release: 'my-project-name@' + process.env.npm_package_version,
   integrations: [
     new ApmIntegrations.Tracing(),
@@ -108,3 +108,7 @@ verify_content=__verify_content
 config_content=__config_content 
 install_content=__install_content 
  -%}
+ 
+ Next steps:
+ 
+ - [Manage Configuration Options](/sdks/javascript/config/intro)
