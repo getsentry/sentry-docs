@@ -41,25 +41,25 @@ If Sentry captures some predefined data but doesn’t expose it as a tag, you ca
 
 Request, device, OS, runtime, app, browser, GPU, logger, and monitor are the most typical predefined data sent with an event. In addition, the following are sent, and can be modified for your team's use.
 
-`Level`
+Level
 
-Defines the severity of an event. The level can be set to one of five values, which are, in order of severity: `fatal`, `error`, `warning`, `info`, and `debug.error`. Learn how to set the level in Set the Level
+: Defines the severity of an event. The level can be set to one of five values, which are, in order of severity: `fatal`, `error`, `warning`, `info`, and `debug.error`. Learn how to set the level in Set the Level
 
-`User`
+User
 
-Providing user information to Sentry helps you evaluate the number of users affecting an issue and evaluate the quality of the application. Learn how to capture user information in Capture the User
+: Providing user information to Sentry helps you evaluate the number of users affecting an issue and evaluate the quality of the application. Learn how to capture user information in Capture the User
 
-`Fingerprint`
+Fingerprint
 
-Sentry uses one or more “fingerprints” to decide how to group errors into issues. Learn more about Sentry's approach to grouping algorithms and fingerprinting in Grouping & Fingerprints. Learn how to override the the default group in very advanced use cases in Modifying the Default Fingerprint
+: Sentry uses one or more fingerprints to determine how to group errors into issues. Learn more about Sentry's approach to grouping algorithms and fingerprinting in Grouping & Fingerprints. Learn how to override the the default group in very advanced use cases in Modifying the Default Fingerprint
 
-`Environment`
+Environment
 
-Environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI. Learn how to set and manage environments in Manage Environments
+: Environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI. Learn how to set and manage environments in Manage Environments
 
-`Release`
+Release
 
-A release is a version of your code that you deploy to an environment. When enabled, releases also help you determine regressions between releases and their potential source as discussed Track Releases
+: A release is a version of your code that you deploy to an environment. When enabled, releases also help you determine regressions between releases and their potential source as discussed Track Releases
 
 {{ include.errors_release_name }}
 
@@ -75,21 +75,21 @@ Modify the defaults with any of the following:
 
 Users consist of a few critical pieces of information that construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
 
-`id`
+id
 
-Your internal identifier for the user.
+: Your internal identifier for the user.
 
-`username`
+username
 
-The username. Typically used as a better label than the internal id.
+: The username. Typically used as a better label than the internal id.
 
-`email`
+email
 
-An alternative (or addition) to the username. Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities.
+: An alternative (or addition) to the username. Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities.
 
-`ip_address`
+ip_address
 
-The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. Sentry will attempt to pull this from the HTTP request data, if available.
+: The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. Sentry will attempt to pull this from the HTTP request data, if available.
 
 To capture a user:
 

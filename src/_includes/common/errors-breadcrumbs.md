@@ -58,7 +58,7 @@ Timestamp
 
 ### How You Can Modify
 
-Developers who want to modify the breadcrumbs interface can read about this in detail using the developer documentation devoted to the "Breadcrumbs Interface". Manual breadcrumb recording and customization of breadcrumbs are documented on this page.
+Developers who want to modify the breadcrumbs interface can read about this in detail using the developer documentation devoted to the [Breadcrumbs Interface](https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/). Manual breadcrumb recording and customization of breadcrumbs are documented on this page.
 
 ### **Manual Breadcrumbs**
 
@@ -70,6 +70,4 @@ To enable manual breadcrumbs:
 
 ### **Customize** **Breadcrumbs**
 
-SDKs customize breadcrumbs through the `before_breadcrumb` hook. This hook passes an already assembled breadcrumb assembled breadcrumb and in some SDKs an optional hint. The function can modify the breadcrumb or decide to discard it entirely:
-
-{{ include.errors_modify_breadcrumbs }}
+SDKs customize breadcrumbs through the `before_breadcrumb` hook. This hook passes an already assembled breadcrumb assembled breadcrumb and in some SDKs an optional hint. The function can modify the breadcrumb or decide to discard it entirely.

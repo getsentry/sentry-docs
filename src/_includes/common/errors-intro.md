@@ -10,11 +10,11 @@ If you have questions, please ask Fiona or Daniel.
 **The objective for this page is that a developer can easily view the error data that enriches each SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
 {% endcomment %}
 
-When your SDK sends an event to Sentry, the event is enriched with data that helps you identify the source of the event and includes information both pertinent to the event as well as a full picture of what led up to the event.
+When your SDK sends an event to Sentry, the event is enriched with data. This data helps you identify the source of the event and includes information both pertinent to the event as well as a full picture of what led up to it.
 
 - **[Event Context](/sdks/{{ include.root_link }}/errors/context)** 
 
-    Learn more about what data is sent with every event and the form the data can take. 
+    Learn more about what data is sent with every event, the form the data can take, and how you can modify the defaults. 
     
 - **[Breadcrumbs](/sdks/{{ include.root_link }}/errors/breadcrumbs)** 
 
@@ -24,8 +24,10 @@ When your SDK sends an event to Sentry, the event is enriched with data that hel
 
     Learn more about how environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI.
     
-- **[Releases](workflow/releases/)**
+- **[Releases](/workflow/releases/)**
 
     Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source.
+    
+{{ include.error_page_content }}
     
     
