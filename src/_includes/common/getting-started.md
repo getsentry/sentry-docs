@@ -108,7 +108,14 @@ Guideline: add an `include` statement provides information particular to the SDK
 
 Performance monitoring helps developers measure Apdex, Throughput, and trace slow transactions down to the poor performing API call or DB query. Available for both JavaScript and Python SDKs, performance monitoring helps you both diagnose problems and measure your application's overall health. 
 
+To get started with performance monitoring, first install the `@sentry/tracing` package:
 
+{{ include.performance-install_content }}
+{% comment %}
+Guideline: Create the `include` statement that provides SDK specific installation information
+{% endcomment %}
+
+Performance data is transmitted using a new event type called `transactions` {% comment %}: link to Distributing Tracing{% endcomment %}. **To sample transactions, you must set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions. Learn more about sampling in Using Your SDK to Filter Events{% comment %} add link to this content for the SDK you are documenting{% endcomment %}
 
 {% comment %}
 Guideline: Create the `include` statement that provides SDK specific installation information. This page is under development with the projects team currently.
