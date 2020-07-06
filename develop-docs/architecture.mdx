@@ -2,4 +2,32 @@
 title: Architecture
 ---
 
+## Service Diagram
+
+```mermaid
+graph TD
+app[Your Application] --> |SDK| lb{{Load Balancer}}
+lb --> relay
+lb --> sentry_web["Sentry (web)"]
+relay --> kafka
+relay --> redis
+sentry_web --> symbolicator
+sentry_web --> snuba
+sentry_web --> memcached
+sentry_web --> postgres
+snuba --> kafka
+snuba --> redis
+snuba --> clickhouse
+kafka --> zookeeper
+sentry_web --> sentry_worker["Sentry (worker)"]
+sentry_worker --> memcached
+sentry_worker --> redis
+sentry_worker --> postgres
+
+click snuba "https://github.com/getsentry/snuba" "Snuba Documentation"
+click relay "https://github.com/getsentry/relay" "Relay Documentation"
+```
+
+## Additional Resources
+
 - [Event Ingestion Pipeline](https://getsentry.github.io/event-ingestion-graph/)
