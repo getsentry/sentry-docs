@@ -18,7 +18,7 @@ Getting started with Sentry is a three step process:
 Sentry captures data by using an SDK within your application’s runtime. These are platform specific and allow Sentry to have a deep understanding of how your application works.
 
 {% capture __alert_content -%}
-Your platform is not listed?  There are more SDKs we support: [list of SDKs]({%- link _documentation/platforms/index.md -%})
+Your platform is not listed?  There are more SDKs we support: [list of SDKs](/platforms/)
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -52,8 +52,8 @@ Once you have Sentry integrated into your project, you probably want to verify t
 Now that you’ve got basic reporting set up, you’ll want to explore adding additional context to your data.
 
 {% include components/platform_content.html content_dir='getting-started-next-steps' %}
--   [_manual error and event capturing_]({%- link _documentation/error-reporting/capturing.md -%})
--   [_configuration options_]({%- link _documentation/error-reporting/configuration/index.md -%})
--   [_adding context (tags, user and extra information)_]({%- link _documentation/enriching-error-data/additional-data.md -%})
--   [_tracing issues with breadcrumbs_]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
--   [_capturing user feedback on crashes_]({%- link _documentation/enriching-error-data/user-feedback.md -%})
+-   [_manual error and event capturing_](/error-reporting/capturing/)
+-   [_configuration options_](/error-reporting/configuration/)
+-   [_adding context (tags, user and extra information)_](/enriching-error-data/additional-data/)
+-   [_tracing issues with breadcrumbs_](/enriching-error-data/breadcrumbs/)
+-   [_capturing user feedback on crashes_](/enriching-error-data/user-feedback/)

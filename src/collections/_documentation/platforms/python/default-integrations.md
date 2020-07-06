@@ -49,9 +49,9 @@ This integration deduplicates certain events. The Sentry Python SDK enables it b
 
 The stdlib integration instruments certain modules in the standard library to emit breadcrumbs.  The Sentry Python SDK enables this by default, and it rarely makes sense to disable.
 
-* Any outgoing HTTP request done with `httplib` will result in a [breadcrumb]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}) being logged. `urllib3` and `requests` use `httplib` under the hood, so HTTP requests from those packages should be covered as well.
+* Any outgoing HTTP request done with `httplib` will result in a [breadcrumb](/enriching-error-data/breadcrumbs/) being logged. `urllib3` and `requests` use `httplib` under the hood, so HTTP requests from those packages should be covered as well.
 
-* {% version_added 0.10.0 %} Subprocesses spawned with the `subprocess` module will result in a [breadcrumb]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}) being logged.
+* {% version_added 0.10.0 %} Subprocesses spawned with the `subprocess` module will result in a [breadcrumb](/enriching-error-data/breadcrumbs/) being logged.
 
 ## Modules
 *Import name: `sentry_sdk.integrations.modules.ModulesIntegration`*
@@ -68,7 +68,7 @@ Adds `sys.argv` as an `extra` attribute to each event.
 ## Logging
 *Import name: `sentry_sdk.integrations.logging.LoggingIntegration`*
 
-See [_Logging_]({% link _documentation/platforms/python/logging.md %})
+See [_Logging_](/platforms/python/logging/)
 
 ## Threading
 *Import name: `sentry_sdk.integrations.threading.ThreadingIntegration`*

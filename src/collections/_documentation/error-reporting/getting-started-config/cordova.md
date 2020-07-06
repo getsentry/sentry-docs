@@ -1,4 +1,4 @@
-You should `init` the SDK in the `deviceReady` function, to make sure the native integrations runs. For more details about Cordova [click here]({%- link _documentation/platforms/javascript/cordova.md -%})  
+You should `init` the SDK in the `deviceReady` function, to make sure the native integrations runs. For more details about Cordova [click here](/platforms/javascript/cordova/)  
 
 ```javascript
 onDeviceReady: function() {

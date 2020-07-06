@@ -8,12 +8,12 @@ This section will describe features, configurations and general functionality wh
 
 ## Integrations
 
-- [_ASP.NET Core_]({% link _documentation/platforms/dotnet/aspnetcore.md %})
-- [_EntityFramework_]({% link _documentation/platforms/dotnet/entityframework.md %})
-- [_log4net_]({% link _documentation/platforms/dotnet/log4net.md %})
-- [_Microsoft.Extensions.Logging_]({% link _documentation/platforms/dotnet/microsoft-extensions-logging.md %})
-- [_Serilog_]({% link _documentation/platforms/dotnet/serilog.md %})
-- [_NLog_]({% link _documentation/platforms/dotnet/nlog.md %})
+- [_ASP.NET Core_](/platforms/dotnet/aspnetcore/)
+- [_EntityFramework_](/platforms/dotnet/entityframework/)
+- [_log4net_](/platforms/dotnet/log4net/)
+- [_Microsoft.Extensions.Logging_](/platforms/dotnet/microsoft-extensions-logging/)
+- [_Serilog_](/platforms/dotnet/serilog/)
+- [_NLog_](/platforms/dotnet/nlog/)
 
 ## Compatibility
 
@@ -46,6 +46,17 @@ Of those, we run our unit/integration tests against:
   level="info"
 %}
 
+## Ignoring Exceptions
+
+You can ignore exceptions by their type when initializing the SDK:
+
+```csharp
+SentrySdk.Init(o => o.AddExceptionFilterForType<OperationCancelledException>());
+```
+
+It works in the whole inheritance chain.  
+The example above will also filter out `TaskCancelledException` because it derives from `OperationCancelledException`.
+
 
 ## Automatically discovering release version
 
@@ -69,7 +80,7 @@ If that's your case, you can use 2 abstractions:
 
 The `ISentryClient` exposes the `CaptureEvent` method and its implementation `SentryClient` is responsible for queueing the event to be sent to Sentry. It also abstracts away the internal transport.
 
-The `IHub` on the other hand, holds a client and the current [scope]({% link _documentation/enriching-error-data/scopes.md %}). In fact, it extends `ISentryClient` and is able to dispatch calls to the right client depending on the current scope.
+The `IHub` on the other hand, holds a client and the current [scope](/enriching-error-data/scopes/). In fact, it extends `ISentryClient` and is able to dispatch calls to the right client depending on the current scope.
 
 In order to allow different events to hold different contextual data, you need to know in which scope you are in.
 That's the job of the [`Hub`](https://github.com/getsentry/sentry-dotnet/blob/master/src/Sentry/Internal/Hub.cs). It holds the scope management as well as a client.

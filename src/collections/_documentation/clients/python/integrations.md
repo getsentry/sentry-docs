@@ -140,7 +140,7 @@ app.config_from_object('django.conf:settings')
 
 ## Django
 
-[Django](http://djangoproject.com/) versions 1.4 to 2.0 are supported. Since this SDK is being phased out, newer versions of Django are only supported by [the new Python SDK]({%- link _documentation/platforms/python/index.md -%}).
+[Django](http://djangoproject.com/) versions 1.4 to 2.0 are supported. Since this SDK is being phased out, newer versions of Django are only supported by [the new Python SDK](/platforms/python/).
 
 ### Installation
 
@@ -212,7 +212,7 @@ By default, the DSN is generated in a protocol relative fashion, e.g. `//public@
 {% raw %}{% sentry_public_dsn 'https' %}{% endraw %}
 ```
 
-See the [_Raven.js documentation_]({%- link _documentation/clients/javascript/index.md -%}) for more information.
+See the [_Raven.js documentation_](/clients/javascript/) for more information.
 
 ### Integration with `logging`
 
@@ -384,7 +384,7 @@ By default Django will render `500.html`, so simply drop the following snippet i
 
 That’s it!
 
-For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
+For more details on this feature, see the [_User Feedback guide_](/enriching-error-data/user-feedback/).
 
 ### Additional Settings
 
@@ -658,7 +658,7 @@ And in the error template (`500.html`) you can then do this:
 
 That’s it!
 
-For more details on this feature, see the [_User Feedback guide_]({%- link _documentation/enriching-error-data/user-feedback.md -%}).
+For more details on this feature, see the [_User Feedback guide_](/enriching-error-data/user-feedback/).
 
 ### Dealing With Proxies
 
@@ -718,7 +718,7 @@ def handler(event, context):
 
 By default this will report unhandled exceptions and errors to Sentry.
 
-The `LambdaClient` accepts the same arguments as the regular `Client`, see [_Configuring the Client_]({%- link _documentation/clients/python/advanced.md -%}#python-client-config).
+The `LambdaClient` accepts the same arguments as the regular `Client`, see [_Configuring the Client_](/clients/python/advanced/#python-client-config).
 
 The integration was inspired by [raven python lambda](https://github.com/Netflix-Skunkworks/raven-python-lambda), another implementation that also integrates with Serverless Framework and has SQS transport support.
 

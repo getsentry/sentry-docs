@@ -1,1 +1,1 @@
--  [_integrating with the JavaScript ecosystem_]({% link _documentation/platforms/javascript/index.md %})
+-  [_integrating with the JavaScript ecosystem_](/platforms/javascript/)

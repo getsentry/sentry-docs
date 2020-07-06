@@ -3,7 +3,7 @@ title: 'Issue Owners'
 sidebar_order: 2
 ---
 
-The Issue Owners feature allows you to create rules to decide which user or team should own an [Issue]({%- link _documentation/data-management/event-grouping/index.md -%}). These rules resemble a typical code owners file in a repository, and can match on file paths of files in the stack trace, URL of the request, or event tags. You can automatically assign issues to their respective owners, or alert the owners about the issue, allowing you to find the developer with the most context about a fix.
+The Issue Owners feature allows you to create rules to decide which user or team should own an [Issue](/data-management/event-grouping/). These rules resemble a typical code owners file in a repository, and can match on file paths of files in the stack trace, URL of the request, or event tags. You can automatically assign issues to their respective owners, or alert the owners about the issue, allowing you to find the developer with the most context about a fix.
 
 ## How It Works
 
@@ -51,7 +51,7 @@ When creating a rule from the issue page, you'll see some suggested paths and UR
 
 ### Suggested Assignees
 
-On the issue page, you'll see suggested assignees based on ownership rules matching the event you're looking at (by default, the issue page shows the latest event). Suggested assignees can also be based on [suspect commits]({%- link _documentation/workflow/releases/index.md -%}#after-associating-commits). You can assign the *issue* to a suggested assignee by clicking on the suggestion. An event can have multiple suggested assignees if it matches multiple ownership rules.
+On the issue page, you'll see suggested assignees based on ownership rules matching the event you're looking at (by default, the issue page shows the latest event). Suggested assignees can also be based on [suspect commits](/workflow/releases/#after-associating-commits). You can assign the *issue* to a suggested assignee by clicking on the suggestion. An event can have multiple suggested assignees if it matches multiple ownership rules.
 
 [{% asset issue-owners/suggested_assignees.png alt="Avatar icons of suggested assignees and ability to click on them for assignment." width="400"%}]({% asset issue-owners/suggested_assignees.png @path %})
 
@@ -65,7 +65,7 @@ If an issue is already assigned, a new event for that issue will not re-assign t
 
 ### Issue Alerts
 
-You can send [Issue Alerts]({%- link _documentation/workflow/alerts-notifications/alerts.md -%}#issue-alerts) to issue owners. Issue alerts are event-driven: when Sentry receives an event, it evaluates issue alert rules for the issue for that event. If the alert conditions match, Sentry sends an alert to the *owners of the event that triggered the alert*.
+You can send [Issue Alerts](/workflow/alerts-notifications/alerts/#issue-alerts) to issue owners. Issue alerts are event-driven: when Sentry receives an event, it evaluates issue alert rules for the issue for that event. If the alert conditions match, Sentry sends an alert to the *owners of the event that triggered the alert*.
 
 [{% asset issue-owners/perform_these_actions.png alt="Dropdown indicating choices for Issue Alert recipients."%}]({% asset issue-owners/perform_these_actions.png @path %})
 

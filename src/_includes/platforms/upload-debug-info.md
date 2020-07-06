@@ -16,5 +16,4 @@ Unless you are uploading Breakpad symbols, be sure to also include the binaries
 when uploading files to Sentry.
 
 For more information on uploading debug information and their supported formats,
-see [Debug Information Files]({%- link _documentation/workflow/debug-files.md
--%}).
+see [Debug Information Files](/workflow/debug-files/).

@@ -161,7 +161,7 @@ All optional attributes are passed as part of the options to `captureException` 
 
 `fingerprint`
 
-: The fingerprint for grouping this event. Learn more how [Sentry groups errors]({%- link _documentation/data-management/event-grouping/index.md -%}).
+: The fingerprint for grouping this event. Learn more how [Sentry groups errors](/data-management/event-grouping/).
 
   ```javascript
   {% raw %}{
@@ -207,7 +207,7 @@ Raven.context(function () {
 });
 ```
 
-To learn more about what types of data can be collected via breadcrumbs, see the [breadcrumbs client API specification]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}).
+To learn more about what types of data can be collected via breadcrumbs, see the [breadcrumbs client API specification](/enriching-error-data/breadcrumbs/).
 
 Raven can be configured to automatically capture breadcrubs for certain events including:
 
@@ -233,7 +233,7 @@ Raven.config('___PUBLIC_DSN___', {
 });
 ```
 
-For more on configuring breadcrumbs, see [_Configuration_]({%- link _documentation/clients/node/config.md -%}).
+For more on configuring breadcrumbs, see [_Configuration_](/clients/node/config/).
 
 ## Event IDs
 
@@ -342,4 +342,4 @@ var Raven2 = new Raven.Client();
 
 Raven and Sentry support [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/).
 
-We have provided some instructions to creating Source Maps over at [Source Maps]({%- link _documentation/clients/node/sourcemaps.md -%}#raven-node-sourcemaps).
+We have provided some instructions to creating Source Maps over at [Source Maps](/clients/node/sourcemaps/#raven-node-sourcemaps).

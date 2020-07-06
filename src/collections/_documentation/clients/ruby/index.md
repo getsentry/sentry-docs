@@ -21,7 +21,7 @@ Raven Ruby comes as a gem and is straightforward to install. If you are using Bu
 gem "sentry-raven"
 ```
 
-For other means of installation see [_Installation_]({%- link _documentation/clients/ruby/install.md -%}).
+For other means of installation see [_Installation_](/clients/ruby/install/).
 
 ## Configuration {#configure}
 
@@ -35,9 +35,9 @@ end
 
 ## Reporting Failures
 
-If you use Rails, Rake, Sidekiq, etc, you’re already done - no more configuration required! Check [_Integrations_]({%- link _documentation/clients/ruby/integrations.md -%}) for more details on other gems Sentry integrates with automatically.
+If you use Rails, Rake, Sidekiq, etc, you’re already done - no more configuration required! Check [_Integrations_](/clients/ruby/integrations/) for more details on other gems Sentry integrates with automatically.
 
-Rack requires a little more setup: [_Rack (Sinatra etc.)_]({%- link _documentation/clients/ruby/integrations.md -%}#rack-sinatra-etc)
+Rack requires a little more setup: [_Rack (Sinatra etc.)_](/clients/ruby/integrations/#rack-sinatra-etc)
 
 Otherwise, Raven supports two methods of capturing exceptions:
 
@@ -74,23 +74,23 @@ Raven.tags_context interesting: 'yes'
 Raven.extra_context happiness: 'very'
 ```
 
-For more information, see [_Context_]({%- link _documentation/clients/ruby/context.md -%}).
+For more information, see [_Context_](/clients/ruby/context/).
 
 ## Deep Dive
 
 Want to know more? We have a detailed documentation about all parts of the library and the client integrations.
 
--   [Installation]({%- link _documentation/clients/ruby/install.md -%})
--   [Configuration]({%- link _documentation/clients/ruby/config.md -%})
--   [Usage]({%- link _documentation/clients/ruby/usage.md -%})
--   [Breadcrumbs]({%- link _documentation/clients/ruby/breadcrumbs.md -%})
--   [Context]({%- link _documentation/clients/ruby/context.md -%})
--   [Processors]({%- link _documentation/clients/ruby/processors.md -%})
--   [Integrations]({%- link _documentation/clients/ruby/integrations.md -%})
-    -   [Ruby on Rails]({%- link _documentation/clients/ruby/integrations.md -%}#ruby-on-rails)
-    -   [Rack (Sinatra etc.)]({%- link _documentation/clients/ruby/integrations.md -%}#rack-sinatra-etc)
-    -   [Puma]({%- link _documentation/clients/ruby/integrations.md -%}#puma)
-    -   [Heroku]({%- link _documentation/clients/ruby/integrations.md -%}#heroku)
+-   [Installation](/clients/ruby/install/)
+-   [Configuration](/clients/ruby/config/)
+-   [Usage](/clients/ruby/usage/)
+-   [Breadcrumbs](/clients/ruby/breadcrumbs/)
+-   [Context](/clients/ruby/context/)
+-   [Processors](/clients/ruby/processors/)
+-   [Integrations](/clients/ruby/integrations/)
+    -   [Ruby on Rails](/clients/ruby/integrations/#ruby-on-rails)
+    -   [Rack (Sinatra etc.)](/clients/ruby/integrations/#rack-sinatra-etc)
+    -   [Puma](/clients/ruby/integrations/#puma)
+    -   [Heroku](/clients/ruby/integrations/#heroku)
 
 Resources:
 

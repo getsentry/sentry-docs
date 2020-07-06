@@ -1,11 +1,18 @@
+import algoliasearch from 'algoliasearch/lite';
 import instantsearch from 'instantsearch.js';
 import { connectHits } from 'instantsearch.js/es/connectors';
-import { searchBox } from 'instantsearch.js/es/widgets';
+import { index, searchBox } from 'instantsearch.js/es/widgets';
+
 $(function() {
+  const config = window.ALGOLIA || {};
+
+  const searchClient = algoliasearch(config.appId, config.apiKey);
+
   const search = instantsearch({
-    ...(window.ALGOLIA || {}),
+    indexName: config.indexName,
+    searchClient,
     searchFunction: function(helper) {
-      var $hits = $('#hits');
+      var $hits = $('#hits > div');
       if (helper.state.query === '') {
         $hits.addClass('d-none');
         $('#search-clickplate').addClass('d-none');
@@ -47,6 +54,26 @@ $(function() {
     `;
   };
 
+  const renderGatsbyHit = hit => {
+    const categories = hit.categories?.length
+      ? hit.categories.map(
+          category =>
+            `<span class="badge badge-secondary">${escapeHtml(category)}</span>`
+        )
+      : '';
+    return `
+      <a href="${escapeHtml(
+        hit.fields.slug
+      )}" class="list-group-item list-group-item-action">
+      <h6 class="mb-1">
+        ${hit._highlightResult?.title?.value || ''}
+        ${categories}
+      </h6>
+      ${hit._snippetResult?.excerpt?.value || ''}
+      </a>
+    `;
+  };
+
   const renderHits = (renderOptions, isFirstRender) => {
     const { hits, widgetParams } = renderOptions;
     if (!hits.length) {
@@ -59,29 +86,41 @@ $(function() {
     }
   };
 
-  const customHits = connectHits(renderHits);
+  // hardcode to gatsby production index
+  const renderGatsbyHits = (renderOptions, isFirstRender) => {
+    const { hits, widgetParams } = renderOptions;
+    if (!hits.length) {
+      widgetParams.container.innerHTML = '';
+    } else {
+      widgetParams.container.innerHTML = `<div class="list-group search-results">${hits
+        .map(renderGatsbyHit)
+        .join('')}</div>`;
+    }
+  };
 
-  search.addWidget(
+  search.addWidgets([
     searchBox({
       container: document.querySelector('#search-box'),
       placeholder: 'Search the docs',
-      magnifier: false,
-      reset: false,
+      showSubmit: false,
+      showReset: false,
       cssClasses: {
         input: 'form-control'
       }
+    }),
+    index({ indexName: 'sentry-gatsby-docs' }).addWidgets([
+      connectHits(renderGatsbyHits)({
+        container: document.querySelector('#hits_gatsby')
+      })
+    ]),
+    connectHits(renderHits)({
+      container: document.querySelector('#hits_jekyll')
     })
-  );
-
-  search.addWidget(
-    customHits({
-      container: document.querySelector('#hits')
-    })
-  );
+  ]);
 
   search.start();
 });
 
 $(document).on('click', '#search-clickplate', function(event) {
-  $('#search-clickplate, #hits').addClass('d-none');
+  $('#search-clickplate, #hits > div').addClass('d-none');
 });
