@@ -7,19 +7,19 @@ Discover is a powerful query engine that allows you to query through all your er
 
 Let's go over some examples of how to work with all this data to gain some useful insights into the health and stability of your applications.
 
-## Discover through issues
+## Discover Through Issues
 
 The Sentry workflow (Alert - Triage - Resolve) notifies you in real-time when your application breaks, and then provides all the information and tools to triage and resolve the error. With Discover, users can take a more proactive approach to find the major issues that break their apps. The flow looks something like this:
 
-1. Open _Discover_ and click on _Build a new query_
+1. Open _Discover_ and click on _Build a new query_.
 
-2. From the top-level filter select the projects, environments, and time range of errors you'd like to query
+2. From the top-level filter select the projects, environments, and time range of errors you'd like to query.
 
 3. Sentry monitors different types of events for errors, performance, etc. To query issues filter by `event.type:error` in the search bar.
 
     ![Filter by Error type]({% asset guides/discover/004.png @path %})
 
-4. Edit the results table columns to show the number of events [`count()`], unique issues [`count_unique(issue)`], and impacted users [`count_unique(user)`] per project
+4. Edit the results table columns to show the number of events [`count()`], unique issues [`count_unique(issue)`], and impacted users [`count_unique(user)`] per project.
 
     ![Issues per project]({% asset guides/discover/001.png @path %})
 
@@ -39,7 +39,7 @@ The Sentry workflow (Alert - Triage - Resolve) notifies you in real-time when yo
 
     ![Actions per line item]({% asset guides/discover/003.png @path %})
 
-## Discover through errors
+## Discover Through Errors
 
 The true power of Discover lies in its ability to query through all your error metadata, so you're no longer restricted to the context of _Issues_ or _Projects_ and can reveal trends and insights across all your applications. Let's look at some examples.
 
@@ -57,7 +57,7 @@ Create a report looking into all the errors occurring in the URL endpoints acros
 
 ![Wildcard filter]({% asset guides/discover/009.png @path %})
 
-### Unhandled errors
+### Unhandled Errors
 
 Whether your code is running on a mobile, browser, or server, an unhandled fatal error might crash your application. To find out where those crashes are happening, run the following query in Discover:
 
@@ -66,14 +66,14 @@ Whether your code is running on a mobile, browser, or server, an unhandled fatal
 
     ![Crashes]({% asset guides/discover/006.png @path %})
 
-To look deeper into one of the crash types
+To look deeper into one of the crash types:
 
 * Select one of the line item values and add them to the filter
 * Modify the table columns to show the crash `message` and `count()`
 
     ![Native Crashes]({% asset guides/discover/007.png @path %})
 
-### Files with most errors
+### Files with Most Errors
 
 To find out which files in your codebase are generating the most errors, run the following query in Discover:
 
@@ -86,7 +86,7 @@ You can continue exploring a specific filename by adding it to the filer and cha
 
 ![Culprits]({% asset guides/discover/008.png @path %})
 
-### Errors per release over time
+### Errors Per Release
 
 To find out how the health of a specific project is improving (or not) over time as you release new versions, run the following in Discover:
 
@@ -99,7 +99,7 @@ Each table cell offers a dynamic context menu that allows you to easily continue
 
 ![Context menu]({% asset guides/discover/013.png @path %})
 
-## Additional use cases
+## Additional Use Cases
 
 As you've probably noticed by now, Discover is extremely useful in gaining visibility and insights into your errors. For additional use cases take a look at the following:
 
