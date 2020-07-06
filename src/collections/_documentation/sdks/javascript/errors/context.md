@@ -2,6 +2,13 @@
 title: Event Context
 excerpt: ""
 ---
+
+{%- capture errors_release_name -%}
+
+For JavaScript developers, a release is also used for applying source maps to minified JavaScript to view original, untransformed source code.
+
+{%- endcapture -%}
+
 {%- capture __errors_set_level -%}
 
 To set the level out of scope, you can call `captureMessage()` per event:
@@ -35,7 +42,7 @@ Sentry.setUser({"email": ["john.doe@example.com](mailto:%22john.doe@example.com)
 
 {%- endcapture -%}
 
-{%- capture __errors_grouping_example
+{%- capture __errors_grouping_example -%}
 
 ```js
 Sentry.configureScope(function(scope) {
@@ -44,7 +51,7 @@ Sentry.configureScope(function(scope) {
 ```
 {%- endcapture -%}
 
-{%- capture __errors_grouping_split
+{%- capture __errors_grouping_split -%}
 
 ```js
     function makeRequest(path, options) {
@@ -58,17 +65,18 @@ Sentry.configureScope(function(scope) {
 ```
 {%- endcapture -%}
 
-{%- capture __errors_grouping_merge
+{%- capture __errors_grouping_merge -%}
 
 ```js
     Sentry.withScope(function(scope) {
       scope.setFingerprint(['Database Connection Error']);
       Sentry.captureException(err);
     });
-    ```
+```
+
 {%- endcapture -%}
 
-{%- capture __errors_configure_tags
+{%- capture __errors_configure_tags -%}
 
 ```js
 Sentry.setTag("page_locale", "de-at");
@@ -76,14 +84,16 @@ Sentry.setTag("page_locale", "de-at");
 
 {%- endcapture -%}
 
-{%- capture __errors_configure_custom_data
+{%- capture __errors_configure_custom_data -%}
 
 ```js
 Sentry.setExtra("character_name", "Mighty Fighter");
 ```
+
 {%- endcapture -%}
 
 {%- include common/errors-context.md 
+errors_release_name=__errors_release_name
 errors_set_level=__errors_set_level
 errors_capture_user=__errors_capture_user
 errors_grouping_example=__errors_grouping_example

@@ -4,7 +4,6 @@ Guideline: This page is comprehensive; it is stored in the common folder, nested
 1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
 2. Create a copy of "context.md" file in _documentation/sdks/<platform-name> 
 3. Create the defined `include` statements and add them to the errors-context.md file
-4. Note that each of these terms is wrapped in an "if/then" statement; this is because not all of these options are included for every SDK. For those terms you do not wish to include, add the command `hide_<option>=true` in the SDK-specific page.
 
 If you have questions, please ask Fiona or Daniel. 
 
@@ -42,27 +41,27 @@ If Sentry captures some predefined data but doesn’t expose it as a tag, you ca
 
 Request, device, OS, runtime, app, browser, GPU, logger, and monitor are the most typical predefined data sent with an event. In addition, the following are sent, and can be modified for your team's use.
 
-Level:
+`Level`
 
 Defines the severity of an event. The level can be set to one of five values, which are, in order of severity: `fatal`, `error`, `warning`, `info`, and `debug.error`. Learn how to set the level in Set the Level
 
-User:
+`User`:
 
 Providing user information to Sentry helps you evaluate the number of users affecting an issue and evaluate the quality of the application. Learn how to capture user information in Capture the User
 
-Fingerprint:
+`Fingerprint`:
 
 Sentry uses one or more “fingerprints” to decide how to group errors into issues. Learn more about Sentry's approach to grouping algorithms and fingerprinting in Grouping & Fingerprints. Learn how to override the the default group in very advanced use cases in Modifying the Default Fingerprint
 
-Environment:
+`Environment`:
 
 Environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI. Learn how to set and manage environments in Manage Environments
 
-Release:
+`Release`:
 
 A release is a version of your code that you deploy to an environment. When enabled, releases also help you determine regressions between releases and their potential source as discussed Track Releases
 
-For JavaScript developers, a release is also used for applying source maps to minified JavaScript to view original, untransformed source code.
+{{ include.errors_release_name }}
 
 ## Modifying Defaults
 
@@ -104,12 +103,12 @@ By default, Sentry runs one of our built-in grouping algorithms to generate a fi
 
 You can override the default grouping by passing the `fingerprint` attribute an array of strings. The following extra values are available for fingerprints:
 
-- `{{ default }}`: adds the default fingerprint values
-- `{{ transaction }}`: groups by the event’s transaction
-- `{{ function }}`: groups by the event’s function name
-- `{{ type }}`: groups by the event’s exception type name
-- `{{ module }}`: groups by the event’s module name
-- `{{ package }}`: groups by the event’s package name
+- `default`: adds the default fingerprint values
+- `transaction`: groups by the event’s transaction
+- `function`: groups by the event’s function name
+- `type`: groups by the event’s exception type name
+- `module`: groups by the event’s module name
+- `package`: groups by the event’s package name
 
 If you wish to append information, thus making the grouping slightly less aggressive, you can add the special string `{{default}}` as one of the items.
 

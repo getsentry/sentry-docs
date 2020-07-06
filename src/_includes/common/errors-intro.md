@@ -16,3 +16,6 @@ When your SDK sends an event to Sentry, the event is enriched with data that hel
 
     Learn more about what data is sent with every event and the form the data can take. 
     
+- **[Breadcrumbs](/sdks/{{ include.root_link }}/errors/breadcrumbs)** 
+
+    Learn more about what Sentry uses to create a trail of events (breadcrumbs) that happened prior to an issue. 
