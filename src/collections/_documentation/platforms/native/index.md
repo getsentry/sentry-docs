@@ -2,19 +2,6 @@
 title: Native
 ---
 
-{% capture __alert_content -%}
-Support for `sentry-native` is currently limited to the hosted version on
-[`sentry.io`](https://sentry.io). The latest on-premise version of Sentry
-(*10.0*) does not provide server-side support for events sent by
-`sentry-native`. Full support for `sentry-native` will be made available to all
-on-premise customers with the next release.
-{%- endcapture -%}
-{%- include components/alert.html
-  title="Sentry On-Premise"
-  content=__alert_content
-  level="warning"
-%}
-
 The Sentry Native SDK is intended for C and C++. However, since it builds as a
 dynamic library and exposes C-bindings, it can be used by any language that
 supports interoperability with C, such as the Foreign Function Interface (FFI).
@@ -22,15 +9,19 @@ supports interoperability with C, such as the Foreign Function Interface (FFI).
 Sentry also offers higher-level SDKs for platforms with built-in support for
 native crashes:
 
+- [_Android_](/platforms/android/)
 - [_Cocoa_](/clients/cocoa/)
 - [_Electron_](/platforms/javascript/electron/)
 
-In case you would like to integrate Sentry into a third-party framework directly
+In case you would like to use Sentry with a third-party framework directly
 without using the Native SDK, see the following resources:
 
 - [_Google Breakpad_](/platforms/native/breakpad/)
 - [_Google Crashpad_](/platforms/native/crashpad/)
 - [_Unreal Engine 4_](/platforms/native/ue4/)
+
+The Sentry Native SDK has built-in support for both Google Breakpad and Google
+Crashpad, see the [Integrations](#integrations) below.
 
 ## Integrating the SDK
 
@@ -158,7 +149,7 @@ documents.
 To capture an error or exception condition, create events containing an
 exception object. It needs to contain at least a value and type:
 
-```cpp
+```c
 #include <sentry.h>
 
 sentry_value_t exc = sentry_value_new_object();
@@ -345,37 +336,52 @@ For more information, see:
 - [Manage Your Flow of Errors Using Inbound
   Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 
+{% capture __alert_content -%}
+The Crashpad Backend sends minidumps with an additional event payload
+out-of-process. `before_send` hooks are not invoked when capturing crashes
+using Crashpad.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Crashpad Notice"
+  content=__alert_content
+  level="warning"
+%}
+
 ### Transports
 
 The Native SDK uses _Transports_ to send event payloads to Sentry. The default
 transport depends on the target platform:
 
+ - **Windows**: WinHTTP
  - **Linux**: Curl
  - **macOS**: Curl
 
 To specify a custom transport, use the `sentry_options_set_transport` function
 and supply a transport that implements the `sentry_transport_t` interface.
-To simplify using a single function, one might use the
-`sentry_new_function_transport` function:
 
 ```c
 #include <sentry.h>
 
-void custom_transport(sentry_value_t event, void *data) {
+void custom_transport(sentry_envelope_t *envelope, void *state) {
   /*
    * Send the event here. If the transport requires state, such as an HTTP
-   * client object or request queue, it can be specified in the `data`
+   * client object or request queue, it can be specified in the `state`
    * parameter when configuring the transport. It will be passed as second
    * argument to this function.
+   * The transport takes ownership of the `envelope`, and must free it once it
+   * is done.
    */
+  sentry_envelope_free(envelope);
 }
 
 int main(void) {
-  void *transport_data = 0;
+  void *transport_state = 0;
 
   sentry_options_t *options = sentry_options_new();
-  sentry_options_set_transport(options,
-    sentry_new_function_transport(custom_transport, transport_data));
+  sentry_transport_t *transport = sentry_transport_new(custom_transport);
+  sentry_transport_set_state(transport, transport_state);
+  
+  sentry_options_set_transport(options, transport);
   sentry_init(options);
 
   /* ... */
@@ -394,16 +400,18 @@ SDK.
 
 The Native SDK can use different backends that are responsible for capturing
 crashes. The backend is configured at build-time, using the `SENTRY_BACKEND`
-CMake option.
+CMake option, with support for the following options:
 
-The `crashpad` backend is used by default on Windows and macOS, whereas Linux
-and Android use the `inproc` in-process backend by default.
+- `crashpad`, which is the default on Windows and macOS,
+- `breakpad`, which is the default on Linux,
+- `inproc`, the default on Android, and
+- `none`, that disables capturing crashes altogether.
 
 ### Google Crashpad
 
 [Crashpad](https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md)
 is an open-source multiplatform crash reporting system written in C++ by Google.
-It supports macOS, Windows, and Linux (limited), and features an uploader to
+It supports macOS, Windows, and Linux, and features an uploader to
 submit minidumps to a configured URL right when the process crashes.
 
 To use the Crashpad backend with the Native SDK, configure the CMake build
@@ -431,7 +439,10 @@ sentry_init(options);
 
 The crashpad handler executable must be shipped alongside your application so
 that it can be launched when initializing the SDK. The path is evaluated
-relative to the current working directory at runtime.
+according to shell lookup rules at runtime.
+
+It is advised to specify both the path to the `crashpad_handler` executable
+as well as the path to the database directory manually.
 
 ## Event Attachments (Preview)
 
@@ -445,5 +456,5 @@ initializing the SDK. It will monitor the file and upload it along with any even
 or crash that is sent to Sentry:
 
 ```c
-sentry_options_add_attachment(options, "log", "/var/server.log");
+sentry_options_add_attachment(options, "/var/server.log");
 ```
