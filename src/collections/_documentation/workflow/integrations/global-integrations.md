@@ -1022,7 +1022,7 @@ Follow the instructions in the link below:
 
 ## Code Linking
 
-These integrations will allow seamlessly connect a Sentry error to the underlying code behind the error in a separate platform.
+These integrations will allow you to seamlessly connect a Sentry error to the underlying code behind the error in a separate platform.
 
 ### Rookout
 
@@ -1081,6 +1081,60 @@ The Split integration is only available for organizations on the Business and En
 
 Follow the instructions in the link below:  
 <https://help.split.io/hc/en-us/articles/360029879431>
+
+## Deployment
+
+These integrations will assist in automating your release and deployment process, making understanding your errors simpler.
+
+### Vercel
+
+Vercel is an all-in-one platform with Global CDN supporting static & JAMstack deployment and Serverless Functions. Connect your Sentry and Vercel projects to automatically upload source maps and notify Sentry of new releases being deployed.
+
+**Installation**
+
+1. In Sentry, navigate to **Organization Settings** > **Integrations**.
+
+2. Find Vercel in the list of the available Global Integrations list and click **Vercel**.
+
+    [{% asset vercel/vercel_install_sentry.png alt="Sentry modal showing Vercel installation." %}]({% asset vercel/vercel_install_sentry.png @path %})
+
+3. Click the "Vercel Marketplace" button at the top right to install the integration.
+
+    [{% asset vercel/vercel_marketplace.png alt="Sentry modal showing Vercel marketplace button." %}]({% asset vercel/vercel_marketplace.png @path %})
+
+4. Select your account and click "Add".
+
+    [{% asset vercel/vercel_install.png alt="Sentry modal showing Vercel installation." %}]({% asset vercel/vercel_install.png @path %})
+
+    **Note that the installation created an internal integration for the purpose of creating an auth token used in creating releases. If the Vercel internal integration is deleted, your Vercel integration will stop working!**
+
+    [{% asset vercel/vercel_internal_integration.png alt="Sentry modal showing Vercel internal integration." %}]({% asset vercel/vercel_internal_integration.png @path %})
+
+**Project Linking**
+
+1. Select a Sentry project and a Vercel project to link together.
+
+    [{% asset vercel/vercel_link_project.png alt="Sentry modal showing linking Sentry project to Vercel project." %}]({% asset vercel/vercel_link_project.png @path %})
+
+This step will generate environment variables in the selected Vercel project. You can see these in Vercel in **Project Settings** > **General** > **Environment Variables**.
+
+**Usage**
+
+* If you have not already done so, [instrument your code with Sentry]({%- link _documentation/error-reporting/quickstart.md -%}).
+* Ensure you have [installed a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration).
+* Add the [Sentry Webpack Plugin](https://github.com/getsentry/sentry-webpack-plugin) to your configuration. For NextJS, use `next.config.js`.
+
+**Uninstallation**
+
+1. From the Vercel integration configuration page (**Organization Settings** > **Integrations** > **Vercel**) you can uninstall the integration. 
+
+    [{% asset vercel/vercel_delete.png alt="Sentry modal showing uninstalling Vercel integration." %}]({% asset vercel/vercel_delete.png @path %})
+
+
+2. Delete the internal integration that was created by navigating to **Organization Settings** > **Developer Settings** and clicking the trash can icon next to **Vercel Internal Integration**. You will be prompted to confirm the deletion by entering a string provided in the modal - enter this and click "Confirm" to finalize the deletion.
+
+    [{% asset vercel/vercel_delete_internal_integration.png alt="Sentry modal showing uninstalling Vercel integration." %}]({% asset vercel/vercel_delete_internal_integration.png @path %})
+
 
 ## Troubleshooting
 If you're having trouble setting up Sentry with your on-premise integration like JIRA Server, Bitbucket Server, GitHub Enterprise, or Gitlab:
