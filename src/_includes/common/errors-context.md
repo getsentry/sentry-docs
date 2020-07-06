@@ -45,19 +45,19 @@ Request, device, OS, runtime, app, browser, GPU, logger, and monitor are the mos
 
 Defines the severity of an event. The level can be set to one of five values, which are, in order of severity: `fatal`, `error`, `warning`, `info`, and `debug.error`. Learn how to set the level in Set the Level
 
-`User`:
+`User`
 
 Providing user information to Sentry helps you evaluate the number of users affecting an issue and evaluate the quality of the application. Learn how to capture user information in Capture the User
 
-`Fingerprint`:
+`Fingerprint`
 
 Sentry uses one or more “fingerprints” to decide how to group errors into issues. Learn more about Sentry's approach to grouping algorithms and fingerprinting in Grouping & Fingerprints. Learn how to override the the default group in very advanced use cases in Modifying the Default Fingerprint
 
-`Environment`:
+`Environment`
 
 Environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI. Learn how to set and manage environments in Manage Environments
 
-`Release`:
+`Release`
 
 A release is a version of your code that you deploy to an environment. When enabled, releases also help you determine regressions between releases and their potential source as discussed Track Releases
 
@@ -110,7 +110,7 @@ You can override the default grouping by passing the `fingerprint` attribute an 
 - `module`: groups by the event’s module name
 - `package`: groups by the event’s package name
 
-If you wish to append information, thus making the grouping slightly less aggressive, you can add the special string `{{default}}` as one of the items.
+If you wish to append information, thus making the grouping slightly less aggressive, you can add the special string `default` as one of the items.
 
 This minimal example puts all exceptions of the current scope into the same issue/group:
 
@@ -122,13 +122,13 @@ In addition, you can review two real-world use cases.
 
     Your application queries an external API service, so the stack trace is generally the same (even if the outgoing request is very different).
 
-    The following example splits up the default group Sentry would create (represented by `{{default}}`) further, while also splitting up the group based on the API URL.
+    The following example splits up the default group Sentry would create (represented by `default`) further, while also splitting up the group based on the API URL.
     
     {{ include.errors_grouping_split }}
 
 2. Merging many groups into one group:
 
-    If you have an error that has many different stack traces and never groups together, you can merge them together by omitting `{{default}}` from the fingerprint array.
+    If you have an error that has many different stack traces and never groups together, you can merge them together by omitting `default` from the fingerprint array.
 
     {{ include.errors_grouping_merge }}
 

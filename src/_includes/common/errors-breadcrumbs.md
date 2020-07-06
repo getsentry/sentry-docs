@@ -26,9 +26,9 @@ A timestamp representing when the breadcrumb occurred. The format is either a st
 
 A semi internal attribute `type` can control the type of the breadcrumb. By default, all breadcrumbs are recoded as `default`, which makes it appear as a log entry. Other types are available that influence how they are rendered:
 
-    - `default`: The default breadcrumb rendering
-    - `http`: Renders the breadcrumb as HTTP request
-    - `error`: Renders the breadcrumb as a hard error
+- `default`: The default breadcrumb rendering
+- `http`: Renders the breadcrumb as HTTP request
+- `error`: Renders the breadcrumb as a hard error
 
 The type is not used exclusively to customize the rendering. We **do not recommend** changing the type from the default.
 
