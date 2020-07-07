@@ -222,7 +222,7 @@ exclude some types of errors, you just need to apply the right bitmask.
 For example, if you want to get all errors but exclude notices and deprecations,
 the right bitmask to apply is `E_ALL & ~E_NOTICE & ~E_DEPRECATED`.
 
-##### in_app_exclude
+##### excluded_app_paths
 
 This option configures the list of paths to exclude from the `app_path` detection.
 
