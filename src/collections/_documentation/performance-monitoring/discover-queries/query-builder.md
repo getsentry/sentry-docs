@@ -205,6 +205,22 @@ The Query Builder syntax is identical to [Sentry's Search syntax](/workflow/sear
 - Lower bounds (is more than or equal to): `count(id):>99` or `count(id):>=99`
 - Multiple bounds (is more and less than): `count(id):>10 count(id):<20`
 
+**Using `or` & `and` Conditions**
+
+Use `or` and `and` between aggregate filters. `and` can also handle queries between non-aggregates and aggregates. However, `or` cannot. 
+
+Some examples of using the `or` condition:
+
+```
+# a valid `or` query
+[ add `or` example here ]
+
+# an invalid `or` query
+[ add invalid example here ]
+```
+
+Also, the queries prioritize `and` before `or`. For example, "x `and` y `or` z" is the same as "[x `and` y] `or` z".
+
 **Tag Summary Filters**
 
 Every event has a list of tag values. The tag summary (or facet map) is a visualization of the top 10 keys sorted by frequency. The most common tag value is listed directly above the bar in the description and percentage. Hover over each section in a bar to see the exact distribution for that tag. 
