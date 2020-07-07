@@ -16,7 +16,6 @@ Sentry.init({
 {%- include common/configuration-basics.md 
 sdk_name="JavaScript"
 config_basic_content=__config_basic_content 
-hide_error_types=true
 hide_send_default_pii=true
 hide_server_name=true
 hide_in_app_include=true

@@ -3,7 +3,7 @@ title: Breadcrumbs
 excerpt: ""
 ---
 
-{%- capture errors_manual_breadcrumbs -%}
+{%- capture __errors_manual_breadcrumbs -%}
 
 This example is for an application that sometimes throws an error after the screen resizes.
 

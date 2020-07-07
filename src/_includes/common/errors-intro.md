@@ -1,9 +1,10 @@
 {% comment %}
 Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
 
-1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
-2. Create a new errors folder and new errors.md file in _documentation/sdks/<platform-name> 
-3. Create the defined `include` statements and add them to the intro.md file
+
+1. If you haven't already, add the errors content folder to directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
+2. Create a copy of intro.md file in _documentation/sdks/<platform-name>/errors 
+3. Create the defined `include` statements and add them to the errors-intro.md file
 
 If you have questions, please ask Fiona or Daniel. 
 
@@ -29,5 +30,9 @@ When your SDK sends an event to Sentry, the event is enriched with data. This da
     Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source.
     
 {{ include.error_page_content }}
+
+{% comment %}
+Guideline: Create the `include` statement that links to the pages specific to the SDK you are documenting. For example, here we link to the user feedback widget content for JavaScript.
+{% endcomment %}
     
     

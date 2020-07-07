@@ -1,13 +1,14 @@
 {% comment %}
 Guideline: This page is comprehensive; it is stored in the common folder, nested under _includes/common. To use, 
 
-1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
-2. Create a copy of "context.md" file in _documentation/sdks/<platform-name> 
+If you have questions, please ask Fiona or Daniel. 
+1. If you haven't already, add the errors content folder to directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
+2. Create a copy of context.md file in _documentation/sdks/<platform-name>/errors 
 3. Create the defined `include` statements and add them to the errors-context.md file
 
 If you have questions, please ask Fiona or Daniel. 
 
-**The objective for this page is that a developer can easily view the what context is sent for events for this SDK**
+**The objective for this page is that a developer can easily view the what context is with events for this SDK**
 {% endcomment %}
 
 Data is sent with every event, and is either predefined or custom:
@@ -25,11 +26,11 @@ Regardless of whether the data sent to Sentry is predefined or custom, additiona
     
     {{ include.errors_configure_tags }}
 
-    {% comment %} add screen shot {% endcomment %}
+    [{% asset additional-data/tags.png alt="All tags and their related values." %}]({% asset additional-data/tags.png @path %})
 
 - *Context* includes additional diagnostic information attached to an event. By default, contexts are not searchable, but for convenience Sentry turns information in some predefined contexts into tags, making them searchable.
 
-   {% comment %} add screen shot {% endcomment %}
+   [{% asset additional-data/predefined_contexts.png alt="Predefined data such as the name and version." %}]({% asset additional-data/predefined_contexts.png @path %})
 
 ## What Sentry Sends Automatically
 
@@ -37,7 +38,7 @@ Certain data is sent to Sentry automatically. This section explains the predefin
 
 ### Predefined Data
 
-Sentry turns additional, predefined data or specific attributes on the data into _tags_, which you can use for a variety of purposes, such as searching in the web UI for the event or delving deeper into your application. For example, you can use tags such as `level` or `user.email` to surface particular errors. You can also enable Sentry to track releases, which unlocks features that help you delve more deeply into the differences between deployed releases.
+Sentry turns additional, predefined data or specific attributes on the data into _tags_, which you can use for a variety of purposes, such as searching in the web UI for the event or delving deeper into your application. For example, you can use tags such as `level` or `user.email` to surface particular errors. You can also enable Sentry to track [releases](/workflow/releases/), which unlocks features that help you delve more deeply into the differences between deployed releases.
 
 If Sentry captures some predefined data but doesn’t expose it as a tag, you can set a custom tag for it.
 
@@ -61,9 +62,12 @@ Environment
 
 Release
 
-: A release is a version of your code that you deploy to an environment. When enabled, releases also help you determine regressions between releases and their potential source as discussed Track Releases
+: A release is a version of your code that you deploy to an environment. When enabled, releases also help you determine regressions between releases and their potential source as discussed our content discussing [releases](/workflow/releases/).
 
 {{ include.errors_release_name }}
+{% comment %}
+Guideline: Create the `include` statement that provides SDK specific information
+{% endcomment %}
 
 ## Modifying Defaults
 
@@ -72,6 +76,9 @@ Modify the defaults with any of the following:
 ### Set the Level
 
 {{ include.errors_set_level }}
+{% comment %}
+Guideline: Create the `include` statement that provides SDK specific information
+{% endcomment %}
 
 ### Capture the User
 
@@ -96,6 +103,9 @@ ip_address
 To capture a user:
 
 {{ include.errors_capture_user }}
+{% comment %}
+Guideline: Create the `include` statement that provides SDK specific capture user information
+{% endcomment %}
 
 In addition, you can provide arbitrary key/value pairs beyond the reserved names, and the Sentry SDK will store those with the user.
 
@@ -117,6 +127,9 @@ If you wish to append information, thus making the grouping slightly less aggres
 This minimal example puts all exceptions of the current scope into the same issue/group:
 
 {{ include.errors_grouping_example}}
+{% comment %}
+Guideline: Create the `include` statement that provides SDK specific grouping example
+{% endcomment %}
 
 In addition, you can review two real-world use cases.
 
@@ -127,12 +140,18 @@ In addition, you can review two real-world use cases.
     The following example splits up the default group Sentry would create (represented by `default`) further, while also splitting up the group based on the API URL.
     
     {{ include.errors_grouping_split }}
+{% comment %}
+Guideline: Create the `include` statement that provides SDK specific grouping example
+{% endcomment %}
 
 2. Merging many groups into one group:
 
     If you have an error that has many different stack traces and never groups together, you can merge them together by omitting `default` from the fingerprint array.
 
     {{ include.errors_grouping_merge }}
+{% comment %}
+Guideline: Create the `include` statement that provides SDK specific grouping example
+{% endcomment %}
 
 ## Extra Context
 
@@ -141,12 +160,15 @@ In addition to the structured context that Sentry understands, you can send a ke
 To configure tags:
 
  {{ include.errors_configure_tags }}
+{% comment %}
+Guideline: Create the `include` statement that provides SDK specific tag example
+{% endcomment %}
 
 **Important:** Sentry strongly recommends against setting custom tags that use reserved names.
 
 Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries) to an event. You cannot search these, but they are viewable on the issue page:
 
-{% comment %} add screen shot {% endcomment %}
+[{% asset additional-data/additional_data.png alt="Custom contexts as viewed on the Additional Data section of an event." width="500"%}]({% asset additional-data/additional_data.png @path %})
 
 To configure extra context:
 
@@ -154,5 +176,11 @@ To configure extra context:
 
 When sending extra context, *be aware of maximum payload size*, especially if you want to send the whole application state as extra data. Sentry does not recommend this approach since application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you’ll receive an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay pending forever (for example, in Google Chrome).
 
-{{ include.errors_extra_context }}
+Sentry will try its best to accommodate the data you send, but Sentry will trim large context payloads or truncate the payloads entirely. 
 
+For more details, see the [full documentation on SDK data handling](https://develop.sentry.dev/sdk/data-handling/).
+
+{{ include.errors_extra_context }}
+{% comment %}
+Guideline: Create the `include` statement that provides SDK specific context information.
+{% endcomment %}

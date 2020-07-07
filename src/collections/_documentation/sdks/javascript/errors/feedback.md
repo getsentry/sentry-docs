@@ -37,12 +37,12 @@ If you're not using a framework, you can collect feedback just before an event i
 </script>
 ```
 
-### How You Can Modify
+### Modify the Widget
 
 You can customize the widget to your team's needs, especially for localization purposes. All options can be passed through the `showReportDialog` call.
 
-| Param | Default |
-| --- | --- |
+| Parameter | Default |
+| ------------- | --- |
 | `eventId` | Manually set the id of the event. |
 | `dsn` | Manually set dsn to report to. |
 | `user` | Manually set user data _[an object with keys listed above]_. |

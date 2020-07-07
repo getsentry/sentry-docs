@@ -38,7 +38,7 @@ As explained, the Loader lazy loads and injects our SDK into your website, but
 
 ```html
 <script> 
-Sentry.onLoad(function() {
+  Sentry.onLoad(function() {
     // Use whatever Sentry.* function you want
   });
   Sentry.forceLoad();
