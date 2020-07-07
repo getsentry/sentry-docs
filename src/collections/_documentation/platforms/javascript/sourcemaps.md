@@ -259,8 +259,7 @@ In order for uploaded source maps to be located and applied, the release needs t
 To verify this, open up the issue from the Sentry UI and check if the release is configured. If it says "_not configured_" or "_N/A_" next to **Release** on the right hand side of the screen (or if you do not see a `release` tag in the list of tags), you'll need to go back and [tag your errors](/workflow/releases/#tag-errors). If this is properly set up you'll see "Release: my_example_release". 
 
 ### Verify artifacts are uploaded
-
-Once your release is properly configured and issues are tagged, from within an issue you can then click on the release >> Artifacts (or **Releases >> your specific release >> Artifacts**) to check that your source maps and the associated files are in fact uploaded to the correct release.
+Once your release is properly configured and issues are tagged, you can find the artifacts uploaded to Sentry by navigating to **[Project] » Project Settings » Source Maps**.
 
 Additionally, make sure all of the necessary files are available. For Sentry to de-minify your stack traces you must provide both the minified files (for example, app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 

@@ -232,6 +232,7 @@ Source maps can be either:
 
 #### Uploading Source Maps to Sentry
 Except for [Webpack](/platforms/javascript/sourcemaps/#webpack), the recommended way to upload source maps is using [Sentry CLI](/cli/). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs](/cli/configuration/) to set up your project.
+You can find the artifacts uploaded to Sentry by navigating to **[Project] » Project Settings » Source Maps**.
 
 Now you need to set up your build system to create a release and attach the various source files. For Sentry to de-minify your stack traces you must provide both the minified files (e.g. app.min.js) and the corresponding source maps. In case the source map files do not contain your original source code (`sourcesContent`), you must additionally provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.)
 
