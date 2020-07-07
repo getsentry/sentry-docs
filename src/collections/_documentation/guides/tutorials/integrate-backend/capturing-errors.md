@@ -25,8 +25,8 @@ The Sentry SDK will automatically capture and report any Unhandled Error that ha
 
 5. Notice that the event is:
 
-   * Tagged with the `Environment` and `Release` options we've set in the previous tutorial and `handled:no` - marking this event as an unhandled error.
-   * Contains a _Suspect Commit_ enabled by the Commit Tracking feature we enabled in the previous tutorial.
+   - Tagged with the `Environment` and `Release` options we've set in the previous tutorial and `handled:no` - marking this event as an unhandled error.
+   - Contains a _Suspect Commit_ enabled by the Commit Tracking feature we enabled in the previous tutorial.
 
 ## Handled Errors
 
@@ -34,7 +34,7 @@ The Sentry SDK contains various methods that you can utilize to **explicitly** r
 
 ### captureException
 
-1. Open the `views.py` file. Notice  that we import `captureException` from the sentry_sdk lib.
+1. Open the `views.py` file. Notice that we import `captureException` from the sentry_sdk lib.
 
    ```python
       from sentry_sdk import capture_exception
@@ -56,17 +56,16 @@ The Sentry SDK contains various methods that you can utilize to **explicitly** r
    from sentry_sdk import capture_message
 ```
 
-2. You can place the capture_message option anywhere within your app. For the sake of this example, we've added it to the same function, `HandledErrorView` and replaced `capture_exception`.
+2. You can place the `capture_message` option anywhere within your app. For our example, we've created a function `CaptureMessageView` to capture the message we want to track.
 
 3. Once the app runs and to trigger a handled issue is as simple as clicking or going to this link
-   `http://localhost:8000/handled`.
+   `http://localhost:8000/message`.
 
 4. Within your issues stream, you can find the exact issue using the event_id generated (mentioned above).
 
 ![Import and Configure SDK]({% asset guides/integrate-backend/capture_message.png @path %})
 
 **Note** Typically, `capture_message` is not emitted but there are times when a developer may want to add a simple message within their app for debugging purposes and `capture_message` is great for that.
-
 
 ## Next
 

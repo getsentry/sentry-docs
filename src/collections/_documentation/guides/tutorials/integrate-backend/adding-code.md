@@ -13,12 +13,12 @@ Integrating the frontend code and backend code is relatively straightforward. Th
 
 1. Open up the file `views.py` within the Django Demo app.
 
-2. In the `views.py` file you can see how Sentry is capturing the transactionID.
+2. Notice in the `views.py` file you can see how Sentry is capturing the `transactionID`.
 
    - Sentry is making a simple `get` request to get the `X-Transaction-ID`.
      ![Import and Configure SDK]({% asset guides/integrate-backend/capture_transaction_id.png @path %})
 
-3. Once the requests are made and a value is given, we set the `X-Transaction-ID` to custom tags. In our example, we set the tags to be `transaction_id`.
+3. Using the captured `X-Transaction-ID`, we set the `X-Transaction-ID` to our custom tag `transaction_id`.
 
    - **Note:** Please keep the tag fields consistent in both the frontend and backend app.
 
@@ -26,7 +26,7 @@ Integrating the frontend code and backend code is relatively straightforward. Th
 
 ## Reporting an Error
 
-1. Run both the frontend and backend applications at the same time.
+1. Open and run both the frontend and backend applications at the same time.
 
    ```bash
    $ make deploy
@@ -42,6 +42,6 @@ Integrating the frontend code and backend code is relatively straightforward. Th
 
 3. Go to your issues stream, select both the frontend and backend projects, and click on the newest issue.
 
-4. Within the newest issue click on the `transaction_id` and you will be redirected to the Issues Stream with both issues related to one another displayed.
+4. In your newest issue click on the `transaction_id` and you will be redirected to the Issues Stream with both issues related to one another displayed.
 
 ![Import and Configure SDK]({% asset guides/integrate-backend/issue_with_transaction_id.png @path %})

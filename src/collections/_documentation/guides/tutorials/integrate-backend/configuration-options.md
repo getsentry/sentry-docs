@@ -36,7 +36,7 @@ Let's see how we set up the release in this project:
       sentry-cli releases -o $(SENTRY_ORG) new -p $(SENTRY_PROJECT) $(VERSION)
    ```
 
-5. In the previous tutorial we configured the GitHub integration, and added the code repository for Commit Tracking. Now we can associate commits from that repository to the new release, by running the command:
+5. In the previous tutorial, we configured the GitHub integration and added the code repository for Commit Tracking. Now we can associate commits from that repository to the new release, by running the command:
 
    ```bash
    > associate_commits:
@@ -66,7 +66,7 @@ Let's see how we add breadcrumbs to our app.
 
 ## Environment
 
-`Environment` is a powerful configuration option that enables developers using Sentry to perform various workflows (filter issues, trigger alerts, etc.0 based on the deployment environment in which the errors are occurring in.
+`Environment` is a powerful configuration option that enables developers using Sentry to perform various workflows (filter issues, trigger alerts, etc. based on the deployment environment in which the errors are occurring in.
 
 1. Open the `settings.py` file
 
@@ -76,7 +76,7 @@ Let's see how we add breadcrumbs to our app.
     environment:"Production"
    ```
 
-   > **Note** Environment values are freeform strings. The Sentry SDK or UI will not limit you to any specific value or format. In this example we hardcoded the value. In a real life app the value would probably be determined dynamically through a properties file, system, or environment variable.
+   > **Note** Environment values are freeform strings. The Sentry SDK or UI will not limit you to any specific value or format. In this example, we hardcoded the value. In a real-life app, the value would probably be determined dynamically through a properties file, system, or environment variable.
 
 ## Next
 

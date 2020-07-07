@@ -53,7 +53,7 @@ Sentry captures data by using a platform-specific SDK within your application ru
 
 <!-- Refer to the [doc](https://docs.sentry.io/error-reporting/quickstart/?platform=python) on how to get started. -->
 
-1. To start working with the SDK in our Django app we install the `sentry-sdk` by defining the dependency in the `requirements.txt` file. The SDK documentation and release information is available in the [Sentry SDK](https://github.com/getsentry/sentry-python) GitHub repository.
+1. To start working with the SDK in our Django app we install the `sentry-sdk` by defining the dependency in the `requirements.txt` file. The SDK documentation and release information are available in the [Sentry SDK](https://github.com/getsentry/sentry-python) GitHub repository.
 
 2. Open the `settings.py` file (located under \_./backend-monitoring/myproject/settings.py). This is where we initialize and configure the Sentry SDK in our application.
 
