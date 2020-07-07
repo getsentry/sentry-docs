@@ -22,6 +22,8 @@ Regardless of whether the data sent to Sentry is predefined or custom, additiona
     Once you've started sending tagged data, you'll see it in the Sentry web UI: the filters within the sidebar on the Project page; summarized within an event; and on the tags page for an aggregated event.
 
     We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. We also keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
+    
+    {{ include.errors_configure_tags }}
 
     {% comment %} add screen shot {% endcomment %}
 
@@ -39,7 +41,7 @@ Sentry turns additional, predefined data or specific attributes on the data into
 
 If Sentry captures some predefined data but doesn’t expose it as a tag, you can set a custom tag for it.
 
-Request, device, OS, runtime, app, browser, GPU, logger, and monitor are the most typical predefined data sent with an event. In addition, the following are sent, and can be modified for your team's use.
+Request, device, OS, runtime, app, browser, GPU, logger, and monitor are the most typical predefined data sent with an event. In addition, the following are sent, and can be modified for your team's use:
 
 Level
 
@@ -67,11 +69,11 @@ Release
 
 Modify the defaults with any of the following:
 
-### Set the Level ###
+### Set the Level
 
 {{ include.errors_set_level }}
 
-**Capture the User**
+### Capture the User
 
 Users consist of a few critical pieces of information that construct a unique identity in Sentry. Each of these is optional, but one **must** be present for the Sentry SDK to capture the user:
 
@@ -132,9 +134,9 @@ In addition, you can review two real-world use cases.
 
     {{ include.errors_grouping_merge }}
 
-### Custom Data
+## Extra Context
 
-Custom data is arbitrary structured or unstructured extra data you can attach to your event. These data can take two forms, tags and context, both of which are defined in "Enriching Error Data" in the section above.
+In addition to the structured context that Sentry understands, you can send a key paired with a data object which the Sentry SDK will store alongside the event. These are not indexed, and the Sentry SDK uses them to add additional information about what might be happening:
 
 To configure tags:
 
@@ -146,8 +148,11 @@ Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries
 
 {% comment %} add screen shot {% endcomment %}
 
-To configure custom data:
+To configure extra context:
 
-{{ include.errors_configure_custom_data }}
+{{ include.errors_configure_extra_context }}
 
-When sending custom data, *be aware of maximum payload size*, especially if you want to send the whole application state as extra data. Sentry does not recommend this approach since application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you’ll receive an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay pending forever (for example, in Google Chrome).
+When sending extra context, *be aware of maximum payload size*, especially if you want to send the whole application state as extra data. Sentry does not recommend this approach since application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you’ll receive an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay pending forever (for example, in Google Chrome).
+
+{{ include.errors_extra_context }}
+
