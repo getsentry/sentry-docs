@@ -44,8 +44,20 @@ The `Tracing` integration is specific to `@sentry/browser` and does not work wit
 The `Tracing` integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
 
 ```javascript
+// Without CDN
+
 import * as Sentry from '@sentry/browser';
 import { Integrations as ApmIntegrations } from '@sentry/apm';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    new ApmIntegrations.Tracing(),
+  ],
+  tracesSampleRate: 0.25,
+});
+
+// With CDN
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
