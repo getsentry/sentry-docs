@@ -1022,7 +1022,7 @@ Follow the instructions in the link below:
 
 ## Code Linking
 
-These integrations will allow you to seamlessly connect a Sentry error to the underlying code behind the error in a separate platform.
+These integrations will allow you to seamlessly connect a Sentry error to the underlying code behind the error.
 
 ### Rookout
 
@@ -1084,11 +1084,11 @@ Follow the instructions in the link below:
 
 ## Deployment
 
-These integrations will assist in automating your release and deployment process, making understanding your errors simpler.
+These integrations help automate your release and deployment process.
 
 ### Vercel
 
-Vercel is an all-in-one platform with Global CDN supporting static & JAMstack deployment and Serverless Functions. Connect your Sentry and Vercel projects to automatically upload source maps and notify Sentry of new releases being deployed.
+Vercel is an all-in-one platform with Global CDN supporting static and JAMstack deployment and Serverless Functions. Connect your Sentry and Vercel projects to automatically upload source maps and notify Sentry of release deployment.
 
 **Installation**
 
@@ -1098,7 +1098,7 @@ Vercel is an all-in-one platform with Global CDN supporting static & JAMstack de
 
     [{% asset vercel/vercel_install.png alt="Sentry modal showing Vercel installation." %}]({% asset vercel/vercel_install.png @path %})
 
-    **Note that the installation created an internal integration for the purpose of creating an auth token used in creating releases. If the Vercel internal integration is deleted, your Vercel integration will stop working!**
+    **Note that the installation created an internal integration to generate an auth token used in building releases. If the Vercel internal integration is deleted, your Vercel integration will stop working!**
 
     [{% asset vercel/vercel_internal_integration.png alt="Sentry modal showing Vercel internal integration." %}]({% asset vercel/vercel_internal_integration.png @path %})
 
@@ -1117,7 +1117,7 @@ Vercel is an all-in-one platform with Global CDN supporting static & JAMstack de
     * `SENTRY_PROJECT` - the name of your linked Sentry project
     * `SENTRY_AUTH_TOKEN` - the auth token from the Vercel Internal Integration that was created upon installation
     * `NEXT_PUBLIC_SENTRY_DSN` - the linked Sentry project's DSN
-    * `VERCEL_GITHUB_COMMIT_SHA`, `VERCEL_GITLAB_COMMIT_SHA`, or `VERCEL_BITBUCKET_COMMIT_SHA` - your source code provider's commit sha, used for creating releases and associating commits
+    * `VERCEL_GITHUB_COMMIT_SHA`, `VERCEL_GITLAB_COMMIT_SHA`, or `VERCEL_BITBUCKET_COMMIT_SHA` - your source code provider's commit SHA, used for creating releases and associating commits
 
 **Usage**
 
@@ -1132,7 +1132,7 @@ Vercel is an all-in-one platform with Global CDN supporting static & JAMstack de
     [{% asset vercel/vercel_delete.png alt="Sentry modal showing uninstalling Vercel integration." %}]({% asset vercel/vercel_delete.png @path %})
 
 
-2. Delete the internal integration that was created by navigating to **Organization Settings** > **Developer Settings** and clicking the trash can icon next to **Vercel Internal Integration**. You will be prompted to confirm the deletion by entering a string provided in the modal - enter this and click "Confirm" to finalize the deletion.
+2. Delete the internal integration that was created by navigating to **Organization Settings** > **Developer Settings** and clicking the trash can icon next to **Vercel Internal Integration**. You will be prompted to confirm the deletion by entering a string provided in the modal. Enter the string and click "Confirm" to finalize the deletion.
 
     [{% asset vercel/vercel_delete_internal_integration.png alt="Sentry modal showing uninstalling Vercel integration." %}]({% asset vercel/vercel_delete_internal_integration.png @path %})
 
