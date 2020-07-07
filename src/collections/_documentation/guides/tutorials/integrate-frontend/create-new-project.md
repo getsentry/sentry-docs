@@ -67,4 +67,4 @@ In this step, you create a new Alert rule notifying **every time** an event occu
 
 ## Next
 
-[Introduce Sentry SDK to your Frontend Code](/guides/integrate-frontend/initialize-sentry-sdk/)
+[Introduce Sentry SDK to your Frontend Code](/guides/tutorials/integrate-frontend/initialize-sentry-sdk/)
