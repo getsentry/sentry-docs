@@ -353,4 +353,7 @@ You can also use our [API](/api/releases/post-release-deploys/) to create a depl
 
 ## Release Artifacts
 
-JavaScript and iOS projects can utilize release artifacts to unminify or symbolicate error stack traces. To learn more, please check out our [iOS](/clients/cocoa/#sentry-cocoa-debug-symbols) and [JavaScript](/platforms/javascript/sourcemaps/) docs.
+
+JavaScript and React Native projects can utilize release artifacts to unminify or symbolicate error stack traces, you can find the artifacts uploaded to Sentry by navigating to **[Project] » Project Settings » Source Maps**.
+
+To learn more, please check out our [Source Maps](/platforms/javascript/sourcemaps/) docs.
