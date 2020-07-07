@@ -30,7 +30,7 @@ On-demand capacity is billed at the end of each billing cycle. You are charged p
 
 Reserved capacity allows you to prepay for significant discounts. Your prepaid, reserved capacity is always applied before on-demand capacity. Unused reserved capacity expires at the end of each billing month.
 
-Every Sentry account includes a varying amount of reserved capacity. For example, our base Team plan includes 50k errors, 100k transactions, and 1 GB of attachments per month.
+Every Sentry account includes a varying amount of reserved capacity. For example, our Team plan includes 50k errors, 100k transactions, and 1 GB of attachments per month.
 
 ### Billing Cycles
 
@@ -274,7 +274,7 @@ Yes, the following table details costs for errors, transactions, and attachments
 
 `What happens when my trial expires?`
 
-You are downgraded to your original plan, which has limited members and events. We'll be reminding you to choose whether to adopt the updated plans Sentry offers to take advantage of Performance Monitoring.
+You will be downgraded to the same plan you were on prior to starting the trial. Before the trial ends, Sentry will provide you options to upgrade and continue to use our latest features like Performance Monitoring.
 
 `Who sees my events?`
 
