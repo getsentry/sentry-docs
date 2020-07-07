@@ -18,8 +18,21 @@ Alternatively, instead of npm packages, you can use our pre-built CDN bundle tha
 Next, initialize the integration in your call to `Sentry.init`:
 
 ```jsx
+// Without CDN
+
 import * as Sentry from '@sentry/browser';
 import { Integrations as ApmIntegrations } from '@sentry/apm';
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  release: 'my-project-name@' + process.env.npm_package_version,
+  integrations: [
+    new ApmIntegrations.Tracing(),
+  ],
+  tracesSampleRate: 0.25, // must be present and non-zero
+});
+
+// With CDN
+
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   release: 'my-project-name@' + process.env.npm_package_version,
