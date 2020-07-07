@@ -12,7 +12,7 @@ initialized.
 ## Common Options
 
 The list of common options across SDKs.  These work more or less the same in all SDKs, but some
-subtle differences will exist to better support the platform. Options which can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically. See [Working with Projects]({%- link _documentation/cli/configuration.md -%}#sentry-cli-working-with-projects) for more information. 
+subtle differences will exist to better support the platform. Options which can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically. See [Working with Projects](/cli/configuration/#sentry-cli-working-with-projects) for more information. 
 
 {:.config-key}
 ### `dsn`
@@ -96,7 +96,7 @@ This feature is `off` by default.
 {% unsupported browser javascript node %}
 If this flag is enabled, certain personally identifiable information is added by active integrations. By default no such data is sent.
 
-If possible, it's recommended to turn on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_]({%- link _documentation/data-management/sensitive-data.md -%}).
+If possible, it's recommended to turn on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_](/data-management/sensitive-data/).
 {% endunsupported %}
 
 {:.config-key}
@@ -110,14 +110,14 @@ will attempt to auto-discover this value.
 {% endunsupported %}
 
 {:.config-key}
-### `blocklist-urls`
+### `deny-urls`
 
 {% supported browser browsernpm %}
 A list of strings or regex patterns that match error URLs which should not be sent to Sentry.  By default, all errors will be sent.
 {% endsupported %}
 
 {:.config-key}
-### `whitelist-urls`
+### `allow-urls`
 
 {% supported browser browsernpm %}
 A legacy alias for a list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry.  By default, all errors
@@ -176,7 +176,7 @@ happen as part of the `init()` call, in some others, different patterns apply.
 {:.config-key}
 ### `integrations`
 
-{% unsupported csharp aspnetcore rust %}
+{% unsupported csharp aspnetcore %}
 In some SDKs, the integrations are configured through this parameter on library initialization.
 For more information, have a look at the specific integration documentation.
 {% endunsupported %}
@@ -184,7 +184,7 @@ For more information, have a look at the specific integration documentation.
 {:.config-key}
 ### `default-integrations`
 
-{% unsupported csharp aspnetcore rust %}
+{% unsupported csharp aspnetcore %}
 This can be used to disable integrations that are added by default.  When set to `false` no
 default integrations are added.
 {% endunsupported %}

@@ -11,7 +11,7 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 To install the PHP SDK, you need to be using Composer in your project. For more details about Composer, see the [Composer documentation](https://getcomposer.org/doc/).
 
 ```bash
-composer require sentry/sdk:{% sdk_version sentry.php.sdk %}
+composer require sentry/sdk
 ```
 
 ### Connecting the SDK to Sentry
@@ -152,7 +152,7 @@ Sentry\addBreadcrumb(new Sentry\Breadcrumb(
 
 For more information, see:
 
-- [Full documentation on Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%})
+- [Full documentation on Breadcrumbs](/enriching-error-data/breadcrumbs/)
 - [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs)
 
 ### Filter Events & Custom Logic
@@ -170,7 +170,7 @@ Sentry\init([
 
 For more information, see:
 
-- [Full documentation on Filtering Events]({%- link _documentation/error-reporting/configuration/filtering.md -%})
+- [Full documentation on Filtering Events](/error-reporting/configuration/filtering/)
 - [Manage Your Flow of Errors Using Inbound Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters)
 
 
@@ -181,13 +181,13 @@ libraries.  Similar to plugins, they extend the functionality of the Sentry SDK.
 Integrations are configured by a call to `init()` method.
 
 #### Web Frameworks
-- [Laravel]({%- link _documentation/platforms/php/laravel.md -%})
-- [Symfony]({%- link _documentation/platforms/php/symfony.md -%})
+- [Laravel](/platforms/php/laravel/)
+- [Symfony](/platforms/php/symfony/)
 
 #### Default Integrations
 Default integrations are integrations enabled by default that integrate into the standard library or the interpreter itself. They are documented so you can see what they do and that they can be disabled if they cause issues. To disable system integrations set default_integrations => false when calling init().
 
-For more information, see full documentation on [Default Integrations]({%- link _documentation/platforms/php/default-integrations.md -%}).
+For more information, see full documentation on [Default Integrations](/platforms/php/default-integrations/).
 
 
 ### PHP Specific Options

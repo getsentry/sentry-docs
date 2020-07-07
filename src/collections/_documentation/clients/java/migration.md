@@ -53,7 +53,7 @@ What follows is a small guide explaining the major changes.
 
   This is because appenders are initialized only when the first message (at or above the threshold) is sent to them, which means Sentry has no idea how to initialize and configure itself until the first event is sent. This may seem OK, but it prevented users from being able to do things before an error was sent, such as: record breadcrumbs, set the current user, and more.
 
-  For this reason, all configuration is now done “outside” of the logging integration itself. You may configure Sentry using a properties file (default: `sentry.properties`) if you preferred the old style, [more information can be found on the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration).
+  For this reason, all configuration is now done “outside” of the logging integration itself. You may configure Sentry using a properties file (default: `sentry.properties`) if you preferred the old style, [more information can be found on the configuration page](/clients/java/config/#configuration).
 
   For example:
 
@@ -147,7 +147,7 @@ What follows is a small guide explaining the major changes.
 
 `Now (sentry-java)`
 
-: To do customization users subclass `DefaultSentryClientFactory` and then call out that class with the `factory` option, like `factory=my.company.MySentryClientFactory`. [See the configuration page]({%- link _documentation/clients/java/config.md -%}#configuration) for more information.
+: To do customization users subclass `DefaultSentryClientFactory` and then call out that class with the `factory` option, like `factory=my.company.MySentryClientFactory`. [See the configuration page](/clients/java/config/#configuration) for more information.
 
 ## Android
 
@@ -157,4 +157,4 @@ What follows is a small guide explaining the major changes.
 
 `Now (sentry-java)`
 
-: Android users now use the same `Sentry` and `SentryClient` classes as everyone, they just need to initialize it with their application context and the `AndroidSentryClientFactory`. For an example, [see the Android documentation]({%- link _documentation/clients/java/integrations.md -%}).
+: Android users now use the same `Sentry` and `SentryClient` classes as everyone, they just need to initialize it with their application context and the `AndroidSentryClientFactory`. For an example, [see the Android documentation](/clients/java/integrations/).

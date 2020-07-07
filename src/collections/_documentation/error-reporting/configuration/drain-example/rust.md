@@ -4,9 +4,8 @@ the guard and make sure it disposes on shutdown.  Alternatively the client can b
 
 ```rust
 use std::time::Duration;
-use sentry::Hub;
 
-if let Some(client) = Hub.current().client() {
+if let Some(client) = sentry::Hub::current().client() {
     client.close(Some(Duration::from_secs(2)));
 }
 ```

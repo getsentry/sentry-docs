@@ -6,7 +6,7 @@ sidebar_order: 2
 
 This guide walks you through the process of automating Sentry release management and deploy notifications in Jenkins. After deploying in Jenkins, you'll be able to identify suspect commits that are likely the culprit for new errors. You'll also be able to apply source maps to see the original code in Sentry.
 
-Before starting, confirm that your Sentry project is properly set up to track commit metadata by [installing a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration). Once that's installed, and you've added your repository, come back to this guide. If you've already installed a repository integration, you're ready to go.
+Before starting, confirm that your Sentry project is properly set up to track commit metadata by [installing a repository integration](/workflow/releases/#install-repo-integration). Once that's installed, and you've added your repository, come back to this guide. If you've already installed a repository integration, you're ready to go.
 
 ## Create a Sentry Internal Integration
 
@@ -14,7 +14,7 @@ For Jenkins to communicate securely with Sentry, you'll need to create a new int
 
 Give your new integration a name (for example, “Jenkins Deploy Integration”) and specify the necessary permissions. In this case, you need Admin access for “Release” and Read access for “Organization”.
 
-For more details about scopes and API endpoints, see the full documentation on [API Permissions]({%- link _documentation/api/permissions.md -%}).
+For more details about scopes and API endpoints, see the full documentation on [API Permissions](/api/permissions/).
 
 [{% asset releases/jenkins/internal-integration-permissions.png alt="View of internal integration permissions." %}]({% asset releases/jenkins/internal-integration-permissions.png @path %})
 
@@ -38,10 +38,10 @@ To access your internal integration token securely in Jenkins, store it as a [cr
 
 Depending on what type of Jenkins project you're using to build and deploy, you want to follow different steps:
 
-- [Pipeline (Jenkinsfile)]({%- link _documentation/workflow/releases/release-automation/jenkins/index.md -%}#pipeline)
-- [Freestyle project]({%- link _documentation/workflow/releases/release-automation/jenkins/index.md -%}#freestyle-project)
+- [Pipeline (Jenkinsfile)](/workflow/releases/release-automation/jenkins/#pipeline)
+- [Freestyle project](/workflow/releases/release-automation/jenkins/#freestyle-project)
 
-For more details about the release management concepts below, see the full documentation on [release management]({%- link _documentation/cli/releases.md -%}).
+For more details about the release management concepts below, see the full documentation on [release management](/cli/releases/).
 
 ### Pipeline
 
@@ -82,7 +82,7 @@ pipeline {
 **Notes**: 
 
 - If you’re not deploying a JavaScript project or have sent source maps to Sentry using another method, omit the `upload-sourcemaps` line.
-- If you can’t install a repository integration, send commit metadata via the [create release endpoint]({%- link _documentation/workflow/releases/index.md -%}#alternatively-without-a-repository-integration) or omit the `set-commits` line.
+- If you can’t install a repository integration, send commit metadata via the [create release endpoint](/workflow/releases/#alternatively-without-a-repository-integration) or omit the `set-commits` line.
 - `credentials('sentry-auth-token')` refers to the ID of the credentials just added to Jenkins.
 - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
 
@@ -117,5 +117,5 @@ If you're using Freestyle projects, you need to add another build step after dep
     **Notes**: 
 
     - If you’re not deploying a JavaScript project or have sent source maps to Sentry using another method, omit the `upload-sourcemaps` line.
-    - If you can’t install a repository integration, send commit metadata via the [create release endpoint]({%- link _documentation/workflow/releases/index.md -%}#alternatively-without-a-repository-integration) or omit the `set-commits` line.
+    - If you can’t install a repository integration, send commit metadata via the [create release endpoint](/workflow/releases/#alternatively-without-a-repository-integration) or omit the `set-commits` line.
     - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.

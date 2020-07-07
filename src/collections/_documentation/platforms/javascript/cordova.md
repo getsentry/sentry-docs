@@ -6,12 +6,12 @@ sidebar_order: 200
 This is the documentation for our Cordova SDK. The SDK uses a native extension for iOS and Android but will fall back to a pure JavaScript version (@sentry/browser) if needed.
 This SDK is able to catch native crashes that happen on iOS or uncaught exceptions on Android as well.
 
-When you [install]({%- link _documentation/error-reporting/quickstart.md -%}?platform=cordova) `sentry-cordova` 
+When you [install](/error-reporting/quickstart/?platform=cordova) `sentry-cordova` 
 [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will help you to configure your project. We also add a build step to your Xcode project to upload debug symbols we need to symbolicate iOS crashes.
 
 ## Configuration
 
-You will need to whitelist Sentry's domain in your `config.xml` like:
+You will need to allow Sentry's domain in your `config.xml` like:
 
 ```xml
 <access origin="sentry.io" />

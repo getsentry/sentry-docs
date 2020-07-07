@@ -4,7 +4,7 @@ keywords: ["golang"]
 ---
 
 {% capture __alert_content -%}
-Looking for the old `raven-go` SDK documentation? See the Legacy client section [here]({%- link _documentation/clients/go/index.md -%}). If you want to start using sentry-go instead, check out the [migration guide]({%- link _documentation/platforms/go/migration.md -%}).
+Looking for the old `raven-go` SDK documentation? See the Legacy client section [here](/clients/go/). If you want to start using sentry-go instead, check out the [migration guide](/platforms/go/migration/).
 {%- endcapture -%}
 {%- include components/alert.html
   level="warning"
@@ -35,12 +35,12 @@ $ go get github.com/getsentry/sentry-go
 
 To use `sentry-go`, you’ll need to import the `sentry-go` package and initialize it with the client options that will include your DSN. If you specify the `SENTRY_DSN` environment variable, you can omit this value from options and it will be picked up automatically for you. The release and environment can also be specified in the environment variables `SENTRY_RELEASE` and `SENTRY_ENVIRONMENT` respectively.
 
-More on this in [Configuration]({%- link _documentation/platforms/go/config.md -%}) section.
+More on this in [Configuration](/platforms/go/config/) section.
 
 ## Usage {#usage}
 
 The example below shows a sample usage of one of the three primary methods, the `CaptureException` method that allows for sending `error` data to Sentry.
-The other two being `CaptureMessage` and `Recover` which you can read more about in [Error Reporting]({%- link _documentation/error-reporting/quickstart.md -%}?platform={{ include.platform }}) and [Capturing Panics]({%- link _documentation/platforms/go/panics.md -%}).
+The other two being `CaptureMessage` and `Recover` which you can read more about in [Error Reporting](/error-reporting/quickstart/?platform={{ include.platform }}) and [Capturing Panics](/platforms/go/panics/).
 
 ```go
 // This is an example program that makes an HTTP request and prints response
@@ -123,20 +123,20 @@ func main() {
 
 For more detailed information about how to get the most out of `sentry-go` there is additional documentation available:
 
-- [Configuration]({%- link _documentation/platforms/go/config.md -%})
-- [Error Reporting]({%- link _documentation/error-reporting/quickstart.md -%}?platform={{ include.platform }})
-- [Capturing Panics]({%- link _documentation/platforms/go/panics.md -%})
-- [Enriching Error Data]({%- link _documentation/enriching-error-data/additional-data.md -%}?platform={{ include.platform }})
-- [Transports]({%- link _documentation/platforms/go/transports.md -%})
-- [Goroutines]({%- link _documentation/platforms/go/goroutines.md -%})
-- [Integrations]({%- link _documentation/platforms/go/integrations.md -%})
-  - [net/http]({%- link _documentation/platforms/go/http.md -%})
-  - [echo]({%- link _documentation/platforms/go/echo.md -%})
-  - [fasthttp]({%- link _documentation/platforms/go/fasthttp.md -%})
-  - [gin]({%- link _documentation/platforms/go/gin.md -%})
-  - [iris]({%- link _documentation/platforms/go/iris.md -%})
-  - [martini]({%- link _documentation/platforms/go/martini.md -%})
-  - [negroni]({%- link _documentation/platforms/go/negroni.md -%})
+- [Configuration](/platforms/go/config/)
+- [Error Reporting](/error-reporting/quickstart/?platform={{ include.platform }})
+- [Capturing Panics](/platforms/go/panics/)
+- [Enriching Error Data](/enriching-error-data/additional-data/?platform={{ include.platform }})
+- [Transports](/platforms/go/transports/)
+- [Goroutines](/platforms/go/goroutines/)
+- [Integrations](/platforms/go/integrations/)
+  - [net/http](/platforms/go/http/)
+  - [echo](/platforms/go/echo/)
+  - [fasthttp](/platforms/go/fasthttp/)
+  - [gin](/platforms/go/gin/)
+  - [iris](/platforms/go/iris/)
+  - [martini](/platforms/go/martini/)
+  - [negroni](/platforms/go/negroni/)
 
 Resources:
 

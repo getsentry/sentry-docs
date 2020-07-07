@@ -5,6 +5,46 @@ sidebar_order: 2000
 
 `@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the main process and renderers, as well as collect native crash reports (Minidumps).
 
+## Webpack Configuration
+
+If you are seeing an issue similar to `TypeError: mod.require is not a function`, it means that Webpack is bundling your browser and node code together. To fix this, change the import statement of Sentry's `init` method to:
+
+```js
+const { init } = (process.type === 'browser'
+  ? require('@sentry/electron/dist/main')
+  : require('@sentry/electron/dist/renderer'))
+```
+
+And use the Webpack's `DefinePlugin` plugin to specify the process type:
+
+```js
+plugins: [
+  // main process
+  new webpack.DefinePlugin({
+    'process.type': '"browser"'
+  }),
+
+  // renderer process
+  new webpack.DefinePlugin({
+    'process.type': '"renderer"'
+  }),
+]
+```
+
+With these changes, when bundling the code for each of processes, Webpack will replace `process.type` with the constant and removes the inaccessible code:
+
+```js
+const { init } = ('browser' === 'browser'
+  ? require('@sentry/electron/dist/main')
+  : require('@sentry/electron/dist/renderer'))
+
+// becomes >
+
+const { init } = (true
+  ? require('@sentry/electron/dist/main')
+  : undefined)
+```
+
 ## Wizard
 
 Our Sentry Wizard can help with the setup process. Make sure you have installed the `@sentry/wizard` npm package globally, then run:
@@ -18,7 +58,7 @@ This will guide you through the installation and configuration process and sugge
 
 ## Configuring the Client
 
-Start by configuring the SDK as described in the [quickstart guide]({%- link _documentation/error-reporting/quickstart.md -%}?platform=electron#configure-the-sdk). This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the main process and all renderer processes to also catch errors during startup.
+Start by configuring the SDK as described in the [quickstart guide](/error-reporting/quickstart/?platform=electron#configure-the-sdk). This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the main process and all renderer processes to also catch errors during startup.
 
 ## Browser integration
 
@@ -86,7 +126,7 @@ To get symbolicated stack traces for native crashes, you have to upload debug sy
 $ node sentry-symbols.js
 ```
 
-If your app uses a custom Electron fork, contains modules with native extensions or spawns subprocesses, you have to upload those symbols manually using Sentry CLI. For more information, see [_Native Usage_]({%- link _documentation/platforms/javascript/electron.md -%}).
+If your app uses a custom Electron fork, contains modules with native extensions or spawns subprocesses, you have to upload those symbols manually using Sentry CLI. For more information, see [_Native Usage_](/platforms/javascript/electron/).
 
 {% capture __alert_content -%}
 It is currently not possible to send events from native code (such as a C++ extension). However, crashes will still be reported to Sentry if they happen in a process where the SDK has been configured. Also, crash reports from sub processes will not be reported automatically on all platforms. This feature will be added in a future SDK update.
@@ -99,7 +139,7 @@ It is currently not possible to send events from native code (such as a C++ exte
 
 ## Dealing with Minified Source Code
 
-The Electron SDK supports [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you upload source maps in addition to your minified files that data becomes available in Sentry. For more information see [_Source Maps_]({%- link _documentation/platforms/javascript/electron.md  -%}).
+The Electron SDK supports [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you upload source maps in addition to your minified files that data becomes available in Sentry. For more information see [_Source Maps_](/platforms/javascript/electron/).
 
 ## Native
 
@@ -129,10 +169,9 @@ are deploying to, depending on your needs.
 
 If your application contains custom native extensions or you wish to symbolicate
 crashes from a spawned child process, upload their debug information manually
-during your build or release process. See [_Debug Information Files_]({%- link
-_documentation/workflow/debug-files.md -%}) for a detailed description of how to
+during your build or release process. See [_Debug Information Files_](/workflow/debug-files/) for a detailed description of how to
 set up Sentry for native development. Additionally, see [_Uploading Debug
-Information_]({%- link _documentation/cli/dif.md -%}) for the upload process.
+Information_](/cli/dif/) for the upload process.
 
 ### Child Processes
 
@@ -164,11 +203,10 @@ crashReporter.start({
 
 ## Source Maps
 
-To find out why Sentry needs your source maps and how to provide them visit: [Source Maps]({%- link _documentation/platforms/javascript/sourcemaps.md -%}) 
+To find out why Sentry needs your source maps and how to provide them visit: [Source Maps](/platforms/javascript/sourcemaps/) 
 
 ### Native Application
 
 To allow Sentry to match source code references to uploaded source maps or source files, make sure your tool outputs files relative to your project root folder and prefixes them either with `/` or with `~/`. Some tools do this automatically (e.g. Webpack), or have a configuration option (e.g. TypeScript). For others, please see the section on rewriting source maps before uploading.
 
 The SDK will rewrite stack traces before sending them to Sentry. If your application generates manual stack traces for some reason, make sure stack frames always contain relative paths from the project root starting with `~/` or `app:///`.
-

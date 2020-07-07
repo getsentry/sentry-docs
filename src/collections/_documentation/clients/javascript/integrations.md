@@ -13,7 +13,7 @@ In order to keep the core small, we have opted to only include the most basic fu
 
 ## Why are plugins needed at all? {#why-are-plugins-needed-at-all}
 
-JavaScript is pretty restrictive when it comes to exception handling, and there are a lot of things that make it difficult to get relevent information, so it’s important that we inject code and wrap things magically so we can extract what we need. See [_Usage_]({%- link _documentation/clients/javascript/usage.md -%}) for tips regarding that.
+JavaScript is pretty restrictive when it comes to exception handling, and there are a lot of things that make it difficult to get relevent information, so it’s important that we inject code and wrap things magically so we can extract what we need. See [_Usage_](/clients/javascript/usage/) for tips regarding that.
 
 ## Installation
 
@@ -23,7 +23,7 @@ To install a plugin just include the plugin **after** Raven has been loaded and 
 
 To use Sentry with your AngularJS (1.x) application, you will need to use both Raven.js (Sentry’s browser JavaScript SDK) and the Raven.js AngularJS plugin.
 
-On its own, Raven.js will report any uncaught exceptions triggered from your application. For advanced usage examples of Raven.js, please read [_Raven.js usage_]({%- link _documentation/clients/javascript/usage.md -%}).
+On its own, Raven.js will report any uncaught exceptions triggered from your application. For advanced usage examples of Raven.js, please read [_Raven.js usage_](/clients/javascript/usage/).
 
 Additionally, the Raven.js AngularJS plugin will catch any AngularJS-specific exceptions reported through AngularJS’s `$exceptionHandler` interface.
 
@@ -157,7 +157,7 @@ module.exports = moduleName;
 
 ## Angular
 
-This document uses Angular to refer to Angular 2+. On its own, Raven.js will report any uncaught exceptions triggered from your application. For advanced usage examples of Raven.js, please read [_Raven.js usage_]({%- link _documentation/clients/javascript/usage.md -%}).
+This document uses Angular to refer to Angular 2+. On its own, Raven.js will report any uncaught exceptions triggered from your application. For advanced usage examples of Raven.js, please read [_Raven.js usage_](/clients/javascript/usage/).
 
 Additionally, Raven.js can be configured to catch any Angular-specific (2.x) exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component.
 
@@ -293,7 +293,7 @@ At this point, Raven is ready to capture any uncaught exception.
 
 To use Sentry with your Ember application, you will need to use both Raven.js (Sentry’s browser JavaScript SDK) and the Raven.js Ember plugin.
 
-On its own, Raven.js will report any uncaught exceptions triggered from your application. For advanced usage examples of Raven.js, please read [_Raven.js usage_]({%- link _documentation/clients/javascript/usage.md -%}).
+On its own, Raven.js will report any uncaught exceptions triggered from your application. For advanced usage examples of Raven.js, please read [_Raven.js usage_](/clients/javascript/usage/).
 
 Additionally, the Raven.js Ember plugin will catch any Ember-specific exceptions reported through Ember’s [onerror](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_implement-an-ember-onerror-hook-to-log-all-errors-in-production). hook and any [RSVP promises](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_errors-within-an-code-rsvp-promise-code) that would otherwise be swallowed.
 
@@ -395,7 +395,7 @@ At this point, Raven is ready to capture any uncaught exception.
 <!-- ENDWIZARD -->
 ### Expanded Usage
 
-If you’re using React 16 or above, [Error Boundaries](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html) are an important tool for defining the behavior of your application in the face of errors. Be sure to send errors they catch to Sentry using `Raven.captureException`, and optionally this is also a great opportunity to surface [User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%})
+If you’re using React 16 or above, [Error Boundaries](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html) are an important tool for defining the behavior of your application in the face of errors. Be sure to send errors they catch to Sentry using `Raven.captureException`, and optionally this is also a great opportunity to surface [User Feedback](/enriching-error-data/user-feedback/)
 
 ```jsx
 class ExampleBoundary extends Component {
@@ -469,7 +469,7 @@ This plugin only works with Vue 2.0 or greater.
 
 To use Sentry with your Vue application, you will need to use both Raven.js (Sentry’s browser JavaScript SDK) and the Raven.js Vue plugin.
 
-On its own, Raven.js will report any uncaught exceptions triggered from your application. For advanced usage examples of Raven.js, please read [_Raven.js usage_]({%- link _documentation/clients/javascript/usage.md -%}).
+On its own, Raven.js will report any uncaught exceptions triggered from your application. For advanced usage examples of Raven.js, please read [_Raven.js usage_](/clients/javascript/usage/).
 
 Additionally, the Raven.js Vue plugin will capture the name and props state of the active component where the error was thrown. This is reported via Vue’s _config.errorHandler_ hook.
 
@@ -562,7 +562,7 @@ The deprecated plugin “React Native for Raven.js” is a pure JavaScript error
 **Do not use this plugin for new code but instead use the new :ref:`react-native` client integration instead**.
 
 {% capture __alert_content -%}
-Unless you have specific reasons not to, it’s recommended to instead the new [React Native]({%- link _documentation/clients/react-native/index.md -%}#react-native) client instead which supports native and JavaScript crashes as well as an improved integration into the Xcode build process.
+Unless you have specific reasons not to, it’s recommended to instead the new [React Native](/clients/react-native/#react-native) client instead which supports native and JavaScript crashes as well as an improved integration into the Xcode build process.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -621,7 +621,7 @@ react-native bundle \
   --sourcemap-output main.jsbundle.map
 ```
 
-This will write both main.jsbundle and main.jsbundle.map to the current directory. Next, you’ll need to [create a new release and upload these files as release artifacts]({%- link _documentation/clients/javascript/sourcemaps.md -%}#uploading-source-maps-to-sentry).
+This will write both main.jsbundle and main.jsbundle.map to the current directory. Next, you’ll need to [create a new release and upload these files as release artifacts](/clients/javascript/sourcemaps/#uploading-source-maps-to-sentry).
 
 #### Naming your Artifacts
 

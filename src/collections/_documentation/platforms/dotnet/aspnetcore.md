@@ -19,7 +19,7 @@ Or using the .NET Core CLI:
 dotnet add package Sentry.AspNetCore -v {% sdk_version sentry.dotnet.aspnetcore %}
 ```
 
-This package extends [Sentry.Extensions.Logging]({%- link _documentation/platforms/dotnet/microsoft-extensions-logging.md -%}). This means that besides the ASP.NET Core related features, through this package you'll also get access to all the framework's logging integration and also the features available in the main [Sentry]({%- link _documentation/platforms/dotnet/index.md -%}) SDK.
+This package extends [Sentry.Extensions.Logging](/platforms/dotnet/microsoft-extensions-logging/). This means that besides the ASP.NET Core related features, through this package you'll also get access to all the framework's logging integration and also the features available in the main [Sentry](/platforms/dotnet/) SDK.
 
 ## Overview of the features
 
@@ -163,19 +163,19 @@ public void ConfigureServices(IServiceCollection services)
 
 ## Options and Initialization
 
-As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging]({%- link _documentation/platforms/dotnet/microsoft-extensions-logging.md -%}) and [Sentry]({%- link _documentation/platforms/dotnet/index.md -%}). Please refer to the documentation of these packages to get the options that are defined at those levels.
+As previously mentioned, this package is a wrapper around [Sentry.Extensions.Logging](/platforms/dotnet/microsoft-extensions-logging/) and [Sentry](/platforms/dotnet/). Please refer to the documentation of these packages to get the options that are defined at those levels.
 
 Below, the options that are specific to `Sentry.AspNetCore` will be described.
 
 ### SendDefaultPii
 
-Although this setting is part of the [Sentry]({%- link _documentation/platforms/dotnet/index.md -%}) package, in the context of ASP.NET Core, it means reporting the user by reading the frameworks `HttpContext.User`. The strategy to create the `SentryUser` can be customized. Please read [retrieving user info](#capturing-the-affected-user) for more.
+Although this setting is part of the [Sentry](/platforms/dotnet/) package, in the context of ASP.NET Core, it means reporting the user by reading the frameworks `HttpContext.User`. The strategy to create the `SentryUser` can be customized. Please read [retrieving user info](#capturing-the-affected-user) for more.
 
 ### Environment
 
 The environment name is automatically populated by reading the frameworks `IHostingEnvironment` value. 
 
-This option is part of the [Sentry]({%- link _documentation/platforms/dotnet/index.md -%}) package. The value of `IHostingEnvironment` will only be used if **no other method was used**.
+This option is part of the [Sentry](/platforms/dotnet/) package. The value of `IHostingEnvironment` will only be used if **no other method was used**.
 
 Methods that take precedence over `IHostingEnvironment` are:
 

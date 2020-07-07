@@ -20,7 +20,7 @@ This allows the ability for Raven’s integrations to instrument themselves. If 
 
 We serve our own builds off of [Fastly](http://www.fastly.com/). They are accessible over both http and https, so we recommend leaving the protocol off.
 
-Our CDN distributes builds with and without [_integrations_]({%- link _documentation/clients/javascript/integrations.md -%}).
+Our CDN distributes builds with and without [_integrations_](/clients/javascript/integrations/).
 
 ```html
 <script src="https://cdn.ravenjs.com/3.26.4/raven.min.js" crossorigin="anonymous"></script>

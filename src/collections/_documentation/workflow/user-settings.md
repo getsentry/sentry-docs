@@ -75,7 +75,7 @@ Find a historical list of your sessions, including First Seen and Last Seen time
 
 Sentry notifications are broadly categorized into alerts and non-alert notifications. 
 
-- Alerts can be sent to many supported [integrations]({%- link _documentation/workflow/integrations/index.md -%}#webhook-alerts). 
+- Alerts can be sent to many supported [integrations](/workflow/integrations/#webhook-alerts). 
 - Non-alert notifications only go to email.
 
 ## Alerts & Notifications
@@ -84,7 +84,7 @@ Define Project Alerts in [Project] > Project Settings > Alerts. Slide the toggle
 
 Control workflow notifications (for example, in issue assignment, resolution status, and comments) by clicking a radio button under Send Me Workflow Notifications. Fine-tune workflow notifications per project with the dropdown selector.
 
-For more details, see the [full documentation on Alerts & Notifications]({%- link _documentation/workflow/alerts-notifications/index.md -%}).
+For more details, see the [full documentation on Alerts & Notifications](/workflow/alerts-notifications/).
 
 ## Email Routing
 

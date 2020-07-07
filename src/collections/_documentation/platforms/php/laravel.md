@@ -175,11 +175,11 @@ $app['sentry']->setRelease(Git::sha());
 
 ## Configuration
 
-The configuration file should be placed in `config/sentry.php` here you can configure all the [options]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php) the PHP SDK supports and a few Laravel specific options documented below.
+The configuration file should be placed in `config/sentry.php` here you can configure all the [options](/error-reporting/configuration/?platform=php) the PHP SDK supports and a few Laravel specific options documented below.
 
 ### Laravel specific options
 
-The Laravel integration will create [breadcrumbs]({%- link _documentation/platforms/php/index.md -%}#breadcrumbs) for certain events occuring in the framework, the capture of this information can be configured using the following options:
+The Laravel integration will create [breadcrumbs](/platforms/php/#breadcrumbs) for certain events occuring in the framework, the capture of this information can be configured using the following options:
 
 ```php
 'breadcrumbs' => [
@@ -244,11 +244,11 @@ $this->app->extend(ClientBuilderInterface::class, function (ClientBuilderInterfa
 
 ### User Feedback
 
-To see how to show user feedback dialog see: [User Feedback]({%- link _documentation/enriching-error-data/user-feedback.md -%}?platform=laravel).
+To see how to show user feedback dialog see: [User Feedback](/enriching-error-data/user-feedback/?platform=laravel).
 
 ### User Context
 
-Starting with Laravel 5.3 we can automatically add the authenticated user id to the scope if [`send_default_pii`]({%- link _documentation/error-reporting/configuration/index.md -%}?platform=php#send-default-pii) option is set to `true` in your `config/sentry.php`.
+Starting with Laravel 5.3 we can automatically add the authenticated user id to the scope if [`send_default_pii`](/error-reporting/configuration/?platform=php#send-default-pii) option is set to `true` in your `config/sentry.php`.
 
 The mechanism to add more user context to the scope will vary depending on which version of Laravel you're using, but the general approach is the same. Find a good entry point to your application in which the context you want to add is available, ideally early in the process.
 

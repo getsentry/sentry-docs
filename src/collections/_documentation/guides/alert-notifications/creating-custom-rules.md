@@ -120,4 +120,4 @@ This will allow you to refine your rules based on the environment where your pro
 
 ## Next
 
-[Routing Alert Notifications]({%- link _documentation/guides/alert-notifications/routing-alerts.md -%})
+[Routing Alert Notifications](/guides/alert-notifications/routing-alerts/)

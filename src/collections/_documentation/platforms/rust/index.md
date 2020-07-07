@@ -9,36 +9,26 @@ protocol for Rust and provides convenient helpers for sending common types of
 events to Sentry.
 
 The Rust SDK follows the new unified SDK architecture.  To get started have a
-look at the [quickstart](/error-reporting/quickstart/?platform=rust) docs.
+look at the [quickstart](/error-reporting/quickstart/?platform=rust) docs and the crates [API Docs](https://docs.rs/sentry).
+
+## Quick Start
+
+```rust
+let _guard = sentry::init("___PUBLIC_DSN___");
+sentry::capture_message("Hello World!", sentry::Level::Info);
+```
 
 ## Integrations
 
 *Integrations* extend the functionality of the SDK for some common frameworks
 and libraries.
 
-### Framework integrations
+A list of integrations and their feature flags can be found
+[in the integration API docs](https://docs.rs/sentry/0/sentry/integrations/index.html).
 
-Sentry-Rust supports the following application frameworks:
+Apart from those, the Rust SDK also supports the following application frameworks:
 
-* [actix-web](/platforms/rust/actix/)
-
-### Error handling integrations
-
-Sentry-Rust supports the most commonly used libraries for advanced error management:
-
-* [failure](/platforms/rust/failure/)
-* [error-chain](/platforms/rust/error_chain/)
-
-Additionally you can catch panics using the panic integration:
-
-* [panic](/platforms/rust/panic/)
-
-### Logging integrations
-
-Logs can be automatically converted into breadcrumbs.
-
-* [env_logger](/platforms/rust/env_logger/)
-* [log](/platforms/rust/log/)
+* [actix-web 0.7](/platforms/rust/actix/)
 
 ## More Information
 
