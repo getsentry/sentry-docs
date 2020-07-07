@@ -133,4 +133,4 @@ Category hierarchy is automatically defined by folder structure. Add a markdown 
 
 ## Updating Test Snapshots
 
-When adding new pages, use `yarn test -u` to update test snapshots.
+When adding new pages, use `bin/test -u` to update test snapshots.
