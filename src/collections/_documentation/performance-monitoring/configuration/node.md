@@ -53,7 +53,7 @@ setTimeout(() => {
 // ---------------------------------
 ```
 
-Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` option to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Be sure to lower this value to production otherwise, it could easily happen that you burn through your quota.
+Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` option to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Be sure to lower this value in production otherwise you could burn through your quota quickly.
 
 **Automatic Instrumentation**
 
