@@ -3,12 +3,12 @@ title: Azure Functions
 sidebar_order: 9
 ---
 
-Install our Sentry SDK as a dependency In the `package.json`:
-```jsx
-"@sentry/node": "^5.16.1"
-```
+Install our Nodejs SDK in Azure:
+ ````js
+ npm install @sentry/node
+ ````
 
-Set up Sentry error logging for an azure function:
+Set up Sentry error logging for your azure function:
 ````jsx
 const Sentry = require("@sentry/node");
 
