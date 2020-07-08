@@ -3,6 +3,14 @@ title: 'Additional Configuration'
 robots: noindex
 ---
 
+{% capture __alert_content -%}
+This SDK has been superseded by the new React Native SDK. Sentry preserves this documentation for customers using the old client. We recommend using the [updated React Native SDK](/platforms/react-native/) for new projects.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 These are functions you can call in your JavaScript code:
 
 ```javascript
