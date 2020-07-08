@@ -73,7 +73,7 @@ sentry-cli releases set-commits "$VERSION" --commit "my-repo@from..to"
 ```
 
 ### Alternatively: Without a Repository Integration
-You can still use the `--auto` flag and the cli will automatically use the git tree of your local repo, and associate commits between the previous release's commit and the current head commit with the release. If this is the first release, Sentry will use the latest 20 commits. This behavior is configurable with the `--initial-depth` flag. 
+You can still use the `--auto` flag, and the CLI will automatically use the git tree of your local repo, and associate commits between the previous release's commit and the current head commit with the release. If this is the first release, Sentry will use the latest 20 commits. This behavior is configurable with the `--initial-depth` flag.  
 
 You can use the `--local` flag to enable this behavior by default.
 ```bash
