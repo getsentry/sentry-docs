@@ -12,7 +12,7 @@ Supported SDKs
 - JavaScript Browser SDK ≥ {% sdk_version sentry.javascript.browser %}
 - JavaScript Node SDK ≥ {% sdk_version sentry.javascript.node %}
 - Python SDK version ≥ {% sdk_version sentry.python %}
-- Javascript React SDK ≥ {% sdk_version sentry.javascript.react %}
+- Javascript React SDK ≥ {% sdk_version sentry.javascript.browser %}
 
 {%- endcapture -%}
 {%- include components/alert.html
