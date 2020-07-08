@@ -38,7 +38,7 @@ or per event:
 
 ```js
 Sentry.withScope(function(scope) { 
-   scope.setLevel("info"); Sentry.captureException(error);
+   scope.setLevel("info"); Sentry.captureException("info");
 });
 ```
 {%- endcapture -%}
@@ -65,9 +65,9 @@ Sentry.configureScope(function(scope) {
 ```js
     function makeRequest(path, options) {
         return fetch(path, options).catch(function(err) {
-          Sentry.withScope(function(scope) {
-             scope.setFingerprint(['', path]);
-             Sentry.captureException(err);
+            Sentry.withScope(function(scope) {
+                scope.setFingerprint(['{{ default }}', path]);
+                Sentry.captureException(err);
             });
         });
     }
