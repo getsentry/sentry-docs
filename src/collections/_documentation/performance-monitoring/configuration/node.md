@@ -37,9 +37,14 @@ const transaction = Sentry.startTransaction({
 });
 
 setTimeout(() => {
-  transaction.finish();
-  foo();
-}, 200);
+  try {
+    foo();
+  } catch (e) {
+    Sentry.captureException(e);
+  } finally {
+    transaction.finish();    
+  }
+}, 99);
 
 // ---------------------------------
 ```
