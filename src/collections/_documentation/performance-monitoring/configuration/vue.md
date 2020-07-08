@@ -43,7 +43,7 @@ Sentry.init({
       tracing: true
     })
   ],
-  tracesSampleRate: 1
+  tracesSampleRate: 1.0 // Be sure to adjust this to your needs
 });
 ```
 

@@ -8,7 +8,7 @@ After this quick setup, you'll have access to [Performance](/performance-monitor
 {% capture __alert_content -%}
 Sentry's Performance features are currently in beta. For more details about access to these features, feel free to reach out at [performance-feedback@sentry.io](mailto:performance-feedback@sentry.io).
 
-Supported SDKs for Tracing
+Supported SDKs
 - JavaScript Browser SDK ≥ 5.16.0
 - JavaScript Node SDK ≥ 5.16.0
 - Python SDK version ≥ 0.11.2

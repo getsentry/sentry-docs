@@ -22,7 +22,7 @@ Sentry.init({
   integrations: [
     new Integrations.Tracing(),
   ],
-  tracesSampleRate: 0.25, // must be present and non-zero
+  tracesSampleRate: 1.0, // Be sure to adjust this to your needs
 });
 
 // ...
