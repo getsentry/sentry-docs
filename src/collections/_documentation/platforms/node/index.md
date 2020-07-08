@@ -23,9 +23,9 @@ One thing that is the same across all our JavaScript SDKs --- how you add or rem
 ### Adding an Integration
 
 ```javascript
-import * as Sentry from '@sentry/node';
-// or using CommonJS
-// const Sentry = require('@sentry/node');
+const Sentry = require('@sentry/node');
+// or use es6 import statements
+// import * as Sentry from '@sentry/node';
 
 // All integrations that come with an SDK can be found on the Sentry.Integrations object
 // Custom integrations must conform Integration interface: https://github.com/getsentry/sentry-javascript/blob/master/packages/types/src/index.ts
@@ -41,9 +41,9 @@ Sentry.init({
 In this example, we will remove the by default enabled integration for adding breadcrumbs to the event:
 
 ```javascript
-import * as Sentry from '@sentry/node';
-// or using CommonJS
-// const Sentry = require('@sentry/node');
+const Sentry = require('@sentry/node');
+// or use es6 import statements
+// import * as Sentry from '@sentry/node';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
@@ -59,9 +59,9 @@ Sentry.init({
 ### Alternative way of setting an Integration
 
 ```javascript
-import * as Sentry from '@sentry/node';
-// or using CommonJS
-// const Sentry = require('@sentry/node');
+const Sentry = require('@sentry/node');
+// or use es6 import statements
+// import * as Sentry from '@sentry/node';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
