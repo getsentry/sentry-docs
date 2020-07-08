@@ -18,7 +18,7 @@ Because releases work on projects you will need to specify the organization and 
 
 Releases are created with the `sentry-cli releases new` command. It takes at the very least a version identifier that uniquely identifies the releases. There are a few restrictions -- the release name cannot contain newlines, spaces, or "\\\", be ".", "..", or exceed 200 characters. The value can be arbitrary, but for certain platforms, recommendations exist:
 
-- for mobile devices use `VERSION_NUMBER` or `VERSION_NUMBER (BUILD_NUMBER)`. So for instance `1.0.0` or `1.0.0 (1234)`.
+- for mobile devices use `package-name@version-number` or `package-name@version-number+build-number`. **Do not** use `VERSION_NUMBER (BUILD_NUMBER)` as the parenthesis are used for display purposes (foo@1.0+2 becomes 1.0 (2)), so invoking them will cause an error.
 - if you use a DVCS we recommed using the identifying hash (eg: the commit SHA, `da39a3ee5e6b4b0d3255bfef95601890afd80709`). You can let sentry-cli automatically determine this hash for supported version control systems with `sentry-cli releases propose-version`.
 - if you tag releases we recommend using the release tag (eg: `v1.0.0`).
 
