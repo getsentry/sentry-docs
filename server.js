@@ -44,5 +44,16 @@ for (route of routes) {
 }
 
 app.listen(PORT, () => {
-  console.log(`Proxy running at http://localhost:${PORT}`);
+  console.log('\x1b[32m%s\x1b[0m', `-----------------------------------------`);
+  console.log('\x1b[32m%s\x1b[0m', `-----------------------------------------`);
+  console.log('\x1b[32m%s\x1b[0m', `-----------------------------------------`);
+  console.log('\x1b[32m%s\x1b[0m', `-----------------------------------------`);
+  console.log('\x1b[32m%s\x1b[0m', `Open to see the docs http://localhost:${PORT}`);
+  console.log('\x1b[32m%s\x1b[0m', `Open to see the docs http://localhost:${PORT}`);
+  console.log('\x1b[32m%s\x1b[0m', `Open to see the docs http://localhost:${PORT}`);
+  console.log('\x1b[32m%s\x1b[0m', `Open to see the docs http://localhost:${PORT}`);
+  console.log('\x1b[32m%s\x1b[0m', `-----------------------------------------`);
+  console.log('\x1b[32m%s\x1b[0m', `-----------------------------------------`);
+  console.log('\x1b[32m%s\x1b[0m', `-----------------------------------------`);
+  console.log('\x1b[32m%s\x1b[0m', `-----------------------------------------`);
 });
