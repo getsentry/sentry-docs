@@ -10,7 +10,7 @@ Sentry's Performance features are currently in beta. For more details about acce
 
 Supported SDKs
 - JavaScript Browser SDK ≥ {% sdk_version sentry.javascript.browser %}
-- JavaScript Node SDK ≥ {% sdk_version sentry.javascript.browser %}
+- JavaScript Node SDK ≥ {% sdk_version sentry.javascript.node %}
 - Python SDK version ≥ {% sdk_version sentry.python %}
 - Javascript React SDK ≥ {% sdk_version sentry.javascript.react %}
 
