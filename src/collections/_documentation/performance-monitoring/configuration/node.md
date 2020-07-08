@@ -16,7 +16,7 @@ $ npm install @sentry/node @sentry/apm
 
 **Sending Traces**
 
-To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 25% of all your transactions:
+To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 100% of all your transactions:
 
 ```javascript
 const Sentry = require('@sentry/node');
@@ -30,9 +30,30 @@ const Apm = require("@sentry/apm");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 0.25
+  tracesSampleRate: 1.0 // Be sure to adjust this to your needs
 });
+
+// Your test code to verify it works
+
+const transaction = Sentry.startTransaction({
+  op: 'test',
+  name: 'My First Test Transaction',
+});
+
+setTimeout(() => {
+  try {
+    foo();
+  } catch (e) {
+    Sentry.captureException(e);
+  } finally {
+    transaction.finish();    
+  }
+}, 99);
+
+// ---------------------------------
 ```
+
+Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` option to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Make sure to adjust this value according to your needs.
 
 **Automatic Instrumentation**
 
@@ -52,7 +73,7 @@ Sentry.init({
       // enable Express.js middleware tracing
       new Apm.Integrations.Express({ app })
   ],
-  tracesSampleRate: 0.25
+  tracesSampleRate: 0.25 // Be sure to adjust this to your needs
 });
 
 // RequestHandler creates a separate execution context using domains, so that every 

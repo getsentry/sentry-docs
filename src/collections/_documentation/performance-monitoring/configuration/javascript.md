@@ -26,14 +26,13 @@ Sentry.init({
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 0.25, // must be present and non-zero
+  tracesSampleRate: 1.0, // Be sure to adjust this to your needs
 });
 ```
 
-Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions.
+Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Make sure to adjust this value according to your needs.
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
-
 
 **Automatic Instrumentation**
 
@@ -54,7 +53,7 @@ Sentry.init({
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 0.25,
+  tracesSampleRate: 1.0, // Be sure to adjust this to your needs
 });
 
 // With CDN
@@ -64,13 +63,13 @@ Sentry.init({
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 0.25,
+  tracesSampleRate: 1.0, // Be sure to adjust this to your needs
 });
 ```
 
 *NOTE:* The `Tracing` integration is available under `Sentry.Integrations.Tracing` when using the CDN bundle.
 
-To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
+To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 100% of your transactions.
 
 By default, the `pageload` and `navigation` transactions set a transaction name using `window.location.pathname`.
 
@@ -116,7 +115,7 @@ Sentry.init({
       },
     }),
   ],
-  tracesSampleRate: 0.25,
+  tracesSampleRate: 0.25, // Be sure to adjust this to your needs
 });
 ```
 

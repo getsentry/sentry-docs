@@ -13,11 +13,11 @@ Next, initialize the integration in your call to `sentry_sdk.init`:
 ```python
 sentry_sdk.init(
     "___PUBLIC_DSN___", 
-    traces_sample_rate = 0.25
+    traces_sample_rate = 1.0
 )
 ```
 
-Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured traces.
+Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install and configure your SDK to set the `traces_sample_rate` option to a nonzero value.** The example configuration above will transmit 100% of captured traces.
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
 
