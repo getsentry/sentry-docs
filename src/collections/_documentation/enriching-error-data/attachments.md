@@ -6,17 +6,17 @@ sidebar_order: 7
 
 Besides crash reports, Sentry can optionally store additional files uploaded in the same request, such as log files, as event attachments. Attachments allow the files within a crash to not only upload to Sentry, but also persist for further investigation. You can use a higher-level SDK for platforms with built-in support for native crashes, or generate and upload attachments using the API:
 
-- [Native C/C++]({%- link _documentation/platforms/native/index.md -%})
-- [Electron]({%- link _documentation/platforms/javascript/electron.md -%})
-- [Minidump endpoint]({%- link _documentation/platforms/native/minidump.md -%})
+- [Native C/C++](/platforms/native/index/)
+- [Electron](/platforms/javascript/electron/)
+- [Minidump endpoint](/platforms/native/minidump/)
 
-To receive symbolicated stack traces, you have to upload debug information to Sentry. Unless the option to store crash reports is enabled, Sentry will use the crash reports only to create the event, then will drop the files. For more information, see [Debug Information Files]({%- link _documentation/workflow/debug-files.md %}).
+To receive symbolicated stack traces, you have to upload debug information to Sentry. Unless the option to store crash reports is enabled, Sentry will use the crash reports only to create the event, then will drop the files. For more information, see [Debug Information Files](/workflow/debug-files/).
 
 ## Storage and Quota Impact
 
 Attachments persist for 30 days; if your total storage included in your quota is exceeded, attachments will not be stored. You can delete attachments or their containing events at any time. Deleting an attachment does not affect your quota - Sentry counts an attachment toward your quota as soon as it is stored. 
 
-Learn more about how attachments impact your [quota]({%- link _documentation/accounts/quotas/index.md %}).
+Learn more about how attachments impact your [quota](/accounts/quotas/index/).
 
 ## Crash Reports and Privacy
 
