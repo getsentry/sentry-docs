@@ -19,10 +19,14 @@ $ npm install @sentry/node @sentry/apm
 To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 25% of all your transactions:
 
 ```javascript
-const Sentry = require("@sentry/node");
+const Sentry = require('@sentry/node');
+// or use es6 import statements
+// import * as Sentry from '@sentry/node';
 
 // This is required since it patches functions on the hub
 const Apm = require("@sentry/apm"); 
+// or use es6 import statements
+// import * as Apm from '@sentry/apm';
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
