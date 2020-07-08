@@ -26,7 +26,7 @@ const Apm = require("@sentry/apm");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0
+  tracesSampleRate: 1.0 // Be sure to adjust this to your needs
 });
 
 // Your test code to verify it works
