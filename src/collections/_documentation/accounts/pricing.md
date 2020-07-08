@@ -264,7 +264,7 @@ Yes, the following table details costs for errors, transactions, and attachments
       <td>$0.325</td>
     </tr>
     <tr>
-      <td>>100 (GB) - 10 (TB)</td>
+      <td>>100 - 10k (GB)</td>
       <td>100 (GB)</td>
       <td>$0.25</td>
       <td>$0.325</td>
