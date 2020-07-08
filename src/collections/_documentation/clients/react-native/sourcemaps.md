@@ -3,6 +3,14 @@ title: 'Source Maps for Other Platforms'
 robots: noindex
 ---
 
+{% capture __alert_content -%}
+This SDK has been superseded by the new React Native SDK. Sentry preserves this documentation for customers using the old client. We recommend using the [updated React Native SDK](/platforms/react-native/) for new projects.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 Currently automatic source map handling is only implemented for iOS with Xcode and Android with gradle. If you manually invoke the [react-native packager](https://github.com/facebook/metro) you can however get source maps anyways by passing _–sourcemap-output_ to it.
 
 If you do get source maps you can upload them with `sentry-cli`. However make sure to pass `--rewrite` to the `upload-sourcemaps` command which will fix up the source maps before upload (inlines sources etc.).

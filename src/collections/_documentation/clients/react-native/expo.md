@@ -3,6 +3,14 @@ title: 'Using Sentry with Expo'
 robots: noindex
 ---
 
+{% capture __alert_content -%}
+This SDK has been superseded by the new React Native SDK. Sentry preserves this documentation for customers using the old client. We recommend using the [updated React Native SDK](/platforms/react-native/) for new projects.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 [Expo](https://expo.io/) is an excellent way to quickly create and play around with your React Native app. Now you can also use Sentry together with Expo:
 
 ```bash
