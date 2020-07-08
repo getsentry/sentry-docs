@@ -4,7 +4,7 @@ robots: noindex
 ---
 
 {% capture __alert_content -%}
-A new React Native SDK has superseded this deprecated version. Sentry preserves this documentation for customers using the old client. We recommend using the [updated React Native SDK](/platforms/react-native/) for new projects.{%- endcapture -%}
+This SDK has been superseded by the new React Native SDK. Sentry preserves this documentation for customers using the old client. We recommend using the [updated React Native SDK](/platforms/react-native/) for new projects.{%- endcapture -%}
 {%- include components/alert.html
     title="Note"
     content=__alert_content
