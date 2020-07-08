@@ -3,6 +3,14 @@ title: 'Using RAM Bundles'
 robots: noindex
 ---
 
+{% capture __alert_content -%}
+This SDK has been superseded by the new React Native SDK. Sentry preserves this documentation for customers using the old client. We recommend using the [updated React Native SDK](/platforms/react-native/) for new projects.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 The [RAM bundle](https://facebook.github.io/react-native/docs/performance#ram-bundles-inline-requires) format is a new approach to packaging React Native apps that optimizes your app's startup time. With RAM bundles, it is possible to load to memory only those modules that are needed for specific functionality, and only when needed.
 
 All the existing RAM bundle formats are explained in detail in the [Metro Bundler documentation](https://facebook.github.io/metro/docs/en/bundling).

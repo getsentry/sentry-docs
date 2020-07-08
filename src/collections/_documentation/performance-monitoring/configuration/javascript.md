@@ -26,14 +26,13 @@ Sentry.init({
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 0.25, // must be present and non-zero
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
 
-Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions.
+Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Be sure to lower this value in production otherwise you could burn through your quota quickly.
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
-
 
 **Automatic Instrumentation**
 
@@ -54,7 +53,7 @@ Sentry.init({
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 0.25,
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 
 // With CDN
@@ -64,13 +63,13 @@ Sentry.init({
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 0.25,
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
 
 *NOTE:* The `Tracing` integration is available under `Sentry.Integrations.Tracing` when using the CDN bundle.
 
-To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 25% of your transactions.
+To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 100% of your transactions.
 
 By default, the `pageload` and `navigation` transactions set a transaction name using `window.location.pathname`.
 
@@ -80,7 +79,7 @@ For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-java
 
 **tracingOrigins Option**
 
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace.
+The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **One important thing to note is that the `traceOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL can help make sure that requests do not unnecessarily have the `sentry-trace` header attached.**
 
 *Example:*
 
@@ -116,7 +115,7 @@ Sentry.init({
       },
     }),
   ],
-  tracesSampleRate: 0.25,
+  tracesSampleRate: 0.25, // Be sure to lower this in production
 });
 ```
 
