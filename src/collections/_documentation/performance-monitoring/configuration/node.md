@@ -30,7 +30,7 @@ const Apm = require("@sentry/apm");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0 // Be sure to adjust this to your needs
+  tracesSampleRate: 1.0 // Be sure to lower this in production
 });
 
 // Your test code to verify it works
@@ -53,7 +53,7 @@ setTimeout(() => {
 // ---------------------------------
 ```
 
-Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` option to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Make sure to adjust this value according to your needs.
+Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` option to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Be sure to lower this value in production otherwise you could burn through your quota quickly.
 
 **Automatic Instrumentation**
 
@@ -73,7 +73,7 @@ Sentry.init({
       // enable Express.js middleware tracing
       new Apm.Integrations.Express({ app })
   ],
-  tracesSampleRate: 0.25 // Be sure to adjust this to your needs
+  tracesSampleRate: 0.25 // Be sure to lower this in production
 });
 
 // RequestHandler creates a separate execution context using domains, so that every 

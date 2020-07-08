@@ -21,7 +21,7 @@ const domain = require("domain");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0, // Be sure to adjust this to your needs
+  tracesSampleRate: 1.0 // Be sure to lower this in production
 });
 
 // not mandatory, but adding domains do help a lot with breadcrumbs
