@@ -26,11 +26,11 @@ Sentry.init({
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 1.0, // Be sure to adjust this to your needs
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
 
-Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Make sure to adjust this value according to your needs.
+Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Be sure to lower this value to production otherwise, it could easily happen that you burn through your quota.
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
 
@@ -53,7 +53,7 @@ Sentry.init({
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 1.0, // Be sure to adjust this to your needs
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 
 // With CDN
@@ -63,7 +63,7 @@ Sentry.init({
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 1.0, // Be sure to adjust this to your needs
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
 
@@ -79,7 +79,7 @@ For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-java
 
 **tracingOrigins Option**
 
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace.
+The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **One important thing to note is that, `tracingOrigins` looks at the whole url versus just at the domain. Consider this when writing a string or regex**
 
 *Example:*
 
@@ -115,7 +115,7 @@ Sentry.init({
       },
     }),
   ],
-  tracesSampleRate: 0.25, // Be sure to adjust this to your needs
+  tracesSampleRate: 0.25, // Be sure to lower this in production
 });
 ```
 
