@@ -1122,7 +1122,7 @@ Vercel is an all-in-one platform with Global CDN supporting static and JAMstack 
 **Usage**
 
 * If you have not already done so, [instrument your code with Sentry]({%- link _documentation/error-reporting/quickstart.md -%}).
-* Ensure you have [installed a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration).
+* Ensure you have [installed a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration) and added the relevant repository.
 * Add the [Sentry Webpack Plugin](https://github.com/getsentry/sentry-webpack-plugin) to your configuration. For NextJS, use `next.config.js`.
 
 **Uninstallation**
