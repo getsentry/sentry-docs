@@ -26,7 +26,7 @@ $ yarn start
 
 You will now be able to access docs via http://localhost:3000.
 
-Note: This is running both the Jekyll (port 9001) and Gatsby (port 8000) servers, with a proxy routing requests between the two.
+Note: This is running both the Jekyll (port 9001) and Gatsby (port 9002) servers, with a proxy routing requests between the two.
 
 ## The Great Gatsby Migration
 
@@ -34,7 +34,7 @@ The repository currently contains a Jekyll site (`./`) as well as a Gatsby site 
 
 - In production, the `nginx.conf` file determines which routes are served by Jekyll vs Gatsby. Gatsby is the default behavior, whereas Jekyll routes are listed explicitly.
 
-- In development, the proxy server (`server.js`) manages routing between Jekyll (http://localhost:9001) and Gatsby (http://localhost:8000). Route configuration is the same as whats in nginx.
+- In development, the proxy server (`server.js`) manages routing between Jekyll (http://localhost:9001) and Gatsby (http://localhost:9002). Route configuration is the same as whats in nginx.
 
 - We've disabled the default optimized static links within Gatsby due to the complexity of navigating between two codebases. Once the Jekyll conversion is done, we'll want to make the change in `<SmartLink>`.
 
