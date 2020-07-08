@@ -3,6 +3,14 @@ title: 'Using Sentry with CodePush'
 robots: noindex
 ---
 
+{% capture __alert_content -%}
+This SDK has been superseded by the new React Native SDK. Sentry preserves this documentation for customers using the old client. We recommend using the [updated React Native SDK](/platforms/react-native/) for new projects.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
 If you want to use sentry together with CodePush you have to send us the CodePush version:
 
 ```javascript

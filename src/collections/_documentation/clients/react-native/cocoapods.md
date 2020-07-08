@@ -3,6 +3,15 @@ title: 'Setup With CocoaPods'
 robots: noindex
 ---
 
+{% capture __alert_content -%}
+This SDK has been superseded by the new React Native SDK. Sentry preserves this documentation for customers using the old client. We recommend using the [updated React Native SDK](/platforms/react-native/) for new projects.{%- endcapture -%}
+{%- include components/alert.html
+    title="Note"
+    content=__alert_content
+    level="warning"
+%}
+
+
 In order to use Sentry with CocoaPods you have to install the packages with `npm` or `yarn` and link them locally in your `Podfile`.
 
 ```bash
