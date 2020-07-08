@@ -13,30 +13,36 @@ merged.
 
 ### Clearing Travis Cache
 
-The "Delete all repository caches" button does NOT work.
+Build caches can be cleared in the [Travis cache page](https://travis-ci.org/getsentry/sentry/caches).
 
-Type the following into your browser devtools console on the [Travis cache page](https://travis-ci.org/getsentry/sentry/caches):
+However, there are multiple issues with that:
 
-```javascript
-Travis.__registry__._resolveCache[
-  "config:environment"
-].skipConfirmations = true;
-btns = document.getElementsByClassName("delete-cache-icon");
-i = 0;
-while (i < btns.length) {
-  btns[i].click();
-  i++;
-}
-```
+- The "Delete all repository caches" button does not work when a large amount of caches has to be deleted. Instead, type the following into your browser devtools console on that page:
 
-Or this works too and is prettier:
+  ```javascript
+  Travis.__registry__._resolveCache[
+    "config:environment"
+  ].skipConfirmations = true;
+  btns = document.getElementsByClassName("delete-cache-icon");
+  i = 0;
+  while (i < btns.length) {
+    btns[i].click();
+    i++;
+  }
+  ```
 
-```javascript
-window.confirm = (m) => true;
-Array.from(document.getElementsByClassName("delete-cache-icon")).map((e) =>
-  e.click()
-);
-```
+  Or this works too and is prettier:
+
+  ```javascript
+  window.confirm = (m) => true;
+  Array.from(document.getElementsByClassName("delete-cache-icon")).map((e) =>
+    e.click()
+  );
+  ```
+
+- Cache deletion is asynchronous. After telling Travis to delete caches, it takes a while for that deletion to actually apply.
+
+  After retrying your build, it may fail again. Most of the time this is because your issue has nothing to do with caches. But sometimes it's Travis's fault. Inspect the build logs to see if Travis possibly fetched the "deleted" cache (ctrl-f for "cache"). If so you can try clearing caches again and waiting a bit before retrying your job yet another time.
 
 ## GitHub Actions
 
