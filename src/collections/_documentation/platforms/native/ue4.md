@@ -85,7 +85,7 @@ If a `[CrashReportClient]` section already exists, simply changing the value of 
 
 ## Event Attachments
 
-The files within the crash uploaded to Sentry can be persisted using *Event Attachments*. Learn more about these in [Attachments] ({%- link _documentation/enriching-error-data/attachments.md -%})
+The files within the crash uploaded to Sentry can be persisted using *Event Attachments*. Learn more about these in [Attachments] (/enriching-error-data/attachments/)
 
 {% include platforms/event-attachments.md %}
 
