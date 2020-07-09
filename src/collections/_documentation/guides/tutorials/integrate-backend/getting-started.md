@@ -3,7 +3,7 @@ title: Getting Started
 sidebar_order: 1
 ---
 
-In this tutorial, you will import the backend app source code into your local development environment, add the Sentry SDK and initialize it.
+In this tutorial, you will import the backend app source code into your local development environment, add the Sentry SDK, and initialize it.
 
 > **Note:** If you're using your own source code you can skip this tutorial and instead
 >
@@ -12,7 +12,7 @@ In this tutorial, you will import the backend app source code into your local de
 
 ## Prerequisites
 
-1. The demo app source code requires a **Python** development environment to build install and run the application. Make sure that you have the following in place:
+1. The demo app source code requires a `Python` development environment to build install and run the application. Make sure that you have the following in place:
 
    - A source code editor (like [VS-Code](https://code.visualstudio.com))
    - [Python3](https://www.python.org/download/releases/3.0/)
@@ -39,25 +39,19 @@ In this tutorial, you will import the backend app source code into your local de
 
 5. Now that the sample code is available locally, open the `backend-monitoring` project in your preferred code editor
 
-## Step 2: Enable commit tracking for your repository
+## Step 2: Enable Commit Tracking for your Repository
 
-Configuring your source code management solution and adding your code repositories is required to enable commit tracking, for more information see [this link](https://docs.sentry.io/workflow/releases/?platform=node#associate-commits-with-a-release).
+Sentry can help you resolve your errors faster by suggesting a suspect commit that might have introduced the error into your code base. This is enabled by configuring **Commit Tracking**. Integrating your source code management solution and adding your code repositories is required to enable commit tracking, for more information see [this link](https://docs.sentry.io/workflow/releases/?platform=node#associate-commits-with-a-release).
 
 1. Open your Sentry account and navigate to `Settings > Integrations` to enable the GitHub integration and add your `backend-monitoring` repository. For more information follow the steps described in [Global Integrations > GitHub](https://docs.sentry.io/workflow/integrations/global-integrations/#github).
 
 ## Step 3: Install the SDK
 
-Sentry captures data by using a platform-specific SDK within your application runtime. To use the SDK, import and configure it in your source code.
-
-<!-- The demo project uses Django for the backend code and REACT for the frontend code. Please refer to the [frontend guide]({%- link _documentation/guides/tutorials/integrate-frontend/index.md -%}) on how to set up your front end code. -->
-
-<!-- Refer to the [doc](https://docs.sentry.io/error-reporting/quickstart/?platform=python) on how to get started. -->
+Sentry captures data by using a platform-specific SDK within your application runtime. To use the SDK, import, initialize and configure it in your source code.
 
 1. To start working with the SDK in our Django app we install the `sentry-sdk` by defining the dependency in the `requirements.txt` file. The SDK documentation and release information are available in the [Sentry SDK](https://github.com/getsentry/sentry-python) GitHub repository.
 
 2. Open the `settings.py` file (located under \_./backend-monitoring/myproject/settings.py). This is where we initialize and configure the Sentry SDK in our application.
-
-   <!-- ![Import and Configure SDK]({% asset guides/integrate-backend/sentry_init.png @path %}) -->
 
 3. After importing the Sentry SDK to the app, it is important to import the Sentry Django integration as well. Integrations extend the functionality of the SDK for some common frameworks and libraries.
 
@@ -120,13 +114,13 @@ To build and run the Demo application on your localhost
 8. Follow the `deploy` target execution flow.
 
    > Notice that in addition to installing Python requirements and running the server, we also utilize the `sentry-cli` to create a new Sentry Release, and associate commits to that release. Sentry will lookup through those commits when suggesting a suspect commit for your project issues.
-   > Commands mentioned within the Makefile will be explain in detail in the next part [Configuration Options]({%- link _documentation/guides/tutorials/integrate-backend/configuration-options.md -%})
+   > Commands mentioned within the Makefile will be explained in detail in the next part [Configuration Options]({%- link _documentation/guides/tutorials/integrate-backend/configuration-options.md -%})
 
 9. To execute the `sentry-cli` commands, follow the instructions described [here]({%- link _documentation/guides/tutorials/integrate-frontend/upload-source-maps.md -%}#step-1-prepare-the-build-environment) to obtain the values for your `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` environment variables.
 
    ![Makefile Config]({% asset guides/integrate-backend/makefile_config.png @path %})
 
-   > The sentry-cli can be configured by providing these values either through environment variables or through a dedicated configuration file. For more information see [Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
+   > The sentry-cli can be configured by providing these values either through environment variables or through a dedicated configuration file. For more information see [Sentry CLI > Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
 
 10. Run the following command to install the required Python libraries, set up the Sentry Release, and run the Django server:
 
@@ -134,9 +128,9 @@ To build and run the Demo application on your localhost
     make deploy
     ```
 
-    > In the terminal, notice that a new release is created and the commits are associated. Once the deploy finishes successfully, you'll see the confirmation in your terminal
-
     ![Deploy & Serve]({% asset guides/integrate-backend/run_django_server.png @path %})
+
+    > In the terminal, notice that a new release is created and commits are associated to it. Once the deploy finishes successfully, you'll see the confirmation in your terminal
 
 ## Next
 

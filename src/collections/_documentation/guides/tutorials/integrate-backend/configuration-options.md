@@ -3,7 +3,7 @@ title: Configuration Options
 sidebar_order: 2
 ---
 
-Sentry has many configuration options to help enhance your experience using Sentry. The options can help provide additional data needed to debug issues even faster or help control what is sent to Sentry by filtering. For more information, see [Configuration](https://docs.sentry.io/error-reporting/configuration/?platform=python).
+Sentry has various configuration options to help enhance the SDK functionality. The options can help provide additional data needed to debug issues even faster or help control what is sent to Sentry by filtering. For more information, see [Configuration](https://docs.sentry.io/error-reporting/configuration/?platform=python).
 
 ## Releases
 
@@ -23,7 +23,7 @@ Let's see how we set up the release in this project:
 
    ![Makefile]({% asset guides/integrate-backend/makefile.png @path %})
 
-3. Notice that we're settings the release version name as an environment variable that is then used in the application's runtime. We're letting the CLI propose a name, but you'd probably want to apply your own naming conventions:
+3. Notice that we're settings the release version name as an environment variable that is then used in the application's runtime. We're letting the CLI propose a release version name, but you'd probably want to apply your own naming conventions:
 
    ```bash
    VERSION=`sentry-cli releases propose-version`
@@ -41,14 +41,14 @@ Let's see how we set up the release in this project:
    ```bash
    > associate_commits:
          sentry-cli releases -o $(SENTRY_ORG) -p $(SENTRY_PROJECT) \
-         set-commits $(VERSION) --commit "$(REPO)@$(VERSION)"
+         set-commits $(VERSION) --auto
    ```
 
 ## Breadcrumbs
 
-`Breadcrumbs` are the trail of events which led up to the error. They can be quite useful when trying to reproduce an issue. The SDK tracks various types of Breadcrumbs by default (DB queries, Network events, Logging, etc) and you can add your own custom breadcrumbs as well. For more information, see [Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}?platform=python).
+`Breadcrumbs` are the trail of events which led up to the error. They can be quite useful when trying to reproduce an issue. Depending on the platform, the SDK will track various types of Breadcrumbs by default (for backend SDKs those are DB queries, Network events, Logging, and others) and you can add your own custom breadcrumbs as well. For more information, see [Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}?platform=python).
 
-Let's see how we add breadcrumbs to our app.
+Let's see how we add breadcrumbs to our app:
 
 1. Open the file `myapp > view.py`
 
@@ -58,15 +58,21 @@ Let's see how we add breadcrumbs to our app.
    from sentry_sdk import add_breadcrumb
    ```
 
-3. We create a custom breadcrumb in the `process_order` function. This breadcrumb will be added to the trail of breadcrumbs associated with any error triggered through that method call flow.
+3. We create a custom breadcrumb for each method handler in the view classes. This breadcrumb will be added to the trail of breadcrumbs associated with any error triggered through these method call flows. For instance, under `HandledErrorView:get`:
 
-   ![Import and Configure SDK]({% asset guides/integrate-backend/breadcrumbs.png @path %})
-
+   ```python
+    add_breadcrumb(
+      category='URL Endpoints',
+      message='In the handled function',
+      level='info',
+   )
+   ```
+   <!-- ![Import and Configure SDK]({% asset guides/integrate-backend/breadcrumbs.png @path %}) -->
    > For more information on customizing your breadcrumbs, see [Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}?platform=python).
 
 ## Environment
 
-`Environment` is a powerful configuration option that enables developers using Sentry to perform various workflows (filter issues, trigger alerts, etc. based on the deployment environment in which the errors are occurring in.
+`Environment` is a powerful configuration option that enables developers using Sentry to perform various workflows (filter issues, trigger alerts, etc.) in the context of the deployment environment in which the errors occurred in.
 
 1. Open the `settings.py` file
 
@@ -76,8 +82,8 @@ Let's see how we add breadcrumbs to our app.
     environment:"Production"
    ```
 
-   > **Note** Environment values are freeform strings. The Sentry SDK or UI will not limit you to any specific value or format. In this example, we hardcoded the value. In a real-life app, the value would probably be determined dynamically through a properties file, system, or environment variable.
+   > **Note:** Environment values are freeform strings. The Sentry SDK or UI will not limit you to any specific value or format. In this example, we hardcoded the value. In a real-life app, the value would probably be determined dynamically through a properties file, system or environment variable.
 
 ## Next
 
-[Handled vs Unhandled Errors]({%- link _documentation/guides/tutorials/integrate-backend/capturing-errors.md -%})
+[Capturing Errors]({%- link _documentation/guides/tutorials/integrate-backend/capturing-errors.md -%})

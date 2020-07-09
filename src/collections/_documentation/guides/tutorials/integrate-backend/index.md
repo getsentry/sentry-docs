@@ -3,11 +3,11 @@ title: Monitor Errors in Backend Applications
 sidebar_order: 0
 ---
 
-This step-by-step guide walks you through the flow of setting up and configuring your Sentry account to monitor errors in your `Python` backend application. After completing this guide, you should:
+This step-by-step guide walks you through the flow of setting up and configuring your Sentry account to monitor errors in your `Python` backend application. As part of this guide you will:
 
-- Add basic configurations
-- Send handled and unhandled issues to Sentry
-- Implement tracing between your frontend and backend app
+- Add basic configurations to the Sentry SDK
+- Monitor various types of events and errors to Sentry
+- Implement error tracing between your frontend and backend applications
 
 > **Note:** We provided the source code for a sample `Django` application to use along with this guide. This allows us to streamline the steps required to getting the maximum value out of integrating Sentry into your development workflow.
 >
