@@ -17,11 +17,11 @@ Sentry.init({
 });
 
 module.exports = async function (context, req) {
-    try{
-        callUndefinedFunction();  // Call undefined function.
-    }catch(error){
-        Sentry.captureException(error);  // Capture the exception in Sentry dashboard.
-        Sentry.flush(2000);
+    try {
+        callUndefinedFunction(); // Call undefined function.
+    } catch (error) {
+        Sentry.captureException(error); // Capture the exception in Sentry dashboard.
+        await Sentry.flush(2000);
     }
 
     context.res = {
@@ -33,7 +33,6 @@ module.exports = async function (context, req) {
 
 You can obtain the DSN using your Sentry account from your organization's *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI.
 
-Note: You need to call both `CaptureException` and `Flush` to report errors into Sentry.
+Note: You need to call both `captureException` and `flush` to report errors into Sentry.
 
 Checkout Sentry’s [azure sample apps](https://github.com/getsentry/examples/tree/master/azure-functions/node) for detailed examples. For detailed configuration options, use [JavaScript docs](/platforms/javascript/).
-
