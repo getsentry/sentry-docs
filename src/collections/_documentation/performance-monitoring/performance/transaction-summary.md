@@ -41,7 +41,3 @@ _Note_: Currently, only transaction data - the transaction name and any attribu
 ## Related Issues
 
 The sidebar contains helpful supplementary information about this transaction's [User Misery](/performance-monitoring/performance/metrics/#user-misery), [Apdex](/performance-monitoring/performance/metrics/#apdex), [Throughput](/performance-monitoring/performance/metrics/#throughput-total-tpm-tps), [Latency](/performance-monitoring/performance/metrics/#latency), and more. You'll also find a Tag Summary (facet map) for a list of common tags related to this transaction.
-
-## Related Issues
-
-This table will show you all related issues. In other words, any errors that are associated with this transaction. Click "Open in Issues" to see the full list.
