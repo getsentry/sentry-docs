@@ -118,7 +118,7 @@ documents.
 ## Event Attachments
 
 Besides the minidump file, Sentry can optionally store additional files uploaded
-in the same request, such as log files. Learn more about these in [Attachments] (/enriching-error-data/attachments/)
+in the same request, such as log files. Learn more about these in [Attachments](/enriching-error-data/attachments/).
 
 To send attachments directly to Sentry, add more files to the multipart form
 body. Note that the entire request must not exceed **20MB** in size. Sentry will
