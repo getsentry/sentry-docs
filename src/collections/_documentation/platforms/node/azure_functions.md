@@ -17,10 +17,10 @@ Sentry.init({
 });
 
 module.exports = async function (context, req) {
-    try{
-        callUndefinedFunction();  // Call undefined function.
-    }catch(error){
-        Sentry.captureException(error);  // Capture the exception in Sentry dashboard.
+    try {
+        callUndefinedFunction(); // Call undefined function.
+    } catch (error) {
+        Sentry.captureException(error); // Capture the exception in Sentry dashboard.
         await Sentry.flush(2000);
     }
 
