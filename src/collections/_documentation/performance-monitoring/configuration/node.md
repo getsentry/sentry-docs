@@ -24,7 +24,7 @@ const Sentry = require('@sentry/node');
 // import * as Sentry from '@sentry/node';
 
 // This is required since it patches functions on the hub
-const Apm = require("@sentry/apm"); 
+const Apm = require("@sentry/apm");
 // or use es6 import statements
 // import * as Apm from '@sentry/apm';
 
@@ -46,7 +46,7 @@ setTimeout(() => {
   } catch (e) {
     Sentry.captureException(e);
   } finally {
-    transaction.finish();    
+    transaction.finish();
   }
 }, 99);
 
@@ -76,7 +76,7 @@ Sentry.init({
   tracesSampleRate: 0.25 // Be sure to lower this in production
 });
 
-// RequestHandler creates a separate execution context using domains, so that every 
+// RequestHandler creates a separate execution context using domains, so that every
 // transaction/span/breadcrumb is attached to its own Hub instance
 app.use(Sentry.Handlers.requestHandler());
 // TracingHandler creates a trace for every incoming request
@@ -94,6 +94,57 @@ Spans are instrumented for the following operations within a transaction:
 - `get` calls using native `http` and `https` modules
 - Middleware (Express.js only)
 
+**Trace context for Errors**
+
+By default, Sentry error events will not get trace context unless you configure the scope with the transaction. For example:
+
+```js
+const Sentry = require("@sentry/node");
+const Apm = require("@sentry/apm");
+
+const http = require('http');
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.00,
+  integrations: [
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+  ],
+});
+
+const transaction = Sentry.startTransaction({
+  op: "transaction",
+  name: 'My Transaction'
+});
+
+// Note that we set the transaction as the span on the scope.
+// This step makes sure that if an error happens during the lifetime of the transaction
+// the transaction context will be attached to the error event
+Sentry.configureScope(scope => {
+  scope.setSpan(transaction);
+});
+
+let request;
+
+try {
+  // this should generate an http span
+  request = http.get('http://sentry.io', (res) => {
+    console.log(`STATUS: ${res.statusCode}`);
+    console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
+  });
+
+  // this error event should have trace context
+  foo();
+} catch(err) {
+  Sentry.captureException(err);
+}
+
+request.on('close', () => {
+  transaction.finish();
+});
+````
+
 **Manual Instrumentation**
 
 <!-- WIZARD node-tracing -->
@@ -106,7 +157,7 @@ The following example creates a transaction for a part of the code that contains
 app.use(function processItems(req, res, next) {
   const item = getFromQueue();
   const transaction = Sentry.startTransaction({
-      op: "task",  
+      op: "task",
       name: item.getTransaction()
   })
 
