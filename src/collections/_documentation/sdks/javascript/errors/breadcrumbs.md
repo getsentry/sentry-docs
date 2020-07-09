@@ -9,15 +9,14 @@ This example is for an application that sometimes throws an error after the scre
 
 
 ```js
-
-window.addEventListener('resize', function(event){
+// `debounce` function comes from a 3rd party library like Lodash or can be implemented manually
+window.addEventListener('resize', debounce(function (event) {
   Sentry.addBreadcrumb({
     category: 'ui',
     message: 'New window size:' + window.innerWidth + 'x' + window.innerHeight,
     level: 'info'
   });
-})
-```
+}));
 
 {%- endcapture -%}
 
