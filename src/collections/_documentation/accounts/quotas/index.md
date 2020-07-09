@@ -3,20 +3,23 @@ title: 'Quotas & Events'
 sidebar_order: 0
 ---
 
-Events and quotas are interconnected in Sentry. At the most basic, when you [subscribe to Sentry](https://sentry.io/pricing/), you pay for the number of events to be tracked. This number of events is your quota. When an event is accepted by Sentry, it counts toward your quota.
+Events and quotas are interconnected in Sentry. At the most basic, when you [subscribe to Sentry](https://sentry.io/pricing/), you pay for the number of events - errors, attachments, and transactions - to be tracked. Each of these type of events has a quota. When Sentry accepts an event, it counts toward your quota for that type of event.
 
 Sentry’s flexibility means you can exercise fine-grained control over which events count toward your quota.
 
 ## Key Terms
 
 Let’s clarify a few terms to start:
+
 -   Event - an event is one instance of you sending Sentry data. Generally, this data is an error. Every event has a set of characteristics, called its fingerprint.
--   Issue - an issue is a grouping of similar events, who all share the same fingerprint. For example, Sentry groups events together when they are triggered by the same part of your code. For more information, see [Grouping & Fingerprinting](https://docs.sentry.io/data-management/event-grouping/).
--   Quota - your quota is the monthly number of events you pay Sentry to track.
+-   Issue - an issue is a grouping of similar events, which all share the same fingerprint. For example, Sentry groups events together when they are triggered by the same part of your code. For more information, see [Grouping & Fingerprinting](https://docs.sentry.io/data-management/event-grouping/).
+-   Attachment - Attachments are files uploaded in the same request, such as log files. Unless the option to store crash reports is enabled, Sentry will use the files only to create the event, and then drop the files. 
+-   Transaction - A transaction represents a single instance of a service being called to support an operation you want to measure or track, like a page load.
+-   Quota - your quota is the monthly number of events - errors, attachments, and transactions - you pay Sentry to track.
 
 ## What Counts Toward My Quota, an Overview
 
-Sentry completes a thorough evaluation of each event to determine if it counts toward your quota, as outlined in this overview. Detailed documentation for each evaluation is linked throughout. Before completing any of these evaluations, Sentry confirms that each event includes a valid DSN and project as well as whether the event can be parsed and contains valid fingerprint information; if any of these items are missing or incorrect, the event is rejected.
+Sentry completes a thorough evaluation of each event to determine if it counts toward your quota, as outlined in this overview. Detailed documentation for each evaluation is linked throughout. Before completing any of these evaluations, Sentry confirms that each event includes a valid DSN and project as well as whether the event can be parsed. In addition, for error events, Sentry validates that the event contains valid fingerprint information. If any of these items are missing or incorrect, the event is rejected.
 
 1. **SDK configuration**
 
@@ -37,17 +40,17 @@ Sentry completes a thorough evaluation of each event to determine if it counts t
 
 5. **Spike protection**
 
-      Sentry’s spike protection prevents huge overages from consuming your event capacity. For more information, see [Spike Protection](/accounts/quotas/#spike-protection).
+      Sentry’s spike protection prevents huge overages from consuming your event capacity; spike protection is not currently available for transactions. For more information, see [Spike Protection](/accounts/quotas/#spike-protection).
 
 In addition, depending on your project’s configuration and the plan you subscribe to, Sentry may also check:
 
 6. **Rate limit for the project**
 
-      If the rate limit for the project has been exceeded, and your subscription allows, the event will not be counted. For more information, see [Rate Limiting in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#4-rate-limiting) or  [Rate Limiting Projects](/accounts/quotas/#id1).
+      If the error event rate limit for the project has been exceeded, and your subscription allows, the event will not be counted. For more information, see [Rate Limiting in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#4-rate-limiting) or  [Rate Limiting Projects](/accounts/quotas/#id1).
 
 7. **Inbound filters**
 
-      If any inbound filter is set for this type of event, and your subscription allows, the event will not be counted. For more information, see [Inbound Filters in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#inbound-data-filters) or [Inbound Data Filter](/accounts/quotas/#inbound-data-filters).
+      If any inbound filter is set for this type of error event, and your subscription allows, the event will not be counted. For more information, see [Inbound Filters in our guide to Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/#inbound-data-filters) or [Inbound Data Filter](/accounts/quotas/#inbound-data-filters).
 
 After these checks are processed, the event counts toward your quota. It is accepted into Sentry, where it persists and is stored.
 
@@ -88,7 +91,7 @@ After these checks are processed, the event counts toward your quota. It is acce
       <td>Exceeded</td>
     </tr>
     <tr>
-      <td>Are <i>future</i> events that repeat set to Delete & Discard?</td>
+      <td>Are <i>future</i> error events that repeat set to Delete & Discard?</td>
       <td>No</td>
       <td> </td>
     </tr>
@@ -108,21 +111,21 @@ After these checks are processed, the event counts toward your quota. It is acce
       <td>Yes</td>
     </tr>
     <tr>
-      <td>Rate limit for the project</td>
+      <td>Rate limit for error events for the project</td>
       <td>Not set <i>or</i> not reached</td>
       <td>Set <i>and</i> exceeded</td>
     </tr>
     <tr>
       <td>Inbound Filters</td>
       <td>Not set</td>
-      <td>Set for this event</td>
+      <td>Set for this error event</td>
     </tr>
   </tbody>
 </table>
 
 {% include components/alert.html
     title="Note"
-    content="Delete and discard and per-project rate limits are available only for Business and Enterprise plans"
+    content="Delete and discard and per-project rate limits are available only for Team and Business plans"
     level="warning"
 %}
 
@@ -132,9 +135,11 @@ Add to your quota at any time during your billing period, either by upgrading to
 
 If you’ve exceeded your quota threshold, the server will respond with a 429 HTTP status code. However, if this is your first time exceeding quota, you'll be entered into a one-time grace period. For more information, see this [Help article](https://help.sentry.io/hc/en-us/articles/115000154554-What-happens-when-I-run-out-of-event-capacity-and-a-grace-period-is-triggered-). In addition, you can specify a spending cap for on-demand capacity if you need additional events; for example, if you’re rolling out a new version and anticipate more events this month. For more information, see [On-Demand Spending Cap](/accounts/pricing/#on-demand-cap).
 
-## Rate Limiting Projects {#id1}
+## Limiting Events
 
-Per-key rate limits allow you to set the maximum volume of events a key will accept during a period of time.
+### Error Event Limits {#id1}
+
+Per-key rate limits allow you to set the maximum volume of error events a key will accept during a period of time.
 
 For example, you may have a project in production that generates a lot of noise. A rate limit allows you to set the maximum amount of data to “500 events per minute”. Additionally, you can create a second key for the same project for your staging environment, which is unlimited, ensuring your QA process is still untouched.
 
@@ -142,9 +147,13 @@ To set up rate limits, navigate to **[Project] » Client Keys » Configure**. Se
 
 {% include components/alert.html
     title="Note"
-    content="Per-key rate limiting is available only for Business and Enterprise plans"
+    content="Per-key rate limiting is available only for Team and Business plans"
     level="warning"
 %}
+
+### Attachment Limits
+
+If you have enabled the storage of crash reports, you may set limits for the maximum number of crash reports that will be stored per issue. To set up these limits, use the slider in the "Store Native Crash Reports" option for your organization's **Security and Privacy Settings**.
 
 ## Inbound Filters {#inbound-data-filters}
 
@@ -166,7 +175,7 @@ Explore these by navigating to **[Project] » Project Settings » Inbound Filter
 
 {% include components/alert.html
     title="Note"
-    content="Filter by release is available only for Business and Enterprise plans"
+    content="Filter by release is available only for Team and Business plans"
     level="warning"
 %}
 
@@ -174,7 +183,7 @@ Explore these by navigating to **[Project] » Project Settings » Inbound Filter
 
 {% include components/alert.html
     title="Note"
-    content="Filter by error message is available only for Business and Enterprise plans"
+    content="Filter by error message is available only for Team and Business plans"
     level="warning"
 %}
 
@@ -182,7 +191,7 @@ Explore these by navigating to **[Project] » Project Settings » Inbound Filter
 
 {% include components/alert.html
     title="Note"
-    content="Deleting and discarding issues is available only for Business and Enterprise plans"
+    content="Deleting and discarding issues is available only for Team and Business plans"
     level="warning"
 %}
 

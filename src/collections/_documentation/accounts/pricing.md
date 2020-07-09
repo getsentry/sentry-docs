@@ -4,7 +4,7 @@ sidebar_order: 6
 ---
 
 {% capture __alert_content -%}
-This document aims to clarify concepts and frequently asked questions around pricing. For the breakdown of plans and prices, go to our [pricing page](https://sentry.io/pricing).
+This document clarifies concepts and frequently asked questions around pricing. For the breakdown of plans and prices, go to our [pricing page](https://sentry.io/pricing/).
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -16,7 +16,7 @@ This document aims to clarify concepts and frequently asked questions around pri
 
 ### Events
 
-An event is a crash report (also known as an exception or error) that’s sent to Sentry’s server for processing. Additional metadata around an event (breadcrumbs, user context, environment, etc) do not count as separate events.
+An event is an error, attachment, or transaction sent to Sentry’s server for processing. Additional metadata around the event (breadcrumbs, user context, environment, traces) do not count separately.
 
 ### Capacity
 
@@ -30,17 +30,15 @@ On-demand capacity is billed at the end of each billing cycle. You are charged p
 
 Reserved capacity allows you to prepay for significant discounts. Your prepaid, reserved capacity is always applied before on-demand capacity. Unused reserved capacity expires at the end of each billing month.
 
-Every Sentry account includes a varying amount of reserved capacity. For example, our developer plan includes 5,000 events per month.
+Every Sentry account includes a varying amount of reserved capacity. For example, our Team plan includes 50k errors, 100k transactions, and 1 GB of attachments per month.
 
 ### Billing Cycles
 
-Three different kinds of billing periods exist on accounts.
+Two different billing periods are available.
 
 The first is your actual **Billing Period**, which is either monthly or annual. This is when we’ll charge the credit card on file for automatic renewal.
 
 The second is the **On-Demand Period**. The On-Demand Period reflects a one month window in which we calculate On-Demand charges.
-
-Lastly, some plans may contain a **Contract Period** that differs from your Billing Period. For example, some plans have an **Annual Contract**, but are billed monthly. This simply means that you cannot downgrade or cancel your plan until the end of the contract period, but you’ll still be billed month-to-month.
 
 ### Billing Controls
 
@@ -50,21 +48,261 @@ You can set a maximum monthly on-demand bill amount by setting an on-demand spen
 
 #### Rate limits
 
-Business and Enterprise plans have the option to configure rate limits for each project that let you specify the number of events and time interval for rate limiting.
+Team and Business plans have the option to configure rate limits for each project that let you specify the number of events and time interval for rate limiting.
 
 ## Managing your event volume
 
 If your projects have a high volume of events, you can control how many errors Sentry receives by reviewing Sentry's guide to [Manage Your Event Stream](/accounts/quotas/manage-event-stream-guide/).
 
 ## FAQ
+{% comment %}
+The on-demand chart needs to sit as the first question to enable proper linking from the sign up page. 
+{% endcomment %}
+
+`Is there detailed information for each plan?`
+
+Yes, the following table details costs for errors, transactions, and attachments.
+
+<table>
+  <tbody>
+    <tr>
+    <td>
+      <strong>ERRORS </strong>
+    </td>
+    <td>
+      <strong> </strong>
+    </td>
+      <td>
+        <strong>Team Plan</strong>
+      </td>
+      <td>
+        <strong></strong>
+      </td>
+      <td>
+        <strong>Business Plan</strong>
+      </td>
+      <td>
+        <strong></strong>
+      </td>
+    </tr>
+    <tr>
+      <td><i>Volume</i></td>
+      <td><i>Prepaid Quota</i></td>
+      <td><i>Prepaid</i></td>
+      <td><i>On-Demand</i></td>
+      <td><i>Prepaid</i></td>
+      <td><i>On-Demand</i></td>
+    </tr>
+    <tr>
+      <td>>50k-100k</td>
+      <td>50k</td>
+      <td>$0.000290</td>
+      <td>$0.000377</td>
+      <td>$0.000890</td>
+      <td>$0.001157</td>
+    </tr>
+    <tr>
+      <td>>100k-500k</td>
+      <td>100k</td>
+      <td>$0.000175</td>
+      <td>$0.000228</td>
+      <td>$0.000500</td>
+      <td>$0.000650</td>
+    </tr>
+    <tr>
+      <td>>500k-2M</td>
+      <td>500k</td>
+      <td>$0.000150</td>
+      <td>$0.000195</td>
+      <td>$0.000300</td>
+      <td>$0.000390</td>
+    </tr>
+    <tr>
+      <td>>2M-10M</td>
+      <td>1M</td>
+      <td>$0.000150</td>
+      <td>$0.000195</td>
+      <td>$0.000300</td>
+      <td>$0.000390</td>
+    </tr>
+    <tr>
+      <td>>10M-20M</td>
+      <td>1M</td>
+      <td>$0.000120</td>
+      <td>$0.000156</td>
+      <td>$0.000144</td>
+      <td>$0.000187</td>
+    </tr>
+    <tr>
+      <td>>20M-50M</td>
+      <td>2M</td>
+      <td>$0.000110</td>
+      <td>$0.000143</td>
+      <td>$0.000132</td>
+      <td>$0.000172</td>
+    </tr>
+    
+  </tbody>
+</table>
+
+<table>
+  <tbody>
+    <tr>
+    <td>
+      <strong>TRANSACTIONS </strong>
+    </td>
+    <td>
+      <strong> </strong>
+    </td>
+      <td>
+        <strong>Team Plan</strong>
+      </td>
+      <td>
+        <strong></strong>
+      </td>
+      <td>
+        <strong>Business Plan</strong>
+      </td>
+      <td>
+        <strong></strong>
+      </td>
+    </tr>
+    <tr>
+      <td><i>Volume</i></td>
+      <td><i>Prepaid Quota</i></td>
+      <td><i>Prepaid</i></td>
+      <td><i>On-Demand</i></td>
+      <td><i>Prepaid</i></td>
+      <td><i>On-Demand</i></td>
+    </tr>
+    <tr>
+      <td>>100k-250k</td>
+      <td>150k</td>
+      <td>$0.000100</td>
+      <td>$0.000130</td>
+      <td>$0.000300</td>
+      <td>$0.000390</td>
+    </tr>
+    <tr>
+      <td>>250k-500k</td>
+      <td>250k</td>
+      <td>$0.000058</td>
+      <td>$0.000075</td>
+      <td>$0.000178</td>
+      <td>$0.000231</td>
+    </tr>
+    <tr>
+      <td>>500k-4.5M</td>
+      <td>500k</td>
+      <td>$0.000052</td>
+      <td>$0.000068</td>
+      <td>$0.000130</td>
+      <td>$0.000169</td>
+    </tr>
+    <tr>
+      <td>>4.5M-5M</td>
+      <td>500k</td>
+      <td>$0.000046</td>
+      <td>$0.000060</td>
+      <td>$0.000092</td>
+      <td>$0.000120</td>
+    </tr>
+    <tr>
+      <td>>5M-10M</td>
+      <td>1M</td>
+      <td>$0.000046</td>
+      <td>$0.000060</td>
+      <td>$0.000092</td>
+      <td>$0.000120</td>
+    </tr>
+    <tr>
+      <td>>10M-20M</td>
+      <td>2M</td>
+      <td>$0.000044</td>
+      <td>$0.000057</td>
+      <td>$0.000077</td>
+      <td>$0.000100</td>
+    </tr>
+    <tr>
+      <td>>20M-50M</td>
+      <td>5M</td>
+      <td>$0.000042</td>
+      <td>$0.000055</td>
+      <td>$0.000074</td>
+      <td>$0.000096</td>
+    </tr>
+    
+  </tbody>
+</table>
+
+<table>
+  <tbody>
+    <tr>
+    <td>
+      <strong>ATTACHMENTS </strong>
+    </td>
+    <td>
+      <strong> </strong>
+    </td>
+      <td>
+        <strong>Team/Business Plan</strong>
+      </td>
+      <td>
+        <strong></strong>
+      </td>
+    </tr>
+    <tr>
+      <td><i>Volume</i></td>
+      <td><i>Prepaid Quota</i></td>
+      <td><i>Prepaid</i></td>
+      <td><i>On-Demand</i></td>
+    </tr>
+    <tr>
+      <td>25-100 (GB)</td>
+      <td>25 GB</td>
+      <td>$0.25</td>
+      <td>$0.325</td>
+    </tr>
+    <tr>
+      <td>>100 - 10k (GB)</td>
+      <td>100 (GB)</td>
+      <td>$0.25</td>
+      <td>$0.325</td>
+    </tr>
+  </tbody>
+</table>
 
 `What happens when my trial expires?`
 
-You are downgraded to the developer plan, which has limited members and events.
+You will be downgraded to the same plan you were on prior to starting the trial. Before the trial ends, Sentry will provide you options to upgrade and continue to use our latest features like Performance Monitoring.
 
 `Who sees my events?`
 
 You control who can see events. We allow you to add your team members, as well as share events with anonymous users should you wish to do so.
+
+`Events now include transactions, errors, and attachments? What's the difference?`
+
+An *event* is one instance of you sending Sentry data. What can be captured as an error depends on your platform. In general, if you have something that looks like an exception, it will be sent to Sentry as an error event. *Attachments* are files uploaded in the same request, such as log files. In addition, the files within the crash uploaded to Sentry can be persisted by enabling storage of crash reports. A *transaction* represents a single instance of a service being called to support an operation you want to measure or track, like a page load.
+
+`What is included in the free trial for current customers?`
+
+Trials include transactions and attachments as well as business features like cross-project Discover. Current paying customers can sign up for a 30-day trial; free plans can run a trial for 14 days.
+
+`If I start the free trial, but do not want to opt into transactions once the trial is over, can I keep my old plan and pricing?`
+
+Yes, you can keep your current plan and pricing.
+
+`If I opt into a new plan, when does the new plan take effect?`
+
+New plans take effect immediately.
+
+`Can I buy a plan for only transactions?`
+
+Our minimum plan provides 100k transactions, 50k errors, and 1GB of attachments. If you need more of any of the three types of events we track, use the slider on our [pricing](https://sentry.io/pricing/) page to add what you need.
+
+`How do I manage my monthly spending?`
+
+The slider on the [pricing](https://sentry.io/pricing/) page allows you to choose the volume you'd like for each type of event - errors, transactions, or attachments storage.
 
 `If I downgrade mid-year, when does it apply?`
 
@@ -90,6 +328,6 @@ Your plan will continue until the end of the current billing cycle. After this, 
 
 `Where can I find my previous invoices/receipts?`
 
-Users with the role of [Billing or Owner](/accounts/membership/) can find all previous invoices by going to the Organization dropdown (top-left) > Usage & Billing > Usage & Payments > Receipts.
+Users with the role of [Billing or Owner](/accounts/membership/) can find all previous invoices by going to **Organization > Usage & Billing > Usage & Payments > Receipts**.
 
-Note: You must have either `Billing` or `Owner` permissions to access and/or make changes to information on this page. If you don't have those permissions, or you are not a member of the organization in Sentry, please reach out to a Billing member or an Owner to obtain invoices.
+**Note:** You must have either `Billing` or `Owner` permissions to access and/or make changes to information on this page. If you don't have those permissions, or you are not a member of the organization in Sentry, please reach out to a Billing member or an Owner to obtain invoices.
