@@ -2,7 +2,7 @@
 Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
 
 
-1. If you haven't already, add the errors content folder to directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
+1. If you haven't already, add the errors content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
 2. Create a copy of intro.md file in _documentation/sdks/<platform-name>/errors 
 3. Create the defined `include` statements and add them to the errors-intro.md file
 

@@ -1,7 +1,7 @@
 {% comment %}
 Guideline: This page is comprehensive; it is stored in the common folder, nested under _includes/common. To use, 
 
-1. If you haven't already, add the errors content folder to directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
+1. If you haven't already, add the errors content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
 2. Create a copy of breadcrumbs.md file, then add it to the errors folder. 
 3. Add the SDK-specific `include` statements to the breadcrumbs.md file
 
@@ -10,7 +10,7 @@ If you have questions, please ask Fiona or Daniel.
 **The objective for this page is that a developer can easily view the breadcrumbs sent for this SDK.**
 {% endcomment %}
 
-Sentry uses _breadcrumbs_ to create a trail of events that happened prior to an issue. These events are often similar to traditional logs, but have the ability to record more rich structured data. For example, Sentry automatically records certain events, such as changes to the URL and XHR requests to add context to an error. 
+Sentry uses _breadcrumbs_ to create a trail of events that happened prior to an issue. These events are often similar to traditional logs, but can record more rich, structured data. For example, Sentry automatically records certain events, such as changes to the URL and XHR requests to add context to an error. 
 
 ## What Sentry Sends Automatically
 
@@ -62,7 +62,7 @@ Developers who want to modify the breadcrumbs interface can read about this in d
 
 ### Manual Breadcrumbs
 
-You can manually add breadcrumbs whenever something interesting happens. For example, you might add manually record a breadcrumb if the user authenticates or another state change happens.
+You can manually add breadcrumbs whenever something interesting happens. For example, you might manually record a breadcrumb if the user authenticates or another state change happens.
 
 {{ include.errors_manual_breadcrumbs }}
 {% comment %}
@@ -71,4 +71,4 @@ Guideline: Create the `include` statement that provides SDK specific example
 
 ### Customize Breadcrumbs
 
-SDKs customize breadcrumbs through the `before_breadcrumb` hook. This hook passes an already assembled breadcrumb assembled breadcrumb and in some SDKs an optional hint. The function can modify the breadcrumb or decide to discard it entirely.
+SDKs customize breadcrumbs through the `before_breadcrumb` hook. This hook passes an already assembled breadcrumb assembled breadcrumb and, in some SDKs, an optional hint. The function can modify the breadcrumb or decide to discard it entirely.

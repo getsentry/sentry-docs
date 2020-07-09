@@ -2,7 +2,7 @@
 Guideline: This page is comprehensive; it is stored in the common folder, nested under _includes/common. To use, 
 
 If you have questions, please ask Fiona or Daniel. 
-1. If you haven't already, add the errors content folder to directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
+1. If you haven't already, add the errors content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
 2. Create a copy of context.md file in _documentation/sdks/<platform-name>/errors 
 3. Create the defined `include` statements and add them to the errors-context.md file
 
@@ -20,7 +20,7 @@ Regardless of whether the data sent to Sentry is predefined or custom, additiona
 
 - *Tags* are key/value string pairs that are both indexed and searchable. Tags power UI features such as filters and tag-distribution maps. Tags help you quickly access related events and view the tag distribution for a set of events. Common uses for tags include hostname, platform version, and user language.
 
-    Once you've started sending tagged data, you'll see it in the Sentry web UI: the filters within the sidebar on the Project page; summarized within an event; and on the tags page for an aggregated event.
+    Once you've started sending tagged data, you'll see it in the Sentry web UI: the filters within the sidebar on the Project page, summarized within an event, and on the tags page for an aggregated event.
 
     We’ll automatically index all tags for an event, as well as the frequency and the last time the Sentry SDK has seen a value. We also keep track of the number of distinct tags and can assist you in determining hotspots for various issues.
     
@@ -54,15 +54,15 @@ User
 
 Fingerprint
 
-: Sentry uses one or more fingerprints to determine how to group errors into issues. Learn more about Sentry's approach to grouping algorithms and fingerprinting in Grouping & Fingerprints. Learn how to override the the default group in very advanced use cases in Modifying the Default Fingerprint
+: Sentry uses one or more fingerprints to determine how to group errors into issues. Learn more about Sentry's approach to grouping algorithms and fingerprinting in Grouping & Fingerprints. Learn how to override the default group in very advanced use cases in Modifying the Default Fingerprint
 
 Environment
 
-: Environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI. Learn how to set and manage environments in Manage Environments
+: Environments help you better filter issues, releases, and user feedback in the Issue Details page of the web UI. Learn how to set and [manage environments](/enriching-error-data/environments/)
 
 Release
 
-: A release is a version of your code that you deploy to an environment. When enabled, releases also help you determine regressions between releases and their potential source as discussed our content discussing [releases](/workflow/releases/).
+: A release is a version of your code that you deploy to an environment. When enabled, releases also help you determine regressions between releases and their potential source as discussed in the [releases documentation](/workflow/releases/).
 
 {{ include.errors_release_name }}
 {% comment %}
