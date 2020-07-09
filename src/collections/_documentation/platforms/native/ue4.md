@@ -83,14 +83,9 @@ If a `[CrashReportClient]` section already exists, simply changing the value of 
 
 {% include platforms/upload-debug-info.md %}
 
-## Event Attachments (Preview)
+## Event Attachments
 
-The files within the crash uploaded to Sentry can be persisted using *Event Attachments*.
-Unless *Event Attachments* is enabled, Sentry will only use the files to create the event and
-subsequently will drop the files.
-
-In order to keep the original log and context files, make sure to enable the *Event Attachments*
-feature in your Sentry project.
+The files within the crash uploaded to Sentry can be persisted using *Event Attachments*. Learn more about these in [Attachments] (/enriching-error-data/attachments/)
 
 {% include platforms/event-attachments.md %}
 
