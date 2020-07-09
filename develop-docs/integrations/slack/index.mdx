@@ -1,0 +1,90 @@
+---
+title: "Slack Integration"
+---
+
+Based off of this [post](https://forum.sentry.io/t/how-to-configure-slack-in-your-on-prem-sentry/3463)
+
+## Create a Slack App
+
+To use Sentry’s new Slack integration you’ll need to create an app in Slack bot app. Navigate to __Your Apps__ and click __Create new App__.
+
+![Create](./create.png)
+
+After naming your app and connecting your workspace, navigate to __Basic Information__. Here you’ll find your Client ID, Client Secret, and Verification token that lets your app access the Slack API.
+
+Here’s where you’ll connect your on-premise Sentry instance to your newly created Slack app.
+<dl>
+<dt><code>system.admin-email</code></dt>
+Declared in <code>config.yml</code>.
+
+<dd>
+<markdown>
+Copy your Client ID, Client Secret, and Verification Token.
+
+Set `slack.legacy-app` to `False` if you made your bot Post June 2020, due to slack api changes
+
+If `slack.legacy-app` is `True` please use `slack.verification-token` instead of `slack.signing-secret`
+```yaml
+slack.client-id: <'client id'>
+slack.client-secret: <client secret>
+slack.signing-secret: <signing secret>
+slack.legacy-app: <boolean>
+```
+
+</markdown>
+</dd>
+</dl>
+After you update the <code>config.yml</code> you need to restart your Sentry server to continue configuring the Slack app.
+
+Now that you’ve created your app and updated your Sentry config, you can navigate to __Interactive Components__ under __Features__.
+
+Click __Enable Interactive Components__ and you’ll be able to enter your Request URL (this is the location of your on-premise Sentry) and Options Load URL:
+
+```
+Request URL: https://your-sentry-server.com/extensions/slack/action/
+Options Load URL: https://your-sentry-server.com/extensions/slack/options-load/
+```
+
+Click __Enable Interactive Components__ and Slack will confirm if the HTTP request to the URL you entered succeeds or fails.
+
+Navigate to __OAuth & Permissions__ to configure the Redirect URLs.
+
+![OAuth](./oauth.png)
+
+Click __Add a new Redirect URL__, enter the URL, and click __Add__. The URL will look like:
+
+```
+https://your-sentry-server.com/extensions/slack/setup/
+```
+
+Click __Save URLs__.
+
+On the same page under __Scopes__ in the __Select Permission Scopes__ dropdown menu, add:
+
+* `links:read`
+
+Click __Save Changes__.
+
+_Note: You have the option to set Restrict API Token Usage on this page if you want to ensure your Slack is the only one talking to your Sentry instance._
+
+Navigate to __Event Subscription__ and toggle “On”. Here you will enter another Request URL in the following format: `https://your-sentry-server.com/extensions/slack/event/`
+
+You’ll see “Verified” when you’ve entered the correct URL.
+
+![Events](./events.png)
+
+_Note: When you enter the Request URL, Slack tries to verify it. The request will fail if you didn’t configure the client keys/secret and restarted Sentry to ensure those config changes were picked up. If it fails to validate, first make sure your Sentry instance is running and Slack can talk to it (Slack [doesn’t have an ip range](https://twitter.com/slackapi/status/567110311476350976?lang=en))_
+
+On the same page under __Selected Events__, click __Add Workspace Event__ and search for `link_shared`:
+
+On the same page under __App Unfurl Domains__, click __Add Domain__ to enter your domain and click Done.
+
+At the bottom of the page, click __Save Changes__.
+
+Navigate to __Bot Users__
+
+Click __Add a Bot User__ and give your sentry app bot a name (this is the name that will be displayed when alerts are triggered)
+
+![Bot](./bot.png)
+
+Now you can use Slack with Sentry! See our [documentation on configuring the Slack integration for your projects](https://docs.sentry.io/workflow/integrations/global-integrations/#slack) to take advantage of multi-channel Alert routing with the new integration.
