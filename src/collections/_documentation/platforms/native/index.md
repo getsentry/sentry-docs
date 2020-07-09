@@ -444,12 +444,10 @@ according to shell lookup rules at runtime.
 It is advised to specify both the path to the `crashpad_handler` executable
 as well as the path to the database directory manually.
 
-## Event Attachments (Preview)
+## Event Attachments
 
 Besides the Minidump file, Sentry can optionally store additional files uploaded
-in the same request, such as log files.
-
-{% include platforms/event-attachments.md %}
+in the same request, such as log files. Learn more about these in [Attachments] (/enriching-error-data/attachments/)
 
 To add an attachment, the path to the file has to be configured when
 initializing the SDK. It will monitor the file and upload it along with any event
