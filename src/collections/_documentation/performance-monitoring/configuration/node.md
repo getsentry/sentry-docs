@@ -119,8 +119,8 @@ const transaction = Sentry.startTransaction({
 });
 
 // Note that we set the transaction as the span on the scope.
-// This step makes sure that in case an error happens during the lifetime of the transaction
-// The Transaction context will be attached to the error event
+// This step makes sure that if an error happens during the lifetime of the transaction
+// the transaction context will be attached to the error event
 Sentry.configureScope(scope => {
   scope.setSpan(transaction);
 });
