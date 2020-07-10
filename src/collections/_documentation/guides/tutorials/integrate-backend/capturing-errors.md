@@ -75,7 +75,7 @@ Typically, `capture_message` is not emitted but there are times when a developer
 
    ![Import and Configure SDK]({% asset guides/integrate-backend/capture_message.png @path %})
 
-   > By default captured messages are marked with a severity level tag `level:info` as reflected in the tags section. However, the `capture_message` methods accept an **optional** severity level parameter with possible values as described [here](enriching-error-data/additional-data/?platform=python#setting-the-level).
+   > By default captured messages are marked with a severity level tag `level:info` as reflected in the tags section. However, the `capture_message` methods accept an **optional** severity level parameter with possible values as described [here](/enriching-error-data/additional-data/?platform=python#setting-the-level).
 
 5. In the `views.py` file, go ahead and change the `capture_message` method to:
 

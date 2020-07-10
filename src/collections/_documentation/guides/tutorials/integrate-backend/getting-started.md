@@ -7,7 +7,7 @@ In this tutorial, you will import the backend app source code into your local de
 
 > **Note:** If you're using your source code you can skip this tutorial and instead
 >
-> - Follow the instructions in our [Getting Started](https://docs.sentry.io/error-reporting/quickstart/?platform=python) docs. Notice that you can select the desired platform.
+> - Follow the instructions in our [Getting Started](/error-reporting/quickstart/?platform=python) docs. Notice that you can select the desired platform.
 > - Continue with [Configuration Options](/guides/tutorials/integrate-backend/configuration-options/)
 
 ## Prerequisites
@@ -120,7 +120,7 @@ To build and run the Demo application on your localhost
 
    ![Makefile Config]({% asset guides/integrate-backend/makefile_config.png @path %})
 
-   > The sentry-cli can be configured by providing these values either through environment variables or through a dedicated configuration file. For more information see [Sentry CLI > Configuration and Authentication]({%- link _documentation/cli/configuration.md -%})
+   > The sentry-cli can be configured by providing these values either through environment variables or through a dedicated configuration file. For more information see [Sentry CLI > Configuration and Authentication](/cli/configuration/)
 
 10. Run the following command to install the required Python libraries, set up the Sentry Release, and run the Django server:
 
