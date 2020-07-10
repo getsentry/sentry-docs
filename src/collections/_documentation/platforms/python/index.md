@@ -252,6 +252,7 @@ For more information, see:
 - [RQ (Redis Queue)](/platforms/python/rq/)
 
 #### Data
+- [Apache Airflow](/platforms/python/airflow)
 - [Apache Beam](/platforms/python/beam/)
 - [PySpark](/platforms/python/pyspark/)
 
