@@ -1,15 +1,33 @@
 ---
-title: Integrating the Backend with the FrontEnd
+title: Error Tracing
 sidebar_order: 4
 ---
+
+## Error Tracing
+
+With error tracing, you can correlate errors from multiple services and uncover a significant story surrounding a break. Using a unique identifier allows you to trace an error and pinpoint the service and code behaving unexpectedly.
 
 Now that the Demo App is up and running on your local environment integrated with the Sentry SDK, you're ready to integrate the front and backend together.
 
 > **Note:** If you're using your own source code, follow [Capturing your first event](https://docs.sentry.io/error-reporting/quickstart/?platform=python) to introduce an error to your source code.
 
-## Integrating the Frontend and BackEnd
+## Integrating the Frontend and BackEnd with Error Tracing
 
-Integrating the frontend code and backend code is relatively straightforward. This is done through [tracing](https://docs.sentry.io/performance/distributed-tracing/). Using both the frontend app, the `React-demo` and backend app, the `Django-demo`, we can use the tags such as `transaction_id` to integrate tracing.
+Integrating the frontend code and backend code is relatively straightforward. This is done through [tracing](https://docs.sentry.io/performance/distributed-tracing/). Using both the frontend app, the `React-demo` and backend app, the `Django-demo`, we can use the tags such as `transaction_id` to integrate tracing. Let's begin by integrating tracing in our frontend app.
+
+## Frontend
+
+1. Open up the file `App.js` (src/components) and remove or comment out `this.myCodeIsPerfect();` from the file.
+
+2. In the `request.post` change the URL to `http://localhost:8000/checkout` and save the changes.
+
+   > Make sure to change the URL to match with the backend server. In our case, it is from the `http://localhost:8000/checkout`.
+
+   ![Import and Configure SDK]({% asset guides/integrate-backend/frontend_url.png @path %})
+
+Now that your frontend app is updated, let's update the backend app now.
+
+# Backend
 
 1. Open up the file `views.py` within the Django Demo app.
 
@@ -23,6 +41,8 @@ Integrating the frontend code and backend code is relatively straightforward. Th
    - **Note:** Please keep the tag fields consistent in both the frontend and backend app.
 
 **Note** The transactionID is generated from the trace. A trace represents the record of the entire operation you want to measure or track. A trace can be a single operation such as performing an action within an app or it can be a lot more in-depth. For example, an action can be committed within the frontend of your app which caused an error and your backend might respond back with an error as well. The trace_id is able to connect both the backend and frontend error together. This is valuable information knowing how the app in entirely connected which can enable a developer to debug both the front
+
+Now that both the frontend and backend apps are updated, we can now see how error tracing works by having both ends working together.
 
 ## Reporting an Error
 
