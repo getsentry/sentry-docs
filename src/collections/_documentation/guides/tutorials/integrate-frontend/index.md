@@ -1,5 +1,5 @@
 ---
-title: Monitor Errors in Frontend Applications
+title: Frontend Error Monitoring
 sidebar_order: 0
 ---
 
@@ -20,4 +20,4 @@ This step-by-step guide walks you through the flow of setting up and configuring
 
 ## Next
 
-[Create a Sentry Project](/guides/integrate-frontend/create-new-project/)
+[Create a Sentry Project](/guides/tutorials/integrate-frontend/create-new-project/)

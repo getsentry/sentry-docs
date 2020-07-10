@@ -19,11 +19,3 @@ sidebar_order: 0
 * [Uncover Trends with Discover](/guides/discover/)
 
 * [Moving on Up - Switch to Hosted Sentry](/guides/migration/)
-
-## Tutorials
-
-Step-by-step guides to getting started with error monitoring for your apps on:
-
-* [Frontend](/guides/integrate-frontend/)
-
-* Backend
