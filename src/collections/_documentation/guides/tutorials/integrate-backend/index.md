@@ -20,4 +20,4 @@ This step-by-step guide walks you through the flow of setting up and configuring
 
 ## Next
 
-[Getting Started]({%- link _documentation/guides/tutorials/integrate-backend/getting-started.md -%})
+[Getting Started](/guides/tutorials/integrate-backend/getting-started/)

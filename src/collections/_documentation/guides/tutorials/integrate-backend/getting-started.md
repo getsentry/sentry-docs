@@ -5,10 +5,10 @@ sidebar_order: 1
 
 In this tutorial, you will import the backend app source code into your local development environment, add the Sentry SDK, and initialize it.
 
-> **Note:** If you're using your own source code you can skip this tutorial and instead
+> **Note:** If you're using your source code you can skip this tutorial and instead
 >
 > - Follow the instructions in our [Getting Started](https://docs.sentry.io/error-reporting/quickstart/?platform=python) docs. Notice that you can select the desired platform.
-> - Continue with [Configuration Options]({%- link _documentation/guides/tutorials/integrate-backend/configuration-options.md -%})
+> - Continue with [Configuration Options](/guides/tutorials/integrate-backend/configuration-options/)
 
 ## Prerequisites
 
@@ -16,10 +16,10 @@ In this tutorial, you will import the backend app source code into your local de
 
    - A source code editor (like [VS-Code](https://code.visualstudio.com))
    - [Python3](https://www.python.org/download/releases/3.0/)
-   - [Sentry-Cli](https://docs.sentry.io/cli/)
+   - [Sentry-CLI](/cli/)
    - [NPM](https://www.npmjs.com/)
 
-2. To start monitoring errors in your application you'll need to create a new project in your Sentry account. **Please** view the [frontend guide](https://docs.sentry.io/guides/integrate-frontend/create-new-project/) to learn more about how to create a project and define alert rules.
+2. To start monitoring errors in your application you'll need to create a new project in your Sentry account. **Please** view the [frontend guide](/guides/integrate-frontend/create-new-project/) to learn more about how to create a project and define alert rules.
 
 ## Step 1: Get the Code
 
@@ -41,9 +41,9 @@ In this tutorial, you will import the backend app source code into your local de
 
 ## Step 2: Enable Commit Tracking for your Repository
 
-Sentry can help you resolve your errors faster by suggesting a suspect commit that might have introduced the error into your code base. This is enabled by configuring **Commit Tracking**. Integrating your source code management solution and adding your code repositories is required to enable commit tracking, for more information see [this link](https://docs.sentry.io/workflow/releases/?platform=node#associate-commits-with-a-release).
+Sentry can help you resolve your errors faster by suggesting a suspect commit that might have introduced the error into your codebase. This is enabled by configuring **Commit Tracking**. Integrating your source code management solution and adding your code repositories is required to enable commit tracking, for more information see [this link](/workflow/releases/?platform=node#associate-commits-with-a-release).
 
-1. Open your Sentry account and navigate to `Settings > Integrations` to enable the GitHub integration and add your `backend-monitoring` repository. For more information follow the steps described in [Global Integrations > GitHub](https://docs.sentry.io/workflow/integrations/global-integrations/#github).
+1. Open your Sentry account and navigate to `Settings > Integrations` to enable the GitHub integration and add your `backend-monitoring` repository. For more information follow the steps described in [Global Integrations > GitHub](/workflow/integrations/global-integrations/#github).
 
 ## Step 3: Install the SDK
 
@@ -89,7 +89,7 @@ To build and run the Demo application on your localhost
     exec bash
    ```
 
-4. Install Sentry's command line tool to use release tracking and GitHub integration for commit data:
+4. Install Sentry's command-line tool to use release tracking and GitHub integration for commit data:
 
    ```bash
     npm install -g @sentry/cli
@@ -114,9 +114,9 @@ To build and run the Demo application on your localhost
 8. Follow the `deploy` target execution flow.
 
    > Notice that in addition to installing Python requirements and running the server, we also utilize the `sentry-cli` to create a new Sentry Release, and associate commits to that release. Sentry will lookup through those commits when suggesting a suspect commit for your project issues.
-   > Commands mentioned within the Makefile will be explained in detail in the next part [Configuration Options]({%- link _documentation/guides/tutorials/integrate-backend/configuration-options.md -%})
+   > Commands mentioned within the Makefile will be explained in detail in the next part [Configuration Options](/guides/tutorials/integrate-backend/configuration-options/)
 
-9. To execute the `sentry-cli` commands, follow the instructions described [here]({%- link _documentation/guides/tutorials/integrate-frontend/upload-source-maps.md -%}#step-1-prepare-the-build-environment) to obtain the values for your `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` environment variables.
+9. To execute the `sentry-cli` commands, follow the instructions described [here](/guides/tutorials/integrate-frontend/upload-source-maps/#step-1-prepare-the-build-environment) to obtain the values for your `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` environment variables.
 
    ![Makefile Config]({% asset guides/integrate-backend/makefile_config.png @path %})
 
@@ -130,8 +130,8 @@ To build and run the Demo application on your localhost
 
     ![Deploy & Serve]({% asset guides/integrate-backend/run_django_server.png @path %})
 
-    > In the terminal, notice that a new release is created and commits are associated to it. Once the deploy finishes successfully, you'll see the confirmation in your terminal
+    > In the terminal, notice that a new release is created and commits are associated with it. Once the deploy finishes successfully, you'll see the confirmation in your terminal
 
 ## Next
 
-[Configuration Options]({%- link _documentation/guides/tutorials/integrate-backend/configuration-options.md -%})
+[Configuration Options](/guides/tutorials/integrate-backend/configuration-options/)

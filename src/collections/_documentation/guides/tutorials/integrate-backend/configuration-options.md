@@ -3,13 +3,13 @@ title: Configuration Options
 sidebar_order: 2
 ---
 
-Sentry has various configuration options to help enhance the SDK functionality. The options can help provide additional data needed to debug issues even faster or help control what is sent to Sentry by filtering. For more information, see [Configuration](https://docs.sentry.io/error-reporting/configuration/?platform=python).
+Sentry has various configuration options to help enhance the SDK functionality. The options can help provide additional data needed to debug issues even faster or help control what is sent to Sentry by filtering. For more information, see [Configuration](/error-reporting/configuration/?platform=python).
 
 ## Releases
 
-A `release` is a version of your code that is deployed to an environment. Configuring the Release helps you figure out if there is a regression in your code, hold accountability, resolve issues within Sentry, and staying up to date with your deployments. Releases need to be configured within your SDK and then managed through the [sentry-cli](https://docs.sentry.io/cli/) to support extra features such as suspect commits and suggested assignee.
+A `release` is a version of your code that is deployed to an environment. Configuring the Release helps you figure out if there is a regression in your code, hold accountability, resolve issues within Sentry, and staying up to date with your deployments. Releases need to be configured within your SDK and then managed through the [sentry-cli](/cli/) to support extra features such as suspect commits and suggested assignee.
 
-Sentry currently supports integrations with GitHub, BitBucket, Azure DevOps, GitLab, and others. For a complete list of our integrations, check out our docs on [Integrations](https://docs.sentry.io/workflow/integrations/global-integrations/).
+Sentry currently supports integrations with GitHub, BitBucket, Azure DevOps, GitLab, and others. For a complete list of our integrations, check out our docs on [Integrations](/workflow/integrations/global-integrations/).
 
 Let's see how we set up the release in this project:
 
@@ -23,7 +23,7 @@ Let's see how we set up the release in this project:
 
    ![Makefile]({% asset guides/integrate-backend/makefile.png @path %})
 
-3. Notice that we're settings the release version name as an environment variable that is then used in the application's runtime. We're letting the CLI propose a release version name, but you'd probably want to apply your own naming conventions:
+3. Notice that we're settings the release version name as an environment variable that is then used in the application's runtime. We're letting the CLI propose a release version name, but you'd probably want to apply your naming conventions:
 
    ```bash
    VERSION=`sentry-cli releases propose-version`
@@ -46,7 +46,7 @@ Let's see how we set up the release in this project:
 
 ## Breadcrumbs
 
-`Breadcrumbs` are the trail of events which led up to the error. They can be quite useful when trying to reproduce an issue. Depending on the platform, the SDK will track various types of Breadcrumbs by default (for backend SDKs those are DB queries, Network events, Logging, and others) and you can add your own custom breadcrumbs as well. For more information, see [Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}?platform=python).
+`Breadcrumbs` are the trail of events that led up to the error. They can be quite useful when trying to reproduce an issue. Depending on the platform, the SDK will track various types of Breadcrumbs by default (for backend SDKs those are DB queries, Network events, Logging, and others) and you can add custom breadcrumbs as well. For more information, see [Breadcrumbs](/enriching-error-data/breadcrumbs/?platform=python).
 
 Let's see how we add breadcrumbs to our app:
 
@@ -67,8 +67,8 @@ Let's see how we add breadcrumbs to our app:
       level='info',
    )
    ```
-   <!-- ![Import and Configure SDK]({% asset guides/integrate-backend/breadcrumbs.png @path %}) -->
-   > For more information on customizing your breadcrumbs, see [Breadcrumbs]({%- link _documentation/enriching-error-data/breadcrumbs.md -%}?platform=python).
+
+   > For more information on customizing your breadcrumbs, see [Breadcrumbs](/enriching-error-data/breadcrumbs/?platform=python).
 
 ## Environment
 
@@ -82,8 +82,8 @@ Let's see how we add breadcrumbs to our app:
     environment:"Production"
    ```
 
-   > **Note:** Environment values are freeform strings. The Sentry SDK or UI will not limit you to any specific value or format. In this example, we hardcoded the value. In a real-life app, the value would probably be determined dynamically through a properties file, system or environment variable.
+   > **Note:** Environment values are freeform strings. The Sentry SDK or UI will not limit you to any specific value or format. In this example, we hardcoded the value. In a real-life app, the value would probably be determined dynamically through a properties file, system, or environment variable.
 
 ## Next
 
-[Capturing Errors]({%- link _documentation/guides/tutorials/integrate-backend/capturing-errors.md -%})
+[Capturing Errors](/guides/tutorials/integrate-backend/capturing-errors/)

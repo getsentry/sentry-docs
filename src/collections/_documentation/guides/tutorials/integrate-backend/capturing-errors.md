@@ -5,7 +5,7 @@ sidebar_order: 3
 
 Once initialized in your code, the Sentry SDK will capture various types of events and notify you about them in real-time, depending on the alert rules you've configured. With the Django app already running on your [localhost](http://localhost:8000/), let's try them out.
 
-> **Note:** If you're using your own source code, follow [Capturing your first event](https://docs.sentry.io/error-reporting/quickstart/?platform=python) to introduce an error into your app.
+> **Note:** If you're using your own source code, follow [Capturing your first event](/error-reporting/quickstart/?platform=python) to introduce an error into your app.
 
 ## Unhandled Errors
 
@@ -33,7 +33,7 @@ The Sentry SDK will automatically capture and report any Unhandled Error that ha
 
 ## Handled Errors
 
-The Sentry SDK contains several methods that you can utilize to **explicitly** report errors, events and custom messages in except clauses, critical areas of your code, etc.
+The Sentry SDK contains several methods that you can utilize to **explicitly** report errors, events, and custom messages in except clauses, critical areas of your code, etc.
 
 ### Capture Exception
 
@@ -75,7 +75,7 @@ Typically, `capture_message` is not emitted but there are times when a developer
 
    ![Import and Configure SDK]({% asset guides/integrate-backend/capture_message.png @path %})
 
-   > By default captured messages are marked with a severity level tag `level:info` as reflected in the tags section. However, the `capture_message` methods accept an **optional** severity level parameter with possible values as described [here](https://docs.sentry.io/enriching-error-data/additional-data/?platform=python#setting-the-level).
+   > By default captured messages are marked with a severity level tag `level:info` as reflected in the tags section. However, the `capture_message` methods accept an **optional** severity level parameter with possible values as described [here](enriching-error-data/additional-data/?platform=python#setting-the-level).
 
 5. In the `views.py` file, go ahead and change the `capture_message` method to:
 
@@ -87,6 +87,35 @@ Typically, `capture_message` is not emitted but there are times when a developer
 
 7. Notice that the severity level tag on the new event now shows `level:fatal`.
 
-## Next
+## Enriching your Event Data
 
-[Integrating Backend with Frontend]({%- link _documentation/guides/tutorials/integrate-backend/adding-code.md -%})
+You can enrich your event and error data through the Sentry SDK by adding custom tags and user context attributes. In addition to providing more context to your errors, those will expand your options to search, filter, and query through your event metadata. For more information on the advantages of enriching your data see [Put your Data to Work](/guides/enrich-data/).
+
+Let's enrich the data of the message events we've captured with `capture_message`.
+
+1. In the `views.py` file, locate the line that triggers `sentry_sdk.capture_message`.
+
+2. Replace that line with the following code:
+
+   ```Python
+   with sentry_sdk.push_scope() as scope:
+      scope.set_tag("my-tag", "my value")
+      scope.user = { "email" : "my.email@your.domain.com" }
+      scope.set_extra("someVariable", "some data")
+
+      sentry_sdk.capture_message("You caught me!", "fatal")
+   ```
+
+   > Note: we're using the `push_scope` method that allows us to send data with one specific event on a local scope. We're setting a custom tag, user context attribute (email), and extra data on the local scope to enrich the data on the message event. For more information, see [Scopes and Hubs](/enriching-error-data/scopes/).
+
+3. Save your changes and trigger the `/message` endpoint again.
+
+4. Open the issue’s detail page from your _Issues Stream_.
+
+5. Notice that:
+
+   - The **user email** is now displayed on the details page and the number of unique users impacted by this event is reflected in the issue's header.
+   - The **custom tag** is now available (and searchable) in the list of tags.
+      ![Enriched Event Data]({% asset guides/integrate-backend/enriched_data_1.png @path %})
+   - The **extra data** we set on the SDK is reflected in the Additional Data context
+      ![Enriched Event Data 2]({% asset guides/integrate-backend/enriched_data_2.png @path %})
