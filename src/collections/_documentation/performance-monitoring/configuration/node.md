@@ -73,7 +73,7 @@ Sentry.init({
       // enable Express.js middleware tracing
       new Apm.Integrations.Express({ app })
   ],
-  tracesSampleRate: 0.25 // Be sure to lower this in production
+  tracesSampleRate: 1.0 // Be sure to lower this in production
 });
 
 // RequestHandler creates a separate execution context using domains, so that every
