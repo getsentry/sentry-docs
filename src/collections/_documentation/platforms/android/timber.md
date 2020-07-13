@@ -1,0 +1,54 @@
+---
+title: Timber
+sidebar_order: 2
+---
+
+The `sentry-android-timber` library provides [Timber](https://github.com/JakeWharton/timber) support for Sentry via [Timber Tree](https://github.com/JakeWharton/timber/blob/10f0adce3921ad2929ddf2f3b7fecda2cf3148a5/timber/src/main/java/timber/log/Timber.kt#L20) that sends events and breadcrumbs to Sentry. Once this integration is configured you can use Timber’s static API.
+
+The source can be found [on GitHub](https://github.com/getsentry/sentry-android/tree/master/sentry-android-timber/src/main/java/io/sentry/android/timber).
+
+### Installation
+
+1. In order to add the Timber integration, you have to do a [manual initialization](https://docs.sentry.io/platforms/android/#manual-initialization) of the Android SDK.
+
+2. Add the `sentry-android-timber` dependency
+
+	Using Gradle:
+	
+	```groovy
+	implementation 'io.sentry:sentry-android:{version}'
+	implementation 'io.sentry:sentry-android-timber:{version}' // version >= 2.2.0
+	```
+
+3. Initialize and add the `SentryTimberIntegration`
+
+	```kotlin
+	SentryAndroid.init(context) { options ->
+	    if (!BuildConfig.DEBUG) {
+	
+	        // default values:
+	        // minEventLevel = ERROR
+	        // minBreadcrumbLevel = INFO
+	        options.addIntegration(SentryTimberIntegration(
+	            minEventLevel = SentryLevel.ERROR,
+	            minBreadcrumbLevel = SentryLevel.INFO))
+	    }
+	}
+```
+
+### Usage
+
+The following example adds a breadcrumb and captures an error using the Timber’s static API; this breadcrumb and error will be forwarded to Sentry.
+
+```kotlin
+fun division(x: Int = 5, y: Int = 0): Int {
+    Timber.i("x = $x, y = $y")
+
+    try {
+        return x / y
+    } catch (e: ArithmeticException) {
+        Timber.e(e, "Division error")
+    }
+    return 0
+}
+```
