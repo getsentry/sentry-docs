@@ -43,21 +43,21 @@ The release details page focuses on an individual release. Elements of the relea
 
 Hover over specific dates and times in the overview graph for a quick perspective of events that crashed, behaved abnormally, errored, or are healthy.
 
-healthy 
-
-: The app shuts down (or goes into the background) normally, and there were no errors in that session.
-
-crashed 
+Crashed 
 
 : The app had an explicit hard crash. You’ll likely see a corresponding Sentry issue for the crash.
 
-errored 
+Abnormal 
+
+: The app went Out of Memory (OOM) and was forced to quit by the OS/timed out/froze. There’s usually no corresponding Sentry issue because this is a passive action.
+
+Errored 
 
 : The app shut down normally, but there were non-fatal errors in the session. Most likely, there are issues/errors in Sentry.
 
-abnormal 
+Healthy 
 
-: The app went Out of Memory (OOM) and was forced to quit by the OS/timed out/froze. There’s usually no corresponding Sentry issue because this is a passive action.
+: The app shuts down (or goes into the background) normally, and there were no errors in that session.
 
 [{% asset releases/release_crash_details.png alt="A hover view illustrating the number of crashes, abnormal, errored, and healthy events." width="400" %}]({% asset releases/release_crash_details.png @path %})
 
