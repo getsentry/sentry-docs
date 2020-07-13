@@ -13,7 +13,7 @@ Install the `apache-airflow` package with the `sentry` requirement.
 pip install 'apache-airflow[sentry]'
 ```
 
-You can then add your Sentry DSN to your configuration file (ex. `airflow.cfg`) under the `[sentry]` field.
+Then, add your Sentry DSN to your configuration file (ex. `airflow.cfg`) under the `[sentry]` field.
 
 ```ini
 [sentry]
