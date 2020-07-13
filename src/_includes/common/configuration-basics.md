@@ -1,14 +1,12 @@
 {% comment %}
 Guideline: This page is comprehensive; it is stored in the common folder, nested under _includes/common. To use, 
 
-1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
-2. Create a copy of "basics.md" file in _documentation/sdks/<platform-name> 
-3. Create the defined `include` statements and add them to the configuration-basics.md file
-4. Note that each of these terms is wrapped in an "if/then" statement; this is because not all of these options are included for every SDK. For those terms you do not wish to include, add the command `hide_<option>=true` in the SDK-specific page.
+1. If you haven't already, add the configuration content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/config (for example, _documentation/sdks/javascript/config). 
+2. Create a copy of basics.md file, then add it to the config folder. 
+3. Add the SDK-specific `include` statements to the configuration-basics.md file
+4. Note that each of these terms is wrapped in an "if/then" statement; this is because not all of these options are included for every SDK. For those terms you do not wish to include, add the command `hide_<option>=true` in the basics.md file.
 
 If you have questions, please ask Fiona or Daniel. 
-
-**The objective for this page is that a developer can easily view the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
 {% endcomment %}
 
 The {{ include.sdk_name }} SDK is configurable using a variety of options. These options are set when the SDK is first initialized, passed to the `init()` as an object:
@@ -42,13 +40,6 @@ Release names are strings, but some formats are detected by Sentry and might be 
 Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the Sentry web UI (for example, `staging` as compared to `prod` or similar).
 
 By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable. Note that the variable for `@sentry/browser` is `window.SENTRY_ENVIRONMENT`.
-{% endif %}
-{% if include.hide_error_types == nil %}
-`error_types`
-
-Sets which errors are reported. It takes the same values as PHP’s [error_reporting](https://www.php.net/manual/en/errorfunc.configuration.php#ini.error-reporting) configuration parameter.
-
-By default all types of errors are be reported (equivalent to `E_ALL`).
 {% endif %}
 {% if include.hide_error_sample_rate == nil %}
 `sampleRate`

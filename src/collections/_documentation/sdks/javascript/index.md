@@ -112,3 +112,4 @@ install_content=__install_content
  Next steps:
  
  - [Manage Configuration Options](/sdks/javascript/config/intro)
+ - [Enrich Event Data](/sdks/javascript/errors/intro)

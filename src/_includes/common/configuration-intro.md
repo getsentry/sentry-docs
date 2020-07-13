@@ -1,9 +1,9 @@
 {% comment %}
 Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
 
-1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
-2. Create a new config folder and new intro.md file in _documentation/sdks/<platform-name> 
-3. Create the defined `include` statements and add them to the intro.md file
+1. If you haven't already, add the configuration content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/config (for example, _documentation/sdks/javascript/config). 
+2. Create a copy of intro.md file, then add it to the config folder. 
+3. Add the SDK-specific `include` statements to the configuration-intro.md file
 
 If you have questions, please ask Fiona or Daniel. 
 
@@ -23,7 +23,7 @@ Sentry's {{ include.sdk_name }} SDK includes many configuration options that are
 {{ include.config-page_content }}
 
 {% comment %}
-Guideline: Create the `include` statement that links to the pages specific to the SDK you are documenting. For example, here we link to Source Maps, Lazy Loading, and Supported Browsers for JavaScript
+Guideline: Create the `include` statement that links to the pages specific to the SDK you are documenting. For example, here we link to Source Maps, Lazy Loading, and Supported Browsers for JavaScript.
 {% endcomment %}
 
 - **[Shutdown and Draining](/sdks/{{ include.root_link }}/config/shutdown-drain)**

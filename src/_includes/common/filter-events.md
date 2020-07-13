@@ -1,13 +1,13 @@
 {% comment %}
 Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
 
-1. Add a folder with the name of the platform you are documenting to the _documentation/sdks structure (for example, _documentation/sdks/javascript) 
+. If you haven't already, add the config content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/config). 
 2. Create a new filter.md file in _documentation/sdks/<platform-name>/config folder
 3. Create the defined `include` statements and add them to the filter.md file
 
 If you have questions, please ask Fiona or Daniel. 
 
-**The objective for this page is that a developer can easily view the configuration options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
+**The objective for this page is that a developer can easily understand how to filter events.**
 {% endcomment %}
 
 While sending all application errors to Sentry ensures you’ll be notified in real-time when errors occur in your code, often applications generate many errors, thus many notifications. The Sentry SDKs have several configuration options you can use to filter unwanted errors from leaving your application’s runtime. In addition, the Sentry web UI also offers methods to filter events.

@@ -124,6 +124,5 @@ Guideline: Create the `include` statement that provides SDK specific installatio
 
 **Next Steps:**
 
-- Learn more about enriching event data {% comment %}next phase:add link{% endcomment %}
 - Review and manage integrations {% comment %}next phase:add link{% endcomment %}
 - Review common problems {% comment %}next phase:add link{% endcomment %}
