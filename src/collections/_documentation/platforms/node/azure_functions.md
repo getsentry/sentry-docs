@@ -4,9 +4,8 @@ sidebar_order: 9
 ---
 
 Install our Node.js SDK in Azure:
-```basic
- npm install @sentry/node
-```
+```bash
+npm install @sentry/node
 
 Set up Sentry error logging for your azure function:
 ```jsx
