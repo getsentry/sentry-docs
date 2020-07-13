@@ -15,7 +15,7 @@ In this tutorial, you create a new `Project` in your Sentry account. Projects al
 
     ![Create new project]({% asset guides/integrate-frontend/create-new-project-01.png @path %})
 
-    > **Note:** If there are no projects in your account --- you might be redirected to the onboarding wizard to create your first project. 
+    > **Note:** If there are no projects in your account --- you might be redirected to the onboarding wizard to create your first project.
 
     * Select the language or framework for your project based on the code you wish to monitor --- in this case, `JavaScript`.
 
@@ -67,4 +67,4 @@ In this step, you create a new Alert rule notifying **every time** an event occu
 
 ## Next
 
-[Introduce Sentry SDK to your Frontend Code](/guides/integrate-frontend/initialize-sentry-sdk/)
+[Introduce Sentry SDK to your Frontend Code](/guides/tutorials/integrate-frontend/initialize-sentry-sdk/)
