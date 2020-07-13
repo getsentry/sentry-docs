@@ -8,16 +8,16 @@ Install our Node.js SDK in Azure:
 npm install @sentry/node
 
 Set up Sentry error logging for your azure function:
-```jsx
+```js
 const Sentry = require("@sentry/node");
 
 Sentry.init({
-  dsn: "<Your dsn>",
+    dsn: "___PUBLIC_DSN___"
 });
 
 module.exports = async function (context, req) {
     try {
-        callUndefinedFunction(); // Call undefined function.
+        await callUndefinedFunction(); // Call undefined function.
     } catch (error) {
         Sentry.captureException(error); // Capture the exception in Sentry dashboard.
         await Sentry.flush(2000);
@@ -28,7 +28,6 @@ module.exports = async function (context, req) {
         body: "Hello from Azure cloud function"
     };
 }
-```
 
 You can obtain the DSN using your Sentry account from your organization's *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI.
 
