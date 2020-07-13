@@ -3,7 +3,7 @@ title: Azure Functions
 sidebar_order: 9
 ---
 
-Install our Nodejs SDK in Azure:
+Install our Node.js SDK in Azure:
 ```basic
  npm install @sentry/node
 ```
