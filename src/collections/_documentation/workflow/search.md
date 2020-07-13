@@ -37,6 +37,22 @@ The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search toke
 
 The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
+### Using `or` & `and` Conditions
+
+Use `or` and `and` between aggregate filters. `and` can also handle queries between non-aggregates and aggregates. However, `or` cannot. 
+
+Some examples of using the `or` condition:
+
+```
+# a valid `or` query
+[ add `or` example here ]
+
+# an invalid `or` query
+[ add invalid example here ]
+```
+
+Also, the queries prioritize `and` before `or`. For example, "x `and` y `or` z" is the same as "[x `and` y] `or` z".
+
 ### Explicit Tag Syntax
 
 We recommend you never use reserved keywords (such as `project_id`) as tags. But if you do, you must use the following syntax to search for it:
