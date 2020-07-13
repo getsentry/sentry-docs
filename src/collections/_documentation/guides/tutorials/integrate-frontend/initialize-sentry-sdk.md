@@ -14,8 +14,8 @@ In this tutorial, you import the React demo code into your local development env
 
 The demo app source code requires a **NodeJS** development environment to install and run the application. Make sure that you have the following in place:
 
-- [Node and NPM](https://nodejs.org/en/)
-- [NVM](https://github.com/nvm-sh/nvm)
+* [Node and NPM](https://nodejs.org/en/)
+* [NVM](https://github.com/nvm-sh/nvm)
 
 ## Step 1: Get the code
 
@@ -84,4 +84,4 @@ To build and run the Demo application on your localhost:
 
 ## Next
 
-[Capture your First Error](/guides/integrate-frontend/generate-first-error/)
+[Capture your First Error](/guides/tutorials/integrate-frontend/generate-first-error/)

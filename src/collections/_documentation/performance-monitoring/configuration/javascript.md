@@ -115,7 +115,7 @@ Sentry.init({
       },
     }),
   ],
-  tracesSampleRate: 0.25, // Be sure to lower this in production
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
 
