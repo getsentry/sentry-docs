@@ -20,7 +20,7 @@ Then, add your Sentry DSN to your configuration file (ex. `airflow.cfg`) under t
 sentry_dsn = ___PUBLIC_DSN___
 ```
 
-Now, Airflow should report errors to Sentry automatically. Airflow will also generate custom tags and breadcrumbs based on the current dag and tasks at time of error.
+Now, Airflow should report errors to Sentry automatically. Airflow will also generate custom tags and breadcrumbs based on the current Directed Acyclic Graph (DAG) and tasks at the time of the error.
 
 Please see the official [Apache Airflow documentation](https://airflow.apache.org/docs/stable/errors.html) for more details.
 
