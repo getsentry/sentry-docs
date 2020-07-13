@@ -3,7 +3,7 @@ title: Apache Airflow
 sidebar_order: 9
 ---
 
-[Apache Airflow](https://airflow.apache.org/) **1.10.6** and above can be setup to send errors to Sentry.
+[Apache Airflow](https://airflow.apache.org/) **1.10.6** and above can be set up to send errors to Sentry.
 
 ## Installation
 
