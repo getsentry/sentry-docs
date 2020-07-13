@@ -34,7 +34,6 @@ exports.cloud_handler = (event, context) => {
 ```
 You can obtain the DSN using your Sentry account from your organization's *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI.
 
-Note: You need to call both `CaptureException` and `Flush` to report errors into Sentry.
+Note: You need to call both `captureException` and `flush` in order for captured events to be successfully delivered to Sentry.
 
 Checkout Sentry’s [gcp sample apps](https://github.com/getsentry/examples/tree/master/gcp-cloud-functions/node) for detailed examples. For detailed configuration options, use [JavaScript docs](/platforms/javascript/).
-

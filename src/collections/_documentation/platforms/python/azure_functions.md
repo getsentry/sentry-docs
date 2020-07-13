@@ -1,15 +1,16 @@
 ---
-title: GCP Functions
-sidebar_order: 8
+title: Azure Functions
+sidebar_order: 9
 ---
 
 <!-- WIZARD -->
-Install our Sentry SDK in the `requirements.txt` section:
+Create a .venv in the local machine on VS Code, create a Python function, and install the sentry SDK:
 ```python
 sentry_sdk
 ```
 
-You can use the GCP Functions integration for the Python SDK like this:
+Add DSN value in ````__init__.py````:
 {% include platforms/python/generic-serverless-example.md %}
 <!-- ENDWIZARD -->
+
 {% include platforms/python/generic-serverless-behavior.md %}
