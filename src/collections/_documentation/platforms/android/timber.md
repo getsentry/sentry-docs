@@ -38,7 +38,7 @@ The source can be found [on GitHub](https://github.com/getsentry/sentry-android/
 
 ### Usage
 
-The following example adds a breadcrumb and capture an error using the Timber’s static API, this breadcrumb and error will be forwarded to Sentry.
+The following example adds a breadcrumb and captures an error using the Timber’s static API; this breadcrumb and error will be forwarded to Sentry.
 
 ```kotlin
 fun division(x: Int = 5, y: Int = 0): Int {
