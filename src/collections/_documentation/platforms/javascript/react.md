@@ -146,3 +146,135 @@ class App extends React.Component {
 
 export default App;
 ```
+
+## Redux
+
+{% version_added 5.20.0 %}
+
+Redux support is included in the `@sentry/react` package since version `5.20.0`. To use redux you would use `Sentry.createReduxEnhancer` at the same place that you initialize your Redux store.
+
+
+```js
+import { createStore, compose } from 'redux';
+import * as Sentry from '@sentry/react'
+
+// ...
+
+const sentryReduxEnhancer = Sentry.createReduxEnhancer({
+  // Optionally pass options listed below
+});
+
+const store = createStore(rootReducer, sentryReduxEnhancer);
+
+// ...
+
+```
+
+If you have other enhancers or middleware such as `thunk` you would do:
+
+```js
+const store = createStore(rootReducer, compose(applyMiddleware(thunk), sentryReduxEnhancer));
+```
+
+{% capture __alert_content -%}
+Sentry uses a redux **enhancer**, this means that you neither pass it to `applyMiddleware` nor call the method when you pass it to the `createStore` method, you would just pass it as indicated above.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="info"
+%}
+
+### Redux Enhancer Options
+
+Pass an options object as the first parameter to `Sentry.createReduxEnhancer` to configure it.
+
+{% capture __alert_content -%}
+We advise against sending sensitive information to Sentry, but if you do, we will try our best to filter out things such as user passwords.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+%}
+
+#### `actionTransformer` (Function)
+
+Used to remove sensitive information from actions. The first parameter passed to the function is the Redux action. Return `null` to not send the action to Sentry. By default we send all actions.
+
+```js
+const sentryReduxEnhancer = Sentry.createReduxEnhancer({
+  actionTransformer: action => {
+    if (action.type === "GOVERNMENT_SECRETS") {
+      // Return null to not log the action to Sentry
+      return null;
+    }
+    if (action.type === "SET_PASSWORD" ) {
+      // return a transformed action to remove sensitive information
+      return {
+        ...action,
+        password: null
+      }
+    };
+    
+    return action;
+  }
+});
+```
+
+#### `stateTransformer` (Function)
+
+Used to remove sensitive information from state.  The first parameter passed to the function is the Redux state. Return `null` to not attach the state to events sent to Sentry. Note that if you do choose to not send state to Sentry, your errors might not have the latest version of the state attached. By default we attach all state changes.
+
+```js
+const sentryReduxEnhancer = Sentry.createReduxEnhancer({
+  stateTransformer: state => {
+    if (state.topSecret.doNotSend) {
+      // Return null to not send this version of the state.
+      return null;
+    }
+    
+    // Transform the state to remove sensitive information
+    const transformedState = {
+      ...state,
+      topSecret: {
+        ...state.topSecret,
+        // Replace sensitive information with something else
+        nuclearLaunchCodes: "I love pizza",
+        // or just remove it entirely
+        hiddenTreasureLocation: null
+      },
+      giganticState: null
+    };
+    
+    return transformedState;
+  }
+})
+```
+
+### `actionBreadcrumbCategory` (string)
+
+Category of the breadcrumb sent by actions. Default is `"redux.action"`.
+
+### `actionBreadcrumbType` (string)
+
+Type of the breadcrumb sent by actions. Default is `info`.
+
+### `stateContextKey` (string)
+
+The context key to pass the state to. Default is `redux.state`. Note that if you change this, the context may not be displayed as nicely on the Sentry dashboard.
+
+### `configureScopeWithState` (Function)
+
+Called on every state update, configure the Sentry Scope with the redux state. The first parameter is the scope, which is the same scope instance that you would get when you call `Sentry.configureScope`, and the second parameter is the latest Redux state.
+
+```js
+const sentryReduxEnhancer = Sentry.createReduxEnhancer({
+  configureScopeWithState: (scope, state) => {
+    // Set tag if the user is using imperial units.
+    if (state.settings.useImperialUnits) {
+      scope.setTag('user.usesImperialUnits', true);
+    }
+  }
+});
+```
