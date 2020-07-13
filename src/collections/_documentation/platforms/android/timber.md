@@ -13,27 +13,27 @@ The source can be found [on GitHub](https://github.com/getsentry/sentry-android/
 
 2. Add the `sentry-android-timber` dependency
 
-Using Gradle:
-
-```groovy
-implementation 'io.sentry:sentry-android:{version}'
-implementation 'io.sentry:sentry-android-timber:{version}' // version >= 2.2.0
-```
+	Using Gradle:
+	
+	```groovy
+	implementation 'io.sentry:sentry-android:{version}'
+	implementation 'io.sentry:sentry-android-timber:{version}' // version >= 2.2.0
+	```
 
 3. Initialize and add the `SentryTimberIntegration`
 
-```kotlin
-SentryAndroid.init(context) { options ->
-    if (!BuildConfig.DEBUG) {
-
-        // default values:
-        // minEventLevel = ERROR
-        // minBreadcrumbLevel = INFO
-        options.addIntegration(SentryTimberIntegration(
-            minEventLevel = SentryLevel.ERROR,
-            minBreadcrumbLevel = SentryLevel.INFO))
-    }
-}
+	```kotlin
+	SentryAndroid.init(context) { options ->
+	    if (!BuildConfig.DEBUG) {
+	
+	        // default values:
+	        // minEventLevel = ERROR
+	        // minBreadcrumbLevel = INFO
+	        options.addIntegration(SentryTimberIntegration(
+	            minEventLevel = SentryLevel.ERROR,
+	            minBreadcrumbLevel = SentryLevel.INFO))
+	    }
+	}
 ```
 
 ### Usage
