@@ -45,7 +45,7 @@ Hover over specific dates and times in the overview graph for a quick perspectiv
 
 Crashed 
 
-: The app had an explicit hard crash. You’ll likely see a corresponding Sentry issue for the crash.
+: The app had an explicit unhandled error or hard crash. You'll typically be able to see the corresponding issue in Sentry that captures this event. 
 
 Abnormal 
 
