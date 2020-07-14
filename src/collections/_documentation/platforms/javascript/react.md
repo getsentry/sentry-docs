@@ -151,7 +151,7 @@ export default App;
 
 {% version_added 5.20.0 %}
 
-Redux support is included in the `@sentry/react` package since version `5.20.0`. To use redux you would use `Sentry.createReduxEnhancer` at the same place that you initialize your Redux store.
+Redux support is included in the `@sentry/react` package since version `5.20.0`. To apply Redux, use `Sentry.createReduxEnhancer` at the same place that you initialize your Redux store.
 
 
 ```js
@@ -170,14 +170,14 @@ const store = createStore(rootReducer, sentryReduxEnhancer);
 
 ```
 
-If you have other enhancers or middleware such as `thunk` you would do:
+If you have other enhancers or middleware such as `thunk`:
 
 ```js
 const store = createStore(rootReducer, compose(applyMiddleware(thunk), sentryReduxEnhancer));
 ```
 
 {% capture __alert_content -%}
-Sentry uses a redux **enhancer**, this means that you neither pass it to `applyMiddleware` nor call the method when you pass it to the `createStore` method, you would just pass it as indicated above.
+Sentry uses a redux **enhancer**. Pass the enhancer, as indicated above. Don't pass it to `applyMiddleware` and don't call the method when you pass it to the `createStore` method.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
@@ -224,7 +224,7 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
 
 #### `stateTransformer` (Function)
 
-Used to remove sensitive information from state.  The first parameter passed to the function is the Redux state. Return `null` to not attach the state to events sent to Sentry. Note that if you do choose to not send state to Sentry, your errors might not have the latest version of the state attached. By default we attach all state changes.
+Used to remove sensitive information from state.  The first parameter passed to the function is the Redux state. Return `null` to not attach the state to events sent to Sentry. Note that if you choose not to send state to Sentry, your errors might not have the latest version of the state attached. By default, we attach all state changes.
 
 ```js
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({
@@ -266,7 +266,7 @@ The context key to pass the state to. Default is `redux.state`. Note that if you
 
 ### `configureScopeWithState` (Function)
 
-Called on every state update, configure the Sentry Scope with the redux state. The first parameter is the scope, which is the same scope instance that you would get when you call `Sentry.configureScope`, and the second parameter is the latest Redux state.
+Called on every state update, configure the Sentry Scope with the Redux state. The first parameter is the scope, which is the same scope instance that you would get when you call `Sentry.configureScope`, and the second parameter is the latest Redux state.
 
 ```js
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({
