@@ -49,7 +49,7 @@ Crashed
 
 Abnormal 
 
-: The app went Out of Memory (OOM) and was forced to quit by the OS/timed out/froze. There’s usually no corresponding Sentry issue because this is a passive action.
+: The application timed out, froze, or was forced to quit by the operating system. There is usually no corresponding Sentry issue, as this is a passive action.
 
 Errored 
 
@@ -57,7 +57,7 @@ Errored
 
 Healthy 
 
-: The app shuts down (or goes into the background) normally, and there were no errors in that session.
+: The session ends normally and no errors occurred during its lifetime.
 
 [{% asset releases/release_crash_details.png alt="A hover view illustrating the number of crashes, abnormal, errored, and healthy events." width="400" %}]({% asset releases/release_crash_details.png @path %})
 
