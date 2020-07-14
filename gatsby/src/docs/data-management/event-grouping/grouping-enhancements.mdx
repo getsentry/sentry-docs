@@ -1,0 +1,136 @@
+---
+title: 'Custom Grouping Enhancements'
+sidebar_order: 2
+---
+
+If you use stack traces for grouping, the enhancements rules are used to influence the data.
+These rules can be configured on a per-project basis under *Project Settings > General Settings > Grouping Settings*.
+
+Enhancements are rules written in a pretty straightforward way. Each line is a
+single enhancement rule. It's one or multiple match expressions followed by one
+or multiple actions to be executed when all expressions match. All rules are
+executed from top to bottom on all frames in the stack trace.
+
+The syntax for grouping enhancements is roughly like this:
+
+```
+matcher-name:expression other-matcher:expression ... action1 action2 ...
+```
+
+Here is a practical example to see how this looks:
+
+```
+family:native function:std::*   -app
+path:**/node_modules/**         -app
+path:**/generated/**.js         -group
+```
+
+## Rules
+
+The following **matchers** exist. Multiple matchers can be defined in a line:
+
+- `family`: matches on the general platform family. Right now there are `javascript`, `native` and `other`. To make a rule apply to multiple platforms, you can comma separate them.
+  For example: `family:native,javascript` applies to both JavaScript and Native.
+- `path`: this matches case insensitive with Unix glob behavior on a path. The path separators are normalized to `/`. As a special rule, if the filename is relative, it still matches on `**/`. Examples:
+  - `path:**/project/**.c`: matches on all files under `project` with a `.c` extension
+  - `path:**/vendor/foo/*.c`: matches on vendor/foo without sub folders
+  - `path:**/*.c`: matches on `foo.c` as well as `foo/bar.c`.
+- `module`: is similar to `path` but matches on the module. This is not used for Native, but it is used for JavaScript, Python, and similar platforms. Matches are case sensitive, and normal globbing is available.
+- `function`: matches on a function, and is case sensitive with normal globbing.
+  - `function:myproject_*` matches all functions starting with `myproject_`
+  - `function:malloc` matches on the malloc function
+- `package`: matches on a package. The package is the container that contains a function or module.
+  This is a `.jar`, a `.dylib` or similar. The same matching rules as for `path` apply (For example, this is typically an absolute path).
+- `app`: matches on the current state of the in-app flag. `yes` means the frame is in app, `no` means it's not.
+- An expression can be quoted if necessary (when spaces are included, for example).
+
+There are two types of **actions**: flag setting and setting variables.
+
+- **flag**: flags are what is to be done if all matchers match. A flag needs to be prefixed with `+` to set it or `-` to unset it. If this expression is prefixed with a `^`, it applies to frames above the frame -- towards the crash. If prefixed with `v` it applies to frames below the frame -- away from the crash. For instance, `-group ^-group` removes the matching frame and all frames above it from the grouping.
+  - `app`: marks or unmarks a frame in-app
+  - `group`: adds or removes a frame from grouping
+- **variables**: additionally variables can be set (`variable=value`). Currently, there is just one:
+  - `max-frames`: sets the total number of frames to be considered for grouping.
+The default is `0` which means "all frames." If set to `3`, only the top 3 frames are considered.
+
+If a line is prefixed with a hash (`#`), it's a comment and ignored.
+
+#### Examples
+
+```
+path:**/node_modules/** -group
+path:**/app/utils/requestError.jsx -group
+path:**src/getsentry/src/getsentry/** +app
+
+family:native max-frames=3
+
+function:fetchSavedSearches v-group
+path:**/app/views/**.jsx function:fetchData ^-group
+
+family:native function:SpawnThread v-app -app
+family:native function:_NSRaiseError ^-group -app
+family:native function:std::* -app
+family:native function:core::* -app
+```
+
+#### Recommendations
+
+There are some general recommendations we have to greatly improve the out of the box grouping experience.
+
+**Mark in-app Frames**
+
+To proactively improve your experience, help Sentry determine which frames in your stack trace are "in-app" (part of your own application) and which ones are not. The default rules are defined by the SDK, but in many cases, this can be improved on the server as well. In particular, for languages where server-side processing is necessary (for example, Native C, C++, or JavaScript), it's better to override this on the server.
+
+For instance, the following marks as in-app all frames that are below a specific C++ namespace:
+
+```
+function:myapplication::* +app
+```
+
+You can also achieve the same result by marking other frames "not in-app." However, if that's the case, you should ensure that first all frames are set to "in-app" to override the defaults:
+
+```
+app:no             +app
+function:std::*    -app
+function:boost::*  -app
+```
+
+Forcing all frames to be in-app first is necessary because there might already have
+been some defaults set by the client SDK or earlier processing.
+
+**Cut Stack Traces**
+
+In many cases, you want to chop off the top or bottom of the stack trace. For instance, many code bases use a common function to generate an error. In this case, the error machinery will appear as part of the stack trace. For example, if you use Rust, you likely want to remove some frames that are related to panic handling:
+
+```
+function:std::panicking::begin_panic       ^-app -app ^-group
+function:core::panicking::begin_panic      ^-app -app ^-group
+```
+
+Here we tell the system that all frames from begin-panic to the crash location are not part of the application (including the panic frame itself). All frames above are also in all cases irrelevant for grouping.
+
+Likewise, you can also chop off the base of a stack trace. This is particularly useful if you have different main loops that drive an application:
+
+```
+function:myapp::LinuxMainLoop         v-group -group
+function:myapp::MacMainLoop           v-group -group
+function:myapp::WinMainLoop           v-group -group
+```
+
+**Stack Trace Frame Limits**
+
+This isn't useful for *all* projects, but it can work well for large applications with many crashes. The default strategy is to consider most of the stack trace relevant for grouping. This means that every different stack trace that leads to a crashing function will cause a different group to be created. If you do not want that, you can alternatively force the groups to be much larger by limiting how many frames should be considered.
+
+For instance, if any of the frames in the stack trace refer to a common external library, you could tell the system to only  consider the top N frames, :
+
+```
+# always only consider the top 1 frame for all native events
+family:native max-frames=1
+
+# if the bug is in proprietarymodule.so, only consider top 2 frames
+family:native package:**/proprietarymodule.so  max-frames=2
+
+# these are functions we want to consider much more of the stack trace for
+family:native function:KnownBadFunction1  max-frames=5
+family:native function:KnownBadFunction2  max-frames=5
+```
