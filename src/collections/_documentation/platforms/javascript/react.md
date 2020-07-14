@@ -151,7 +151,7 @@ export default App;
 
 {% version_added 5.20.0 %}
 
-Redux support is included in the `@sentry/react` package since version `5.20.0`. To apply Redux, use `Sentry.createReduxEnhancer` at the same place that you initialize your Redux store.
+Redux support is included in the `@sentry/react` package since version `5.20.0`. To apply Sentry to Redux, use `Sentry.createReduxEnhancer` at the same place that you initialize your Redux store.
 
 
 ```js
