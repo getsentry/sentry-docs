@@ -5,11 +5,11 @@ excerpt: ""
 
 {%- capture __filter-stack-trace -%}
 
-For example, with JavaScript errors, a minified source code can result in a nondeterministic stack trace that could interfere with event grouping, which can be avoided by ensuring Sentry has access to your [Source Maps](/platforms/javascript/sourcemaps) and minified artifacts. 
+For example, with JavaScript errors, a minified source code can result in a nondeterministic stack trace that could interfere with event grouping, which can be avoided by ensuring Sentry has access to your [Source Maps](/platforms/javascript/sourcemaps) and minified artifacts.
 
- ![JavaScript stack trace without source maps]({% asset guides/manage-event-stream/04.png @path %})
- ![JavaScript stack trace with source maps]({% asset guides/manage-event-stream/05.png @path %})
- 
+ ![JavaScript stack trace without source maps]({% asset stacktrace-without-sourcemaps.png @path %})
+ ![JavaScript stack trace with source maps]({% asset stacktrace-with-sourcemaps.png @path %})
+
  {%- endcapture -%}
 
 {%- capture __filter-init_content -%}
@@ -78,11 +78,11 @@ Sentry.init({
 
 {%- endcapture -%}
 
-{%- include common/filter-events.md 
+{%- include common/filter-events.md
 sdk_name="JavaScript"
 
 filter-stack-trace=__filter-stack-trace
-filter-init_content=__filter-init_content 
+filter-init_content=__filter-init_content
 filter-example_content=__filter-example_content
 filter-sample-rate_content=__filter-sample-rate_content
 filter-hint_content=__filter-hint_content
