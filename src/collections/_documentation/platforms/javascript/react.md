@@ -252,18 +252,6 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
 })
 ```
 
-### `actionBreadcrumbCategory` (string)
-
-Category of the breadcrumb sent by actions. Default is `"redux.action"`.
-
-### `actionBreadcrumbType` (string)
-
-Type of the breadcrumb sent by actions. Default is `info`.
-
-### `stateContextKey` (string)
-
-The context key to pass the state to. Default is `redux.state`. Note that if you change this, the context may not be displayed as nicely on the Sentry dashboard.
-
 ### `configureScopeWithState` (Function)
 
 Called on every state update, configure the Sentry Scope with the Redux state. The first parameter is the scope, which is the same scope instance that you would get when you call `Sentry.configureScope`, and the second parameter is the latest Redux state.
