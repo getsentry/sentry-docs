@@ -1,11 +1,11 @@
 {% comment %}
-Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
+Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use,
 
-. If you haven't already, add the config content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/config). 
+. If you haven't already, add the config content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/config).
 2. Create a new filter.md file in _documentation/sdks/<platform-name>/config folder
 3. Create the defined `include` statements and add them to the filter.md file
 
-If you have questions, please ask Fiona or Daniel. 
+If you have questions, please ask Fiona or Daniel.
 
 **The objective for this page is that a developer can easily understand how to filter events.**
 {% endcomment %}
@@ -32,20 +32,20 @@ Inbound filters include:
 
 Once applied, you can track the filtered events (numbers and cause) using the graph provided at the top of the Inbound Data Filters view.
 
-![Built-in Inbound Filters]({% asset guides/manage-event-stream/03.png @path %})
+![Built-in Inbound Filters]({% asset builtin-inbound-filters.png @path %})
 
 ### Proper Event Grouping
 
 Proper event grouping maintains a meaningful issue stream and reduces redundant notifications. Sentry groups similar *events* into unique *issues* based on their *fingerprint*. An event’s fingerprint relies firstly on its **stack trace**.
 
 {{ include.filter-stack-trace }}
-{% comment %} 
+{% comment %}
 Guideline: as appropriate, add the example and screen shot for the SDK your are documenting
 {% endcomment %}
 
 ### Apply Workflows
 
-Event streams with inbound filter and proper event grouping can be made more efficient by practicing good development hygiene. When Sentry alerts you to an issue in your code, resolve it or discard. 
+Event streams with inbound filter and proper event grouping can be made more efficient by practicing good development hygiene. When Sentry alerts you to an issue in your code, resolve it or discard.
 
 ### Rate Limit
 
@@ -68,7 +68,7 @@ All Sentry SDKs support the `beforeSend` callback method. `before-send` is calle
 Guideline: add the `init` call for the SDK your are documenting
 {% endcomment %}
 
-The `before-send` callback is passed both the `event` and a second argument, `hint`, that holds one or more hints. 
+The `before-send` callback is passed both the `event` and a second argument, `hint`, that holds one or more hints.
 
 Typically a `hint` holds the original exception so that additional data can be extracted or grouping is affected. In this example, the fingerprint is forced to a common value if an exception of a certain type has been caught:
 
@@ -86,7 +86,7 @@ When the SDK creates an event or breadcrumb for transmission, that transmission 
 
 #### Sampling
 
-If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events. 
+If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events.
 
 **Note:** The SDK sample rate is not dynamic; changing it requires re-deployment. In addition, setting an SDK sample rate limits visibility into the source of events. Setting a rate limit for your project may better suit your needs.
 
@@ -105,12 +105,12 @@ When choosing a sampling rate, the goal is to not collect *too* much data, but
 
 Hints are available in two places: 
 
-1. `beforeSend` / `beforeBreadcrumb` 
-2. `eventProcessors` 
+1. `beforeSend` / `beforeBreadcrumb`
+2. `eventProcessors`
 
 Event and Breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected. 
 
-For events, those are things such as `event_id`,  `originalException`,  `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that you attach. 
+For events, those are things such as `event_id`,  `originalException`,  `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that you attach.
 
 For breadcrumbs, the use of `hints` is implementation dependent. For XHR requests, the hint contains the xhr object itself; for user interactions the hint contains the DOM element and event name and so forth.
 
