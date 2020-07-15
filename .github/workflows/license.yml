@@ -1,0 +1,22 @@
+name: update-license
+on:
+  repository_dispatch:
+    types: [update-license]
+  schedule:
+    # This is the typical CalVer release time
+    - cron:  '0 17 15 * *'
+
+jobs:
+  build:
+    name: Update BSL Change Date
+    runs-on: ubuntu-latest
+    env:
+      GIT_COMMITTER_NAME: getsentry-bot
+      GIT_AUTHOR_NAME: getsentry-bot
+      EMAIL: bot@getsentry.com
+    steps:
+    - uses: actions/checkout@v2
+    - run: sed -i -e "s/\(Change Date:\s*\)[-0-9]\+\$/\\1$(date +'%Y-%m-%d' -d '3 years')/" LICENSE
+    - run: git add LICENSE
+    - run: 'git commit -m "license: Update BSL change date"'
+    - run: git push
