@@ -16,3 +16,12 @@ Sentry.init({
   integrations: [new MyAwesomeIntegration()]
 });
 ```
+
+{%- endcapture -%}
+
+{%- include common/integration-custom.md 
+sdk_name="JavaScript"
+
+custom-integration=__custom-integration
+root_link="javascript"
+ -%}
