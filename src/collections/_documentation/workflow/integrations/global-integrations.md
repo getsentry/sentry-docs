@@ -1108,7 +1108,7 @@ Vercel is an all-in-one platform with Global CDN supporting static and JAMstack 
 
     [{% asset vercel/vercel_link_project.png alt="Sentry modal showing linking Sentry project to Vercel project." %}]({% asset vercel/vercel_link_project.png @path %})
 
-  * This step will generate environment variables in the selected Vercel project. Having these set means you can skip the [CLI Configuration step](https://github.com/getsentry/sentry-webpack-plugin#cli-configuration) in the Sentry Webpack Plugin setup. You can see these in Vercel in **Project Settings** > **General** > **Environment Variables**.
+    * This step will generate environment variables in the selected Vercel project. Having these set means you can skip the [CLI Configuration step](https://github.com/getsentry/sentry-webpack-plugin#cli-configuration) in the Sentry Webpack Plugin setup. You can see these in Vercel in **Project Settings** > **General** > **Environment Variables**.
 
 
     [{% asset vercel/vercel_env_vars.png alt="Sentry modal showing linking Sentry project to Vercel project." %}]({% asset vercel/vercel_env_vars.png @path %})
@@ -1119,20 +1119,25 @@ Vercel is an all-in-one platform with Global CDN supporting static and JAMstack 
     * `NEXT_PUBLIC_SENTRY_DSN` - the linked Sentry project's DSN
     * `VERCEL_GITHUB_COMMIT_SHA`, `VERCEL_GITLAB_COMMIT_SHA`, or `VERCEL_BITBUCKET_COMMIT_SHA` - your source code provider's commit SHA, used for creating releases and associating commits
 
+  2. Redeploy your Vercel project in order to trigger a release.
+
 **Usage**
 
 * If you have not already done so, [instrument your code with Sentry]({%- link _documentation/error-reporting/quickstart.md -%}).
 * Ensure you have [installed a repository integration]({%- link _documentation/workflow/releases/index.md -%}#install-repo-integration) and added the relevant repository.
 * Add the [Sentry Webpack Plugin](https://github.com/getsentry/sentry-webpack-plugin) to your configuration. For NextJS, use `next.config.js`.
 
+* If you already have a Vercel project integrated with Sentry, ensure the Sentry project you link is the one you're already using to report errors.
+
 **Uninstallation**
 
-1. From the Vercel integration configuration page (**Organization Settings** > **Integrations** > **Vercel**) you can uninstall the integration. 
+1. The integration must be uninstalled from Vercel. Visit the Vercel integration configuration page (**Organization Settings** > **Integrations** > **Vercel** > **Configurations**) and click "Uninstall" then "Visit Vercel" in the modal that pops up. 
 
-    [{% asset vercel/vercel_delete.png alt="Sentry modal showing uninstalling Vercel integration." %}]({% asset vercel/vercel_delete.png @path %})
+    [{% asset vercel/vercel_uninstall.png alt="Sentry modal showing uninstalling Vercel integration." %}]({% asset vercel/vercel_uninstall.png @path %})
 
+2. Click "Remove Configuration"
 
-2. Delete the internal integration that was created by navigating to **Organization Settings** > **Developer Settings** and clicking the trash can icon next to **Vercel Internal Integration**. You will be prompted to confirm the deletion by entering a string provided in the modal. Enter the string and click "Confirm" to finalize the deletion.
+3. Delete the internal integration that was created by navigating to **Organization Settings** > **Developer Settings** and clicking the trash can icon next to **Vercel Internal Integration**. You will be prompted to confirm the deletion by entering a string provided in the modal. Enter the string and click "Confirm" to finalize the deletion.
 
     [{% asset vercel/vercel_delete_internal_integration.png alt="Sentry modal showing uninstalling Vercel integration." %}]({% asset vercel/vercel_delete_internal_integration.png @path %})
 
