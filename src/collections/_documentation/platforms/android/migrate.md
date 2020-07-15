@@ -46,7 +46,7 @@ To initialize the SDK manually:
 
     ```java
     SentryAndroid.init(context, options -> {
-        options.setDsn("___PUBLIC_DSN___");    
+        options.setDsn("___PUBLIC_DSN___");  
     });
     ```
 
@@ -54,7 +54,7 @@ To initialize the SDK manually:
 
 Please note that the new SDK will send with each event a release version in a different format than the previous SDK.
 
-If you are using the [GitHub](/workflow/integrations/global-integrations/#github) or [GitLab](/workflow/integrations/global-integrations/#gitlab) integrations, you need to do one of the following:
+If you are using the [GitHub](/workflow/integrations/github/) or [GitLab](/workflow/integrations/gitlab/) integrations, you need to do one of the following:
 
 - Use the new format LINK: ([https://docs.sentry.io/platforms/android/#releases](https://docs.sentry.io/platforms/android/#releases))
 - Set the release in your `AndroidManifest.xml`
@@ -110,7 +110,7 @@ Sentry.capture("This is a test");
 
 ```java
 Sentry.captureMessage("This is a test"); // SentryLevel.INFO by default
-Sentry.captureMessage("This is a test", SentryLevel.WARNING); // or specific level 
+Sentry.captureMessage("This is a test", SentryLevel.WARNING); // or specific level
 ```
 
 **Breadcrumbs**
@@ -144,7 +144,7 @@ Sentry.getContext().setUser(
 ```java
 User user = new User();
 user.setEmail("hello@sentry.io");
-Sentry.setUser(user); 
+Sentry.setUser(user);
 ```
 
 **Set extra**

@@ -1,0 +1,147 @@
+---
+title: BitBucket
+sidebar_order: 1
+---
+
+You can use the data from your Bitbucket commits to help find and fix bugs faster.
+
+## Configure Bitbucket
+
+<Alert title="Note" level="info">
+Sentry owner or manager permissions, and Bitbucket admin permissions are required to install this integration.
+</Alert>
+
+### Atlassian Cloud
+
+1. In Sentry, navigate to Organization Settings > **Integrations**.
+2. If you have the legacy Bitbucket integration installed, you’ll see a button next to Bitbucket that says **Upgrade**. If you do not have the legacy Bitbucket integration installed, you’ll see a button that says **Install**.
+
+    ![](bitbucket-install.png)
+
+3. In the resulting modal, click **Add Installation**.
+
+    ![](bitbucket-add-installation.png)
+
+4. A Bitbucket install window should pop up. Select the Bitbucket account you'd like to grant Sentry access to, and click **Grant Access**.
+5. On your new Bitbucket instance in Sentry, click **Configure**.
+
+    ![](bitbucket-installed.png)
+
+6. Add any repositories from which you want to collect commit data.
+
+    ![](bitbucket-add-repo.png)
+
+Bitbucket should now be enabled for all projects under your Sentry organization.
+
+### Bitbucket Server
+
+#### Generate an RSA public/private key pair
+
+To generate an RSA public/private key pair, run the following commands in your terminal window one by one.
+
+```
+openssl genrsa -out bitbucket_privatekey.pem 1024
+openssl req -newkey rsa:1024 -x509 -key bitbucket_privatekey.pem -out bitbucket_publickey.cer -days 365
+openssl pkcs8 -topk8 -nocrypt -in bitbucket_privatekey.pem -out bitbucket_privatekey.pcks8
+openssl x509 -pubkey -noout -in bitbucket_publickey.cer  > bitbucket_publickey.pem
+```
+
+#### Create a new application link in Bitbucket
+
+1. In Bitbucket, click the **gear icon** > **Applications** > **Application Links**.
+2. Enter the following as the application URL:
+`https://sentry.io/extensions/bitbucket_server/setup/`
+3. Click **Create New Link**. If you see a warning that “No response was received from the URL you entered,” ignore and click **Continue**.
+4. In the resulting dialog, fill out the form as follows:
+
+    <table>
+    <tr><th>Application Name</th><td>Sentry</td></tr>
+    <tr><th>Application Type</th><td>Generic Application</td></tr>
+    <tr><th>Service Provider Name</th><td>Sentry</td></tr>
+    <tr><th>Consumer Key</th><td>(your choice, but keep this handy for the next step)</td></tr>
+    <tr><th>Shared Secret</th><td>sentry</td></tr>
+    <tr><th>Request Token URL</th><td>https://sentry.io</td></tr>
+    <tr><th>Access Token URL</th><td>https://sentry.io</td></tr>
+    <tr><th>Authorize URL</th><td>https://sentry.io</td></tr>
+    <tr><th>Create Incoming Link</th><td>No</td></tr>
+    </table>
+
+5. Click **Continue**. This will return you to the **Configure Application Links** page, where you'll see an application called **Sentry**.
+6. Click the pencil icon next to the **Sentry** application.
+7. On the lefthand side of the resulting modal, click **Incoming Authentication**. Fill out the form as follows, and press **Save**:
+
+    <table>
+    <tr><th>Consumer Key</th><td>(the consumer key from Step II.4)</td></tr>
+    <tr><th>Consumer Name</th><td>Sentry</td></tr>
+    <tr><th>Public Key</th><td>(the public key you created in Section I)</td></tr>
+    <tr><th>Consumer Callback URL</th><td>https://sentry.io/extensions/bitbucket_server/setup/</td></tr>
+    <tr><th>Allow 2-Legged OAuth</th><td>no</td></tr>
+    </table>
+
+#### Connect your Bitbucket Server application with Sentry
+
+Note: Confirm [Sentry's IP ranges](/meta/ip-ranges/) are allowed.
+
+1. In Sentry, navigate to **Organization Settings** > **Integrations**.
+2. Next to Bitbucket Server, click **Install**.
+3. In the resulting modal, click **Add Installation**.
+4. In the resulting window, enter the base URL for your Bitbucket Server instance, your consumer key, and your private key. Click **Submit**. Then, complete the OAuth process as prompted.
+5. In Sentry, you’ll see a new Bitbucket Server instance appear on the Integrations page.
+
+Bitbucket should now be authorized for all projects under your Sentry organization.
+
+## Commit Tracking
+
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
+
+## Suspect Commits and Suggested Assignees
+
+Once you set up commit tracking, you’ll be able to see the most recent changes to files found in the issue’s stack trace with suspect commits.
+
+For issues where the files in the stack trace match files included in commits sent to Sentry, you’ll see the suspect commit, with a link to the commit itself.
+
+You’ll also see that the author of the suspect commit will be listed as a suggested assignee for this issue. To assign the issue to the suggested assignee, click on their icon.
+
+## Issue Management
+
+Issue tracking allows you to create Bitbucket issues from within Sentry, and link Sentry issues to existing Bitbucket Issues.
+
+Once you’ve navigated to a specific issue, you’ll find the **Linked Issues** section on the right hand panel. Here, you’ll be able to create or link Bitbucket issues.
+
+![](bitbucket-link-issue.png)
+
+## Resolving in Commit
+
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
+
+```
+Prevent empty queries on users
+
+Fixes MYAPP-317
+```
+
+When Sentry sees this, we’ll automatically annotate the matching issue with reference to the commit, and later, when that commit is part of a release, we’ll mark the issue as resolved.
+
+## Commit Tracking
+
+Commit tracking allows you to hone in on problematic commits. Learn more about [commit tracking](/workflow/releases/#link-repository).
+
+## Suspect Commits and Suggested Assignees
+
+Once you set up commit tracking, you’ll be able to see the most recent changes to files found in the issue’s stack trace with suspect commits.
+
+For issues where the files in the stack trace match files included in commits sent to Sentry, you’ll see the suspect commit, with a link to the commit itself.
+
+You’ll also see that the author of the suspect commit will be listed as a suggested assignee for this issue. To assign the issue to the suggested assignee, click on their icon.
+
+## Resolving in Commit
+
+Once you are sending commit data, you can start resolving issues by including `fixes &lt;SENTRY-SHORT-ID&gt;` in your commit messages. For example, a commit message might look like:
+
+```
+Prevent empty queries on users
+
+Fixes MYAPP-317
+```
+
+When Sentry sees this, we’ll automatically annotate the matching issue with reference to the commit, and later, when that commit is part of a release, we’ll mark the issue as resolved.

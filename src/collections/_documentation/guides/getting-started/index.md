@@ -3,7 +3,7 @@ title: Set up your Sentry Account
 sidebar_order: 1
 ---
 
-[Getting started](https://docs.sentry.io/error-reporting/quickstart/?platform=node) with Sentry error monitoring is easy and straightforward. In this post, we will provide the recommended ToDos checklist for setting up your Sentry organization account and making the most of it.
+[Getting started](/error-reporting/quickstart/?platform=node) with Sentry error monitoring is easy and straightforward. In this post, we will provide the recommended ToDos checklist for setting up your Sentry organization account and making the most of it.
 
 ## 1. Enable Single Sign-On Access
 
@@ -15,8 +15,8 @@ SAML2 Single Sign-On (SSO) enables your team to log in quickly, streamlines the 
 
 For more information see:
 
-- [Single Sign On (SSO)](https://docs.sentry.io/accounts/sso/)
-- [Integrating Generic SAML2 Providers](https://docs.sentry.io/accounts/saml2/)
+- [Single Sign On (SSO)](/accounts/sso/)
+- [Integrating Generic SAML2 Providers](/accounts/sso/saml2/)
 
 ## 2. Set-up Teams
 
@@ -33,7 +33,7 @@ You can also invite multiple new (external) members to join your organization an
 
 ![Invite Members]({% asset guides/getting-started/05.png @path %})
 
-For more information see: [Organization Management](https://docs.sentry.io/accounts/membership/)
+For more information see: [Organization Management](/accounts/membership/)
 
 ## 3. Configure Integrations
 
@@ -41,7 +41,7 @@ Sentry integrates seamlessly into your existing workflows by providing out of th
 
 ### 3.1. Alert Notifications
 
-By default, Sentry will notify you about errors in your apps via **email**. To receive real-time notifications about your errors where you work, enable Sentry integrations with: [Slack](https://docs.sentry.io/workflow/integrations/global-integrations/#slack), [PagerDuty](https://www.pagerduty.com/docs/guides/sentry-integration-guide/).
+By default, Sentry will notify you about errors in your apps via **email**. To receive real-time notifications about your errors where you work, enable Sentry integrations with: [Slack](/workflow/integrations/slack/), [PagerDuty](/workflow/integrations/pagerduty/).
 
 > ![PagerDuty Integration]({% asset guides/getting-started/slack_sentry_e2e_integration4.gif @path %})
 >
@@ -49,8 +49,8 @@ By default, Sentry will notify you about errors in your apps via **email**. To r
 
 Sentry supports additional solutions on a project level. After creating a project, **Hipchat**, **Twilio**, **OpsGenie**, and other solutions can be configured and used to channel notifications through alert rules. For more information, check out:
 
-- [Per-Project Integrations: Issue Notifications](https://docs.sentry.io/workflow/integrations/legacy-integrations/#issue-notifications)
-- [Routing Alerts to 3rd Party Integrations](https://docs.sentry.io/guides/alert-notifications/routing-alerts/#routing-alerts-to-3rd-party-integrations)
+- [Per-Project Integrations: Issue Notifications](/workflow/integrations/integrations/)
+- [Routing Alerts to 3rd Party Integrations](/guides/alert-notifications/routing-alerts/#routing-alerts-to-3rd-party-integrations)
 
 ### 3.2. Source Code Management
 
@@ -65,22 +65,21 @@ By enabling Sentry's integration with your Source Code Management (SCM) provider
 
 Sentry has built-in integrations with:
 
-- [GitHub](https://docs.sentry.io/workflow/integrations/global-integrations/#github)
-- [GitHub Enterprise](https://docs.sentry.io/workflow/integrations/global-integrations/#github-enterprise)
-- [GitLab](https://docs.sentry.io/workflow/integrations/global-integrations/#gitlab)
-- [Bitbucket](https://docs.sentry.io/workflow/integrations/global-integrations/#bitbucket)
+- [GitHub](/workflow/integrations/integrations/github/)
+- [GitLab](/workflow/integrations/integrations/gitlab/)
+- [Bitbucket](/workflow/integrations/integrations/bitbucket/)
 
-If you're using a different SCM provider or don't want Sentry to connect to your repository, checkout our [docs]((https://docs.sentry.io/workflow/releases/?platform=browser#alternatively-without-a-repository-integration)) to learn how you can still enable most of these features (#1 - #3) by telling Sentry about your commit metadata.
+If you're using a different SCM provider or don't want Sentry to connect to your repository, checkout our [docs](/workflow/releases/?platform=browser#alternatively-without-a-repository-integration) to learn how you can still enable most of these features (#1 - #3) by telling Sentry about your commit metadata.
 
 ### 3.3. Issue Tracking
 
-Enabling the 2-way integration with your Issue Tracking solution allows you to create a new issue from within the Sentry issue page, or link it to an existing one. In addition to **GitHub**, **GitLab**, and **Bitbucket** Issues that are enabled with the respective SCM integration, Sentry also integrates with: [Azure DevOps](https://docs.sentry.io/workflow/integrations/global-integrations/#azure-devops), [Clubhouse](https://docs.sentry.io/workflow/integrations/global-integrations/#clubhouse), [JIRA](https://docs.sentry.io/workflow/integrations/global-integrations/#jira), and others.
+Enabling the 2-way integration with your Issue Tracking solution allows you to create a new issue from within the Sentry issue page, or link it to an existing one. In addition to **GitHub**, **GitLab**, and **Bitbucket** Issues that are enabled with the respective SCM integration, Sentry also integrates with: [Azure DevOps](/workflow/integrations/azure-devops/), [Clubhouse](/workflow/integrations/clubhouse/), [JIRA](/workflow/integrations/jira/), and others.
 
 > ![JIRA 2-Way Integration]({% asset guides/getting-started/jira-2way-binding.gif @path %})
 >
 > 2-Way integration with JIRA issue tracking.
 
-For a full list of all supported integrations, go to our documentation on [Integrations](https://docs.sentry.io/workflow/integrations/)
+For a full list of all supported integrations, go to our documentation on [Integrations](/workflow/integrations/).
 
 ## 4. Create Projects
 
@@ -92,10 +91,10 @@ To start monitoring errors in your app with Sentry, you'll need to initialize th
 
 A Project is a logical entity that connects between the errors in your application (or a part of it) to the team members assigned to that project. The **Project Settings** configuration determines:
 
-- Which errors should be ingested into your Sentry account and which should be dropped, through [Inbound Filters](https://docs.sentry.io/accounts/quotas/#inbound-data-filters)
-- Who to notify, about what error, and how, using [Alert Rules](https://docs.sentry.io/workflow/notifications/alerts/)
-- Which errors should be automatically assigned to which member or team through [Issue Owners](https://docs.sentry.io/workflow/issue-owners/)
-- Custom rules to fine-tune [Event Grouping](https://docs.sentry.io/data-management/event-grouping/) into issues.
+- Which errors should be ingested into your Sentry account and which should be dropped, through [Inbound Filters](/accounts/quotas/#inbound-data-filters)
+- Who to notify, about what error, and how, using [Alert Rules](/workflow/notifications/alerts/)
+- Which errors should be automatically assigned to which member or team through [Issue Owners](/workflow/issue-owners/)
+- Custom rules to fine-tune [Event Grouping](/data-management/event-grouping/) into issues.
 
 Also, when displaying the **Issue Stream** and **Discover** views, the top-level filter bar considers the projects you are a member of by default. This way, developers are looking at information that is relevant to their work, and see the errors that they might need to jump on.
 
@@ -114,7 +113,7 @@ Here are some points to consider:
 
 ## 5. Define Environments
 
-Depending on your development life cycle, your applications are probably deployed and running in multiple environments --  _QA_, _Staging_, _Production_, etc. Configuring the environment in your Sentry SDK, will add the tag to every error event and will help you associate events to the environment in which they occurred. You can do that by creating a `SENTRY_ENVIRONMENT` environment variable or by explicitly defining it in the SDK configuration. For more information, see our documentation on [Environments](https://docs.sentry.io/enriching-error-data/environments/?platform=browser).
+Depending on your development life cycle, your applications are probably deployed and running in multiple environments --  _QA_, _Staging_, _Production_, etc. Configuring the environment in your Sentry SDK, will add the tag to every error event and will help you associate events to the environment in which they occurred. You can do that by creating a `SENTRY_ENVIRONMENT` environment variable or by explicitly defining it in the SDK configuration. For more information, see our documentation on [Environments](/enriching-error-data/environments/?platform=browser).
 
 ![Create a Project]({% asset guides/getting-started/10.png @path %})
 

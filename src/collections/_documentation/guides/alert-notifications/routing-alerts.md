@@ -13,7 +13,7 @@ When creating custom alert rules, you can determine what action (or actions) sho
 
 ### **Slack Alerts**
 
-A Sentry Org owner or manager can install and configure the Slack integration in their Sentry account. For more information see [Slack Configuration](https://docs.sentry.io/workflow/integrations/global-integrations/#slack).
+A Sentry Org owner or manager can install and configure the Slack integration in their Sentry account. For more information see [Slack Configuration](https://docs.sentry.io/workflow/integrations/integrations/slack/).
 Once configured, this will make the following action available in your alert rules:
 
 `Send a notification to the {workspace} Slack workspace to {channel} and show tags {tags} in notification`.

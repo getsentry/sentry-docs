@@ -15,7 +15,6 @@ const routes = [
       "/error-reporting",
       "/enriching-error-data",
       "/performance-monitoring",
-      "/workflow",
       "/cli",
       "/api",
       "/guides",

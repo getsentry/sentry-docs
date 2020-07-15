@@ -81,8 +81,8 @@ For more information, see [Issue Owners](/workflow/issue-owners/).
 
 Configuring the release version ID on the SDK will associate every error that happens in your application runtime with a specific release version of your code. This way you know exactly when an error was introduced into your source code. It also unlocks these powerful features and workflows:  
 
-1. **Suspect Commits & Suggested Assignee** - With a release in place, Sentry can suggest suspect commits that might have an introduced the error to your code and through that commit also suggest the author as an assignee. For more information, see [Commit Tracking](/workflow/integrations/global-integrations/#commit-tracking-3).
-2. **Resolve with Release** - When you mark an Issue as resolved in a specific release, new events of that issue occurring in previous releases will be ignored and will not trigger any notifications. For more information, see [Resolve in Commit](/workflow/integrations/global-integrations/#resolve-in-commit).
+1. **Suspect Commits & Suggested Assignee** - With a release in place, Sentry can suggest suspect commits that might have an introduced the error to your code and through that commit also suggest the author as an assignee.
+2. **Resolve with Release** - When you mark an Issue as resolved in a specific release, new events of that issue occurring in previous releases will be ignored and will not trigger any notifications.
 3. **Regression Notifications** - In case you marked an issue as resolved in a release and new events are still occurring in that same release or any future releases, Sentry will consider that a regression and will notify you.
 4. **Release Health** (Currently available on the Android and iOS SDKs) - Sentry can monitor the health of your releases by observing various metrics like user adoption, session duration, crash-free users and sessions, and others. For more information, see [Health](/workflow/releases/health/).
 

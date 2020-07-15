@@ -9,7 +9,7 @@ Now that you've created a release, you can tell Sentry which commits are associa
 
 ## Step 1: Integrate your GitHub account and repositories
 
-1. To integrate GitHub with your Sentry org, follow the instructions in the [Global Integrations documentation](/workflow/integrations/global-integrations/#github)
+1. To integrate GitHub with your Sentry org, follow the instructions in the [Global Integrations documentation](/workflow/integrations/github/)
 
 2. For the last step, add the `frontend-monitoring` repository from your GitHub account
 
@@ -94,4 +94,4 @@ Now suspect commits and suggested assignees should start appearing on the issue 
 ## More Information
 
 - [Create Release and Associate Commits](/workflow/releases/#create-release)
-- [Global Integrations](/workflow/integrations/global-integrations/)
+- [Global Integrations](/workflow/integrations/)
