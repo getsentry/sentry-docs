@@ -205,7 +205,7 @@ The Query Builder syntax is identical to [Sentry's Search syntax](/workflow/sear
 - Lower bounds (is more than or equal to): `count(id):>99` or `count(id):>=99`
 - Multiple bounds (is more and less than): `count(id):>10 count(id):<20`
 
-Use `or` and `and` conditions between aggregate filters. `and` can also handle queries between non-aggregates and aggregates. However, `or` cannot. For more details about these conditions, see [Using `or` & `and` Conditions](/workflow/search/#using-or--and-conditions).
+Use `OR` and `AND` conditions between filters. However `OR` cannot be used between aggregate and non-aggregate filters. For more details about these conditions, see [Using `OR` & `AND` Conditions](/workflow/search/#using-or--and-conditions).
 
 
 **Tag Summary Filters**

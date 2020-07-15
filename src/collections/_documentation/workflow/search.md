@@ -37,21 +37,21 @@ The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search toke
 
 The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
-### Using `or` & `and` Conditions
+### Using `OR` & `AND` Conditions
 
-Use `or` and `and` between aggregate filters. `and` can also handle queries between non-aggregates and aggregates. However, `or` cannot. 
+Use `OR` and `AND` between tokens, and use parentheses `()` to group conditions. `AND` can also be used between non-aggregates and aggregates. However, `or` cannot. 
 
-Some examples of using the `or` condition:
+Some examples of using the `OR` condition:
 
 ```
 # a valid `or` query
-[ add `or` example here ]
+browser:Chrome OR browser:Opera
 
 # an invalid `or` query
-[ add invalid example here ]
+user.username:janedoe OR count():>100
 ```
 
-Also, the queries prioritize `and` before `or`. For example, "x `and` y `or` z" is the same as "[x `and` y] `or` z".
+Also, the queries prioritize `AND` before `OR`. For example, "x `AND` y `OR` z" is the same as "(x `AND` y) `OR` z". Parentheses can be used to change the grouping. For example, "x `AND` (y `OR` z)".
 
 ### Explicit Tag Syntax
 
