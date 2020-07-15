@@ -220,7 +220,7 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
       return null;
     }
     if (action.type === "SET_PASSWORD" ) {
-      // return a transformed action to remove sensitive information
+      // Return a transformed action to remove sensitive information
       return {
         ...action,
         password: null
@@ -254,6 +254,7 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
         // or just remove it entirely
         hiddenTreasureLocation: null
       },
+      // You should also remove large data that is irrelevant to debugging to not clutter your Sentry issues
       giganticState: null
     };
     
