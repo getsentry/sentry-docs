@@ -23,7 +23,7 @@ When you use Xcode, you can hook directly into the build process to upload debug
 
 #### Bundle React Native code and images
 
-We modify the react-native build phase (“Bundle React Native code and images”) slightly from this:
+We modify the React Native build phase (“Bundle React Native code and images”) slightly from this:
 
 ```bash
 export NODE_BINARY=node

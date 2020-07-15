@@ -17,7 +17,7 @@ Other than making sure you have the minimum version of the SDK, Sentry itself is
 The combination of `@sentry/react-native` and `@sentry/cli` should integrate
 correctly into the `react-native` build pipeline to find and upload the correct source map.
 
-However, care must be taken to upload the correct source map when manually bundling and building react-native apps.
+However, care must be taken to upload the correct source map when manually bundling and building React Native apps.
 
 Building Hermes bundles is a three-step process, each of which creates a different
 source map.

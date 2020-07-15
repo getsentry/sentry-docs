@@ -610,7 +610,7 @@ Unlike a normal web application where your JavaScript files (and source maps) ar
 
 ### Generating and Uploading Source Files/Source Maps {#generating-and-uploading-source-files-source-maps}
 
-To generate both an application JavaScript file (main.jsbundle) and source map for your project (main.jsbundle.map), use the react-native CLI tool:
+To generate both an application JavaScript file (main.jsbundle) and source map for your project (main.jsbundle.map), use the React Native CLI tool:
 
 ```bash
 react-native bundle \
