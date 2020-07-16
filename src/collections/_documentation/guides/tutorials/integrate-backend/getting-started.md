@@ -43,7 +43,7 @@ In this tutorial, you will import the backend app source code into your local de
 
 Sentry can help you resolve your errors faster by suggesting a suspect commit that might have introduced the error into your codebase. This is enabled by configuring **Commit Tracking**. Integrating your source code management solution and adding your code repositories is required to enable commit tracking, for more information see [this link](/workflow/releases/?platform=node#associate-commits-with-a-release).
 
-1. Open your Sentry account and navigate to `Settings > Integrations` to enable the GitHub integration and add your `backend-monitoring` repository. For more information follow the steps described in [Global Integrations > GitHub](/workflow/integrations/global-integrations/#github).
+1. Open your Sentry account and navigate to `Settings > Integrations` to enable the GitHub integration and add your `backend-monitoring` repository. For more information follow the steps described in [Global Integrations > GitHub](/workflow/integrations/github/).
 
 ## Step 3: Install the SDK
 

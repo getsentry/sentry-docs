@@ -100,7 +100,7 @@ Or, to completely remove the merging of the `ContentProvider`:
 
 The next step is to initialize the SDK directly in your code.
 
-The SDK can catch errors and crashes only after you've initialized it. So, we recommend calling `SentryAndroid.init` in the instance of the Application class right after the application is created. 
+The SDK can catch errors and crashes only after you've initialized it. So, we recommend calling `SentryAndroid.init` in the instance of the Application class right after the application is created.
 
 Configuration options will be loaded from the manifest so that you don't need to have the static properties in your code. In the `init` method, you can provide a callback that will modify the configuration and also register new options.
 
@@ -203,7 +203,7 @@ buildscript {
     repositories {
         mavenCentral()
     }
-    
+
     dependencies {
         // https://github.com/getsentry/sentry-android-gradle-plugin/releases
         classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
@@ -270,7 +270,7 @@ With the releases you can:
 - Filter events and issues by the release version directly in the tag search on the Issues and Events pages
 - Check what new issues were introduced with the new release
 
-With the releases and a [GitHub](/workflow/integrations/global-integrations/#github)/[GitLab](/workflow/integrations/global-integrations/#gitlab) integration, you can:
+With the releases and a [BitBucket](/workflow/integrations/bitbucket/), [GitHub](/workflow/integrations/github/), [GitLab](/workflow/integrations/gitlab/) integration, you can:
 
 - Determine the issues and regressions introduced in a new release
 - Receive suggestions about which commit caused an issue and who is likely responsible
@@ -281,8 +281,8 @@ Even though releases are automatically created as events come in, to take advant
 
 Sentry offers a command-line tool to aid with this task. After configuring your SDK, setting up releases is a 2-step process (recommended for the use of suspect commits):
 
-1. [Create Release and Associate Commits](https://docs.sentry.io/workflow/releases/#create-release)
-2. [Tell Sentry When You Deploy a Release](https://docs.sentry.io/workflow/releases/#create-deploy)
+1. [Create Release and Associate Commits](/workflow/releases/#create-release)
+2. [Tell Sentry When You Deploy a Release](/workflow/releases/#create-deploy)
 
 For more information, see [Releases Are Better With Commits](https://blog.sentry.io/2017/05/01/release-commits.html).
 
@@ -296,7 +296,7 @@ packageName@versionName+versionCode
 
 Please note that if you're using multiple flavors in your application, the release version will be different for each flavor, and different release objects will be created in-app for each flavor.
 
-If you want to change the release name, you can do it in the `AndroidManifest.xml` or directly in the code. 
+If you want to change the release name, you can do it in the `AndroidManifest.xml` or directly in the code.
 
 The release version can be any random string, but we recommend using a similar format to the default. The default involves having the text identifier of your app connected with the version string using "@" and the last optional suffix dedicated to build or an additional identifier. With this format, the Sentry UI will display a more comprehensive release name. For example, company.demo.app@1.1.1 instead of 1.1.0.
 
@@ -440,12 +440,12 @@ To make your life easier, the Android SDK automatically enriches the context wit
 
 Default Android context should help you correlate the errors with the specific device types, releases, etc. so that you can find the root cause of the problem faster.
 
-Used SDK 
+Used SDK
 
 - name
 - version
 
-Operating system 
+Operating system
 
 - name
 - version
@@ -460,7 +460,7 @@ Package info
 - version
 - build
 
-Memory size 
+Memory size
 
 - Total available memory on the device
 - Free memory at the moment
@@ -502,9 +502,9 @@ Emulator indicator
 
 ### Requirements
 
-For the use of the SDK with the NDK, the minimal required API level is 16. 
+For the use of the SDK with the NDK, the minimal required API level is 16.
 
-If you want to use the SDK without the NDK, you can: 
+If you want to use the SDK without the NDK, you can:
 
 - disable the NDK as described in the configuration section
 - or use sentry-android-core that doesn't contain the NDK and can be used separately. The minimal required API level for this SDK is 14.
@@ -570,7 +570,7 @@ Alternatively, you can disable the NDK integration by adding the following line 
 </application>
 ```
 
-**Application Not Responding (ANR)** 
+**Application Not Responding (ANR)**
 
 Whenever the main UI thread of the application is blocked for more than four seconds, the SDK will report the problem to the server.  (Sentry does not report the ANR if the application is in debug mode.)
 
@@ -612,7 +612,7 @@ SentryAndroid.init(this, options -> {
 
 Sentry exposes a `beforeSend` callback, which can be used to filter out information or add additional context to the event object.
 
-The callback can be registered during the initialization of the SDK. 
+The callback can be registered during the initialization of the SDK.
 
 ```java
 SentryAndroid.init(this, options -> {
@@ -682,7 +682,7 @@ buildscript {
     repositories {
         jcenter()
     }
-    
+
     dependencies {
         // Add the line below, the plugin that copies the binaries
         // https://github.com/howardpang/androidNativeBundle/releases
