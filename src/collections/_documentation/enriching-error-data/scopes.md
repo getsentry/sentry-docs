@@ -35,8 +35,8 @@ other hand are more user facing.  You can at any point in time call
 used to [modify the context](/enriching-error-data/additional-data/).
 
 {% capture __alert_content -%}
-If you are very curious about how this thread locality thing works here are the
-nitty gritty details.  On platforms such as .NET or on Python 3.7 and later we will
+If you are very curious about how thread locality works, the
+details are: On platforms such as .NET or on Python 3.7 and later, we will
 use "ambient data" to have either the hub flow with your code or the hub is already
 a singleton that internally manages the scope.
 
