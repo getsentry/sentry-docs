@@ -85,8 +85,8 @@ $ npm install @sentry/browser @sentry/apm
 
 Alternatively, instead of `npm` packages, you can use our pre-built CDN bundle that combines both @sentry/browser and @sentry/apm:
 
-```bash
-<script src="https://browser.sentry-cdn.com/5.19.1/bundle.apm.min.js" integrity="sha384-qcuJnBVywcOnVTsYC4W46ENmLFtgTt1rojscXpw6pgE6BDJ+MSj3AgdT897AgysN" crossorigin="anonymous"></script>
+```html
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.min.js %}" crossorigin="anonymous"></script>
 ```
 
 Next, initialize the integration in your call to `Sentry.init`:

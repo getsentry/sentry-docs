@@ -41,6 +41,10 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
  Access-Control-Allow-Origin: *
  ```
 
+## Missing Console Log Line Numbers for Breadcrumbs
+
+If you are using our SDK version earlier than Version 3, you need to add `/@sentry/` instead of `/raven-js/` to ensure breadcrumbs capture console log line numbers.
+
 {%- endcapture -%}
 
 {%- include common/troubleshooting-common.md 

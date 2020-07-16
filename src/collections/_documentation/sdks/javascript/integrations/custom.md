@@ -5,7 +5,7 @@ excerpt: ""
 
 {%- capture __custom-integration -%}
 
-```bash
+```js
 import * as Sentry from '@sentry/browser';
 
 // All integration that come with an SDK can be found on Sentry.Integrations object

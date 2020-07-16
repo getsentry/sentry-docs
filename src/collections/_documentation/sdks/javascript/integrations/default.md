@@ -96,7 +96,7 @@ To override their settings, provide a new instance with your config to `integra
 import * as Sentry from '@sentry/browser';
 
 Sentry.init({
-  dsn: 'https://bc367fd982144d75923219dca8f35ad1@o1.ingest.sentry.io/2783252',
+  dsn: '___PUBLIC_DSN___',
   integrations: function(integrations) {
     // integrations will be all default integrations
     return integrations.filter(function(integration) {
