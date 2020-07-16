@@ -9,12 +9,6 @@ $ yarn add @sentry/browser @sentry/apm
 $ npm install @sentry/browser @sentry/apm
 ```
 
-Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
-
-```html
-<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.apm.min.js %}" crossorigin="anonymous"></script>
-```
-
 Next, initialize the integration in your call to `Sentry.init`:
 
 ```jsx
@@ -25,6 +19,24 @@ Sentry.init({
   release: 'my-project-name@' + process.env.npm_package_version,
   integrations: [
     new ApmIntegrations.Tracing(),
+  ],
+  tracesSampleRate: 1.0, // Be sure to lower this in production
+});
+```
+
+Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
+
+```html
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.apm.min.js %}" crossorigin="anonymous"></script>
+```
+
+Next, initialize the integration in your call to `Sentry.init`:
+
+```js
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    new Sentry.Integrations.Tracing(),
   ],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
@@ -61,7 +73,7 @@ Sentry.init({
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: [
-    new ApmIntegrations.Tracing(),
+    new Sentry.Integrations.Tracing(),
   ],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
@@ -212,7 +224,7 @@ Sentry.init({
 	// ...
   integrations: [
     new ApmIntegrations.Tracing({
-      beforeNavigate: (location) => {        
+      beforeNavigate: (location) => {
         // You could use your UI's routing library to find the matching
 		    // route template here. We don't have one right now, so do some basic
 		    // parameter replacements.
