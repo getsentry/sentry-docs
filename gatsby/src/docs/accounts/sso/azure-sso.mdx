@@ -1,0 +1,57 @@
+---
+title: 'Azure Active Directory SSO'
+sidebar_order: 1
+---
+
+## Installation
+
+You'll need an [Office365 developer account](https://developer.microsoft.com/en-us/microsoft-365/dev-program) 
+before installing Azure Active Directory SSO.
+
+1. Login to the [Azure portal](https://portal.azure.com/) and wait for the Sample Data
+Pack to completly download before continuing.
+
+2. Under Manage Azure Active Directory (the shield picture), click "View", which takes
+you to the Organization Overview page.
+
+3. On the left hand navigation, click "Groups". Create a new group, add an owner, and
+members to the group. Set "Group type" to Office 365. For more details about group creation, see the
+[Azure docs](https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-groups-create-azure-portal).
+
+4. Return to the Overview page. On the left hand navigation, click "Enterprise Applications".
+Then, select "Non-gallery application" and create one for Sentry. Once created, you'll
+be directed to "Sentry - Overview."
+
+5. Click on `1. Assign users and groups`, and assign yourself and the group you've created 
+to the Sentry app.
+
+6. Click on `2. Setup Single Sign-on`
+
+7. For Section (1) labeled as `Basic SAML2 Configuration`, enter the following data 
+in each line.
+    
+    Identifier (entity ID): https//[URL of your Sentry instance]/saml/metadata/sentry/
+    Reply URL (Assertion Consumer Service URL): https//[URL of your Sentry instance]/saml/acs/sentry/
+    Sign on URL: https//[URL of your Sentry instance]/auth/login/sentry/
+    Relay State: https//[URL of your Sentry instance]/
+    Logout URL: https//[URL of your Sentry instance]/saml/sls/sentry/
+    
+8. In Section (3) labeled as `SAML Signing Certificate`, copy the `App Federation Metadata URL`
+
+[ screenshot here ]
+
+9. Go to `https://<YOUR_SENTRY_INSTANCE>/settings/sentry/auth/` and click on "Configure" 
+for Active Directory
+
+10. Paste the App Federation Metadata URL and click "Get metadata"
+
+11. In the following page, enter these to map the values from AzureAD to Sentry
+
+    ```jsx
+    IdP User ID: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
+    User Email: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress
+    First Name: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname
+    Last Name: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname
+    ```
+
+12. Congrats. You've set up an intance of AzureAD with Sentry.
