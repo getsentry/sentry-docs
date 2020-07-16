@@ -2,7 +2,5 @@ These pluggable integrations are snippets of code that augment functionality for
 
 ## How to Enable
 
-To enable these integrations:
-
 {{ include.enable-pluggable }}
 

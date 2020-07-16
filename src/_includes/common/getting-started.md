@@ -119,6 +119,3 @@ Learn more about sampling in [Filtering Events Reported to Sentry](/sdks/javascr
 
 
 **Next Steps:**
-
-- Review and manage integrations {% comment %}next phase:add link{% endcomment %}
-- Review common problems {% comment %}next phase:add link{% endcomment %}

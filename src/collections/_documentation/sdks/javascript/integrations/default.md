@@ -5,7 +5,7 @@ excerpt: ""
 
 {%- capture __default-integrations -%}
 
-#### InboundFilters
+### InboundFilters
 
 *Import name: `Sentry.Integrations.InboundFilters`*
 
@@ -15,7 +15,7 @@ Remember also that denyURL and allowURL work only for captured exceptions, not r
 
 To configure this integration, use `ignoreErrors`, `denyUrls`, and `allowUrls` SDK options directly.
 
-**FunctionToString**
+### FunctionToString
 
 *Import name: `Sentry.Integrations.FunctionToString`*
 
@@ -25,7 +25,7 @@ This integration allows the SDK to provide original functions and method names, 
 
 This integration wraps native time and events APIs (`setTimeout`, `setInterval`, `requestAnimationFrame`, `addEventListener/removeEventListener`) in `try/catch` blocks to handle async exceptions.
 
-**Breadcrumbs**
+### Breadcrumbs
 
 *Import name: `Sentry.Integrations.Breadcrumbs`*
 
@@ -44,7 +44,7 @@ Available options:
 }
 ```
 
-**GlobalHandlers**
+### GlobalHandlers
 
 *Import name: `Sentry.Integrations.GlobalHandlers`*
 
@@ -59,7 +59,7 @@ Available options:
 }
 ```
 
-**LinkedErrors**
+### LinkedErrors
 
 *Import name: `Sentry.Integrations.LinkedErrors`*
 
@@ -74,7 +74,7 @@ Available options:
 }
 ```
 
-**UserAgent**
+### UserAgent
 
 *Import name: `Sentry.Integrations.UserAgent`*
 

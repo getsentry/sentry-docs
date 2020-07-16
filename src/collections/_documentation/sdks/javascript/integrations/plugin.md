@@ -18,7 +18,7 @@ Sentry.init({
 });
 ```
 
-**ExtraErrorData**
+### ExtraErrorData
 
 *Import name: `Sentry.Integrations.ExtraErrorData`*
 
@@ -26,12 +26,12 @@ This integration extracts all non-native attributes from the Error object and at
 
 Available options:
 
-```bash
+```js
 { depth: number; // limit of how deep the object serializer should go. Anything deeper than limit will be replaced with standard Node.js REPL notation of [Object], [Array], [Function] or primitive value. Defaults to 3.
 }
 ```
 
-**CaptureConsole**
+### CaptureConsole
 
 *Import name: `Sentry.Integrations.CaptureConsole`*
 
@@ -42,13 +42,13 @@ This integration captures all `Console API` calls and redirects them to Sentry
 }
 ```
 
-**Dedupe**
+### Dedupe
 
 *Import name: `Sentry.Integrations.Dedupe`*
 
 This integration deduplicates certain events; it can be helpful if you are receiving many duplicate errors. Be aware that Sentry will only compare stack traces and fingerprints.
 
-**Debug**
+### Debug
 
 *Import name: `Sentry.Integrations.Debug`*
 
@@ -62,7 +62,7 @@ Available options:
 }
 ```
 
-**RewriteFrames**
+### RewriteFrames
 
 *Import name: `Sentry.Integrations.RewriteFrames`*
 
@@ -77,7 +77,7 @@ Available options:
 }
 ```
 
-**ReportingObserver**
+### ReportingObserver
 
 *Import name: `Sentry.Integrations.ReportingObserver`*
 
@@ -91,3 +91,10 @@ Available options:
 ```
 
 {%- endcapture -%}
+
+{%- include common/integration-plugin.md 
+sdk_name="JavaScript"
+
+enable-pluggable=__enable-pluggable
+root_link="javascript"
+ -%}
