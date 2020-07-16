@@ -13,7 +13,6 @@ const routes = [
       "/platforms",
       "/clients",
       "/error-reporting",
-      "/enriching-error-data",
       "/performance-monitoring",
       "/cli",
       "/api",
