@@ -14,7 +14,6 @@ const routes = [
       "/clients",
       "/error-reporting",
       "/performance-monitoring",
-      "/cli",
       "/api",
       "/guides",
       "/support",
