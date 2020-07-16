@@ -124,3 +124,4 @@ install_content=__install_content
  - [Manage Configuration Options](/sdks/javascript/config/intro)
  - [Enrich Event Data](/sdks/javascript/errors/intro)
  - [Review and Manage Integrations](/sdks/javascript/integrations/intro)
+ - [Troubleshooting](/sdks/javascript/troubleshooting/intro)

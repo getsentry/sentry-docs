@@ -1,10 +1,10 @@
 {% comment %}
 Guideline: This page is comprehensive; it is stored in the common folder, nested under _includes/common. To use, 
 
-1. If you haven't already, add the configuration content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/config (for example, _documentation/sdks/javascript/config). 
-2. Create a copy of basics.md file, then add it to the config folder. 
-3. Add the SDK-specific `include` statements to the configuration-basics.md file
-4. Note that each of these terms is wrapped in an "if/then" statement; this is because not all of these options are included for every SDK. For those terms you do not wish to include, add the command `hide_<option>=true` in the basics.md file.
+1. If you haven't already, copy the configuration content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/config (for example, _documentation/sdks/javascript/config). 
+2. Edit the basics.md file to be specific to the SDK you are documenting.
+
+Note that each of these terms is wrapped in an "if/then" statement; this is because not all of these options are included for every SDK. For those terms you do not wish to include, add the command `hide_<option>=true` in the basics.md file.
 
 If you have questions, please ask Fiona or Daniel. 
 {% endcomment %}

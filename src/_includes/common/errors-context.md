@@ -2,13 +2,12 @@
 Guideline: This page is comprehensive; it is stored in the common folder, nested under _includes/common. To use, 
 
 If you have questions, please ask Fiona or Daniel. 
-1. If you haven't already, add the errors content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
-2. Create a copy of context.md file in _documentation/sdks/<platform-name>/errors 
-3. Create the defined `include` statements and add them to the errors-context.md file
+1. If you haven't already, copy the errors content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
+2. Edit the context.md file to be specific to the SDK you are documenting.
 
 If you have questions, please ask Fiona or Daniel. 
 
-**The objective for this page is that a developer can easily view the what context is with events for this SDK**
+**The objective for this page is that a developer can easily view the what context is with events for this SDK.**
 {% endcomment %}
 
 Data is sent with every event, and is either predefined or custom:

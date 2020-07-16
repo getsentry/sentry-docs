@@ -1,17 +1,13 @@
 {% comment %}
-Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. 
+Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
 
-Of all our templates, this page is perhaps the most customizable - we provide this page as an example of design. It may not apply to all SDKs; adopt as appropriate to the SDK you're documenting.
-
-To use, 
-
-1. If you haven't already, add the configuration content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/integration (for example, _documentation/sdks/javascript/integration). 
-2. Create a copy of intro.md file, then add it to the integration folder. 
-3. Add the SDK-specific `include` statements to the integration-intro.md file
+1. If you haven't already, add the integrations content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/integrations (for example, _documentation/sdks/javascript/integrations). 
+2. Create a copy of intro.md file in _documentation/sdks/<platform-name>/integrations
+3. Create the defined `include` statements and add them to the integration-intro.md file
 
 If you have questions, please ask Fiona or Daniel. 
 
-**The objective for this page is that a developer can easily view the integration/plugin options for the SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
+**The objective for this page is that a developer can easily view the system, pluggable, and custom integrations available for each SDK; each page _must_ have a description that includes a summary of what the page provides to the developer. Simply linking the page is insufficient.**
 {% endcomment %}
 
 Integrations extend the functionality of our {{ include.sdk_name }} SDK to cover common libraries and environments automatically. 

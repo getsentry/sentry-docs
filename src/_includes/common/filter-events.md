@@ -1,9 +1,8 @@
 {% comment %}
 Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
 
-. If you haven't already, add the config content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/config). 
-2. Create a new filter.md file in _documentation/sdks/<platform-name>/config folder
-3. Create the defined `include` statements and add them to the filter.md file
+1. If you haven't already, copy the config content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/config). 
+2. Edit the filter.md file to be specific to the SDK you are documenting.
 
 If you have questions, please ask Fiona or Daniel. 
 
