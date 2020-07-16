@@ -5,7 +5,7 @@ let cachedVersionData = null;
 export default ({ apm = false }) => {
   const [versionData, setVersionData] = useState(cachedVersionData);
 
-  if (!versionData) {
+  if (!versionData && typeof fetch !== "undefined") {
     fetch(
       "https://release-registry.services.sentry.io/sdks/sentry.javascript.browser/latest"
     ).then(data => {
