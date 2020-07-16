@@ -60,7 +60,7 @@ The repository currently contains a Jekyll site (`./`) as well as a Gatsby site 
 
 :pray: that MDX v2 fixes this.
 
-MDX has its flaws. When rendering components, any text inside of them is treated as raw text (_not_ markdown). To work around this you can use the `<markdown>` tag, but it also has its issues. Generally speaking, put an empty after the opening tag, and before the closing tag.
+MDX has its flaws. When rendering components, any text inside of them is treated as raw text (_not_ markdown). To work around this you can use the `<markdown>` tag, but it also has its issues. Generally speaking, put an empty line after the opening tag, and before the closing tag.
 
 ```jsx
 // dont do this as parsing will hit weird breakages
@@ -70,7 +70,7 @@ foo bar
 ```
 
 ```jsx
-// do this@
+// do this
 <markdown>
 
 foo bar
