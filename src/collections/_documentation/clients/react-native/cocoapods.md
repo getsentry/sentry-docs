@@ -19,7 +19,7 @@ npm install --save react react-native react-native-sentry
 yarn add react react-native react-native-sentry
 ```
 
-After that change your `Podfile` to reference to the packages in your `node_modules` folder. For the latest reference on how to use react-native with CocoaPods see: [Integration with existing apps](https://facebook.github.io/react-native/docs/integration-with-existing-apps.html#configuring-cocoapods-dependencies)
+After that change your `Podfile` to reference to the packages in your `node_modules` folder. For the latest reference on how to use React Native with CocoaPods see: [Integration with existing apps](https://facebook.github.io/react-native/docs/integration-with-existing-apps.html#configuring-cocoapods-dependencies)
 
 ```ruby
 target 'YOUR-TARGET' do

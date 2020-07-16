@@ -2,7 +2,7 @@
 title: 'React Native'
 ---
 
-The React-Native SDK uses a native extension for iOS and Android but will fall back to a pure JavaScript version if necessary.
+The React Native SDK uses a native extension for iOS and Android but will fall back to a pure JavaScript version if necessary.
 
 <!-- WIZARD -->
 ## Integrating the SDK

@@ -11,7 +11,7 @@ This SDK has been superseded by the new React Native SDK. Sentry preserves this 
     level="warning"
 %}
 
-This is the documentation for our React-Native SDK. The React-Native SDK uses a native extension for iOS and Android but will fall back to a pure JavaScript version if necessary.
+This is the documentation for our React Native SDK. The React Native SDK uses a native extension for iOS and Android but will fall back to a pure JavaScript version if necessary.
 
 ## Getting Started
 Getting started with Sentry is a three step process:
