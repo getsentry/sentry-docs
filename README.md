@@ -32,6 +32,18 @@ Note: This is running both the Jekyll (port 9001) and Gatsby (port 9002) servers
 
 The repository currently contains a Jekyll site (`./`) as well as a Gatsby site (`./gatsby`). This is to aid with a progressive migratiopn over to Gatsby. There's a bit of magic that you need to understand in how this is deployed:
 
+- **Sidebar:** Jekyll and Gatsby _both_ control the sidebar. If you add a new page in Jekyll at the top level (aka `/docs/parent/THISLEVEL.md`) you will also need to add an empty page in Jekyll at the same location with the `title`, `sidebar_order`, and `gatsby` frontmatter elements:
+
+  ```yaml
+  ---
+  title: Page Name
+  sidebar_order: 0
+  gatsby: true
+  ---
+  ```
+
+- When you convert a page from Jekyll to Gatsby you should remove all text contents of the document in Jekyll (this makes it clear its not used), and add `gatsby: true` to the frontmatter. This ensures it still renders in the sidebar, but both systems recognize the content is in Gatsby.
+
 - In production, the `nginx.conf` file determines which routes are served by Jekyll vs Gatsby. Gatsby is the default behavior, whereas Jekyll routes are listed explicitly.
 
 - In development, the proxy server (`server.js`) manages routing between Jekyll (http://localhost:9001) and Gatsby (http://localhost:9002). Route configuration is the same as whats in nginx.
