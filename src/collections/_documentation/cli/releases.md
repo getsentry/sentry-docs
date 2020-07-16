@@ -127,7 +127,7 @@ The following options exist to change the behavior of the upload command:
 : When this option is provided, `sentry-cli` will rewrite the source maps before upload. This does two things:
 
 1.  It flattens out indexed source maps. This has the advantage that it can compress source maps sometimes which might improve your processing times and can work with tools that embed local paths for source map references which would not work on the server. This is useful when working with source maps for development purposes in particular.
-2.  Local file references in source maps for source contents are inlined. This works particularly well with react-native projects which might reference thousands of files you probably do not want to upload separately.
+2.  Local file references in source maps for source contents are inlined. This works particularly well with React Native projects which might reference thousands of files you probably do not want to upload separately.
 3.  It automatically validates source maps before upload very accurately which can spot errors you would not find otherwise until an event comes in. This is an improved version of what `--validate` does otherwise.
 
 `--strip-prefix` / `--strip-common-prefix`

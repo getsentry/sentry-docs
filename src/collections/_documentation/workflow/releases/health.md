@@ -41,6 +41,26 @@ The release details page focuses on an individual release. Elements of the relea
 
 [{% asset releases/release_details.png alt="View of the release details page showing an overview graph, files changed, and other details." %}]({% asset releases/release_details.png @path %})
 
+Hover over specific dates and times in the overview graph for a quick perspective of events that crashed, behaved abnormally, errored, or are healthy.
+
+Crashed 
+
+: The app had an explicit unhandled error or hard crash. You'll typically be able to see the corresponding issue in Sentry that captures this event. 
+
+Abnormal 
+
+: The application timed out, froze, or was forced to quit by the operating system. There is usually no corresponding Sentry issue, as this is a passive action.
+
+Errored 
+
+: The app shut down normally, but there were non-fatal errors in the session. Most likely, there are issues/errors in Sentry.
+
+Healthy 
+
+: The session ends normally and no errors occurred during its lifetime.
+
+[{% asset releases/release_crash_details.png alt="A hover view illustrating the number of crashes, abnormal, errored, and healthy events." width="400" %}]({% asset releases/release_crash_details.png @path %})
+
 For more information about Sentry's Mobile features, see the full documentation for [Android SDK](/platforms/android/), [iOS SDK](/platforms/cocoa/) and
 [React Native SDK](/platforms/react-native/).
 
@@ -57,12 +77,12 @@ For more details, see the [full documentation on using Release Health with Andro
 ### iOS
 To benefit from the health data you must use at least version 5.0.0 of the Cocoa SDK and enable the collection of the release health metrics in the initialization options of the SDK.
 
-For more details, see the [full documentation on using Release Health with iOS.](/platforms/cocoa/#release-health).
+For more details, see the [full documentation on using Release Health with iOS](/platforms/cocoa/#release-health).
 
 ### React Native
 To benefit from the health data you must use at least version 1.4.0 of the React Native SDK and enable the collection of the release health metrics in the initialization options of the SDK.
 
-For more details, see the [full documentation on using Release Health with React Native.](/platforms/react-native/#release-health).
+For more details, see the [full documentation on using Release Health with React Native](/platforms/react-native/#release-health).
 
 ## Data Filtering
 
