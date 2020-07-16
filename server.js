@@ -16,7 +16,6 @@ const routes = [
       "/performance-monitoring",
       "/api",
       "/guides",
-      "/support",
       "/sdks",
       "/ssl",
       "/_platforms"
