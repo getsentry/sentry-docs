@@ -1,28 +1,5 @@
 ---
 title: Support
 sidebar_order: 8
+gatsby: true
 ---
-
-As a paying customer of Sentry you have access to various forms of support; and if you are using the Open Source version you can get in contact with the Sentry community for questions. All Sentry repositories can be found on [GitHub](https://github.com/getsentry). 
-
-{% include components/alert.html
-  title="Note"
-  content="If you're unable to find the answer in our documentation, you can also check out our [Help Center](https://help.sentry.io/hc/en-us) for commonly asked questions."
-  level="warning"
-%}
-
-## System Status
-
-The availability of the Sentry cloud hosted installation is independently monitored from outside the infrastructure. To monitor the availability, get notifications and read status updates about outdates you can visit the status page at [status.sentry.io](http://status.sentry.io/). There you can also subscribe to email and SMS notifications.
-
-## Community Support
-
-We offer community support through [forum.sentry.io](https://forum.sentry.io/). This is a great place to provide product feedback, get help and advice with various issues, as well as to take part in the larger Sentry community.
-
-You can also find answers to commonly asked questions in our [Help Center](https://help.sentry.io/hc/en-us). 
-
-If you’re looking for support on a specific SDK, check the documentation specific to that SDK. Several SDKs are maintained by the Sentry team, whereas others are not. Nearly every SDK also has its own bug tracker, which is generally where the code lives (i.e. on GitHub).
-
-## Paid Support
-
-If you're a paid customer, you can contact support from within your Sentry organization. This can be found by clicking on the "Help" button on the bottom left. We suggest reserving that for actual problems with the service, and when possible referring to our documentation, [Help Center](https://help.sentry.io/hc/en-us), and community support.
