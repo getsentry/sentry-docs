@@ -40,12 +40,6 @@ const getPlugins = () => {
       }
     },
     {
-      resolve: require.resolve("./plugins/gatsby-plugin-code-tabs")
-    },
-    {
-      resolve: require.resolve("./plugins/gatsby-plugin-include")
-    },
-    {
       resolve: "gatsby-remark-prismjs",
       options: {
         noInlineHighlight: true
@@ -77,7 +71,15 @@ const getPlugins = () => {
       resolve: "gatsby-plugin-mdx",
       options: {
         remarkPlugins: [require("remark-deflist")],
-        gatsbyRemarkPlugins: remarkPlugins
+        gatsbyRemarkPlugins: [
+          {
+            resolve: require.resolve("./plugins/gatsby-plugin-code-tabs")
+          },
+          {
+            resolve: require.resolve("./plugins/gatsby-plugin-include")
+          },
+          ...remarkPlugins
+        ]
       }
     },
     "gatsby-plugin-react-helmet",
