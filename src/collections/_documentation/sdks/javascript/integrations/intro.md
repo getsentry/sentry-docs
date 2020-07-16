@@ -20,10 +20,10 @@ excerpt: ""
 These integrations build upon the functions available in the JavaScript SDK. The functions are specific to the framework, and must be installed separately.
 
 - [Angular](/platforms/javascript/angular/)
-- [Backbone](/platforms/javascript/backbone/)
+- [Backbone](/clients/javascript/integrations/)
 - [Ember](/platforms/javascript/ember/)
-- [Express](/platforms/javascript/ember/)
-- [Koa](/platforms/javascript/koa/)
+- [Express](/platforms/node/express/)
+- [Koa](/platforms/node/koa/)
 - [Node.js](/platforms/node/)
 - [React](/platforms/javascript/react/)
 - [Vue](/platforms/javascript/vue/)

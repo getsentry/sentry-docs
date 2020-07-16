@@ -3,7 +3,7 @@ title: Pluggable Integrations
 excerpt: ""
 ---
 
-{%- capture enable-pluggable -%}
+{%- capture __enable-pluggable -%}
 Install the `@sentry/integrations` package and provide a new instance with your config to `integrations` option. Include the plugin after the SDK has been loaded.
 
 For example:
