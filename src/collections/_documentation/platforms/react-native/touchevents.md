@@ -85,7 +85,7 @@ You can pass specific options to configure the boundary either as props to the `
 
 ```jsx
 (
-    <Sentry.TouchEventBoundary ignoredDisplayNames={["BadComponent", "IgnoredComponent"]} >
+    <Sentry.TouchEventBoundary ignoreNames={["BadComponent", /^Connect\(/, /^LibraryComponent$/]} >
         <RestOfTheApp />
     </Sentry.TouchEventBoundary>
 )
@@ -110,7 +110,7 @@ The type assigned to the breadcrumb that is logged by the touch event.
 
 The max number/depth of components to display when logging a touch's component tree. The default is 20.
 
-### `ignoredDisplayNames`
-`string[]`
+### `ignoreNames`
+`Array<string | RegExp>`
 
-Component `displayName`(s) to ignore when logging the touch event. This prevents unhelpful logs such as "Touch event within element: View" where you still can't tell which `View` it occurred in. By default, only `View` and `Text` are ignored. If you use this option, don't forget to include them.
+{% version_added 1.7.0 %} Component names to ignore when logging the touch event. This prevents unhelpful logs such as "Touch event within element: View" where you still can't tell which `View` it occurred in. Accepts strings and regular expressions.
