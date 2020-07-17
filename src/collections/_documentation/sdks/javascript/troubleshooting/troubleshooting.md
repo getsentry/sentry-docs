@@ -41,9 +41,9 @@ Most community CDNs properly set an `Access-Control-Allow-Origin` header.
  Access-Control-Allow-Origin: *
  ```
 
-## Missing Console Log Line Numbers for Breadcrumbs
+## instrument.js Line Numbers for Console Log statements
 
-If you are using our SDK version earlier than Version 3, you need to add `/@sentry/` instead of `/raven-js/` to ensure breadcrumbs capture console log line numbers.
+If `instrument.js` displays in your console while debugging, add Sentry to your framework [blackboxing](https://developer.chrome.com/devtools/docs/blackboxing) settings like: `/@sentry/` so Chrome ignores the SDK stackframes when debugging. 
 
 {%- endcapture -%}
 
