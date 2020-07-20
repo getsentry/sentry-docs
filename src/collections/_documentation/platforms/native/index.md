@@ -198,8 +198,8 @@ initialization:
 
 Monitor the [health of releases](/workflow/releases/health/) by observing user adoption, usage of the application, percentage of [crashes](/workflow/releases/health/#crash), and [session data](/workflow/releases/health/#session). Release health will provide insight into the impact of crashes and bugs as it relates to user experience, and reveal trends with each new issue through the release details, graphs, and filters.
 
-To benefit from the health data you must use at least version 0.4.0 of the Native SDK.
-The collection of release health metrics is enabled by default unless specifically disabled in the initialization options of the SDK.
+To benefit from the health data, you must use at least version 0.4.0 of the Native SDK.
+Metrics collection for release health is, by default, enabled, unless you specifically disabled collecting in the initialization options for the SDK.
 
 ```c
 sentry_options_t *options = sentry_options_new();
@@ -209,13 +209,13 @@ sentry_init(options);
 ```
 
 The SDK automatically starts a new session when it is initialized via `sentry_init`, and will end that session automatically when the SDK is shut down via `sentry_shutdown`, or explicitly by calling `sentry_end_session`.
-The SDK currently only tracks one concurrent session and will also end the running session when using `sentry_start_session`.
+The SDK currently tracks only one concurrent session and will end the running session when using `sentry_start_session`.
 
 For more details, see the [full documentation on Release Health](/workflow/releases/health/).
 
 ### Identification of the User
 
-By default, the SDK will try to use the `id`, `email` or `username` properties of the object set via `sentry_set_user` as the sessions distinct identifier. While this ID does contain personally identifiable information and is transmitted to the sentry backend, it will not be persisted server-side.
+By default, the SDK will try to use the `id`, `email`, or `username` properties of the object set via `sentry_set_user` as the session’s distinct identifier. While this ID contains personally identifiable information, and is transmitted to the sentry backend, the ID will not persist server-side.
 
 ### Known Limitations
 
