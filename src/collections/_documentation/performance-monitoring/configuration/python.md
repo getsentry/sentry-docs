@@ -86,7 +86,7 @@ The next example contains the implementation of the hypothetical `process_item` 
 
 In cases where you want to attach Spans to an already ongoing Transaction you can use `Hub.current.scope.transaction`. This property will return a `Transaction` in case there is a running Transaction otherwise it returns `None`.
 
-Alternatively, instead of adding to the top-level transaction, you can make a child span of the current span, if there is one. Use ``Hub.current.scope.span` in that case.
+Alternatively, instead of adding to the top-level transaction, you can make a child span of the current span, if there is one. Use `Hub.current.scope.span` in that case.
 
 You can choose the value of `op` and `description`.
 
