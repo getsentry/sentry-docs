@@ -1,10 +1,10 @@
 {% comment %}
 Guideline: This page is comprehensive; it is stored in the common folder, nested under _includes/common. To use, 
 
-1. If you haven't already, add the configuration content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/config (for example, _documentation/sdks/javascript/config). 
-2. Create a copy of basics.md file, then add it to the config folder. 
-3. Add the SDK-specific `include` statements to the configuration-basics.md file
-4. Note that each of these terms is wrapped in an "if/then" statement; this is because not all of these options are included for every SDK. For those terms you do not wish to include, add the command `hide_<option>=true` in the basics.md file.
+1. If you haven't already, copy the configuration content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/config (for example, _documentation/sdks/javascript/config). 
+2. Edit the basics.md file to be specific to the SDK you are documenting.
+
+Note that each of these terms is wrapped in an "if/then" statement; this is because not all of these options are included for every SDK. For those terms you do not wish to include, add the command `hide_<option>=true` in the basics.md file.
 
 If you have questions, please ask Fiona or Daniel. 
 {% endcomment %}
@@ -32,7 +32,7 @@ Turns debug mode on or off. If debug is enabled, the SDK will attempt to print o
 
 Sets the release. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable, but it's best to set it manually to guarantee that the release is in sync with your deploy integrations or source map uploads.
 
-Release names are strings, but some formats are detected by Sentry and might be rendered differently. For more information have a look at [the releases documentation](/workflow/releases/).
+Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/workflow/releases/).
 {% endif %}
 {% if include.hide_environment == nil %}
 `environment`
@@ -131,7 +131,7 @@ These options can be used to hook the SDK in various ways to customize the repor
 {% if include.hide_before_send == nil %}
 `beforeSend`
 
-This function is called with an SDK specific event object and can return a modified event object or nothing to skip reporting the event. Use this hook, for instance, for manual PII stripping before sending.
+This function is called with an SDK-specific event object, and can return a modified event object or nothing to skip reporting the event. Use this hook, for instance, for manual PII stripping before sending.
 {% endif %}
 {% if include.hide_before_breadcrumb == nil %}
 `beforeBreadcrumb`

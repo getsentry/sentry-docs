@@ -1,9 +1,8 @@
 {% comment %}
 Guideline: This page is comprehensive; it is stored in the common folder, nested under _includes/common. To use, 
 
-1. If you haven't already, add the errors content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
-2. Create a copy of breadcrumbs.md file, then add it to the errors folder. 
-3. Add the SDK-specific `include` statements to the breadcrumbs.md file
+1. If you haven't already, copy the errors content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/errors). 
+2. Edit the breadcrumbs.md file to be specific to the SDK you are documenting.
 
 If you have questions, please ask Fiona or Daniel. 
 
@@ -48,8 +47,7 @@ Type
   * `http`: Renders the breadcrumb as HTTP request.
   * `error`: Renders the breadcrumb as a hard error.
 
-  _The type is not exclusively used to customize the rendering.  We do not recommend changing
-   the type from the default._
+  _The type is not exclusively used to customize the rendering. We do not recommend changing the type from the default._
 
 Timestamp
 

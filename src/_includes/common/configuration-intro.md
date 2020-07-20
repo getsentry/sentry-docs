@@ -1,9 +1,8 @@
 {% comment %}
 Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use, 
 
-1. If you haven't already, add the configuration content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/config (for example, _documentation/sdks/javascript/config). 
-2. Create a copy of intro.md file, then add it to the config folder. 
-3. Add the SDK-specific `include` statements to the configuration-intro.md file
+1. If you haven't already, copy the configuration content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/config (for example, _documentation/sdks/javascript/config). 
+2. Modify the intro.md file to be specific to the SDK you are documenting.
 
 If you have questions, please ask Fiona or Daniel. 
 

@@ -73,22 +73,34 @@ Upload source maps using our Webpack plugin or TypeScript.
 
 {%- capture __performance-install_content -%}
 
+To get started with performance monitoring using Sentry’s JavaScript SDK, first install the `@sentry/browser` and `@sentry/apm` packages:
+
 ```bash
-npm install --save @sentry/tracing
+# Using yarn
+$ yarn add @sentry/browser @sentry/apm
+
+# Using npm
+$ npm install @sentry/browser @sentry/apm
+```
+
+Alternatively, instead of `npm` packages, you can use our pre-built CDN bundle that combines both @sentry/browser and @sentry/apm:
+
+```html
+<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.min.js %}" crossorigin="anonymous"></script>
 ```
 
 Next, initialize the integration in your call to `Sentry.init`:
 
 ```js
 import * as Sentry from '@sentry/browser';
-import { Integrations as ApmIntegrations } from '@sentry/tracing';
+import { Integrations as ApmIntegrations } from '@sentry/apm';
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   release: 'my-project-name@' + process.env.npm_package_version,
   integrations: [
     new ApmIntegrations.Tracing(),
   ],
-  tracesSampleRate: 0.25, // must be present and non-zero
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
 
@@ -109,7 +121,7 @@ config_content=__config_content
 install_content=__install_content 
  -%}
  
- Next steps:
- 
  - [Manage Configuration Options](/sdks/javascript/config/intro)
  - [Enrich Event Data](/sdks/javascript/errors/intro)
+ - [Review and Manage Integrations](/sdks/javascript/integrations/intro)
+ - [Troubleshooting](/sdks/javascript/troubleshooting/troubleshooting)

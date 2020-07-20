@@ -106,23 +106,16 @@ Guideline: add an `include` statement provides information particular to the SDK
 
 ## Monitor Performance
 
-Performance monitoring helps developers measure Apdex, Throughput, and trace slow transactions down to the poor performing API call or DB query. Available for both JavaScript and Python SDKs, performance monitoring helps you both diagnose problems and measure your application's overall health. 
-
-To get started with performance monitoring, first install the `@sentry/tracing` package:
+Performance Monitoring helps you see everything from macro-level metrics to micro-level spans, and you’ll be able to cross-reference transactions with related issues, customize queries based on your personal needs, and substantially more.
 
 {{ include.performance-install_content }}
 {% comment %}
 Guideline: Create the `include` statement that provides SDK specific installation information
 {% endcomment %}
 
-Performance data is transmitted using a new event type called `transactions` {% comment %}: link to Distributing Tracing{% endcomment %}. **To sample transactions, you must set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 25% of captured transactions. Learn more about sampling in Using Your SDK to Filter Events{% comment %} add link to this content for the SDK you are documenting{% endcomment %}
+Performance data is transmitted using a new event type called “transactions,” which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing). To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value. The example configuration above will transmit 100% of captured transactions. Be sure to lower this value in production; otherwise, you could burn through your quota quickly.
 
-{% comment %}
-Guideline: Create the `include` statement that provides SDK specific installation information. This page is under development with the projects team currently.
-{% endcomment %}
+Learn more about sampling in [Filtering Events Reported to Sentry](/sdks/javascript/config/filter).
 
 
 **Next Steps:**
-
-- Review and manage integrations {% comment %}next phase:add link{% endcomment %}
-- Review common problems {% comment %}next phase:add link{% endcomment %}

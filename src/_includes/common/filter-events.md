@@ -1,9 +1,8 @@
 {% comment %}
 Guideline: This page is common to all SDKs; it is stored in the common folder, nested under _includes/common. To use,
 
-. If you haven't already, add the config content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/config).
-2. Create a new filter.md file in _documentation/sdks/<platform-name>/config folder
-3. Create the defined `include` statements and add them to the filter.md file
+1. If you haven't already, copy the config content folder to the directory of the platform you are documenting -- _documentation/sdks/<sdk/platform>/errors (for example, _documentation/sdks/javascript/config). 
+2. Edit the filter.md file to be specific to the SDK you are documenting.
 
 If you have questions, please ask Fiona or Daniel.
 
@@ -45,7 +44,7 @@ Guideline: as appropriate, add the example and screen shot for the SDK your are 
 
 ### Apply Workflows
 
-Event streams with inbound filter and proper event grouping can be made more efficient by practicing good development hygiene. When Sentry alerts you to an issue in your code, resolve it or discard.
+Event streams with inbound filter and proper event grouping can be made more efficient by practicing good development hygiene. When Sentry alerts you to an issue in your code, resolve it, or discard. 
 
 ### Rate Limit
 
@@ -94,23 +93,23 @@ When you enable sampling in your SDK, you choose a percentage of collected error
 
 {{ include.filter-sample-rate_content }}
 {% comment %}
-Guideline: add a code sample that supports sampling at 25% example for the SDK your are documenting
+Guideline: add a code sample that supports sampling at 25% example for the SDK your are documenting.
 {% endcomment %}
 
-For Sentry's Performance features (which are currently in Beta), we **strongly recommend**  sampling your data for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you’ll more easily prevent yourself from exceeding your organization’s [event quota](/accounts/quotas/), which will help you manage costs.
+For Sentry's Performance Monitoring, we recommend sampling your data for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you’ll more easily prevent yourself from exceeding your organization’s [event quota](/accounts/quotas/).
 
-When choosing a sampling rate, the goal is to not collect *too* much data, but to collect enough data that you are able to draw meaningful conclusions. If you’re not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume, until you’ve found a rate which lets you balance performance and cost concerns with data accuracy.
+When choosing a sampling rate, the goal is not to collect *too* much data, but to collect sufficient data so you can draw meaningful conclusions. If you’re not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume, until you’ve found a rate that balances performance and cost concerns with data accuracy.
 
 ### Using Hints
 
-Hints are available in two places: 
+Hints are available in two places:
 
 1. `beforeSend` / `beforeBreadcrumb`
 2. `eventProcessors`
 
-Event and Breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected. 
+Event and breadcrumb `hints` are objects containing various information used to put together an event or a breadcrumb. Typically `hints` hold the original exception so that additional data can be extracted or grouping can be affected. 
 
-For events, those are things such as `event_id`,  `originalException`,  `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that you attach.
+For events, such as `event_id`,  `originalException`,  `syntheticException` (used internally to generate cleaner stack trace), and any other arbitrary `data` that you attach. 
 
 For breadcrumbs, the use of `hints` is implementation dependent. For XHR requests, the hint contains the xhr object itself; for user interactions the hint contains the DOM element and event name and so forth.
 
