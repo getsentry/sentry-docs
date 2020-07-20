@@ -8,7 +8,7 @@ Create a deployment package on your local machine and install the required depen
 Install our Node.js SDK using `npm`:
 
 ```basic
-npm install sentry_sdk
+npm install @sentry/node
 ```
 
 To set up Sentry error logging for a Lambda function, build a wrapper:
