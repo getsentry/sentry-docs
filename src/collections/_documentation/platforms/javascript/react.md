@@ -188,12 +188,12 @@ Sentry uses a redux **enhancer**. Pass the enhancer, as indicated above. Don't p
 ### Normalization Depth
 
 By default Sentry SDKs normalize any context to a depth of 3, which in the case of sending Redux state you probably will want to increase that. You do so by passing `normalizeDepth` to the `Sentry.init` call:
+
 ```js
 Sentry.init({
   dsn: '___DSN___',
   normalizeDepth: 10 // Or however deep you want your state context to be.
 })
-```
 
 ### Redux Enhancer Options
 
