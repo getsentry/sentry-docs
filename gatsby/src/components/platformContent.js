@@ -13,7 +13,7 @@ const includeQuery = graphql`
         slug
       }
     }
-    allFile(filter: { absolutePath: { regex: "//src/includes//" } }) {
+    allFile(filter: { sourceInstanceName: { eq: "includes" } }) {
       nodes {
         relativePath
         name

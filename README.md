@@ -62,6 +62,8 @@ The repository currently contains a Jekyll site (`./`) as well as a Gatsby site 
 
 - You can determine which engine is used by viewing source and looking for `"Rendered with"` in the HTML.
 
+- The new `wizard/` pages are automatically generated upon Jekyll builds from any pre-existing wizard entries. It will _not_ overwrite new pages you add, only pages which still exist on the Jekyll site.
+
 ## MDX Components + Markdown
 
 :pray: that MDX v2 fixes this.
@@ -82,6 +84,23 @@ foo bar
 foo bar
 
 </markdown>
+```
+
+## Wizard Pages
+
+A number of pages exist to provide content within Sentry installations. We refer to this system as the _Wizard_. These pages are found in Gatsby's `wizard` content directory, and are rendered and exported to a JSON file for use within the `getsentry/sentry` application.
+
+Each page consists of some wizard-specific frontmatter, as well as a markdown body:
+
+```markdown
+---
+name: Platform Name
+doc_url: Permalink for this page
+type: framework
+support_level: production
+---
+
+This is my  content.
 ```
 
 ## Development mode (Gatsby-specific)
