@@ -134,7 +134,7 @@ module.exports = {
 }
 ```
 {% capture __alert_content -%}
-As this applies to **all** class and function names—not just React components—this could increase your js bundle size. 
+As this applies to **all** class and function names — not just React components — this could increase your JS bundle size. 
 {%- endcapture -%}
 {%- include components/alert.html
   title="Note"
