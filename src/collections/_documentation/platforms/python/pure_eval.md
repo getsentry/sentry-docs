@@ -2,7 +2,7 @@
 title: pure_eval
 sidebar_order: 9
 ---
-<!-- WIZARD -->
+
 This integration uses [`pure_eval`](https://github.com/alexmojaki/pure_eval) to safely evaluate additional expressions in the source code and display their values alongside other local variables.
 
 **This integration is experimental.** It may be removed in minor versions.
@@ -19,5 +19,3 @@ from sentry_sdk.integrations.pure_eval import PureEvalIntegration
 
 sentry_sdk.init("___PUBLIC_DSN___", integrations=[PureEvalIntegration()])
 ```
-
-<!-- ENDWIZARD -->
