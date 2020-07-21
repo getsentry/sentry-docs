@@ -36,7 +36,7 @@ Note: This is running both the Jekyll (port 9001) and Gatsby (port 9002) servers
 
 ## The Great Gatsby Migration
 
-The repository currently contains a Jekyll site (`./`) as well as a Gatsby site (`./gatsby`). This is to aid with a progressive migratiopn over to Gatsby. There's a bit of magic that you need to understand in how this is deployed:
+The repository currently contains a Jekyll site (`./`) as well as a Gatsby site (`./gatsby`). This is to aid with a progressive migration over to Gatsby. There's a bit of magic that you need to understand in how this is deployed:
 
 - **Sidebar:** Jekyll and Gatsby _both_ control the sidebar. If you add a new page in Gatsby at the top level (aka `/docs/parent/THISLEVEL.md`) you will also need to add an empty page in Jekyll at the same location with the `title`, `sidebar_order`, and `gatsby` frontmatter elements:
 

@@ -95,4 +95,4 @@ Event ingestion imposes limits on the size of UE4 crash reports. These limits
 are subject to future change and defined currently as:
 
 - *20MB* for a compressed request
-- *50MB* for the full crash report after decompression
+- *100MB* for the full crash report after decompression

@@ -178,6 +178,30 @@ sentry_value_t event = sentry_value_new_message_event(
 );
 ```
 
+### Application Crashes
+
+By default, the Native SDK intercepts crash signals and unhandled exceptions and
+sends crash reports to Sentry. Depending on the [backend](#integrations), the
+crash report is sent as a conventional event, or as a native crash report file.
+On Windows, Linux, and macOS, the default backends send binary Minidump files.
+Sentry processes them to extract stack traces and exception information into a
+readable crash report.
+
+For more information on and the limits that apply, see
+[What is a Minidump](/platforms/native/minidumps#what-is-a-minidump).
+
+{% capture __alert_content -%}
+The size of Minidumps can vary greatly from a few kilobytes to many megabytes.
+Contributing factors are the number of threads, size of stack space, and the
+number of heap memory regions referenced from the stack. Sentry limits Minidump
+uploads to _100MB_ and rejects all larger files.
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Size Limits"
+  content=__alert_content
+  level="warning"
+%}
+
 ## Uploading Debug Information
 
 {% include platforms/upload-debug-info.md %}
@@ -364,7 +388,7 @@ For more information, see:
   Filters](https://blog.sentry.io/2017/11/27/setting-up-inbound-filters).
 
 {% capture __alert_content -%}
-The Crashpad Backend sends minidumps with an additional event payload
+The Crashpad Backend sends Minidumps with an additional event payload
 out-of-process. `before_send` hooks are not invoked when capturing crashes
 using Crashpad.
 {%- endcapture -%}
@@ -439,7 +463,7 @@ CMake option, with support for the following options:
 [Crashpad](https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md)
 is an open-source multiplatform crash reporting system written in C++ by Google.
 It supports macOS, Windows, and Linux, and features an uploader to
-submit minidumps to a configured URL right when the process crashes.
+submit Minidumps to a configured URL right when the process crashes.
 
 To use the Crashpad backend with the Native SDK, configure the CMake build
 with the `SENTRY_BACKEND=crashpad` option. This will automatically create a
