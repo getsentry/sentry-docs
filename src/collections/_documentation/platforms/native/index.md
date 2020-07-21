@@ -180,21 +180,21 @@ sentry_value_t event = sentry_value_new_message_event(
 
 ### Application Crashes
 
-By default, the Native SDK intercepts crash signals and unhandled exceptions and
-sends crash reports to Sentry. Depending on the [backend](#integrations), the
-crash report is sent as a conventional event, or as a native crash report file.
-On Windows, Linux, and macOS, the default backends send binary Minidump files.
-Sentry processes them to extract stack traces and exception information into a
-readable crash report.
+By default, the Native SDK intercepts crash signals and unhandled exceptions to
+send crash reports to Sentry. Depending on the [backend](#integrations), the
+crash report can be sent as a conventional event or as a native crash report
+file. On Windows, Linux, and macOS, the default backends send binary Minidump
+files. Sentry processes them to extract stack traces and exception information
+into a readable crash report.
 
-For more information on and the limits that apply, see
+For more information on Minidumps and the limits that apply, see
 [What is a Minidump](/platforms/native/minidumps#what-is-a-minidump).
 
 {% capture __alert_content -%}
-The size of Minidumps can vary greatly from a few kilobytes to many megabytes.
+The size of Minidumps can vary between a few kilobytes and many megabytes.
 Contributing factors are the number of threads, size of stack space, and the
 number of heap memory regions referenced from the stack. Sentry limits Minidump
-uploads to _100MB_ and rejects all larger files.
+uploads to _100MB_ and drops all larger requests.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Size Limits"
