@@ -1,7 +1,7 @@
 const pageQuery = `{
     pages: allFile(
       filter: {
-        absolutePath: { regex: "/(pages|docs)/" },
+        sourceInstanceName: {in: ["docs"]}
       }
     ) {
       edges {

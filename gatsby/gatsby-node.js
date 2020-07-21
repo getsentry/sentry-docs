@@ -5,9 +5,9 @@ exports.onCreateWebpackConfig = ({ stage, actions }) => {
   actions.setWebpackConfig({
     resolve: {
       alias: {
-        "~src": path.join(path.resolve(__dirname, "src"))
-      }
-    }
+        "~src": path.join(path.resolve(__dirname, "src")),
+      },
+    },
   });
 };
 
@@ -36,10 +36,10 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
       name: "Frontmatter",
       fields: {
         title: {
-          type: "String!"
+          type: "String!",
         },
         keywords: {
-          type: "[String!]"
+          type: "[String!]",
         },
         sidebar_order: {
           type: "Int",
@@ -49,10 +49,24 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
             return source[info.fieldName] !== null
               ? source[info.fieldName]
               : 10;
-          }
-        }
-      }
-    })
+          },
+        },
+
+        // wizard fields
+        support_level: {
+          type: "String",
+        },
+        type: {
+          type: "String",
+        },
+        doc_link: {
+          type: "String",
+        },
+        name: {
+          type: "String",
+        },
+      },
+    }),
   ];
   createTypes(typeDefs);
 };
@@ -64,19 +78,19 @@ exports.onCreateNode = ({ node, actions, getNode }) => {
     createNodeField({
       name: "slug",
       node,
-      value
+      value,
     });
     createNodeField({
       name: "jekyllOnly",
       node,
       value: !!(
         node.rawMarkdownBody && node.rawMarkdownBody.indexOf("{%") !== -1
-      )
+      ),
     });
     createNodeField({
       name: "gatsbyOnly",
       node,
-      value: node.fileAbsolutePath.indexOf("/src/docs") !== -1
+      value: node.fileAbsolutePath.indexOf("/src/docs") !== -1,
     });
   }
 };
@@ -85,7 +99,7 @@ exports.createPages = async function({ actions, graphql, reporter }) {
   // TODO(dcramer): query needs rewritten when mdx is back
   const { data, errors } = await graphql(`
     query {
-      allFile(filter: { absolutePath: { regex: "//docs//" } }) {
+      allFile(filter: { sourceInstanceName: { eq: "docs" } }) {
         nodes {
           id
           childMarkdownRemark {
@@ -113,21 +127,21 @@ exports.createPages = async function({ actions, graphql, reporter }) {
     reporter.panicOnBuild('🚨  ERROR: Loading "createPages" query');
   }
   const component = require.resolve(`./src/components/layout.js`);
-  data.allFile.nodes.forEach(node => {
+  data.allFile.nodes.forEach((node) => {
     if (node.childMarkdownRemark && node.childMarkdownRemark.fields) {
       actions.createPage({
         path: node.childMarkdownRemark.fields.slug,
         component,
         context: {
           id: node.id,
-          title: node.childMarkdownRemark.frontmatter.title
-        }
+          title: node.childMarkdownRemark.frontmatter.title,
+        },
       });
     } else if (node.childMdx && node.childMdx.fields) {
       actions.createPage({
         path: node.childMdx.fields.slug,
         component,
-        context: { id: node.id, title: node.childMdx.frontmatter.title }
+        context: { id: node.id, title: node.childMdx.frontmatter.title },
       });
     }
   });

@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+"""
+Tests upstream platform JSON (wizard) files and compares them to
+the gatsby converted files.
+"""
+
+import json
+from urllib.request import urlopen
+
+INDEX_FILE = '_index.json'
+
+
+def compare_dicts(a, b, path=''):
+    for key, value in a.items():
+        new_value = b.get(key)
+        if isinstance(value, dict):
+            compare_dicts(value, new_value or {}, f'{path}.{key}')
+        elif new_value != value:
+            if len(new_value) > 200 or len(value) > 200:
+                print(f'{path}.{key}:'
+                      f'value of length {len(value)}'
+                      f' != value of length {len(new_value)}')
+            else:
+                print(f'{path}.{key}: {value} != {new_value}')
+
+
+def test_index(old, new):
+    print(f'Testing {INDEX_FILE}')
+    compare_dicts(old, new)
+
+
+def test_details(path):
+    print(f'Testing {path}')
+
+    with urlopen(f'https://docs.sentry.io/_platforms/{path}') as fp:
+        old = json.load(fp)
+
+    try:
+        with open(f'gatsby/static/_platforms/{path}') as fp:
+            new = json.load(fp)
+    except FileNotFoundError as exc:
+        print(exc)
+        return
+
+    compare_dicts(old, new)
+
+
+def main():
+    with urlopen(f'https://docs.sentry.io/_platforms/{INDEX_FILE}') as fp:
+        old = json.load(fp)
+
+    with open(f'gatsby/static/_platforms/{INDEX_FILE}') as fp:
+        new = json.load(fp)
+
+    test_index(old, new)
+
+    for p_data in old['platforms'].values():
+        for l_data in p_data.values():
+            test_details(l_data['details'])
+
+
+if __name__ == '__main__':
+    main()

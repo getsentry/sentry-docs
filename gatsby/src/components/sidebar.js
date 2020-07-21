@@ -8,11 +8,7 @@ import { sortBy } from "../utils";
 
 const navQuery = graphql`
   query NavQuery {
-    allFile(
-      filter: {
-        absolutePath: { regex: "/(/docs/|/collections/_documentation/)/" }
-      }
-    ) {
+    allFile(filter: { sourceInstanceName: { in: ["docs", "docs-jekyll"] } }) {
       nodes {
         childMarkdownRemark {
           frontmatter {

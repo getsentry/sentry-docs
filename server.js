@@ -17,23 +17,20 @@ const routes = [
       "/api",
       "/guides",
       "/ssl",
-      "/_platforms"
     ],
-    address: "http://localhost:9001"
+    address: "http://localhost:9001",
   },
   {
-    routes: [
-      "/", 
-    ],
-    address: "http://localhost:9002"
-  }
+    routes: ["/"],
+    address: "http://localhost:9002",
+  },
 ];
 
 for (route of routes) {
   app.use(
     route.routes,
     createProxyMiddleware({
-      target: route.address
+      target: route.address,
     })
   );
 }
