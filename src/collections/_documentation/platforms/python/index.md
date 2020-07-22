@@ -267,6 +267,7 @@ For more information, see:
 
 - [Logging](/platforms/python/logging/)
 - [GNU Backtrace](/platforms/python/gnu_backtrace/)
+- [pure_eval](/platforms/python/pure_eval/)
 - [Redis](/platforms/python/redis/)
 - [SQLAlchemy](/platforms/python/sqlalchemy/)
 
