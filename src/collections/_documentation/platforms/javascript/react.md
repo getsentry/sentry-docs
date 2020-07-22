@@ -213,6 +213,7 @@ Sentry.init({
   dsn: '___DSN___',
   normalizeDepth: 10 // Or however deep you want your state context to be.
 })
+```
 
 ### Redux Enhancer Options
 
