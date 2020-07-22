@@ -139,7 +139,7 @@ Event ingestion imposes limits on the size and number of fields in multipart
 uploads. These limits are subject to future change and defined currently as:
 
 - *20MB* for a compressed minidump request
-- *50MB* for the full body after decompression
-- *50MB* for all files combined
-- *50MB* for each file individually
+- *100MB* for the full body after decompression
+- *100MB* for all files combined
+- *100MB* for each file individually
 - *1MB* for event payloads
