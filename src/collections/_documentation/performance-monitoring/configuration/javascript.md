@@ -27,7 +27,10 @@ Sentry.init({
 Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
 
 ```html
-<script src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js" integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.apm.min.js %}" crossorigin="anonymous"></script>
+<script
+  src="https://browser.sentry-cdn.com/{% sdk_version sentry.javascript.browser %}/bundle.apm.min.js"
+  integrity="{% sdk_cdn_checksum sentry.javascript.browser latest bundle.apm.min.js %}"
+  crossorigin="anonymous"></script>
 ```
 
 Next, initialize the integration in your call to `Sentry.init`:
