@@ -193,8 +193,10 @@ For more information on Minidumps and the limits that apply, see
 {% capture __alert_content -%}
 The size of Minidumps can vary between a few kilobytes and many megabytes.
 Contributing factors are the number of threads, size of stack space, and the
-number of heap memory regions referenced from the stack. Sentry limits Minidump
-uploads to _100MB_ and drops all larger requests.
+number of heap memory regions referenced from the stack. As Minidumps often
+contain large regions of empty memory, the SDK compresses Minidumps before
+uploading. Sentry drops requests with a body larger than _20MB_, or if they
+contain files larger than _100MB_.
 {%- endcapture -%}
 {%- include components/alert.html
   title="Size Limits"
