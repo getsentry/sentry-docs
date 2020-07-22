@@ -3,7 +3,9 @@ title: Sentry Testkit
 sidebar_order: 30002
 ---
 
-When building tests for your application, you want to assert, that the right flow-tracking or error is being sent to _Sentry_, **but** without really sending it to the _Sentry_ servers. This way you won't swamp Sentry with false reports during test runs or other CI operations.
+When building tests for your application, you want to assert, that the right flow-tracking or error is being sent to Sentry, but without really sending it to the Sentry servers. This way you won't swamp Sentry with false reports during test runs or other CI operations.
+
+Note: [Wix](https://wix.github.io/sentry-testkit/), a Sentry partner, maintains Sentry Testkit.
 
 ## Sentry Testkit
 
@@ -24,7 +26,7 @@ const { testkit, sentryTransport } = sentryTestkit()
 
 // initialize your Sentry instance with sentryTransport
 Sentry.init({
-  dsn: 'some_dummy_dsn',
+  dsn: '___PUBLIC_DSN___',
   transport: sentryTransport
   //... other configurations
 })
