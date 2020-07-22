@@ -3,6 +3,8 @@ title: pure_eval
 sidebar_order: 9
 ---
 
+{% version_added 0.16.2 %}
+
 This integration uses [`pure_eval`](https://github.com/alexmojaki/pure_eval) to safely evaluate additional expressions in the source code and display their values alongside other local variables.
 
 **This integration is experimental.** It may be removed in minor versions.
