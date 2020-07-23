@@ -9,7 +9,7 @@ Sentry's .NET SDK works with WinForms applications through the [Sentry NuGet pac
 
 ## Configuration
 
-The SDK automatically captures unhandled exceptions that hit the `AppDomain.UnhandledException`, but on Windows Forms, for production apps (when no debugger is attached), the small Window pops up when a crash happens. In order to get the exception to rethrow and be captured by Sentry, you must also configure:
+The SDK automatically handles AppDomain.UnhandledException. On Windows Forms, for production apps (when no debugger is attached), the small Window pops up when an unhandled error occurs. To get the exception to rethrow the error so it is captured by Sentry, also configure:
 
 ```csharp
 using System.Windows.Forms;
