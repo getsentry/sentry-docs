@@ -9,7 +9,7 @@ Sentry's .NET SDK works with Windows Presentation Foundation applications throug
 
 Besides the [main configuration like calling `SentrySdk.Init`](/platforms/dotnet/), you must consider the WPF specific configuration.
 
-The SDK automatically captures unhandled exceptions that hit the `AppDomain.UnhandledException`, but on WPF, for production apps (when no debugger is attached), WPF catches exception to show the dialog to the user. You can also configure your app to capture those exceptions before the dialog shows up:
+The SDK automatically handles `AppDomain.UnhandledException`. On WPF, for production apps (when no debugger is attached), WPF catches exception to show the dialog to the user. You can also configure your app to capture those exceptions before the dialog shows up:
 
 ```csharp
 using System.Windows;
