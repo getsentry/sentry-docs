@@ -9,7 +9,7 @@ Install our Node.js SDK using `npm`:
 $ npm install @sentry/node
 ```
 
-To set up Sentry error logging for a Azure Function:
+To set up Sentry error logging for an Azure Function:
 
 ```javascript
 "use strict";
@@ -39,4 +39,4 @@ You can obtain the DSN using your Sentry account from your organization's *Setti
 
 Note: You need to call both `captureException` and `flush` in order for captured events to be successfully delivered to Sentry.
 
-Checkout Sentry's [azure sample apps](https://github.com/getsentry/examples/tree/master/azure-functions/node) for detailed examples. Use [JavaScript docs](/platforms/javascript/) for more configuration options.
+Checkout Sentry's [Azure sample apps](https://github.com/getsentry/examples/tree/master/azure-functions/node) for detailed examples. Refer to the [JavaScript docs](/platforms/javascript/) for more configuration options.

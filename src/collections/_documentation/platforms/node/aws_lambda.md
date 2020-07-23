@@ -44,4 +44,4 @@ You can obtain the DSN using your Sentry account from your organization's *Setti
 
 Note: You need to call both `captureException` and `flush` in order for captured events to be successfully delivered to Sentry.
 
-Create the deployment package in `.zip` format, then upload it to AWS Lambda as a Lambda function. Checkout Sentry's [aws sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/node) for detailed examples. Use [JavaScript docs](/platforms/javascript/) for more configuration options.
+Create the deployment package in `.zip` format, then upload it to AWS Lambda as a Lambda Function. Checkout Sentry's [aws sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/node) for detailed examples. Refer to the [JavaScript docs](/platforms/javascript/) for more configuration options.
