@@ -3,31 +3,35 @@ title: Azure Functions
 sidebar_order: 9
 ---
 
-Install our Node.js SDK in Azure:
+Install our Node.js SDK using `npm`:
+
 ```bash
-npm install @sentry/node
+$ npm install @sentry/node
 ```
 
-Set up Sentry error logging for your azure function:
-```js
+To set up Sentry error logging for a Azure Function:
+
+```javascript
+"use strict";
+
 const Sentry = require("@sentry/node");
 
 Sentry.init({
-    dsn: "___PUBLIC_DSN___"
+  dsn: "___PUBLIC_DSN___"
 });
 
 module.exports = async function (context, req) {
-    try {
-        await callUndefinedFunction(); // Call undefined function.
-    } catch (error) {
-        Sentry.captureException(error); // Capture the exception in Sentry dashboard.
-        await Sentry.flush(2000);
-    }
+  try {
+    await notExistFunction();
+  } catch (e) {
+    Sentry.captureException(e);
+    await Sentry.flush(2000);
+  }
 
-    context.res = {
-        status: 200, /* Defaults to 200 */
-        body: "Hello from Azure cloud function"
-    };
+  context.res = {
+    status: 200,
+    body: "Hello from Azure Cloud Function!"
+  };
 }
 ```
 
@@ -35,4 +39,4 @@ You can obtain the DSN using your Sentry account from your organization's *Setti
 
 Note: You need to call both `captureException` and `flush` in order for captured events to be successfully delivered to Sentry.
 
-Checkout Sentry’s [azure sample apps](https://github.com/getsentry/examples/tree/master/azure-functions/node) for detailed examples. For detailed configuration options, use [JavaScript docs](/platforms/javascript/).
+Checkout Sentry's [azure sample apps](https://github.com/getsentry/examples/tree/master/azure-functions/node) for detailed examples. Use [JavaScript docs](/platforms/javascript/) for more configuration options.
