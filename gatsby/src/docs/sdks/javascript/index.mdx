@@ -12,6 +12,10 @@ On this page, we provide concise information to get you up and running quickly. 
 
 In the right place? We also offer documentation for:
 
+- [Node.js](/platforms/node/)
+- [React](/platforms/javascript/react/)
+- [Angular](/platforms/javascript/angular/)
+
 What's covered on this page:
 
 - [Install](#install)
@@ -24,9 +28,7 @@ What's covered on this page:
 
 ## Install
 
-Sentry captures data by using an SDK within your application’s runtime.
-
-Add the Sentry SDK as a dependency using `yarn` or `npm`:
+Sentry captures data by using an SDK within your application’s runtime. Add the Sentry SDK as a dependency using `yarn` or `npm`:
 
 ```bash
 # Using yarn
@@ -44,11 +46,13 @@ $ npm install @sentry/browser
 Sentry.init({ dsn: '___PUBLIC_DSN___' });
 ```
 
-Learn more about how to manually capture errors or enable message capture with the @@@sdk_name@@@ SDK in Capture Errors.
+Once this is done, all unhandled exceptions are automatically captured by Sentry.
+
+**Important:** Note your DSN. The *DSN* (Data Source Name) tells the SDK where to send events. If you forget it, view *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI.
 
 ## Verify Setup
 
-Verify your setup by intentionally sending an error that breaks your application. An *event* is one instance of sending data to Sentry. Generally, this data is an error. An *issue* is a grouping of similar events.
+Verify your setup by intentionally sending an error that breaks your application. An *event* is one instance of sending data to Sentry. Generally, this data is an error or exception. An *issue* is a grouping of similar events.
 
 For example, in JavaScript, calling an undefined function throws an exception:
 
@@ -56,15 +60,13 @@ For example, in JavaScript, calling an undefined function throws an exception:
 myUndefinedFunction();
 ```
 
-After you inform Sentry of a new release, you will see information about it, such as new issues and regressions introduced in the release.
-
-Learn more about what releases can do, including using a repository integration, creating the release and associated commits, and telling Sentry when you deploy a release in Track Releases.
+Resolve the created error by logging in to Sentry, then opening your project. On the **Issue Details** page, scroll down to the Exception stack trace and view the error.
 
 ## Capture Errors
 
-The reporting of an *event* - an error or exception - is called *capturing*. When an event is captured, it’s sent to Sentry.
+The reporting of an event is called *capturing*. When an event is captured, it’s sent to Sentry.
 
-By including and configuring Sentry, the SDK automatically attaches global handlers to capture uncaught exceptions and unhandled rejections. Disable default behavior by changing the `onunhandledrejection` option to `false` in your GlobalHandlers integration and manually hook into each event handler and call `Sentry.captureException`  or `Sentry.captureMessage` directly.
+By including and configuring Sentry, the SDK automatically attaches global handlers to capture uncaught exceptions and unhandled rejections. Disable default behavior by changing the `onunhandledrejection` option to `false` in your GlobalHandlers integration and manually hook into each event handler, then call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
 By default, Sentry's JavaScript SDK captures unhandled promise rejections, as described in the official ECMAScript 6 standard. Configuration may be required if you are using a third-party library to implement promises.
 
@@ -76,7 +78,7 @@ Learn more about how to manually capture errors or enable message capture with t
 
 When the SDK sends an event to Sentry, the event is enriched with data to help identify the source of the event. We include data both pertinent to the event as well as what led up to the event. Much of this data is sent automatically - including the error context and environment - as well as the trail of events that happened prior to an issue, which we call breadcrumbs. You don't need to configure these, though you may modify them. 
 
-Learn more about enriching data sent with events in Enrich Event Data.
+Learn more about enriching data sent with events in [Enrich Event Data](/sdks/javascript/errors/intro/).
 
 ### Set the Release Version
 
@@ -84,7 +86,7 @@ When you configure Sentry to include the version of your application, Sentry can
 
 Use the `process.env.npm_package_version`:
 
-```js
+```javasript
 Sentry.init({ 
 dsn: '___PUBLIC_DSN___',
 release: 'my-project-name@' + process.env.npm_package_version,
@@ -93,17 +95,18 @@ release: 'my-project-name@' + process.env.npm_package_version,
 
 After you inform Sentry of a new release, you will see information about it, such as new issues and regressions introduced in the release.
 
-Learn more about what releases can do, including using a repository integration, creating the release and associated commits, and telling Sentry when you deploy a release in Track Releases.
+Learn more about what releases can do, including using a repository integration, creating the release and associated commits, and telling Sentry when you deploy a release in [our documentation for Releases](/workflow/releases/).
+
 
 ### Upload Source Maps
 
-Sentry supports un-minifying JavaScript via source maps. This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (for example, TypeScript, ES6).
+Sentry supports un-minifying JavaScript via source maps. This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (for example, TypeScript, ES6). 
 
-We **highly recommend** you incorporate source maps with the Sentry JavaScript SDK to receive the full benefit of error tracking and monitoring. Source maps provide stack traces, which will provide more information regarding errors.
+We **highly recommend** you incorporate source maps with the Sentry JavaScript SDK to receive the full benefit of error tracking and monitoring. Source maps provide stack traces, which will provide more information regarding errors. 
 
-When you’re using the Sentry JavaScript SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. However, you may disable the JavaScript source fetching by logging in to Sentry and toggling off `Allow JavaScript source fetching` in your organization's settings for Security & Privacy.
+When you’re using the Sentry JavaScript SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. However, you may disable the JavaScript source fetching by logging in to Sentry and toggling off `Allow JavaScript source fetching` in your organization's settings for Security & Privacy. See our [source maps documentation](/platforms/javascript/sourcemaps) to learn more.
 
-Upload source maps using our Webpack plugin or TypeScript.
+Upload source maps using our [Webpack plugin](/platforms/javascript/sourcemaps/#webpack), [Uglify JS](/platforms/javascript/sourcemaps/#uglifyjs), [System JS](/platforms/javascript/sourcemaps/#systemjs), or [TypeScript](/platforms/javascript/sourcemaps/#typescript).
 
 ## Monitor Performance
 
@@ -127,7 +130,7 @@ Alternatively, instead of `npm` packages, you can use our pre-built CDN bundle t
 
 Next, initialize the integration in your call to `Sentry.init`:
 
-```js
+```javascript
 import * as Sentry from '@sentry/browser';
 import { Integrations as ApmIntegrations } from '@sentry/apm';
 Sentry.init({
