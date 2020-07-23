@@ -5,7 +5,7 @@ sidebar_order: 30
 
 Besides the [main configuration like calling `SentrySdk.Init`](/platforms/dotnet/), you must consider the WinForms specific configuration.
 
-Sentry's .NET SDK works with WinForms applications through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry). It works with WinForms apps running on .NET Framework 4.6.1, .NET Core 3.0 or higher.
+Sentry's .NET SDK works with WinForms applications through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry). It works with WinForms apps running on .NET Framework 4.6.1, .NET Core 3.0, or higher.
 
 ## Configuration
 
