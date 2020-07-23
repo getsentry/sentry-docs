@@ -114,3 +114,31 @@ The max number/depth of components to display when logging a touch's component t
 `Array<string | RegExp>`
 
 {% version_added 1.7.0 %} Component names to ignore when logging the touch event. This prevents unhelpful logs such as "Touch event within element: View" where you still can't tell which `View` it occurred in. Accepts strings and regular expressions.
+
+## Production Bundles
+
+When bundling for production, React Native will minify class and function names to reduce the bundle size. This means that you won't get the full original component names in your Touch Event breadcrumbs. A way to work with this is to set the `displayName` on all the components you want to track. However, you can also configure Metro bundler to not minify function names by setting these options in `metro.config.js`:
+
+```js
+module.exports = {
+    transformer: {
+        minifierConfig: {
+            keep_classnames: true, // Preserve class names
+            keep_fnames: true,  // Preserve function names
+            mangle: {
+                keep_classnames: true, // Preserve class names
+                keep_fnames: true, // Preserve function names
+            }
+        }
+    }
+}
+```
+{% capture __alert_content -%}
+As this applies to **all** class and function names — not just React components — this could increase your JS bundle size. 
+{%- endcapture -%}
+{%- include components/alert.html
+  title="Note"
+  content=__alert_content
+  level="warning"
+  deep_link="multiple-boundaries"
+%}
