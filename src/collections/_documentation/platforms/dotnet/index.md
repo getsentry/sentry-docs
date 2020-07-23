@@ -14,6 +14,8 @@ This section will describe features, configurations and general functionality wh
 - [_Microsoft.Extensions.Logging_](/platforms/dotnet/microsoft-extensions-logging/)
 - [_Serilog_](/platforms/dotnet/serilog/)
 - [_NLog_](/platforms/dotnet/nlog/)
+- [_WinForms_](/platforms/dotnet/winforms/)
+- [_WPF_](/platforms/dotnet/wpf/)
 
 ## Compatibility
 
@@ -29,10 +31,10 @@ The main [Sentry NuGet package](https://www.nuget.org/packages/Sentry) targets .
 
 Of those, we run our unit/integration tests against:
 
-* .NET Framework 4.7.2 on Windows
+* .NET Framework 4.8 on Windows
 * Mono 5.12 macOS and Linux
-* .NET Core 2.0 Windows, macOS and Linux
 * .NET Core 2.1 Windows, macOS and Linux
+* .NET Core 3.1 Windows, macOS and Linux
 
 {% include components/alert.html
   title="Using an older version of .NET Framework or Mono?"
