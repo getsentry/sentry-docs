@@ -16,14 +16,16 @@ const routes = [
       "/performance-monitoring",
       "/api",
       "/guides",
-      "/sdks",
       "/ssl",
       "/_platforms"
     ],
     address: "http://localhost:9001"
   },
   {
-    routes: ["/"],
+    routes: [
+      "/", 
+      "/sdks"
+    ],
     address: "http://localhost:9002"
   }
 ];
