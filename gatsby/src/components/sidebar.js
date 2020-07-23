@@ -186,7 +186,7 @@ const Sidebar = () => {
             />
             <DynamicNav
               root="accounts"
-              title="Organizations and Projects"
+              title="Account Management"
               tree={tree}
             />
             <DynamicNav root="platforms" title="Platforms" tree={tree} />
