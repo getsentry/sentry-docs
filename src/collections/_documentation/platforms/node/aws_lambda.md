@@ -7,11 +7,11 @@ Create a deployment package on your local machine and install the required depen
 
 Install our Node.js SDK using `npm`:
 
-```basic
-npm install @sentry/node
+```bash
+$ npm install @sentry/node
 ```
 
-To set up Sentry error logging for a Lambda function, build a wrapper:
+To set up Sentry error logging for a Lambda Function, build a wrapper:
 
 ```javascript
 "use strict";
@@ -19,28 +19,29 @@ To set up Sentry error logging for a Lambda function, build a wrapper:
 const Sentry = require("@sentry/node");
 
 Sentry.init({
-  dsn: "YOUR DSN"
+  dsn: "___PUBLIC_DSN___"
 });
 
 function sentryHandler(lambdaHandler) {
   return async event => {
     try {
       return await lambdaHandler(event);
-    } catch (error) {
-      Sentry.captureException(error);
+    } catch (e) {
+      Sentry.captureException(e);
       await Sentry.flush(2000);
-      return error;
+      return e;
     }
   };
 }
 
 module.exports.hello = sentryHandler(async event => {
-  throw new Error("asd");
+  notExistFunction();
+  return event;
 });
 ```
-You can obtain the DSN using your Sentry account from your organization's *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI.
 
-Note: You need to call both `CaptureException` and `Flush` to report errors into Sentry.
+You can obtain the DSN using your Sentry account from your organization's *Settings > Projects > Client Keys (DSN)* in the Sentry web UI.
 
-Create the deployment package in .zip format, then upload it to AWS Lambda as a Lambda function. Checkout Sentry’s [aws sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/node) for detailed examples. Use [JavaScript docs](/platforms/javascript/) for more configuration options.
+Note: You need to call both `captureException` and `flush` for captured events to be successfully delivered to Sentry.
 
+Create the deployment package in `.zip` format, then upload it to AWS Lambda as a Lambda Function. Checkout Sentry's [aws sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/node) for detailed examples. Refer to the [JavaScript docs](/platforms/javascript/) for more configuration options.

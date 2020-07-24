@@ -3,23 +3,25 @@ title: GCP Functions
 sidebar_order: 8
 ---
 
-Install our Sentry SDK as a dependency In the `package.json`:
-```jsx
-"@sentry/node": "^5.16.1"
+Add our Node.js SDK as a dependency in the `package.json`:
+
+```bash
+"@sentry/node": "^{% sdk_version sentry.javascript.node %}"
 ```
 
-To set up Sentry error logging for a gcp cloud function, build a wrapper:
-```jsx
+To set up Sentry error logging for a GCP Cloud Function:
+
+```javascript
 "use strict"
 
 const Sentry = require("@sentry/node");
 
-sentry.init({
-    dsn="https://<key>@<organization>.ingest.sentry.io/<project>"
-		});
+Sentry.init({
+  dsn: "___PUBLIC_DSN___"
+});
 
 try {
- notExistFunction();
+  notExistFunction();
 } catch (e) {
   Sentry.captureException(e);
   Sentry.flush(2000);
@@ -32,8 +34,9 @@ exports.cloud_handler = (event, context) => {
   };
 };
 ```
-You can obtain the DSN using your Sentry account from your organization's *Settings -> Projects -> Client Keys (DSN)* in the Sentry web UI.
 
-Note: You need to call both `captureException` and `flush` in order for captured events to be successfully delivered to Sentry.
+You can obtain the DSN using your Sentry account from your organization's *Settings > Projects > Client Keys (DSN)* in the Sentry web UI.
 
-Checkout Sentry’s [gcp sample apps](https://github.com/getsentry/examples/tree/master/gcp-cloud-functions/node) for detailed examples. For detailed configuration options, use [JavaScript docs](/platforms/javascript/).
+Note: You need to call both `captureException` and `flush` for captured events to be successfully delivered to Sentry.
+
+Checkout Sentry's [GCP sample apps](https://github.com/getsentry/examples/tree/master/gcp-cloud-functions/node) for detailed examples. Refer to the [JavaScript docs](/platforms/javascript/) for more configuration options.
