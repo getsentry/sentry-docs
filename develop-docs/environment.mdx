@@ -114,11 +114,23 @@ node -v
 
 Volta intercepts this and automatically downloads and installs the node version in sentry's `package.json`.
 
+## Bootstrap Services
+
+Source your virtual environment again (`source .venv/bin/activate`), then run `make bootstrap`. This will take a long time, as it bootstraps not only Sentry and its dependencies, but starts up related services, and runs database migrations.
+
+The `bootstrap` command does a few things you'll want to know about:
+
+- `sentry init` creates the baseline Sentry configuration in `~/.sentry/`.
+- `sentry devservices up` spins up required Docker services (such as Postgres and Clickhouse)
+- `sentry upgrade` runs Postgres migrations, and will also prompt you to create a user. You will want to ensure your first user is designated as **superuser**.
+
+Once this command has finished you'll have Sentry installed in development mode with all its required dependencies.
+
 ## direnv
 
-We use [direnv](https://github.com/direnv/direnv) to automate configuration and constraints. It automatically sets some helpful environment variables for you, activates your virtual environment, and does some simple state checking to guide you towards the expected development environment.
+[direnv](https://github.com/direnv/direnv) _automatically activates your virtual environment_, sets some helpful environment variables for you, and performs some simple checks to make sure your environment is as expected (and tries its best to guide you if it isn't).
 
-You need to install it, and add the following snippet to the end of your startup script:
+First, you should be done bootstrapping. Then, run `brew install direnv` and add the following snippet to the end of your startup script:
 
 ```bash {filename: ~/.bashrc}
 eval "$(direnv hook bash)"
@@ -136,24 +148,7 @@ exec "$SHELL"
 
 Any time the `.envrc` configuration changes (including the first time) you will be prompted to run `direnv allow` before any of the configuration will run. This is for security purposes and you are encouraged to inspect the changes before running this command.
 
-## Bootstrap Services
-
-The last step is to run `make bootstrap`. This will take a long time, as it bootstraps not only Sentry and its dependencies, but starts up related services, and runs database migrations.
-
-The `bootstrap` command does a few things you'll want to know about:
-
-- `sentry init` creates the baseline Sentry configuration in `~/.sentry/`.
-- `sentry devservices up` spins up required Docker services (such as Postgres and Clickhouse)
-- `sentry upgrade` runs Postgres migrations, and will also prompt you to create a user. You will want to ensure your first user is designated as **superuser**.
-
-Once this command has finished you'll have Sentry installed in development mode with all its required dependencies.
-
 ## Running the Development Server
-
-<Alert title="Tip!" level="info">
-  If you would like to import an example dataset, running `./bin/load-mocks`
-  will add a few example projects and teams to the main organization.
-</Alert>
 
 Once you’ve successfully stood up your datastore, you can now run the development server:
 
