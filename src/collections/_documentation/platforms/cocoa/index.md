@@ -11,7 +11,12 @@ If you are migrating from an older version, please consider our [Migration Guide
 
 The SDK can be installed using [CocoaPods](http://cocoapods.org), [Carthage](https://github.com/Carthage/Carthage), or [Swift Package Manager](https://swift.org/package-manager/). This is the recommended SDK for both Swift and Objective-C projects.
 
-It supports iOS (>= 8.0), tvOS (>= 9.0), macOS (>= 10.10) and partially watchOS (>= 2.0). 
+Support for
+
+* iOS >= 8.0
+* tvOS >= 9.0
+* macOS >= 10.10
+* watchOS >= 2.0 with limited symbolication support and no hard crashes
 
 ### CocoaPods
 
