@@ -21,19 +21,6 @@ Performance data is transmitted using a new event type called "transactions", wh
 
 Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
 
-**Python**
-
-To send traces, set the `traces_sample_rate` to a nonzero value. The following configuration will capture 25% of your transactions:
-
-```python
-import sentry_sdk
-
-sentry_sdk.init(
-    "___PUBLIC_DSN___", 
-    traces_sample_rate = 0.25
-)
-```
-
 **Automatic Instrumentation**
 
 Many integrations for popular frameworks automatically capture transactions. If you already have any of the following frameworks set up for Sentry error reporting, you will start to see traces immediately:
