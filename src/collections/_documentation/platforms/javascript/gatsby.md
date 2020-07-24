@@ -78,7 +78,7 @@ The Gatsby SDK will set certain options automatically based on environmental var
 
 : Defaults to certain environmental variables based on the platform
 
-- Github Actions: `process.env.GITHUB_SHA`
+- GitHub Actions: `process.env.GITHUB_SHA`
 - Netlify: `process.env.COMMIT_REF`
 - Vercel: `process.env.VERCEL_GITHUB_COMMIT_SHA` or `process.env.VERCEL_GITLAB_COMMIT_SHA` or `process.env.VERCEL_BITBUCKET_COMMIT_SHA`
 
