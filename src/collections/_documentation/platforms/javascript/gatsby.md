@@ -27,7 +27,7 @@ $ npm install @sentry/gatsby
 
 ## Connecting the SDK to Sentry
 
-You can register the plugin your gatsby configuration file (typically `gatsby-config.js`).
+You can register the plugin in your Gatsby configuration file (typically `gatsby-config.js`).
 
 ```js
 {
@@ -81,4 +81,3 @@ The Gatsby SDK will set certain options automatically based on environmental var
 - GitHub Actions: `process.env.GITHUB_SHA`
 - Netlify: `process.env.COMMIT_REF`
 - Vercel: `process.env.VERCEL_GITHUB_COMMIT_SHA` or `process.env.VERCEL_GITLAB_COMMIT_SHA` or `process.env.VERCEL_BITBUCKET_COMMIT_SHA`
-
