@@ -159,11 +159,15 @@ const Sidebar = () => {
         );
         return (
           <ul className="list-unstyled" data-sidebar-tree>
-            <DynamicNav root="platforms" title="Platforms" tree={tree} />
             <DynamicNav
               root="error-reporting"
               title="Error Reporting"
               tree={tree}
+            />
+            <DynamicNav 
+              root="platforms" 
+              title="Platform Reference" 
+              tree={tree} 
             />
             <DynamicNav
               root="enriching-error-data"
