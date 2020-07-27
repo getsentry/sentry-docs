@@ -24,7 +24,6 @@ const routes = [
   {
     routes: [
       "/", 
-      "/sdks"
     ],
     address: "http://localhost:9002"
   }
