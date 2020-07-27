@@ -159,6 +159,7 @@ const Sidebar = () => {
         );
         return (
           <ul className="list-unstyled" data-sidebar-tree>
+            <DynamicNav root="platforms" title="Platforms" tree={tree} />
             <DynamicNav
               root="error-reporting"
               title="Error Reporting"
@@ -189,7 +190,6 @@ const Sidebar = () => {
               title="Account Management"
               tree={tree}
             />
-            <DynamicNav root="platforms" title="Platforms" tree={tree} />
             <DynamicNav root="meta" title="Security and Legal" tree={tree} />
             <DynamicNav
               root="cli"
