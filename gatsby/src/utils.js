@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef } from "react";
 
 export function useOnClickOutside(ref, handler) {
   useEffect(() => {
-    const cb = event => {
+    const cb = (event) => {
       if (!ref.current || !ref.current.contains(event.target)) {
         handler(event);
       }
@@ -17,7 +17,7 @@ export function useOnClickOutside(ref, handler) {
 export function useRefWithCallback(callback) {
   const ref = useRef();
   const setRef = useCallback(
-    node => {
+    (node) => {
       let old = ref.current;
       ref.current = node;
       callback(node, old);

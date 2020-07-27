@@ -18,9 +18,9 @@ const DEFAULTS = {
       ORG_SLUG: "exmaple-org",
       MINIDUMP_URL: "https://examplePublicKey@o0.ingest.sentry.io/0",
       UNREAL_URL: "https://examplePublicKey@o0.ingest.sentry.io/0",
-      title: `example-org / example-project`
-    }
-  ]
+      title: `example-org / example-project`,
+    },
+  ],
 };
 
 const CodeContext = React.createContext(DEFAULTS);
@@ -33,7 +33,7 @@ const parseDsn = function(dsn) {
     publicKey: escape(match[2]),
     secretKey: `${escape(match[3])}`,
     host: escape(match[4]),
-    pathSection: escape(match[5])
+    pathSection: escape(match[5]),
   };
 };
 
@@ -53,13 +53,13 @@ const formatApiUrl = ({ scheme, host }) => {
 };
 
 export function fetchCodeKeywords() {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     function transformResults(projects) {
       if (projects.length === 0) {
         resolve(DEFAULTS);
       } else {
         resolve({
-          PROJECT: projects.map(project => {
+          PROJECT: projects.map((project) => {
             const parsedDsn = parseDsn(project.dsn);
             return {
               DSN: project.dsn,
@@ -74,9 +74,9 @@ export function fetchCodeKeywords() {
               ORG_SLUG: project.organizationSlug,
               MINIDUMP_URL: formatMinidumpURL(parsedDsn),
               UNREAL_URL: formatUnrealEngineURL(parsedDsn),
-              title: `${project.organizationSlug} / ${project.projectSlug}`
+              title: `${project.organizationSlug} / ${project.projectSlug}`,
             };
-          })
+          }),
         });
       }
     }
@@ -110,7 +110,7 @@ export function useCodeContextState(fetcher = fetchCodeKeywords) {
 
   useEffect(() => {
     if (cachedCodeKeywords === null) {
-      fetcher().then(config => {
+      fetcher().then((config) => {
         cachedCodeKeywords = config;
         setCodeKeywords(config);
       });
@@ -120,6 +120,6 @@ export function useCodeContextState(fetcher = fetchCodeKeywords) {
   return {
     codeKeywords,
     sharedCodeSelection: useState(null),
-    sharedKeywordSelection: useState({})
+    sharedKeywordSelection: useState({}),
   };
 }

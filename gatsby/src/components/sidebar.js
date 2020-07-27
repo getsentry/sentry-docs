@@ -64,11 +64,11 @@ const NavLink = ({ to, title, children, remote, ...props }) => {
   );
 };
 
-const toTree = nodeList => {
+const toTree = (nodeList) => {
   const result = [];
   const level = { result };
 
-  nodeList.forEach(node => {
+  nodeList.forEach((node) => {
     const slug = node.fields.slug;
     slug.split("/").reduce((r, name, i, a) => {
       if (!r[name]) {
@@ -83,12 +83,12 @@ const toTree = nodeList => {
   return result[0].children;
 };
 
-const renderChildren = children => {
+const renderChildren = (children) => {
   return sortBy(
     children.filter(
       ({ name, node }) => !!node.frontmatter.title && name !== ""
     ),
-    n => n.node.frontmatter.sidebar_order
+    (n) => n.node.frontmatter.sidebar_order
   ).map(({ node, children }) => {
     return (
       <NavLink
@@ -106,8 +106,8 @@ const renderChildren = children => {
 const DynamicNav = ({ root, title, tree, collapse = false }) => {
   // TODO(dcramer): this still needs to build the tree
   // love that we cant use filters here...
-  const node = tree.find(n => n.name === root);
-  const parentNode = node.children.find(n => n.name === "");
+  const node = tree.find((n) => n.name === root);
+  const parentNode = node.children.find((n) => n.name === "");
 
   const location = useLocation();
   const isActive =
@@ -145,16 +145,16 @@ const Sidebar = () => {
   return (
     <StaticQuery
       query={navQuery}
-      render={data => {
+      render={(data) => {
         const tree = toTree(
           sortBy(
             data.allFile.nodes
-              .filter(n => !!(n.childMdx || n.childMarkdownRemark))
-              .map(n => n.childMdx || n.childMarkdownRemark)
+              .filter((n) => !!(n.childMdx || n.childMarkdownRemark))
+              .map((n) => n.childMdx || n.childMarkdownRemark)
               // hide jekyll docs which indicate they're converted to gatsby
               // this avoids duplicating urls (which filter out in the tree, but might be the wrong node)
-              .filter(n => !n.frontmatter.gatsby),
-            n => n.fields.slug
+              .filter((n) => !n.frontmatter.gatsby),
+            (n) => n.fields.slug
           )
         );
         return (

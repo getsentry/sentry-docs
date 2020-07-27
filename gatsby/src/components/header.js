@@ -1,5 +1,5 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import PropTypes from "prop-types";
+import React from "react";
 
 const Header = ({ homeUrl, sitePath }) => (
   <div className="navbar navbar-expand-md navbar-light bg-white global-header">
@@ -37,11 +37,11 @@ const Header = ({ homeUrl, sitePath }) => (
 
 Header.propTypes = {
   siteTitle: PropTypes.string,
-  homeUrl: PropTypes.string
+  homeUrl: PropTypes.string,
 };
 
 Header.defaultProps = {
-  siteTitle: ''
+  siteTitle: "",
 };
 
 export default Header;

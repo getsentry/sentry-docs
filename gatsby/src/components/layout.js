@@ -28,9 +28,9 @@ const GitHubCTA = ({ sourceInstanceName, relativePath }) => (
 const Layout = ({
   data: {
     file,
-    site: { siteMetadata }
+    site: { siteMetadata },
   },
-  pageContext: { title }
+  pageContext: { title },
 }) => {
   const child = file.childMarkdownRemark || file.childMdx;
   const hasToc = !!child.tableOfContents.items;
