@@ -1,26 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'gatsby';
+import React, { useState, useEffect, useRef } from "react";
+import { Link } from "gatsby";
 import {
   InstantSearch,
   Index,
   Hits,
   Highlight,
   Snippet,
-  connectStateResults
-} from 'react-instantsearch-dom';
-import algoliasearch from 'algoliasearch/lite';
+  connectStateResults,
+} from "react-instantsearch-dom";
+import algoliasearch from "algoliasearch/lite";
 
-import Input from './input';
-import * as hitComps from './hitComps';
+import Input from "./input";
+import * as hitComps from "./hitComps";
 
-const LegacyPageHit = clickHandler => ({ hit }) => {
+const LegacyPageHit = (clickHandler) => ({ hit }) => {
   return (
     <Link to={hit.url} onClick={clickHandler}>
       <h6 className="mb-1">
         <Highlight attribute="title" hit={hit} tagName="mark" />
         {hit.categories && (
           <React.Fragment>
-            {hit.categories.map(category => (
+            {hit.categories.map((category) => (
               <span className="badge badge-secondary">{category}</span>
             ))}
           </React.Fragment>
@@ -43,7 +43,7 @@ const Results = connectStateResults(
 const useClickOutside = (ref, handler, events) => {
   if (!events) events = [`mousedown`, `touchstart`];
 
-  const detectClickOutside = event => {
+  const detectClickOutside = (event) => {
     return !ref.current.contains(event.target) && handler();
   };
 
@@ -80,7 +80,7 @@ export default function Search({ indices, collapse, hitsAsGrid }) {
       <div ref={ref}>
         <Input onFocus={() => setFocus(true)} {...{ collapse, focus }} />
         <div
-          style={{ display: query.length > 0 && focus ? 'block' : 'none' }}
+          style={{ display: query.length > 0 && focus ? "block" : "none" }}
           className="hits"
         >
           <div className="list-group search-results">

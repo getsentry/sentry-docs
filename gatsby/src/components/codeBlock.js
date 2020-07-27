@@ -33,7 +33,7 @@ function makeKeywordsClickable(children) {
         Selector({
           group: match[1] || "PROJECT",
           keyword: match[2],
-          key: lastIndex
+          key: lastIndex,
         })
       );
       lastIndex = KEYWORDS_REGEX.lastIndex;
@@ -53,10 +53,10 @@ function Selector({ keyword, group, ...props }) {
   const codeContext = useContext(CodeContext);
   const [
     sharedSelection,
-    setSharedSelection
+    setSharedSelection,
   ] = codeContext.sharedKeywordSelection;
   const spanRef = useRef();
-  const [menuRef, setMenuRef] = useRefWithCallback(menuNode => {
+  const [menuRef, setMenuRef] = useRefWithCallback((menuNode) => {
     if (menuNode) {
       for (const node of menuNode.childNodes) {
         if (node.getAttribute("data-active") === "1") {
@@ -106,7 +106,7 @@ function Selector({ keyword, group, ...props }) {
         onClick={() => {
           setIsOpen(!isOpen);
         }}
-        onKeyDown={e => {
+        onKeyDown={(e) => {
           if (e.key === "Enter") {
             setIsOpen(!isOpen);
           }
@@ -189,7 +189,7 @@ function CodeBlock({ filename, children }) {
         <MDXProvider
           components={{
             code: CodeWrapper,
-            span: SpanWrapper
+            span: SpanWrapper,
           }}
         >
           {children}
@@ -202,7 +202,7 @@ function CodeBlock({ filename, children }) {
 CodeBlock.propTypes = {
   language: PropTypes.string,
   filename: PropTypes.string,
-  title: PropTypes.string
+  title: PropTypes.string,
 };
 
 export default CodeBlock;

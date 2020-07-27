@@ -32,7 +32,7 @@ const pageQuery = `{
     }
   }`;
 
-const flatten = arr =>
+const flatten = (arr) =>
   arr
     .filter(
       ({ node: { childMarkdownRemark, childMdx } }) =>
@@ -43,14 +43,14 @@ const flatten = arr =>
       objectID,
       ...(childMarkdownRemark || childMdx).frontmatter,
       fields: (childMarkdownRemark || childMdx).fields,
-      excerpt: (childMarkdownRemark || childMdx).excerpt
+      excerpt: (childMarkdownRemark || childMdx).excerpt,
     }));
 
 const settings = { attributesToSnippet: [`excerpt:20`] };
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
 if (!indexPrefix) {
-  throw new Error('`GATSBY_ALGOLIA_INDEX_PREFIX` must be configured!');
+  throw new Error("`GATSBY_ALGOLIA_INDEX_PREFIX` must be configured!");
 }
 
 const queries = [
@@ -58,8 +58,8 @@ const queries = [
     query: pageQuery,
     transformer: ({ data }) => flatten(data.pages.edges),
     indexName: `${indexPrefix}docs`,
-    settings
-  }
+    settings,
+  },
 ];
 
 module.exports = queries;

@@ -8,8 +8,8 @@ export default ({ apm = false }) => {
   if (!versionData && typeof fetch !== "undefined") {
     fetch(
       "https://release-registry.services.sentry.io/sdks/sentry.javascript.browser/latest"
-    ).then(data => {
-      data.json().then(jsonData => {
+    ).then((data) => {
+      data.json().then((jsonData) => {
         setVersionData(jsonData);
         cachedVersionData = jsonData;
       });
@@ -22,8 +22,8 @@ export default ({ apm = false }) => {
     : {
         version: "{VERSION}",
         files: {
-          [packageName]: { checksums: { "sha384-base64": "{CHECKSUM}" } }
-        }
+          [packageName]: { checksums: { "sha384-base64": "{CHECKSUM}" } },
+        },
       };
 
   return (

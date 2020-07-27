@@ -43,16 +43,18 @@ const PlatformContent = ({ includePath }) => {
       query={includeQuery}
       render={({
         allFile: { nodes: files },
-        allPlatformsYaml: { nodes: platforms }
+        allPlatformsYaml: { nodes: platforms },
       }) => {
         const matches = files.filter(
-          node => node.relativePath.indexOf(includePath) === 0
+          (node) => node.relativePath.indexOf(includePath) === 0
         );
-        const defaultPlatform = platforms.find(p =>
-          matches.find(m => m.name === p.slug)
+        const defaultPlatform = platforms.find((p) =>
+          matches.find((m) => m.name === p.slug)
         );
         const activePlatform = platform || defaultPlatform;
-        const contentMatch = matches.find(m => m.name === activePlatform.slug);
+        const contentMatch = matches.find(
+          (m) => m.name === activePlatform.slug
+        );
 
         return (
           <div className="platform-specific-content">
@@ -70,8 +72,10 @@ const PlatformContent = ({ includePath }) => {
                   role="tablist"
                   style={{ display: dropdown ? "block" : "none" }}
                 >
-                  {matches.map(node => {
-                    const platform = platforms.find(p => p.slug === node.name);
+                  {matches.map((node) => {
+                    const platform = platforms.find(
+                      (p) => p.slug === node.name
+                    );
                     return (
                       <a
                         className="dropdown-item"
@@ -105,7 +109,7 @@ const PlatformContent = ({ includePath }) => {
 };
 
 PlatformContent.propTypes = {
-  includePath: PropTypes.string.isRequired
+  includePath: PropTypes.string.isRequired,
 };
 
 PlatformContent.defaultProps = {};

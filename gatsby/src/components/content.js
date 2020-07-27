@@ -23,7 +23,7 @@ const mdxComponents = {
   Break,
   ParamTable,
   PlatformContent,
-  JsCdnTag
+  JsCdnTag,
 };
 
 export default ({ file }) => {
@@ -33,9 +33,7 @@ export default ({ file }) => {
     <CodeContext.Provider value={useCodeContextState()}>
       {child.internal.type === "Mdx" ? (
         <MDXProvider components={mdxComponents}>
-          <MDXRenderer>
-            {child.body}
-          </MDXRenderer>
+          <MDXRenderer>{child.body}</MDXRenderer>
         </MDXProvider>
       ) : (
         <div dangerouslySetInnerHTML={{ __html: child.html }} />
