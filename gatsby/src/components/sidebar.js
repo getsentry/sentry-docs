@@ -161,12 +161,12 @@ const Sidebar = () => {
           <ul className="list-unstyled" data-sidebar-tree>
             <DynamicNav
               root="error-reporting"
-              title="Error Reporting"
+              title="Error Monitoring"
               tree={tree}
             />
             <DynamicNav 
               root="platforms" 
-              title="Platform Reference" 
+              title="Platforms" 
               tree={tree} 
             />
             <DynamicNav
