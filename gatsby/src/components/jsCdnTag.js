@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 
+import CodeBlock from "./codeBlock";
+import CodeTabs from "./codeTabs";
+
 let cachedVersionData = null;
 
 export default ({ apm = false }) => {
@@ -27,6 +30,12 @@ export default ({ apm = false }) => {
       };
 
   return (
-    <pre className="language-js">{`<script src="https://browser.sentry-cdn.com/${packageData.version}/${packageName}" integrity="${packageData.files[packageName].checksums["sha384-base64"]}" crossorigin="anonymous"></script>`}</pre>
+  <CodeTabs>
+    <CodeBlock language="html">
+    <div class="gatsby-highlight" data-language="html">
+      <pre class="language-html"><code class="language-html">{`<script src="https://browser.sentry-cdn.com/${packageData.version}/${packageName}" integrity="${packageData.files[packageName].checksums["sha384-base64"]}" crossorigin="anonymous"></script>`}</code></pre></div>
+      
+    </CodeBlock>
+  </CodeTabs>
   );
 };
