@@ -16,7 +16,7 @@ const GitHubCTA = ({ sourceInstanceName, relativePath }) => (
     <small>
       You can{" "}
       <SmartLink
-        to={`https://github.com/getsentry/develop/edit/master/src/${sourceInstanceName}/${relativePath}`}
+        to={`https://github.com/getsentry/sentry-docs/edit/master/gatsby/src/${sourceInstanceName}/${relativePath}`}
       >
         edit this page
       </SmartLink>{" "}
