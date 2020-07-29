@@ -9,6 +9,7 @@ Sentry release management can be automated using any continuous integration and 
 ### Release Management Automation Guides
 - [Bitbucket Pipelines](/workflow/releases/release-automation/bitbucket-pipelines/)
 - [CircleCI](/workflow/releases/release-automation/circleci/)
+- [GitHub Actions](/workflow/releases/release-automation/github-actions/)
 - [Jenkins](/workflow/releases/release-automation/jenkins/)
 - [Netlify](/workflow/releases/release-automation/netlify/)
 - [Travis CI](/workflow/releases/release-automation/travis-ci/)
