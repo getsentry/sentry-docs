@@ -11,7 +11,7 @@ Apdex is an industry-standard metric used to track and measure user satisfaction
     - **T**: Threshold for the target response time.
     - **Satisfactory**: Users are satisfied using the app when their page load times are less than or equal to T.
     - **Tolerable**: Users consider the app tolerable to use when their page load times are between T and 4T.
-    - **Frustrated**: Users are frustrated with the app when their page load times are greater than T.
+    - **Frustrated**: Users are frustrated with the app when their page load times are greater than 4T.
     - **Apdex**: (Number of Satisfactory Requests + (Number of Tolerable Requests/2)) / (Number of Total Requests)
     
 ## Failure Rate
