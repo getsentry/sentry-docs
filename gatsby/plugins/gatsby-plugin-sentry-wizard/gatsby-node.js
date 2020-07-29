@@ -66,29 +66,19 @@ const writeJson = async (path, nodes) => {
   });
 
   console.info(`Writing '_index.json'`);
-  await fs.mkdir(path, { recursive: true }, (err) => {
-    if (err) throw err;
-  });
-  await fs.writeFile(
-    `${path}/_index.json`,
-    JSON.stringify({ platforms }),
-    (err) => {
-      if (err) throw err;
-    }
-  );
+  fs.mkdirSync(path, { recursive: true });
+  fs.writeFileSync(`${path}/_index.json`, JSON.stringify({ platforms }));
 
-  nodes.forEach(async (node) => {
+  nodes.forEach((node) => {
     const pathMatch = node.fields.slug.match(/^\/([^\/]+)(?:\/([^\/]+))?\/$/);
     const [_, main, sub] = pathMatch;
 
     console.info(`Writing '${sub ? `${main}/${sub}.json` : `${main}.json`}'`);
     if (sub) {
-      await fs.mkdir(`${path}/${main}`, { recursive: true }, (err) => {
-        if (err) throw err;
-      });
+      fs.mkdirSync(`${path}/${main}`, { recursive: true });
     }
 
-    await writeNode(
+    writeNode(
       sub ? `${path}/${main}/${sub}.json` : `${path}/${main}.json`,
       node
     );
@@ -96,8 +86,8 @@ const writeJson = async (path, nodes) => {
   console.log(`Wizard recorded ${nodes.length} platform snippets`);
 };
 
-const writeNode = async (path, node) => {
-  await fs.writeFile(
+const writeNode = (path, node) => {
+  fs.writeFileSync(
     path,
     JSON.stringify({
       type: node.frontmatter.type,
@@ -105,9 +95,6 @@ const writeNode = async (path, node) => {
       doc_link: node.frontmatter.doc_link,
       name: node.frontmatter.name,
       body: node.html,
-    }),
-    (err) => {
-      if (err) throw err;
-    }
+    })
   );
 };
