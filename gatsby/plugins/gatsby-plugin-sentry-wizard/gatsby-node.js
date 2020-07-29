@@ -34,7 +34,11 @@ exports.onPostBuild = async ({ graphql }, { source, output }) => {
     (e) => e.node.childMarkdownRemark
   );
   if (!nodes.length) {
-    console.warn("No platform data found for wizard!");
+    const msg = "No platform data found for wizard!";
+    if (process.env.JEKYLL_ENABLE_PLATFORM_API !== "false") {
+      throw new Error(msg);
+    }
+    console.warn(msg);
     return;
   }
 
