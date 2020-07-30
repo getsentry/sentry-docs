@@ -8,6 +8,7 @@ end
 
 def write_page(path, markdown, frontmatter)
   full_path = "gatsby/src/wizard/#{path}"
+  puts("Writing #{full_path}")
   FileUtils.mkdir_p File.dirname(full_path)
   File.open(full_path, "w") do |f|
     f.write("---\n")
@@ -18,15 +19,42 @@ def write_page(path, markdown, frontmatter)
 end
 
 HIJACK_INCLUDE_PATHS = {
-  "components/platform_content.html" => "components/wizard_platform_content.html"
+  "components/platform_content.html" => "components/raw_platform_content.md",
+  "components/alert.html" => "components/raw_alert.html"
 }
 
-# TODO(dcramer): we'd love to load the uncached/unrendered file here (aka have raw markdown when we're done)
+class WizardTagHijack < Liquid::Block
+  def initialize(tag_name, text, tokens)
+    super
+    @flag = text
+    @flag.chomp!
+    @flag.strip!
+  end
+
+  def render(context)
+    site = context.registers[:site]
+    content = super(context)
+
+    case @flag
+    when "hide" then %Q(<!-- WIZARDHIDE -->#{content}<!-- ENDWIZARDHIDE -->)
+    else %Q(<!-- WIZARD #{@flag} -->#{content}<!-- ENDWIZARD -->)
+    end
+  end
+end
+
 class IncludeTagHijack < Jekyll::Tags::IncludeTag
   def locate_include_file(context, file, safe)
     file = HIJACK_INCLUDE_PATHS[file.to_s] if HIJACK_INCLUDE_PATHS.include?(file.to_s)
     super(context, file, safe)
   end
+end
+
+class IncludeRelativeTagHijack < Jekyll::Tags::IncludeRelativeTag
+  def locate_include_file(context, file, safe)
+    file = HIJACK_INCLUDE_PATHS[file.to_s] if HIJACK_INCLUDE_PATHS.include?(file.to_s)
+    super(context, file, safe)
+  end
+
 end
 
 class FileSystemHijack
@@ -47,14 +75,25 @@ Jekyll::Hooks.register :site, :pre_render, priority: :high do |site|
   end
 
   puts "Generating Wizard pages for Gatsby"
-  # jekyll include sits own tag, which doesnt work the same as liquid (and doesnt use the file_system object)
-  old_include = Liquid::Template.tags["include"]
-  Liquid::Template.tags["include"] = IncludeTagHijack
+
+  tags = {
+    "include" => IncludeTagHijack,
+    "include_relative" => IncludeRelativeTagHijack,
+    "wizard" => WizardTagHijack,
+  }
+  old_tags = {}
 
   begin
+    tags.each do |k, v|
+      old_tags[k] = Liquid::Template.tags[k]
+      Liquid::Template.tags[k] = v
+    end
+
     do_work(site)
   ensure
-    Liquid::Template.tags["include"] = old_include
+    old_tags.each do |k, v|
+      Liquid::Template.tags[k] = v
+    end
   end
 end
 
