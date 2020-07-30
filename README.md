@@ -56,7 +56,7 @@ The repository currently contains a Jekyll site (`./`) as well as a Gatsby site 
 
 - We've disabled the default optimized static links within Gatsby due to the complexity of navigating between two codebases. Once the Jekyll conversion is done, we'll want to make the change in `<SmartLink>`.
 
-- We're automatically importing _all_ Jekyll pages inside of Gatsby. They won't all work. When formally converting a page over to Gatsby you should move it into a parallel location inside of the Gatsby file tree (`./src/docs/...`). You also like want to convert it to `.mdx` instead of `.md`. (DC: you will need to update `gatsby-node.js` to handle indexing `.mdx` once the first is added!)
+- We're automatically importing _all_ Jekyll pages inside of Gatsby. They won't all work. When formally converting a page over to Gatsby you should move it into a parallel location inside of the Gatsby file tree (`./src/docs/...`). You also want to convert it to `.mdx` instead of `.md`. (DC: you will need to update `gatsby-node.js` to handle indexing `.mdx` once the first is added!)
 
 - This is likely brittle. We want to move away from Jekyll as quickly as possible, so ideally all new content is done in Gatsby.
 

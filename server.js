@@ -15,7 +15,6 @@ const routes = [
       "/error-reporting",
       "/performance-monitoring",
       "/api",
-      "/guides",
       "/ssl",
     ],
     address: "http://localhost:9001",
