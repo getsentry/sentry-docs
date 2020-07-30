@@ -41,6 +41,9 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
         keywords: {
           type: "[String!]",
         },
+        draft: {
+          type: "Boolean",
+        },
         sidebar_order: {
           type: "Int",
           resolve(source, args, context, info) {

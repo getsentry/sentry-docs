@@ -6,6 +6,7 @@ import { StaticQuery, graphql } from "gatsby";
 import SmartLink from "./smartLink";
 import { sortBy } from "../utils";
 
+// TODO(dcramer): filter out drafts
 const navQuery = graphql`
   query NavQuery {
     allFile(filter: { sourceInstanceName: { in: ["docs", "docs-jekyll"] } }) {
@@ -160,11 +161,7 @@ const Sidebar = () => {
               title="Error Monitoring"
               tree={tree}
             />
-            <DynamicNav 
-              root="platforms" 
-              title="Platforms" 
-              tree={tree} 
-            />
+            <DynamicNav root="platforms" title="Platforms" tree={tree} />
             <DynamicNav
               root="enriching-error-data"
               title="Enriching Error Data"
