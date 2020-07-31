@@ -10,6 +10,26 @@ module GatsbyConverter
 
   VALID_FRONTMATTER = Set["draft", "categories", "toc", "title", "sidebar_order", "robots", "tags"]
 
+  # {% asset guides/integrate-frontend/upload-source-maps-010.png @path %}
+  # need to swap out w/ markdown-style image embed
+  class AssetTagHijack < Jekyll::Assets::Tag
+    def parse_args(args)
+      puts(args)
+      return args if args.is_a?(Liquid::Tag::Parser) || args.is_a?(Hash)
+      Liquid::Tag::Parser.new(
+        @args
+      )
+    end
+
+    def render(ctx)
+      args = parse_args(@args).to_h
+      return args[:argv1] if args.has_key?(:path) and args[:path]
+      alt = args.has_key?(:alt) ? args[:alt] : ""
+      return "![#{alt}](#{args[:argv1]})"
+      super(ctx)
+    end
+  end
+
   # Wizard does not exist in Gatsby
   class WizardTagHijack < Liquid::Block
     def render(context)
@@ -43,8 +63,8 @@ module GatsbyConverter
   end
 
   Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
-    if !ENV["JEKYLL_TO_GATSBY"]
-      puts "JEKYLL_TO_GATSBY is not set. Not automatically converting pages"
+    if ENV["JEKYLL_TO_GATSBY"] != "1"
+      puts "JEKYLL_TO_GATSBY is not configured. Not automatically converting pages."
       next
     end
 
@@ -53,6 +73,7 @@ module GatsbyConverter
       "include" => GatsbyConverter::IncludeTagHijack,
       "include_relative" => GatsbyConverter::IncludeRelativeTagHijack,
       "wizard" => GatsbyConverter::WizardTagHijack,
+      "asset" => GatsbyConverter::AssetTagHijack,
     }
     old_tags = {}
 
