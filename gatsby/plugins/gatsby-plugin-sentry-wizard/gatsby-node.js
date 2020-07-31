@@ -1,4 +1,5 @@
 const fs = require("fs");
+const jsdom = require("jsdom");
 
 exports.createPages = async ({ graphql }, { source, output }) => {
   console.info(`Building wizard output from '${source}' source`);
@@ -87,6 +88,24 @@ const writeJson = async (path, nodes) => {
 };
 
 const writeNode = (path, node) => {
+  const dom = new jsdom.JSDOM(node.html, {
+    url: "https://docs.sentry.io/",
+  });
+  // remove anchor svgs
+  dom.window.document.querySelectorAll("a.anchor svg").forEach((node) => {
+    node.parentNode.parentNode.removeChild(node.parentNode);
+  });
+
+  // add highlight class
+  dom.window.document
+    .querySelectorAll("div.gatsby-highlight pre")
+    .forEach((node) => {
+      node.className += " highlight";
+      // TODO: Ideal, but not working
+      // const div = node.parentChild;
+      // div.parentChild.replaceChild(div, node);
+    });
+
   fs.writeFileSync(
     path,
     JSON.stringify({
@@ -94,7 +113,7 @@ const writeNode = (path, node) => {
       support_level: node.frontmatter.support_level,
       doc_link: node.frontmatter.doc_link,
       name: node.frontmatter.name,
-      body: node.html,
+      body: dom.window.document.body.innerHTML,
     })
   );
 };
