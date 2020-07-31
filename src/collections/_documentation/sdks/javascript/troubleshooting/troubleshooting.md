@@ -1,4 +1,0 @@
----
-title: Troubleshooting
-gatsby: true
----
