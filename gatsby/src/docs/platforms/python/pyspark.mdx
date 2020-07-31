@@ -1,0 +1,93 @@
+---
+draft: false
+categories: []
+toc: true
+title: Apache Spark
+sidebar_order: 9
+tags: []
+---
+*(New in version 0.13.0)*
+
+<!-- WIZARD -->
+The Spark Integration adds support for the Python API for Apache Spark, [PySpark](https://spark.apache.org/).
+
+**This integration is experimental and in an alpha state**. The integration API may experience breaking changes in further minor versions.
+
+### Driver
+
+The spark driver integration is supported for Spark 2 and above.
+
+To configure the SDK, initialize it with the integration before you create a `SparkContext` or `SparkSession`.
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.spark import SparkIntegration
+
+if __name__ == "__main__":
+    sentry_sdk.init("___PUBLIC_DSN___", integrations=[SparkIntegration()])
+
+    spark = SparkSession\
+        .builder\
+        .appName("ExampleApp")\
+        .getOrCreate()
+    ...
+```
+
+### Worker
+
+The spark worker integration is supported for Spark 2.4.0 and above.
+
+Create a file called `sentry-daemon.py` with the following content:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.spark import SparkWorkerIntegration
+import pyspark.daemon as original_daemon
+
+if __name__ == '__main__':
+    sentry_sdk.init("___PUBLIC_DSN___", integrations=[SparkWorkerIntegration()])
+    original_daemon.manager()
+```
+
+In your `spark_submit` command, add the following configuration options so the spark clusters can use the sentry integration.
+
+| Command Line Options | Parameter                                | Usage                                                           |
+|----------------------|------------------------------------------|-----------------------------------------------------------------|
+| --py-files           | sentry_daemon.py                         | Sends the `sentry_daemon.py` file to your Spark clusters        |
+| --conf               | spark.python.use.daemon=true             | Configures Spark to use a daemon to execute it's Python workers |
+| --conf               | spark.python.daemon.module=sentry_daemon | Configures Spark to use the sentry custom daemon                |
+
+```bash
+./bin/spark-submit \
+    --py-files sentry_daemon.py \
+    --conf spark.python.use.daemon=true \
+    --conf spark.python.daemon.module=sentry_daemon \
+    example-spark-job.py
+```
+
+
+
+## Behavior
+
+* You must have the sentry python sdk installed on all your clusters to use the Spark integration. The easiest way to do this is to run an initialization script on all your clusters:
+
+```bash
+easy_install pip
+pip install --upgrade 'sentry-sdk==0.16.2'
+```
+
+* In order to access certain tags (`app_name`, `application_id`), the worker integration requires the driver integration to also be active.
+
+* The worker integration only works on UNIX-based systems due to the daemon process using signals for child management.
+
+## Google Cloud Dataproc
+
+This integration can be set up to be used with [Google Cloud Dataproc](https://cloud.google.com/dataproc/). It is recommended that Cloud Dataproc image version 1.4 be used as it comes with Spark 2.4 (required by the worker integration).
+
+1. Set up an [Initialization action](https://cloud.google.com/dataproc/docs/concepts/configuring-clusters/init-actions) to install the `sentry-sdk` on your Dataproc cluster.
+
+2. Add the driver integration to your main python file submitted in in the job submit screen
+
+3. Add the `sentry_daemon.py` under <i>Additional python files</i> in the job submit screen. You must first upload the daemon file to a bucket to access it.
+
+4.  Add the configuration properties listed above, `spark.python.use.daemon=true` and `spark.python.daemon.module=sentry_daemon` in the job submit screen.
