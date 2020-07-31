@@ -43,6 +43,12 @@ module GatsbyConverter
   end
 
   Jekyll::Hooks.register :site, :pre_render, priority: :low do |site|
+    if !ENV["JEKYLL_TO_GATSBY"]
+      puts "JEKYLL_TO_GATSBY is not set. Not automatically converting pages"
+      next
+    end
+
+
     tags = {
       "include" => GatsbyConverter::IncludeTagHijack,
       "include_relative" => GatsbyConverter::IncludeRelativeTagHijack,
