@@ -1,35 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "gatsby";
 import {
   InstantSearch,
   Index,
   Hits,
-  Highlight,
-  Snippet,
   connectStateResults,
 } from "react-instantsearch-dom";
 import algoliasearch from "algoliasearch/lite";
 
 import Input from "./input";
 import * as hitComps from "./hitComps";
-
-const LegacyPageHit = (clickHandler) => ({ hit }) => {
-  return (
-    <Link to={hit.url} onClick={clickHandler}>
-      <h6 className="mb-1">
-        <Highlight attribute="title" hit={hit} tagName="mark" />
-        {hit.categories && (
-          <React.Fragment>
-            {hit.categories.map((category) => (
-              <span className="badge badge-secondary">{category}</span>
-            ))}
-          </React.Fragment>
-        )}
-      </h6>
-      <Snippet attribute="content" hit={hit} tagName="mark" />
-    </Link>
-  );
-};
 
 const Results = connectStateResults(
   ({ searchState: state, searchResults: res, children }) =>
@@ -93,11 +72,6 @@ export default function Search({ indices, collapse, hitsAsGrid }) {
                 </Results>
               </Index>
             ))}
-            <Index key="legacy" indexName="sentry-docs">
-              <Results>
-                <Hits hitComponent={LegacyPageHit(() => setFocus(false))} />
-              </Results>
-            </Index>
           </div>
         </div>
       </div>
