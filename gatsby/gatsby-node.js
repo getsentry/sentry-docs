@@ -27,9 +27,6 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
 
     type Fields {
       slug: String!
-      jekyllOnly: Boolean
-      gatsbyOnly: Boolean
-      gatsby: Boolean
     }
   `,
     schema.buildObjectType({
@@ -40,6 +37,9 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
         },
         keywords: {
           type: "[String!]",
+        },
+        draft: {
+          type: "Boolean",
         },
         sidebar_order: {
           type: "Int",
@@ -79,18 +79,6 @@ exports.onCreateNode = ({ node, actions, getNode }) => {
       name: "slug",
       node,
       value,
-    });
-    createNodeField({
-      name: "jekyllOnly",
-      node,
-      value: !!(
-        node.rawMarkdownBody && node.rawMarkdownBody.indexOf("{%") !== -1
-      ),
-    });
-    createNodeField({
-      name: "gatsbyOnly",
-      node,
-      value: node.fileAbsolutePath.indexOf("/src/docs") !== -1,
     });
   }
 };

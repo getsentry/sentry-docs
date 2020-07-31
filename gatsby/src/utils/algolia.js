@@ -13,7 +13,7 @@ const pageQuery = `{
             }
             fields {
               slug
-              gatsbyOnly
+              draft
             }
             excerpt(pruneLength: 5000)
           }
@@ -23,7 +23,7 @@ const pageQuery = `{
             }
             fields {
               slug
-              gatsbyOnly
+              draft
             }
             excerpt(pruneLength: 5000)
           }
@@ -36,15 +36,15 @@ const flatten = (arr) =>
   arr
     .filter(
       ({ node: { childMarkdownRemark, childMdx } }) =>
-        (childMarkdownRemark || childMdx) &&
-        (childMarkdownRemark || childMdx).fields.gatsbyOnly
+        childMarkdownRemark || childMdx
     )
     .map(({ node: { childMarkdownRemark, childMdx, objectID } }) => ({
       objectID,
       ...(childMarkdownRemark || childMdx).frontmatter,
       fields: (childMarkdownRemark || childMdx).fields,
       excerpt: (childMarkdownRemark || childMdx).excerpt,
-    }));
+    }))
+    .filter((n) => !n.draft);
 
 const settings = { attributesToSnippet: [`excerpt:20`] };
 

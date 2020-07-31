@@ -8,14 +8,7 @@ const app = express();
 const routes = [
   {
     // this should match what's in nginx.conf
-    routes: [
-      "/assets",
-      "/platforms",
-      "/clients",
-      "/error-reporting",
-      "/api",
-      "/ssl",
-    ],
+    routes: ["/assets"],
     address: "http://localhost:9001",
   },
   {
