@@ -20,7 +20,6 @@ WORKDIR /usr/src/app
 ADD . ./
 WORKDIR /usr/src/app/gatsby
 RUN yarn
-COPY --from=builder /usr/src/app/gatsby/src/wizard /usr/src/app/gatsby/src/wizard
 RUN gatsby build
 
 FROM getsentry/jekyll-base:runtime-${VERSION} AS runtime
