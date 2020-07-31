@@ -14,7 +14,6 @@ const pageQuery = `{
             fields {
               slug
               draft
-              gatsbyOnly
             }
             excerpt(pruneLength: 5000)
           }
@@ -25,7 +24,6 @@ const pageQuery = `{
             fields {
               slug
               draft
-              gatsbyOnly
             }
             excerpt(pruneLength: 5000)
           }
@@ -38,8 +36,7 @@ const flatten = (arr) =>
   arr
     .filter(
       ({ node: { childMarkdownRemark, childMdx } }) =>
-        (childMarkdownRemark || childMdx) &&
-        (childMarkdownRemark || childMdx).fields.gatsbyOnly
+        childMarkdownRemark || childMdx
     )
     .map(({ node: { childMarkdownRemark, childMdx, objectID } }) => ({
       objectID,

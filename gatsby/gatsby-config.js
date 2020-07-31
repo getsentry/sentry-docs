@@ -94,13 +94,6 @@ const getPlugins = () => {
     {
       resolve: `gatsby-source-filesystem`,
       options: {
-        name: `docs-jekyll`,
-        path: `${__dirname}/../src/collections/_documentation`,
-      },
-    },
-    {
-      resolve: `gatsby-source-filesystem`,
-      options: {
         name: `docs`,
         path: `${__dirname}/src/docs`,
       },

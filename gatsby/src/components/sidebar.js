@@ -20,7 +20,6 @@ const navQuery = graphql`
           }
           fields {
             slug
-            gatsbyOnly
           }
         }
         childMdx {
@@ -31,7 +30,6 @@ const navQuery = graphql`
           }
           fields {
             slug
-            gatsbyOnly
           }
         }
       }
@@ -94,7 +92,6 @@ const renderChildren = (children) => {
         to={node.fields.slug}
         key={node.fields.slug}
         title={node.frontmatter.title}
-        remote={!node.fields.gatsbyOnly}
       >
         {renderChildren(children)}
       </NavLink>
@@ -114,12 +111,7 @@ const DynamicNav = ({ root, title, tree, collapse = false }) => {
 
   const headerClassName = "sidebar-title d-flex align-items-center mb-0";
   const header = parentNode ? (
-    <SmartLink
-      to={`/${root}/`}
-      className={headerClassName}
-      data-sidebar-link
-      remote={!parentNode.node.fields.gatsbyOnly}
-    >
+    <SmartLink to={`/${root}/`} className={headerClassName} data-sidebar-link>
       <h6>{title}</h6>
     </SmartLink>
   ) : (
@@ -150,10 +142,7 @@ const Sidebar = () => {
             data.allFile.nodes
               .filter((n) => !!(n.childMdx || n.childMarkdownRemark))
               .filter((n) => !n.draft)
-              .map((n) => n.childMdx || n.childMarkdownRemark)
-              // hide jekyll docs which indicate they're converted to gatsby
-              // this avoids duplicating urls (which filter out in the tree, but might be the wrong node)
-              .filter((n) => !n.frontmatter.gatsby),
+              .map((n) => n.childMdx || n.childMarkdownRemark),
             (n) => n.fields.slug
           )
         );
