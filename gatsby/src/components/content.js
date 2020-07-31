@@ -27,6 +27,7 @@ const mdxComponents = {
 };
 
 export default ({ file }) => {
+  if (!file) return null;
   const child = file.childMarkdownRemark || file.childMdx;
   if (!child) return null;
   return (
