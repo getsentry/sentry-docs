@@ -15,6 +15,7 @@ const navQuery = graphql`
           frontmatter {
             title
             sidebar_order
+            draft
             gatsby
           }
           fields {
@@ -26,6 +27,7 @@ const navQuery = graphql`
           frontmatter {
             title
             sidebar_order
+            draft
           }
           fields {
             slug
@@ -147,6 +149,7 @@ const Sidebar = () => {
           sortBy(
             data.allFile.nodes
               .filter((n) => !!(n.childMdx || n.childMarkdownRemark))
+              .filter((n) => !n.draft)
               .map((n) => n.childMdx || n.childMarkdownRemark)
               // hide jekyll docs which indicate they're converted to gatsby
               // this avoids duplicating urls (which filter out in the tree, but might be the wrong node)
