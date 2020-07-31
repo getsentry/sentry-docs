@@ -27,7 +27,6 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
 
     type Fields {
       slug: String!
-      gatsby: Boolean
     }
   `,
     schema.buildObjectType({

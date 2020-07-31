@@ -16,7 +16,6 @@ const navQuery = graphql`
             title
             sidebar_order
             draft
-            gatsby
           }
           fields {
             slug
