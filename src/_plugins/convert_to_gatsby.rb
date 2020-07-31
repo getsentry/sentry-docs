@@ -14,7 +14,6 @@ module GatsbyConverter
   # need to swap out w/ markdown-style image embed
   class AssetTagHijack < Jekyll::Assets::Tag
     def parse_args(args)
-      puts(args)
       return args if args.is_a?(Liquid::Tag::Parser) || args.is_a?(Hash)
       Liquid::Tag::Parser.new(
         @args
