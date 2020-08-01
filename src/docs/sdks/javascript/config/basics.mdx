@@ -1,0 +1,97 @@
+---
+title: Basic Configuration Options
+excerpt: ""
+---
+
+The JavaScript SDK is configurable using a variety of options. These options are set when the SDK is first initialized, passed to the `init()` as an object:
+
+```JavaScript
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  maxBreadcrumbs: 50,
+  debug: true,
+});
+```
+
+These options can be read from an environment variable - `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE` - are read automatically.
+
+`dsn`
+
+: The *DSN* tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will not send any events. In runtimes without a process environment (such as the browser SDK), the fallback of reading from the environment variable does not apply.
+
+`debug`
+
+: Turns debug mode on or off. If debug is enabled, the SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It’s generally not recommended to turn it on in production, though turning debug mode on will not cause any safety concerns.
+
+`release`
+
+: Sets the release. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable, but it's best to set it manually to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/workflow/releases/).
+
+`environment`
+
+: Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the Sentry web UI (for example, `staging` as compared to `prod` or similar). By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable. Note that the variable for `@sentry/browser` is `window.SENTRY_ENVIRONMENT`.
+
+`sampleRate`
+
+: Configures the sample rate as a percentage of events to be sent in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of events are sent. If set to `0.1` only 10% of events will be sent. Events are picked randomly.
+
+`maxBreadcrumbs`
+
+: This variable controls the total amount of breadcrumbs that should be captured. This variable defaults to `100`.
+
+`attachStacktrace`
+
+: When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages. This feature is `off` by default. Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
+
+`denyUrls`
+
+: A list of strings or regex patterns that match error URLs that should not be sent to Sentry. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
+
+`allowUrls`
+
+: A list of strings or regex patterns that match error URLs that should exclusively be sent to Sentry. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `[https://bar.com/myfile/foo.com](https://bar.com/myfile/foo.com)` By default, all errors will be sent.
+
+`normalizeDepth`
+
+: Sentry SDKs normalize any contextual data to a given depth. Any keys containing data with a structure deeper than this will be trimmed and marked using its type instead (`[Object]` or `[Array]`), without walking the tree any further. By default, walking is performed `3` levels deep.
+
+## Integration Configuration
+
+For many platform SDKs integrations can be configured alongside it. On some platforms that happen as part of the `init()` call, in some others, different patterns apply.
+
+`integrations`
+
+: In JavaScript, the integrations are configured through this parameter on library initialization.
+
+`defaultIntegrations`
+
+: This can be used to disable integrations that are added by default. When set to `false` no default integrations are added.
+
+## Hooks
+
+These options can be used to hook the SDK in various ways to customize the reporting of events.
+
+`beforeSend`
+
+: This function is called with an SDK-specific event object, and can return a modified event object or nothing to skip reporting the event. Use this hook, for instance, for manual PII stripping before sending.
+
+`beforeBreadcrumb`
+
+: This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object. The callback typically gets a second argument (called a “hint”) that contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+## Transport Options
+
+Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
+
+`transport`
+
+: Switches out the transport used to send events. In JavaScript for example, it can be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
+
+`shutdownTimeout`
+
+: Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue and this queue is given a certain amount to drain pending events. The default is SDK specific but typically around 2 seconds. Setting this value too low will most likely cause problems for sending events from command line applications. Setting it too high will cause the application to block for a long time for users with network connectivity problems.
+
+## Next Steps:
+
+ - [Return to **Getting Started**](/sdks/javascript/)
+ - [Return to the main configuration page](intro)
