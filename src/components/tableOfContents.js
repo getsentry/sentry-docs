@@ -10,7 +10,7 @@ export default ({ toc: { items } }) => {
       if (!i.title) return recurse(i.items);
       return (
         <li className="toc-entry" key={i.url}>
-          <a href={i.url}>{i.title.replace(/\s\{\#[^\}]+\}$/, "")}</a>
+          <a href={i.url}>{i.title.replace(/\s\{#[^}]+\}$/, "")}</a>
           {i.items && <ul>{recurse(i.items)}</ul>}
         </li>
       );

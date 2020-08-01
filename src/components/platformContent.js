@@ -44,7 +44,7 @@ const PlatformContent = ({ includePath }) => {
       query={includeQuery}
       render={({
         allFile: { nodes: files },
-        allPlatformsYaml: { nodes: platforms },
+        allPlatformsYaml: { nodes: platforms }
       }) => {
         return (
           <Location>
@@ -52,20 +52,20 @@ const PlatformContent = ({ includePath }) => {
               let platform = parse(location.search).platform || null;
 
               const matches = files.filter(
-                (node) => node.relativePath.indexOf(includePath) === 0
+                node => node.relativePath.indexOf(includePath) === 0
               );
-              const defaultPlatform = platforms.find((p) =>
-                matches.find((m) => m.name === p.slug)
+              const defaultPlatform = platforms.find(p =>
+                matches.find(m => m.name === p.slug)
               );
               let activePlatform = platforms.find(
-                (p) => p.slug == (platform || defaultPlatform.slug)
+                p => p.slug === (platform || defaultPlatform.slug)
               );
               let contentMatch = matches.find(
-                (m) => m.name === activePlatform.slug
+                m => m.name === activePlatform.slug
               );
               if (!contentMatch && platform !== defaultPlatform.slug) {
                 contentMatch = matches.find(
-                  (m) => m.name === defaultPlatform.slug
+                  m => m.name === defaultPlatform.slug
                 );
                 activePlatform = defaultPlatform;
               }
@@ -86,9 +86,9 @@ const PlatformContent = ({ includePath }) => {
                         role="tablist"
                         style={{ display: dropdown ? "block" : "none" }}
                       >
-                        {matches.map((node) => {
+                        {matches.map(node => {
                           const platform = platforms.find(
-                            (p) => p.slug === node.name
+                            p => p.slug === node.name
                           );
                           return (
                             <a
@@ -130,7 +130,7 @@ const PlatformContent = ({ includePath }) => {
 };
 
 PlatformContent.propTypes = {
-  includePath: PropTypes.string.isRequired,
+  includePath: PropTypes.string.isRequired
 };
 
 PlatformContent.defaultProps = {};
