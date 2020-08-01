@@ -1,4 +1,4 @@
-FROM node:12-buster as build
+FROM node:10-buster as build
 
 ARG BUILD_CONF={}
 ENV BUILD_CONF="$BUILD_CONF"
