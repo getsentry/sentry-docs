@@ -1,5 +1,5 @@
 Install our Python SDK using [`pip`](https://pip.pypa.io/en/stable/):
 
 ```bash
-$ pip install --upgrade sentry-sdk=={% sdk_version sentry.python %}
+$ pip install --upgrade sentry-sdk
 ```

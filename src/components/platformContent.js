@@ -49,7 +49,7 @@ const PlatformContent = ({ includePath }) => {
         return (
           <Location>
             {({ location, navigate }) => {
-              let platform = parse(location.search).platform || null;
+              let platformQueryString = parse(location.search).platform || null;
 
               const matches = files.filter(
                 node => node.relativePath.indexOf(includePath) === 0
@@ -57,17 +57,21 @@ const PlatformContent = ({ includePath }) => {
               const defaultPlatform = platforms.find(p =>
                 matches.find(m => m.name === p.slug)
               );
+
               let activePlatform = platforms.find(
-                p => p.slug === (platform || defaultPlatform.slug)
+                p => p.slug === (platformQueryString || defaultPlatform.slug)
               );
               let contentMatch = matches.find(
                 m => m.name === activePlatform.slug
               );
-              if (!contentMatch && platform !== defaultPlatform.slug) {
-                contentMatch = matches.find(
-                  m => m.name === defaultPlatform.slug
-                );
+              if (
+                !contentMatch &&
+                platformQueryString !== defaultPlatform.slug
+              ) {
                 activePlatform = defaultPlatform;
+                contentMatch = matches.find(
+                  m => m.name === activePlatform.slug
+                );
               }
 
               return (
