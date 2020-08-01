@@ -9,7 +9,7 @@ import { sortBy } from "../utils";
 // TODO(dcramer): filter out drafts
 const navQuery = graphql`
   query NavQuery {
-    allFile(filter: { sourceInstanceName: { in: ["docs", "docs-jekyll"] } }) {
+    allFile(filter: { sourceInstanceName: { in: ["docs"] } }) {
       nodes {
         childMarkdownRemark {
           frontmatter {
