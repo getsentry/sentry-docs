@@ -120,7 +120,7 @@ const PlatformContent = ({ includePath }) => {
 
                   <div className="tab-content">
                     <div className="tab-pane show active">
-                      <Content file={contentMatch} />
+                      <Content key={activePlatform.slug} file={contentMatch} />
                     </div>
                   </div>
                 </div>
