@@ -6,7 +6,7 @@ title: Django
 sidebar_order: 1
 tags: []
 ---
-<!-- WIZARD -->
+
 The Django integration adds support for the [Django Web Framework](https://www.djangoproject.com/)
 from Version 1.6 upwards.
 
@@ -16,7 +16,7 @@ Install `sentry-sdk`:
 $ pip install --upgrade 'sentry-sdk==0.16.2'
 ```
 
-To configure the SDK, initialize it with the Django integration in your ``settings.py`` file:
+To configure the SDK, initialize it with the Django integration in your `settings.py` file:
 
 ```python
 import sentry_sdk
@@ -48,7 +48,6 @@ urlpatterns = [
 
 Visiting this route will trigger an error that will be captured by Sentry.
 
-
 ## A note on Django Channels
 
 A Django application using [Channels 2.0](https://channels.readthedocs.io/en/latest/) will be correctly instrumented under Python 3.7. For older versions of Python you'll have to install `aiocontextvars` from PyPI or your application will not start.
@@ -59,25 +58,24 @@ Unfortunately the SDK is not able to do so by itself, as [Channels is missing so
 
 ## Behavior
 
-* All exceptions leading to an Internal Server Error are reported.
+- All exceptions leading to an Internal Server Error are reported.
 
-* Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set ``send_default_pii`` to ``True``.
+- Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
 
 Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
 
+- If you use `django.contrib.auth` and have set `send_default_pii=True` in your call to `init`, user data (current user id, email address, username) is attached to the event.
 
-* If you use ``django.contrib.auth`` and have set ``send_default_pii=True`` in your call to ``init``, user data (current user id, email address, username) is attached to the event.
+- The Sentry Python SDK will attach SQL queries as breadcrumbs.
 
-* The Sentry Python SDK will attach SQL queries as breadcrumbs.
-
-* Logging with any logger will create breadcrumbs when the [Logging](/platforms/python/logging/)
+- Logging with any logger will create breadcrumbs when the [Logging](/platforms/python/logging/)
   integration is enabled (done by default).
 
 ## Options
 
 You can pass the following keyword arguments to `DjangoIntegration()`:
 
-* `transaction_style`:
+- `transaction_style`:
 
   ```python
   def my_function(request):
@@ -90,14 +88,14 @@ You can pass the following keyword arguments to `DjangoIntegration()`:
 
   In the above code, you would set the transaction to:
 
-  * `/myurl/{myid}` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
-  * `my_function` if you set `transaction_style="function_name"`
+  - `/myurl/{myid}` if you set `transaction_style="url"`. This matches the behavior of the old Raven SDK.
+  - `my_function` if you set `transaction_style="function_name"`
 
   The default is `"url"`.
 
 ## User Feedback
 
-You can use the user feedback feature with this integration.  For more information see [User Feedback](/enriching-error-data/user-feedback/?platform=django).
+You can use the user feedback feature with this integration. For more information see [User Feedback](/enriching-error-data/user-feedback/?platform=django).
 
 ## Reporting other status codes
 
