@@ -92,10 +92,28 @@ const getPlugins = () => {
     },
     `gatsby-transformer-yaml`,
     {
+      resolve: `gatsby-transformer-json`,
+      options: {
+        typeName: ({ node, object, isArray }) => {
+          if (node.sourceInstanceName === "api-docs") {
+            return "ApiDoc";
+          }
+          return null;
+        }
+      }
+    },
+    {
       resolve: `gatsby-source-filesystem`,
       options: {
         name: `docs`,
         path: `${__dirname}/src/docs`
+      }
+    },
+    {
+      resolve: `gatsby-source-filesystem`,
+      options: {
+        name: `api-docs`,
+        path: `${__dirname}/src/api`
       }
     },
     {

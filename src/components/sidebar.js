@@ -9,8 +9,15 @@ import { sortBy } from "../utils";
 // TODO(dcramer): filter out drafts
 const navQuery = graphql`
   query NavQuery {
-    allFile(filter: { sourceInstanceName: { in: ["docs"] } }) {
+    allFile(filter: { sourceInstanceName: { in: ["docs", "api-docs"] } }) {
       nodes {
+        childApiDoc {
+          title
+          sidebar_order
+          fields {
+            slug
+          }
+        }
         childMarkdownRemark {
           frontmatter {
             title
@@ -82,15 +89,15 @@ const toTree = nodeList => {
 const renderChildren = children => {
   return sortBy(
     children.filter(
-      ({ name, node }) => !!node.frontmatter.title && name !== ""
+      ({ name, node }) => !!(node.frontmatter || node).title && name !== ""
     ),
-    n => n.node.frontmatter.sidebar_order
+    n => (n.node.frontmatter || n.node).sidebar_order
   ).map(({ node, children }) => {
     return (
       <NavLink
         to={node.fields.slug}
         key={node.fields.slug}
-        title={node.frontmatter.title}
+        title={(node.frontmatter || node).title}
       >
         {renderChildren(children)}
       </NavLink>

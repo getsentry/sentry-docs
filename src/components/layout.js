@@ -1,7 +1,5 @@
 import React from "react";
-import { graphql } from "gatsby";
 
-import Content from "./content";
 import SEO from "./seo";
 import Header from "./header";
 import Sidebar from "./sidebar";
@@ -25,15 +23,16 @@ const GitHubCTA = ({ sourceInstanceName, relativePath }) => (
   </div>
 );
 
-const Layout = ({
+export default ({
   data: {
     file,
     site: { siteMetadata }
   },
-  pageContext: { title }
+  pageContext: { title },
+  children
 }) => {
-  const child = file.childMarkdownRemark || file.childMdx;
-  const hasToc = !!child.tableOfContents.items;
+  const child = file && (file.childMarkdownRemark || file.childMdx);
+  const hasToc = child && !!child.tableOfContents.items;
   return (
     <div className="document-wrapper">
       <SEO title={title} />
@@ -71,12 +70,14 @@ const Layout = ({
               >
                 <h1 className="mb-3">{title}</h1>
                 <div id="main">
-                  <Content file={file} />
+                  {children}
 
-                  <GitHubCTA
-                    sourceInstanceName={file.sourceInstanceName}
-                    relativePath={file.relativePath}
-                  />
+                  {file && (
+                    <GitHubCTA
+                      sourceInstanceName={file.sourceInstanceName}
+                      relativePath={file.relativePath}
+                    />
+                  )}
                 </div>
               </div>
               {hasToc && (
@@ -93,45 +94,6 @@ const Layout = ({
           </section>
         </div>
       </main>
-      <div style={{ display: "none" }}>Rendered with Gatsby</div>
     </div>
   );
 };
-
-export default Layout;
-
-export const pageQuery = graphql`
-  query PageQuery($id: String) {
-    site {
-      siteMetadata {
-        title
-        homeUrl
-        sitePath
-      }
-    }
-    file(id: { eq: $id }) {
-      relativePath
-      sourceInstanceName
-      childMarkdownRemark {
-        html
-        tableOfContents
-        internal {
-          type
-        }
-        frontmatter {
-          title
-        }
-      }
-      childMdx {
-        body
-        tableOfContents
-        internal {
-          type
-        }
-        frontmatter {
-          title
-        }
-      }
-    }
-  }
-`;

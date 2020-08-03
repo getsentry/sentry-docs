@@ -11,6 +11,7 @@ exports.onCreateWebpackConfig = ({ stage, actions }) => {
   });
 };
 
+// TODO(dcramer): move frontmatter out of ApiDoc and into Frontmatter
 exports.createSchemaCustomization = ({ actions, schema }) => {
   const { createTypes } = actions;
   const typeDefs = [
@@ -27,6 +28,28 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
 
     type Fields {
       slug: String!
+    }
+
+    type ApiParam {
+      type: String!
+      name: String!
+      description: String
+    }
+
+    type ApiDoc implements Node {
+      sidebar_order: Int
+      title: String!
+
+      api_path: String!
+      authentication:  String
+      description: String
+      example_request: String
+      example_response: String
+      method: String!
+      parameters: [ApiParam]
+      path_parameters: [ApiParam]
+      query_parameters: [ApiParam]
+      warning: String
     }
   `,
     schema.buildObjectType({
@@ -53,6 +76,7 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
         },
 
         // wizard fields
+        // TODO(dcramer): move to a diff schema/type
         support_level: {
           type: "String"
         },
@@ -71,8 +95,14 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
   createTypes(typeDefs);
 };
 
-exports.onCreateNode = ({ node, actions, getNode }) => {
-  const { createNodeField } = actions;
+exports.onCreateNode = ({
+  node,
+  actions,
+  getNode,
+  createContentDigest,
+  createNodeId
+}) => {
+  const { createNodeField, createNode } = actions;
   if (node.internal.type === "Mdx" || node.internal.type === "MarkdownRemark") {
     const value = createFilePath({ node, getNode });
     createNodeField({
@@ -80,57 +110,113 @@ exports.onCreateNode = ({ node, actions, getNode }) => {
       node,
       value
     });
+  } else if (node.internal.type === "ApiDoc") {
+    const value = createFilePath({ node, getNode });
+    createNodeField({
+      name: "slug",
+      node,
+      value: `/api${value}`
+    });
+
+    const markdownNode = {
+      id: createNodeId(`${node.id} >>> MarkdownRemark`),
+      children: [],
+      parent: node.id,
+      internal: {
+        content: node.description,
+        contentDigest: createContentDigest(node.description),
+        mediaType: `text/markdown`,
+        type: `ApiDocMarkdown`
+      }
+    };
+    createNode(markdownNode);
+
+    createNodeField({
+      node,
+      name: "markdownDescription___NODE",
+      value: markdownNode.id
+    });
   }
 };
 
 exports.createPages = async function({ actions, graphql, reporter }) {
-  // TODO(dcramer): query needs rewritten when mdx is back
-  const { data, errors } = await graphql(`
-    query {
-      allFile(filter: { sourceInstanceName: { eq: "docs" } }) {
-        nodes {
-          id
-          childMarkdownRemark {
-            frontmatter {
-              title
-            }
-            fields {
-              slug
-            }
-          }
-          childMdx {
-            frontmatter {
-              title
-            }
+  const createApi = async () => {
+    const { data, errors } = await graphql(`
+      query {
+        allApiDoc {
+          nodes {
+            id
+            title
             fields {
               slug
             }
           }
         }
       }
-    }
-  `);
+    `);
 
-  if (errors) {
-    reporter.panicOnBuild('🚨  ERROR: Loading "createPages" query');
-  }
-  const component = require.resolve(`./src/components/layout.js`);
-  data.allFile.nodes.forEach(node => {
-    if (node.childMarkdownRemark && node.childMarkdownRemark.fields) {
+    if (errors) {
+      reporter.panicOnBuild('🚨  ERROR: Loading "createApi" query');
+    }
+    const component = require.resolve(`./src/components/layoutApi.js`);
+    data.allApiDoc.nodes.forEach(node => {
       actions.createPage({
-        path: node.childMarkdownRemark.fields.slug,
+        path: node.fields.slug,
         component,
         context: {
           id: node.id,
-          title: node.childMarkdownRemark.frontmatter.title
+          title: node.title
         }
       });
-    } else if (node.childMdx && node.childMdx.fields) {
-      actions.createPage({
-        path: node.childMdx.fields.slug,
-        component,
-        context: { id: node.id, title: node.childMdx.frontmatter.title }
-      });
+    });
+  };
+
+  const createDocs = async () => {
+    const { data, errors } = await graphql(`
+      query {
+        allFile(filter: { sourceInstanceName: { eq: "docs" } }) {
+          nodes {
+            id
+            childMarkdownRemark {
+              frontmatter {
+                title
+              }
+              fields {
+                slug
+              }
+            }
+            childMdx {
+              frontmatter {
+                title
+              }
+              fields {
+                slug
+              }
+            }
+          }
+        }
+      }
+    `);
+
+    if (errors) {
+      reporter.panicOnBuild('🚨  ERROR: Loading "createDocs" query');
     }
-  });
+    const component = require.resolve(`./src/components/layoutDoc.js`);
+    data.allFile.nodes.forEach(node => {
+      const child = node.childMarkdownRemark || node.childMdx;
+      if (child && child.fields) {
+        actions.createPage({
+          path: child.fields.slug,
+          component,
+          context: {
+            id: node.id,
+            title: child.frontmatter.title
+          }
+        });
+      }
+    });
+  };
+
+  await createApi();
+  await createDocs();
 };
