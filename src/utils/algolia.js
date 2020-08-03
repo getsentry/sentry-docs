@@ -10,20 +10,20 @@ const pageQuery = `{
           childMarkdownRemark {
             frontmatter {
               title
+              draft
             }
             fields {
               slug
-              draft
             }
             excerpt(pruneLength: 5000)
           }
           childMdx {
             frontmatter {
               title
+              draft
             }
             fields {
               slug
-              draft
             }
             excerpt(pruneLength: 5000)
           }
