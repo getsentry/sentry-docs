@@ -1,8 +1,8 @@
 import React from "react";
 import { graphql } from "gatsby";
 
-import Layout from "./layout";
-import Markdown from "./markdown";
+import Layout from "../layout";
+import Markdown from "../markdown";
 
 const Params = ({ params }) => (
   <ul className="api-params">
@@ -35,17 +35,6 @@ export default props => {
       )}
 
       <table className="table">
-        {apiDoc.query_parameters && (
-          <tr>
-            <td>
-              <strong>Query Parameters:</strong>
-            </td>
-            <td className="content-flush-bottom">
-              <Params params={apiDoc.query_parameters} />
-            </td>
-          </tr>
-        )}
-
         {apiDoc.path_parameters && (
           <tr>
             <td>
@@ -53,6 +42,17 @@ export default props => {
             </td>
             <td className="content-flush-bottom">
               <Params params={apiDoc.path_parameters} />
+            </td>
+          </tr>
+        )}
+
+        {apiDoc.query_parameters && (
+          <tr>
+            <td>
+              <strong>Query Parameters:</strong>
+            </td>
+            <td className="content-flush-bottom">
+              <Params params={apiDoc.query_parameters} />
             </td>
           </tr>
         )}
@@ -95,6 +95,22 @@ export default props => {
           </tr>
         )}
       </table>
+
+      {apiDoc.example_request && (
+        <React.Fragment>
+          <h2>Example Request</h2>
+
+          <pre>{apiDoc.example_request}</pre>
+        </React.Fragment>
+      )}
+
+      {apiDoc.example_response && (
+        <React.Fragment>
+          <h2>Example Response</h2>
+
+          <pre>{apiDoc.example_response}</pre>
+        </React.Fragment>
+      )}
     </Layout>
   );
 };
@@ -112,19 +128,15 @@ export const pageQuery = graphql`
       title
 
       fields {
-        markdownDescription {
+        description {
           internal {
             type
-          }
-          childMdx {
-            body
           }
         }
       }
 
       api_path
       authentication
-      description
       method
       example_request
       example_response
