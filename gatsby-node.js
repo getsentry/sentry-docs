@@ -133,7 +133,7 @@ exports.onCreateNode = ({
 
     createNodeField({
       node,
-      name: "markdownDescription___NODE",
+      name: "description___NODE",
       value: markdownNode.id
     });
   }
@@ -158,7 +158,7 @@ exports.createPages = async function({ actions, graphql, reporter }) {
     if (errors) {
       reporter.panicOnBuild('🚨  ERROR: Loading "createApi" query');
     }
-    const component = require.resolve(`./src/components/layoutApi.js`);
+    const component = require.resolve(`./src/components/pages/api.js`);
     data.allApiDoc.nodes.forEach(node => {
       actions.createPage({
         path: node.fields.slug,
@@ -201,7 +201,7 @@ exports.createPages = async function({ actions, graphql, reporter }) {
     if (errors) {
       reporter.panicOnBuild('🚨  ERROR: Loading "createDocs" query');
     }
-    const component = require.resolve(`./src/components/layoutDoc.js`);
+    const component = require.resolve(`./src/components/pages/doc.js`);
     data.allFile.nodes.forEach(node => {
       const child = node.childMarkdownRemark || node.childMdx;
       if (child && child.fields) {

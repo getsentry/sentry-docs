@@ -1,8 +1,8 @@
 import React from "react";
 import { graphql } from "gatsby";
 
-import Layout from "./layout";
-import Content from "./content";
+import Layout from "../layout";
+import Content from "../content";
 
 export default props => {
   return (
