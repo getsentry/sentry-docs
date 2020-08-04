@@ -34,7 +34,7 @@ export default ({ apm = false }) => {
       <CodeBlock language="html">
         <div class="gatsby-highlight" data-language="html">
           <pre class="language-html">
-            <code class="language-html">{`<script src="https://browser.sentry-cdn.com/${packageData.version}/${packageName}" integrity="${packageData.files[packageName].checksums["sha384-base64"]}" crossorigin="anonymous"></script>`}</code>
+            <code class="language-html">{`<script src="https://browser.sentry-cdn.com/${packageData.version}/${packageName}" integrity="sha384-${packageData.files[packageName].checksums["sha384-base64"]}" crossorigin="anonymous"></script>`}</code>
           </pre>
         </div>
       </CodeBlock>
