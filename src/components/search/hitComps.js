@@ -4,7 +4,7 @@ import { Link } from "gatsby";
 
 export const PageHit = clickHandler => ({ hit }) => {
   return (
-    <Link to={hit.fields.slug} onClick={clickHandler}>
+    <Link to={hit.url} onClick={clickHandler}>
       <h6 className="mb-1">
         <Highlight attribute="title" hit={hit} tagName="mark" />
         {hit.categories && (
@@ -15,7 +15,7 @@ export const PageHit = clickHandler => ({ hit }) => {
           </React.Fragment>
         )}
       </h6>
-      <Snippet attribute="excerpt" hit={hit} tagName="mark" />
+      <Snippet attribute="content" hit={hit} tagName="mark" />
     </Link>
   );
 };

@@ -41,12 +41,12 @@ const flatten = arr =>
     .map(({ node: { childMarkdownRemark, childMdx, objectID } }) => ({
       objectID,
       ...(childMarkdownRemark || childMdx).frontmatter,
-      fields: (childMarkdownRemark || childMdx).fields,
-      excerpt: (childMarkdownRemark || childMdx).excerpt
+      url: (childMarkdownRemark || childMdx).fields.slug,
+      content: (childMarkdownRemark || childMdx).excerpt
     }))
     .filter(n => !n.draft);
 
-const settings = { attributesToSnippet: [`excerpt:20`] };
+const settings = { attributesToSnippet: [`content:20`] };
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
 if (!indexPrefix) {
