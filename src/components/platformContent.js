@@ -51,6 +51,7 @@ const PlatformContent = ({ includePath }) => {
   // taking in the new content and rendering it appropriately.
   // const platformQueryString = parse(location.search).platform || null;
   const platformQueryString = null;
+  const [platform, setPlatform] = React.useState(platformQueryString);
 
   const navigate = useNavigate();
   const [dropdown, setDropdown] = React.useState(null);
@@ -70,8 +71,7 @@ const PlatformContent = ({ includePath }) => {
         );
 
         let activePlatform =
-          platforms.find(p => slugMatches(p.slug, platformQueryString)) ||
-          defaultPlatform;
+          platforms.find(p => slugMatches(p.slug, platform)) || defaultPlatform;
         if (!activePlatform) activePlatform = defaultPlatform;
         const contentMatch = matches.find(m =>
           slugMatches(m.name, activePlatform.slug)
@@ -109,9 +109,10 @@ const PlatformContent = ({ includePath }) => {
                         key={platform.slug}
                         onClick={() => {
                           setDropdown(false);
-                          navigate(
-                            `${location.pathname}?platform=${platform.slug}`
-                          );
+                          // navigate(
+                          //   `${location.pathname}?platform=${platform.slug}`
+                          // );
+                          setPlatform(platform.slug);
                           // TODO: retain scroll
                           // window.scrollTo(window.scrollX, window.scrollY);
                         }}
