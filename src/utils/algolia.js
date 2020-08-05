@@ -14,6 +14,7 @@ const pageQuery = `{
             }
             fields {
               slug
+              legacy
             }
             excerpt(pruneLength: 5000)
           }
@@ -24,6 +25,7 @@ const pageQuery = `{
             }
             fields {
               slug
+              legacy
             }
             excerpt(pruneLength: 5000)
           }
@@ -42,7 +44,8 @@ const flatten = arr =>
       objectID,
       ...(childMarkdownRemark || childMdx).frontmatter,
       url: (childMarkdownRemark || childMdx).fields.slug,
-      content: (childMarkdownRemark || childMdx).excerpt
+      content: (childMarkdownRemark || childMdx).excerpt,
+      score: (childMarkdownRemark || childMdx).legacy ? 0 : 1,
     }))
     .filter(n => !n.draft);
 
@@ -58,8 +61,8 @@ const queries = [
     query: pageQuery,
     transformer: ({ data }) => flatten(data.pages.edges),
     indexName: `${indexPrefix}docs`,
-    settings
-  }
+    settings,
+  },
 ];
 
 module.exports = queries;

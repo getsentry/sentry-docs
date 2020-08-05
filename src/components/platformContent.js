@@ -2,7 +2,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import { StaticQuery, graphql } from "gatsby";
 import { useLocation, useNavigate } from "@reach/router";
-import { parse } from "query-string";
 
 import Content from "./content";
 import SmartLink from "./smartLink";
@@ -38,8 +37,8 @@ const includeQuery = graphql`
 `;
 
 const slugMatches = (slug1, slug2) => {
-  if (slug1 == "browser") slug1 = "javascript";
-  if (slug2 == "browser") slug2 = "javascript";
+  if (slug1 === "browser") slug1 = "javascript";
+  if (slug2 === "browser") slug2 = "javascript";
   return slug1 === slug2;
 };
 
@@ -61,7 +60,7 @@ const PlatformContent = ({ includePath }) => {
       query={includeQuery}
       render={({
         allFile: { nodes: files },
-        allPlatformsYaml: { nodes: platforms }
+        allPlatformsYaml: { nodes: platforms },
       }) => {
         const matches = files.filter(
           node => node.relativePath.indexOf(includePath) === 0
@@ -143,7 +142,7 @@ const PlatformContent = ({ includePath }) => {
 };
 
 PlatformContent.propTypes = {
-  includePath: PropTypes.string.isRequired
+  includePath: PropTypes.string.isRequired,
 };
 
 PlatformContent.defaultProps = {};
