@@ -2,7 +2,9 @@
 title: Architecture
 ---
 
-## Service Diagram
+## High level overview
+
+Edges represent service dependencies.
 
 ```mermaid
 graph TD
@@ -30,6 +32,42 @@ click snuba "https://github.com/getsentry/snuba" "Snuba Documentation"
 click relay "https://github.com/getsentry/relay" "Relay Documentation"
 ```
 
-## Additional Resources
+## Event pipeline
 
-- [Event Ingestion Pipeline](https://getsentry.github.io/event-ingestion-graph/)
+How an event gets saved. Edges represent data flow through system.
+
+This graph is extremely simplified mostly due to layout constraints. Missing from this graph:
+
+* How Relay fetches project configs. Answer: from sentry-web
+* How Relay caches project configs. Answer: In memory, and in Redis
+* How Relay counts events and keeps track of quotas. Answer: more Redis
+* Symbolicator as auxilliary service to symbolicate-event
+* How alerting is triggered. Answer: postprocess-event, a Celery task which is responsible for alerting (spawned by a Kafka consumer in Sentry reading from eventstream)
+* Possibly more
+
+For more information read [Path of an event through Relay](https://getsentry.github.io/relay/architecture/ingest-event-path/) and [Event Ingestion Pipeline](https://getsentry.github.io/event-ingestion-graph/).
+
+
+```mermaid
+graph TD
+
+app[Your application] --> |sends crashes| lb{{nginx}}
+lb --> |/api/n/store/| relay
+relay --> kafka[(Ingest Kafka)]
+kafka --> ingest-consumer["Sentry ingest consumer"]
+ingest-consumer --> preprocess-event
+
+subgraph celery["Sentry celery tasks"]
+  preprocess-event --> save-event
+  preprocess-event --> process-event
+  preprocess-event --> symbolicate-event
+  symbolicate-event --> process-event
+  process-event --> save-event
+  save-event --> snuba-kafka[("Snuba Kafka<br>(eventstream)")]
+end
+
+subgraph snuba["Snuba"]
+  snuba-kafka --> snuba-consumer["Snuba consumers"]
+  snuba-consumer --> clickhouse[("Clickhouse")]
+end
+```
