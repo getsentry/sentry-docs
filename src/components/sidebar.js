@@ -198,7 +198,6 @@ const Sidebar = () => {
               tree={tree}
               collapse
             />
-            <DynamicNav root="guides" title="Guides" tree={tree} collapse />
             <DynamicNav root="support" title="Support" tree={tree} collapse />
             <li className="mb-3" data-sidebar-branch>
               <div
