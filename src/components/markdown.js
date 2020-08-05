@@ -9,7 +9,6 @@ import Break from "./break";
 import SmartLink from "./smartLink";
 import CodeBlock from "./codeBlock";
 import CodeTabs from "./codeTabs";
-import CodeContext, { useCodeContextState } from "./codeContext";
 import JsCdnTag from "./jsCdnTag";
 import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
@@ -26,19 +25,10 @@ const mdxComponents = {
   JsCdnTag
 };
 
-export default ({ value, withoutCodeContext }) => {
-  if (withoutCodeContext) {
-    return (
-      <MDXProvider components={mdxComponents}>
-        <MDXRenderer>{value}</MDXRenderer>
-      </MDXProvider>
-    );
-  }
+export default ({ value }) => {
   return (
-    <CodeContext.Provider value={useCodeContextState()}>
-      <MDXProvider components={mdxComponents}>
-        <MDXRenderer>{value}</MDXRenderer>
-      </MDXProvider>
-    </CodeContext.Provider>
+    <MDXProvider components={mdxComponents}>
+      <MDXRenderer>{value}</MDXRenderer>
+    </MDXProvider>
   );
 };

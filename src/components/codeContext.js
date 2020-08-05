@@ -56,6 +56,7 @@ export function fetchCodeKeywords() {
   return new Promise(resolve => {
     function transformResults(projects) {
       if (projects.length === 0) {
+        console.warn("Unable to fetch codeContext - using defaults.");
         resolve(DEFAULTS);
       } else {
         resolve({
