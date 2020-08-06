@@ -1,5 +1,5 @@
 ```swift
-let exception = NSException(name: NSExceptionName("My Custom exeption"), reason: "User clicked the button", userInfo: nil)
+let exception = NSException(name: NSExceptionName("My Custom exception"), reason: "User clicked the button", userInfo: nil)
 let scope = Scope()
 scope.setLevel(.fatal)
 // By explicity just passing the scope, only the data in this scope object will be added to the event

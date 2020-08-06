@@ -45,9 +45,9 @@ const slugMatches = (slug1, slug2) => {
 const PlatformContent = ({ includePath }) => {
   const location = useLocation();
 
-  // TODO(dcramer): this isnt working correctly with Gatsby in production
+  // TODO(dcramer): this isn't working correctly with Gatsby in production
   // on first render it will update _some_ portions of the page, but not all.
-  // Specifically it looks like the MDX renderer (or a portion of that) isnt
+  // Specifically it looks like the MDX renderer (or a portion of that) isn't
   // taking in the new content and rendering it appropriately.
   // const platformQueryString = parse(location.search).platform || null;
   const platformQueryString = null;
