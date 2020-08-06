@@ -1,5 +1,5 @@
 ```objc
-NSException *exception = [[NSException alloc] initWithName:@"My Custom exeption" reason:@"User clicked the button" userInfo:nil];
+NSException *exception = [[NSException alloc] initWithName:@"My Custom exception" reason:@"User clicked the button" userInfo:nil];
 SentryScope *scope = [[SentryScope alloc] init];
 [scope setLevel:kSentryLevelFatal];
 // By explicity just passing the scope, only the data in this scope object will be added to the event

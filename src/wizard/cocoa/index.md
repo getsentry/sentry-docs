@@ -54,7 +54,7 @@ NOTE: Version tags or branches need to have the Package.swift file in it or Xcod
 
 ## Configuration {#configure}
 
-Make sure you initalize the SDK as soon as possible in your application lifecycle e.g. in your AppDelegate `application:didFinishLaunchingWithOptions` method:
+Make sure you initialize the SDK as soon as possible in your application lifecycle e.g. in your AppDelegate `application:didFinishLaunchingWithOptions` method:
 
 ```swift
 import Sentry // Make sure you import Sentry
