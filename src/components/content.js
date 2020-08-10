@@ -7,7 +7,7 @@ export default ({ file }) => {
   const child = file.childMarkdownRemark || file.childMdx;
   if (!child) return null;
   return child.internal.type === "Mdx" ? (
-    <Markdown key={child.id} value={child.body} />
+    <Markdown value={child.body} />
   ) : (
     <div dangerouslySetInnerHTML={{ __html: child.html }} />
   );
