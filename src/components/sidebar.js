@@ -109,7 +109,9 @@ const DynamicNav = ({ root, title, tree, collapse = false }) => {
   // TODO(dcramer): this still needs to build the tree
   // love that we cant use filters here...
   const node = tree.find(n => n.name === root);
-  const parentNode = node.children.find(n => n.name === "");
+  const parentNode = node.children
+    ? node.children.find(n => n.name === "")
+    : null;
 
   const location = useLocation();
   const isActive =
@@ -129,7 +131,7 @@ const DynamicNav = ({ root, title, tree, collapse = false }) => {
   return (
     <li className="mb-3" data-sidebar-branch>
       {header}
-      {(!collapse || isActive) && (
+      {(!collapse || isActive) && node.children && (
         <ul className="list-unstyled" data-sidebar-tree>
           {renderChildren(node.children)}
         </ul>

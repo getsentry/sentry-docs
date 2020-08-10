@@ -68,7 +68,7 @@ While the server is running, you can also view the [Markdown styleguide](http://
 MDX has its flaws. When rendering components, any text inside of them is treated as raw text (_not_ markdown). To work around this you can use the `<markdown>` tag, but it also has its issues. Generally speaking, put an empty line after the opening tag, and before the closing tag.
 
 ```jsx
-// dont do this as parsing will hit weird breakages
+// don't do this as parsing will hit weird breakages
 <markdown>
 foo bar
 </markdown>

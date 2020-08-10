@@ -17,14 +17,9 @@ const includeQuery = graphql`
     }
     allFile(filter: { sourceInstanceName: { eq: "includes" } }) {
       nodes {
+        id
         relativePath
         name
-        childMarkdownRemark {
-          internal {
-            type
-          }
-          html
-        }
         childMdx {
           internal {
             type
@@ -36,41 +31,44 @@ const includeQuery = graphql`
   }
 `;
 
+const slugMatches = (slug1, slug2) => {
+  if (slug1 === "browser") slug1 = "javascript";
+  if (slug2 === "browser") slug2 = "javascript";
+  return slug1 === slug2;
+};
+
 const PlatformContent = ({ includePath }) => {
-  const [dropdown, setDropdown] = React.useState(false);
+  const [dropdown, setDropdown] = React.useState(null);
 
   return (
     <StaticQuery
       query={includeQuery}
       render={({
         allFile: { nodes: files },
-        allPlatformsYaml: { nodes: platforms }
+        allPlatformsYaml: { nodes: platforms },
       }) => {
         return (
           <Location>
             {({ location, navigate }) => {
-              let platformQueryString = parse(location.search).platform || null;
+              const platform = parse(location.search).platform || null;
 
               const matches = files.filter(
                 node => node.relativePath.indexOf(includePath) === 0
               );
               const defaultPlatform = platforms.find(p =>
-                matches.find(m => m.name === p.slug)
+                matches.find(m => slugMatches(m.name, p.slug))
               );
 
-              let activePlatform = platforms.find(
-                p => p.slug === (platformQueryString || defaultPlatform.slug)
+              let activePlatform =
+                platforms.find(p => slugMatches(p.slug, platform)) ||
+                defaultPlatform;
+              if (!activePlatform) activePlatform = defaultPlatform;
+              const contentMatch = matches.find(m =>
+                slugMatches(m.name, activePlatform.slug)
               );
-              let contentMatch = matches.find(
-                m => m.name === activePlatform.slug
-              );
-              if (
-                !contentMatch &&
-                platformQueryString !== defaultPlatform.slug
-              ) {
-                activePlatform = defaultPlatform;
-                contentMatch = matches.find(
-                  m => m.name === activePlatform.slug
+              if (!contentMatch) {
+                console.warn(
+                  `Couldn't find content in ${includePath} for selected platform: ${activePlatform.slug}`
                 );
               }
 
@@ -91,13 +89,14 @@ const PlatformContent = ({ includePath }) => {
                         style={{ display: dropdown ? "block" : "none" }}
                       >
                         {matches.map(node => {
-                          const platform = platforms.find(
-                            p => p.slug === node.name
+                          const platform = platforms.find(p =>
+                            slugMatches(p.slug, node.name)
                           );
                           return (
                             <a
                               className="dropdown-item"
                               role="tab"
+                              key={platform.slug}
                               onClick={() => {
                                 setDropdown(false);
                                 navigate(
@@ -120,7 +119,9 @@ const PlatformContent = ({ includePath }) => {
 
                   <div className="tab-content">
                     <div className="tab-pane show active">
-                      <Content key={activePlatform.slug} file={contentMatch} />
+                      {contentMatch && (
+                        <Content key={contentMatch.id} file={contentMatch} />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -134,7 +135,7 @@ const PlatformContent = ({ includePath }) => {
 };
 
 PlatformContent.propTypes = {
-  includePath: PropTypes.string.isRequired
+  includePath: PropTypes.string.isRequired,
 };
 
 PlatformContent.defaultProps = {};

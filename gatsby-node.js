@@ -5,9 +5,9 @@ exports.onCreateWebpackConfig = ({ stage, actions }) => {
   actions.setWebpackConfig({
     resolve: {
       alias: {
-        "~src": path.join(path.resolve(__dirname, "src"))
-      }
-    }
+        "~src": path.join(path.resolve(__dirname, "src")),
+      },
+    },
   });
 };
 
@@ -28,6 +28,7 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
 
     type Fields {
       slug: String!
+      legacy: Boolean
     }
 
     type ApiParam {
@@ -39,6 +40,7 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
     type ApiDoc implements Node {
       sidebar_order: Int
       title: String!
+      fields: Fields
 
       api_path: String!
       authentication:  String
@@ -56,13 +58,13 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
       name: "Frontmatter",
       fields: {
         title: {
-          type: "String!"
+          type: "String!",
         },
         keywords: {
-          type: "[String!]"
+          type: "[String!]",
         },
         draft: {
-          type: "Boolean"
+          type: "Boolean",
         },
         sidebar_order: {
           type: "Int",
@@ -72,25 +74,25 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
             return source[info.fieldName] !== null
               ? source[info.fieldName]
               : 10;
-          }
+          },
         },
 
         // wizard fields
         // TODO(dcramer): move to a diff schema/type
         support_level: {
-          type: "String"
+          type: "String",
         },
         type: {
-          type: "String"
+          type: "String",
         },
         doc_link: {
-          type: "String"
+          type: "String",
         },
         name: {
-          type: "String"
-        }
-      }
-    })
+          type: "String",
+        },
+      },
+    }),
   ];
   createTypes(typeDefs);
 };
@@ -100,7 +102,7 @@ exports.onCreateNode = ({
   actions,
   getNode,
   createContentDigest,
-  createNodeId
+  createNodeId,
 }) => {
   const { createNodeField, createNode } = actions;
   if (node.internal.type === "Mdx" || node.internal.type === "MarkdownRemark") {
@@ -108,14 +110,25 @@ exports.onCreateNode = ({
     createNodeField({
       name: "slug",
       node,
-      value
+      value,
+    });
+
+    createNodeField({
+      name: "legacy",
+      node,
+      value: value.indexOf("/clients/") === 0,
     });
   } else if (node.internal.type === "ApiDoc") {
     const value = createFilePath({ node, getNode });
     createNodeField({
       name: "slug",
       node,
-      value: `/api${value}`
+      value: `/api${value}`,
+    });
+    createNodeField({
+      name: "legacy",
+      node,
+      value: false,
     });
 
     const markdownNode = {
@@ -126,15 +139,15 @@ exports.onCreateNode = ({
         content: node.description,
         contentDigest: createContentDigest(node.description),
         mediaType: `text/markdown`,
-        type: `ApiDocMarkdown`
-      }
+        type: `ApiDocMarkdown`,
+      },
     };
     createNode(markdownNode);
 
     createNodeField({
       node,
       name: "description___NODE",
-      value: markdownNode.id
+      value: markdownNode.id,
     });
   }
 };
@@ -165,8 +178,8 @@ exports.createPages = async function({ actions, graphql, reporter }) {
         component,
         context: {
           id: node.id,
-          title: node.title
-        }
+          title: node.title,
+        },
       });
     });
   };
@@ -210,8 +223,8 @@ exports.createPages = async function({ actions, graphql, reporter }) {
           component,
           context: {
             id: node.id,
-            title: child.frontmatter.title
-          }
+            title: child.frontmatter.title,
+          },
         });
       }
     });

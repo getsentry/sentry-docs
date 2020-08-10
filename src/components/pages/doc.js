@@ -22,6 +22,7 @@ export const pageQuery = graphql`
       }
     }
     file(id: { eq: $id }) {
+      id
       relativePath
       sourceInstanceName
       childMarkdownRemark {

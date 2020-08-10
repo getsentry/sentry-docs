@@ -1,5 +1,6 @@
 import React from "react";
 
+import CodeContext, { useCodeContextState } from "./codeContext";
 import SEO from "./seo";
 import Header from "./header";
 import Sidebar from "./sidebar";
@@ -70,7 +71,9 @@ export default ({
               >
                 <h1 className="mb-3">{title}</h1>
                 <div id="main">
-                  {children}
+                  <CodeContext.Provider value={useCodeContextState()}>
+                    {children}
+                  </CodeContext.Provider>
 
                   {file && (
                     <GitHubCTA

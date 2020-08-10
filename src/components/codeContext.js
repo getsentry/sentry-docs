@@ -18,9 +18,9 @@ const DEFAULTS = {
       ORG_SLUG: "exmaple-org",
       MINIDUMP_URL: "https://examplePublicKey@o0.ingest.sentry.io/0",
       UNREAL_URL: "https://examplePublicKey@o0.ingest.sentry.io/0",
-      title: `example-org / example-project`
-    }
-  ]
+      title: `example-org / example-project`,
+    },
+  ],
 };
 
 const CodeContext = React.createContext(DEFAULTS);
@@ -33,7 +33,7 @@ const parseDsn = function(dsn) {
     publicKey: escape(match[2]),
     secretKey: `${escape(match[3])}`,
     host: escape(match[4]),
-    pathSection: escape(match[5])
+    pathSection: escape(match[5]),
   };
 };
 
@@ -56,6 +56,7 @@ export function fetchCodeKeywords() {
   return new Promise(resolve => {
     function transformResults(projects) {
       if (projects.length === 0) {
+        console.warn("Unable to fetch codeContext - using defaults.");
         resolve(DEFAULTS);
       } else {
         resolve({
@@ -70,13 +71,13 @@ export function fetchCodeKeywords() {
               PROJECT_ID: project.id,
               PROJECT_NAME: project.slug,
               ORG_ID: project.organizationId,
-              ORG_NAME: project.organizationName,
+              ORG_NAME: project.organizationSlug,
               ORG_SLUG: project.organizationSlug,
               MINIDUMP_URL: formatMinidumpURL(parsedDsn),
               UNREAL_URL: formatUnrealEngineURL(parsedDsn),
-              title: `${project.organizationSlug} / ${project.projectSlug}`
+              title: `${project.organizationSlug} / ${project.projectSlug}`,
             };
-          })
+          }),
         });
       }
     }
@@ -120,6 +121,6 @@ export function useCodeContextState(fetcher = fetchCodeKeywords) {
   return {
     codeKeywords,
     sharedCodeSelection: useState(null),
-    sharedKeywordSelection: useState({})
+    sharedKeywordSelection: useState({}),
   };
 }
