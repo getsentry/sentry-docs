@@ -161,20 +161,19 @@ const Sidebar = () => {
               title="Error Monitoring"
               tree={tree}
             />
-            <DynamicNav root="platforms" title="Platforms" tree={tree} />
+            <DynamicNav 
+              root="platforms" 
+              title="Platforms" 
+              tree={tree} 
+            />
             <DynamicNav
               root="enriching-error-data"
               title="Enriching Error Data"
               tree={tree}
             />
             <DynamicNav
-              root="performance-monitoring"
-              title="Performance Monitoring"
-              tree={tree}
-            />
-            <DynamicNav
-              root="workflow"
-              title="Workflow and Integrations"
+              root="product"
+              title="Product"
               tree={tree}
             />
             <DynamicNav
@@ -201,7 +200,6 @@ const Sidebar = () => {
               tree={tree}
               collapse
             />
-            <DynamicNav root="guides" title="Guides" tree={tree} collapse />
             <DynamicNav root="support" title="Support" tree={tree} collapse />
             <li className="mb-3" data-sidebar-branch>
               <div
