@@ -171,7 +171,7 @@ const Sidebar = () => {
             />
             <DynamicNav
               root="product"
-              title="Product Guide"
+              title="Product"
               tree={tree}
             />
             <DynamicNav
