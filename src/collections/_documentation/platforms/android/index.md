@@ -519,6 +519,9 @@ If you want to disable the automatic collection of the breadcrumbs please add th
 
     <!--    To disable the system events breadcrumbs integration-->
     <!--    <meta-data android:name="io.sentry.breadcrumbs.system-events" android:value="false" />-->
+    
+    <!--    To disable the app components breadcrumbs integration-->
+    <!--    <meta-data android:name="io.sentry.breadcrumbs.app-components" android:value="false" />-->
 </application>
 ```
 
