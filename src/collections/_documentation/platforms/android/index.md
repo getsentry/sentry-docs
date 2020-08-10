@@ -498,6 +498,29 @@ Emulator indicator
 
 - Whether the device is an emulator
 
+**Automatically collected Breadcrumbs**
+
+Android SDK automatically collects and converts the following events into the breadcrumbs:
+- Android Activity Lifecycle Events
+- Application Lifecycle Events (Lifecycle of the application process)
+- System Events (Low battery, Low storage space, Airplane mode started, Shutdown, Changes of the configuration, etc. )
+ 
+
+If you want to disable the automatic collection of the breadcrumbs please add the following items into your manifest.
+
+```xml
+<application>
+    <!--    To disable the activity lifecycle breadcrumbs integration-->
+    <!--    <meta-data android:name="io.sentry.breadcrumbs.activity-lifecycle" android:value="false" />-->
+
+    <!--     To disable the app lifecycle breadcrumbs integration-->
+    <!--    <meta-data android:name="io.sentry.breadcrumbs.app-lifecycle" android:value="false" />-->
+
+    <!--    To disable the system events breadcrumbs integration-->
+    <!--    <meta-data android:name="io.sentry.breadcrumbs.system-events" android:value="false" />-->
+</application>
+```
+
 ## Advanced Usage
 
 ### Requirements
@@ -634,6 +657,7 @@ SentryAndroid.init(this, options -> {
 If you want to have control over what breadcrumbs are attached to your data, you can register a hook that is called with each new breadcrumb that's created.
 
 That allows the user to decide whether and how a breadcrumb should be sent.
+
 
 ### Multi-Dex Support
 
