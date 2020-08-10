@@ -504,6 +504,7 @@ Android SDK automatically collects and converts the following events into the br
 - Android Activity Lifecycle Events
 - Application Lifecycle Events (Lifecycle of the application process)
 - System Events (Low battery, Low storage space, Airplane mode started, Shutdown, Changes of the configuration, etc. )
+- App. Component callbacks
  
 
 If you want to disable the automatic collection of the breadcrumbs please add the following items into your manifest.
