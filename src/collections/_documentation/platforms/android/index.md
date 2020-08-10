@@ -500,7 +500,7 @@ Emulator indicator
 
 **Automatically collected Breadcrumbs**
 
-Android SDK automatically collects and converts the following events into the breadcrumbs:
+Android SDK automatically collects and converts the following events into breadcrumbs:
 - Android Activity Lifecycle Events
 - Application Lifecycle Events (Lifecycle of the application process)
 - System Events (Low battery, Low storage space, Airplane mode started, Shutdown, Changes of the configuration, etc. )
