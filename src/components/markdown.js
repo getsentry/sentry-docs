@@ -9,6 +9,7 @@ import Break from "./break";
 import SmartLink from "./smartLink";
 import CodeBlock from "./codeBlock";
 import CodeTabs from "./codeTabs";
+import ConfigKey from "./configKey";
 import JsCdnTag from "./jsCdnTag";
 import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
@@ -19,10 +20,11 @@ const mdxComponents = {
   Link: SmartLink,
   CodeBlock,
   CodeTabs,
+  ConfigKey,
   Break,
   ParamTable,
   PlatformContent,
-  JsCdnTag
+  JsCdnTag,
 };
 
 export default ({ value }) => {
