@@ -1,0 +1,128 @@
+---
+draft: false
+categories: []
+toc: true
+title: Unreal Engine 4
+tags: []
+---
+Installation of a Sentry SDK is not required in order to capture the crashes of your
+UE4 application or game. Sentry supports the *UE4 Crash Reporter*.
+
+To integrate your UE4 game or application with Sentry, the following steps are required:
+
+1. Include the *UE4 Crash Reporter* to your game or application.
+2. Include Debug information in the crash reports.
+3. Add the Sentry DSN to the relevant configuration file.
+4. Upload your games symbols so Sentry can display function names and line numbers.
+5. Optionally enable Event Attachments for your Sentry project.
+
+Below we'll break down each step in detail.
+
+## UE4 Crash reporter
+
+The UE4 Crash Reporter is provided out of the box by Epic Games. It is able to collect relevant
+information about the crash and send it to a service like Sentry to process.
+
+Adding it to your game means that in case a crash happens, the following dialog is displayed
+to the user:
+
+![The UE4 Crash Reporter](ue4-crash-reporter.png)
+
+### Include the UE4 Crash Reporter
+
+You can add the _Crash Report Client_ to your game in your *Project Settings*.
+
+The simplest way is to search the option: `Crash Reporter`:
+
+![Include UE4 Crash Reporter](ue4-include-crash-reporter.png)
+
+The option is located under *Project > Packaging* menu, then select *show advanced* followed by
+checking the box for: `Include Crash Reporter`.
+
+## Debug information
+
+To get the most out of Sentry, crash reports are required to include debug information.
+In order for Sentry to be able to process the crash report and translate
+memory addresses to meaningful information like function names, module names
+and line numbers, the crash itself must include debug information and also, [symbols need
+to be uploaded to Sentry](#upload-debug-symbols).
+
+### Include Debug Information
+
+![Include Debug Files](ue4-include-debug-files.png)
+
+The option is also located under *Project > Packaging* menu, then select *show advanced* followed by
+checking the box for: `Include Debug Files`.
+
+## Add the Sentry DSN
+
+Now that the *Crash Reporter* and *Debug Files* are included, UE4 needs to know where to send the
+crash. For that, we add the Sentry *DSN* (Data Source Name) to game's configuration file. This will
+include which project within Sentry you want to see the crashes arriving in real time.
+That's accomplished by configuring the `CrashReportClient` in the *DefaultEngine.ini* file.
+
+Edit the file:
+> project-root\Config\DefaultEngine.ini
+
+Add the configuration section:
+
+```ini
+[CrashReportClient]
+CrashReportClientVersion=1.0
+DataRouterUrl="___UNREAL_URL___"
+```
+
+<Alert level="info" title="Note"><markdown>
+
+If a `[CrashReportClient]` section already exists, simply changing the value of `DataRouterUrl`
+ is enough.
+
+</markdown></Alert>
+
+
+## Upload Debug Symbols {#upload-debug-symbols}
+
+To allow Sentry to fully process native crashes and provide you with
+symbolicated stack traces, you need to upload _Debug Information Files_
+(sometimes also referred to as _Debug Symbols_ or just _Symbols_). We recommend
+uploading debug information during your build or release process.
+
+For all libraries where you'd like to receive symbolication, **you need
+to provide debug information**. This includes dependencies and operating system
+libraries. If you are not sure which files are required, go to _Project
+Settings > Processing Issues_, which shows a list of all the necessary files and
+instructions to retrieve them.
+
+In addition to Debug Information Files, Sentry needs _Call Frame Information_
+(CFI) to extract accurate stack traces from minidumps of optimized release
+builds. CFI is usually part of the executables and not copied to debug symbols.
+Unless you are uploading Breakpad symbols, be sure to also include the binaries
+when uploading files to Sentry.
+
+For more information on uploading debug information and their supported formats,
+see [Debug Information Files](/workflow/debug-files/).
+
+
+## Event Attachments
+
+The files within the crash uploaded to Sentry can be persisted using *Event Attachments*. Learn more about these in [Attachments](/enriching-error-data/attachments/).
+
+The organization and project setting _Store Native Crash Reports_ also enables
+storage of the original minidump files. For data privacy reasons, this setting
+is by default disabled. Raw minidumps are deleted permanently with their issues
+or after 30 days.
+
+<Alert level="" title="Early Access"><markdown>
+
+Event attachments are not yet available to all organizations. If interested, please [contact](https://sentry.io/contact/enterprise/) our friendly sales team to enroll your organization and receive more information. We are working to bring this feature to all customers in the near future.
+
+</markdown></Alert>
+
+
+## Size Limits
+
+Event ingestion imposes limits on the size of UE4 crash reports. These limits
+are subject to future change and defined currently as:
+
+- *20MB* for a compressed request
+- *100MB* for the full crash report after decompression

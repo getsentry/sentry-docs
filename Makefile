@@ -1,6 +1,6 @@
 develop:
-	[ ! -f gatsby/.env.develpoment ] && cp gatsby/.env.example gatsby/.env.development
-	yarn develop
+	[ ! -f .env.develpoment ] && cp .env.example .env.development
+	yarn
 
 test:
 	yarn test
