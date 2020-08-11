@@ -22,11 +22,13 @@ function SEO({ description, lang, meta, keywords, title, file }) {
       render={data => {
         const robots = (
           (
+            file &&
             file.childMarkdownRemark && 
             file.childMarkdownRemark.frontmatter && 
             file.childMarkdownRemark.frontmatter.robots) 
           || 
           (
+            file &&
             file.childMdx && 
             file.childMdx.frontmatter &&
             file.childMdx.frontmatter.robots
