@@ -70,7 +70,7 @@ const NavLink = ({ to, title, children, remote, ...props }) => {
 const toTree = nodeList => {
   const result = [];
   const level = { result };
-
+    
   nodeList.forEach(node => {
     const slug = node.fields.slug;
     slug.split("/").reduce((r, name, i, a) => {
@@ -82,7 +82,22 @@ const toTree = nodeList => {
       return r[name];
     }, level);
   });
-
+  
+  // When you write new docs and you want to replace the old "platforms" with the "sdks"
+  // tree, just add the the child that should be replaced here
+  // TODO: We need to add folders from SDKs that don't exist in platforms yet here
+  const newSdkDocs = ['javascript'];
+  
+  const platformsIndex = result[0].children.findIndex(x => x.name === "platforms");
+  const sdksIndex = result[0].children.findIndex(x => x.name === "sdks");
+  newSdkDocs.forEach(newDocs => {
+    const toReplaceIndex = result[0].children[platformsIndex].children.findIndex(x => x.name === newDocs);
+    const withNewIndex = result[0].children[sdksIndex].children.findIndex(x => x.name === newDocs);
+    if (toReplaceIndex > -1 && withNewIndex > -1) {
+      result[0].children[platformsIndex].children[toReplaceIndex] = result[0].children[sdksIndex].children[withNewIndex];
+    }
+  });
+  
   return result[0].children;
 };
 
