@@ -35,7 +35,7 @@ const formatCase = (style, value) => {
       return value
         .split(/-/g)
         .map((val, idx) =>
-          idx == 0 ? val : val.charAt(0).toUpperCase() + val.substr(1)
+          idx === 0 ? val : val.charAt(0).toUpperCase() + val.substr(1)
         )
         .join("");
     case "PascalCase":

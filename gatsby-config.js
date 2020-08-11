@@ -140,9 +140,16 @@ const getPlugins = () => {
         output: `${__dirname}/static/_platforms`,
       },
     },
-    // this (optional) plugin enables Progressive Web App + Offline functionality
-    // To learn more, visit: https://gatsby.app/offline
-    // 'gatsby-plugin-offline',
+    {
+      resolve: "./plugins/gatsby-redirects",
+      options: {
+        inputConfigFile: `${__dirname}/nginx.conf`,
+        outputConfigFile: `${__dirname}/nginx.out.conf`,
+      },
+    },
+    // generate normal redirects so when you're running without nginx
+    // you receive similar behavior
+    `gatsby-plugin-meta-redirect`,
   ];
   if (process.env.ALGOLIA_INDEX === "1") {
     plugins.push({
