@@ -29,6 +29,19 @@ You will now be able to access docs via http://localhost:3000.
 [gatsby]: https://gatsbyjs.org
 [volta]: https://volta.sh/
 
+## Redirects
+
+Redirects are supported via yaml frontmatter in `.md` and `.mdx` files:
+
+```yaml
+---
+redirect_from:
+  - /performance-monitoring/discover/
+---
+```
+
+These will be generated as both client-side (using an empty page with a meta tag) and server-side (nginx rules).
+
 ## Wizard Pages
 
 A number of pages exist to provide content within Sentry installations. We refer to this system as the _Wizard_. These pages are found in Gatsby's `wizard` content directory, and are rendered and exported to a JSON file for use within the `getsentry/sentry` application.

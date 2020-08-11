@@ -66,6 +66,9 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
         draft: {
           type: "Boolean",
         },
+        redirect_from: {
+          type: "[String!]",
+        },
         sidebar_order: {
           type: "Int",
           resolve(source, args, context, info) {
