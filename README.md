@@ -29,6 +29,12 @@ You will now be able to access docs via http://localhost:3000.
 [gatsby]: https://gatsbyjs.org
 [volta]: https://volta.sh/
 
+## Markdown Documentation
+
+Documentation is written in Markdown (via Remark) and MDX.
+
+[<kbd>Read the quick reference</kbd>](https://daringfireball.net/projects/markdown/syntax)
+
 ## Redirects
 
 Redirects are supported via yaml frontmatter in `.md` and `.mdx` files:
@@ -59,22 +65,7 @@ support_level: production
 This is my  content.
 ```
 
-## Development mode
-
-```bash
-$ yarn start
-```
-
-## Markdown documentation
-
-Documentation is written in Markdown, which is parsed by [kramdown](https://kramdown.gettalong.org/).
-
-[<kbd>Read the quick reference</kbd>](https://kramdown.gettalong.org/quickref.html)
-
-While the server is running, you can also view the [Markdown styleguide](http://0.0.0.0:9000/markdown-styleguide/links/)
-
-
-## Markdown vs MDX
+## Notes on Markdown vs MDX
 
 :pray: that MDX v2 fixes this.
 
