@@ -36,7 +36,7 @@ export default ({
   const hasToc = child && !!child.tableOfContents.items;
   return (
     <div className="document-wrapper">
-      <SEO title={title} />
+      <SEO title={title} file={file} />
       <div className="sidebar">
         <Header
           siteTitle={siteMetadata.title}
