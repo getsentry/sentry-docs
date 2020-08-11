@@ -27,7 +27,7 @@ $ yarn start
 You will now be able to access docs via http://localhost:3000.
 
 [gatsby]: https://gatsbyjs.org
-volta]: https://volta.sh/
+[volta]: https://volta.sh/
 
 ## Wizard Pages
 

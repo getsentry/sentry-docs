@@ -7,6 +7,7 @@ import Sidebar from "./sidebar";
 import Navbar from "./navbar";
 import SmartLink from "./smartLink";
 import TableOfContents from "./tableOfContents";
+import * as Sentry from '@sentry/browser';
 
 import "~src/css/screen.scss";
 
@@ -32,6 +33,11 @@ export default ({
   pageContext: { title },
   children
 }) => {
+  const tx = Sentry.getCurrentHub().getScope().getTransaction();
+  if (tx) {
+    tx.setStatus("ok");
+  }
+
   const child = file && (file.childMarkdownRemark || file.childMdx);
   const hasToc = child && !!child.tableOfContents.items;
   return (
