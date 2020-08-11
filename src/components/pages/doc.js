@@ -33,6 +33,7 @@ export const pageQuery = graphql`
         }
         frontmatter {
           title
+          robots
         }
       }
       childMdx {
@@ -43,6 +44,7 @@ export const pageQuery = graphql`
         }
         frontmatter {
           title
+          robots
         }
       }
     }

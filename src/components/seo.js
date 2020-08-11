@@ -15,11 +15,24 @@ const detailsQuery = graphql`
   }
 `;
 
-function SEO({ description, lang, meta, keywords, title }) {
+function SEO({ description, lang, meta, keywords, title, file }) {
   return (
     <StaticQuery
       query={detailsQuery}
       render={data => {
+        const robots = (
+          (
+            file.childMarkdownRemark && 
+            file.childMarkdownRemark.frontmatter && 
+            file.childMarkdownRemark.frontmatter.robots) 
+          || 
+          (
+            file.childMdx && 
+            file.childMdx.frontmatter &&
+            file.childMdx.frontmatter.robots
+            )
+          );
+          
         const metaDescription =
           description || data.site.siteMetadata.description;
         return (
@@ -71,6 +84,14 @@ function SEO({ description, lang, meta, keywords, title }) {
                     }
                   : []
               )
+              .concat(
+                robots
+                  ? {
+                    property: "robots",
+                    content: robots
+                  }
+                  : []
+              )
               .concat(meta)}
           />
         );
@@ -89,6 +110,7 @@ SEO.propTypes = {
   description: PropTypes.string,
   lang: PropTypes.string,
   meta: PropTypes.array,
+  file: PropTypes.object,
   keywords: PropTypes.arrayOf(PropTypes.string),
   title: PropTypes.string.isRequired
 };
