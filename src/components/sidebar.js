@@ -121,7 +121,6 @@ const renderChildren = children => {
     ),
     n => (n.node.frontmatter || n.node).sidebar_order
   ).map(({ node, children }) => {
-    console.log(node);
     return (
       <NavLink
         to={node.fields.slug}
