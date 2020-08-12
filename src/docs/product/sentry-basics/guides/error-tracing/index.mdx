@@ -15,9 +15,11 @@ Generate a unique transaction identifier and set as a Sentry tag in the service 
 
 ```javascript
 // generate unique transactionId and set as Sentry tag
-const transactionId = Math.random().toString(36).substr(2, 9);
+const transactionId = Math.random()
+  .toString(36)
+  .substr(2, 9);
 Sentry.configureScope(function(scope) {
-    scope.setTag("transaction_id", transactionId);
+  scope.setTag("transaction_id", transactionId);
 });
 ```
 
@@ -27,21 +29,21 @@ When initiating the request, set the transaction identifier as a custom request 
 
 ```javascript
 // perform request (set transactionId as header and throw error appropriately)
-fetch('https://my.artisanal-hot-dogs.com/checkout', {
-    method: 'POST',
-    headers: {
-      "X-Transaction-ID": transactionId
-    },
-    body: order
+fetch("https://my.artisanal-hot-dogs.com/checkout", {
+  method: "POST",
+  headers: {
+    "X-Transaction-ID": transactionId,
+  },
+  body: order,
 })
-.then(function (response) {
+  .then(function(response) {
     if (response.status !== 200) {
-        throw new Error(response.status + " - " + response.statusText);
+      throw new Error(response.status + " - " + response.statusText);
     }
-})
-.catch(function (error) {
+  })
+  .catch(function(error) {
     throw error;
-});
+  });
 ```
 
 ### Parse the transaction header
@@ -49,12 +51,12 @@ fetch('https://my.artisanal-hot-dogs.com/checkout', {
 In the receiving service (the server responding to the request), extract the unique identifier, in our case `transactionId` customer header, and set it as a Sentry tag. Both services should have set the same tag key/value pair.
 
 ```javascript
-let transactionId = request.header('X-Transaction-ID');
+let transactionId = request.header("X-Transaction-ID");
 
 if (transactionId) {
-    Sentry.configureScope(function(scope) {
-        scope.setTag("transaction_id", transactionId);
-    });
+  Sentry.configureScope(function(scope) {
+    scope.setTag("transaction_id", transactionId);
+  });
 }
 ```
 
@@ -124,13 +126,13 @@ class RequestIdMiddleware:
 
 ```javascript
 app.use((req, res, next) => {
-    let requestId = req.headers['x-request-id'];
-    if (requestId) {
-        Sentry.configureScope(function(scope) {
-            scope.setTag("request_id", requestId);
-        });
-    }
-    next();
+  let requestId = req.headers["x-request-id"];
+  if (requestId) {
+    Sentry.configureScope(function(scope) {
+      scope.setTag("request_id", requestId);
+    });
+  }
+  next();
 });
 ```
 
@@ -142,6 +144,6 @@ After you configure the variable in your SDK, the variable surfaces as a tag in 
 
 ### Searching Request IDs in Sentry
 
-If you also need several example cases to supplement a unique request ID, you can use Sentry's [Discover](/performance-monitoring/discover-queries/) functionality to search for all request ids you've seen on a specific URL.
+If you also need several example cases to supplement a unique request ID, you can use Sentry's [Discover](/product/discover-queries/) functionality to search for all request ids you've seen on a specific URL.
 
 ![Image of the request_id grouped with other tags.](tracing_with_discover.png)
