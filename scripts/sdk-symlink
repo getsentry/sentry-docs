@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 
-const child_process = require('child_process');
 const fs = require("fs");
 const path = require("path");
 
 const args = process.argv;
 var myArgs = process.argv.slice(2);
 
-var symlinkRecursiveSync = function(src, dest) {
+var symlinkRecursiveSync = function(src, dest) {    
   var exists = fs.existsSync(src);
   var stats = exists && fs.statSync(src);
   var isDirectory = exists && stats.isDirectory();
@@ -19,9 +18,14 @@ var symlinkRecursiveSync = function(src, dest) {
                             path.join(dest, childItemName));
     });
   } else {
-    const cwd = path.join(__dirname, '..');
-    console.log(`## - Symlink ${src} -> ${dest}`);
-    fs.symlinkSync(path.join(cwd, src), path.join(cwd, dest));
+    
+    // const relativePath = path.relative(src, dest);
+    const target = path.relative(
+        path.dirname(dest),
+        src
+    );    
+    console.log(`## - Symlink ${target} -> ${dest}`);
+    fs.symlinkSync(target, dest);
     // child_process.execSync(`ln -s ${src} ${dest}`);
   }
 };
