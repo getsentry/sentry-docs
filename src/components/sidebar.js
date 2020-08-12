@@ -67,11 +67,6 @@ const NavLink = ({ to, title, children, remote, ...props }) => {
   );
 };
 
-
-function insertAt(array, index, ...elementsArray) {
-  
-}
-
 const toTree = nodeList => {
   const result = [];
   const level = { result };
