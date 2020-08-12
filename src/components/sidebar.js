@@ -67,6 +67,11 @@ const NavLink = ({ to, title, children, remote, ...props }) => {
   );
 };
 
+
+function insertAt(array, index, ...elementsArray) {
+  
+}
+
 const toTree = nodeList => {
   const result = [];
   const level = { result };
@@ -85,8 +90,7 @@ const toTree = nodeList => {
   
   // When you write new docs and you want to replace the old "platforms" with the "sdks"
   // tree, just add the the child that should be replaced here
-  // TODO: We need to add folders from SDKs that don't exist in platforms yet here
-  const newSdkDocs = ['javascript'];
+  const newSdkDocs = ['javascript', 'angular'];
   
   const platformsIndex = result[0].children.findIndex(x => x.name === "platforms");
   const sdksIndex = result[0].children.findIndex(x => x.name === "sdks");
@@ -95,6 +99,15 @@ const toTree = nodeList => {
     const withNewIndex = result[0].children[sdksIndex].children.findIndex(x => x.name === newDocs);
     if (toReplaceIndex > -1 && withNewIndex > -1) {
       result[0].children[platformsIndex].children[toReplaceIndex] = result[0].children[sdksIndex].children[withNewIndex];
+    } else if (toReplaceIndex === -1 && withNewIndex > -1) {
+      // That means this doesn't exist in the old docs so we only append it
+      const order = result[0].children[sdksIndex].node.frontmatter.sidebar_order;
+      if (order) {
+        result[0].children[platformsIndex].children.splice(order, 0, result[0].children[sdksIndex].children[withNewIndex]);
+      } else {
+        result[0].children[platformsIndex].children.push(result[0].children[sdksIndex].children[withNewIndex]);  
+      }
+      
     }
   });
   
@@ -108,6 +121,7 @@ const renderChildren = children => {
     ),
     n => (n.node.frontmatter || n.node).sidebar_order
   ).map(({ node, children }) => {
+    console.log(node);
     return (
       <NavLink
         to={node.fields.slug}
