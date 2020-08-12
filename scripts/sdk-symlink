@@ -3,35 +3,28 @@
 const fs = require("fs");
 const path = require("path");
 
-const args = process.argv;
 var myArgs = process.argv.slice(2);
 
-var symlinkRecursiveSync = function(src, dest) {    
+const symlinkRecursiveSync = function(src, dest) {    
   var exists = fs.existsSync(src);
   var stats = exists && fs.statSync(src);
   var isDirectory = exists && stats.isDirectory();
   if (isDirectory) {
     fs.mkdirSync(dest);
     console.log(`# - New Dir ${dest}`);
-    fs.readdirSync(src).forEach(function(childItemName) {
-        symlinkRecursiveSync(path.join(src, childItemName),
-                            path.join(dest, childItemName));
-    });
+    fs.readdirSync(src).forEach(childItemName => symlinkRecursiveSync(
+        path.join(src, childItemName),
+        path.join(dest, childItemName)
+    ));
   } else {
-    
-    // const relativePath = path.relative(src, dest);
-    const target = path.relative(
-        path.dirname(dest),
-        src
-    );    
+    const target = path.relative(path.dirname(dest), src);    
     console.log(`## - Symlink ${target} -> ${dest}`);
     fs.symlinkSync(target, dest);
-    // child_process.execSync(`ln -s ${src} ${dest}`);
   }
 };
 
 if (!myArgs[0] || !myArgs[1]) {
-    console.error('Please call this command with `from to`');
+    console.error('Please call this command with like `sdk:copy FROM TO`');
     process.exit(1);
 }
 
