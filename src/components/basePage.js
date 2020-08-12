@@ -7,8 +7,6 @@ import SmartLink from "./smartLink";
 import TableOfContents from "./tableOfContents";
 import * as Sentry from "@sentry/gatsby";
 
-import "~src/css/screen.scss";
-
 const GitHubCTA = ({ sourceInstanceName, relativePath }) => (
   <div className="github-cta">
     <small>

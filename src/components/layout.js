@@ -4,7 +4,6 @@ import { StaticQuery, graphql } from "gatsby";
 import Header from "./header";
 import Sidebar from "./sidebar";
 import Navbar from "./navbar";
-import SmartLink from "./smartLink";
 
 import "~src/css/screen.scss";
 
@@ -19,20 +18,6 @@ const query = graphql`
     }
   }
 `;
-
-const GitHubCTA = ({ sourceInstanceName, relativePath }) => (
-  <div className="github-cta">
-    <small>
-      You can{" "}
-      <SmartLink
-        to={`https://github.com/getsentry/sentry-docs/edit/master/src/${sourceInstanceName}/${relativePath}`}
-      >
-        edit this page
-      </SmartLink>{" "}
-      on GitHub.
-    </small>
-  </div>
-);
 
 export default ({ children }) => {
   return (
