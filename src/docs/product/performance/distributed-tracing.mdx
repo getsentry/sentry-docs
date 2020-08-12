@@ -1,6 +1,9 @@
 ---
 title: Distributed Tracing
 sidebar_order: 3
+redirect_from:
+  - /performance/distributed-tracing/
+  - /performance-monitoring/distributed-tracing/
 ---
 
 Enabling tracing augments your existing error data by capturing interactions among your software systems. With tracing, Sentry tracks your software performance, measuring things like throughput and latency, and can also display the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution, helping you both diagnose problems and measure your application's overall health more easily. Tracing in Sentry provides insights such as:
@@ -13,9 +16,9 @@ Enabling tracing augments your existing error data by capturing interactions amo
 
 To begin, a note about what tracing is not: Tracing is not profiling. Though the goals of profiling and tracing overlap quite a bit, and though they can both be used to diagnose problems in your application, they differ in terms of what they measure and how the data is recorded.
 
-A [profiler](https://en.wikipedia.org/wiki/Profiling_(computer_programming)) may measure any number of aspects of an application's operation: the number of instructions executed, the amount of memory being used by various processes, the amount of time a given function call takes, and many more. The resulting profile is a statistical summary of these measurements.
+A [profiler](<https://en.wikipedia.org/wiki/Profiling_(computer_programming)>) may measure any number of aspects of an application's operation: the number of instructions executed, the amount of memory being used by various processes, the amount of time a given function call takes, and many more. The resulting profile is a statistical summary of these measurements.
 
-A [tracing tool](https://en.wikipedia.org/wiki/Tracing_(software)), on the other hand, focuses on _what_ happened (and when), rather than how many times it happened or how long it took. The resulting trace is a log of events which occurred during a program's execution, often across multiple systems. Though traces most often - or, in the case of Sentry's traces, always - include timestamps, allowing durations to be calculated, measuring performance is not their only purpose. They can also show the ways in which interconnected systems interact, and the ways in which problems in one can cause problems in another.
+A [tracing tool](<https://en.wikipedia.org/wiki/Tracing_(software)>), on the other hand, focuses on _what_ happened (and when), rather than how many times it happened or how long it took. The resulting trace is a log of events which occurred during a program's execution, often across multiple systems. Though traces most often - or, in the case of Sentry's traces, always - include timestamps, allowing durations to be calculated, measuring performance is not their only purpose. They can also show the ways in which interconnected systems interact, and the ways in which problems in one can cause problems in another.
 
 ### Why Tracing?
 
@@ -56,13 +59,11 @@ Let's say, in this simplified example, that when a user loads the app in their b
 - _Browser_
   - 1 request each for HTML, CSS, and JavaScript
   - 1 rendering task, which sets off 2 requests for JSON data
-^
+    ^
 - _Backend_
   - 3 requests to serve static files (the HTML, CSS, and JS)
-  - 2 requests for JSON data
-    - 1 requiring a call to the database
-    - 1 requiring a call to an external API and work to process the results before returning them to the frontend
-^
+  - 2 requests for JSON data - 1 requiring a call to the database - 1 requiring a call to an external API and work to process the results before returning them to the frontend
+    ^
 - _Database Server_
   - 1 request which requires 2 queries
     - 1 query to check authentication
@@ -98,16 +99,16 @@ Now, for the sake of completeness, back to our spans:
 
 - _Backend HTML/CSS/JS Request Transactions_: 1 span each
   - 1 root span representing the entire request (child of a browser span)
-^
+    ^
 - _Backend Request with DB Call Transaction_: 2 spans
   - 1 root span representing the entire request (child of a browser span)
   - 1 span for querying the database (parent of the database server transaction)
-^
+    ^
 - _Backend Request with API Call Transaction_: 3 spans
   - 1 root span representing the entire request (child of a browser span)
   - 1 span for the API request (unlike with the DB call, _not_ a parent span, since the API is external)
   - 1 span for processing the API data
-^
+    ^
 - _Database Server Request Transaction_: 3 spans
   - 1 root span representing the entire request (child of the backend span above)
   - 1 span for the authentication query
@@ -126,16 +127,16 @@ If your application involves e-commerce, you likely want to measure the time bet
 - The browser's full process (_T_ and root span _S_)
   - XHR request to backend\* (_S_)
   - Rendering confirmation screen (_S_)
-^
+    ^
 - Your backend's processing of that request (_T_ and root span _S_)
   - Function call to compute total (_S_)
   - DB call to store order\* (_S_)
   - API call to payment processor (_S_)
   - Queuing of email confirmation\* (_S_)
-^
+    ^
 - Your database's work updating the customer's order history (_T_ and root span _S_)
   - Individual SQL queries (_S_)
-^
+    ^
 - The queued task of sending the email (_T_ and root span _S_)
   - Function call to populate email template (_S_)
   - API call to email-sending service (_S_)
@@ -151,11 +152,11 @@ If your backend periodically polls for data from an external service, processes 
   - Processing function (_S_)
   - Call to caching service\* (_S_)
   - API call to internal service\* (_S_)
-^
+    ^
 - The work done in your caching service (_T_ and root span _S_)
   - Checking cache for existing data (_S_)
   - Storing new data in cache (_S_)
-^
+    ^
 - Your internal service's processing of the request (_T_ and root span _S_)
   - Anything that service might do to handle the request (_S_)
 
