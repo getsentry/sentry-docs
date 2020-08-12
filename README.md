@@ -65,7 +65,18 @@ support_level: production
 This is my  content.
 ```
 
+## Search
+
+Search is powered by Algolia, and will index all content in /docs/ that is Markdown or MDX formatted.
+
+It will _not_ index documents with any of the following in their frontmatter:
+
+- `draft: true`
+- `noindex: true`
+- `robots: noindex`
+
 ## Notes on Markdown vs MDX
+
 
 :pray: that MDX v2 fixes this.
 
