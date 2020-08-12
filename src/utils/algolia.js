@@ -11,6 +11,7 @@ const pageQuery = `{
             frontmatter {
               title
               draft
+              noindex
             }
             fields {
               slug
@@ -22,6 +23,7 @@ const pageQuery = `{
             frontmatter {
               title
               draft
+              noindex
             }
             fields {
               slug
@@ -40,12 +42,18 @@ const flatten = arr =>
       ({ node: { childMarkdownRemark, childMdx } }) =>
         childMarkdownRemark || childMdx
     )
-    .map(({ node: { childMarkdownRemark, childMdx, objectID } }) => ({
+    .map(
+      ({ node: { childMarkdownRemark, childMdx, objectID } }) => (
+        childMarkdownRemark || childMdx, objectID
+      )
+    )
+    .filter(([child]) => !child.frontmatter.noindex)
+    .map(([child, objectID]) => ({
       objectID,
-      ...(childMarkdownRemark || childMdx).frontmatter,
-      url: (childMarkdownRemark || childMdx).fields.slug,
-      content: (childMarkdownRemark || childMdx).excerpt,
-      score: (childMarkdownRemark || childMdx).legacy ? 0 : 1,
+      ...child.frontmatter,
+      url: child.fields.slug,
+      content: child.excerpt,
+      score: child.legacy ? 0 : 1,
     }))
     .filter(n => !n.draft);
 

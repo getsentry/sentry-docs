@@ -1,11 +1,9 @@
 ---
-draft: false
-categories: []
-toc: true
 title: Advanced Usage
 sidebar_order: 30001
-tags: []
+noindex: true
 ---
+
 ## Using a Client directly
 
 To be able to manage several Sentry instances without any conflicts between them you need to create your own `Client`.
@@ -16,10 +14,10 @@ inside of it. In this example we use `@sentry/browser` but it's also applicable 
 import { BrowserClient } from "@sentry/browser";
 
 const client = new BrowserClient({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
 });
 
-client.captureException(new Error('example'));
+client.captureException(new Error("example"));
 ```
 
 While the above sample should work perfectly fine, some methods like `configureScope` and `withScope` are missing on the `Client` because the `Hub` takes care of the state management. That's why it may be easier to create a new `Hub` and bind your `Client` to it. The result is the same but you will also get state management with it.
@@ -28,7 +26,7 @@ While the above sample should work perfectly fine, some methods like `configureS
 import { BrowserClient, Hub } from "@sentry/browser";
 
 const client = new BrowserClient({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
 });
 
 const hub = new Hub(client);
@@ -86,7 +84,7 @@ const client1 = new Sentry.BrowserClient({
   beforeSend(event) {
     console.log("client 1", event);
     return null; // Returning null does not send the event
-  }
+  },
 });
 const hub1 = new Sentry.Hub(client1);
 
@@ -96,18 +94,20 @@ const client2 = new Sentry.BrowserClient({
   beforeSend(event) {
     console.log("client 2", event);
     return null; // Returning null does not send the event
-  }
+  },
 });
 const hub2 = new Sentry.Hub(client2);
 
-hub1.run(currentHub => { // The hub.run method makes sure that Sentry.getCurrentHub() returns this hub during the callback
+hub1.run(currentHub => {
+  // The hub.run method makes sure that Sentry.getCurrentHub() returns this hub during the callback
   currentHub.captureMessage("a");
   currentHub.configureScope(function(scope) {
     scope.setTag("a", "b");
   });
 });
 
-hub2.run(currentHub => { // The hub.run method makes sure that Sentry.getCurrentHub() returns this hub during the callback
+hub2.run(currentHub => {
+  // The hub.run method makes sure that Sentry.getCurrentHub() returns this hub during the callback
   currentHub.captureMessage("x");
   currentHub.configureScope(function(scope) {
     scope.setTag("c", "d");

@@ -69,6 +69,9 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
         redirect_from: {
           type: "[String!]",
         },
+        noindex: {
+          type: "Boolean",
+        },
         sidebar_order: {
           type: "Int",
           resolve(source, args, context, info) {
