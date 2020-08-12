@@ -45,11 +45,11 @@ const Header = ({ homeUrl, sitePath }) => {
 
 Header.propTypes = {
   siteTitle: PropTypes.string,
-  homeUrl: PropTypes.string
+  homeUrl: PropTypes.string,
 };
 
 Header.defaultProps = {
-  siteTitle: ""
+  siteTitle: "",
 };
 
 export default Header;

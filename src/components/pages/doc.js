@@ -1,26 +1,19 @@
 import React from "react";
 import { graphql } from "gatsby";
 
-import Layout from "../layout";
+import BasePage from "../basePage";
 import Content from "../content";
 
 export default props => {
   return (
-    <Layout {...props}>
+    <BasePage {...props}>
       <Content file={props.data.file} />
-    </Layout>
+    </BasePage>
   );
 };
 
 export const pageQuery = graphql`
   query DocQuery($id: String) {
-    site {
-      siteMetadata {
-        title
-        homeUrl
-        sitePath
-      }
-    }
     file(id: { eq: $id }) {
       id
       relativePath

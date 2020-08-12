@@ -1,7 +1,8 @@
 import React from "react";
+import * as Sentry from "@sentry/gatsby";
 
+import Layout from "../components/layout";
 import SEO from "../components/seo";
-import * as Sentry from "@sentry/browser";
 
 const NotFoundPage = () => {
   const tx = Sentry.getCurrentHub()
@@ -12,11 +13,11 @@ const NotFoundPage = () => {
   }
 
   return (
-    <div>
-      <SEO title="404: Not found" />
-      <h1>NOT FOUND</h1>
-      <p>You just hit a route that doesn&#39;t exist... the sadness.</p>
-    </div>
+    <Layout>
+      <SEO title="Page Not Found" />
+      <h1>Page Not Found</h1>
+      <p>We couldn't find the page you were looking for.</p>
+    </Layout>
   );
 };
 

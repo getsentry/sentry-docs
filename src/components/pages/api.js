@@ -1,7 +1,7 @@
 import React from "react";
 import { graphql } from "gatsby";
 
-import Layout from "../layout";
+import BasePage from "../basePage";
 import Markdown from "../markdown";
 
 const Params = ({ params }) => (
@@ -19,7 +19,7 @@ const Params = ({ params }) => (
 export default props => {
   const { apiDoc } = props.data;
   return (
-    <Layout {...props}>
+    <BasePage {...props}>
       <p>
         <strong>
           {apiDoc.method} {apiDoc.api_path}
@@ -111,19 +111,12 @@ export default props => {
           <pre>{apiDoc.example_response}</pre>
         </React.Fragment>
       )}
-    </Layout>
+    </BasePage>
   );
 };
 
 export const pageQuery = graphql`
   query ApiQuery($id: String) {
-    site {
-      siteMetadata {
-        title
-        homeUrl
-        sitePath
-      }
-    }
     apiDoc(id: { eq: $id }) {
       title
 
