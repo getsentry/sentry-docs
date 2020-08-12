@@ -85,7 +85,7 @@ const toTree = nodeList => {
   
   // When you write new docs and you want to replace the old "platforms" with the "sdks"
   // tree, just add the the child that should be replaced here
-  const newSdkDocs = ['javascript', 'angular'];
+  const newSdkDocs = ['javascript'];
   
   const platformsIndex = result[0].children.findIndex(x => x.name === "platforms");
   const sdksIndex = result[0].children.findIndex(x => x.name === "sdks");
