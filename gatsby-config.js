@@ -50,6 +50,7 @@ const getPlugins = () => {
       resolve: "@sentry/gatsby",
       options: {
         dsn: process.env.SENTRY_DSN,
+        release: process.env.SENTRY_RELEASE,
         tracesSampleRate: activeEnv === "development" ? 0 : 1,
       },
     },
