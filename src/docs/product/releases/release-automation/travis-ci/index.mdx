@@ -1,5 +1,7 @@
 ---
 title: Travis CI
+redirect_from:
+  - /workflow/releases/release-automation/travis-ci/
 ---
 
 This guide walks you through the process of automating Sentry release management and deploy notifications in Travis CI. After deploying in Travis CI, you’ll be able to identify suspect commits that are likely the culprit for new errors. You’ll also be able to apply source maps to see the original code in Sentry.
@@ -42,18 +44,18 @@ To automate your Sentry release management process, you'll need to add the `Crea
 
 ```yaml
 jobs:
-    include:
-# ...
-      - name: Create release and notify Sentry of deploy
-        env: SENTRY_ORG=sample-organization-slug SENTRY_PROJECT=sample-project-slug SENTRY_ENVIRONMENT=production
-        script: |
-          curl -sL https://sentry.io/get-cli/ | bash
-          export SENTRY_RELEASE=$(sentry-cli releases propose-version)
-          sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
-          sentry-cli releases set-commits $SENTRY_RELEASE --auto
-          sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps path-to-sourcemaps-if-applicable
-          sentry-cli releases finalize $SENTRY_RELEASE
-          sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
+  include:
+    # ...
+    - name: Create release and notify Sentry of deploy
+      env: SENTRY_ORG=sample-organization-slug SENTRY_PROJECT=sample-project-slug SENTRY_ENVIRONMENT=production
+      script: |
+        curl -sL https://sentry.io/get-cli/ | bash
+        export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+        sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
+        sentry-cli releases set-commits $SENTRY_RELEASE --auto
+        sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps path-to-sourcemaps-if-applicable
+        sentry-cli releases finalize $SENTRY_RELEASE
+        sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
 ```
 
 For more details about the release management concepts in the snippet above, see the full documentation on [release management](/cli/releases/).

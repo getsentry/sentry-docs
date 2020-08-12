@@ -1,5 +1,7 @@
 ---
 title: Jenkins
+redirect_from:
+  - /workflow/releases/release-automation/jenkins/
 ---
 
 This guide walks you through the process of automating Sentry release management and deploy notifications in Jenkins. After deploying in Jenkins, you'll be able to identify suspect commits that are likely the culprit for new errors. You'll also be able to apply source maps to see the original code in Sentry.
@@ -89,29 +91,29 @@ If you're using Freestyle projects, you need to add another build step after dep
 
 1. Make sure you add a binding to map the environment variable `SENTRY_AUTH_TOKEN` to the internal integration token credential you added in the previous step.
 
-    ![View of environment variable bindings.](jenkins-freestyle-bindings.png)
+   ![View of environment variable bindings.](jenkins-freestyle-bindings.png)
 
 2. Add the following build step after your deployment step:
 
-    ![View of jenkins freestyle shell.](jenkins-freestyle-shell.png)
+   ![View of jenkins freestyle shell.](jenkins-freestyle-shell.png)
 
-    ```bash
-    curl -sL https://sentry.io/get-cli/ | bash || true
+   ```bash
+   curl -sL https://sentry.io/get-cli/ | bash || true
 
-    export SENTRY_ORG=sample-organization-slug
-    export SENTRY_PROJECT=sample-project-slug
-    export SENTRY_ENVIRONMENT=production
-    export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+   export SENTRY_ORG=sample-organization-slug
+   export SENTRY_PROJECT=sample-project-slug
+   export SENTRY_ENVIRONMENT=production
+   export SENTRY_RELEASE=$(sentry-cli releases propose-version)
 
-    sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
-    sentry-cli releases set-commits $SENTRY_RELEASE --auto
-    sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps path-to-sourcemaps-if-applicable
-    sentry-cli releases finalize $SENTRY_RELEASE
-    sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
-    ```
+   sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
+   sentry-cli releases set-commits $SENTRY_RELEASE --auto
+   sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps path-to-sourcemaps-if-applicable
+   sentry-cli releases finalize $SENTRY_RELEASE
+   sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT
+   ```
 
-    **Notes**:
+   **Notes**:
 
-    - If you’re not deploying a JavaScript project or have sent source maps to Sentry using another method, omit the `upload-sourcemaps` line.
-    - If you can’t install a repository integration, send commit metadata via the [create release endpoint](/workflow/releases/#alternatively-without-a-repository-integration) or omit the `set-commits` line.
-    - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
+   - If you’re not deploying a JavaScript project or have sent source maps to Sentry using another method, omit the `upload-sourcemaps` line.
+   - If you can’t install a repository integration, send commit metadata via the [create release endpoint](/workflow/releases/#alternatively-without-a-repository-integration) or omit the `set-commits` line.
+   - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
