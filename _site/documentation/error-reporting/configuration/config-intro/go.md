@@ -1,0 +1,8 @@
+Options are passed to the `Init()` method as an instance of `sentry.ClientOptions`:
+
+```go
+sentry.Init(sentry.ClientOptions{
+	Dsn: "___PUBLIC_DSN___",
+	Debug: true,
+})
+```

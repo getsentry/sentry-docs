@@ -1,0 +1,11 @@
+
+```javascript
+import * as Sentry from '@sentry/browser';
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  beforeBreadcrumb(breadcrumb, hint) {
+    return breadcrumb.category === 'ui.click' ? null : breadcrumb;
+  },
+});
+```

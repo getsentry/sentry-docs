@@ -1,0 +1,3120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head prefix="og: http://ogp.me/ns#">
+  <meta name="description" content="Learn how to use Sentry, configure Sentry clients, and contribute to the open source project on GitHub">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+ 
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sentry Documentation">
+<meta property="og:description" content="Learn how to use Sentry, configure Sentry clients, and contribute to the open source project on GitHub">
+<meta property="og:url" content="http://0.0.0.0:9001/performance-monitoring/distributed-tracing/">
+<meta property="og:title" content="Distributed Tracing">
+<meta property="og:image:url" content="http://0.0.0.0:9001/assets/meta/default.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:creator" content="@getsentry">
+<meta property="twitter:title" content="Distributed Tracing">
+<meta property="twitter:site" content="http://0.0.0.0:9001/performance-monitoring/distributed-tracing/">
+<meta property="twitter:description" content="Learn how to use Sentry, configure Sentry clients, and contribute to the open source project on GitHub">
+<meta property="twitter:image:src" content="http://0.0.0.0:9001/assets/meta/default.png">
+<meta property="twitter:image:width" content="1200">
+<meta property="twitter:image:height" content="630">
+
+<link rel="image_src" type="image/png" href="http://0.0.0.0:9001/assets/meta/default.png">
+<link href="/assets/favicon.ico" rel="icon" type="image/png">
+<link rel="canonical" href="/performance-monitoring/distributed-tracing/">
+
+
+
+<script>
+  window.loadIfTrackersOk = [];
+  window.analyticsAssetURL = '/assets/amplitude.min.js';
+  window.activePlatform = null;
+  window.supportedPlatforms = ["tracing","koa","node","node-legacy","nodeawslambda","nodegcpfunctions","express","connect","cordova","aspnetcore","java","logging","logback","android","log4j2","log4j","appengine","python","python-legacy","tracing","pyramid","rq","flask","sanic","django","celery","pythonawslambda","pythongcpfunctions","pythonserverless","pyramid","rq","wsgi","aiohttp","asgi","tornado","bottle","tryton","falcon","pylons","swift","browser","javascript","javascript-legacy","browsernpm","vue","backbone","ember","react","angularjs","angular","electron","elixir","react-native","objc","csharp","csharp-legacy","go","http","go-legacy","php","laravel","symfony","php-legacy","monolog","symfony2","ruby","rack","rails","rust","minidump","native"];
+  window.platformData = {"tracing":{"slug":"tracing","name":"Python"},"koa":{"slug":"koa","name":"Koa"},"node":{"slug":"node","name":"Node.js","case_style":"camelCase","fallback_platform":"javascript"},"node-legacy":{"slug":"node-legacy","name":"Node.js","case_style":"camelCase","fallback_platform":"javascript"},"nodeawslambda":{"slug":"nodeawslambda","name":"AWS Lambda"},"nodegcpfunctions":{"slug":"nodegcpfunctions","name":"GCP Cloud Functions"},"express":{"slug":"express","name":"Express"},"connect":{"slug":"connect","name":"Connect"},"cordova":{"slug":"cordova","name":"Cordova","case_style":"camelCase","fallback_platform":"javascript"},"aspnetcore":{"slug":"aspnetcore","name":"ASP.NET Core","case_style":"PascalCase","fallback_platform":"csharp"},"java":{"slug":"java","name":"Java"},"logging":{"slug":"logging","name":"java.util.logging"},"logback":{"slug":"logback","name":"Logback"},"android":{"slug":"android","name":"Android"},"log4j2":{"slug":"log4j2","name":"Log4j 2.x"},"log4j":{"slug":"log4j","name":"Log4j 1.x"},"appengine":{"slug":"appengine","name":"Google App Engine"},"python":{"slug":"python","name":"Python","case_style":"snake_case"},"python-legacy":{"slug":"python-legacy","name":"Python Legacy","case_style":"snake_case"},"pyramid":{"slug":"pyramid","name":"Pyramid"},"rq":{"slug":"rq","name":"RQ (Redis Queue)"},"flask":{"slug":"flask","name":"Flask"},"sanic":{"slug":"sanic","name":"Sanic"},"django":{"slug":"django","name":"Django"},"celery":{"slug":"celery","name":"Celery"},"pythonawslambda":{"slug":"pythonawslambda","name":"AWS Lambda"},"pythongcpfunctions":{"slug":"pythongcpfunctions","name":"GCP Cloud Functions"},"pythonserverless":{"slug":"pythonserverless","name":"Serverless (Python)"},"wsgi":{"slug":"wsgi","name":"WSGI"},"aiohttp":{"slug":"aiohttp","name":"AIOHTTP"},"asgi":{"slug":"asgi","name":"ASGI"},"tornado":{"slug":"tornado","name":"Tornado"},"bottle":{"slug":"bottle","name":"Bottle"},"tryton":{"slug":"tryton","name":"Tryton"},"falcon":{"slug":"falcon","name":"Falcon"},"pylons":{"slug":"pylons","name":"Pylons"},"swift":{"slug":"swift","name":"Swift"},"browser":{"slug":"browser","name":"Browser JavaScript","case_style":"camelCase","fallback_platform":"javascript"},"javascript":{"slug":"javascript","name":"JavaScript","case_style":"camelCase"},"javascript-legacy":{"slug":"javascript-legacy","name":"JavaScript","case_style":"camelCase"},"browsernpm":{"slug":"browsernpm","name":"Browser JavaScript NPM","case_style":"camelCase","fallback_platform":"javascript"},"vue":{"slug":"vue","name":"Vue"},"backbone":{"slug":"backbone","name":"Backbone"},"ember":{"slug":"ember","name":"Ember"},"react":{"slug":"react","name":"React"},"angularjs":{"slug":"angularjs","name":"AngularJS"},"angular":{"slug":"angular","name":"Angular"},"electron":{"slug":"electron","name":"Electron","case_style":"camelCase","fallback_platform":"javascript"},"elixir":{"slug":"elixir","name":"Elixir","case_style":"PascalCase"},"react-native":{"slug":"react-native","name":"React-Native"},"objc":{"slug":"objc","name":"Objective-C"},"csharp":{"slug":"csharp","name":"C#","case_style":"PascalCase"},"csharp-legacy":{"slug":"csharp-legacy","name":"C#","case_style":"PascalCase"},"go":{"slug":"go","name":"Go","case_style":"PascalCase"},"http":{"slug":"http","name":"net/http"},"go-legacy":{"slug":"go-legacy","name":"Go Legacy","case_style":"snake_case"},"php":{"slug":"php","name":"PHP","case_style":"snake_case"},"laravel":{"slug":"laravel","name":"Laravel"},"symfony":{"slug":"symfony","name":"Symfony"},"php-legacy":{"slug":"php-legacy","name":"PHP Legacy","case_style":"snake_case"},"monolog":{"slug":"monolog","name":"Monolog"},"symfony2":{"slug":"symfony2","name":"Symfony"},"ruby":{"slug":"ruby","name":"Ruby"},"rack":{"slug":"rack","name":"Rack"},"rails":{"slug":"rails","name":"Rails"},"rust":{"slug":"rust","name":"Rust","case_style":"snake_case"},"minidump":{"slug":"minidump","name":"Minidump"},"native":{"slug":"native","name":"Native (C/C++)"}};
+
+  (function(e,t){var n=e.amplitude||{_q:[],_iq:{}}
+  ;function s(e,t){e.prototype[t]=function(){
+  this._q.push([t].concat(Array.prototype.slice.call(arguments,0)));return this}}
+  var o=function(){this._q=[];return this}
+  ;var a=["add","append","clearAll","prepend","set","setOnce","unset"]
+  ;for(var u=0;u<a.length;u++){s(o,a[u])}n.Identify=o;var c=function(){this._q=[]
+  ;return this}
+  ;var l=["setProductId","setQuantity","setPrice","setRevenueType","setEventProperties"]
+  ;for(var p=0;p<l.length;p++){s(c,l[p])}n.Revenue=c
+  ;var d=["init","logEvent","logRevenue","setUserId","setUserProperties","setOptOut","setVersionName","setDomain","setDeviceId","setGlobalUserProperties","identify","clearUserProperties","setGroup","logRevenueV2","regenerateDeviceId","logEventWithTimestamp","logEventWithGroups","setSessionId","resetSessionId"]
+  ;function v(e){function t(t){e[t]=function(){
+  e._q.push([t].concat(Array.prototype.slice.call(arguments,0)))}}
+  for(var n=0;n<d.length;n++){t(d[n])}}v(n);n.getInstance=function(e){
+  e=(!e||e.length===0?"$default_instance":e).toLowerCase()
+  ;if(!n._iq.hasOwnProperty(e)){n._iq[e]={_q:[]};v(n._iq[e])}return n._iq[e]}
+  ;e.amplitude=n})(window,document);
+</script>
+
+<link rel="stylesheet" type="text/css" href="/assets/screen.css"> <link rel="stylesheet" type="text/css" href="/assets/dev.css">
+
+<title>Distributed Tracing - Docs</title>
+
+</head>
+
+<body>
+<section class="peek text-white d-none" data-peek>
+  <div class="container py-3 py-md-5">
+    <div class="row">
+      <div class="col-md-6">
+        <h4>Meta image</h4>
+        <div class="mb-3 content-flush-bottom">
+          <a href="http://0.0.0.0:9001/assets/meta/default.png" title="Link to larger version of the meta image for this page">
+          <img src="http://0.0.0.0:9001/assets/meta/default.png" class="img-fluid rounded" alt="Meta image for this page">
+          </a>
+        </div>
+      </div>
+      <div class="col-md-6 content-flush-bottom">
+        <h4>Title:</h4>
+        <div class="rounded mb-3 family-mono text-success">
+          Distributed Tracing
+        </div>
+
+        <h4>Description:</h4>
+        <div class="rounded family-mono text-success">
+          Learn how to use Sentry, configure Sentry clients, and contribute to the open source project on GitHub
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="document-wrapper">
+    <div class="sidebar">
+      <div class="navbar navbar-expand-md navbar-light bg-white global-header">
+  <a href="https://sentry.io/welcome/" title="Sentry error monitoring" class="navbar-brand pb-0">
+    <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 298.11 80">
+      <g height="75" width="75" class="loader-spin">
+        <path d="M7.8 49.78c-1.75 2.88-3.19 5.4-4.35 7.56a3.9 3.9 0 0 0 3.34 6h18.86a25.75 25.75 0 0 0-12.87-22.19c1.9-3.17 5.12-9 6.32-11a38.47 38.47 0 0 1 19.14 33.23h12.63a50.79 50.79 0 0 0-25.51-44C29.65 12 32.38 7 33.89 4.64a4 4 0 0 1 6.66 0C42 7 69.53 54.8 71 57.34a4 4 0 0 1-3.75 6h-6.79" fill="none" stroke="currentColor" class="loader-stroke loading" stroke-width="5"></path>
+      </g>
+      <path d="M184.35 42.25l-22.17-28.71h-5.55v38.4h5.55V22.45l22.75 29.49h4.93v-38.4h-5.51zm-55.81-7.13h19.8v-4.93h-19.8V18.72h22.37v-5.18H123v38.4h28.29V47h-22.75zm-23.16-4.93c-7.71-1.78-9.9-3.35-9.9-6.92s2.77-5.34 7.12-5.34a18.48 18.48 0 0 1 10.69 3.77l3-4.14A21.5 21.5 0 0 0 102.6 13c-7.5 0-12.84 4.56-12.84 10.9s4.56 9.28 12.68 11.27c7.33 1.57 9.49 3.14 9.49 6.71s-3 5.76-7.71 5.76a18.93 18.93 0 0 1-12.43-4.93l-3.36 4.14a23.87 23.87 0 0 0 15.62 5.76c8.29 0 13.47-4.35 13.47-11.27.12-5.84-3.44-8.99-12.14-11.15zm186.19-16.57l-11.48 17.94-11.47-18h-6.72l15.25 23.14v15.24h5.76V36.49l15.2-23h-6.54zm-97 5.1H207v33.14h5.76V18.72h12.43v-5.18h-30.65zM252 37a11.28 11.28 0 0 0 8.83-11.56c0-7.33-5.35-11.89-14-11.89h-16.99v38.4h5.76V38.11h9.69L255 51.94h6.71l-10.49-14.66zm-16.57-3.77V18.51h10.69c5.55 0 8.91 2.57 8.91 7.33a7.63 7.63 0 0 1-7.84 7.41 8.09 8.09 0 0 1-.86-.07H235.6z" fill="currentColor"></path>
+    </svg>
+  </a>
+
+  <button class="d-md-none btn btn-outline-dark" type="button" data-toggle="collapse" data-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle table of contents">
+    Table of Contents
+  </button>
+</div>
+
+
+      <div class="d-md-flex flex-column align-items-stretch collapse navbar-collapse" id="sidebar">
+        <div class="toc">
+          <div class="text-white p-3" data-dynamic-load="sidebar" data-sidebar-root>
+            <ul class="list-unstyled" data-sidebar-tree>
+<li class="mb-3" data-sidebar-branch>
+<a href="/error-reporting/quickstart/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Error Reporting</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/error-reporting/quickstart/" data-sidebar-link>
+  Getting Started
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/error-reporting/capturing/" data-sidebar-link>
+  Capturing Events
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/error-reporting/configuration/" data-sidebar-link>
+  Configuration
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/error-reporting/configuration/filtering/" data-sidebar-link>
+  Filtering events
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/error-reporting/configuration/draining/" data-sidebar-link>
+  Shutdown and Draining
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/error-reporting/security-policy-reporting/" data-sidebar-link>
+  Security Policy Reporting
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch>
+<a href="/enriching-error-data/additional-data/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Enriching Error Data</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/enriching-error-data/additional-data/" data-sidebar-link>
+  Additional Data
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/enriching-error-data/environments/" data-sidebar-link>
+  Environments
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/enriching-error-data/breadcrumbs/" data-sidebar-link>
+  Breadcrumbs
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/enriching-error-data/user-feedback/" data-sidebar-link>
+  User Feedback
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/enriching-error-data/scopes/" data-sidebar-link>
+  Scopes and Hubs
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/enriching-error-data/error-tracing/" data-sidebar-link>
+  Error Tracing
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/enriching-error-data/attachments/" data-sidebar-link>
+  Attachments
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch>
+<a href="/performance-monitoring/getting-started/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Performance Monitoring</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/performance-monitoring/getting-started/" data-sidebar-link>
+  Getting Started
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/performance-monitoring/performance/" data-sidebar-link>
+  Performance
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/performance-monitoring/performance/metrics/" data-sidebar-link>
+  Metrics
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/performance-monitoring/performance/transaction-summary/" data-sidebar-link>
+  Transaction Summary
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/performance-monitoring/performance/event-detail/" data-sidebar-link>
+  Event Detail
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/performance-monitoring/distributed-tracing/" data-sidebar-link>
+  Distributed Tracing
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/performance-monitoring/discover-queries/" data-sidebar-link>
+  Discover Queries
+</a>
+<ul class="list-unstyled" data-sidebar-tree><li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/performance-monitoring/discover-queries/query-builder/" data-sidebar-link>
+  Query Builder
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch>
+<a href="/workflow/alerts-notifications/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Workflow and Integrations</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/alerts-notifications/" data-sidebar-link>
+  Alerts &amp; Notifications
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/alerts-notifications/alerts/" data-sidebar-link>
+  Alerts
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/alerts-notifications/notifications/" data-sidebar-link>
+  Other Notifications
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/releases/" data-sidebar-link>
+  Releases
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/releases/health/" data-sidebar-link>
+  Health
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/releases/release-automation/" data-sidebar-link>
+  Release Automation
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/releases/release-automation/bitbucket-pipelines/" data-sidebar-link>
+  Bitbucket Pipelines
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/releases/release-automation/circleci/" data-sidebar-link>
+  CircleCI
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/releases/release-automation/jenkins/" data-sidebar-link>
+  Jenkins
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/releases/release-automation/netlify/" data-sidebar-link>
+  Netlify
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/releases/release-automation/travis-ci/" data-sidebar-link>
+  Travis CI
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/issue-owners/" data-sidebar-link>
+  Issue Owners
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/search/" data-sidebar-link>
+  Search
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/dashboards/" data-sidebar-link>
+  Dashboards
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/integrations/" data-sidebar-link>
+  Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/integrations/global-integrations/" data-sidebar-link>
+  Global Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/integrations/legacy-integrations/" data-sidebar-link>
+  Per-Project Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/integrations/integration-platform/" data-sidebar-link>
+  Integration Platform
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/integrations/integration-platform/ui-components/" data-sidebar-link>
+  UI Components
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/integrations/integration-platform/webhooks/" data-sidebar-link>
+  Webhooks
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/debug-files/" data-sidebar-link>
+  Debug Information Files
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/workflow/user-settings/" data-sidebar-link>
+  User Settings
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch>
+<a href="/data-management/event-grouping/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Data Management</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/data-management/event-grouping/" data-sidebar-link>
+  Grouping &amp; Fingerprints
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/data-management/event-grouping/sdk-fingerprinting/" data-sidebar-link>
+  SDK Fingerprinting
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/data-management/event-grouping/server-side-fingerprinting/" data-sidebar-link>
+  Server-side Fingerprinting
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/data-management/event-grouping/grouping-enhancements/" data-sidebar-link>
+  Custom Grouping Enhancements
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/data-management/sensitive-data/" data-sidebar-link>
+  Sensitive Data
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/data-management/data-forwarding/" data-sidebar-link>
+  Data Forwarding
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/data-management/advanced-datascrubbing/" data-sidebar-link>
+  Advanced Data Scrubbing
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch>
+<a href="/accounts/quotas/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Organizations and Projects</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/accounts/quotas/" data-sidebar-link>
+  Quotas &amp; Events
+</a>
+<ul class="list-unstyled" data-sidebar-tree><li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/accounts/quotas/manage-event-stream-guide/" data-sidebar-link>
+  Manage Your Event Stream, a Guide
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block active" href="/accounts/membership/" data-sidebar-link>
+  Organization Management
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/accounts/require-2fa/" data-sidebar-link>
+  Require 2FA
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/accounts/sso/" data-sidebar-link>
+  Single Sign-On (SSO)
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/accounts/saml2/" data-sidebar-link>
+  SAML2 Integration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/accounts/pricing/" data-sidebar-link>
+  Pricing
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch>
+<a href="/platforms/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Platforms</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/dotnet/" data-sidebar-link>
+  .NET
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/dotnet/aspnetcore/" data-sidebar-link>
+  ASP.NET Core
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/dotnet/entityframework/" data-sidebar-link>
+  Entity Framework
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/dotnet/log4net/" data-sidebar-link>
+  log4net
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/dotnet/microsoft-extensions-logging/" data-sidebar-link>
+  Microsoft.Extensions.Logging
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/dotnet/nlog/" data-sidebar-link>
+  NLog
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/dotnet/serilog/" data-sidebar-link>
+  Serilog
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/android/" data-sidebar-link>
+  Android
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/android/migrate/" data-sidebar-link>
+  Migration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/android/timber/" data-sidebar-link>
+  Timber
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/cocoa/" data-sidebar-link>
+  Cocoa
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/cocoa/usage/" data-sidebar-link>
+  Advanced Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/cocoa/dsym/" data-sidebar-link>
+  Uploading Debug Symbols
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/elixir/" data-sidebar-link>
+  Elixir
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/elixir/usage/" data-sidebar-link>
+  Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/elixir/config/" data-sidebar-link>
+  Configuration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/elixir/plug/" data-sidebar-link>
+  Sentry.Plug
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/flutter/" data-sidebar-link>
+  Flutter
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/" data-sidebar-link>
+  Go
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/migration/" data-sidebar-link>
+  Migration Guide
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/config/" data-sidebar-link>
+  Configuration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/panics/" data-sidebar-link>
+  Handling Panics
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/transports/" data-sidebar-link>
+  Transports
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/goroutines/" data-sidebar-link>
+  Goroutines
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/serverless/" data-sidebar-link>
+  Serverless
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/integrations/" data-sidebar-link>
+  Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/echo/" data-sidebar-link>
+  Echo
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/fasthttp/" data-sidebar-link>
+  Fasthttp
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/gin/" data-sidebar-link>
+  Gin
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/iris/" data-sidebar-link>
+  Iris
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/martini/" data-sidebar-link>
+  Martini
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/negroni/" data-sidebar-link>
+  Negroni
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/go/http/" data-sidebar-link>
+  net/http
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/java/" data-sidebar-link>
+  Java
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/java/config/" data-sidebar-link>
+  Configuration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/java/integrations/" data-sidebar-link>
+  Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/java/context/" data-sidebar-link>
+  Context &amp; Breadcrumbs
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/java/usage/" data-sidebar-link>
+  Manual Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/java/migration/" data-sidebar-link>
+  Migration from Raven Java
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/" data-sidebar-link>
+  JavaScript
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/react/" data-sidebar-link>
+  React
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/angular/" data-sidebar-link>
+  Angular
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/vue/" data-sidebar-link>
+  Vue
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/ember/" data-sidebar-link>
+  Ember
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/sourcemaps/" data-sidebar-link>
+  Source Maps
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/cordova/" data-sidebar-link>
+  Cordova
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/ionic/" data-sidebar-link>
+  Ionic
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/electron/" data-sidebar-link>
+  Electron
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/advance-settings/" data-sidebar-link>
+  Advanced Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/javascript/sentry-testkit/" data-sidebar-link>
+  Sentry Testkit
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/native/" data-sidebar-link>
+  Native
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/native/crashpad/" data-sidebar-link>
+  Google Crashpad
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/native/breakpad/" data-sidebar-link>
+  Google Breakpad
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/native/minidump/" data-sidebar-link>
+  Minidump
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/native/ue4/" data-sidebar-link>
+  Unreal Engine 4
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/node/" data-sidebar-link>
+  Node.js
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/node/typescript/" data-sidebar-link>
+  TypeScript
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/node/aws_lambda/" data-sidebar-link>
+  AWS Lambda
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/node/gcp_functions/" data-sidebar-link>
+  GCP Functions
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/node/default-integrations/" data-sidebar-link>
+  Default Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/node/pluggable-integrations/" data-sidebar-link>
+  Pluggable Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/node/sourcemaps/" data-sidebar-link>
+  Source Maps
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/node/express/" data-sidebar-link>
+  Express
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/node/koa/" data-sidebar-link>
+  Koa
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/node/connect/" data-sidebar-link>
+  Connect
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/php/" data-sidebar-link>
+  PHP
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/php/default-integrations/" data-sidebar-link>
+  Default Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/php/laravel/" data-sidebar-link>
+  Laravel
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/php/symfony/" data-sidebar-link>
+  Symfony
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/" data-sidebar-link>
+  Python
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/django/" data-sidebar-link>
+  Django
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/migration/" data-sidebar-link>
+  Migrating from Raven to Sentry-Python
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/flask/" data-sidebar-link>
+  Flask
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/celery/" data-sidebar-link>
+  Celery
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/bottle/" data-sidebar-link>
+  Bottle
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/tryton/" data-sidebar-link>
+  Tryton
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/pyramid/" data-sidebar-link>
+  Pyramid
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/tornado/" data-sidebar-link>
+  Tornado
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/aws_lambda/" data-sidebar-link>
+  AWS Lambda
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/gcp_functions/" data-sidebar-link>
+  GCP Functions
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/wsgi/" data-sidebar-link>
+  WSGI
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/aiohttp/" data-sidebar-link>
+  AIOHTTP
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/beam/" data-sidebar-link>
+  Apache Beam
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/pyspark/" data-sidebar-link>
+  Apache Spark
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/asgi/" data-sidebar-link>
+  ASGI
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/falcon/" data-sidebar-link>
+  Falcon
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/gnu_backtrace/" data-sidebar-link>
+  GNU Backtrace
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/logging/" data-sidebar-link>
+  Logging
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/redis/" data-sidebar-link>
+  Redis
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/rq/" data-sidebar-link>
+  RQ (Redis Queue)
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/sanic/" data-sidebar-link>
+  Sanic
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/serverless/" data-sidebar-link>
+  Serverless Decorator
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/sqlalchemy/" data-sidebar-link>
+  SQLAlchemy
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/default-integrations/" data-sidebar-link>
+  Default Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/python/troubleshooting/" data-sidebar-link>
+  Troubleshooting
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/react-native/" data-sidebar-link>
+  React Native
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/react-native/hermes/" data-sidebar-link>
+  Hermes
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/react-native/manual-setup/" data-sidebar-link>
+  Manual Setup
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/react-native/cocoapods/" data-sidebar-link>
+  Setup With CocoaPods
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/react-native/sourcemaps/" data-sidebar-link>
+  Source Maps for Other Platforms
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/react-native/touchevents/" data-sidebar-link>
+  Tracking Touch Events
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/react-native/ram-bundles/" data-sidebar-link>
+  Using RAM Bundles
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/react-native/codepush/" data-sidebar-link>
+  Using Sentry with CodePush
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/react-native/expo/" data-sidebar-link>
+  Using Sentry with Expo
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/ruby/" data-sidebar-link>
+  Ruby
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/ruby/config/" data-sidebar-link>
+  Configuration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/ruby/usage/" data-sidebar-link>
+  Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/ruby/breadcrumbs/" data-sidebar-link>
+  Breadcrumbs
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/ruby/context/" data-sidebar-link>
+  Context
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/ruby/install/" data-sidebar-link>
+  Installation
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/ruby/integrations/" data-sidebar-link>
+  Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/ruby/processors/" data-sidebar-link>
+  Processors
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/rust/" data-sidebar-link>
+  Rust
+</a>
+<ul class="list-unstyled" data-sidebar-tree><li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/platforms/rust/actix/" data-sidebar-link>
+  actix-web
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch>
+<a href="/meta/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Security &amp; Legal</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/meta/terms/" data-sidebar-link>
+  Terms of Service
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/meta/soc2/" data-sidebar-link>
+  SOC2 Report
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/meta/ip-ranges/" data-sidebar-link>
+  IP Ranges
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch data-hide-when-inactive>
+<a href="/cli/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Command Line Interface</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/cli/installation/" data-sidebar-link>
+  Installation
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/cli/configuration/" data-sidebar-link>
+  Configuration and Authentication
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/cli/releases/" data-sidebar-link>
+  Release Management
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/cli/dif/" data-sidebar-link>
+  Debug Information Files
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/cli/send-event/" data-sidebar-link>
+  Sending Events
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch data-hide-when-inactive>
+<a href="/api/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>API Reference</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/requests/" data-sidebar-link>
+  Requests
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/auth/" data-sidebar-link>
+  Authentication
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/pagination/" data-sidebar-link>
+  Pagination
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/permissions/" data-sidebar-link>
+  Permissions
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/" data-sidebar-link>
+  Events
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/get-project-events/" data-sidebar-link>
+  List a Project's Events
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/get-project-event-details/" data-sidebar-link>
+  Retrieve an Event for a Project
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/get-project-group-index/" data-sidebar-link>
+  List a Project's Issues
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/put-project-group-index/" data-sidebar-link>
+  Bulk Mutate a List of Issues
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/delete-project-group-index/" data-sidebar-link>
+  Bulk Remove a List of Issues
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/get-group-details/" data-sidebar-link>
+  Retrieve an Issue
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/put-group-details/" data-sidebar-link>
+  Update an Issue
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/delete-group-details/" data-sidebar-link>
+  Remove an Issue
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/get-group-events/" data-sidebar-link>
+  List an Issue's Events
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/get-group-events-latest/" data-sidebar-link>
+  Retrieve the Latest Event for an Issue
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/get-group-events-oldest/" data-sidebar-link>
+  Retrieve the Oldest Event for an Issue
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/get-group-hashes/" data-sidebar-link>
+  List an Issue's Hashes
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/get-group-tag-key-details/" data-sidebar-link>
+  Retrieve Tag Details
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/events/get-group-tag-key-values/" data-sidebar-link>
+  List a Tag's Values
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/" data-sidebar-link>
+  Organizations
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/get-organization-index/" data-sidebar-link>
+  List your Organizations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/post-organization-index/" data-sidebar-link>
+  Create a New Organization
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/get-organization-details/" data-sidebar-link>
+  Retrieve an Organization
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/put-organization-details/" data-sidebar-link>
+  Update an Organization
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/delete-organization-details/" data-sidebar-link>
+  Delete an Organization
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/get-short-id-lookup/" data-sidebar-link>
+  Resolve a Short ID
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/get-event-id-lookup/" data-sidebar-link>
+  Resolve a Event ID
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/get-organization-projects/" data-sidebar-link>
+  List an Organization's Projects
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/get-organization-users/" data-sidebar-link>
+  List an Organization's Users
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/get-organization-repositories/" data-sidebar-link>
+  List an Organization's Repositories
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/get-organization-repository-commits/" data-sidebar-link>
+  List a Repository's Commits
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/organizations/get-organization-stats/" data-sidebar-link>
+  Retrieve Event Counts for an Organization
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/" data-sidebar-link>
+  Projects
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/get-project-index/" data-sidebar-link>
+  List your Projects
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/get-project-details/" data-sidebar-link>
+  Retrieve a Project
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/put-project-details/" data-sidebar-link>
+  Update a Project
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/delete-project-details/" data-sidebar-link>
+  Delete a Project
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/get-debug-files/" data-sidebar-link>
+  List a Project's Debug Information Files
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/post-debug-files/" data-sidebar-link>
+  Upload a New File
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/delete-debug-files/" data-sidebar-link>
+  Delete a specific Project's Debug Information File
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/get-project-service-hooks/" data-sidebar-link>
+  List a Project's Service Hooks
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/post-project-service-hooks/" data-sidebar-link>
+  Register a new Service Hook
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/get-project-service-hook-details/" data-sidebar-link>
+  Retrieve a Service Hook
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/put-project-service-hook-details/" data-sidebar-link>
+  Update a Service Hook
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/delete-project-service-hook-details/" data-sidebar-link>
+  Remove a Service Hook
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/get-project-keys/" data-sidebar-link>
+  List a Project's Client Keys
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/post-project-keys/" data-sidebar-link>
+  Create a new Client Key
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/put-project-key-details/" data-sidebar-link>
+  Update a Client Key
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/delete-project-key-details/" data-sidebar-link>
+  Delete a Client Key
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/get-project-stats/" data-sidebar-link>
+  Retrieve Event Counts for a Project
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/get-project-tag-key-values/" data-sidebar-link>
+  List a Tag's Values
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/get-project-users/" data-sidebar-link>
+  List a Project's Users
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/get-project-user-reports/" data-sidebar-link>
+  List a Project's User Feedback
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/projects/post-project-user-reports/" data-sidebar-link>
+  Submit User Feedback
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/" data-sidebar-link>
+  Releases
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-organization-releases/" data-sidebar-link>
+  List an Organization's Releases
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/post-organization-releases/" data-sidebar-link>
+  Create a New Release for an Organization
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-organization-release-details/" data-sidebar-link>
+  Retrieve an Organization's Release
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/put-organization-release-details/" data-sidebar-link>
+  Update an Organization's Release
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/delete-organization-release-details/" data-sidebar-link>
+  Delete an Organization's Release
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-organization-release-files/" data-sidebar-link>
+  List an Organization Release's Files
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/post-organization-release-files/" data-sidebar-link>
+  Upload a New Organization Release File
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-organization-release-file-details/" data-sidebar-link>
+  Retrieve an Organization Release's File
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/put-organization-release-file-details/" data-sidebar-link>
+  Update an Organization Release's File
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/delete-organization-release-file-details/" data-sidebar-link>
+  Delete an Organization Release's File
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-commit-file-change/" data-sidebar-link>
+  Retrieve Files Changed in a Release's Commits
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-release-deploys/" data-sidebar-link>
+  List a Release's Deploys
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/post-release-deploys/" data-sidebar-link>
+  Create a Deploy
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-organization-release-commits/" data-sidebar-link>
+  List an Organization Release's Commits
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-project-release-commits/" data-sidebar-link>
+  List a Project Release's Commits
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-project-issues-resolved-in-release/" data-sidebar-link>
+  List issues to be resolved in a particular release
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-project-release-files/" data-sidebar-link>
+  List a Project Release's Files
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/post-project-release-files/" data-sidebar-link>
+  Upload a New Project Release File
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/get-project-release-file-details/" data-sidebar-link>
+  Retrieve a Project Release's File
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/put-project-release-file-details/" data-sidebar-link>
+  Update a File
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/releases/delete-project-release-file-details/" data-sidebar-link>
+  Delete a File
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/teams/" data-sidebar-link>
+  Teams
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/teams/get-organization-teams/" data-sidebar-link>
+  List an Organization's Teams
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/teams/post-organization-teams/" data-sidebar-link>
+  Create a new Team
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/teams/get-team-details/" data-sidebar-link>
+  Retrieve a Team
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/teams/put-team-details/" data-sidebar-link>
+  Update a Team
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/teams/delete-team-details/" data-sidebar-link>
+  Delete a Team
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/teams/get-team-projects/" data-sidebar-link>
+  List a Team's Projects
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/teams/post-team-projects/" data-sidebar-link>
+  Create a New Project
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/api/teams/get-team-stats/" data-sidebar-link>
+  Retrieve Event Counts for a Team
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch data-hide-when-inactive>
+<a href="/clients/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Legacy Clients</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/javascript/" data-sidebar-link>
+  JavaScript
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/javascript/config/" data-sidebar-link>
+  Configuration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/javascript/usage/" data-sidebar-link>
+  Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/javascript/sourcemaps/" data-sidebar-link>
+  Source Maps
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/javascript/tips/" data-sidebar-link>
+  Tips and Tricks
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/javascript/install/" data-sidebar-link>
+  Installation
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/javascript/integrations/" data-sidebar-link>
+  Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/node/" data-sidebar-link>
+  Node.js
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/node/usage/" data-sidebar-link>
+  Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/node/sourcemaps/" data-sidebar-link>
+  Source Maps
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/node/typescript/" data-sidebar-link>
+  TypeScript
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/node/coffeescript/" data-sidebar-link>
+  CoffeeScript
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/node/config/" data-sidebar-link>
+  Configuration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/node/integrations/" data-sidebar-link>
+  Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/perl/" data-sidebar-link>
+  Perl
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/php/" data-sidebar-link>
+  PHP
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/php/usage/" data-sidebar-link>
+  Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/php/config/" data-sidebar-link>
+  Configuration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/php/integrations/" data-sidebar-link>
+  Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/python/" data-sidebar-link>
+  Python
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/python/advanced/" data-sidebar-link>
+  Advanced Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/python/breadcrumbs/" data-sidebar-link>
+  Logging Breadcrumbs
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/python/api/" data-sidebar-link>
+  API Reference
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/python/usage/" data-sidebar-link>
+  Basic Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/python/integrations/" data-sidebar-link>
+  Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/python/platform-support/" data-sidebar-link>
+  Supported Platforms
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/python/transports/" data-sidebar-link>
+  Transports
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/csharp/" data-sidebar-link>
+  C#
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/cocoa/" data-sidebar-link>
+  Cocoa
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/cocoa/advanced/" data-sidebar-link>
+  Advanced Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/cocoa/migration/" data-sidebar-link>
+  Migration Guide
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/cocoa/dsym/" data-sidebar-link>
+  Uploading Debug Symbols
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/go/" data-sidebar-link>
+  Go
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/go/config/" data-sidebar-link>
+  Configuration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/go/usage/" data-sidebar-link>
+  Usage
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/go/context/" data-sidebar-link>
+  Context
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/go/integrations/" data-sidebar-link>
+  Integrations
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/react-native/" data-sidebar-link>
+  React Native
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/react-native/config/" data-sidebar-link>
+  Additional Configuration
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/react-native/manual-setup/" data-sidebar-link>
+  Manual Setup
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/react-native/cocoapods/" data-sidebar-link>
+  Setup With CocoaPods
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/react-native/sourcemaps/" data-sidebar-link>
+  Source Maps for Other Platforms
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/react-native/ram-bundles/" data-sidebar-link>
+  Using RAM Bundles
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/react-native/codepush/" data-sidebar-link>
+  Using Sentry with CodePush
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/clients/react-native/expo/" data-sidebar-link>
+  Using Sentry with Expo
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch data-hide-when-inactive>
+<a href="/guides/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Guides</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/integrate-frontend/" data-sidebar-link>
+  Monitor Errors in Frontend Applications
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/integrate-frontend/create-new-project/" data-sidebar-link>
+  Create a New Sentry Project
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/integrate-frontend/initialize-sentry-sdk/" data-sidebar-link>
+  Introduce Sentry SDK to your Frontend Code
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/integrate-frontend/generate-first-error/" data-sidebar-link>
+  Capture your First Error
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/integrate-frontend/upload-source-maps/" data-sidebar-link>
+  Enable Readable Stack Traces in your Errors
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/integrate-frontend/configure-scms/" data-sidebar-link>
+  Enable Suspect Commits
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/getting-started/" data-sidebar-link>
+  Set up your Sentry Account
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/enrich-data/" data-sidebar-link>
+  Put your Data to Work
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/alert-notifications/" data-sidebar-link>
+  Alert Notifications
+</a>
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/alert-notifications/creating-custom-rules/" data-sidebar-link>
+  Creating Custom Alert Notifications
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/alert-notifications/routing-alerts/" data-sidebar-link>
+  Routing Alert Notifications
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/discover/" data-sidebar-link>
+  Uncover Trends with Discover
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/grouping-and-fingerprints/" data-sidebar-link>
+  Grouping &amp; Fingerprints
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/guides/migration/" data-sidebar-link>
+  Moving on Up - Switch to Hosted Sentry
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch data-hide-when-inactive>
+<a href="/support/" class="sidebar-title d-flex align-items-center mb-0" data-sidebar-link>
+  <h6>Support</h6>
+</a><ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch>
+</ul>
+
+
+
+<ul class="list-unstyled" data-sidebar-tree>
+  <li class="mb-3" data-sidebar-branch>
+    <a class="sidebar-title d-flex align-items-center mb-0" href="#" data-sidebar-link>
+      <h6>Resources</h6>
+    </a>
+    <ul class="list-unstyled" data-sidebar-tree>
+      <li class="toc-item" data-sidebar-branch>
+        <a class="d-block" href="https://develop.sentry.dev" data-sidebar-link>
+          Developer Documentation
+          <span class="icon icon-external-link">
+            <svg viewbox="0 0 24 24">
+              <path fill="currentColor" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"></path>
+            </svg>
+          </span>
+        </a>
+      </li>
+      <li class="toc-item" data-sidebar-branch>
+        <a class="d-block" href="https://github.com/getsentry/onpremise" data-sidebar-link>
+          Self-Hosting Sentry
+          <span class="icon icon-external-link">
+            <svg viewbox="0 0 24 24">
+              <path fill="currentColor" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"></path>
+            </svg>
+          </span>
+        </a>
+      </li>
+    </ul>
+  </li>
+</ul>
+<hr class="mb-3 mb-md-4">
+
+
+<ul class="list-unstyled" data-sidebar-tree>
+<li class="mb-3" data-sidebar-branch data-hide-when-inactive>
+<a href="/markdown-styleguide/links/" class="sidebar-title d-flex align-items-center text-warning mb-2" data-toggle="tooltip" data-placement="bottom" title="Development only" data-sidebar-link>
+  <?xml version="1.0" encoding="UTF-8"?>
+<svg height="100%" width="100%" viewbox="0 0 40 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 47.1 (45422) - http://www.bohemiancoding.com/sketch -->
+    <title>Combined Shape</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-7" transform="translate(-1743.000000, -684.000000)" fill-rule="nonzero" fill="currentcolor">
+            <g id="Docs">
+                <g id="Group-3" transform="translate(980.000000, 664.000000)">
+                    <g id="Group-6" transform="translate(763.000000, 20.000000)">
+                        <path d="M19.9985352,12.0009766 L19.9985352,4 L16,4 L16,12 L16,12 C16,14.209139 17.790861,16 20,16 L28,16 L28,12.0009766 L19.9985352,12.0009766 Z M5,1.77635684e-15 L19.5857864,0 C20.9118689,1.77635684e-14 22.1836385,0.526784202 23.1213203,1.46446609 L30.5355339,8.87867966 C31.4732158,9.81636155 32,11.0881311 32,12.4142136 L32,35 C32,37.7614237 29.7614237,40 27,40 L5,40 C2.23857625,40 0,37.7614237 0,35 L0,5 C0,2.23857625 2.23857625,2.22044605e-15 5,1.77635684e-15 Z M5,4 C4.44771525,4 4,4.44771525 4,5 L4,35 C4,35.5522847 4.44771525,36 5,36 L27,36 C27.5522847,36 28,35.5522847 28,35 L28,12.4142136 C28,12.1489971 27.8946432,11.8946432 27.7071068,11.7071068 L20.2928932,4.29289322 C20.1053568,4.10535684 19.8510029,4 19.5857864,4 L5,4 Z M40,40 C40,44.418278 36.418278,48 32,48 L12,48 C9.790861,48 8,46.209139 8,44 L8,44 L32,44 C34.209139,44 36,42.209139 36,40 L36,10 C38.209139,10 40,11.790861 40,14 L40,40 Z" id="Combined-Shape"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
+
+  <h6 class="ml-2">Markdown styleguide</h6>
+</a><ul class="list-unstyled" data-sidebar-tree><li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/markdown-styleguide/links/" data-sidebar-link>
+  Links
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li></ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch data-hide-when-inactive>
+<a href="/includes/alert/" class="sidebar-title d-flex align-items-center text-warning mb-2" data-toggle="tooltip" data-placement="bottom" title="Development only" data-sidebar-link>
+  <?xml version="1.0" encoding="UTF-8"?>
+<svg width="100%" height="100%" viewbox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 47.1 (45422) - http://www.bohemiancoding.com/sketch -->
+    <title>System/Monitor</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-7" transform="translate(-530.000000, -785.000000)" fill-rule="nonzero" fill="currentcolor">
+            <g id="Docs">
+                <g id="Sidebar" transform="translate(480.000000, 85.000000)">
+                    <g id="System/Add" transform="translate(48.000000, 698.000000)">
+                        <g id="System/Monitor">
+                            <path d="M13,24 L7,24 C6.44771525,24 6,24.4477153 6,25 C6,25.5522847 6.44771525,26 7,26 L21,26 C21.5522847,26 22,25.5522847 22,25 C22,24.4477153 21.5522847,24 21,24 L15,24 L15,20 L13,20 L13,24 Z M6,2 L22,2 C24.209139,2 26,3.790861 26,6 L26,16 C26,18.209139 24.209139,20 22,20 L6,20 C3.790861,20 2,18.209139 2,16 L2,6 C2,3.790861 3.790861,2 6,2 Z M6,4 C4.8954305,4 4,4.8954305 4,6 L4,16 C4,17.1045695 4.8954305,18 6,18 L22,18 C23.1045695,18 24,17.1045695 24,16 L24,6 C24,4.8954305 23.1045695,4 22,4 L6,4 Z M13,12 C12.4477153,12 12,11.5522847 12,11 C12,10.4477153 12.4477153,10 13,10 C13.5522847,10 14,10.4477153 14,11 C14,11.5522847 13.5522847,12 13,12 Z M9,8 C8.44771525,8 8,7.55228475 8,7 C8,6.44771525 8.44771525,6 9,6 C9.55228475,6 10,6.44771525 10,7 C10,7.55228475 9.55228475,8 9,8 Z M9,16 C8.44771525,16 8,15.5522847 8,15 C8,14.4477153 8.44771525,14 9,14 C9.55228475,14 10,14.4477153 10,15 C10,15.5522847 9.55228475,16 9,16 Z M17,12 C16.4477153,12 16,11.5522847 16,11 C16,10.4477153 16.4477153,10 17,10 C17.5522847,10 18,10.4477153 18,11 C18,11.5522847 17.5522847,12 17,12 Z M21,12 C20.4477153,12 20,11.5522847 20,11 C20,10.4477153 20.4477153,10 21,10 C21.5522847,10 22,10.4477153 22,11 C22,11.5522847 21.5522847,12 21,12 Z M9,12 C8.44771525,12 8,11.5522847 8,11 C8,10.4477153 8.44771525,10 9,10 C9.55228475,10 10,10.4477153 10,11 C10,11.5522847 9.55228475,12 9,12 Z" id="Combined-Shape"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
+
+  <h6 class="ml-2">Includes</h6>
+</a><ul class="list-unstyled" data-sidebar-tree>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/includes/alert/" data-sidebar-link>
+  Alert
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/includes/platform-content/" data-sidebar-link>
+  Platform Content
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+<li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/includes/user-content/" data-sidebar-link>
+  User Content
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li>
+</ul>
+
+</li>
+<li class="mb-3" data-sidebar-branch data-hide-when-inactive>
+<a href="/tags/version-added/" class="sidebar-title d-flex align-items-center text-warning mb-2" data-toggle="tooltip" data-placement="bottom" title="Development only" data-sidebar-link>
+  <?xml version="1.0" encoding="UTF-8"?>
+<svg width="100%" height="100%" viewbox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 47.1 (45422) - http://www.bohemiancoding.com/sketch -->
+    <title>System/Monitor</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-7" transform="translate(-530.000000, -785.000000)" fill-rule="nonzero" fill="currentcolor">
+            <g id="Docs">
+                <g id="Sidebar" transform="translate(480.000000, 85.000000)">
+                    <g id="System/Add" transform="translate(48.000000, 698.000000)">
+                        <g id="System/Monitor">
+                            <path d="M13,24 L7,24 C6.44771525,24 6,24.4477153 6,25 C6,25.5522847 6.44771525,26 7,26 L21,26 C21.5522847,26 22,25.5522847 22,25 C22,24.4477153 21.5522847,24 21,24 L15,24 L15,20 L13,20 L13,24 Z M6,2 L22,2 C24.209139,2 26,3.790861 26,6 L26,16 C26,18.209139 24.209139,20 22,20 L6,20 C3.790861,20 2,18.209139 2,16 L2,6 C2,3.790861 3.790861,2 6,2 Z M6,4 C4.8954305,4 4,4.8954305 4,6 L4,16 C4,17.1045695 4.8954305,18 6,18 L22,18 C23.1045695,18 24,17.1045695 24,16 L24,6 C24,4.8954305 23.1045695,4 22,4 L6,4 Z M13,12 C12.4477153,12 12,11.5522847 12,11 C12,10.4477153 12.4477153,10 13,10 C13.5522847,10 14,10.4477153 14,11 C14,11.5522847 13.5522847,12 13,12 Z M9,8 C8.44771525,8 8,7.55228475 8,7 C8,6.44771525 8.44771525,6 9,6 C9.55228475,6 10,6.44771525 10,7 C10,7.55228475 9.55228475,8 9,8 Z M9,16 C8.44771525,16 8,15.5522847 8,15 C8,14.4477153 8.44771525,14 9,14 C9.55228475,14 10,14.4477153 10,15 C10,15.5522847 9.55228475,16 9,16 Z M17,12 C16.4477153,12 16,11.5522847 16,11 C16,10.4477153 16.4477153,10 17,10 C17.5522847,10 18,10.4477153 18,11 C18,11.5522847 17.5522847,12 17,12 Z M21,12 C20.4477153,12 20,11.5522847 20,11 C20,10.4477153 20.4477153,10 21,10 C21.5522847,10 22,10.4477153 22,11 C22,11.5522847 21.5522847,12 21,12 Z M9,12 C8.44771525,12 8,11.5522847 8,11 C8,10.4477153 8.44771525,10 9,10 C9.55228475,10 10,10.4477153 10,11 C10,11.5522847 9.55228475,12 9,12 Z" id="Combined-Shape"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
+
+  <h6 class="ml-2">Tags</h6>
+</a><ul class="list-unstyled" data-sidebar-tree><li class="toc-item" data-sidebar-branch>
+<a class="d-block" href="/tags/version-added/" data-sidebar-link>
+  Version Added
+</a>
+<ul class="list-unstyled" data-sidebar-tree></ul>
+
+</li></ul>
+
+</li>
+</ul>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="tracking-widget d-none bg-primary p-3 small text-white" data-tracking-widget>
+  <p class="mb-3">Like every organization on earth, we use cookies to ensure you have a normal experience on our website. <a href="https://sentry.io/privacy/">Learn More</a></p>
+
+  <div class="row no-gutters">
+    <div class="col-6 pr-1">
+      <button class="btn btn-light btn-sm btn-block" data-accept>I Accept</button>
+    </div>
+    <div class="col-6 pl-1">
+      <button class="btn btn-outline-light btn-sm btn-block" data-reject>Please, No</button>
+    </div>
+  </div>
+</div>
+
+    </div>
+
+    <main role="main" class="px-0">
+      <div class="flex-grow-1 main-scroll">
+        <div class="d-none d-md-block">
+          <div class="navbar navbar-expand-md navbar-light global-header">
+  <div class="collapse navbar-collapse content-max" id="navbar-menu">
+    <div>
+      <div id="search-clickplate" class="d-none"></div>
+      <div id="search-box"></div>
+      <div id="hits">
+        <div id="hits_gatsby"></div>
+        <div id="hits_jekyll"></div>
+      </div>
+    </div>
+    <ul class="navbar-nav ml-auto rounded">
+      <li class="nav-item mr-md-1 mr-lg-2" data-hide-when-logged-in>
+        <a class="nav-link" href="https://sentry.io/auth/login">Sign in</a>
+      </li>
+      <li class="nav-item" data-hide-when-logged-in>
+        <div class="p-1 p-md-0">
+          <a href="https://sentry.io/signup" class="btn btn-primary d-block d-inline-block-md" role="button">Get started</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+        </div>
+
+        <section class="pt-3 px-3 content-max prose" data-searchable data-dynamic-load="main">
+          <div class="row">
+  <div class="col-sm-8 col-md-12 col-lg-8 col-xl-9">
+    <h1 class="mb-3">Distributed Tracing</h1>
+    <div id="main">
+      <p>Enabling tracing augments your existing error data by capturing interactions among your software systems. With tracing, Sentry tracks your software performance, measuring things like throughput and latency, and can also display the impact of errors across multiple systems. Tracing makes Sentry a more complete monitoring solution, helping you both diagnose problems and measure your application’s overall health more easily. Tracing in Sentry provides insights such as:</p>
+
+<ul>
+  <li>What occurred for a specific error event or issue</li>
+  <li>The conditions that cause bottlenecks or latency issues in your application</li>
+  <li>The endpoints or operations that consume the most time</li>
+</ul>
+
+<h2 id="what-is-tracing">What is Tracing?</h2>
+
+<p>To begin, a note about what tracing is not: Tracing is not profiling. Though the goals of profiling and tracing overlap quite a bit, and though they can both be used to diagnose problems in your application, they differ in terms of what they measure and how the data is recorded.</p>
+
+<p>A <a href="https://en.wikipedia.org/wiki/Profiling_(computer_programming)">profiler</a> may measure any number of aspects of an application’s operation: the number of instructions executed, the amount of memory being used by various processes, the amount of time a given function call takes, and many more. The resulting profile is a statistical summary of these measurements.</p>
+
+<p>A <a href="https://en.wikipedia.org/wiki/Tracing_(software)">tracing tool</a>, on the other hand, focuses on <em>what</em> happened (and when), rather than how many times it happened or how long it took. The resulting trace is a log of events which occurred during a program’s execution, often across multiple systems. Though traces most often - or, in the case of Sentry’s traces, always - include timestamps, allowing durations to be calculated, measuring performance is not their only purpose. They can also show the ways in which interconnected systems interact, and the ways in which problems in one can cause problems in another.</p>
+
+<h3 id="why-tracing">Why Tracing?</h3>
+
+<p>Applications typically consist of interconnected components, which are also called services. As an example, let’s look at a modern web application, composed of the following components, separated by network boundaries:</p>
+
+<ul>
+  <li>Frontend (Single-Page Application)</li>
+  <li>Backend (REST API)</li>
+  <li>Task Queue</li>
+  <li>Database Server</li>
+  <li>Cron Job Scheduler</li>
+</ul>
+
+<p>Each of these components may be written in a different language on a different platform. Each can be instrumented individually using a Sentry SDK to capture error data or crash reports, but that instrumentation doesn’t provide the full picture, as each piece is considered separately. Tracing allows you to tie all of the data together.</p>
+
+<p>In our example web application, tracing means being able to follow a request from the frontend to the backend and back, pulling in data from any background tasks or notification jobs that request creates. Not only does this allow you to correlate Sentry error reports, to see how an error in one service may have propagated to another, but it also allows you to gain stronger insights into which services may be having a negative impact on your application’s overall performance.</p>
+
+<p>Before learning how to enable tracing in your application, it helps to understand a few key terms and how they relate to one another.</p>
+
+<h3 id="traces-transactions-and-spans">Traces, Transactions, and Spans</h3>
+
+<p>A <strong>trace</strong> represents the record of the entire operation you want to measure or track - like page load, an instance of a user completing some action in your application, or a cron job in your backend. When a trace includes work in multiple services, such as those listed above, it’s called a <strong>distributed trace</strong>, because the trace is distributed across those services.</p>
+
+<p>Each trace consists of one or more tree-like structures called <strong>transactions</strong>, the nodes of which are called <strong>spans</strong>. In most cases, each transaction represents a single instance of a service being called, and each span within that transaction represents that service performing a single unit of work, whether calling a function within that service or making a call to a different service. Here’s an example trace, broken down into transactions and spans:</p>
+
+<p><a href="/assets/performance/diagram-transaction-trace.png"><img alt="Diagram illustrating how a trace is composed of multiple transactions, and each transaction is composed of multiple spans." src="/assets/performance/diagram-transaction-trace.png"></a></p>
+
+<p>Because a transaction has a tree structure, top-level spans can themselves be broken down into smaller spans, mirroring the way that one function may call a number of other, smaller functions; this is expressed using the parent-child metaphor, so that every span may be the <strong>parent span</strong> to multiple other <strong>child spans</strong>. Further, since all trees must have a single root, one span in every transaction always represents the transaction itself, with all other spans in the transaction descending from that root span. Here’s a zoomed-in view of one of the transactions from the diagram above:</p>
+
+<p><a href="/assets/performance/diagram-transaction-spans.png"><img alt="Diagram illustrating the parent-child relationship between spans within a single transaction." src="/assets/performance/diagram-transaction-spans.png"></a></p>
+
+<p>To make all of this more concrete, let’s consider our example web app again.</p>
+
+<h3 id="example-investigating-slow-page-load">Example: Investigating Slow Page Load</h3>
+
+<p>Suppose your web application is slow to load, and you’d like to know why. A lot has to happen for your app to first get to a usable state: multiple requests to your backend, likely some work - including calls to your database or to outside APIs - completed before responses are returned, and processing by the browser to render all of the returned data into something meaningful to the user. So which part of that process is slowing things down?</p>
+
+<p>Let’s say, in this simplified example, that when a user loads the app in their browser, the following happens in each service:</p>
+
+<ul>
+  <li>
+<em>Browser</em>
+    <ul>
+      <li>1 request each for HTML, CSS, and JavaScript</li>
+      <li>1 rendering task, which sets off 2 requests for JSON data</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>
+<em>Backend</em>
+    <ul>
+      <li>3 requests to serve static files (the HTML, CSS, and JS)</li>
+      <li>2 requests for JSON data
+        <ul>
+          <li>1 requiring a call to the database</li>
+          <li>1 requiring a call to an external API and work to process the results before returning them to the frontend</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>
+<em>Database Server</em>
+    <ul>
+      <li>1 request which requires 2 queries
+        <ul>
+          <li>1 query to check authentication</li>
+          <li>1 query to get data</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p><em>Note:</em> The external API is not listed precisely because it’s external, and you therefore can’t see inside of it.</p>
+
+<p>In this example, the entire page-loading process, including all of the above, is represented by a single <strong>trace</strong>. That trace would consist of the following <strong>transactions</strong>:</p>
+
+<ul>
+  <li>1 browser transaction (for page load)</li>
+  <li>5 backend transactions (one for each request)</li>
+  <li>1 database server transaction (for the single DB request)</li>
+</ul>
+
+<p>Each transaction would be broken down into <strong>spans</strong> as follows:</p>
+
+<ul>
+  <li>
+<em>Browser Page-load Transaction</em>: 7 spans
+    <ul>
+      <li>1 root span representing the entire page load</li>
+      <li>1 span each (3 total) for the HTML, CSS, and JS requests</li>
+      <li>1 span for the rendering task, which itself contains
+        <ul>
+          <li>2 child spans, one for each JSON request</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>Let’s pause here to make an important point: Some, though not all, of the spans listed here in the browser transaction have a direct correspondence to backend transactions listed earlier. Specifically, each request span in the browser transaction corresponds to a separate request transaction in the backend. In this situation, when a span in one service gives rise to a transaction in a subsequent service, we call the original span a parent span to <em>both</em> the transaction and its root span. In the diagram below, the squggly lines represent this parent-child relationship.</p>
+
+<p><a href="/assets/performance/diagram-transaction-example.png"><img alt="Diagram illustrating the trace-transaction-span relationship illustrated above, now applied to the example." src="/assets/performance/diagram-transaction-example.png"></a></p>
+
+<p>In our example, every transaction other than the initial browser page-load transaction is the child of a span in another service, which means that every root span other than the browser transaction root has a parent span (albeit in a different service).</p>
+
+<p>In a fully-instrumented system (one in which every service has tracing enabled) this pattern will always hold true. The only parentless span will be the root of the initial transaction; every other span will have a parent. Further, parents and children will always live in the same service, except in the case where the child span is the root of a child transaction, in which case the parent span will live in the calling service and the child transaction/child root span will live in the called service.</p>
+
+<p>Put another way, a fully-instrumented system creates a trace which is itself a connected tree - with each transaction a subtree - and in that tree, the boundaries between subtrees/transactions are precisely the boundaries between services. The diagram above shows one branch of our example’s full trace tree.</p>
+
+<p>Now, for the sake of completeness, back to our spans:</p>
+
+<ul>
+  <li>
+<em>Backend HTML/CSS/JS Request Transactions</em>: 1 span each
+    <ul>
+      <li>1 root span representing the entire request (child of a browser span)</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>
+<em>Backend Request with DB Call Transaction</em>: 2 spans
+    <ul>
+      <li>1 root span representing the entire request (child of a browser span)</li>
+      <li>1 span for querying the database (parent of the database server transaction)</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>
+<em>Backend Request with API Call Transaction</em>: 3 spans
+    <ul>
+      <li>1 root span representing the entire request (child of a browser span)</li>
+      <li>1 span for the API request (unlike with the DB call, <em>not</em> a parent span, since the API is external)</li>
+      <li>1 span for processing the API data</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>
+<em>Database Server Request Transaction</em>: 3 spans
+    <ul>
+      <li>1 root span representing the entire request (child of the backend span above)</li>
+      <li>1 span for the authentication query</li>
+      <li>1 span for the query retrieving data</li>
+    </ul>
+  </li>
+</ul>
+
+<p>To wrap up the example: after instrumenting all of your services, you might discover that - for some reason - it’s the auth query in your database server that is making things slow, accounting for more than half of the time it takes for your entire page load process to complete. Tracing can’t tell you <em>why</em> that’s happening, but at least now you know where to look!</p>
+
+<h3 id="further-examples">Further Examples</h3>
+
+<p>This section contains a few more examples of tracing, broken down into transactions and spans.</p>
+
+<h4 id="measuring-a-specific-user-action">Measuring a Specific User Action</h4>
+
+<p>If your application involves e-commerce, you likely want to measure the time between a user clicking “Submit Order” and the order confirmation appearing, including tracking the submitting of the charge to the payment processor and the sending of an order confirmation email. That entire process is one trace, and typically you’d have transactions (<em>T</em>) and spans (<em>S</em>) for:</p>
+
+<ul>
+  <li>The browser’s full process (<em>T</em> and root span <em>S</em>)
+    <ul>
+      <li>XHR request to backend* (<em>S</em>)</li>
+      <li>Rendering confirmation screen (<em>S</em>)</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>Your backend’s processing of that request (<em>T</em> and root span <em>S</em>)
+    <ul>
+      <li>Function call to compute total (<em>S</em>)</li>
+      <li>DB call to store order* (<em>S</em>)</li>
+      <li>API call to payment processor (<em>S</em>)</li>
+      <li>Queuing of email confirmation* (<em>S</em>)</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>Your database’s work updating the customer’s order history (<em>T</em> and root span <em>S</em>)
+    <ul>
+      <li>Individual SQL queries (<em>S</em>)</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>The queued task of sending the email (<em>T</em> and root span <em>S</em>)
+    <ul>
+      <li>Function call to populate email template (<em>S</em>)</li>
+      <li>API call to email-sending service (<em>S</em>)</li>
+    </ul>
+  </li>
+</ul>
+
+<p><em>Note:</em> Starred spans represent spans that are the parent of a later transaction (and its root span).</p>
+
+<h4 id="monitoring-a-background-process">Monitoring a Background Process</h4>
+
+<p>If your backend periodically polls for data from an external service, processes it, caches it, and then forwards it to an internal service, each instance of this happening is a trace, and you’d typically have transactions (<em>T</em>) and spans (<em>S</em>) for:</p>
+
+<ul>
+  <li>The cron job that completes the entire process (<em>T</em> and root span <em>S</em>)
+    <ul>
+      <li>API call to external service (<em>S</em>)</li>
+      <li>Processing function (<em>S</em>)</li>
+      <li>Call to caching service* (<em>S</em>)</li>
+      <li>API call to internal service* (<em>S</em>)</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>The work done in your caching service (<em>T</em> and root span <em>S</em>)
+    <ul>
+      <li>Checking cache for existing data (<em>S</em>)</li>
+      <li>Storing new data in cache (<em>S</em>)</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li>Your internal service’s processing of the request (<em>T</em> and root span <em>S</em>)
+    <ul>
+      <li>Anything that service might do to handle the request (<em>S</em>)</li>
+    </ul>
+  </li>
+</ul>
+
+<p><em>Note:</em> Starred spans represent spans that are the parent of a later transaction (and its root span).</p>
+
+<h3 id="tracing-data-model">Tracing Data Model</h3>
+
+<blockquote>
+  <p>“Show me your flowchart and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won’t usually need your flowchart; it’ll be obvious.”</p>
+
+  <p>– <a href="https://en.wikipedia.org/wiki/Fred_Brooks">Fred Brooks</a>, The Mythical Man Month (1975)</p>
+</blockquote>
+
+<p>While the theory is interesting, ultimately any data structure is defined by the kind of data it contains, and relationships between data structures are defined by how links between them are recorded. Traces, transactions, and spans are no different.</p>
+
+<h4 id="traces">Traces</h4>
+
+<p>Traces are not an entity in and of themselves. Rather, a trace is defined as the collection of all transactions that share a <code class="highlighter-rouge">trace_id</code> value.</p>
+
+<h4 id="transactions">Transactions</h4>
+
+<p>Transactions share most of their properties (start and end time, tags, and so forth) with their root spans, so the same options described below for spans are available in transactions, and setting them in either place is equivalent.</p>
+
+<p>Transactions also have one additional property not included in spans, called <code class="highlighter-rouge">transaction_name</code>, which is used in the UI to identify the transaction. Common examples of <code class="highlighter-rouge">transaction_name</code> values include endpoint paths (like <code class="highlighter-rouge">/store/checkout/</code> or <code class="highlighter-rouge">api/v2/users/&lt;user_id&gt;/</code>) for backend request transactions, task names (like <code class="highlighter-rouge">data.cleanup.delete_inactive_users</code>) for cron job transactions, and URLs (like <code class="highlighter-rouge">https://docs.sentry.io/performance<span class="no-break"></span>-<span class="no-break"></span>monitoring/distributed<span class="no-break"></span>-<span class="no-break"></span>tracing/</code>) for page-load transactions.</p>
+
+<p><em>Note:</em> Before the transaction is sent, the <code class="highlighter-rouge">tags</code> and <code class="highlighter-rouge">data</code> properties will get merged with data from the global scope. (Global scope data is set either in <code class="highlighter-rouge">Sentry.init()</code> - for things like <code class="highlighter-rouge">environment</code> and <code class="highlighter-rouge">release</code> - or by using <code class="highlighter-rouge">Sentry.configureScope()</code>, <code class="highlighter-rouge">Sentry.setTag()</code>, <code class="highlighter-rouge">Sentry.setUser()</code>, and <code class="highlighter-rouge">Sentry.setExtra()</code>. See the <a href="/enriching-error-data/additional-data/">Additional Data</a> docs for more information.)</p>
+
+<h4 id="spans">Spans</h4>
+
+<p>The majority of the data in a transaction resides in the individual spans the transaction contains. Span data includes:</p>
+
+<ul>
+  <li>
+<code class="highlighter-rouge">parent_span_id</code>: ties the span to its parent span</li>
+  <li>
+<code class="highlighter-rouge">op</code>: short string identifying the type or category of operation the span is measuring</li>
+  <li>
+<code class="highlighter-rouge">start_timestamp</code>: when the span was opened</li>
+  <li>
+<code class="highlighter-rouge">end_timestamp</code>: when the span was closed</li>
+  <li>
+<code class="highlighter-rouge">description</code>: longer description of the span’s operation, which uniquely identifies the span but is consistent across instances of the span (optional)</li>
+  <li>
+<code class="highlighter-rouge">status</code>: short code indicating operation’s status (optional)</li>
+  <li>
+<code class="highlighter-rouge">tags</code>: key-value pairs holding additional data about the span (optional)</li>
+  <li>
+<code class="highlighter-rouge">data</code>: arbitrarily-structured additional data about the span (optional)</li>
+</ul>
+
+<p>An example use of the <code class="highlighter-rouge">op</code> and <code class="highlighter-rouge">description</code> properties together is <code class="highlighter-rouge">op: sql.query</code> and <code class="highlighter-rouge">description: SELECT * FROM users WHERE last_active &lt; %s</code>. The <code class="highlighter-rouge">status</code> property is often used to indicate the success or failure of the span’s operation, or for a response code in the case of HTTP requests. Finally, <code class="highlighter-rouge">tags</code> and <code class="highlighter-rouge">data</code> allow you to attach further contextual information to the span, such as <code class="highlighter-rouge">function: middleware.auth.is_authenticated</code> for a function call or <code class="highlighter-rouge">request: {url: ..., headers: ... , body: ...}</code> for an HTTP request.</p>
+
+<h3 id="further-information">Further Information</h3>
+
+<p>A few more important points about traces, transactions, and spans, and the way they relate to one another:</p>
+
+<h4 id="trace-duration">Trace Duration</h4>
+
+<p>Because a trace just is a collection of transactions, traces don’t have their own start and end times. Instead, a trace begins when its earliest transaction starts, and ends when its latest transaction ends. As a result, you can’t explicitly start or end a trace directly. Instead, you create a trace by creating the first transaction in that trace, and you complete a trace by completing all of transactions it contains.</p>
+
+<h4 id="async-transactions">Async Transactions</h4>
+
+<p>Because of the possibility of asynchronous processes, child transactions may outlive the transactions containing their parent spans, sometimes by many orders of magnitude. For example, if a backend API call sets off a long-running processing task and then immediately returns a response, the backend transaction will finish (and its data will be sent to Sentry) long before the async task transaction does. Asynchronicity also means that the order in which transactions are sent to (and received by) Sentry does not in any way depend on the order in which they were created. (By contrast, order of receipt for transactions in the same trace <em>is</em> correlated with order of completion, though because of factors like the variability of transmission times, the correlation is far from perfect.)</p>
+
+<h4 id="orphan-transactions">Orphan Transactions</h4>
+
+<p>In theory, in a fully instrumented system, each trace should contain only one transaction and one span (the transaction’s root) without a parent, namely the transaction in the originating service. However, in practice, you may not have tracing enabled in every one of your services, or an instrumented service may fail to report a transaction due to network disruption or other unforeseen circumstances. When this happens, you may see gaps in your trace hierarchy. Specifically, you may see transactions partway through the trace whose parent spans haven’t been recorded as part of any known transactions. Such non-originating, parentless transactions are called <strong>orphan transactions</strong>.</p>
+
+<h4 id="nested-spans">Nested Spans</h4>
+
+<p>Though our examples above had four levels in their hierarchy (trace, transaction, span, child span) there’s no set limit to how deep the nesting of spans can go. There are, however, practical limits: transaction payloads sent to Sentry have a maximum allowed size, and as with any kind of logging, there’s a balance to be struck between your data’s granularity and its usability.</p>
+
+<h4 id="zero-duration-spans">Zero-duration Spans</h4>
+
+<p>It’s possible for a span to have equal start and end times, and therefore be recorded as taking no time. This can occur either because the span is being used as a marker (such as is done in <a href="https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark">the browser’s Performance API</a>) or because the amount of time the operation took is less than the measurement resolution (which will vary by service).</p>
+
+<h4 id="clock-skew">Clock Skew</h4>
+
+<p>If you are collecting transactions from multiple machines, you will likely encounter <strong>clock skew</strong>, where timestamps in one transaction don’t align with timestamps in another. For example, if your backend makes a database call, the backend transaction logically should start before the database transaction does. But if the system time on each machine (those hosting your backend and database, respectively) isn’t synced to a common standard, it’s possible that won’t be the case. It’s also possible for the ordering to be correct, but for the two recorded timeframes to not line up in a way that accurately reflects what actually happened. To reduce this possibility, we recommend using Network Time Protocol (NTP) or your cloud provider’s clock synchronization services.</p>
+
+<h4 id="how-data-is-sent">How Data is Sent</h4>
+
+<p>Individual spans aren’t sent to Sentry; rather, the entire transaction is sent as one unit. This means that no span data will be recorded by Sentry’s servers until the transaction to which they belong is closed and dispatched. The converse is not true, however - though spans can’t be sent without a transaction, transactions <em>are</em> still valid, and will be sent, even if the only span they contain is their root span.</p>
+
+<h2 id="data-sampling">Data Sampling</h2>
+
+<p>When you enable sampling in your tracing setup, you choose a percentage of collected transactions to send to Sentry. For example, if you had an endpoint that received 1000 requests per minute, a sampling rate of <code class="highlighter-rouge">0.25</code> would result in approximately 250 transactions (25%) being sent to Sentry each minute. (The number is approximate because each request is either tracked or not, independently and pseudorandomly, with a 25% probability. So in the same way that 100 fair coins, when flipped, result in approximately 50 heads, the SDK will “decide” to collect a trace in approximately 250 cases.) Because you know the sampling percentage, you can then extrapolate your total traffic volume.</p>
+
+<p>When collecting traces, we <strong>strongly recommend</strong> sampling your data, for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you’ll more easily prevent yourself from exceeding your organization’s <a href="/accounts/quotas/">event quota</a>, which will help you manage costs.</p>
+
+<p>When choosing a sampling rate, the goal is to not collect <em>too</em> much data (given the reasons above) but also to collect enough data that you are able to draw meaningful conclusions. If you’re not sure what rate to choose, we recommend starting with a low value and gradually increasing it as you learn more about your traffic patterns and volume, until you’ve found a rate which lets you balance performance and cost concerns with data accuracy.</p>
+
+<h3 id="consistency-within-a-trace">Consistency Within a Trace</h3>
+
+<p>For traces that involve multiple transactions, Sentry uses a “head-based” approach: a sampling decision is made in the originating service, and then that decision is passed to all subsequent services. To see how this works, let’s return to our webapp example above. Consider two users, A and B, who are both loading your app in their respective browsers. When A loads the app, the SDK pseudorandomly “decides” to collect a trace, whereas when B loads the app, the SDK “decides” not to. When each browser makes requests to your backend, it includes in those requests the “yes, please collect transactions” or the “no, don’t collect transactions this time” decision in the headers.</p>
+
+<p>When your backend processes the requests from A’s browser, it sees the “yes” decision, collects transaction and span data, and sends it to Sentry. Further, it includes the “yes” decision in any requests it makes to subsequent services (like your database server), which similarly collect data, send it to Sentry, and pass the decision along to any services they call. Through this process, all of the relevant transactions in A’s trace are collected and sent to Sentry.</p>
+
+<p>On the other hand, when your backend processes the requests from B’s browser, it sees the “no” decision, and as a result it does <em>not</em> collect and send transaction and span data to Sentry. It does, however, do the same thing it does in A’s case in terms of propagating the decision to subsequent services, telling them not to collect or send data either. They then in turn tell any services they call not to send data, and in this way no transactions from B’s trace are collected.</p>
+
+<p>Put simply: as a result of this head-based approach, where the decision is made once in the originating service and passed to all subsequent services, either all of the transactions for a given trace are collected, or none are, so there shouldn’t be any incomplete traces.</p>
+
+<h3 id="consistency-between-traces">Consistency Between Traces</h3>
+
+<p>If you enable tracing in services with multiple entry points, we recommend choosing similar sampling rates, to avoid biasing your data. For example, suppose the backend of our on-going web app example also serves as a public API. In that case, some traces would start with a page-load transaction in the web app, and likely include multiple backend transactions, while other traces (those representing folks hitting the public API) would begin with a single backend request transaction, which would be the only backend transaction in the trace. Choosing a very different sampling rate for your web app from that chosen for your backend would lead to one of those scenarios being oversampled compared to the other, compromising the accuracy of your overall data.</p>
+
+<h2 id="viewing-trace-data">Viewing Trace Data</h2>
+
+<p>Though <a href="/performance-monitoring/performance/">Performance</a> and <a href="/performance-monitoring/discover-queries/">Discover</a>, you can view trace data in the event details.</p>
+
+    </div>
+  </div>
+<div class="col-sm-4 col-md-12 col-lg-4 col-xl-3">
+    <div class="doc-toc">
+      <div class="doc-toc-title">
+        <h6>On this page</h6>
+      </div>
+      <ul class="section-nav">
+<li class="toc-entry toc-h2">
+<a href="#what-is-tracing">What is Tracing?</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#why-tracing">Why Tracing?</a></li>
+<li class="toc-entry toc-h3"><a href="#traces-transactions-and-spans">Traces, Transactions, and Spans</a></li>
+<li class="toc-entry toc-h3"><a href="#example-investigating-slow-page-load">Example: Investigating Slow Page Load</a></li>
+<li class="toc-entry toc-h3"><a href="#further-examples">Further Examples</a></li>
+<li class="toc-entry toc-h3"><a href="#tracing-data-model">Tracing Data Model</a></li>
+<li class="toc-entry toc-h3"><a href="#further-information">Further Information</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2">
+<a href="#data-sampling">Data Sampling</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#consistency-within-a-trace">Consistency Within a Trace</a></li>
+<li class="toc-entry toc-h3"><a href="#consistency-between-traces">Consistency Between Traces</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#viewing-trace-data">Viewing Trace Data</a></li>
+</ul>
+    </div>
+  </div>
+</div>
+
+<aside>
+  <p class="mt-3 mb-4 font-italic small">
+    Found an error?
+    <a href="https://github.com/getsentry/sentry-docs/blob/master/src/collections/_documentation/performance-monitoring/distributed-tracing.md">Help us fix it</a>
+  </p>
+</aside>
+
+        </section>
+      </div>
+    </main>
+    <div style="display: none">Rendered with Jekyll</div>
+  </div>
+
+  
+  <script type="text/javascript">
+    window.ALGOLIA = {
+      appId: 'OOK48W9UCL',
+      indexName: 'sentry-docs-test',
+      apiKey: '2d64ec1106519cbc672d863b0d200782',
+    };
+  </script>
+  <script src="/assets/bundle.js" type="text/javascript"></script>
+  <script src="/assets/reload.min.js" type="text/javascript"></script>
+  
+  
+  <script>
+    document.write(
+      '<script src="http://' +
+      (location.host || 'localhost').split(':')[0] +
+      ':35729/livereload.js?snipver=1"></' +
+      'script>'
+    );
+  </script>
+  
+</body>
+
+</html>

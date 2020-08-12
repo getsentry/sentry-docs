@@ -1,0 +1,8 @@
+```php
+Sentry\init([
+  'dsn' => '___PUBLIC_DSN___',
+  'before_breadcrumb' => function (Sentry\Breadcrumb $breadcrumb): ?Breadcrumb {
+    return $breadcrumb;
+  },
+]);
+```
