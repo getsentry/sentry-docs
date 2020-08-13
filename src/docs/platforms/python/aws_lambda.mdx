@@ -9,7 +9,7 @@ tags: []
 *(New in version 0.3.5)*
 
 Create a deployment package on your local machine and install the required dependencies in the deployment package.
-For more information, see [Building an AWS Lambda deployment package for Python](https://aws.amazon.com/premiumsupport/knowledge-center/build-python-lambda-deployment-package/).
+For more information, see [AWS Lambda deployment package in Python](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html).
 
 Install our Python SDK using `pip`:
 
@@ -32,8 +32,21 @@ def my_function(event, context):
     ...
 ```
 
-Create the deployment package in .zip format and upload it to AWS Lambda as a Lambda function. Checkout Sentry's [aws sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/python) for detailed examples.
+Checkout Sentry's [aws sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/python) for detailed examples.
 
+### Enable Timeout Warning
+*(New in version 0.16.3)*
+
+Update the sentry initialization to set ```timeout_warning``` to ```true```
+```python
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[AwsLambdaIntegration(timeout_warning=True)]
+)
+```
+The timeout warning is sent only if the "timeout" in the Lambda Funtion configuration is set to a value greater than one second.
+
+ 
 <Alert level="info" title="Note"><markdown>
 
 If you are using another web framework inside of AWS Lambda, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [*Integrations*](/platforms/python/#integrations) for more information.
@@ -48,7 +61,15 @@ If you are using another web framework inside of AWS Lambda, the framework might
 
 With the AWS Lambda integration enabled, the Python SDK will:
 
-* Automatically report all uncaught exceptions from your lambda functions including a link to the cloudwatch logs, the function details and sys.argv for the function. You can add more context as described [here](/platforms/python#setting-context)
+* Automatically report all exceptions from your lambda functions 
+* Issues reports automatically include:
+  * A link to the cloudwatch logs 
+  * Function details 
+  * sys.argv for the function 
+  * AWS Request ID
+  * Function execution time 
+  * Function version
+  * You can add more context as described [here](/platforms/python#setting-context)
 
 * Request data is attached to all events: **HTTP method, URL, headers, form data, JSON payloads**. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set ``send_default_pii`` to ``True``.
 
