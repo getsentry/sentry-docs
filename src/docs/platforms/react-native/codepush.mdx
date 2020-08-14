@@ -5,19 +5,42 @@ toc: true
 title: Using Sentry with CodePush
 tags: []
 ---
-If you want to use Sentry together with CodePush you have to send us the CodePush version:
+If you want to use Sentry together with CodePush you will have to pass `release` and `dist` to `Sentry.init`. Our suggestion is to store them in an `app.json`, or you can just use the `package.json`. These values need to be unique to each version of your codebase and match the version on the source maps exactly, or they might not be symbolicated.
+
+We recommend using the format `${BUNDLE_ID}@${APP_VERSION}+codepush:${DIST}` for release names.
+
+```javascript
+import { release, dist } from 'app.json'
+
+Sentry.init({
+  // ...
+  release,
+  dist
+});
+```
+
+If you need to use `codePush.getUpdateMetadata`, you will have to wait to initialize the Sentry SDK until the Promise is resolved.
+<Alert level="warning" title="Warning"><markdown>
+
+This method is not recommended as any errors or crashes that happen before the initialization of the Sentry SDK will not be caught.  
+
+</markdown></Alert>
+
 
 ```javascript
 import codePush from "react-native-code-push";
 
 codePush.getUpdateMetadata().then((update) => {
   if (update) {
-    Sentry.setRelease(update.appVersion + '-codepush:' + update.label);
+    Sentry.init({
+      // ...
+      release: `${update.appVersion}+codepush:${update.label}`
+    });
   }
 });
 ```
 
-Put this somewhere in your code where you already use CodePush. This makes sure that we can associate crashes with the right source maps. `Sentry.setRelease` sets the release to `version`. This works for iOS as well as Android. Make sure that you call this function otherwise Sentry is not able to symbolicate your crashes correctly.
+## Making Releases
 
 After updating your CodePush release, you have to upload the new assets to Sentry:
 
@@ -28,3 +51,5 @@ $ sentry-cli react-native appcenter YourApp ios ./build/CodePush --dist YourBuil
 ```
 
 Exporting the `SENTRY_PROPERTIES` will tell sentry-cli to use the properties in your project. Alternatively, you can either pass it via parameters or a global settings file. To find more about this refer to [Working with Projects](/cli/configuration/#sentry-cli-working-with-projects).
+
+If you still have issues with CodePush source maps, you can refer to [Source Maps for Other Platforms](/platforms/react-native/sourcemaps/) to manually bundle and upload source maps to Sentry.
