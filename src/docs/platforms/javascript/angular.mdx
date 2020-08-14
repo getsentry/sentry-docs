@@ -5,143 +5,241 @@ redirect_from:
   - /clients/javascript/integrations/angular2/
 ---
 
-On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application. Additionally, you can configure `@sentry/browser` to catch any Angular-specific exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component. This is also a great opportunity to collect user feedback by using `Sentry.showReportDialog`.
+To use Sentry with your Angular application, you will need to use `@sentry/angular` (Sentry’s Browser Angular SDK).
 
-First, install `@sentry/browser`:
+<Alert level="info" title="Note"><markdown>
+
+`@sentry/angular` is a wrapper around the `@sentry/browser` package, with added functionality related to Angular. All methods available in the `@sentry/browser` package can also be imported from `@sentry/angular`.
+
+</markdown></Alert>
+
+Add the Sentry SDK as a dependency using yarn or npm:
 
 ```bash
 # Using yarn
-yarn add @sentry/browser
+$ yarn add @sentry/angular
 
 # Using npm
-npm install @sentry/browser
+$ npm install @sentry/angular
 ```
 
-Then initialize a new Sentry instance and configure Angular with the `ErrorHandler` provided and explained below:
+### Connecting the SDK to Sentry
 
-```typescript
-import { BrowserModule } from "@angular/platform-browser";
-import { NgModule, ErrorHandler, Injectable } from "@angular/core";
-import { HttpErrorResponse } from "@angular/common/http";
+After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
-import { environment } from "../environments/environment";
-import { AppComponent } from "./app.component";
+You should `init` the Sentry browser SDK as soon as possible during your application load up, before initializing Angular:
 
-import * as Sentry from "@sentry/browser";
+```javascript
+import { enableProdMode } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { init } from '@sentry/angular';
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  // TryCatch has to be configured to disable XMLHttpRequest wrapping, as we are going to handle
-  // http module exceptions manually in Angular's ErrorHandler and we don't want it to capture the same error twice.
-  // Please note that TryCatch configuration requires at least @sentry/browser v5.16.0.
-  integrations: [
-    new Sentry.Integrations.TryCatch({
-      XMLHttpRequest: false,
-    }),
-  ],
+import { AppModule } from './app/app.module';
+
+init({
+  dsn: '___PUBLIC_DSN___',
+  // ...
 });
 
-@Injectable()
-export class SentryErrorHandler implements ErrorHandler {
-  constructor() {}
+// ...
 
-  extractError(error) {
-    // Try to unwrap zone.js error.
-    // https://github.com/angular/angular/blob/master/packages/core/src/util/errors.ts
-    if (error && error.ngOriginalError) {
-      error = error.ngOriginalError;
-    }
+enableProdMode();
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
+  .then(success => console.log(`Bootstrap success`))
+  .catch(err => console.error(err));
+```
 
-    // We can handle messages and Error objects directly.
-    if (typeof error === "string" || error instanceof Error) {
-      return error;
-    }
+On its own, `@sentry/angular` will report any uncaught exceptions triggered by your application. Additionally, you can configure `@sentry/angular` to catch any Angular-specific exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) provider.
 
-    // If it's http module error, extract as much information from it as we can.
-    if (error instanceof HttpErrorResponse) {
-      // The `error` property of http exception can be either an `Error` object, which we can use directly...
-      if (error.error instanceof Error) {
-        return error.error;
-      }
+### ErrorHandler
 
-      // ... or an`ErrorEvent`, which can provide us with the message but no stack...
-      if (error.error instanceof ErrorEvent) {
-        return error.error.message;
-      }
+`@sentry/angular` exports a function to instantiate `ErrorHandler` provider that will automatically send Javascript errors captured by the Angular's error handler.
 
-      // ...or the request body itself, which we can use as a message instead.
-      if (typeof error.error === "string") {
-        return `Server returned code ${error.status} with body "${error.error}"`;
-      }
-
-      // If we don't have any detailed information, fallback to the request message itself.
-      return error.message;
-    }
-
-    // Skip if there's no error, and let user decide what to do with it.
-    return null;
-  }
-
-  handleError(error) {
-    const extractedError = this.extractError(error) || "Handled unknown error";
-
-    // Capture handled exception and send it to Sentry.
-    const eventId = Sentry.captureException(extractedError);
-
-    // When in development mode, log the error to console for immediate feedback.
-    if (!environment.production) {
-      console.error(extractedError);
-    }
-
-    // Optionally show user dialog to provide details on what happened.
-    Sentry.showReportDialog({ eventId });
-  }
-}
+```javascript
+import { NgModule, ErrorHandler } from '@angular/core';
+import { createErrorHandler } from '@sentry/angular';
 
 @NgModule({
-  declarations: [AppComponent],
-  imports: [BrowserModule],
-  providers: [{ provide: ErrorHandler, useClass: SentryErrorHandler }],
-  bootstrap: [AppComponent],
+  // ...
+  providers: [
+    {
+      provide: ErrorHandler,
+      useValue: createErrorHandler({
+        showDialog: true,
+      }),
+    },
+  ],
+  // ...
 })
 export class AppModule {}
 ```
 
-When using your own `ErrorHandler`, make sure that whenever you use `HttpInterceptor` alongside it,
-the interceptor doesn't modify the error captured originally.
-The same goes for writing your own API services with built-in `http` methods.
+Additionally, `createErrorHandler` accepts a set of options that allows you to configure its behaviour. For more details see `ErrorHandlerOptions` interface in [our repository](https://github.com/getsentry/sentry-javascript/blob/master/packages/angular/src/errorhandler.ts).
 
-For example, the service below makes it impossible for the SDK to extract the correct data, because the full, original error `e` is not propagated.
+## Tracing
 
-```js
-export class ApiService {
-  constructor(http) {
-    this.http = http;
-  }
+`@sentry/angular` exports a Trace Service, Directive and Decorators that leverage the `@sentry/tracing` Tracing integration to add Angular related spans to transactions. If the Tracing integration is not enabled, this functionality will not work. The service itself tracks route changes and durations, where directive and decorators are tracking components initializations.
 
-  formatErrors(e) {
-    console.log("Captured service error");
-    return throwError(e.error);
-  }
+### Install
 
-  get(path) {
-    return this.http.get(path).pipe(catchError(this.formatErrors));
-  }
+Registering a Trace Service is a 3 steps process.
+
+1. Register and configure `@sentry/tracing` `BrowserTracing` integration, including custom Angular routing instrumentation:
+
+```javascript
+import { init, routingInstrumentation } from '@sentry/angular';
+import { Integrations as TracingIntegrations } from '@sentry/tracing';
+
+init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    new TracingIntegrations.BrowserTracing({
+      tracingOrigins: ['localhost', 'https://yourserver.io/api'],
+      routingInstrumentation: routingInstrumentation,
+    }),
+  ],
+  tracesSampleRate: 1,
+});
+```
+
+2. Register `SentryTrace` as a provider in Angular's DI system, with a `Router` as its dependency:
+
+```javascript
+import { NgModule } from '@angular/core';
+import { Router } from '@angular/router';
+import { TraceService } from '@sentry/angular';
+
+@NgModule({
+  // ...
+  providers: [
+    {
+      provide: TraceService,
+      deps: [Router],
+    },
+  ],
+  // ...
+})
+export class AppModule {}
+```
+
+3. Either require the `TraceService` from inside `AppModule` or use `APP_INITIALIZER` to force instantiate Tracing.
+
+```javascript
+@NgModule({
+  // ...
+})
+export class AppModule {
+  constructor(trace: TraceService) {}
 }
 ```
 
-Instead, make sure that you always rethrow or directly pass the original error. For example:
+or
 
-```js
-export class ApiService {
-  constructor(http) {
-    this.http = http;
-  }
+```javascript
+import { APP_INITIALIZER } from '@angular/core';
 
-  get(path) {
-    return this.http.get(path).pipe(catchError(e => throwError(e)));
-  }
+@NgModule({
+  // ...
+  providers: [
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [TraceService],
+      multi: true,
+    },
+  ],
+  // ...
+})
+export class AppModule {}
+```
+
+### Use
+
+To track Angular components as part of your transactions, you have 3 options.
+
+_TraceDirective:_ used to track a duration between `OnInit` and `AfterViewInit` lifecycle hooks in template:
+
+```javascript
+import { TraceDirective } from '@sentry/angular';
+
+@NgModule({
+  // ...
+  declarations: [TraceDirective],
+  // ...
+})
+export class AppModule {}
+```
+
+Then inside your components template (keep in mind that directive name attribute is required):
+
+```html
+<app-header [trace]="'header'"></app-header>
+<articles-list [trace]="'articles-list'"></articles-list>
+<app-footer [trace]="'footer'"></app-footer>
+```
+
+_TraceClassDecorator:_ used to track a duration between `OnInit` and `AfterViewInit` lifecycle hooks in components:
+
+```javascript
+import { Component } from '@angular/core';
+import { TraceClassDecorator } from '@sentry/angular';
+
+@Component({
+  selector: 'layout-header',
+  templateUrl: './header.component.html',
+})
+@TraceClassDecorator()
+export class HeaderComponent {
+  // ...
 }
+```
+
+_TraceMethodDecorator:_ used to track a specific lifecycle hooks as point-in-time spans in components:
+
+```javascript
+import { Component, OnInit } from '@angular/core';
+import { TraceMethodDecorator } from '@sentry/angular';
+
+@Component({
+  selector: 'app-footer',
+  templateUrl: './footer.component.html',
+})
+export class FooterComponent implements OnInit {
+  @TraceMethodDecorator()
+  ngOnInit() {}
+}
+```
+
+You can also add your own custom spans by attaching them to the current active transaction using `getActiveTransaction`
+helper. For example, if you'd like to track the duration of Angular boostraping process, you can do it as follows:
+
+```javascript
+import { enableProdMode } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { init, getActiveTransaction } from '@sentry/angular';
+
+import { AppModule } from './app/app.module';
+
+// ...
+
+const activeTransaction = getActiveTransaction();
+const boostrapSpan =
+  activeTransaction &&
+  activeTransaction.startChild({
+    description: 'platform-browser-dynamic',
+    op: 'angular.bootstrap',
+  });
+
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
+  .then(() => console.log(`Bootstrap success`))
+  .catch(err => console.error(err));
+  .finally(() => {
+    if (bootstrapSpan) {
+      boostrapSpan.finish();
+    }
+  })
 ```
 
 ## AngularJS 1.x
