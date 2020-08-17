@@ -3,8 +3,7 @@ import { Link } from "gatsby";
 
 import ExternalLink from "./externalLink";
 
-// TODO(dcramer): when Gatsby conversion is done, remove remote default
-export default ({ to, href, children, remote = true, ...props }) => {
+export default ({ to, href, children, remote = false, ...props }) => {
   const realTo = to || href || "";
   if (realTo.indexOf("://") !== -1) {
     return (
