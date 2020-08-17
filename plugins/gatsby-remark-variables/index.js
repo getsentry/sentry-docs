@@ -21,7 +21,9 @@ const matchEach = (text, pattern, callback) => {
   return Promise.all(promises);
 };
 
-module.exports = async ({ markdownAST }, options) => {
+module.exports = async ({ markdownAST, markdownNode }, options) => {
+  const page = markdownNode.frontmatter;
+
   visit(
     markdownAST,
     () => true,
@@ -45,7 +47,10 @@ module.exports = async ({ markdownAST }, options) => {
         // YOU CAN EXECUTE CODE HERE JUST FYI
         let result;
         try {
-          result = scopedEval(expr, options.scope);
+          result = scopedEval(expr, {
+            ...options.scope,
+            page,
+          });
           if (result instanceof Promise) result = await result;
         } catch (err) {
           console.warn(

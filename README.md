@@ -59,9 +59,9 @@ For example:
 JavaScript SDK: {{ packages.version('sentry.browser.javascript') }}
 ```
 
-In this case, we expose ``packages`` as an instance of ``PackageRegistry`` which is why there is a `packages.version` function available.
+In this case, we expose ``packages`` as an instance of ``PackageRegistry`` which is why there is a `packages.version` function available. Additional, we expose a default context variable of ``page`` which contains the frontmatter of the given markdown node. For example, ``{{ page.title }}``.
 
-When a function call is invalid, or doesn't match something in the known scope, it will simple render it as a literal value instead. So for example:
+When a function call is invalid (or errors), or doesn't match something in the known scope, it will simple render it as a literal value instead. So for example:
 
 ```markdown
 setFingerprint('{{ default }}')
