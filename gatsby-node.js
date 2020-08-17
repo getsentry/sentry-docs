@@ -178,16 +178,18 @@ exports.createPages = async function({ actions, graphql, reporter }) {
       reporter.panicOnBuild('🚨  ERROR: Loading "createApi" query');
     }
     const component = require.resolve(`./src/components/pages/api.js`);
-    data.allApiDoc.nodes.forEach(node => {
-      actions.createPage({
-        path: node.fields.slug,
-        component,
-        context: {
-          id: node.id,
-          title: node.title,
-        },
-      });
-    });
+    await Promise.all(
+      data.allApiDoc.nodes.map(async node => {
+        actions.createPage({
+          path: node.fields.slug,
+          component,
+          context: {
+            id: node.id,
+            title: node.title,
+          },
+        });
+      })
+    );
   };
 
   const createDocs = async () => {
@@ -221,21 +223,22 @@ exports.createPages = async function({ actions, graphql, reporter }) {
       reporter.panicOnBuild('🚨  ERROR: Loading "createDocs" query');
     }
     const component = require.resolve(`./src/components/pages/doc.js`);
-    data.allFile.nodes.forEach(node => {
-      const child = node.childMarkdownRemark || node.childMdx;
-      if (child && child.fields) {
-        actions.createPage({
-          path: child.fields.slug,
-          component,
-          context: {
-            id: node.id,
-            title: child.frontmatter.title,
-          },
-        });
-      }
-    });
+    await Promise.all(
+      data.allFile.nodes.map(async node => {
+        const child = node.childMarkdownRemark || node.childMdx;
+        if (child && child.fields) {
+          actions.createPage({
+            path: child.fields.slug,
+            component,
+            context: {
+              id: node.id,
+              title: child.frontmatter.title,
+            },
+          });
+        }
+      })
+    );
   };
 
-  await createApi();
-  await createDocs();
+  await Promise.all([createApi(), createDocs()]);
 };
