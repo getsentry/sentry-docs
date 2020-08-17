@@ -4,7 +4,7 @@ The Sentry documentation is a static site, generated with [Gatsby][gatsby].
 
 ## Getting started
 
-You will need [Volta][volta] installed. If you don't have opinions about the process, this will get you going:
+You will need [Volta][volta] and [pre-commit][pre-commit] installed. If you don't have opinions about the process, this will get you going:
 
 ```bash
 # Install Homebrew and everything mentioned above
@@ -28,6 +28,7 @@ You will now be able to access docs via http://localhost:3000.
 
 [gatsby]: https://gatsbyjs.org
 [volta]: https://volta.sh/
+[pre-commit]: https://pre-commit.com/
 
 ## Markdown Documentation
 
