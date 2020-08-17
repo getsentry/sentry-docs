@@ -43,7 +43,7 @@ const navQuery = graphql`
   }
 `;
 
-const NavLink = ({ to, title, children, remote, ...props }) => {
+const NavLink = ({ to, title, children, ...props }) => {
   const location = useLocation();
   const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
 
@@ -55,7 +55,7 @@ const NavLink = ({ to, title, children, remote, ...props }) => {
 
   return (
     <li className={className} data-sidebar-branch>
-      <SmartLink to={to} className="d-block" data-sidebar-link remote={remote}>
+      <SmartLink to={to} className="d-block" data-sidebar-link>
         {title || children}
       </SmartLink>
       {title && children && !!children.length && (
@@ -70,7 +70,7 @@ const NavLink = ({ to, title, children, remote, ...props }) => {
 const toTree = nodeList => {
   const result = [];
   const level = { result };
-    
+
   nodeList.forEach(node => {
     const slug = node.fields.slug;
     slug.split("/").reduce((r, name, i, a) => {
@@ -82,30 +82,43 @@ const toTree = nodeList => {
       return r[name];
     }, level);
   });
-  
+
   // When you write new docs and you want to replace the old "platforms" with the "sdks"
   // tree, just add the the child that should be replaced here
-  const newSdkDocs = ['javascript'];
-  
-  const platformsIndex = result[0].children.findIndex(x => x.name === "platforms");
+  const newSdkDocs = ["javascript"];
+
+  const platformsIndex = result[0].children.findIndex(
+    x => x.name === "platforms"
+  );
   const sdksIndex = result[0].children.findIndex(x => x.name === "sdks");
   newSdkDocs.forEach(newDocs => {
-    const toReplaceIndex = result[0].children[platformsIndex].children.findIndex(x => x.name === newDocs);
-    const withNewIndex = result[0].children[sdksIndex].children.findIndex(x => x.name === newDocs);
+    const toReplaceIndex = result[0].children[
+      platformsIndex
+    ].children.findIndex(x => x.name === newDocs);
+    const withNewIndex = result[0].children[sdksIndex].children.findIndex(
+      x => x.name === newDocs
+    );
     if (toReplaceIndex > -1 && withNewIndex > -1) {
-      result[0].children[platformsIndex].children[toReplaceIndex] = result[0].children[sdksIndex].children[withNewIndex];
+      result[0].children[platformsIndex].children[toReplaceIndex] =
+        result[0].children[sdksIndex].children[withNewIndex];
     } else if (toReplaceIndex === -1 && withNewIndex > -1) {
       // That means this doesn't exist in the old docs so we only append it
-      const order = result[0].children[sdksIndex].node.frontmatter.sidebar_order;
+      const order =
+        result[0].children[sdksIndex].node.frontmatter.sidebar_order;
       if (order) {
-        result[0].children[platformsIndex].children.splice(order, 0, result[0].children[sdksIndex].children[withNewIndex]);
+        result[0].children[platformsIndex].children.splice(
+          order,
+          0,
+          result[0].children[sdksIndex].children[withNewIndex]
+        );
       } else {
-        result[0].children[platformsIndex].children.push(result[0].children[sdksIndex].children[withNewIndex]);  
+        result[0].children[platformsIndex].children.push(
+          result[0].children[sdksIndex].children[withNewIndex]
+        );
       }
-      
     }
   });
-  
+
   return result[0].children;
 };
 
@@ -184,21 +197,13 @@ const Sidebar = () => {
               title="Error Monitoring"
               tree={tree}
             />
-            <DynamicNav 
-              root="platforms" 
-              title="Platforms" 
-              tree={tree} 
-            />
+            <DynamicNav root="platforms" title="Platforms" tree={tree} />
             <DynamicNav
               root="enriching-error-data"
               title="Enriching Error Data"
               tree={tree}
             />
-            <DynamicNav
-              root="product"
-              title="Product"
-              tree={tree}
-            />
+            <DynamicNav root="product" title="Product" tree={tree} />
             <DynamicNav
               root="data-management"
               title="Data Management"
