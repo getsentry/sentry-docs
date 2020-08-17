@@ -6,7 +6,6 @@ import { StaticQuery, graphql } from "gatsby";
 import SmartLink from "./smartLink";
 import { sortBy } from "../utils";
 
-// TODO(dcramer): filter out drafts
 const navQuery = graphql`
   query NavQuery {
     allFile(filter: { sourceInstanceName: { in: ["docs", "api-docs"] } }) {
@@ -142,8 +141,6 @@ const renderChildren = children => {
 };
 
 const DynamicNav = ({ root, title, tree, collapse = false }) => {
-  // TODO(dcramer): this still needs to build the tree
-  // love that we cant use filters here...
   const node = tree.find(n => n.name === root);
   const parentNode = node.children
     ? node.children.find(n => n.name === "")
