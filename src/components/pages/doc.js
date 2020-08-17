@@ -26,7 +26,7 @@ export const pageQuery = graphql`
         }
         frontmatter {
           title
-          robots
+          noindex
         }
       }
       childMdx {
@@ -37,7 +37,7 @@ export const pageQuery = graphql`
         }
         frontmatter {
           title
-          robots
+          noindex
         }
       }
     }

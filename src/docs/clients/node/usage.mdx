@@ -4,9 +4,10 @@ categories: []
 toc: true
 title: Usage
 sidebar_order: 1
-robots: noindex
+noindex: true
 tags: []
 ---
+
 ## Capturing Errors
 
 You can use `captureException` to manually report errors:
@@ -16,12 +17,12 @@ try {
   throw new Error();
 } catch (e) {
   // You can get eventId either as the synchronous return value, or via the callback
-  var eventId = Raven.captureException(e, function (sendErr, eventId) {
+  var eventId = Raven.captureException(e, function(sendErr, eventId) {
     // This callback fires once the report has been sent to Sentry
     if (sendErr) {
-      console.error('Failed to send captured exception to Sentry');
+      console.error("Failed to send captured exception to Sentry");
     } else {
-      console.log('Captured exception and send to Sentry successfully');
+      console.log("Captured exception and send to Sentry successfully");
     }
   });
 }
@@ -30,10 +31,10 @@ try {
 The recommended usage pattern, though, is to run your entire program inside a Raven context:
 
 ```javascript
-var Raven = require('raven');
+var Raven = require("raven");
 
-Raven.config('___PUBLIC_DSN___').install();
-Raven.context(function () {
+Raven.config("___PUBLIC_DSN___").install();
+Raven.context(function() {
   // all your stuff goes here
 });
 ```
@@ -45,19 +46,19 @@ Raven will automatically catch and report any unhandled errors originating insid
 `Raven.context` allows you to wrap any function to be immediately executed. Behind the scenes, this uses [domains](https://nodejs.org/api/domain.html) to wrap, catch, and record any exceptions originating from the function.
 
 ```javascript
-Raven.context(function () {
-    doSomething(a[0])
+Raven.context(function() {
+  doSomething(a[0]);
 });
 ```
 
 `Raven.wrap` wraps a function in a similar way to `Raven.context`, but instead of invoking the function, it returns another function. This is especially useful when passing around a callback.
 
 ```javascript
-var doIt = function () {
-    // doing cool stuff
-}
+var doIt = function() {
+  // doing cool stuff
+};
 
-setTimeout(Raven.wrap(doIt), 1000)
+setTimeout(Raven.wrap(doIt), 1000);
 ```
 
 We refer to code wrapped via `Raven.context` or `Raven.wrap` as being inside a context. Code inside a context has access to the `setContext`, `mergeContext`, and `getContext` methods for associating data with that context.
@@ -65,14 +66,14 @@ We refer to code wrapped via `Raven.context` or `Raven.wrap` as being inside a c
 ```javascript
 Raven.setContext({
   user: {
-    username: 'lewis'
-  }
+    username: "lewis",
+  },
 });
 
 Raven.mergeContext({
   tags: {
-    component: 'api'
-  }
+    component: "api",
+  },
 });
 
 console.log(Raven.getContext());
@@ -92,9 +93,9 @@ While a user is logged in, you can tell Sentry to associate errors with user dat
 ```javascript
 Raven.setContext({
   user: {
-    email: 'matt@example.com',
-    id: '123'
-  }
+    email: "matt@example.com",
+    id: "123",
+  },
 });
 ```
 
@@ -103,8 +104,8 @@ This data is then included with any errors or messages, allowing you to see whic
 ## Capturing Messages
 
 ```javascript
-client.captureMessage('Broken!', function (err, eventId) {
-    // The message has now been sent to Sentry
+client.captureMessage("Broken!", function(err, eventId) {
+  // The message has now been sent to Sentry
 });
 ```
 
@@ -116,80 +117,86 @@ All optional attributes are passed as part of the options to `captureException` 
 
 : User context for this event. Must be a mapping. Children can be any native JSON type.
 
-  ```javascript
-  {
-      user: { name: 'matt' }
+```javascript
+{
+  user: {
+    name: "matt";
   }
-  ```
+}
+```
 
-  If you’re inside a context and your context data includes a `user` key, that data will be merged into this.
+If you’re inside a context and your context data includes a `user` key, that data will be merged into this.
 
 `request`
 
 : Alias: `req`. The `request` object associated with this event, from a Node http server, Express, Koa, or similar. Will be parsed for request details and user context from `request.user` if present. It will only pull out the data that’s handled by the server: `headers`, `method`, `host`, `protocol`, `url`, `query`, `cookies`, `body`, `ip` and `user`.
 
-  ```javascript
-  app.use(function (req, res, next) {
-      if (someError) {
-          Raven.captureException(someError, { req: req });
-      }
-  });
-  ```
+```javascript
+app.use(function(req, res, next) {
+  if (someError) {
+    Raven.captureException(someError, { req: req });
+  }
+});
+```
 
-  Note that the `Raven.requestHandler()` Express middleware adds the `req` object to the context for you automatically, so you won’t need to provide it manually.
+Note that the `Raven.requestHandler()` Express middleware adds the `req` object to the context for you automatically, so you won’t need to provide it manually.
 
 `tags`
 
 : Tags to index with this event. Must be a mapping of strings.
 
-  ```javascript
-  {
-      tags: { key: 'value' }
+```javascript
+{
+  tags: {
+    key: "value";
   }
-  ```
+}
+```
 
-  If you’re inside a context and your context data includes a _tags_ key, that data will be merged into this. You can also set tags data globally to be merged with all events by passing a `tags` option to `config`.
+If you’re inside a context and your context data includes a _tags_ key, that data will be merged into this. You can also set tags data globally to be merged with all events by passing a `tags` option to `config`.
 
 `extra`
 
 : Additional context for this event. Must be a mapping. Children can be any native JSON type.
 
-  ```javascript
-  {
-      extra: { key: 'value' }
+```javascript
+{
+  extra: {
+    key: "value";
   }
-  ```
+}
+```
 
-  If you’re inside a context and your context data includes an _extra_ key, that data will be merged into this. You can also set extra data globally to be merged with all events by passing an `extra` option to `config`.
+If you’re inside a context and your context data includes an _extra_ key, that data will be merged into this. You can also set extra data globally to be merged with all events by passing an `extra` option to `config`.
 
 `fingerprint`
 
 : The fingerprint for grouping this event. Learn more how [Sentry groups errors](/data-management/event-grouping/).
 
-  ```javascript
-  {
-      // don't group events from the same NODE_ENV together
-      fingerprint: ['{{ default }}', process.env.NODE_ENV]
-  }
-  ```
+```javascript
+{
+  // don't group events from the same NODE_ENV together
+  fingerprint: ["{{ default }}", process.env.NODE_ENV];
+}
+```
 
 `level`
 
 : The level of the event. Defaults to `error`.
 
-  ```javascript
-  {
-      level: 'warning'
-  }
-  ```
+```javascript
+{
+  level: "warning";
+}
+```
 
-  Sentry is aware of the following levels:
+Sentry is aware of the following levels:
 
-  -   debug (the least serious)
-  -   info
-  -   warning
-  -   error
-  -   fatal (the most serious)
+- debug (the least serious)
+- info
+- warning
+- error
+- fatal (the most serious)
 
 ## Recording Breadcrumbs {#raven-recording-breadcrumbs}
 
@@ -198,13 +205,13 @@ Breadcrumbs are records of server and application lifecycle events that can be h
 We can capture breadcrumbs and associate them with a context, and then send them along with any errors captured from that context:
 
 ```javascript
-Raven.context(function () {
+Raven.context(function() {
   Raven.captureBreadcrumb({
-    message: 'Received payment confirmation',
-    category: 'payment',
+    message: "Received payment confirmation",
+    category: "payment",
     data: {
-       amount: 312,
-    }
+      amount: 312,
+    },
   });
   // errors thrown here will have breadcrumb attached
 });
@@ -214,25 +221,25 @@ To learn more about what types of data can be collected via breadcrumbs, see the
 
 Raven can be configured to automatically capture breadcrubs for certain events including:
 
-> -   http/https requests
-> -   console log statements
-> -   postgres queries
+> - http/https requests
+> - console log statements
+> - postgres queries
 
 Automatic breadcrumb collection is disabled by default. You can enable it with a config option:
 
 ```javascript
-Raven.config('___PUBLIC_DSN___', {
-  autoBreadcrumbs: true
+Raven.config("___PUBLIC_DSN___", {
+  autoBreadcrumbs: true,
 });
 ```
 
 Or just enable specific types of automatic breadcrumbs:
 
 ```javascript
-Raven.config('___PUBLIC_DSN___', {
+Raven.config("___PUBLIC_DSN___", {
   autoBreadcrumbs: {
-    http: true
-  }
+    http: true,
+  },
 });
 ```
 
@@ -243,7 +250,7 @@ For more on configuring breadcrumbs, see [_Configuration_](/clients/node/config/
 To make referencing an event easy (both by the developer and customer), you can get an event ID from any captured message or exception. It’s provided both as the synchronous return value of the capture method and as an argument to the callback:
 
 ```javascript
-var eventId = Raven.captureException(e, function (sendErr, eventId2) {
+var eventId = Raven.captureException(e, function(sendErr, eventId2) {
   // eventId === eventId2
 });
 ```
@@ -253,8 +260,8 @@ var eventId = Raven.captureException(e, function (sendErr, eventId2) {
 By default, Raven does not capture unhandled promise rejections. You can have it do so automatically:
 
 ```javascript
-Raven.config('___PUBLIC_DSN___', {
-  captureUnhandledRejections: true
+Raven.config("___PUBLIC_DSN___", {
+  captureUnhandledRejections: true,
 }).install();
 ```
 
@@ -269,12 +276,14 @@ The fatal error handler callback will be the last thing called before the proces
 After catching a fatal exception, Raven will make a best-effort attempt to send it to Sentry before it calls the fatal exception handler. If sending fails, a `sendErr` error object will be passed, and otherwise the `eventId` will be provided. In either case, the error object resulting in the shutdown is passed as the first parameter.
 
 ```javascript
-Raven.install(function (err, sendErr, eventId) {
+Raven.install(function(err, sendErr, eventId) {
   if (!sendErr) {
-    console.log('Successfully sent fatal error with eventId ' + eventId + ' to Sentry:');
+    console.log(
+      "Successfully sent fatal error with eventId " + eventId + " to Sentry:"
+    );
     console.error(err.stack);
   }
-  console.log('This is thy sheath; there rust, and let me die.');
+  console.log("This is thy sheath; there rust, and let me die.");
   process.exit(1);
 });
 ```
@@ -284,11 +293,11 @@ Raven.install(function (err, sendErr, eventId) {
 If you want to know if an event was logged or errored out, Raven instances emit two events, _logged_ and _error_:
 
 ```javascript
-Raven.on('logged', function () {
-  console.log('Yay, it worked!');
+Raven.on("logged", function() {
+  console.log("Yay, it worked!");
 });
 
-Raven.on('error', function (e) {
+Raven.on("error", function(e) {
   // The event contains information about the failure:
   //   e.reason -- raw response body
   //   e.statusCode -- response status code
@@ -297,14 +306,14 @@ Raven.on('error', function (e) {
   console.log("uh oh, couldn't record the event");
 });
 
-Raven.captureMessage('Boom');
+Raven.captureMessage("Boom");
 ```
 
 ## Configuring the HTTP Transport
 
 ```javascript
-Raven.config('___PUBLIC_DSN___', {
-  transport: new raven.transports.HTTPSTransport({rejectUnauthorized: false})
+Raven.config("___PUBLIC_DSN___", {
+  transport: new raven.transports.HTTPSTransport({ rejectUnauthorized: false }),
 });
 ```
 
@@ -313,7 +322,7 @@ Raven.config('___PUBLIC_DSN___', {
 Passing any falsey value as the DSN will disable sending events upstream:
 
 ```javascript
-Raven.config(process.env.NODE_ENV === 'production' && '___PUBLIC_DSN___');
+Raven.config(process.env.NODE_ENV === "production" && "___PUBLIC_DSN___");
 ```
 
 ## Disable Console Alerts
@@ -331,7 +340,7 @@ Raven.disableConsoleAlerts();
 Normally there is just one instance of Raven:
 
 ```javascript
-var Raven = require('raven');
+var Raven = require("raven");
 // Raven is already a Raven instance, and we do everything based on that instance
 ```
 

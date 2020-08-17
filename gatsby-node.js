@@ -69,12 +69,8 @@ exports.createSchemaCustomization = ({ actions, schema }) => {
         redirect_from: {
           type: "[String!]",
         },
-        // TODO: we can probably combine noindex + robots
         noindex: {
           type: "Boolean",
-        },
-        robots: {
-          type: "String",
         },
         sidebar_order: {
           type: "Int",

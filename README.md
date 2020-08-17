@@ -73,7 +73,6 @@ It will _not_ index documents with any of the following in their frontmatter:
 
 - `draft: true`
 - `noindex: true`
-- `robots: noindex`
 
 ## Notes on Markdown vs MDX
 

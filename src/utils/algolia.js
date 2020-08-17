@@ -12,7 +12,6 @@ const pageQuery = `{
               title
               draft
               noindex
-              robots
             }
             fields {
               slug
@@ -25,7 +24,6 @@ const pageQuery = `{
               title
               draft
               noindex
-              robots
             }
             fields {
               slug
@@ -49,10 +47,7 @@ const flatten = arr =>
       objectID,
     ])
     .filter(
-      ([child, _]) =>
-        !child.frontmatter.noindex &&
-        !child.frontmatter.draft &&
-        child.frontmatter.robots !== "noindex"
+      ([child, _]) => !child.frontmatter.noindex && !child.frontmatter.draft
     )
     .map(([child, objectID]) => ({
       objectID,
