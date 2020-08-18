@@ -152,7 +152,7 @@ packages.version('sentry.javacript.browser')
 Returns the checksum of a given file in a package.
 
 ```javascript
-packages.version('sentry.javacript.browser', 'bundle.min.js', 'sha384')
+packages.checksum('sentry.javacript.browser', 'bundle.min.js', 'sha384')
 ```
 
 ## MDX Tags
