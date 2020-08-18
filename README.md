@@ -49,6 +49,32 @@ redirect_from:
 
 These will be generated as both client-side (using an empty page with a meta tag) and server-side (nginx rules).
 
+## Template Variables
+
+A transformation is exposed to both Markdown and MDX files which supports processing variables in a Django/Jekyll-style way. The variables available are globally scoped and configured within `gatsby-config.js` (via `gatsby-remark-variables`).
+
+For example:
+
+```markdown
+JavaScript SDK: {{ packages.version('sentry.browser.javascript') }}
+```
+
+In this case, we expose ``packages`` as an instance of ``PackageRegistry`` which is why there is a `packages.version` function available. Additional, we expose a default context variable of ``page`` which contains the frontmatter of the given markdown node. For example, ``{{ page.title }}``.
+
+When a function call is invalid (or errors), or doesn't match something in the known scope, it will simple render it as a literal value instead. So for example:
+
+```markdown
+setFingerprint('{{ default }}')
+```
+
+Will render as:
+
+```markdown
+setFingerprint('{{ default }}')
+```
+
+This is because there is no entity scoped to ``default`` in the template renderer. Additionally - in this case - we also add the ``default`` expression to the exclusion list in our configuration, as it is commonly use in our documentation.
+
 ## Wizard Pages
 
 A number of pages exist to provide content within Sentry installations. We refer to this system as the _Wizard_. These pages are found in Gatsby's `wizard` content directory, and are rendered and exported to a JSON file for use within the `getsentry/sentry` application.

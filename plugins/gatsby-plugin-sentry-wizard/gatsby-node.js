@@ -27,7 +27,7 @@ exports.createPages = async ({ graphql }, { source, output }) => {
       }
     `,
     {
-      source: source
+      source: source,
     }
   );
 
@@ -58,7 +58,7 @@ const writeJson = async (path, nodes) => {
       type: n.frontmatter.type,
       details: sub ? `${main}/${sub}.json` : `${main}.json`,
       doc_link: n.frontmatter.doc_link,
-      name: n.frontmatter.name
+      name: n.frontmatter.name,
     };
     if (sub) platforms[main][sub] = data;
     else platforms[main]["_self"] = data;
@@ -68,26 +68,28 @@ const writeJson = async (path, nodes) => {
   fs.mkdirSync(path, { recursive: true });
   fs.writeFileSync(`${path}/_index.json`, JSON.stringify({ platforms }));
 
-  nodes.forEach(node => {
-    const pathMatch = node.fields.slug.match(/^\/([^\/]+)(?:\/([^\/]+))?\/$/);
-    const [_, main, sub] = pathMatch;
+  Promise.all(
+    nodes.map(async node => {
+      const pathMatch = node.fields.slug.match(/^\/([^\/]+)(?:\/([^\/]+))?\/$/);
+      const [_, main, sub] = pathMatch;
 
-    console.info(`Writing '${sub ? `${main}/${sub}.json` : `${main}.json`}'`);
-    if (sub) {
-      fs.mkdirSync(`${path}/${main}`, { recursive: true });
-    }
+      console.info(`Writing '${sub ? `${main}/${sub}.json` : `${main}.json`}'`);
+      if (sub) {
+        fs.mkdirSync(`${path}/${main}`, { recursive: true });
+      }
 
-    writeNode(
-      sub ? `${path}/${main}/${sub}.json` : `${path}/${main}.json`,
-      node
-    );
-  });
+      writeNode(
+        sub ? `${path}/${main}/${sub}.json` : `${path}/${main}.json`,
+        node
+      );
+    })
+  );
   console.log(`Wizard recorded ${nodes.length} platform snippets`);
 };
 
 const writeNode = (path, node) => {
   const dom = new jsdom.JSDOM(node.html, {
-    url: "https://docs.sentry.io/"
+    url: "https://docs.sentry.io/",
   });
   // remove anchor svgs
   dom.window.document.querySelectorAll("a.anchor svg").forEach(node => {
@@ -111,7 +113,7 @@ const writeNode = (path, node) => {
       support_level: node.frontmatter.support_level,
       doc_link: node.frontmatter.doc_link,
       name: node.frontmatter.name,
-      body: dom.window.document.body.innerHTML
+      body: dom.window.document.body.innerHTML,
     })
   );
 };

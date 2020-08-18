@@ -12,10 +12,22 @@ if (process.env.BRANCH_NAME === "master" && process.env.ALGOLIA_ADMIN_KEY) {
   process.env.ALGOLIA_INDEX = "1";
 }
 
+const IS_DEV = activeEnv === "development";
+
 const queries = require("./src/utils/algolia");
+const packages = new (require("./src/utils/packageRegistry"))();
 
 const getPlugins = () => {
   const remarkPlugins = [
+    {
+      resolve: require.resolve("./plugins/gatsby-remark-variables"),
+      options: {
+        scope: {
+          packages,
+        },
+        excludeExpr: ["default"],
+      },
+    },
     {
       resolve: `gatsby-remark-copy-linked-files`,
     },
@@ -54,8 +66,8 @@ const getPlugins = () => {
         tracesSampleRate: activeEnv === "development" ? 0 : 1,
       },
     },
-    "gatsby-plugin-sass",
     "gatsby-plugin-sharp",
+    "gatsby-plugin-sass",
     "gatsby-plugin-zeit-now",
     {
       resolve: `gatsby-transformer-remark`,
