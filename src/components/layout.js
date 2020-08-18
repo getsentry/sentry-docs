@@ -19,7 +19,7 @@ const query = graphql`
   }
 `;
 
-export default ({ children }) => {
+export default ({ children, sidebar }) => {
   return (
     <StaticQuery
       query={query}
@@ -39,7 +39,7 @@ export default ({ children }) => {
               >
                 <div className="toc">
                   <div className="text-white p-3">
-                    <Sidebar />
+                    {sidebar ? sidebar : <Sidebar />}
                   </div>
                 </div>
               </div>
