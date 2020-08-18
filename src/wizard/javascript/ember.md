@@ -38,11 +38,19 @@ like this:
 
 ```html
 <!-- Note that we now also provide a es6 build only -->
-<!-- <script src="https://browser.sentry-cdn.com/5.20.1/bundle.es6.min.js" integrity="sha384-vX2xdItiRzNmed/VJFb8J4h2p35hYqkdTI9+xNOueKEcr7iipZy17fplNS0ikHL0" crossorigin="anonymous"></script> -->
-<script src="https://browser.sentry-cdn.com/5.20.1/bundle.min.js" integrity="sha384-O8HdAJg1h8RARFowXd2J/r5fIWuinSBtjhwQoPesfVILeXzGpJxvyY/77OaPPXUo" crossorigin="anonymous"></script>
+<!-- <script src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.es6.min.js" integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.es6.min.js', 'sha384-base64') }}" crossorigin="anonymous"></script> -->
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
 
 <!-- If you include the integration it will be available under Sentry.Integrations.Ember -->
-<script src="https://browser.sentry-cdn.com/5.20.1/ember.min.js" crossorigin="anonymous"></script>
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/ember.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'ember.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
 
 <script>
   Sentry.init({
