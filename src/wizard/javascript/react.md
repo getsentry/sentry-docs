@@ -1,6 +1,6 @@
 ---
 name: React
-doc_link: https://docs.sentry.io/platforms/javascript/react/
+doc_link: https://docs.sentry.io/platforms/react/
 support_level: production
 type: framework
 ---

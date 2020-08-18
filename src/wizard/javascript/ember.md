@@ -1,6 +1,6 @@
 ---
 name: Ember
-doc_link: https://docs.sentry.io/platforms/javascript/ember/
+doc_link: https://docs.sentry.io/platforms/ember/
 support_level: production
 type: framework
 ---
