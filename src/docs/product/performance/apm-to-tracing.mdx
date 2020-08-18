@@ -1,0 +1,101 @@
+---
+title: "Switching to @sentry/tracing"
+sidebar_order: 20
+---
+
+Our performance JavaScript SDK has been renamed from [`@sentry/apm`](https://www.npmjs.com/package/@sentry/apm) to [`@sentry/tracing`](https://www.npmjs.com/package/@sentry/tracing). The behaviour between `@sentry/apm` and `@sentry/tracing` is _identical_, but some imports and API have changed slightly.
+
+Although `@sentry/apm` is deprecated for `@sentry/tracing`, we will continue to support `@sentry/apm` with bug fixes for all `5.x.x` versions.
+
+## Migrating from @sentry/apm to @sentry/tracing
+
+For most cases, just replacing your `@sentry/tracing` import is enough to switch packages.
+
+```diff
+-import "@sentry/apm";
++import "@sentry/tracing";
+```
+
+If you were using the CDN use the tracing snippet instead:
+
+<JsCdnTag tracing />
+
+If you are using the automatic instrumentation for the _browser_, you should switch your imports from `Tracing` to `BrowserTracing`.
+
+```diff
+import * as Sentry from "@sentry/browser";
+-import { Integrations } from "@sentry/apm";
++import { Integrations } from "@sentry/tracing";
+
+ Sentry.init({
+   integrations: [
+-    new Integrations.Tracing(),
++    new Integrations.BrowserTracing(),
+   ]
+ });
+```
+
+If you were using the `beforeNavigate` option from the `Tracing` integration, the API for the `beforeNavigate` option in `BrowserTracing` has changed slightly. Instead of passing in a location and returning a string representing transaction name, `beforeNavigate` now accepts a transaction context and is expected to return transaction context. You can now add extra tags or change the op based on different parameters. If you want to access the location like before, you will have to manually look at `window.location`.
+
+For example, if you had a function like so that computed the a custom transaction name,
+
+```javascript
+import * as Sentry from "@sentry/browser";
+import { Integrations } from "@sentry/apm";
+
+Sentry.init({
+  integrations: [
+    new Integrations.Tracing({
+      beforeNavigate: location => {
+        return getTransactionName(location);
+      },
+    }),
+  ],
+});
+```
+
+You would know leverage the context to do the same thing.
+
+```javascript
+import * as Sentry from "@sentry/browser";
+import { Integrations } from "@sentry/tracing";
+
+Sentry.init({
+  integrations: [
+    new Integrations.BrowserTracing({
+      beforeNavigate: context => {
+        return {
+          ...context,
+          // Can even look at context tags or other data to adjust
+          // transaction name
+          name: getTransactionName(window.location),
+        };
+      },
+    }),
+  ],
+});
+```
+
+For the full diff:
+
+```diff
+import * as Sentry from "@sentry/browser";
+-import { Integrations } from "@sentry/apm";
++import { Integrations } from "@sentry/tracing";
+
+ Sentry.init({
+   integrations: [
+-    new Integrations.Tracing({
+-      beforeNavigate: (location) => {
+-        return getTransactionName(location)
++    new Integrations.BrowserTracing({
++      beforeNavigate: (ctx) => {
++        return {
++          ...ctx,
++          name: getTransactionName(ctx.name, window.location)
++        }
+       }
+     }),
+   ]
+});
+```

@@ -5,7 +5,7 @@ import CodeTabs from "./codeTabs";
 
 let cachedVersionData = null;
 
-export default ({ apm = false }) => {
+export default ({ tracing = false }) => {
   const [versionData, setVersionData] = useState(cachedVersionData);
 
   if (!versionData && typeof fetch !== "undefined") {
@@ -19,7 +19,7 @@ export default ({ apm = false }) => {
     });
   }
 
-  const packageName = apm ? "bundle.apm.min.js" : "bundle.min.js";
+  const packageName = tracing ? "bundle.tracing.min.js" : "bundle.min.js";
   const packageData = versionData
     ? versionData
     : {
