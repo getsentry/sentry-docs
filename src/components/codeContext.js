@@ -29,7 +29,7 @@ const parseDsn = function(dsn) {
   const match = dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
 
   return {
-    scheme: escape(match[1]),
+    scheme: match[1],
     publicKey: escape(match[2]),
     secretKey: `${escape(match[3])}`,
     host: escape(match[4]),
