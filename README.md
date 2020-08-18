@@ -106,13 +106,5 @@ If you want to create new docs for SDKs you should start by choosing an SDK to c
 yarn sdk:copy javascript angular
 ```
 
-This for example will take the `src/sdks/javascript` content and symlink everything into `src/sdks/angular`.
+This for example will take the `src/platforms/javascript` content and symlink everything into `src/platforms/angular`.
 Since all the files are symlinks the content will be the same. Files that have different content in the new folder need to be deleted and created manually again to be able to change the content. If you change something in the symlink it will change the original file.
-
-Also open `src/components/sidebar.js` search for a variable named: `newSdkDocs` which should look something like this
-
-```javascript
-const newSdkDocs = ['javascript', 'angular'];
-```
-
-This will add the newly created SDK docs to the sidebar.

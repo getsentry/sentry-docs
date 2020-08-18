@@ -1,7 +1,50 @@
 ---
-title: Advanced Usage
-sidebar_order: 30001
+title: Additional
+sidebar_order: 600
 ---
+
+## Sentry Testkit
+
+When building tests for your application, you want to assert, that the right flow-tracking or error is being sent to Sentry, but without really sending it to the Sentry servers. This way you won't swamp Sentry with false reports during test runs or other CI operations.
+
+Note: [Wix](https://wix.github.io/sentry-testkit/), a Sentry partner, maintains Sentry Testkit.
+
+[Sentry Testkit](https://wix.github.io/sentry-testkit/) is a Sentry plugin that allows intercepting Sentry's reports and further inspection of the data being sent. It enables Sentry to work natively in your application, and by overriding the default Sentry's transport mechanism, the report is not really sent, but rather logged locally into the memory. This way, logged reports can be fetched later for your own usage, verification, or any other use you may have in your local developing/testing environment.
+
+## Installation
+
+```
+npm install sentry-testkit --save-dev
+```
+
+### Using in tests
+
+```javascript
+const sentryTestkit = require("sentry-testkit");
+
+const { testkit, sentryTransport } = sentryTestkit();
+
+// initialize your Sentry instance with sentryTransport
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  transport: sentryTransport,
+  //... other configurations
+});
+
+// then run any scenario that should call Sentry.catchException(...)
+
+expect(testkit.reports()).toHaveLength(1);
+const report = testkit.reports()[0];
+expect(report).toHaveProperty(/*...*/);
+```
+
+You may see more usage examples in the [testing section](https://github.com/wix/sentry-testkit/tree/master/test) of sentry-testkit repository as well.
+
+### Testkit API
+
+Sentry Testkit consists of a very simple and straightforward API.
+See the full API description and documentation in [Sentry Testkit Docs](https://wix.github.io/sentry-testkit/).
+
 
 ## Using a Client directly
 
