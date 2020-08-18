@@ -1,0 +1,211 @@
+---
+title: React
+---
+
+On this page, we provide concise information to get you up and running with Sentry's React SDK, automatically reporting errors and exceptions in your application.
+
+**Note:** If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
+## Install
+
+Sentry captures data by using an SDK within your application’s runtime. Add the Sentry SDK as a dependency using `yarn` or `npm`:
+
+```bash
+# Using yarn
+$ yarn add @sentry/react
+
+# Using npm
+$ npm install @sentry/react
+```
+
+## Configure
+
+You should initialize the Sentry React SDK as soon as possible during your application load up, before initializing React:
+
+```jsx
+import React from "react";
+import ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
+import App from "./App";
+
+Sentry.init({ dsn: "___PUBLIC_DSN___" });
+
+ReactDOM.render(<App />, document.getElementById("root"));
+
+// Can also use with React Concurrent Mode
+// ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+```
+
+Once this is done, all unhandled exceptions are automatically captured by Sentry.
+
+**Important:** Note your DSN. The _DSN_ (Data Source Name) tells the SDK where to send events. If you forget it, view _Settings -> Projects -> Client Keys (DSN)_ in the Sentry web UI.
+
+### Add React Error Boundary
+
+If you're using React 16 or above, Error Boundaries are an essential tool for defining your application's behavior in the face of errors. The `@sentry/react` package exposes an error boundary component that automatically sends JavaScript errors from inside a React component tree to Sentry. You can use the error boundary just like a regular React component.
+
+```jsx
+import React from "react";
+import * as Sentry from "@sentry/react";
+
+<Sentry.ErrorBoundary fallback={"An error has occured"}>
+  <Example />
+</Sentry.ErrorBoundary>;
+```
+
+Learn how to further configure and use the Sentry Error Boundary in [React Error Boundary](./components/errorboundary/)
+
+## Verify Setup
+
+You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button:
+
+```jsx
+return <button onClick={methodDoesNotExist}>Break the world</button>;
+```
+
+Resolve the created error by logging in to Sentry, then opening your project. On the **Issue Details** page, scroll down to the Exception stack trace and view the error.
+
+## Capture Errors
+
+A few key terms to know as we proceed:
+
+- An _event_ is one instance of sending data to Sentry. Generally, this data is an error or exception.
+- An _issue_ is a grouping of similar events.
+- The reporting of an event is called _capturing_.
+  When an event is captured, it’s sent to Sentry.
+
+By including and configuring Sentry, our React SDK automatically attaches global handlers to _capture_ uncaught exceptions and unhandled promise rejections, as described in the official ECMAScript 6 standard. You can disable this default behavior by changing the `onunhandledrejection` option to `false` in your GlobalHandlers integration and manually hook into each event handler, then call `Sentry.captureException` or `Sentry.captureMessage` directly.
+
+You may also need to manage your configuration if you are using a third-party library to implement promises. Also, keep in mind that browsers may take security measures when serving script files from different origins that can block error reporting.
+
+Learn more about how to manually capture errors or enable message capture with Sentry's React SDK in [Capture Errors](./errors/capture).
+
+### Automatically Enrich Error Data
+
+Events sent by the React SDK to Sentry are enriched with data that helps identify the source of the event. Much of this data is sent automatically - including the error context and environment - as well as the trail of events that led up to the event, which we call breadcrumbs. You don't need to configure these, though you may modify them.
+
+Learn more about the data sent with events in [Enrich Event Data](./errors/).
+
+### Set the Release Version
+
+When you configure Sentry to include the version of your application, Sentry can tell you about regressions as well as detailed information about the suspect commit.
+
+Use the `process.env.npm_package_version`:
+
+```JavaScript
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  release: 'my-project-name@' + process.env.npm_package_version,
+});
+```
+
+After you inform Sentry of a new release, you will see information about it, such as new issues and regressions introduced in the release.
+
+Learn more about what releases can do, including using a repository integration, creating the release and associated commits, and telling Sentry when you deploy a release in [our documentation for Releases](/workflow/releases/).
+
+### Upload Source Maps
+
+Sentry supports un-minifying JavaScript via source maps. This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (for example, TypeScript, ES6).
+
+We **highly recommend** you incorporate source maps to receive the full benefit of error tracking and monitoring.
+
+When you’re using the Sentry React SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. If you need to disable the JavaScript source fetching, log in to Sentry and toggle off `Allow JavaScript source fetching` in your organization's settings for Security & Privacy. See our [source maps documentation](/platforms/javascript/sourcemaps) to learn more.
+
+Upload source maps using either our [Webpack plugin](/platforms/javascript/sourcemaps/#webpack) or the [Sentry CLI](cli/). Sourcemaps can be generated by [Uglify JS](/platforms/javascript/sourcemaps/#uglifyjs), [System JS](/platforms/javascript/sourcemaps/#systemjs), or [TypeScript](/platforms/javascript/sourcemaps/#typescript).
+
+## Monitor Performance
+
+Performance Monitoring helps you see everything from macro-level metrics to micro-level spans, and you’ll be able to cross-reference transactions with related issues, customize queries based on your personal needs, and substantially more.
+
+To get started with performance monitoring using Sentry’s React SDK, first install the `@sentry/react` and `@sentry/tracing` packages:
+
+```bash
+# Using yarn
+$ yarn add @sentry/react @sentry/tracing
+
+# Using npm
+$ npm install @sentry/react @sentry/tracing
+```
+
+Next, initialize the integration in your call to `Sentry.init`:
+
+```jsx
+import * as Sentry from "@sentry/react";
+import { Integrations } from "@sentry/tracing";
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  release: "my-project-name@" + process.env.npm_package_version,
+  integrations: [new Integrations.BrowserTracing()],
+  tracesSampleRate: 1.0, // Be sure to lower this in production
+});
+```
+
+`@sentry/react` exports a `withProfiler` higher order component that can be used to capture React related spans for specific React components.
+
+```jsx {filename: App.js}
+import * as Sentry from "@sentry/react";
+
+export default Sentry.withProfiler(App);
+```
+
+Learn more about using and customizing the React Profiler in [Profiler](./components/profiler/).
+
+Performance data is transmitted using a new event type called “transactions”, which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing). To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value. The example configuration above will transmit 100% of captured transactions; lower this value in production to avoid consuming your quota too quickly.
+
+Learn more about sampling in [Filtering Events Reported to Sentry](./config/filter/).
+
+## Redux
+
+_(New in version 5.20.0)_
+
+Redux support is included in the `@sentry/react` package since version `5.20.0`. To apply Sentry to Redux, use `Sentry.createReduxEnhancer` at the same place that you initialize your Redux store.
+
+```jsx
+import { createStore, compose } from "redux";
+import * as Sentry from "@sentry/react";
+
+// ...
+
+const sentryReduxEnhancer = Sentry.createReduxEnhancer({
+  // Optionally pass options
+});
+
+const store = createStore(rootReducer, sentryReduxEnhancer);
+
+// ...
+```
+
+If you have other enhancers or middleware such as `thunk`:
+
+```js
+const store = createStore(
+  rootReducer,
+  compose(applyMiddleware(thunk), sentryReduxEnhancer)
+);
+```
+
+Learn more about the redux integration and it's options in [Redux Integration](./integrations/redux/)
+
+## Next Steps
+
+- **[View Custom Components](./components/)**
+
+  Sentry's React SDK includes various custom components that can be used for first class integration with the React framework.
+
+- **[Manage Configuration Options](./config/)**
+
+  Sentry's React SDK includes many configuration options that are automatically set. You can configure your SDK using the options outlined in these pages.
+
+- **[Enrich Event Data](./errors/)**
+
+  When your SDK sends an event to Sentry, the event is enriched with data. Learn more about the data that helps identify the source of the event and includes information both pertinent to the event as well as a full picture of what led up to it.
+
+- **[Review and Manage Integrations](./integrations/)**
+
+  Integrations extend the functionality of our React SDK to cover common libraries and environments automatically. Learn more about our default and pluggable integrations.
+
+- **[Troubleshooting](./troubleshooting/)**
+
+  If you need help solving issues with Sentry's React SDK, you can read the edge cases documented here.
+
+For a deep dive into our React SDK, [check out our GitHub repo](https://github.com/getsentry/sentry-javascript/tree/master/packages/react/).
