@@ -14,7 +14,7 @@ const DEFAULTS = {
       PROJECT_ID: 0,
       PROJECT_NAME: "example-project",
       ORG_ID: 0,
-      ORG_NAME: "Example Organization",
+      ORG_NAME: "example-org",
       ORG_SLUG: "exmaple-org",
       MINIDUMP_URL: "https://examplePublicKey@o0.ingest.sentry.io/0",
       UNREAL_URL: "https://examplePublicKey@o0.ingest.sentry.io/0",
@@ -31,7 +31,7 @@ const parseDsn = function(dsn) {
   return {
     scheme: match[1],
     publicKey: escape(match[2]),
-    secretKey: `${escape(match[3])}`,
+    secretKey: escape(match[3]),
     host: escape(match[4]),
     pathSection: escape(match[5]),
   };
