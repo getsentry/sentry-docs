@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/platforms/android/
 support_level: production
 type: framework
 ---
+
 ## Integrating the SDK
 
 Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your app works.

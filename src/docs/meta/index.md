@@ -1,5 +1,5 @@
 ---
-title: 'Security & Legal'
+title: "Security & Legal"
 sidebar_order: 5
 ---
 

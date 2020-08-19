@@ -1,5 +1,5 @@
 ---
-title: 'Sentry Documentation'
+title: "Sentry Documentation"
 ---
 
 Welcome to the Sentry documentation. Sentry is an open-source company, providing an application monitoring platform that helps you identify issues in real-time. Here we cover everything about the product, the platform integrations, and self-hosted Sentry.

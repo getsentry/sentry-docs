@@ -1,9 +1,9 @@
 ---
 title: Source Maps
 redirect_from:
-- /platforms/javascript/sourcemaps/
-- /platforms/javascript/sourcemaps/generation/
-- /platforms/javascript/sourcemaps/troubleshooting/
+  - /platforms/javascript/sourcemaps/
+  - /platforms/javascript/sourcemaps/generation/
+  - /platforms/javascript/sourcemaps/troubleshooting/
 ---
 
 <Alert level="warning" title="Note"><markdown>
@@ -41,18 +41,18 @@ $ yarn add --dev @sentry/webpack-plugin
 To allow the plugin to upload source maps automatically, create a `.sentryclirc` or configure environment variables as described in the [CLI configuration docs](/cli/configuration/). Then, add the plugin to your `webpack.config.js`:
 
 ```javascript
-const SentryWebpackPlugin = require('@sentry/webpack-plugin');
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
 
 module.exports = {
   // other configuration
   plugins: [
     new SentryWebpackPlugin({
-      include: '.',
-      ignoreFile: '.sentrycliignore',
-      ignore: ['node_modules', 'webpack.config.js'],
-      configFile: 'sentry.properties'
-    })
-  ]
+      include: ".",
+      ignoreFile: ".sentrycliignore",
+      ignore: ["node_modules", "webpack.config.js"],
+      configFile: "sentry.properties",
+    }),
+  ],
 };
 ```
 
@@ -66,12 +66,12 @@ Alternatively, if you prefer to upload source maps manually, configure Webpack t
 
 ```javascript
 module.exports = {
-    output: {
-      path: path.join(__dirname, 'dist'),
-      filename: "[name].js",
-      sourceMapFilename: "[name].js.map"
-    }
-    // other configuration
+  output: {
+    path: path.join(__dirname, "dist"),
+    filename: "[name].js",
+    sourceMapFilename: "[name].js.map",
+  },
+  // other configuration
 };
 ```
 
@@ -84,10 +84,10 @@ Additionally, the Webpack plugin will automatically set `window.SENTRY_RELEASE`,
 SystemJS is the default module loader for Angular 2 projects. The [SystemJS build tool](https://github.com/systemjs/builder) can be used to bundle, transpile, and minify source code for use in production environments, and can be configured to output source maps.
 
 ```javascript
-builder.bundle('src/app.js', 'dist/app.min.js', {
-    minify: true,
-    sourceMaps: true,
-    sourceMapContents: true
+builder.bundle("src/app.js", "dist/app.min.js", {
+  minify: true,
+  sourceMaps: true,
+  sourceMapContents: true,
 });
 ```
 
@@ -98,6 +98,7 @@ All of the example configurations above inline your original, un-transformed sou
 </markdown></Alert>
 
 ### TypeScript
+
 The TypeScript compiler can output source maps. Configure the `sourceRoot` property to `/` to strip the build path prefix from generated source code references. This allows Sentry to match source files relative to your source root folder:
 
 ```javascript
@@ -123,12 +124,14 @@ uglifyjs app.js \
 ```
 
 ## Uploading / Hosting Source Maps
+
 Source maps can be either:
 
 1.  Uploaded directly to Sentry (**recommended**).
 2.  Served publicly over HTTP alongside your source files.
 
 ### Uploading Source Maps to Sentry
+
 Except for [Webpack](./sourcemaps/#webpack), the recommended way to upload source maps is using [Sentry CLI](/cli/). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs](/cli/configuration/) to set up your project.
 
 You can find the artifacts uploaded to Sentry by navigating to **[Project] » Project Settings » Source Maps**.
@@ -173,17 +176,18 @@ For more information, see our [Releases API documentation](/api/releases/).
 
 It’s not uncommon for a web application to be accessible at multiple origins. For example:
 
--   Website is operable over both `https` and `http`
--   Geolocated web addresses: such as `https://us.example.com`, `https://eu.example.com`
--   Multiple static CDNs: such as `https://static1.example.com`, `https://static2.example.com`
--   Customer-specific domains/subdomains
+- Website is operable over both `https` and `http`
+- Geolocated web addresses: such as `https://us.example.com`, `https://eu.example.com`
+- Multiple static CDNs: such as `https://static1.example.com`, `https://static2.example.com`
+- Customer-specific domains/subdomains
 
 In this situation, **identical** JavaScript and source map files may be located at two or more distinct origins. If you are dealing with such a deployment, you have two choices for naming your uploaded artifacts:
 
 1.  Upload the same artifact multiple times with each possible URL where it appears, for example:
 
-    > -   [https://static1.example.com/js/app.js](https://static1.example.com/js/app.js)
-    > -   [https://static2.example.com/js/app.js](https://static2.example.com/js/app.js)
+    > - [https://static1.example.com/js/app.js](https://static1.example.com/js/app.js)
+    > - [https://static2.example.com/js/app.js](https://static2.example.com/js/app.js)
+
 2.  Alternatively, you can omit the protocol + host and use a special tilde (~) prefixed path:
 
     > ~/js/app.js
@@ -192,19 +196,17 @@ The ~ prefix tells Sentry that for a given URL, **any** combination of protocol 
 
 </markdown></Alert>
 
-
 <Alert level="" title="Validating source maps with Sentry CLI"><markdown>
 
 Unfortunately, it can be quite challenging to ensure that source maps are actually valid themselves and uploaded correctly. To ensure that everything is working as intended, you can use the `–validate` flag when uploading source maps, which will attempt to locally parse the source map and look up the references. Note that there are known cases where the validate flag will indicate failures when the setup is correct (if you have references to external source maps, then the validation tool will indicate a failure).
 
 You can also check these, in addition to the validation step:
 
--   Ensure that the URL prefix is correct for your files. This is easy to get wrong.
--   Upload the matching source maps for your minimized files.
--   Ensure that the minified files you have on your servers actually have references to your files.
+- Ensure that the URL prefix is correct for your files. This is easy to get wrong.
+- Upload the matching source maps for your minimized files.
+- Ensure that the minified files you have on your servers actually have references to your files.
 
 </markdown></Alert>
-
 
 For more information, see:
 
@@ -213,6 +215,7 @@ For more information, see:
 - [Debug Your Node.js Projects with Source Maps](https://blog.sentry.io/2019/02/20/debug-node-source-maps)
 
 ### Hosting Source Map Files
+
 By default, Sentry will look for source map directives in your compiled JavaScript files, which are located on the last line and have the following format:
 
 ```javascript
@@ -237,9 +240,9 @@ Alternatively, during source map generation you can specify a fully qualified UR
 
 While making source maps available to Sentry from your servers is the most natural integration, it is not always advisable:
 
--   Sentry may not always be able to reach your servers.
--   If you do not specify versions in your asset URLs, there may be a version mismatch
--   The additional latency may mean that source mappings are not available for all errors.
+- Sentry may not always be able to reach your servers.
+- If you do not specify versions in your asset URLs, there may be a version mismatch
+- The additional latency may mean that source mappings are not available for all errors.
 
 For these reasons, it is best practice to upload source maps to Sentry beforehand (see below).
 
@@ -285,8 +288,8 @@ The `sourceMappingURL` comment on the last line of your bundled or minified Java
 That is, if your file is similar to:
 
 ```javascript
-    // -- end script.min.js
-    //# sourceMappingURL=script.min.js.map
+// -- end script.min.js
+//# sourceMappingURL=script.min.js.map
 ```
 
 and is hosted at http://example.com/js/script.min.js, then Sentry will look for that source map file at http://example.com/js/script.min.js.map. Your uploaded artifact must therefore be named `http://example.com/js/script.min.js.map` (or `~/js/script.min.js.map`).
@@ -294,8 +297,8 @@ and is hosted at http://example.com/js/script.min.js, then Sentry will look for 
 Or, if your file is similar to:
 
 ```javascript
-    //-- end script.min.js
-    //# sourceMappingURL=https://example.com/dist/js/script.min.js.map
+//-- end script.min.js
+//# sourceMappingURL=https://example.com/dist/js/script.min.js.map
 ```
 
 then your uploaded artifact should also be named `https://example.com/dist/js/script.min.js.map` (or `~/dist/js/script.min.js.map`).
@@ -303,16 +306,15 @@ then your uploaded artifact should also be named `https://example.com/dist/js/sc
 Finally, if your file is similar to:
 
 ```javascript
-    //-- end script.min.js
-    //# sourceMappingURL=../maps/script.min.js.map
+//-- end script.min.js
+//# sourceMappingURL=../maps/script.min.js.map
 ```
 
 then your uploaded artifact should be named `https://example.com/dist/maps/script.min.js.map` (or `~/dist/maps/script.min.js.map`).
 
-
 ### Verify artifact names match stack trace frames
 
-If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file  - for example, `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
+If you’ve uploaded source maps and they aren’t applying to your code in an issue in Sentry, take a look at the JSON of the event and look for the `abs_path` to see exactly where we’re attempting to resolve the file - for example, `http://localhost:8000/scripts/script.js` (`abs_path` will appear once for each frame in the stack trace - match this up with the file(s) that are not deminified.). A link to the JSON view can be found at the top of the issue page next to the date the event occurred. The uploaded artifact names must match these values.
 
 If you have **dynamic values in your path** (for example, `https://www.site.com/{some_value}/scripts/script.js`), you may want to use the [`rewriteFrames`](/platforms/javascript/#rewriteframes) integration to change your `abs_path` values.
 
@@ -332,6 +334,7 @@ sentry-cli releases files VERSION upload-sourcemaps . --url-prefix '~/scripts'
 ```
 
 This command uploads all JavaScript files in the current directory. The Artifacts page in Sentry should now look like:
+
 ```
 ~/scripts/script.js
 ~/scripts/script.min.js
@@ -345,6 +348,7 @@ sentry-cli releases files VERSION upload-sourcemaps script.min.js script.min.js.
 ```
 
 You can also upload it with the fully qualified URL. For example:
+
 ```
 sentry-cli releases files VERSION upload-sourcemaps . --url-prefix 'http://localhost:8000/scripts'
 ```
@@ -369,7 +373,6 @@ The `~` is used in Sentry to replace the scheme and domain. It is not a glob!
 `http://example.com/dist/js/script.js` will match `~/dist/js/script.js` or `http://example.com/dist/js/script.js`
 
 but will NOT match `~/script.js`.
-
 
 ### Verify artifacts are uploaded before errors occur
 
@@ -438,11 +441,11 @@ Sentry does source map calculation in its workers. This means the workers need a
 
 ## Additional Resources
 
-* [Using sentry-cli to Upload Source Maps](/cli/releases/#sentry-cli-sourcemaps)
-* [Debuggable JavaScript with Source Maps](http://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps.html)
-* [4 Reasons Why Your Source Maps Are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
+- [Using sentry-cli to Upload Source Maps](/cli/releases/#sentry-cli-sourcemaps)
+- [Debuggable JavaScript with Source Maps](http://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps.html)
+- [4 Reasons Why Your Source Maps Are Broken](https://blog.sentry.io/2018/10/18/4-reasons-why-your-source-maps-are-broken)
 
 ## Next Steps:
 
- - [Return to **Getting Started**](../)
- - [Return to the main configuration page](./)
+- [Return to **Getting Started**](../)
+- [Return to the main configuration page](./)

@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/clients/ruby/integrations/rack/
 support_level: production
 type: framework
 ---
+
 ### Installation
 
 Install the SDK via Rubygems by adding it to your `Gemfile`:
@@ -25,4 +26,5 @@ end
 
 use Raven::Rack
 ```
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->

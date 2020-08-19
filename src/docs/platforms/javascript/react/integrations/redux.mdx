@@ -8,8 +8,8 @@ _(New in version 5.20.0)_
 Redux support is included in the `@sentry/react` package since version `5.20.0`. To apply Sentry to Redux, use `Sentry.createReduxEnhancer` at the same place that you initialize your Redux store.
 
 ```js
-import { createStore, compose } from 'redux';
-import * as Sentry from '@sentry/react'
+import { createStore, compose } from "redux";
+import * as Sentry from "@sentry/react";
 
 // ...
 
@@ -20,13 +20,15 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
 const store = createStore(rootReducer, sentryReduxEnhancer);
 
 // ...
-
 ```
 
 If you have other enhancers or middleware such as `thunk`:
 
 ```js
-const store = createStore(rootReducer, compose(applyMiddleware(thunk), sentryReduxEnhancer));
+const store = createStore(
+  rootReducer,
+  compose(applyMiddleware(thunk), sentryReduxEnhancer)
+);
 ```
 
 <Alert level="info" title="Note"><markdown>
@@ -35,16 +37,15 @@ Sentry uses a redux **enhancer**. Pass the enhancer, as indicated above. Don't p
 
 </markdown></Alert>
 
-
 ## Normalization Depth
 
 By default Sentry SDKs normalize any context to a depth of 3, which in the case of sending Redux state you probably will want to increase that. You do so by passing `normalizeDepth` to the `Sentry.init` call:
 
 ```js
 Sentry.init({
-  dsn: '___DSN___',
-  normalizeDepth: 10 // Or however deep you want your state context to be.
-})
+  dsn: "___DSN___",
+  normalizeDepth: 10, // Or however deep you want your state context to be.
+});
 ```
 
 ## Redux Enhancer Options
@@ -57,7 +58,6 @@ We advise against sending sensitive information to Sentry, but if you do, we wil
 
 </markdown></Alert>
 
-
 `actionTransformer` (Function)
 
 : Used to remove sensitive information from actions. The first parameter passed to the function is the Redux action. Return `null` to not send the action to Sentry. By default we send all actions.
@@ -69,22 +69,22 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
       // Return null to not log the action to Sentry
       return null;
     }
-    if (action.type === "SET_PASSWORD" ) {
+    if (action.type === "SET_PASSWORD") {
       // Return a transformed action to remove sensitive information
       return {
         ...action,
-        password: null
-      }
-    };
+        password: null,
+      };
+    }
 
     return action;
-  }
+  },
 });
 ```
 
 `stateTransformer` (Function)
 
-: Used to remove sensitive information from state.  The first parameter passed to the function is the Redux state. Return `null` to not attach the state to events sent to Sentry. Note that if you choose not to send state to Sentry, your errors might not have the latest version of the state attached. By default, we attach all state changes.
+: Used to remove sensitive information from state. The first parameter passed to the function is the Redux state. Return `null` to not attach the state to events sent to Sentry. Note that if you choose not to send state to Sentry, your errors might not have the latest version of the state attached. By default, we attach all state changes.
 
 ```js
 const sentryReduxEnhancer = Sentry.createReduxEnhancer({
@@ -102,15 +102,15 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
         // Replace sensitive information with something else
         nuclearLaunchCodes: "I love pizza",
         // or just remove it entirely
-        hiddenTreasureLocation: null
+        hiddenTreasureLocation: null,
       },
       // You should also remove large data that is irrelevant to debugging to not clutter your Sentry issues
-      giganticState: null
+      giganticState: null,
     };
 
     return transformedState;
-  }
-})
+  },
+});
 ```
 
 `configureScopeWithState` (Function)
@@ -122,12 +122,11 @@ const sentryReduxEnhancer = Sentry.createReduxEnhancer({
   configureScopeWithState: (scope, state) => {
     // Set tag if the user is using imperial units.
     if (state.settings.useImperialUnits) {
-      scope.setTag('user.usesImperialUnits', true);
+      scope.setTag("user.usesImperialUnits", true);
     }
-  }
+  },
 });
 ```
-
 
 ## Next Steps:
 

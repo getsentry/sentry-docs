@@ -6,6 +6,7 @@ title: Integrations
 noindex: true
 tags: []
 ---
+
 Integrations extend the functionality of Raven.js to cover common libraries and environments automatically using simple plugins.
 
 ## What are plugins? {#what-are-plugins}
@@ -36,8 +37,8 @@ This documentation is for Angular 1.x. See also: [_Angular 2.x_](#angular).
 
 </markdown></Alert>
 
-
 <!-- WIZARD angularjs -->
+
 ### Installation
 
 Raven.js and the Raven.js Angular plugin are distributed using a few different methods.
@@ -50,8 +51,13 @@ Example:
 
 ```html
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
-<script src="https://cdn.ravenjs.com/3.26.4/angular/raven.min.js" crossorigin="anonymous"></script>
-<script>Raven.config('___PUBLIC_DSN___').install();</script>
+<script
+  src="https://cdn.ravenjs.com/3.26.4/angular/raven.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").install();
+</script>
 ```
 
 Note that this CDN build auto-initializes the Angular plugin.
@@ -71,8 +77,7 @@ $ bower install raven-js --save
 <script src="/bower_components/raven-js/dist/raven.js"></script>
 <script src="/bower_components/raven-js/dist/plugins/angular.js"></script>
 <script>
-  Raven
-    .config('___PUBLIC_DSN___')
+  Raven.config("___PUBLIC_DSN___")
     .addPlugin(Raven.Plugins.Angular)
     .install();
 </script>
@@ -89,8 +94,7 @@ $ npm install raven-js --save
 <script src="/node_modules/raven-js/dist/raven.js"></script>
 <script src="/node_modules/raven-js/dist/plugins/angular.js"></script>
 <script>
-  Raven
-    .config('___PUBLIC_DSN___')
+  Raven.config("___PUBLIC_DSN___")
     .addPlugin(Raven.Plugins.Angular)
     .install();
 </script>
@@ -107,12 +111,11 @@ Raven.addPlugin(Raven.Plugins.Angular, angular);
 Raven and the Raven AngularJS plugin can be loaded using a module loader like Browserify or Webpack.
 
 ```javascript
-var angular = require('angular');
-var Raven = require('raven-js');
+var angular = require("angular");
+var Raven = require("raven-js");
 
-Raven
-  .config('___PUBLIC_DSN___')
-  .addPlugin(require('raven-js/plugins/angular'), angular)
+Raven.config("___PUBLIC_DSN___")
+  .addPlugin(require("raven-js/plugins/angular"), angular)
   .install();
 ```
 
@@ -123,11 +126,11 @@ Note that when using CommonJS-style imports, you must pass a reference to _angul
 Inside your main AngularJS application module, you need to declare _ngRaven_ as a module dependency:
 
 ```javascript
-var myApp = angular.module('myApp', [
-  'ngRaven',
-  'ngRoute',
-  'myAppControllers',
-  'myAppFilters'
+var myApp = angular.module("myApp", [
+  "ngRaven",
+  "ngRoute",
+  "myAppControllers",
+  "myAppFilters",
 ]);
 ```
 
@@ -136,25 +139,20 @@ var myApp = angular.module('myApp', [
 The raven angular module can be loaded using a module loader like Browserify or Webpack.
 
 ```javascript
-var angular = require('angular');
-var ngRaven = require('raven-js/plugins/angular').moduleName;
-var ngRoute = require('angular-route');
+var angular = require("angular");
+var ngRaven = require("raven-js/plugins/angular").moduleName;
+var ngRoute = require("angular-route");
 
-var myAppFilters = require('./myAppFilters');
-var myAppControllers = require('./myAppControllers');
-var moduleName = 'myApp';
+var myAppFilters = require("./myAppFilters");
+var myAppControllers = require("./myAppControllers");
+var moduleName = "myApp";
 
-angular.module(moduleName, [
-  ngRaven,
-  ngRoute,
-  myAppControllers,
-  myAppFilters,
-]);
+angular.module(moduleName, [ngRaven, ngRoute, myAppControllers, myAppFilters]);
 
 module.exports = moduleName;
 ```
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
 ## Angular
 
@@ -167,6 +165,7 @@ Additionally, Raven.js can be configured to catch any Angular-specific (2.x) exc
 Raven.js ships with a [TypeScript declaration file](https://github.com/getsentry/raven-js/blob/master/packages/raven-js/typescript/raven.d.ts), which helps static checking correctness of Raven.js API calls, and facilitates auto-complete in TypeScript-aware IDEs like Visual Studio Code.
 
 <!-- WIZARD angular -->
+
 ### Installation
 
 Raven.js should be installed via npm.
@@ -189,14 +188,14 @@ First, configure SystemJS to locate the Raven.js package:
 System.config({
   packages: {
     /* ... existing packages above ... */
-    'raven-js': {
-      main: 'dist/raven.js'
-    }
+    "raven-js": {
+      main: "dist/raven.js",
+    },
   },
   paths: {
     /* ... existing paths above ... */
-    'raven-js': 'node_modules/raven-js'
-  }
+    "raven-js": "node_modules/raven-js",
+  },
 });
 ```
 
@@ -238,44 +237,45 @@ Once you’ve completed these two steps, you are done.
 Angular CLI now uses Webpack to build instead of SystemJS. All you need to do is modify your main module file (where `@NgModule` is called, e.g. app.module.ts):
 
 ```js
-import * as Raven from 'raven-js';
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule, ErrorHandler } from '@angular/core';
-import { AppComponent } from './app.component';
+import * as Raven from "raven-js";
+import { BrowserModule } from "@angular/platform-browser";
+import { NgModule, ErrorHandler } from "@angular/core";
+import { AppComponent } from "./app.component";
 
-Raven
-  .config('___PUBLIC_DSN___')
-  .install();
+Raven.config("___PUBLIC_DSN___").install();
 
 export class RavenErrorHandler implements ErrorHandler {
-  handleError(err:any) : void {
+  handleError(err: any): void {
     Raven.captureException(err);
   }
 }
 
 @NgModule({
-  imports: [ BrowserModule ],
-  declarations: [ AppComponent ],
-  bootstrap: [ AppComponent ],
-  providers: [ { provide: ErrorHandler, useClass: RavenErrorHandler } ]
+  imports: [BrowserModule],
+  declarations: [AppComponent],
+  bootstrap: [AppComponent],
+  providers: [{ provide: ErrorHandler, useClass: RavenErrorHandler }],
 })
-export class AppModule { }
+export class AppModule {}
 ```
 
 Once you’ve completed that step, you are done.
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
 ## Backbone
 
 <!-- WIZARD backbone -->
+
 ### Installation
 
 Start by adding the `raven.js` script tag to your page. It should be loaded as early as possible.
 
 ```html
-<script src="https://cdn.ravenjs.com/3.26.4/raven.min.js"
-    crossorigin="anonymous"></script>
+<script
+  src="https://cdn.ravenjs.com/3.26.4/raven.min.js"
+  crossorigin="anonymous"
+></script>
 ```
 
 ### Configuring the Client
@@ -283,12 +283,12 @@ Start by adding the `raven.js` script tag to your page. It should be loaded as e
 Next configure Raven.js to use your Sentry DSN:
 
 ```javascript
-Raven.config('___PUBLIC_DSN___').install()
+Raven.config("___PUBLIC_DSN___").install();
 ```
 
 At this point, Raven is ready to capture any uncaught exception.
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
 ## Ember
 
@@ -299,6 +299,7 @@ On its own, Raven.js will report any uncaught exceptions triggered from your app
 Additionally, the Raven.js Ember plugin will catch any Ember-specific exceptions reported through Ember’s [onerror](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_implement-an-ember-onerror-hook-to-log-all-errors-in-production). hook and any [RSVP promises](https://guides.emberjs.com/v3.2.0/configuring-ember/debugging/#toc_errors-within-an-code-rsvp-promise-code) that would otherwise be swallowed.
 
 <!-- WIZARD ember -->
+
 ### Installation
 
 Raven.js and the Raven.js Ember plugin are distributed using a few different methods.
@@ -311,8 +312,13 @@ Example:
 
 ```html
 <script src="http://builds.emberjs.com/tags/v2.3.1/ember.prod.js"></script>
-<script src="https://cdn.ravenjs.com/3.26.4/ember/raven.min.js" crossorigin="anonymous"></script>
-<script>Raven.config('___PUBLIC_DSN___').install();</script>
+<script
+  src="https://cdn.ravenjs.com/3.26.4/ember/raven.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").install();
+</script>
 ```
 
 Note that this CDN build auto-initializes the Ember plugin.
@@ -328,15 +334,14 @@ $ bower install raven-js --save
 ```
 
 ```javascript
-app.import('bower_components/raven-js/dist/raven.js');
-app.import('bower_components/raven-js/dist/plugins/ember.js');
+app.import("bower_components/raven-js/dist/raven.js");
+app.import("bower_components/raven-js/dist/plugins/ember.js");
 ```
 
 ```html
 <script src="assets/vendor.js"></script>
 <script>
-  Raven
-    .config('___PUBLIC_DSN___')
+  Raven.config("___PUBLIC_DSN___")
     .addPlugin(Raven.Plugins.Ember)
     .install();
 </script>
@@ -350,15 +355,14 @@ $ npm install raven-js --save
 ```
 
 ```javascript
-app.import('node_modules/raven-js/dist/raven.js');
-app.import('node_modules/raven-js/dist/plugins/ember.js');
+app.import("node_modules/raven-js/dist/raven.js");
+app.import("node_modules/raven-js/dist/plugins/ember.js");
 ```
 
 ```html
 <script src="assets/vendor.js"></script>
 <script>
-  Raven
-    .config('___PUBLIC_DSN___')
+  Raven.config("___PUBLIC_DSN___")
     .addPlugin(Raven.Plugins.Ember)
     .install();
 </script>
@@ -371,17 +375,19 @@ These examples assume that Ember is exported globally as `window.Ember`. You can
 Raven.addPlugin(Raven.Plugins.Ember, Ember);
 ```
 
-
 ## React
 
 <!-- WIZARD react -->
+
 ### Installation
 
 Start by adding the `raven.js` script tag to your page. It should be loaded as early as possible, before your main JavaScript bundle.
 
 ```html
-<script src="https://cdn.ravenjs.com/3.26.4/raven.min.js"
-    crossorigin="anonymous"></script>
+<script
+  src="https://cdn.ravenjs.com/3.26.4/raven.min.js"
+  crossorigin="anonymous"
+></script>
 ```
 
 ### Configuring the Client
@@ -389,7 +395,7 @@ Start by adding the `raven.js` script tag to your page. It should be loaded as e
 Next configure Raven.js to use your Sentry DSN:
 
 ```javascript
-Raven.config('___PUBLIC_DSN___').install()
+Raven.config("___PUBLIC_DSN___").install();
 ```
 
 At this point, Raven is ready to capture any uncaught exception.
@@ -400,43 +406,44 @@ If you’re using React 16 or above, [Error Boundaries](https://reactjs.org/blog
 
 ```jsx
 class ExampleBoundary extends Component {
-    constructor(props) {
-        super(props);
-        this.state = { error: null };
-    }
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
 
-    componentDidCatch(error, errorInfo) {
-        this.setState({ error });
-        Raven.captureException(error, { extra: errorInfo });
-    }
+  componentDidCatch(error, errorInfo) {
+    this.setState({ error });
+    Raven.captureException(error, { extra: errorInfo });
+  }
 
-    render() {
-        if (this.state.error) {
-            //render fallback UI
-            return (
-                <div
-                className="snap"
-                onClick={() => Raven.lastEventId() && Raven.showReportDialog()}>
-                    <img src={oops} />
-                    <p>We're sorry — something's gone wrong.</p>
-                    <p>Our team has been notified, but click here fill out a report.</p>
-                </div>
-            );
-        } else {
-            //when there's not an error, render children untouched
-            return this.props.children;
-        }
+  render() {
+    if (this.state.error) {
+      //render fallback UI
+      return (
+        <div
+          className="snap"
+          onClick={() => Raven.lastEventId() && Raven.showReportDialog()}
+        >
+          <img src={oops} />
+          <p>We're sorry — something's gone wrong.</p>
+          <p>Our team has been notified, but click here fill out a report.</p>
+        </div>
+      );
+    } else {
+      //when there's not an error, render children untouched
+      return this.props.children;
     }
+  }
 }
 ```
 
 ```html
 <div>
-    <ExampleBoundary>
-        <h2>Sidebar</h2>
-        <Widget/>
-    </ExampleBoundary>
-    <p> This content won't unmount when Widget throws. </p>
+  <ExampleBoundary>
+    <h2>Sidebar</h2>
+    <Widget />
+  </ExampleBoundary>
+  <p>This content won't unmount when Widget throws.</p>
 </div>
 ```
 
@@ -448,8 +455,8 @@ Read more about error boundaries [in this blog post](https://blog.sentry.io/2017
 
 If you use [Redux](https://github.com/reactjs/redux) there are some useful community maintained middleware packages for annotating error reports with useful information, such as store state and recent actions:
 
--   [captbaritone/raven-for-redux](https://github.com/captbaritone/raven-for-redux)
--   [ngokevin/redux-raven-middleware](https://github.com/ngokevin/redux-raven-middleware)
+- [captbaritone/raven-for-redux](https://github.com/captbaritone/raven-for-redux)
+- [ngokevin/redux-raven-middleware](https://github.com/ngokevin/redux-raven-middleware)
 
 ### Redux Sagas Middleware
 
@@ -465,7 +472,6 @@ This plugin only works with Vue 2.0 or greater.
 
 </markdown></Alert>
 
-
 To use Sentry with your Vue application, you will need to use both Raven.js (Sentry’s browser JavaScript SDK) and the Raven.js Vue plugin.
 
 On its own, Raven.js will report any uncaught exceptions triggered from your application. For advanced usage examples of Raven.js, please read [_Raven.js usage_](/clients/javascript/usage/).
@@ -473,6 +479,7 @@ On its own, Raven.js will report any uncaught exceptions triggered from your app
 Additionally, the Raven.js Vue plugin will capture the name and props state of the active component where the error was thrown. This is reported via Vue’s _config.errorHandler_ hook.
 
 <!-- WIZARD vue -->
+
 ### Installation
 
 Raven.js and the Raven.js Vue plugin are distributed using a few different methods.
@@ -485,8 +492,13 @@ Example:
 
 ```html
 <script src="https://cdn.jsdelivr.net/vue/2.0.0-rc/vue.min.js"></script>
-<script src="https://cdn.ravenjs.com/3.26.4/vue/raven.min.js" crossorigin="anonymous"></script>
-<script>Raven.config('___PUBLIC_DSN___').install();</script>
+<script
+  src="https://cdn.ravenjs.com/3.26.4/vue/raven.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").install();
+</script>
 ```
 
 Note that this CDN build auto-initializes the Vue plugin.
@@ -506,8 +518,7 @@ $ npm install raven-js --save
 <script src="/node_modules/raven-js/dist/raven.js"></script>
 <script src="/node_modules/raven-js/dist/plugins/vue.js"></script>
 <script>
-  Raven
-    .config('___PUBLIC_DSN___')
+  Raven.config("___PUBLIC_DSN___")
     .addPlugin(Raven.Plugins.Vue)
     .install();
 </script>
@@ -524,8 +535,7 @@ $ bower install raven-js --save
 <script src="/bower_components/raven-js/dist/raven.js"></script>
 <script src="/bower_components/raven-js/dist/plugins/vue.js"></script>
 <script>
-  Raven
-    .config('___PUBLIC_DSN___')
+  Raven.config("___PUBLIC_DSN___")
     .addPlugin(Raven.Plugins.Vue)
     .install();
 </script>
@@ -542,17 +552,14 @@ Raven.addPlugin(Raven.Plugins.Vue, Vue);
 In your main application file, import and configure both Raven.js and the Raven.js Vue plugin as follows:
 
 ```js
-import Vue from 'vue';
-import Raven from 'raven-js';
-import RavenVue from 'raven-js/plugins/vue';
+import Vue from "vue";
+import Raven from "raven-js";
+import RavenVue from "raven-js/plugins/vue";
 
-Raven
-    .config('___PUBLIC_DSN___')
-    .addPlugin(RavenVue, Vue)
-    .install();
+Raven.config("___PUBLIC_DSN___")
+  .addPlugin(RavenVue, Vue)
+  .install();
 ```
-
-
 
 ## Deprecated React Native
 
@@ -566,7 +573,6 @@ Unless you have specific reasons not to, it’s recommended to instead the new [
 
 </markdown></Alert>
 
-
 ### Installation
 
 In the root of your React Native project, install raven-js via npm:
@@ -578,10 +584,10 @@ $ npm install --save raven-js
 At the top of your main application file (e.g. index.ios.js and/or index.android.js), add the following code:
 
 ```javascript
-var React = require('react');
+var React = require("react");
 
-var Raven = require('raven-js');
-require('raven-js/plugins/react-native')(Raven);
+var Raven = require("raven-js");
+require("raven-js/plugins/react-native")(Raven);
 ```
 
 ### Configuring the Client
@@ -589,9 +595,7 @@ require('raven-js/plugins/react-native')(Raven);
 Now we need to set up Raven.js to use your Sentry DSN:
 
 ```javascript
-Raven
-  .config('___PUBLIC_DSN___', { release: RELEASE_ID })
-  .install();
+Raven.config("___PUBLIC_DSN___", { release: RELEASE_ID }).install();
 ```
 
 RELEASE_ID is a string representing the “version” of the build you are about to distribute. This can be the SHA of your Git repository’s HEAD. It can also be a semantic version number (e.g. “1.1.2”), pulled from your project’s package.json file. More below.
@@ -600,8 +604,8 @@ RELEASE_ID is a string representing the “version” of the build you are about
 
 Every time you build and distribute a new version of your React Native app, you’ll want to create a new release inside Sentry. This is for two important reasons:
 
--   You can associate errors tracked by Sentry with a particular build
--   You can store your source files/source maps generated for each build inside Sentry
+- You can associate errors tracked by Sentry with a particular build
+- You can store your source files/source maps generated for each build inside Sentry
 
 Unlike a normal web application where your JavaScript files (and source maps) are served and hosted from a web server, your React Native code is being served from the target device’s filesystem. So you’ll need to upload both your **source code** AND **source maps** directly to Sentry, so that we can generate handy stack traces for you to browse when examining exceptions triggered by your application.
 
@@ -646,8 +650,8 @@ Note however that artifact names are completely different when using the simulat
 
 Typically, simulator assets are served at the following URLs:
 
--   Bundle: [http://localhost:8081/index.ios.bundle?platform=ios&dev=true](http://localhost:8081/index.ios.bundle?platform=ios&dev=true)
--   Source map: [http://localhost:8081/index.ios.map?platform=ios&dev=true](http://localhost:8081/index.ios.map?platform=ios&dev=true)
+- Bundle: [http://localhost:8081/index.ios.bundle?platform=ios&dev=true](http://localhost:8081/index.ios.bundle?platform=ios&dev=true)
+- Source map: [http://localhost:8081/index.ios.map?platform=ios&dev=true](http://localhost:8081/index.ios.map?platform=ios&dev=true)
 
 If you want to evaluate Sentry’s source map support using the simulator, you will need to fetch these assets at these URLs (while the React Native packager is running), and upload them to Sentry as artifacts. They should be named using the full URL at which they are located, including the query string.
 
@@ -658,7 +662,7 @@ It’s likely you’ll end up in situations where you want to gracefully handle 
 ```javascript
 function logException(ex, context) {
   Raven.captureException(ex, {
-    extra: context
+    extra: context,
   });
   /*eslint no-console:0*/
   window.console && console.error && console.error(ex);
@@ -669,12 +673,12 @@ Now in your components (or anywhere else), you can fail gracefully:
 
 ```javascript
 var Component = React.createClass({
-    render() {
-        try {
-            // ..
-        } catch (ex) {
-            logException(ex);
-        }
+  render() {
+    try {
+      // ..
+    } catch (ex) {
+      logException(ex);
     }
+  },
 });
 ```

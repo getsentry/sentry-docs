@@ -7,6 +7,7 @@ sidebar_order: 4
 noindex: true
 tags: []
 ---
+
 These are some general recommendations and tips for how to get the most out of Raven.js and Sentry.
 
 ## Decluttering Sentry
@@ -16,12 +17,10 @@ The first thing to do is to consider constructing a whitelist of domains in whic
 If your scripts are loaded from `cdn.example.com` and your site is `example.com` it’d be reasonable to set `whitelistUrls` to:
 
 ```javascript
-whitelistUrls: [
-  /https?:\/\/((cdn|www)\.)?example\.com/
-]
+whitelistUrls: [/https?:\/\/((cdn|www)\.)?example\.com/];
 ```
 
-Since this accepts a regular expression, that would catch anything *.example.com or example.com exactly. See also: [Config: whitelistUrls](/clients/javascript/config/#config-whitelist-urls).
+Since this accepts a regular expression, that would catch anything \*.example.com or example.com exactly. See also: [Config: whitelistUrls](/clients/javascript/config/#config-whitelist-urls).
 
 Next, checkout the list of [_integrations_](/clients/javascript/integrations/) we provide and see which are applicable to you.
 
@@ -29,45 +28,45 @@ The community has compiled a list of common ignore rules for common things, like
 
 ```javascript
 var ravenOptions = {
-    ignoreErrors: [
-      // Random plugins/extensions
-      'top.GLOBALS',
-      // See: http://blog.errorception.com/2012/03/tale-of-unfindable-js-error.html
-      'originalCreateNotification',
-      'canvas.contentDocument',
-      'MyApp_RemoveAllHighlights',
-      'http://tt.epicplay.com',
-      'Can\'t find variable: ZiteReader',
-      'jigsaw is not defined',
-      'ComboSearch is not defined',
-      'http://loading.retry.widdit.com/',
-      'atomicFindClose',
-      // Facebook borked
-      'fb_xd_fragment',
-      // ISP "optimizing" proxy - `Cache-Control: no-transform` seems to
-      // reduce this. (thanks @acdha)
-      // See http://stackoverflow.com/questions/4113268
-      'bmi_SafeAddOnload',
-      'EBCallBackMessageReceived',
-      // See http://toolbar.conduit.com/Developer/HtmlAndGadget/Methods/JSInjection.aspx
-      'conduitPage'
-    ],
-    ignoreUrls: [
-      // Facebook flakiness
-      /graph\.facebook\.com/i,
-      // Facebook blocked
-      /connect\.facebook\.net\/en_US\/all\.js/i,
-      // Woopra flakiness
-      /eatdifferent\.com\.woopra-ns\.com/i,
-      /static\.woopra\.com\/js\/woopra\.js/i,
-      // Chrome extensions
-      /extensions\//i,
-      /^chrome:\/\//i,
-      // Other plugins
-      /127\.0\.0\.1:4001\/isrunning/i,  // Cacaoweb
-      /webappstoolbarba\.texthelp\.com\//i,
-      /metrics\.itunes\.apple\.com\.edgesuite\.net\//i
-    ]
+  ignoreErrors: [
+    // Random plugins/extensions
+    "top.GLOBALS",
+    // See: http://blog.errorception.com/2012/03/tale-of-unfindable-js-error.html
+    "originalCreateNotification",
+    "canvas.contentDocument",
+    "MyApp_RemoveAllHighlights",
+    "http://tt.epicplay.com",
+    "Can't find variable: ZiteReader",
+    "jigsaw is not defined",
+    "ComboSearch is not defined",
+    "http://loading.retry.widdit.com/",
+    "atomicFindClose",
+    // Facebook borked
+    "fb_xd_fragment",
+    // ISP "optimizing" proxy - `Cache-Control: no-transform` seems to
+    // reduce this. (thanks @acdha)
+    // See http://stackoverflow.com/questions/4113268
+    "bmi_SafeAddOnload",
+    "EBCallBackMessageReceived",
+    // See http://toolbar.conduit.com/Developer/HtmlAndGadget/Methods/JSInjection.aspx
+    "conduitPage",
+  ],
+  ignoreUrls: [
+    // Facebook flakiness
+    /graph\.facebook\.com/i,
+    // Facebook blocked
+    /connect\.facebook\.net\/en_US\/all\.js/i,
+    // Woopra flakiness
+    /eatdifferent\.com\.woopra-ns\.com/i,
+    /static\.woopra\.com\/js\/woopra\.js/i,
+    // Chrome extensions
+    /extensions\//i,
+    /^chrome:\/\//i,
+    // Other plugins
+    /127\.0\.0\.1:4001\/isrunning/i, // Cacaoweb
+    /webappstoolbarba\.texthelp\.com\//i,
+    /metrics\.itunes\.apple\.com\.edgesuite\.net\//i,
+  ],
 };
 ```
 
@@ -95,27 +94,26 @@ You can use this event to globally handle Ajax errors:
 
 ```javascript
 $(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
-    Raven.captureMessage(thrownError || jqXHR.statusText, {
-        extra: {
-            type: ajaxSettings.type,
-            url: ajaxSettings.url,
-            data: ajaxSettings.data,
-            status: jqXHR.status,
-            error: thrownError || jqXHR.statusText,
-            response: jqXHR.responseText.substring(0, 100)
-        }
-    });
+  Raven.captureMessage(thrownError || jqXHR.statusText, {
+    extra: {
+      type: ajaxSettings.type,
+      url: ajaxSettings.url,
+      data: ajaxSettings.data,
+      status: jqXHR.status,
+      error: thrownError || jqXHR.statusText,
+      response: jqXHR.responseText.substring(0, 100),
+    },
+  });
 });
 ```
 
 <Alert level="warning" title="Note"><markdown>
 
--   This handler is not called for cross-domain script and cross-domain JSONP requests.
--   If `$.ajax()` or `$.ajaxSetup()` is called with the `global` option set to `false`, the `.ajaxError()` method will not fire.
--   As of jQuery 1.8, the `.ajaxError()` method should only be attached to document.
+- This handler is not called for cross-domain script and cross-domain JSONP requests.
+- If `$.ajax()` or `$.ajaxSetup()` is called with the `global` option set to `false`, the `.ajaxError()` method will not fire.
+- As of jQuery 1.8, the `.ajaxError()` method should only be attached to document.
 
 </markdown></Alert>
-
 
 ## Cross Origin
 
@@ -169,24 +167,26 @@ $ npm install raven-testkit --save-dev
 Then you may create a `testkit` instance and validate your reports against it as follows:
 
 ```javascript
-import testKitInitializer from 'raven-testkit'
+import testKitInitializer from "raven-testkit";
 
-const testKit = testKitInitializer(Raven)
+const testKit = testKitInitializer(Raven);
 
 // any scenario that should call Raven.catchException(...)
 
-expect(testKit.reports()).to.have.lengthOf(1)
-const report = testKit.reports()[0]
-expect(report).to.have.property('release').to.equal('test')
+expect(testKit.reports()).to.have.lengthOf(1);
+const report = testKit.reports()[0];
+expect(report)
+  .to.have.property("release")
+  .to.equal("test");
 ```
 
 Additionally, you may pass your own `shouldSendCallback` logic
 
 ```javascript
 const shouldSendCallback = data => {
-    return /* your own logic */
-}
-const testKit = testKitInitializer(Raven, shouldSendCallback)
+  return; /* your own logic */
+};
+const testKit = testKitInitializer(Raven, shouldSendCallback);
 ```
 
 Other useful API, more example usage and updates can be found in [Raven Test Kit](https://github.com/wix/raven-testkit)

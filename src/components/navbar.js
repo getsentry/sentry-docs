@@ -6,7 +6,7 @@ import queries from "../utils/algolia";
 const searchIndices = queries.map(query => ({
   name: query.indexName,
   title: `Docs`,
-  hitComp: `PageHit`
+  hitComp: `PageHit`,
 }));
 
 const Navbar = ({ homeUrl, sitePath }) => (

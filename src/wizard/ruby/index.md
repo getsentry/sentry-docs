@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/clients/ruby/
 support_level: production
 type: language
 ---
+
 ## Installation {#install}
 
 Raven Ruby comes as a gem and is straightforward to install. If you are using Bundler just add this to your `Gemfile`:

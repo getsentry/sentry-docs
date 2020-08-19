@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/platforms/python/flask/
 support_level: production
 type: framework
 ---
+
 The Flask integration adds support for the [Flask Web
 Framework](http://flask.pocoo.org/).
 
