@@ -14,7 +14,9 @@ const navQuery = graphql`
           draft
           title
           sidebar_order
-          platformName
+          platform {
+            name
+          }
         }
       }
     }
@@ -32,7 +34,10 @@ export default ({ platform, integration }) => {
         const tree = toTree(
           sortBy(
             data.allSitePage.nodes
-              .filter(n => n.context.platform.name === platformName)
+              .filter(
+                n =>
+                  n.context.platform && n.context.platform.name === platformName
+              )
               .filter(n => !n.context.draft),
             n => n.path
           )
@@ -50,13 +55,9 @@ export default ({ platform, integration }) => {
             <DynamicNav
               root={`/platforms/${platformName}/integrations`}
               title={integrationName ? "Other Integrations" : "Integrations"}
-              prependChildren={
+              prependLinks={
                 integrationName
-                  ? [
-                      <SmartLink to={`/platforms/${platformName}/`}>
-                        {platform.title}
-                      </SmartLink>,
-                    ]
+                  ? [[`/platforms/${platformName}/`, platform.title]]
                   : null
               }
               exclude={

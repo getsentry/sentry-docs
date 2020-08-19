@@ -56,7 +56,7 @@ export default ({
   tree,
   collapse = false,
   exclude = [],
-  prependChildren = [],
+  prependLinks = [],
 }) => {
   if (root.indexOf("/") === 0) root = root.substr(1);
 
@@ -97,7 +97,12 @@ export default ({
       {header}
       {(!collapse || isActive) && entity.children && (
         <ul className="list-unstyled" data-sidebar-tree>
-          {prependChildren && !!prependChildren.length && prependChildren}
+          {prependLinks &&
+            prependLinks.map(link => (
+              <SidebarLink to={link[0]} key={link[0]}>
+                {link[1]}
+              </SidebarLink>
+            ))}
           {renderChildren(entity.children, exclude)}
         </ul>
       )}
