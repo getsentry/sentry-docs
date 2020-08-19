@@ -157,7 +157,7 @@ const getPlugins = () => {
       resolve: "./plugins/gatsby-plugin-sentry-wizard",
       options: {
         source: "wizard",
-        output: `${__dirname}/static/_platforms`,
+        output: `${__dirname}/public/_platforms`,
       },
     },
     {
