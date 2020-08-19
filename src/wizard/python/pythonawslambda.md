@@ -32,15 +32,17 @@ def my_function(event, context):
 Checkout Sentry's [aws sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/python) for detailed examples.
 
 ### Enable Timeout Warning
-Update the sentry initialization to set ```timeout_warning``` to ```true```
+
+Update the sentry initialization to set `timeout_warning` to `true`
+
 ```python
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     integrations=[AwsLambdaIntegration(timeout_warning=True)]
 )
 ```
+
 The timeout warning is sent only if the "timeout" in the Lambda Funtion configuration is set to a value greater than one second.
 
- 
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Note</h5><div class="alert-body content-flush-bottom">If you are using another web framework inside of AWS Lambda, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [*Integrations*](/platforms/python/#integrations) for more information.</div>
 </div>

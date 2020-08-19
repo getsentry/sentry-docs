@@ -3,7 +3,7 @@ import {
   InstantSearch,
   Index,
   Hits,
-  connectStateResults
+  connectStateResults,
 } from "react-instantsearch-dom";
 import algoliasearch from "algoliasearch/lite";
 

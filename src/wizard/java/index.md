@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/clients/java/
 support_level: production
 type: language
 ---
+
 ## Installation
 
 Using Maven:

@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/clients/javascript/integrations/angularjs/
 support_level: production
 type: framework
 ---
+
 ### Installation
 
 Raven.js and the Raven.js Angular plugin are distributed using a few different methods.
@@ -16,8 +17,13 @@ Example:
 
 ```html
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
-<script src="https://cdn.ravenjs.com/3.26.4/angular/raven.min.js" crossorigin="anonymous"></script>
-<script>Raven.config('___PUBLIC_DSN___').install();</script>
+<script
+  src="https://cdn.ravenjs.com/3.26.4/angular/raven.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+  Raven.config("___PUBLIC_DSN___").install();
+</script>
 ```
 
 Note that this CDN build auto-initializes the Angular plugin.
@@ -37,8 +43,7 @@ $ bower install raven-js --save
 <script src="/bower_components/raven-js/dist/raven.js"></script>
 <script src="/bower_components/raven-js/dist/plugins/angular.js"></script>
 <script>
-  Raven
-    .config('___PUBLIC_DSN___')
+  Raven.config("___PUBLIC_DSN___")
     .addPlugin(Raven.Plugins.Angular)
     .install();
 </script>
@@ -55,8 +60,7 @@ $ npm install raven-js --save
 <script src="/node_modules/raven-js/dist/raven.js"></script>
 <script src="/node_modules/raven-js/dist/plugins/angular.js"></script>
 <script>
-  Raven
-    .config('___PUBLIC_DSN___')
+  Raven.config("___PUBLIC_DSN___")
     .addPlugin(Raven.Plugins.Angular)
     .install();
 </script>
@@ -73,12 +77,11 @@ Raven.addPlugin(Raven.Plugins.Angular, angular);
 Raven and the Raven AngularJS plugin can be loaded using a module loader like Browserify or Webpack.
 
 ```javascript
-var angular = require('angular');
-var Raven = require('raven-js');
+var angular = require("angular");
+var Raven = require("raven-js");
 
-Raven
-  .config('___PUBLIC_DSN___')
-  .addPlugin(require('raven-js/plugins/angular'), angular)
+Raven.config("___PUBLIC_DSN___")
+  .addPlugin(require("raven-js/plugins/angular"), angular)
   .install();
 ```
 
@@ -89,11 +92,11 @@ Note that when using CommonJS-style imports, you must pass a reference to _angul
 Inside your main AngularJS application module, you need to declare _ngRaven_ as a module dependency:
 
 ```javascript
-var myApp = angular.module('myApp', [
-  'ngRaven',
-  'ngRoute',
-  'myAppControllers',
-  'myAppFilters'
+var myApp = angular.module("myApp", [
+  "ngRaven",
+  "ngRoute",
+  "myAppControllers",
+  "myAppFilters",
 ]);
 ```
 
@@ -102,21 +105,17 @@ var myApp = angular.module('myApp', [
 The raven angular module can be loaded using a module loader like Browserify or Webpack.
 
 ```javascript
-var angular = require('angular');
-var ngRaven = require('raven-js/plugins/angular').moduleName;
-var ngRoute = require('angular-route');
+var angular = require("angular");
+var ngRaven = require("raven-js/plugins/angular").moduleName;
+var ngRoute = require("angular-route");
 
-var myAppFilters = require('./myAppFilters');
-var myAppControllers = require('./myAppControllers');
-var moduleName = 'myApp';
+var myAppFilters = require("./myAppFilters");
+var myAppControllers = require("./myAppControllers");
+var moduleName = "myApp";
 
-angular.module(moduleName, [
-  ngRaven,
-  ngRoute,
-  myAppControllers,
-  myAppFilters,
-]);
+angular.module(moduleName, [ngRaven, ngRoute, myAppControllers, myAppFilters]);
 
 module.exports = moduleName;
 ```
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->

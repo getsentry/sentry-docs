@@ -1,14 +1,14 @@
 ---
-title: 'Advanced Data Scrubbing'
+title: "Advanced Data Scrubbing"
 sidebar_order: 4
 keywords: ["pii", "gdpr", "personally identifiable data", "compliance"]
 ---
 
 In addition to using [`beforeSend`](/data-management/sensitive-data/#custom-event-processing-in-the-sdk) in your SDK or our [regular server-side data scrubbing features](/data-management/sensitive-data/#server-side-scrubbing) to redact sensitive data, Advanced Data Scrubbing is an alternative way to redact sensitive information just before it is saved in Sentry. It allows you to:
 
-* Define custom regular expressions to match on sensitive data
-* Detailed tuning on which parts of an event to scrub
-* Partial removal or hashing of sensitive data instead of deletion
+- Define custom regular expressions to match on sensitive data
+- Detailed tuning on which parts of an event to scrub
+- Partial removal or hashing of sensitive data instead of deletion
 
 ## A Basic Example
 
@@ -69,16 +69,16 @@ Sentry does not know if a local variable that looks like a credit card number ac
 
 Selectors allow you to restrict rules to certain parts of the event. This is useful to unconditionally remove certain data by event attribute, and can also be used to conservatively test rules on real data. A few examples:
 
-* `**` to scrub everything
-* `$error.value` to scrub in the exception message
-* `$message` to scrub the event-level log message
-* `extra.'My Value'` to scrub the key `My Value` in "Additional Data"
-* `extra.**` to scrub everything in "Additional Data"
-* `$http.headers.x-custom-token` to scrub the request header `X-Custom-Token`
-* `$user.ip_address` to scrub the user's IP address
-* `$frame.vars.foo` to scrub a stack trace frame variable called `foo`
-* `contexts.device.timezone` to scrub a key from the Device context
-* `tags.server_name` to scrub the tag `server_name`
+- `**` to scrub everything
+- `$error.value` to scrub in the exception message
+- `$message` to scrub the event-level log message
+- `extra.'My Value'` to scrub the key `My Value` in "Additional Data"
+- `extra.**` to scrub everything in "Additional Data"
+- `$http.headers.x-custom-token` to scrub the request header `X-Custom-Token`
+- `$user.ip_address` to scrub the user's IP address
+- `$frame.vars.foo` to scrub a stack trace frame variable called `foo`
+- `contexts.device.timezone` to scrub a key from the Device context
+- `tags.server_name` to scrub the tag `server_name`
 
 All key names are treated case-insensitively.
 
@@ -109,7 +109,7 @@ Another example. Sentry knows about two kinds of error messages: the exception m
     "values": [
       {
         "type": "ZeroDivisionError",
-        "value": "integer division or modulo by zero",
+        "value": "integer division or modulo by zero"
       }
     ]
   }
@@ -127,38 +127,38 @@ Since the "error message" is taken from the `exception`'s `value`, and the "mess
 
 You can combine sources using boolean logic.
 
-* Prefix with `!` to invert the source. `foo` matches the JSON key `foo`, while `!foo` matches everything but `foo`.
-* Build the conjunction (AND) using `&&`, such as: `foo && !extra.foo` to match the key `foo` except when inside of `extra`.
-* Build the disjunction (OR) using `||`, such as: `foo || bar` to match `foo` or `bar`.
+- Prefix with `!` to invert the source. `foo` matches the JSON key `foo`, while `!foo` matches everything but `foo`.
+- Build the conjunction (AND) using `&&`, such as: `foo && !extra.foo` to match the key `foo` except when inside of `extra`.
+- Build the disjunction (OR) using `||`, such as: `foo || bar` to match `foo` or `bar`.
 
 ### Wildcards
 
-* `**` matches all subpaths, so that `foo.**` matches all JSON keys within `foo`.
-* `*` matches a single path item, so that `foo.*` matches all JSON keys one level below `foo`.
+- `**` matches all subpaths, so that `foo.**` matches all JSON keys within `foo`.
+- `*` matches a single path item, so that `foo.*` matches all JSON keys one level below `foo`.
 
 ### Value Types
 
 Select subsections by JSON-type using the following:
 
-* `$string`: Matches any string value
-* `$number`: Matches any integer or float value
-* `$datetime`: Matches any field in the event that represents a timestamp
-* `$array`: Matches any JSON array value
-* `$object`: Matches any JSON object
+- `$string`: Matches any string value
+- `$number`: Matches any integer or float value
+- `$datetime`: Matches any field in the event that represents a timestamp
+- `$array`: Matches any JSON array value
+- `$object`: Matches any JSON object
 
 Select known parts of the schema using the following:
 
-* `$error`: Matches a single exception instance. Alias for `exception.values.*`
-* `$stack`: Matches a stack trace instance. Alias for `stacktrace || $error.stacktrace || $thread.stacktrace`
-* `$frame`: Matches a frame in a stack trace. Alias for `$stacktrace.frames.*`
-* `$http`: Matches the HTTP request context of an event. Alias for `request`
-* `$user`: Matches the user context of an event. Alias for `user`
-* `$message`: Matches the top-level log message. Alias for `$logentry.formatted`
-* `$logentry`: Matches the `logentry` attribute of an event. Alias for `logentry`
-* `$thread`: Matches a single thread instance. Alias for `threads.values.*`
-* `$breadcrumb`: Matches a single breadcrumb. Alias for `breadcrumbs.values.*`
-* `$span`: Matches a [trace span](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). Alias for `spans.*`
-* `$sdk`: Matches the SDK context. Alias for `sdk`
+- `$error`: Matches a single exception instance. Alias for `exception.values.*`
+- `$stack`: Matches a stack trace instance. Alias for `stacktrace || $error.stacktrace || $thread.stacktrace`
+- `$frame`: Matches a frame in a stack trace. Alias for `$stacktrace.frames.*`
+- `$http`: Matches the HTTP request context of an event. Alias for `request`
+- `$user`: Matches the user context of an event. Alias for `user`
+- `$message`: Matches the top-level log message. Alias for `$logentry.formatted`
+- `$logentry`: Matches the `logentry` attribute of an event. Alias for `logentry`
+- `$thread`: Matches a single thread instance. Alias for `threads.values.*`
+- `$breadcrumb`: Matches a single breadcrumb. Alias for `breadcrumbs.values.*`
+- `$span`: Matches a [trace span](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). Alias for `spans.*`
+- `$sdk`: Matches the SDK context. Alias for `sdk`
 
 ### Escaping Special Characters
 
@@ -182,6 +182,6 @@ This matches the key `my special ' value` in _Additional Data_.
 
 The following limitations generally apply to all server-side data scrubbing, be it basic Safe Fields usage or Advanced Data Scrubbing.
 
-* Hashing, masking or replacing a JSON object, array or number (anything that is not a string) cannot be done in all circumstances as it would change the JSON type of the value and violate assumptions Sentry's internals make about the data schema. Data scrubbing will ignore the _Method_ in those cases and always remove/replace with `null` as that is always safe.
+- Hashing, masking or replacing a JSON object, array or number (anything that is not a string) cannot be done in all circumstances as it would change the JSON type of the value and violate assumptions Sentry's internals make about the data schema. Data scrubbing will ignore the _Method_ in those cases and always remove/replace with `null` as that is always safe.
 
-* Sentry's internals require that the event user's IP address must either be `null` or a valid IPv4/IPv6 address. If you're trying to hash, mask or replace IP addresses, data scrubbing will move the replacement value into the user ID (if one is not already set) in order to avoid breaking this requirement while still providing useful data for the Users count on an issue.
+- Sentry's internals require that the event user's IP address must either be `null` or a valid IPv4/IPv6 address. If you're trying to hash, mask or replace IP addresses, data scrubbing will move the replacement value into the user ID (if one is not already set) in order to avoid breaking this requirement while still providing useful data for the Users count on an issue.

@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/platforms/javascript/
 support_level: production
 type: language
 ---
+
 The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
 
 ```html
@@ -17,7 +18,7 @@ The quickest way to get started is to use the CDN hosted version of the JavaScri
 You should `init` the Sentry Browser SDK as soon as possible during your page load:
 
 ```javascript
-Sentry.init({ dsn: '___PUBLIC_DSN___' });
+Sentry.init({ dsn: "___PUBLIC_DSN___" });
 ```
 
 One way to verify your setup is by intentionally sending an event that breaks your application.

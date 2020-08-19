@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/clients/ruby/integrations/rails/
 support_level: production
 type: framework
 ---
+
 In Rails, all uncaught exceptions will be automatically reported.
 
 We support Rails 4 and newer.
@@ -56,4 +57,5 @@ end
 ### Caveats
 
 Currently, custom exception applications (_config.exceptions_app_) are not supported. If you are using a custom exception app, you must manually integrate Raven yourself.
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->

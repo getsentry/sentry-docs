@@ -4,9 +4,10 @@ doc_link: https://docs.sentry.io/platforms/python/celery/
 support_level: production
 type: library
 ---
+
 The celery integration adds support for the [Celery Task Queue System](http://www.celeryproject.org/).
 
-Just add ``CeleryIntegration()`` to your ``integrations`` list:
+Just add `CeleryIntegration()` to your `integrations` list:
 
 ```python
 import sentry_sdk
