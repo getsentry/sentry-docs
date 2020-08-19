@@ -6,6 +6,7 @@ title: Integrations
 noindex: true
 tags: []
 ---
+
 The Raven Python module also comes with integration for some commonly used libraries to automatically capture errors from common environments. This means that once you have such an integration configured you typically do not need to report errors manually.
 
 Some integrations allow specifying these in a standard configuration, otherwise they are generally passed upon instantiation of the Sentry client.
@@ -38,7 +39,6 @@ app.catchall = False
 Bottle will not propagate exceptions to the underlying WSGI middleware by default. Setting catchall to False disables that.
 
 </markdown></Alert>
-
 
 Sentry will then act as Middleware:
 
@@ -73,7 +73,6 @@ Log a generic message with `captureMessage`:
 ```python
 request.app.sentry.captureMessage('Hello, world!')
 ```
-
 
 ## Celery
 
@@ -136,7 +135,6 @@ app = Celery(__name__)
 app.config_from_object('django.conf:settings')
 ```
 
-
 ## Django
 
 [Django](http://djangoproject.com/) versions 1.4 to 2.0 are supported. Since this SDK is being phased out, newer versions of Django are only supported by [the new Python SDK](/platforms/python/).
@@ -189,7 +187,6 @@ from raven.contrib.django.raven_compat.models import client
 client.captureException()
 ```
 
-
 ### Using with Raven.js {#using-with-raven-js}
 
 A Django template tag is provided to render a proper public DSN inside your templates, you must first load `raven`:
@@ -201,7 +198,9 @@ A Django template tag is provided to render a proper public DSN inside your temp
 Inside your template, you can now use:
 
 ```html
-<script>Raven.config('{% sentry_public_dsn %}').install()</script>
+<script>
+  Raven.config("{% sentry_public_dsn %}").install();
+</script>
 ```
 
 By default, the DSN is generated in a protocol relative fashion, e.g. `//public@example.com/1`. If you need a specific protocol, you can override:
@@ -335,8 +334,10 @@ Once we’ve successfully added the `request` context variable, adding the Sentr
 ```html
 <p>You've encountered an error, oh noes!</p>
 {% if request.sentry.id %}
-    <p>If you need assistance, you may reference this error as
-    <strong>{{ request.sentry.id }}</strong>.</p>
+<p>
+  If you need assistance, you may reference this error as
+  <strong>{{ request.sentry.id }}</strong>.
+</p>
 {% endif %}
 ```
 
@@ -369,14 +370,14 @@ By default Django will render `500.html`, so simply drop the following snippet i
 <script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
 
 {% if request.sentry.id %}
-  <script>
+<script>
   Raven.showReportDialog({
-    eventId: '{{ request.sentry.id }}',
+    eventId: "{{ request.sentry.id }}",
 
     // use the public DSN (don't include your secret!)
-    dsn: '___PUBLIC_DSN___'
+    dsn: "___PUBLIC_DSN___",
   });
-  </script>
+</script>
 {% endif %}
 ```
 
@@ -390,25 +391,25 @@ For more details on this feature, see the [_User Feedback guide_](/enriching-err
 
 : In some situations you may wish for a slightly different behavior to how Sentry communicates with your server. For this, Raven allows you to specify a custom client:
 
-  ```python
-  SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
-  ```
+```python
+SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
+```
 
 `SENTRY_CELERY_LOGLEVEL`
 
 : If you are also using Celery, there is a handler being automatically registered for you that captures the errors from workers. The default logging level for that handler is `logging.ERROR` and can be customized using this setting:
 
-  ```python
-  SENTRY_CELERY_LOGLEVEL = logging.INFO
-  ```
+```python
+SENTRY_CELERY_LOGLEVEL = logging.INFO
+```
 
-  Alternatively you can use a similarly named key in `RAVEN_CONFIG`:
+Alternatively you can use a similarly named key in `RAVEN_CONFIG`:
 
-  ```python
-  RAVEN_CONFIG = {
-      'CELERY_LOGLEVEL': logging.INFO
-  }
-  ```
+```python
+RAVEN_CONFIG = {
+    'CELERY_LOGLEVEL': logging.INFO
+}
+```
 
 `SENTRY_CELERY_IGNORE_EXPECTED`
 
@@ -447,7 +448,6 @@ class MyMiddleware(object):
 This technique may break unit tests using the Django test client (`django.test.client.Client`) if a view under test generates a `Http404` or `PermissionDenied` exception, because the exceptions won’t be translated into the expected 404 or 403 response codes.
 
 </markdown></Alert>
-
 
 Or, alternatively, you can just enable Sentry responses:
 
@@ -514,7 +514,6 @@ sentry = Sentry(app, dsn='___DSN___')
 ```
 
 If you don’t specify the `dsn` value, we will attempt to read it from your environment under the `SENTRY_DSN` key.
-
 
 ### Extended Setup
 
@@ -642,12 +641,12 @@ And in the error template (`500.html`) you can then do this:
 <script src="https://cdn.ravenjs.com/2.3.0/raven.min.js"></script>
 
 {% if event_id %}
-  <script>
+<script>
   Raven.showReportDialog({
-    eventId: '{{ event_id }}',
-    dsn: '{{ public_dsn }}'
+    eventId: "{{ event_id }}",
+    dsn: "{{ public_dsn }}",
   });
-  </script>
+</script>
 {% endif %}
 ```
 
@@ -875,7 +874,6 @@ Depending on the version of Python you’re using, `extra` might not be an accep
 
 </markdown></Alert>
 
-
 While we don’t recommend this, you can also enable implicit stack capturing for all messages:
 
 ```python
@@ -894,7 +892,7 @@ logger.error('There was an error, with user context and tags'), extra={
 })
 ```
 
-You may also pass additional information to be stored as meta information with the event. As long as the key name is not reserved and not private (_foo) it will be displayed on the Sentry dashboard. To do this, pass it as `data` within your `extra` clause:
+You may also pass additional information to be stored as meta information with the event. As long as the key name is not reserved and not private (\_foo) it will be displayed on the Sentry dashboard. To do this, pass it as `data` within your `extra` clause:
 
 ```python
 logger.error('There was some crazy error', exc_info=True, extra={
@@ -944,6 +942,7 @@ pip install raven --upgrade
 ```
 
 <!-- WIZARD pylons -->
+
 ### WSGI Middleware
 
 A Pylons-specific middleware exists to enable easy configuration from settings:
@@ -1008,7 +1007,6 @@ You may want to set up other loggers as well.
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
-
 ## Pyramid
 
 ### Installation
@@ -1020,6 +1018,7 @@ pip install raven --upgrade
 ```
 
 <!-- WIZARD pyramid -->
+
 ### PasteDeploy Filter
 
 A filter factory for [PasteDeploy](https://pastedeploy.readthedocs.io/en/latest/) exists to allow easily inserting Raven into a WSGI pipeline:
@@ -1087,12 +1086,12 @@ You may want to setup other loggers as well. See the [Pyramid Logging Documentat
 
 Instead of defining the DSN in the _.ini_ file you can also use the environment variable `SENTRY_DSN` which overwrites the setting in this file. Because of a syntax check you cannot remove the `args` setting completely, as workaround you can define an empty list of arguments `args = ()`.
 
-
 ## RQ
 
 Starting with RQ version 0.3.1, support for Sentry has been built in.
 
 <!-- WIZARD rq -->
+
 ### Usage
 
 RQ natively supports binding with Sentry by passing your `SENTRY_DSN` through `rqworker`:
@@ -1116,7 +1115,6 @@ register_sentry(client, worker)
 
 Please see `rq`‘s documentation for more information: [http://python-rq.org/patterns/sentry/](http://python-rq.org/patterns/sentry/)
 
-
 ## Tornado
 
 Tornado is an async web framework for Python.
@@ -1128,6 +1126,7 @@ If you haven’t already, start by downloading Raven. The easiest way is with _p
 ```bash
 pip install raven --upgrade
 ```
+
 ### Setup
 
 The first thing you’ll need to do is to initialize sentry client under your application
@@ -1163,7 +1162,6 @@ class UncaughtExceptionExampleHandler(
 ```
 
 You can also send events manually using the shortcuts defined in _SentryMixin_. The shortcuts can be used for both asynchronous and synchronous usage.
-
 
 #### Asynchronous
 
@@ -1208,7 +1206,6 @@ To dynamically use Python if configuration DSN available, change your base handl
 > ```
 
 </markdown></Alert>
-
 
 #### Synchronous
 
@@ -1301,8 +1298,8 @@ sentry = SentryMiddleware(hide_zerorpc_frames=False, dsn='___DSN___')
 
 ### Compatibility
 
--   ZeroRPC-Python < 0.4.0 is compatible with Raven <= 3.1.0;
--   ZeroRPC-Python >= 0.4.0 requires Raven > 3.1.0.
+- ZeroRPC-Python < 0.4.0 is compatible with Raven <= 3.1.0;
+- ZeroRPC-Python >= 0.4.0 requires Raven > 3.1.0.
 
 ## Zope/Plone
 

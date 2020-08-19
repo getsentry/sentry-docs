@@ -6,6 +6,7 @@ title: Source Maps
 sidebar_order: 12
 tags: []
 ---
+
 Sentry supports un-minifying JavaScript via [Source Maps](http://blog.sentry.io/2015/10/29/debuggable-javascript-with-source-maps.html). This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (e.g. UglifyJS), or transpiled code from a higher-level language (e.g. TypeScript, ES6).
 
 Source maps can be either:
@@ -24,19 +25,19 @@ Webpack is a powerful build tool that resolves and bundles your JavaScript modul
 You can configure Webpack to output source maps by editing `webpack.config.js`.
 
 ```javascript
-const path = require('path');
+const path = require("path");
 
 module.exports = {
   // ... other config above ...
-  target: 'node',
-  devtool: 'source-map',
+  target: "node",
+  devtool: "source-map",
   entry: {
-    "app": './src/app.js'
+    app: "./src/app.js",
   },
   output: {
-    path: path.join(__dirname, 'dist'),
-    filename: '[name].js'
-  }
+    path: path.join(__dirname, "dist"),
+    filename: "[name].js",
+  },
 };
 ```
 
@@ -45,7 +46,6 @@ module.exports = {
 If you want to rely on Sentry's source map resolution, make sure that your code is not using the [source-map-support](https://www.npmjs.com/package/source-map-support) package, as it overwrites the captured stack trace in a way that makes it impossible for our processors to correctly parse it.
 
 </markdown></Alert>
-
 
 ## Making Source Maps Available to Sentry
 
@@ -57,23 +57,23 @@ Sentry provides an abstraction called **Releases** which you can attach source a
 
 You can do this with the help of the `sentry-webpack-plugin`, which internally uses our Sentry CLI.
 
--   Start by creating a new authentication token under **[Account] > API**.
--   Ensure you have `project:write` selected under scopes.
--   Install `@sentry/webpack-plugin` using `npm`
--   Create `.sentryclirc` file with necessary config (see Sentry Webpack Plugin docs below)
--   Update your `webpack.config.json`
+- Start by creating a new authentication token under **[Account] > API**.
+- Ensure you have `project:write` selected under scopes.
+- Install `@sentry/webpack-plugin` using `npm`
+- Create `.sentryclirc` file with necessary config (see Sentry Webpack Plugin docs below)
+- Update your `webpack.config.json`
 
 ```javascript
-const SentryPlugin = require('@sentry/webpack-plugin');
+const SentryPlugin = require("@sentry/webpack-plugin");
 
 module.exports = {
   // ... other config above ...
   plugins: [
     new SentryPlugin({
       release: process.env.RELEASE,
-      include: './dist'
-    })
-  ]
+      include: "./dist",
+    }),
+  ],
 };
 ```
 
@@ -83,8 +83,8 @@ Additionally, you’ll need to configure the client to send the `release`:
 
 ```javascript
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  release: process.env.RELEASE
+  dsn: "___PUBLIC_DSN___",
+  release: process.env.RELEASE,
 });
 ```
 
@@ -94,7 +94,6 @@ You don't _have_ to use _RELEASE_ environment variables. You can provide them in
 
 </markdown></Alert>
 
-
 Additional information can be found in the [Releases API documentation](/api/releases/).
 
 ## Updating Sentry SDK configuration to support Source Maps
@@ -102,11 +101,11 @@ Additional information can be found in the [Releases API documentation](/api/rel
 For Sentry to understand how to resolve errors sources, we need to modify the data we send. Thankfully, we have an integration called `RewriteFrames` which can be used to do just that.
 
 ```javascript
-import { RewriteFrames } from '@sentry/integrations';
+import { RewriteFrames } from "@sentry/integrations";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [new RewriteFrames()]
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new RewriteFrames()],
 });
 ```
 

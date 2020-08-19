@@ -4,12 +4,11 @@ doc_link: https://docs.sentry.io/platforms/javascript/react/
 support_level: production
 type: framework
 ---
-To use Sentry with your React application, you will need to use `@sentry/react` (Sentry’s Browser React SDK).
 
+To use Sentry with your React application, you will need to use `@sentry/react` (Sentry’s Browser React SDK).
 
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Note</h5><div class="alert-body content-flush-bottom">`@sentry/react` is a wrapper around the `@sentry/browser` package, with added functionality related to React. All methods available in the `@sentry/browser` package can also be imported from `@sentry/react`.</div>
 </div>
-
 
 Add the Sentry SDK as a dependency using yarn or npm:
 
@@ -28,14 +27,14 @@ After you've completed setting up a project in Sentry, Sentry will give you a va
 You should `init` the Sentry browser SDK as soon as possible during your application load up, before initializing React:
 
 ```jsx
-import React from 'react';
-import ReactDOM from 'react-dom';
-import * as Sentry from '@sentry/react';
-import App from './App';
+import React from "react";
+import ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
+import App from "./App";
 
-Sentry.init({dsn: "___PUBLIC_DSN___"});
+Sentry.init({ dsn: "___PUBLIC_DSN___" });
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById("root"));
 ```
 
 On its own, `@sentry/react` will report any uncaught exceptions triggered by your application.

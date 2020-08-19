@@ -4,13 +4,11 @@ doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=native
 support_level: production
 type: language
 ---
+
 Install the SDK by downloading the [latest
 release](https://github.com/getsentry/sentry-native/releases). Next, follow the
 instructions in the [_Native SDK Documentation_](/platforms/native/) to build and link the SDK
 library.
-
-
-
 
 Import and initialize the Sentry SDK early in your application setup:
 
@@ -31,8 +29,6 @@ int main(void) {
 
 Alternatively, the DSN can be passed as `SENTRY_DSN` environment variable during
 runtime. This can be especially useful for server applications.
-
-
 
 The quickest way to verify Sentry in your Native application is by capturing a message:
 

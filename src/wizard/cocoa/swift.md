@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/platforms/cocoa/
 support_level: production
 type: language
 ---
+
 This is the documentation for our Cocoa SDK (Swift and Objective-C).
 If you are migrating from an older version, please consider our [Migration Guide](https://github.com/getsentry/sentry-cocoa/blob/master/MIGRATION.md). Also always make sure to follow the [changelog](https://github.com/getsentry/sentry-cocoa/blob/master/CHANGELOG.md)
 
@@ -13,10 +14,10 @@ The SDK can be installed using [CocoaPods](http://cocoapods.org), [Carthage](htt
 
 Support for
 
-* iOS >= 8.0
-* tvOS >= 9.0
-* macOS >= 10.10
-* watchOS >= 2.0 with limited symbolication support and no hard crashes
+- iOS >= 8.0
+- tvOS >= 9.0
+- macOS >= 10.10
+- watchOS >= 2.0 with limited symbolication support and no hard crashes
 
 ### CocoaPods
 
@@ -31,6 +32,7 @@ target 'YourApp' do
     pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.2.0'
 end
 ```
+
 <!-- 5.2.0 -->
 
 Afterwards run `pod install`.
@@ -69,7 +71,7 @@ func application(_ application: UIApplication,
     SentrySDK.start { options in
         options.dsn = "___PUBLIC_DSN___"
         options.debug = true // Enabled debug when first installing is always helpful
-    }  
+    }
 
     // Or
 
@@ -87,5 +89,5 @@ func application(_ application: UIApplication,
 
 Before capturing crashes, you need to provide debug information to Sentry. Debug information is provided by uploading dSYM files using one of two methods, dependent on your setup:
 
--   [With Bitcode](/platforms/cocoa/dsym/#dsym-with-bitcode)
--   [Without Bitcode](/platforms/cocoa/dsym/#dsym-without-bitcode)
+- [With Bitcode](/platforms/cocoa/dsym/#dsym-with-bitcode)
+- [Without Bitcode](/platforms/cocoa/dsym/#dsym-without-bitcode)

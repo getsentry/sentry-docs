@@ -2,7 +2,7 @@
 title: Electron
 sidebar_order: 2100
 redirect_from:
-- /clients/electron/
+  - /clients/electron/
 ---
 
 `@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the main process and renderers, as well as collect native crash reports (Minidumps).
@@ -36,9 +36,10 @@ Once this is done, all unhandled exceptions are automatically captured by Sentry
 If you are seeing an issue similar to `TypeError: mod.require is not a function`, it means that Webpack is bundling your browser and node code together. To fix this, change the import statement of Sentry's `init` method to:
 
 ```js
-const { init } = (process.type === 'browser'
-  ? require('@sentry/electron/dist/main')
-  : require('@sentry/electron/dist/renderer'))
+const { init } =
+  process.type === "browser"
+    ? require("@sentry/electron/dist/main")
+    : require("@sentry/electron/dist/renderer");
 ```
 
 And use the Webpack's `DefinePlugin` plugin to specify the process type:
@@ -47,28 +48,27 @@ And use the Webpack's `DefinePlugin` plugin to specify the process type:
 plugins: [
   // main process
   new webpack.DefinePlugin({
-    'process.type': '"browser"'
+    "process.type": '"browser"',
   }),
 
   // renderer process
   new webpack.DefinePlugin({
-    'process.type': '"renderer"'
+    "process.type": '"renderer"',
   }),
-]
+];
 ```
 
 With these changes, when bundling the code for each of processes, Webpack will replace `process.type` with the constant and removes the inaccessible code:
 
 ```js
-const { init } = ('browser' === 'browser'
-  ? require('@sentry/electron/dist/main')
-  : require('@sentry/electron/dist/renderer'))
+const { init } =
+  "browser" === "browser"
+    ? require("@sentry/electron/dist/main")
+    : require("@sentry/electron/dist/renderer");
 
 // becomes >
 
-const { init } = (true
-  ? require('@sentry/electron/dist/main')
-  : undefined)
+const { init } = true ? require("@sentry/electron/dist/main") : undefined;
 ```
 
 ## Wizard
@@ -95,8 +95,8 @@ mainWindow = new BrowserWindow({
   width: 800,
   height: 600,
   webPreferences: {
-    preload: path.join(__dirname, 'sentry.js')
-  }
+    preload: path.join(__dirname, "sentry.js"),
+  },
 });
 ```
 
@@ -112,8 +112,8 @@ mainWindow = new BrowserWindow({
   height: 600,
   webPreferences: {
     nodeIntegration: false,
-    preload: path.join(__dirname, 'sentry.js')
-  }
+    preload: path.join(__dirname, "sentry.js"),
+  },
 });
 ```
 
@@ -128,7 +128,7 @@ The SDK is written in a way that prevents bundlers from processing any code that
 ```javascript
 module.exports = {
   externals: {
-    electron: 'commonjs electron',
+    electron: "commonjs electron",
   },
   // ...
 };
@@ -138,7 +138,7 @@ Or for Rollup:
 
 ```javascript
 export default {
-  external: ['electron'],
+  external: ["electron"],
   plugins: [commonjs()],
   // ...
 };
@@ -160,7 +160,6 @@ It is currently not possible to send events from native code (such as a C++ exte
 
 </markdown></Alert>
 
-
 ## Dealing with Minified Source Code
 
 The Electron SDK supports [Source Maps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/). If you upload source maps in addition to your minified files that data becomes available in Sentry. For more information see [_Source Maps_](/platforms/electron/).
@@ -176,7 +175,6 @@ Due to restrictions of macOS app sandboxing, native crashes cannot be collected 
 Minidumps are memory dumps of the process at the moment it crashes. As such, they might contain sensitive information on the target system, such as environment variables, local path names or maybe even in-memory representations of input fields including passwords. **Sentry does not store these memory dumps**. Once processed, they are removed immediately and all sensitive information is stripped from the resulting issues.
 
 </markdown></Alert>
-
 
 ### Providing Debug Information
 
@@ -214,12 +212,12 @@ It currently not possible create breadcrumbs or other event meta data from nativ
 You can also capture native crashes by starting the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) manually. Sentry is able to provide symbolicated stack traces and show system information, but no Electron-specific metadata, breadcrumbs or context information will be present. This is useful in cases where you cannot use the full Electron SDK:
 
 ```javascript
-const { crashReporter } = require('electron');
+const { crashReporter } = require("electron");
 crashReporter.start({
-  companyName: 'YourCompany',
-  productName: 'YourApp',
+  companyName: "YourCompany",
+  productName: "YourApp",
   ignoreSystemCrashHandler: true,
-  submitURL: '___MINIDUMP_URL___'
+  submitURL: "___MINIDUMP_URL___",
 });
 ```
 

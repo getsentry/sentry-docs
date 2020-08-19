@@ -1,4 +1,3 @@
-
 To get started with performance monitoring using Sentry's JavaScript SDK, first install the `@sentry/browser` and `@sentry/apm` packages:
 
 ```bash
@@ -12,14 +11,12 @@ $ npm install @sentry/browser @sentry/apm
 Next, initialize the integration in your call to `Sentry.init`:
 
 ```jsx
-import * as Sentry from '@sentry/browser';
-import { Integrations as ApmIntegrations } from '@sentry/apm';
+import * as Sentry from "@sentry/browser";
+import { Integrations as ApmIntegrations } from "@sentry/apm";
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  release: 'my-project-name@' + process.env.npm_package_version,
-  integrations: [
-    new ApmIntegrations.Tracing(),
-  ],
+  dsn: "___PUBLIC_DSN___",
+  release: "my-project-name@" + process.env.npm_package_version,
+  integrations: [new ApmIntegrations.Tracing()],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
@@ -32,10 +29,8 @@ Next, initialize the integration in your call to `Sentry.init`:
 
 ```js
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [
-    new Sentry.Integrations.Tracing(),
-  ],
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new Sentry.Integrations.Tracing()],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
@@ -55,29 +50,25 @@ The `Tracing` integration resides in the `@sentry/apm` package. You can add it t
 ```javascript
 // Without CDN
 
-import * as Sentry from '@sentry/browser';
-import { Integrations as ApmIntegrations } from '@sentry/apm';
+import * as Sentry from "@sentry/browser";
+import { Integrations as ApmIntegrations } from "@sentry/apm";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [
-    new ApmIntegrations.Tracing(),
-  ],
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new ApmIntegrations.Tracing()],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 
 // With CDN
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [
-    new Sentry.Integrations.Tracing(),
-  ],
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new Sentry.Integrations.Tracing()],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
 
-*NOTE:* The `Tracing` integration is available under `Sentry.Integrations.Tracing` when using the CDN bundle.
+_NOTE:_ The `Tracing` integration is available under `Sentry.Integrations.Tracing` when using the CDN bundle.
 
 To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 100% of your transactions.
 
@@ -91,7 +82,7 @@ For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-java
 
 The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **One important thing to note is that the `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL can help make sure that requests do not unnecessarily have the `sentry-trace` header attached.**
 
-*Example:*
+_Example:_
 
 - A frontend application is served from `example.com`
 - A backend service is served from `api.example.com`
@@ -99,7 +90,7 @@ The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript 
 - Therefore, the option needs to be configured like this: `new ApmIntegrations.Tracing({tracingOrigins: ['api.example.com']})`
 - Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
 
-*NOTE:* You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
+_NOTE:_ You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
 
 **beforeNavigation Option**
 
@@ -108,18 +99,18 @@ For `pageload` and `navigation` transactions, the `Tracing` integration uses the
 `beforeNavigation` is useful if you would like to leverage the routes from a custom routing library like `React Router` or if you want to reduce the cardinality of particular transactions.
 
 ```javascript
-import * as Sentry from '@sentry/browser';
-import { Integrations as ApmIntegrations } from '@sentry/apm';
+import * as Sentry from "@sentry/browser";
+import { Integrations as ApmIntegrations } from "@sentry/apm";
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   integrations: [
     new ApmIntegrations.Tracing({
       beforeNavigate: location => {
         // Here we are doing some basic parameter replacements, but we recommend
         // using your UI's routing library to find the matching route template here
         return location.pathname
-          .replace(/\d+/g, '<digits>')
-          .replace(/[a-f0-9]{32}/g, '<hash>');
+          .replace(/\d+/g, "<digits>")
+          .replace(/[a-f0-9]{32}/g, "<hash>");
       },
     }),
   ],
@@ -133,8 +124,8 @@ To manually instrument certain regions of your code, you can create a transactio
 This is valid for both JavaScript Browser and Node and works independently of the `Tracing` integration.
 
 ```javascript
-const transaction = Sentry.startTransaction({name: 'test-transaction'});
-const span = transaction.startChild({op: 'functionX'}); // This function returns a Span
+const transaction = Sentry.startTransaction({ name: "test-transaction" });
+const span = transaction.startChild({ op: "functionX" }); // This function returns a Span
 // functionCallX
 span.finish(); // Remember that only finished spans will be sent with the transaction
 transaction.finish(); // Finishing the transaction will send it to Sentry
@@ -169,19 +160,19 @@ This example will send a transaction `shopCheckout` to Sentry. The transaction w
 
 **Adding Additional Spans to the Transaction**
 
-The next example contains the implementation of the hypothetical `processItem ` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add to it all newly created spans as child operations. Keep in mind that each individual span needs to be manually finished; otherwise, that span will not show up in the transaction.
+The next example contains the implementation of the hypothetical `processItem` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add to it all newly created spans as child operations. Keep in mind that each individual span needs to be manually finished; otherwise, that span will not show up in the transaction.
 
 ```javascript
 function processItem(item, transaction) {
   const span = transaction.startChild({
     op: "http",
-    description: "GET /"
-  })
+    description: "GET /",
+  });
 
   return new Promise((resolve, reject) => {
-    http.get(`/items/${item.id}`, (response) => {
-      response.on('data', () => {});
-      response.on('end', () => {
+    http.get(`/items/${item.id}`, response => {
+      response.on("data", () => {});
+      response.on("end", () => {
         span.setTag("http.status_code", response.statusCode);
         span.setData("http.foobarsessionid", getFoobarSessionid(response));
         span.finish();
@@ -199,34 +190,34 @@ When Sentry captures transactions, they are assigned a transaction name. This na
 An example of doing this in a node.js application:
 
 ```javascript
-import { addGlobalEventProcessor } from '@sentry/node';
+import { addGlobalEventProcessor } from "@sentry/node";
 
 addGlobalEventProcess(event => {
   // if event is a transaction event
   if (event.type === "transaction") {
-	event.transaction = sanitizeTransactionName(event.transaction);
+    event.transaction = sanitizeTransactionName(event.transaction);
   }
   return event;
 });
 ```
 
-For browser JavaScript applications using the `Tracing` integration, the `beforeNavigate` option  can be used to better group navigation/pageload transactions together based on URL.
+For browser JavaScript applications using the `Tracing` integration, the `beforeNavigate` option can be used to better group navigation/pageload transactions together based on URL.
 
 ```javascript
-import * as Sentry from '@sentry/browser';
-import { Integrations as ApmIntegrations } from '@sentry/apm';
+import * as Sentry from "@sentry/browser";
+import { Integrations as ApmIntegrations } from "@sentry/apm";
 
 Sentry.init({
-	// ...
+  // ...
   integrations: [
     new ApmIntegrations.Tracing({
-      beforeNavigate: (location) => {
+      beforeNavigate: location => {
         // You could use your UI's routing library to find the matching
-		    // route template here. We don't have one right now, so do some basic
-		    // parameter replacements.
+        // route template here. We don't have one right now, so do some basic
+        // parameter replacements.
         return location.pathname
-        .replace(/\d+/g, '<digits>')
-        .replace(/[a-f0-9]{32}/g, '<hash>');
+          .replace(/\d+/g, "<digits>")
+          .replace(/[a-f0-9]{32}/g, "<hash>");
       },
     }),
   ],
@@ -239,11 +230,13 @@ In cases where you want to attach Spans to an already ongoing Transaction you ca
 
 ```javascript
 function myJsFunction() {
-  const transaction = Sentry.getCurrentHub().getScope().getTransaction();
+  const transaction = Sentry.getCurrentHub()
+    .getScope()
+    .getTransaction();
   if (transaction) {
     let span = transaction.startChild({
       op: "encode",
-      description: "parseAvatarImages"
+      description: "parseAvatarImages",
     });
     // Do something
     span.finish();
@@ -269,15 +262,15 @@ Instead, using `span.set_tag` and `span.set_data` preserves the details of this 
 const baseUrl = "https://empowerplant.io";
 const endpoint = "/api/0/projects/ep/setup_form";
 const parameters = {
-  "user_id": 314159265358979323846264338327,
-  "tracking_id": "EasyAsABC123OrSimpleAsDoReMi",
-  "product_name": PlantToHumanTranslator,
-  "product_id": 161803398874989484820458683436563811772030917980576,
+  user_id: 314159265358979323846264338327,
+  tracking_id: "EasyAsABC123OrSimpleAsDoReMi",
+  product_name: PlantToHumanTranslator,
+  product_id: 161803398874989484820458683436563811772030917980576,
 };
 
 const span = transaction.startChild({
   op: "request",
-  description: "setup form"
+  description: "setup form",
 });
 
 span.setTag("baseUrl", baseUrl);
@@ -285,5 +278,5 @@ span.setTag("endpoint", endpoint);
 span.setData("parameters", parameters);
 // you may also find some parameters to be valuable as tags
 span.setData("user_id", parameters.user_id);
-http.get(`${base_url}/${endpoint}/`, data=parameters);
+http.get(`${base_url}/${endpoint}/`, (data = parameters));
 ```

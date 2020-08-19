@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/clients/java/modules/log4j/
 support_level: production
 type: framework
 ---
+
 ### Installation
 
 Using Maven:
@@ -84,4 +85,5 @@ Alternatively, using the `log4j.xml` format:
 ```
 
 Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#configuration) for ways you can do this.
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
