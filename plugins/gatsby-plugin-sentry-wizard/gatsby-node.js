@@ -1,7 +1,7 @@
 const fs = require("fs");
 const jsdom = require("jsdom");
 
-exports.onPostBuild = async ({ graphql }, { source, output }) => {
+exports.createPages = async ({ graphql }, { source, output }) => {
   console.info(`Building wizard output from '${source}' source`);
   const results = await graphql(
     `
