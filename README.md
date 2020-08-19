@@ -224,3 +224,11 @@ Additionally code blocks also support `tabTitle` and `filename` properties:
 var foo = "bar";
 ```
 ````
+
+## Linting
+
+We use prettier to format our code.
+
+```
+yarn prettier:fix
+```
