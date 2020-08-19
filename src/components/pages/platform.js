@@ -13,8 +13,8 @@ const PlatformPage = props => {
       {...props}
       sidebar={
         <PlatformSidebar
-          platformName={pageContext.platformName}
-          integrationName={pageContext.integrationName}
+          platform={pageContext.platform}
+          integration={pageContext.integration}
         />
       }
     >
@@ -29,8 +29,14 @@ PlatformPage.propTypes = {
   }),
   pageContext: PropTypes.shape({
     title: PropTypes.string.isRequired,
-    platformName: PropTypes.string.isRequired,
-    integrationName: PropTypes.string,
+    platform: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+    }).isRequired,
+    integration: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+    }),
     integrations: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string.isRequired,

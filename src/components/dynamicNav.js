@@ -31,6 +31,7 @@ export const toTree = nodeList => {
 };
 
 export const renderChildren = (children, exclude) => {
+  console.log(children);
   return sortBy(
     children.filter(
       ({ name, node }) =>
@@ -49,7 +50,14 @@ export const renderChildren = (children, exclude) => {
   });
 };
 
-export default ({ root, title, tree, collapse = false, exclude = [] }) => {
+export default ({
+  root,
+  title,
+  tree,
+  collapse = false,
+  exclude = [],
+  prependChildren = [],
+}) => {
   if (root.indexOf("/") === 0) root = root.substr(1);
 
   let entity;
@@ -89,6 +97,7 @@ export default ({ root, title, tree, collapse = false, exclude = [] }) => {
       {header}
       {(!collapse || isActive) && entity.children && (
         <ul className="list-unstyled" data-sidebar-tree>
+          {prependChildren && !!prependChildren.length && prependChildren}
           {renderChildren(entity.children, exclude)}
         </ul>
       )}

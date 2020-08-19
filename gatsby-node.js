@@ -382,8 +382,12 @@ exports.createPages = async function({ actions, getNode, graphql, reporter }) {
       if (!pData.node) {
         throw new Error(`No node identified as root for ${platformName}`);
       }
-      const staticPageContext = {
+      const platformPageContext = {
         platformName,
+        platform: {
+          name: platformName,
+          title: getChild(pData.node).frontmatter.title,
+        },
         integrations: Object.keys(pData.integrations).map(integrationName => {
           const iData = pData.integrations[integrationName];
           return {
@@ -403,7 +407,7 @@ exports.createPages = async function({ actions, getNode, graphql, reporter }) {
           id: pData.node.id,
           title: getChild(pData.node).frontmatter.title,
           sidebar_order: getChild(pData.node).frontmatter.sidebar_order,
-          ...staticPageContext,
+          ...platformPageContext,
         },
       });
 
@@ -418,7 +422,7 @@ exports.createPages = async function({ actions, getNode, graphql, reporter }) {
             id: node.id,
             title: getChild(node).frontmatter.title,
             sidebar_order: getChild(node).frontmatter.sidebar_order,
-            ...staticPageContext,
+            ...platformPageContext,
           },
         });
       });
@@ -437,7 +441,7 @@ exports.createPages = async function({ actions, getNode, graphql, reporter }) {
             id: node.id,
             title: getChild(node).frontmatter.title,
             sidebar_order: getChild(node).frontmatter.sidebar_order,
-            ...staticPageContext,
+            ...platformPageContext,
           },
         });
       });
@@ -451,6 +455,15 @@ exports.createPages = async function({ actions, getNode, graphql, reporter }) {
           );
         }
 
+        const integrationPageContext = {
+          integrationName,
+          integration: {
+            name: integrationName,
+            title: getChild(iData.node).frontmatter.title,
+          },
+          ...platformPageContext,
+        };
+
         console.info(
           `Creating platform pages for ${platformName} -> ${integrationName}`
         );
@@ -461,8 +474,7 @@ exports.createPages = async function({ actions, getNode, graphql, reporter }) {
             id: iData.node.id,
             title: getChild(iData.node).frontmatter.title,
             sidebar_order: getChild(iData.node).frontmatter.sidebar_order,
-            integrationName,
-            ...staticPageContext,
+            ...integrationPageContext,
           },
         });
 
@@ -479,8 +491,7 @@ exports.createPages = async function({ actions, getNode, graphql, reporter }) {
               id: node.id,
               title: getChild(node).frontmatter.title,
               sidebar_order: getChild(node).frontmatter.sidebar_order,
-              integrationName,
-              ...staticPageContext,
+              ...integrationPageContext,
             },
           });
         });
@@ -500,8 +511,7 @@ exports.createPages = async function({ actions, getNode, graphql, reporter }) {
             context: {
               id: node.id,
               title: getChild(node).frontmatter.title,
-              integrationName,
-              ...staticPageContext,
+              ...integrationPageContext,
             },
           });
         });

@@ -2,6 +2,7 @@ import React from "react";
 import { StaticQuery, graphql } from "gatsby";
 
 import DynamicNav, { toTree } from "./dynamicNav";
+import SmartLink from "./smartLink";
 import { sortBy } from "~src/utils";
 
 const navQuery = graphql`
@@ -20,7 +21,10 @@ const navQuery = graphql`
   }
 `;
 
-export default ({ platformName, integrationName }) => {
+export default ({ platform, integration }) => {
+  const platformName = platform.name;
+  const integrationName = integration ? integration.name : null;
+
   return (
     <StaticQuery
       query={navQuery}
@@ -28,7 +32,7 @@ export default ({ platformName, integrationName }) => {
         const tree = toTree(
           sortBy(
             data.allSitePage.nodes
-              .filter(n => n.context.platformName === platformName)
+              .filter(n => n.context.platform.name === platformName)
               .filter(n => !n.context.draft),
             n => n.path
           )
@@ -46,6 +50,15 @@ export default ({ platformName, integrationName }) => {
             <DynamicNav
               root={`/platforms/${platformName}/integrations`}
               title={integrationName ? "Other Integrations" : "Integrations"}
+              prependChildren={
+                integrationName
+                  ? [
+                      <SmartLink to={`/platforms/${platformName}/`}>
+                        {platform.title}
+                      </SmartLink>,
+                    ]
+                  : null
+              }
               exclude={
                 integrationName
                   ? [
