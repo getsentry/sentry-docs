@@ -227,8 +227,14 @@ var foo = "bar";
 
 ## Linting
 
-We use prettier to format our code.
+We use prettier to format our code. Run prettier if you get linting errors in CI.
 
-```
+```bash
 yarn prettier:fix
+```
+
+If you want to run prettier on mdx and markdown files, run
+
+```bash
+yarn prettier:fix:all
 ```
