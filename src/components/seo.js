@@ -20,78 +20,73 @@ function SEO({ description, lang, meta, keywords, title, file }) {
     <StaticQuery
       query={detailsQuery}
       render={data => {
-        const robots = (
-          (
-            file &&
-            file.childMarkdownRemark && 
-            file.childMarkdownRemark.frontmatter && 
-            file.childMarkdownRemark.frontmatter.robots) 
-          || 
-          (
-            file &&
-            file.childMdx && 
+        const noindex =
+          (file &&
+            file.childMarkdownRemark &&
+            file.childMarkdownRemark.frontmatter &&
+            file.childMarkdownRemark.frontmatter.noindex) ||
+          (file &&
+            file.childMdx &&
             file.childMdx.frontmatter &&
-            file.childMdx.frontmatter.robots
-            )
-          );
-          
+            file.childMdx.frontmatter.noindex);
+
         const metaDescription =
           description || data.site.siteMetadata.description;
         return (
           <Helmet
             htmlAttributes={{
-              lang
+              lang,
             }}
             title={title}
             titleTemplate={`%s | ${data.site.siteMetadata.title}`}
             meta={[
               {
                 name: "description",
-                content: metaDescription
+                content: metaDescription,
               },
               {
                 property: "og:title",
-                content: title
+                content: title,
               },
               {
                 property: "og:description",
-                content: metaDescription
+                content: metaDescription,
               },
               {
                 property: "og:type",
-                content: "website"
+                content: "website",
               },
               {
                 name: "twitter:card",
-                content: "summary"
+                content: "summary",
               },
               {
                 name: "twitter:creator",
-                content: data.site.siteMetadata.author
+                content: data.site.siteMetadata.author,
               },
               {
                 name: "twitter:title",
-                content: title
+                content: title,
               },
               {
                 name: "twitter:description",
-                content: metaDescription
-              }
+                content: metaDescription,
+              },
             ]
               .concat(
                 keywords.length > 0
                   ? {
                       name: "keywords",
-                      content: keywords.join(", ")
+                      content: keywords.join(", "),
                     }
                   : []
               )
               .concat(
-                robots
+                noindex
                   ? {
-                    property: "robots",
-                    content: robots
-                  }
+                      property: "robots",
+                      content: "noindex",
+                    }
                   : []
               )
               .concat(meta)}
@@ -105,7 +100,7 @@ function SEO({ description, lang, meta, keywords, title, file }) {
 SEO.defaultProps = {
   lang: "en",
   meta: [],
-  keywords: []
+  keywords: [],
 };
 
 SEO.propTypes = {
@@ -114,7 +109,7 @@ SEO.propTypes = {
   meta: PropTypes.array,
   file: PropTypes.object,
   keywords: PropTypes.arrayOf(PropTypes.string),
-  title: PropTypes.string.isRequired
+  title: PropTypes.string.isRequired,
 };
 
 export default SEO;

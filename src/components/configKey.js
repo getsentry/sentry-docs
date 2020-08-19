@@ -48,7 +48,13 @@ const formatCase = (style, value) => {
   }
 };
 
-const ConfigKey = ({ name, supported = [], notSupported = [], children }) => {
+const ConfigKey = ({
+  name,
+  supported = [],
+  notSupported = [],
+  children,
+  platform,
+}) => {
   return (
     <StaticQuery
       query={query}
@@ -56,9 +62,11 @@ const ConfigKey = ({ name, supported = [], notSupported = [], children }) => {
         return (
           <Location>
             {({ location }) => {
-              const platform = normalizeSlug(
-                parse(location.search).platform || null
-              );
+              if (!platform) {
+                platform = normalizeSlug(
+                  parse(location.search).platform || null
+                );
+              }
               let activePlatform =
                 platforms.find(p => normalizeSlug(p.slug) === platform) || {};
 
@@ -103,6 +111,7 @@ const ConfigKey = ({ name, supported = [], notSupported = [], children }) => {
 
 ConfigKey.propTypes = {
   name: PropTypes.string.isRequired,
+  platform: PropTypes.string,
   supported: PropTypes.arrayOf(PropTypes.string),
   notSupported: PropTypes.arrayOf(PropTypes.string),
 };
