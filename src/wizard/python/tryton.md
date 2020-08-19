@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/platforms/python/tryton/
 support_level: production
 type: framework
 ---
+
 The Tryton integration adds support for the [Tryton Framework Server](https://www.tryton.org/).
 
 To configure the SDK, initialize it with the integration in a custom wsgi.py script:

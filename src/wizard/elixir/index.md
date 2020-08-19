@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/clients/elixir/
 support_level: production
 type: language
 ---
+
 ## Installation {#install}
 
 Edit your mix.exs file to add it as a dependency and add the `:sentry` package to your applications:
@@ -62,6 +63,7 @@ If using an environment with Plug or Phoenix, add the following to your Plug.Rou
 use Plug.ErrorHandler
 use Sentry.Plug
 ```
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
 ## Capturing Errors

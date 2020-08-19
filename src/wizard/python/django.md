@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/platforms/python/django/
 support_level: production
 type: framework
 ---
+
 The Django integration adds support for the [Django Web Framework](https://www.djangoproject.com/)
 from Version 1.6 upwards.
 
@@ -13,7 +14,7 @@ Install `sentry-sdk`:
 $ pip install --upgrade sentry-sdk
 ```
 
-To configure the SDK, initialize it with the Django integration in your ``settings.py`` file:
+To configure the SDK, initialize it with the Django integration in your `settings.py` file:
 
 ```python
 import sentry_sdk

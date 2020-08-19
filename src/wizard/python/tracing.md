@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/performance-monitoring/getting-started/?platfor
 support_level: production
 type: language
 ---
+
 To manually instrument certain regions of your code, you can create a transaction to capture them.
 
 The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:

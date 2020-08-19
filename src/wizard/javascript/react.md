@@ -4,12 +4,11 @@ doc_link: https://docs.sentry.io/platforms/javascript/react/
 support_level: production
 type: framework
 ---
-To use Sentry with your React application, you will need to use `@sentry/react` (Sentry’s Browser React SDK).
 
+To use Sentry with your React application, you will need to use `@sentry/react` (Sentry’s Browser React SDK).
 
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Note</h5><div class="alert-body content-flush-bottom">`@sentry/react` is a wrapper around the `@sentry/browser` package, with added functionality related to React. All methods available in the `@sentry/browser` package can also be imported from `@sentry/react`.</div>
 </div>
-
 
 Add the Sentry SDK as a dependency using yarn or npm:
 
@@ -42,7 +41,7 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById("root"));
 ```
 
 The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.

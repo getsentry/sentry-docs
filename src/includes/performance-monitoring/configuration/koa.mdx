@@ -21,7 +21,7 @@ const domain = require("domain");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0 // Be sure to lower this in production
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 
 // not mandatory, but adding domains do help a lot with breadcrumbs
@@ -29,14 +29,14 @@ const requestHandler = (ctx, next) => {
   return new Promise((resolve, _) => {
     const local = domain.create();
     local.add(ctx);
-    local.on("error", (err) => {
+    local.on("error", err => {
       ctx.status = err.status || 500;
       ctx.body = err.message;
       ctx.app.emit("error", err, ctx);
     });
     local.run(async () => {
-      Sentry.getCurrentHub().configureScope((scope) =>
-        scope.addEventProcessor((event) =>
+      Sentry.getCurrentHub().configureScope(scope =>
+        scope.addEventProcessor(event =>
           Sentry.Handlers.parseRequest(event, ctx.request, { user: false })
         )
       );
@@ -85,8 +85,8 @@ app.use(tracingMiddleWare);
 
 // usual error handler
 app.on("error", (err, ctx) => {
-  Sentry.withScope(function (scope) {
-    scope.addEventProcessor(function (event) {
+  Sentry.withScope(function(scope) {
+    scope.addEventProcessor(function(event) {
       return Sentry.Handlers.parseRequest(event, ctx.request);
     });
     Sentry.captureException(err);

@@ -19,7 +19,7 @@ $ npm install @sentry/node @sentry/apm
 To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 100% of all your transactions:
 
 ```javascript
-const Sentry = require('@sentry/node');
+const Sentry = require("@sentry/node");
 // or use es6 import statements
 // import * as Sentry from '@sentry/node';
 
@@ -30,14 +30,14 @@ const Apm = require("@sentry/apm");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0 // Be sure to lower this in production
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 
 // Your test code to verify it works
 
 const transaction = Sentry.startTransaction({
-  op: 'test',
-  name: 'My First Test Transaction',
+  op: "test",
+  name: "My First Test Transaction",
 });
 
 setTimeout(() => {
@@ -68,12 +68,12 @@ const app = express();
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-      // enable HTTP calls tracing
-      new Sentry.Integrations.Http({ tracing: true }),
-      // enable Express.js middleware tracing
-      new Apm.Integrations.Express({ app })
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+    // enable Express.js middleware tracing
+    new Apm.Integrations.Express({ app }),
   ],
-  tracesSampleRate: 1.0 // Be sure to lower this in production
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 
 // RequestHandler creates a separate execution context using domains, so that every
@@ -102,11 +102,11 @@ By default, Sentry error events will not get trace context unless you configure 
 const Sentry = require("@sentry/node");
 const Apm = require("@sentry/apm");
 
-const http = require('http');
+const http = require("http");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.00,
+  tracesSampleRate: 1.0,
   integrations: [
     // enable HTTP calls tracing
     new Sentry.Integrations.Http({ tracing: true }),
@@ -115,7 +115,7 @@ Sentry.init({
 
 const transaction = Sentry.startTransaction({
   op: "transaction",
-  name: 'My Transaction'
+  name: "My Transaction",
 });
 
 // Note that we set the transaction as the span on the scope.
@@ -129,21 +129,21 @@ let request;
 
 try {
   // this should generate an http span
-  request = http.get('http://sentry.io', (res) => {
+  request = http.get("http://sentry.io", res => {
     console.log(`STATUS: ${res.statusCode}`);
     console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
   });
 
   // this error event should have trace context
   foo();
-} catch(err) {
+} catch (err) {
   Sentry.captureException(err);
 }
 
-request.on('close', () => {
+request.on("close", () => {
   transaction.finish();
 });
-````
+```
 
 **Manual Instrumentation**
 
@@ -155,15 +155,15 @@ The following example creates a transaction for a part of the code that contains
 app.use(function processItems(req, res, next) {
   const item = getFromQueue();
   const transaction = Sentry.startTransaction({
-      op: "task",
-      name: item.getTransaction()
-  })
+    op: "task",
+    name: item.getTransaction(),
+  });
 
   // processItem may create more spans internally (see next examples)
   processItem(item, transaction).then(() => {
-      transaction.finish();
-      next();
-  })
+    transaction.finish();
+    next();
+  });
 });
 ```
 
@@ -173,11 +173,13 @@ In cases where you want to attach Spans to an already ongoing Transaction you ca
 
 ```javascript
 app.get("/success", function successHandler(req, res) {
-  const transaction = Sentry.getCurrentHub().getScope().getTransaction();
+  const transaction = Sentry.getCurrentHub()
+    .getScope()
+    .getTransaction();
   if (transaction) {
     let span = transaction.startChild({
       op: "encode",
-      description: "parseAvatarImages"
+      description: "parseAvatarImages",
     });
     // Do something
     span.finish();

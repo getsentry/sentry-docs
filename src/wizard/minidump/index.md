@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/platforms/native/minidump/
 support_level: production
 type: framework
 ---
+
 ## Creating and Uploading Minidumps {#minidump-integration}
 
 Depending on your operating system and programming language, there are various

@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/platforms/javascript/angular/
 support_level: production
 type: framework
 ---
+
 On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application. Additionally, you can configure `@sentry/browser` to catch any Angular-specific exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) component. This is also a great opportunity to collect user feedback by using `Sentry.showReportDialog`.
 
 First, install `@sentry/browser`:
@@ -33,9 +34,11 @@ Sentry.init({
   // TryCatch has to be configured to disable XMLHttpRequest wrapping, as we are going to handle
   // http module exceptions manually in Angular's ErrorHandler and we don't want it to capture the same error twice.
   // Please note that TryCatch configuration requires at least @sentry/browser v5.16.0.
-  integrations: [new Sentry.Integrations.TryCatch({
-    XMLHttpRequest: false,
-  })],
+  integrations: [
+    new Sentry.Integrations.TryCatch({
+      XMLHttpRequest: false,
+    }),
+  ],
 });
 
 @Injectable()
@@ -99,9 +102,8 @@ export class SentryErrorHandler implements ErrorHandler {
   declarations: [AppComponent],
   imports: [BrowserModule],
   providers: [{ provide: ErrorHandler, useClass: SentryErrorHandler }],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-
 export class AppModule {}
 ```
 
@@ -118,14 +120,12 @@ export class ApiService {
   }
 
   formatErrors(e) {
-    console.log('Captured service error');
+    console.log("Captured service error");
     return throwError(e.error);
   }
 
   get(path) {
-    return this.http
-      .get(path)
-      .pipe(catchError(this.formatErrors));
+    return this.http.get(path).pipe(catchError(this.formatErrors));
   }
 }
 ```
@@ -139,9 +139,7 @@ export class ApiService {
   }
 
   get(path) {
-    return this.http
-      .get(path)
-      .pipe(catchError((e) => throwError(e)));
+    return this.http.get(path).pipe(catchError(e => throwError(e)));
   }
 }
 ```
@@ -161,22 +159,19 @@ npm install @sentry/browser @sentry/integrations
 ```
 
 ```javascript
-import angular from 'angular';
-import * as Sentry from '@sentry/browser';
-import { Angular as AngularIntegration } from '@sentry/integrations';
+import angular from "angular";
+import * as Sentry from "@sentry/browser";
+import { Angular as AngularIntegration } from "@sentry/integrations";
 
 // Make sure to call Sentry.init after importing AngularJS.
 // You can also pass {angular: AngularInstance} to the Integrations.Angular() constructor.
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [
-    new AngularIntegration(),
-  ],
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new AngularIntegration()],
 });
 
 // Finally require ngSentry as a dependency in your application module.
-angular.module('yourApplicationModule', ['ngSentry']);
-
+angular.module("yourApplicationModule", ["ngSentry"]);
 ```
 
 In case you're using the CDN version or the Loader, Sentry provides a standalone file for every integration:
@@ -199,11 +194,10 @@ In case you're using the CDN version or the Loader, Sentry provides a standalone
 
 <script>
   Sentry.init({
-    dsn: '___PUBLIC_DSN___',
-    integrations: [
-      new Sentry.Integrations.Angular(),
-    ],
+    dsn: "___PUBLIC_DSN___",
+    integrations: [new Sentry.Integrations.Angular()],
   });
 </script>
 ```
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->

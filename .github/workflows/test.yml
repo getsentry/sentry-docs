@@ -1,4 +1,4 @@
-name: Test
+name: Build and Test
 
 on:
   push:
@@ -7,12 +7,47 @@ on:
     branches: [master]
 
 jobs:
-  build:
+  job_build:
+    name: Build
     runs-on: ubuntu-latest
     env:
       JEKYLL_ENABLE_PLATFORM_API: false
     steps:
       - uses: actions/checkout@v2
       - uses: volta-cli/action@v1
+      - uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - name: Install
+        run: yarn install
+
+  job_lint:
+    name: Lint
+    needs: job_build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: volta-cli/action@v1
+      - uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install
-      - run: yarn test
+      - name: Run JavaScript Linter (*.jsx, *.js)
+        run: yarn prettier:check
+
+  job_test:
+    name: Test
+    needs: job_build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: volta-cli/action@v1
+      - uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - run: yarn install
+      - name: Run Tests
+        run: yarn test
