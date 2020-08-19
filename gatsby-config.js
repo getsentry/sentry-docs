@@ -1,4 +1,7 @@
-// const path = require("path");
+require("ts-node").register({
+  files: true, // to that TS node hooks have access to local typings too
+});
+
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
 
