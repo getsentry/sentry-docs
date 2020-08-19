@@ -64,5 +64,4 @@ module.exports = async ({ markdownAST, markdownNode }, options) => {
       });
     }
   );
-  return markdownAST;
 };

@@ -1,7 +1,22 @@
 const fs = require("fs");
 const jsdom = require("jsdom");
 
-exports.createPages = async ({ graphql }, { source, output }) => {
+const rmDirSync = function(dirPath) {
+  try {
+    var files = fs.readdirSync(dirPath);
+  } catch (e) {
+    return;
+  }
+  if (files.length > 0)
+    for (var i = 0; i < files.length; i++) {
+      var filePath = dirPath + "/" + files[i];
+      if (fs.statSync(filePath).isFile()) fs.unlinkSync(filePath);
+      else rmDirSync(filePath);
+    }
+  fs.rmdirSync(dirPath);
+};
+
+exports.onPostBuild = async ({ graphql }, { source, output }) => {
   console.info(`Building wizard output from '${source}' source`);
   const results = await graphql(
     `
@@ -63,6 +78,9 @@ const writeJson = async (path, nodes) => {
     if (sub) platforms[main][sub] = data;
     else platforms[main]["_self"] = data;
   });
+
+  // remove files to ensure we're working correctly in prod
+  // rmDirSync(path);
 
   console.info(`Writing '_index.json'`);
   fs.mkdirSync(path, { recursive: true });
