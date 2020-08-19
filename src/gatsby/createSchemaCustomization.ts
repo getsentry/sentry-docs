@@ -7,6 +7,19 @@ export default ({ actions, schema }) => {
       title: String
       sidebar_order: Int
       draft: Boolean
+
+      platform: PlatformContext
+      framework: FrameworkContext
+    }
+
+    type PlatformContext {
+      name: String!
+      title: String!
+    }
+
+    type FrameworkContext {
+      name: String!
+      title: String!
     }
 
     type SitePage implements Node {

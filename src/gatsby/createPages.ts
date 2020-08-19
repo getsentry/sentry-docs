@@ -26,28 +26,26 @@ const buildPlatformData = nodes => {
     let match;
 
     const platformName = node.relativePath.match(/^([^\/]+)\//)[1];
-    const integrationName = (match = node.relativePath.match(
-      /^[^\/]+\/integrations\/([^\/]+)\//
+    const frameworkName = (match = node.relativePath.match(
+      /^[^\/]+\/frameworks\/([^\/]+)\//
     ))
       ? match[1]
       : null;
     const isCommon =
-      !integrationName && !!node.relativePath.match(/^[^\/]+\/common\//);
+      !frameworkName && !!node.relativePath.match(/^[^\/]+\/common\//);
     const isRoot =
-      !integrationName &&
+      !frameworkName &&
       !isCommon &&
       node.relativePath.match(/^([^\/]+)\/index\.mdx?$/);
     const isIntegrationRoot =
-      integrationName &&
-      node.relativePath.match(
-        /^([^\/]+)\/integrations\/([^\/]+)\/index\.mdx?$/
-      );
+      frameworkName &&
+      node.relativePath.match(/^([^\/]+)\/frameworks\/([^\/]+)\/index\.mdx?$/);
 
     if (!platforms[platformName]) {
       platforms[platformName] = {
         node: null,
         children: [],
-        integrations: {},
+        frameworks: {},
         common: [],
       };
     }
@@ -56,14 +54,14 @@ const buildPlatformData = nodes => {
       pData.node = node;
     } else if (isCommon) {
       pData.common.push(node);
-    } else if (integrationName) {
-      if (!pData.integrations[integrationName]) {
-        pData.integrations[integrationName] = {
+    } else if (frameworkName) {
+      if (!pData.frameworks[frameworkName]) {
+        pData.frameworks[frameworkName] = {
           node: null,
           children: [],
         };
       }
-      const iData = pData.integrations[integrationName];
+      const iData = pData.frameworks[frameworkName];
       if (isIntegrationRoot) {
         iData.node = node;
       } else {
@@ -73,13 +71,13 @@ const buildPlatformData = nodes => {
       pData.children.push(node);
     }
   });
-  return buildPlatformData;
+  return platforms;
 };
 
 type PlatformData = {
   node: Node;
   children: Node[];
-  integrations: {
+  frameworks: {
     [name: string]: {
       node: Node;
       children: Node[];
@@ -211,67 +209,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
       reporter
     );
 
-    const platforms: { [key: string]: PlatformData } = {};
-
-    // build up `platforms` data
-    nodes.forEach((node: any) => {
-      if (
-        node.relativePath === "index.mdx" ||
-        node.relativePath === "index.md"
-      ) {
-        return;
-      }
-
-      let match;
-
-      const platformName = node.relativePath.match(/^([^\/]+)\//)[1];
-      const integrationName = (match = node.relativePath.match(
-        /^[^\/]+\/integrations\/([^\/]+)\//
-      ))
-        ? match[1]
-        : null;
-      const isCommon =
-        !integrationName && !!node.relativePath.match(/^[^\/]+\/common\//);
-      const isRoot =
-        !integrationName &&
-        !isCommon &&
-        node.relativePath.match(/^([^\/]+)\/index\.mdx?$/);
-      const isIntegrationRoot =
-        integrationName &&
-        node.relativePath.match(
-          /^([^\/]+)\/integrations\/([^\/]+)\/index\.mdx?$/
-        );
-
-      if (!platforms[platformName]) {
-        platforms[platformName] = {
-          node: null,
-          children: [],
-          integrations: {},
-          common: [],
-        };
-      }
-      const pData = platforms[platformName];
-      if (isRoot) {
-        pData.node = node;
-      } else if (isCommon) {
-        pData.common.push(node);
-      } else if (integrationName) {
-        if (!pData.integrations[integrationName]) {
-          pData.integrations[integrationName] = {
-            node: null,
-            children: [],
-          };
-        }
-        const iData = pData.integrations[integrationName];
-        if (isIntegrationRoot) {
-          iData.node = node;
-        } else {
-          iData.children.push(node);
-        }
-      } else {
-        pData.children.push(node);
-      }
-    });
+    const platforms = buildPlatformData(nodes);
 
     // begin creating pages from `platforms`
     const component = require.resolve(`../components/pages/platform.js`);
@@ -282,18 +220,10 @@ export default async function({ actions, getNode, graphql, reporter }) {
         throw new Error(`No node identified as root for ${platformName}`);
       }
       const platformPageContext = {
-        platformName,
         platform: {
           name: platformName,
           title: getChild(pData.node).frontmatter.title,
         },
-        integrations: Object.keys(pData.integrations).map(integrationName => {
-          const iData = pData.integrations[integrationName];
-          return {
-            name: integrationName,
-            title: getChild(iData.node).frontmatter.title,
-          };
-        }),
       };
 
       console.info(`Creating platform pages for ${platformName}`);
@@ -310,7 +240,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
         },
       });
 
-      // create all direct children (similar behavior to integration children)
+      // create all direct children (similar behavior to framework children)
       pData.children.forEach(node => {
         const path = `/platforms${createFilePath({ node, getNode })}`;
         console.info(`Creating platform child for ${platformName}: ${path}`);
@@ -326,7 +256,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
         });
       });
 
-      // duplicate common for platform (similar behavior to integration common)
+      // duplicate common for platform (similar behavior to framework common)
       pData.common.forEach(node => {
         const path = `/platforms${createFilePath({ node, getNode }).replace(
           /^\/[^\/]+\/common\//,
@@ -345,26 +275,25 @@ export default async function({ actions, getNode, graphql, reporter }) {
         });
       });
 
-      // create integration roots
-      Object.keys(pData.integrations).forEach(integrationName => {
-        const iData = pData.integrations[integrationName];
+      // create framework roots
+      Object.keys(pData.frameworks).forEach(frameworkName => {
+        const iData = pData.frameworks[frameworkName];
         if (!iData.node) {
           throw new Error(
-            `No node identified as root for ${platformName} -> ${integrationName}`
+            `No node identified as root for ${platformName} -> ${frameworkName}`
           );
         }
 
-        const integrationPageContext = {
-          integrationName,
-          integration: {
-            name: integrationName,
+        const frameworkPageContext = {
+          framework: {
+            name: frameworkName,
             title: getChild(iData.node).frontmatter.title,
           },
           ...platformPageContext,
         };
 
         console.info(
-          `Creating platform pages for ${platformName} -> ${integrationName}`
+          `Creating platform pages for ${platformName} -> ${frameworkName}`
         );
         actions.createPage({
           path: `/platforms${createFilePath({ node: iData.node, getNode })}`,
@@ -373,15 +302,15 @@ export default async function({ actions, getNode, graphql, reporter }) {
             id: iData.node.id,
             title: getChild(iData.node).frontmatter.title,
             sidebar_order: getChild(iData.node).frontmatter.sidebar_order,
-            ...integrationPageContext,
+            ...frameworkPageContext,
           },
         });
 
-        // create integration children
+        // create framework children
         iData.children.forEach(node => {
           const path = `/platforms${createFilePath({ node, getNode })}`;
           console.info(
-            `Creating platform child for ${platformName} -> ${integrationName}: ${path}`
+            `Creating platform child for ${platformName} -> ${frameworkName}: ${path}`
           );
           actions.createPage({
             path,
@@ -390,19 +319,19 @@ export default async function({ actions, getNode, graphql, reporter }) {
               id: node.id,
               title: getChild(node).frontmatter.title,
               sidebar_order: getChild(node).frontmatter.sidebar_order,
-              ...integrationPageContext,
+              ...frameworkPageContext,
             },
           });
         });
 
-        // duplicate common for integration
+        // duplicate common for framework
         pData.common.forEach(node => {
           const path = `/platforms${createFilePath({ node, getNode }).replace(
             /^\/[^\/]+\/common\//,
-            `/${platformName}/integrations/${integrationName}/`
+            `/${platformName}/frameworks/${frameworkName}/`
           )}`;
           console.info(
-            `Creating platform common for ${platformName} -> ${integrationName}: ${path}`
+            `Creating platform common for ${platformName} -> ${frameworkName}: ${path}`
           );
           actions.createPage({
             path,
@@ -410,7 +339,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
             context: {
               id: node.id,
               title: getChild(node).frontmatter.title,
-              ...integrationPageContext,
+              ...frameworkPageContext,
             },
           });
         });

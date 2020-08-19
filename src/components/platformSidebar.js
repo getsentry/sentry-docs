@@ -2,7 +2,6 @@ import React from "react";
 import { StaticQuery, graphql } from "gatsby";
 
 import DynamicNav, { toTree } from "./dynamicNav";
-import SmartLink from "./smartLink";
 import { sortBy } from "~src/utils";
 
 const navQuery = graphql`
@@ -23,9 +22,9 @@ const navQuery = graphql`
   }
 `;
 
-export default ({ platform, integration }) => {
+export default ({ platform, framework }) => {
   const platformName = platform.name;
-  const integrationName = integration ? integration.name : null;
+  const frameworkName = framework ? framework.name : null;
 
   return (
     <StaticQuery
@@ -44,27 +43,25 @@ export default ({ platform, integration }) => {
         );
         return (
           <ul className="list-unstyled" data-sidebar-tree>
-            {integrationName ? (
+            {frameworkName ? (
               <DynamicNav
-                root={`platforms/${platformName}/integrations/${integrationName}`}
+                root={`platforms/${platformName}/frameworks/${frameworkName}`}
                 tree={tree}
               />
             ) : (
               <DynamicNav root={`platforms/${platformName}`} tree={tree} />
             )}
             <DynamicNav
-              root={`/platforms/${platformName}/integrations`}
-              title={integrationName ? "Other Integrations" : "Integrations"}
+              root={`/platforms/${platformName}/frameworks`}
+              title={frameworkName ? "Other Frameworks" : "Frameworks"}
               prependLinks={
-                integrationName
+                frameworkName
                   ? [[`/platforms/${platformName}/`, platform.title]]
                   : null
               }
               exclude={
-                integrationName
-                  ? [
-                      `/platforms/${platformName}/integrations/${integrationName}/`,
-                    ]
+                frameworkName
+                  ? [`/platforms/${platformName}/frameworks/${frameworkName}/`]
                   : []
               }
               tree={tree}
