@@ -109,7 +109,9 @@ yarn sdk:copy javascript angular
 This for example will take the `src/platforms/javascript` content and symlink everything into `src/platforms/angular`.
 Since all the files are symlinks the content will be the same. Files that have different content in the new folder need to be deleted and created manually again to be able to change the content. If you change something in the symlink it will change the original file.
 
-## Markdown Templates
+## Extended Markdown Syntax
+
+### Variables
 
 A transformation is exposed to both Markdown and MDX files which supports processing variables in a Django/Jekyll-style way. The variables available are globally scoped and configured within `gatsby-config.js` (via `gatsby-remark-variables`).
 
@@ -155,7 +157,7 @@ Returns the checksum of a given file in a package.
 packages.checksum('sentry.javacript.browser', 'bundle.min.js', 'sha384')
 ```
 
-## MDX Tags
+## Extended MDX Syntax
 
 We expose several default tags to aid with documentation.
 
@@ -197,3 +199,28 @@ Description of send-default-pii
 
 </markdown></ConfigKey>
 ```
+
+### Code Blocks
+
+Consecutively code blocks will be automatically collapsed into a tabulated container.  This behavior is generally useful if you want to define an example in multiple languages:
+
+
+````markdown
+```javascript
+function foo() { return 'bar' }
+```
+
+```python
+def foo():
+  return 'bar'
+````
+
+Some times you may not want this behavior. To solve this you can either break up the code blocks with some additional text, or you can use the ``<Break />`` component.
+
+Additionally code blocks also support `tabTitle` and `filename` properties:
+
+````markdown
+```javascript {tabTitle: Hello} {filename: index.js}
+var foo = "bar";
+```
+````
