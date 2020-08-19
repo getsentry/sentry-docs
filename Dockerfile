@@ -27,6 +27,9 @@ ADD . ./
 RUN yarn
 RUN gatsby build
 
+# Simple test to make sure this stuff exists
+RUN less public/_platforms/javascript.json | grep "{{ packages" && exit 1
+
 FROM gatsbyjs/gatsby
 
 # https://github.com/gatsbyjs/gatsby-docker/blob/master/nginx-boot.sh
