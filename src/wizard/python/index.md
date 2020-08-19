@@ -21,7 +21,7 @@ sentry_sdk.init(
 )
 ```
 
-The above configuration captures both error and performance data. To reduce the volume of performance data captured, change traces_sample_rate to a value between 0 and 1.
+The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `traces_sample_rate` to a value between 0 and 1.
 
 One way to verify your setup is by intentionally sending an event that breaks your application.
 
