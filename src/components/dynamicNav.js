@@ -31,7 +31,6 @@ export const toTree = nodeList => {
 };
 
 export const renderChildren = (children, exclude) => {
-  console.log(children);
   return sortBy(
     children.filter(
       ({ name, node }) =>
