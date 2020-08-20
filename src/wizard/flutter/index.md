@@ -1,9 +1,8 @@
 ---
-draft: false
-categories: []
-toc: true
-title: Flutter
-tags: []
+name: Flutter
+doc_link: https://docs.sentry.io/platforms/flutter/
+support_level: production
+type: framework
 ---
 
 Get the SDK from from [pub.dev](https://pub.dev/packages/sentry) by adding the following to your `pubspec.yaml`:
