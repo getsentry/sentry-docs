@@ -45,12 +45,12 @@ export default ({ platform, guide }) => {
           <ul className="list-unstyled" data-sidebar-tree>
             {guideName ? (
               <DynamicNav
-                root={`platforms/${platformName}/guide/${guideName}`}
+                root={`platforms/${platformName}/guides/${guideName}`}
                 tree={tree}
                 noHeadingLink
                 prependLinks={[
                   [
-                    `/platforms/${platformName}/guide/${guideName}/`,
+                    `/platforms/${platformName}/guides/${guideName}/`,
                     "Getting Started",
                   ],
                 ]}
@@ -66,7 +66,7 @@ export default ({ platform, guide }) => {
               />
             )}
             <DynamicNav
-              root={`/platforms/${platformName}/guide`}
+              root={`/platforms/${platformName}/guides`}
               title={guideName ? "Other Guides" : "Guides"}
               prependLinks={
                 guideName
@@ -75,7 +75,7 @@ export default ({ platform, guide }) => {
               }
               exclude={
                 guideName
-                  ? [`/platforms/${platformName}/guide/${guideName}/`]
+                  ? [`/platforms/${platformName}/guides/${guideName}/`]
                   : []
               }
               tree={tree}

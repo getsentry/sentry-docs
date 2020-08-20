@@ -66,6 +66,11 @@ export default ({
   let rootBits = root.split("/");
   rootBits.forEach(bit => {
     entity = currentTree.find(n => n.name === bit);
+    if (!entity) {
+      throw new Error(
+        `Could not find entity at ${root} (specifically at ${bit})`
+      );
+    }
     currentTree = entity.children;
   });
   if (!title) title = entity.node.context.title;
