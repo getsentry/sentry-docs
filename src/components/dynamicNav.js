@@ -72,7 +72,7 @@ export default ({
     }
     currentTree = entity.children;
   });
-  if (!title) title = entity.node.context.title;
+  if (!title && entity.node) title = entity.node.context.title;
   const parentNode = entity.children
     ? entity.children.find(n => n.name === "")
     : null;

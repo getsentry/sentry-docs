@@ -2,7 +2,7 @@ import { Node } from "gatsby";
 
 import { createFilePath } from "gatsby-source-filesystem";
 
-const getChild = node => {
+const getChild = (node: any) => {
   return node.childMarkdownRemark || node.childMdx;
 };
 
@@ -14,8 +14,53 @@ const getDataOrPanic = async (query, graphql, reporter) => {
   return data;
 };
 
-const buildPlatformData = nodes => {
-  const platforms: { [key: string]: PlatformData } = {};
+type PlatformData = {
+  platforms: {
+    [key: string]: {
+      node: Node;
+      children: Node[];
+      guides: {
+        [name: string]: {
+          node: Node;
+          children: Node[];
+        };
+      };
+      common: Node[];
+    };
+  };
+  common: Node[];
+};
+
+const getPlatfromFromNode = (node: any): string | null => {
+  const match = node.relativePath.match(/^([^\/]+)\//);
+  return match ? match[1] : null;
+};
+
+const getGuideFromNode = (node: any): string | null => {
+  const match = node.relativePath.match(/^[^\/]+\/guides\/([^\/]+)\//);
+  return match ? match[1] : null;
+};
+
+const isCommonNode = (node: any): boolean => {
+  return !!node.relativePath.match(/^[^\/]+\/common\//);
+};
+
+const isRootNode = (node: any): boolean => {
+  return !!node.relativePath.match(/^([^\/]+)\/index\.mdx?$/);
+};
+
+const isGuideRoot = (node: any): boolean => {
+  return !!node.relativePath.match(/^([^\/]+)\/guides\/([^\/]+)\/index\.mdx?$/);
+};
+
+const buildPlatformData = (nodes: any[]) => {
+  const data: PlatformData = {
+    platforms: {},
+    common: nodes.filter(node => {
+      getPlatfromFromNode(node) === "common";
+    }),
+  };
+  const platforms = data.platforms;
 
   // build up `platforms` data
   nodes.forEach((node: any) => {
@@ -23,23 +68,14 @@ const buildPlatformData = nodes => {
       return;
     }
 
-    let match;
-
-    const platformName = node.relativePath.match(/^([^\/]+)\//)[1];
-    const guideName = (match = node.relativePath.match(
-      /^[^\/]+\/guides\/([^\/]+)\//
-    ))
-      ? match[1]
-      : null;
-    const isCommon =
-      !guideName && !!node.relativePath.match(/^[^\/]+\/common\//);
-    const isRoot =
-      !guideName &&
-      !isCommon &&
-      node.relativePath.match(/^([^\/]+)\/index\.mdx?$/);
-    const isIntegrationRoot =
-      guideName &&
-      node.relativePath.match(/^([^\/]+)\/guides\/([^\/]+)\/index\.mdx?$/);
+    const platformName = getPlatfromFromNode(node);
+    if (platformName === "common") {
+      return;
+    }
+    const guideName = getGuideFromNode(node);
+    const isCommon = !guideName && isCommonNode(node);
+    const isRoot = !guideName && !isCommon && isRootNode(node);
+    const isIntegrationRoot = guideName && isGuideRoot(node);
 
     if (!platforms[platformName]) {
       platforms[platformName] = {
@@ -71,19 +107,7 @@ const buildPlatformData = nodes => {
       pData.children.push(node);
     }
   });
-  return platforms;
-};
-
-type PlatformData = {
-  node: Node;
-  children: Node[];
-  guides: {
-    [name: string]: {
-      node: Node;
-      children: Node[];
-    };
-  };
-  common: Node[];
+  return data;
 };
 
 export default async function({ actions, getNode, graphql, reporter }) {
@@ -108,7 +132,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
 
     const component = require.resolve(`../components/pages/api.js`);
     await Promise.all(
-      data.allApiDoc.nodes.map(async node => {
+      data.allApiDoc.nodes.map(async (node: any) => {
         actions.createPage({
           path: node.fields.slug,
           component,
@@ -131,18 +155,26 @@ export default async function({ actions, getNode, graphql, reporter }) {
             childMarkdownRemark {
               frontmatter {
                 title
+                draft
+                noindex
               }
               fields {
                 slug
+                legacy
               }
+              excerpt(pruneLength: 5000)
             }
             childMdx {
               frontmatter {
                 title
+                draft
+                noindex
               }
               fields {
                 slug
+                legacy
               }
+              excerpt(pruneLength: 5000)
             }
           }
         }
@@ -154,17 +186,16 @@ export default async function({ actions, getNode, graphql, reporter }) {
 
     const component = require.resolve(`../components/pages/doc.js`);
     await Promise.all(
-      data.allFile.nodes.map(async node => {
+      data.allFile.nodes.map(async (node: any) => {
         const child = getChild(node);
         if (child && child.fields) {
           actions.createPage({
             path: child.fields.slug,
             component,
             context: {
+              excerpt: child.excerpt,
+              ...child.frontmatter,
               id: node.id,
-              title: child.frontmatter.title,
-              sidebar_order: child.frontmatter.sidebar_order,
-              draft: child.frontmatter.draft,
             },
           });
         }
@@ -188,18 +219,24 @@ export default async function({ actions, getNode, graphql, reporter }) {
               childMarkdownRemark {
                 frontmatter {
                   title
+                  draft
+                  noindex
                 }
                 fields {
                   slug
                 }
+                excerpt(pruneLength: 5000)
               }
               childMdx {
                 frontmatter {
                   title
+                  draft
+                  noindex
                 }
                 fields {
                   slug
                 }
+                excerpt(pruneLength: 5000)
               }
             }
           }
@@ -210,141 +247,164 @@ export default async function({ actions, getNode, graphql, reporter }) {
     );
 
     // filter out nodes with no markdown content
-    const platforms = buildPlatformData(nodes.filter(n => getChild(n)));
+    const { common, platforms } = buildPlatformData(
+      nodes.filter((n: any) => getChild(n))
+    );
 
     // begin creating pages from `platforms`
     const component = require.resolve(`../components/pages/platform.js`);
 
-    Object.keys(platforms).forEach(platformName => {
-      const pData = platforms[platformName];
-      if (!pData.node) {
+    const createPlatformPage = (
+      node: any,
+      path: string,
+      context: { [key: string]: any }
+    ) => {
+      const child = getChild(node);
+      actions.createPage({
+        path: path,
+        component,
+        context: {
+          ...context,
+          excerpt: child.excerpt,
+          ...child.frontmatter,
+          id: node.id,
+        },
+      });
+    };
+
+    const createPlatformPages = (
+      platformName: string,
+      platformData,
+      sharedCommon
+    ) => {
+      if (!platformData.node) {
         throw new Error(`No node identified as root for ${platformName}`);
       }
       const platformPageContext = {
         platform: {
           name: platformName,
-          title: getChild(pData.node).frontmatter.title,
+          title: getChild(platformData.node).frontmatter.title,
         },
       };
 
-      console.info(`Creating platform pages for ${platformName}`);
+      const path = `/platforms${createFilePath({
+        node: platformData.node,
+        getNode,
+      })}`;
+      console.info(`Creating platform root for ${platformName}: ${path}`);
+      createPlatformPage(platformData.node, path, platformPageContext);
 
-      // create the root page for the platform
-      actions.createPage({
-        path: `/platforms${createFilePath({ node: pData.node, getNode })}`,
-        component,
-        context: {
-          id: pData.node.id,
-          title: getChild(pData.node).frontmatter.title,
-          sidebar_order: getChild(pData.node).frontmatter.sidebar_order,
-          ...platformPageContext,
-        },
+      // duplicate global common
+      sharedCommon.forEach(node => {
+        const path = `/platforms${createFilePath({ node, getNode }).replace(
+          /^\/common\//,
+          `/${platformName}/`
+        )}`;
+        console.info(`Creating global common for ${platformName}: ${path}`);
+        createPlatformPage(node, path, platformPageContext);
       });
 
-      // duplicate common for platform (similar behavior to guide common)
-      pData.common.forEach(node => {
+      // duplicate platform common
+      platformData.common.forEach(node => {
         const path = `/platforms${createFilePath({ node, getNode }).replace(
           /^\/[^\/]+\/common\//,
           `/${platformName}/`
         )}`;
         console.info(`Creating platform common for ${platformName}: ${path}`);
-        actions.createPage({
-          path,
-          component,
-          context: {
-            id: node.id,
-            title: getChild(node).frontmatter.title,
-            sidebar_order: getChild(node).frontmatter.sidebar_order,
-            ...platformPageContext,
-          },
-        });
+        createPlatformPage(node, path, platformPageContext);
       });
 
-      // LAST (to allow overrides) create all direct children (similar behavior to guide children)
-      pData.children.forEach(node => {
+      // LAST (to allow overrides) create all direct children
+      platformData.children.forEach(node => {
         const path = `/platforms${createFilePath({ node, getNode })}`;
         console.info(`Creating platform child for ${platformName}: ${path}`);
-        actions.createPage({
-          path,
-          component,
-          context: {
-            id: node.id,
-            title: getChild(node).frontmatter.title,
-            sidebar_order: getChild(node).frontmatter.sidebar_order,
-            ...platformPageContext,
-          },
-        });
+        createPlatformPage(node, path, platformPageContext);
       });
 
       // create guide roots
-      Object.keys(pData.guides).forEach(guideName => {
-        const iData = pData.guides[guideName];
-        if (!iData.node) {
-          throw new Error(
-            `No node identified as root for ${platformName} -> ${guideName}`
-          );
-        }
-
-        const guidePageContext = {
-          guide: {
-            name: guideName,
-            title: getChild(iData.node).frontmatter.title,
-          },
-          ...platformPageContext,
-        };
-
-        console.info(
-          `Creating platform pages for ${platformName} -> ${guideName}`
+      Object.keys(platformData.guides).forEach(guideName => {
+        createPlatformGuidePages(
+          platformName,
+          platformData,
+          guideName,
+          platformData.guides[guideName],
+          sharedCommon,
+          platformPageContext
         );
-        actions.createPage({
-          path: `/platforms${createFilePath({ node: iData.node, getNode })}`,
-          component,
-          context: {
-            id: iData.node.id,
-            title: getChild(iData.node).frontmatter.title,
-            sidebar_order: getChild(iData.node).frontmatter.sidebar_order,
-            ...guidePageContext,
-          },
-        });
+      });
+    };
 
-        // duplicate common for guide
-        pData.common.forEach(node => {
-          const path = `/platforms${createFilePath({ node, getNode }).replace(
-            /^\/[^\/]+\/common\//,
-            `/${platformName}/guides/${guideName}/`
-          )}`;
-          console.info(
-            `Creating platform common for ${platformName} -> ${guideName}: ${path}`
-          );
-          actions.createPage({
-            path,
-            component,
-            context: {
-              id: node.id,
-              title: getChild(node).frontmatter.title,
-              ...guidePageContext,
-            },
-          });
-        });
+    const createPlatformGuidePages = (
+      platformName: string,
+      platformData,
+      guideName: string,
+      guideData,
+      sharedCommon: any[],
+      sharedContext
+    ) => {
+      if (!guideData.node) {
+        throw new Error(
+          `No node identified as root for ${platformName} -> ${guideName}`
+        );
+      }
 
-        // LAST (to allow overrides) create guide children
-        iData.children.forEach(node => {
-          const path = `/platforms${createFilePath({ node, getNode })}`;
-          console.info(
-            `Creating platform child for ${platformName} -> ${guideName}: ${path}`
-          );
-          actions.createPage({
-            path,
-            component,
-            context: {
-              id: node.id,
-              title: getChild(node).frontmatter.title,
-              sidebar_order: getChild(node).frontmatter.sidebar_order,
-              ...guidePageContext,
-            },
-          });
+      const guidePageContext = {
+        guide: {
+          name: guideName,
+          title: getChild(guideData.node).frontmatter.title,
+        },
+        ...sharedContext,
+      };
+
+      const pathRoot = `/platforms${createFilePath({
+        node: guideData.node,
+        getNode,
+      })}`;
+      console.info(
+        `Creating platform root for ${platformName} -> ${guideName}: ${pathRoot}`
+      );
+      createPlatformPage(guideData.node, pathRoot, guidePageContext);
+
+      // duplicate global common
+      sharedCommon.forEach(node => {
+        const path = `${createFilePath({ node, getNode }).replace(
+          /^\/common\//,
+          pathRoot
+        )}`;
+        console.info(`Creating global common for ${platformName}: ${path}`);
+        createPlatformPage(node, path, {
+          ...guidePageContext,
+          noindex: true,
         });
       });
+
+      // duplicate platform common
+      platformData.common.forEach(node => {
+        const path = `${createFilePath({ node, getNode }).replace(
+          /^\/[^\/]+\/common\//,
+          pathRoot
+        )}`;
+        console.info(
+          `Creating platform common for ${platformName} -> ${guideName}: ${path}`
+        );
+        createPlatformPage(node, path, {
+          ...guidePageContext,
+          noindex: true,
+        });
+      });
+
+      // LAST (to allow overrides) create all direct children
+      guideData.children.forEach(node => {
+        const path = `/platforms${createFilePath({ node, getNode })}`;
+        console.info(
+          `Creating platform child for ${platformName} -> ${guideName}: ${path}`
+        );
+        createPlatformPage(node, path, guidePageContext);
+      });
+    };
+
+    Object.keys(platforms).forEach(platformName => {
+      createPlatformPages(platformName, platforms[platformName], common);
     });
   };
 
