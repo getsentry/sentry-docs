@@ -26,9 +26,8 @@ export default () => {
       render={({ allSitePage: { nodes } }) => {
         let rootNode = nodes.find(n => n.path === currentPath);
         if (!rootNode) {
-          throw new Error(
-            `Cant find root node for breadcrumbs: ${currentPath}`
-          );
+          console.warn(`Cant find root node for breadcrumbs: ${currentPath}`);
+          return null;
         }
         let trailNodes = nodes.filter(n => rootNode.path.indexOf(n.path) === 0);
         return (

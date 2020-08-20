@@ -66,12 +66,12 @@ export default ({
   rootBits.forEach(bit => {
     entity = currentTree.find(n => n.name === bit);
     if (!entity) {
-      throw new Error(
-        `Could not find entity at ${root} (specifically at ${bit})`
-      );
+      console.warn(`Could not find entity at ${root} (specifically at ${bit})`);
+      return;
     }
     currentTree = entity.children;
   });
+  if (!entity) return null;
   if (!title && entity.node) title = entity.node.context.title;
   const parentNode = entity.children
     ? entity.children.find(n => n.name === "")
