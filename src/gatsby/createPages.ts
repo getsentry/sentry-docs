@@ -26,28 +26,26 @@ const buildPlatformData = nodes => {
     let match;
 
     const platformName = node.relativePath.match(/^([^\/]+)\//)[1];
-    const integrationName = (match = node.relativePath.match(
-      /^[^\/]+\/integrations\/([^\/]+)\//
+    const guideName = (match = node.relativePath.match(
+      /^[^\/]+\/guides\/([^\/]+)\//
     ))
       ? match[1]
       : null;
     const isCommon =
-      !integrationName && !!node.relativePath.match(/^[^\/]+\/common\//);
+      !guideName && !!node.relativePath.match(/^[^\/]+\/common\//);
     const isRoot =
-      !integrationName &&
+      !guideName &&
       !isCommon &&
       node.relativePath.match(/^([^\/]+)\/index\.mdx?$/);
     const isIntegrationRoot =
-      integrationName &&
-      node.relativePath.match(
-        /^([^\/]+)\/integrations\/([^\/]+)\/index\.mdx?$/
-      );
+      guideName &&
+      node.relativePath.match(/^([^\/]+)\/guides\/([^\/]+)\/index\.mdx?$/);
 
     if (!platforms[platformName]) {
       platforms[platformName] = {
         node: null,
         children: [],
-        integrations: {},
+        guides: {},
         common: [],
       };
     }
@@ -56,14 +54,14 @@ const buildPlatformData = nodes => {
       pData.node = node;
     } else if (isCommon) {
       pData.common.push(node);
-    } else if (integrationName) {
-      if (!pData.integrations[integrationName]) {
-        pData.integrations[integrationName] = {
+    } else if (guideName) {
+      if (!pData.guides[guideName]) {
+        pData.guides[guideName] = {
           node: null,
           children: [],
         };
       }
-      const iData = pData.integrations[integrationName];
+      const iData = pData.guides[guideName];
       if (isIntegrationRoot) {
         iData.node = node;
       } else {
@@ -79,7 +77,7 @@ const buildPlatformData = nodes => {
 type PlatformData = {
   node: Node;
   children: Node[];
-  integrations: {
+  guides: {
     [name: string]: {
       node: Node;
       children: Node[];
@@ -243,7 +241,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
         },
       });
 
-      // duplicate common for platform (similar behavior to integration common)
+      // duplicate common for platform (similar behavior to guide common)
       pData.common.forEach(node => {
         const path = `/platforms${createFilePath({ node, getNode }).replace(
           /^\/[^\/]+\/common\//,
@@ -262,7 +260,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
         });
       });
 
-      // LAST (to allow overrides) create all direct children (similar behavior to integration children)
+      // LAST (to allow overrides) create all direct children (similar behavior to guide children)
       pData.children.forEach(node => {
         const path = `/platforms${createFilePath({ node, getNode })}`;
         console.info(`Creating platform child for ${platformName}: ${path}`);
@@ -278,25 +276,25 @@ export default async function({ actions, getNode, graphql, reporter }) {
         });
       });
 
-      // create integration roots
-      Object.keys(pData.integrations).forEach(integrationName => {
-        const iData = pData.integrations[integrationName];
+      // create guide roots
+      Object.keys(pData.guides).forEach(guideName => {
+        const iData = pData.guides[guideName];
         if (!iData.node) {
           throw new Error(
-            `No node identified as root for ${platformName} -> ${integrationName}`
+            `No node identified as root for ${platformName} -> ${guideName}`
           );
         }
 
-        const integrationPageContext = {
-          integration: {
-            name: integrationName,
+        const guidePageContext = {
+          guide: {
+            name: guideName,
             title: getChild(iData.node).frontmatter.title,
           },
           ...platformPageContext,
         };
 
         console.info(
-          `Creating platform pages for ${platformName} -> ${integrationName}`
+          `Creating platform pages for ${platformName} -> ${guideName}`
         );
         actions.createPage({
           path: `/platforms${createFilePath({ node: iData.node, getNode })}`,
@@ -305,18 +303,18 @@ export default async function({ actions, getNode, graphql, reporter }) {
             id: iData.node.id,
             title: getChild(iData.node).frontmatter.title,
             sidebar_order: getChild(iData.node).frontmatter.sidebar_order,
-            ...integrationPageContext,
+            ...guidePageContext,
           },
         });
 
-        // duplicate common for integration
+        // duplicate common for guide
         pData.common.forEach(node => {
           const path = `/platforms${createFilePath({ node, getNode }).replace(
             /^\/[^\/]+\/common\//,
-            `/${platformName}/integrations/${integrationName}/`
+            `/${platformName}/guides/${guideName}/`
           )}`;
           console.info(
-            `Creating platform common for ${platformName} -> ${integrationName}: ${path}`
+            `Creating platform common for ${platformName} -> ${guideName}: ${path}`
           );
           actions.createPage({
             path,
@@ -324,16 +322,16 @@ export default async function({ actions, getNode, graphql, reporter }) {
             context: {
               id: node.id,
               title: getChild(node).frontmatter.title,
-              ...integrationPageContext,
+              ...guidePageContext,
             },
           });
         });
 
-        // LAST (to allow overrides) create integration children
+        // LAST (to allow overrides) create guide children
         iData.children.forEach(node => {
           const path = `/platforms${createFilePath({ node, getNode })}`;
           console.info(
-            `Creating platform child for ${platformName} -> ${integrationName}: ${path}`
+            `Creating platform child for ${platformName} -> ${guideName}: ${path}`
           );
           actions.createPage({
             path,
@@ -342,7 +340,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
               id: node.id,
               title: getChild(node).frontmatter.title,
               sidebar_order: getChild(node).frontmatter.sidebar_order,
-              ...integrationPageContext,
+              ...guidePageContext,
             },
           });
         });

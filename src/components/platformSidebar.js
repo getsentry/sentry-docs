@@ -22,9 +22,9 @@ const navQuery = graphql`
   }
 `;
 
-export default ({ platform, integration }) => {
+export default ({ platform, guide }) => {
   const platformName = platform.name;
-  const integrationName = integration ? integration.name : null;
+  const guideName = guide ? guide.name : null;
 
   return (
     <StaticQuery
@@ -43,14 +43,14 @@ export default ({ platform, integration }) => {
         );
         return (
           <ul className="list-unstyled" data-sidebar-tree>
-            {integrationName ? (
+            {guideName ? (
               <DynamicNav
-                root={`platforms/${platformName}/integrations/${integrationName}`}
+                root={`platforms/${platformName}/guide/${guideName}`}
                 tree={tree}
                 noHeadingLink
                 prependLinks={[
                   [
-                    `/platforms/${platformName}/integrations/${integrationName}/`,
+                    `/platforms/${platformName}/guide/${guideName}/`,
                     "Getting Started",
                   ],
                 ]}
@@ -66,18 +66,16 @@ export default ({ platform, integration }) => {
               />
             )}
             <DynamicNav
-              root={`/platforms/${platformName}/integrations`}
-              title={integrationName ? "Other Integrations" : "Integrations"}
+              root={`/platforms/${platformName}/guide`}
+              title={guideName ? "Other Guides" : "Guides"}
               prependLinks={
-                integrationName
+                guideName
                   ? [[`/platforms/${platformName}/`, platform.title]]
                   : null
               }
               exclude={
-                integrationName
-                  ? [
-                      `/platforms/${platformName}/integrations/${integrationName}/`,
-                    ]
+                guideName
+                  ? [`/platforms/${platformName}/guide/${guideName}/`]
                   : []
               }
               tree={tree}

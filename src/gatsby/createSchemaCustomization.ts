@@ -9,7 +9,7 @@ export default ({ actions, schema }) => {
       draft: Boolean
 
       platform: PlatformContext
-      integration: IntegrationContext
+      guide: GuideContext
     }
 
     type PlatformContext {
@@ -17,7 +17,7 @@ export default ({ actions, schema }) => {
       title: String!
     }
 
-    type IntegrationContext {
+    type GuideContext {
       name: String!
       title: String!
     }

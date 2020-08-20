@@ -5,11 +5,11 @@ import SmartLink from "./smartLink";
 import { sortBy } from "../utils";
 
 const query = graphql`
-  query FrameworkQuery {
+  query PlatformGuideQuery {
     allSitePage(
       filter: {
-        path: { regex: "//integration/[^/]+/$/" }
-        context: { integration: { name: { ne: null } } }
+        path: { regex: "//guides/[^/]+/$/" }
+        context: { guide: { name: { ne: null } } }
       }
     ) {
       nodes {
@@ -19,7 +19,7 @@ const query = graphql`
           platform {
             name
           }
-          integration {
+          guide {
             name
             title
           }
@@ -36,13 +36,13 @@ export default ({ platform }) => {
       render={({ allSitePage: { nodes } }) => {
         let matches = sortBy(
           nodes.filter(n => n.context.platform.name === platform),
-          n => n.context.integration.title
+          n => n.context.guide.title
         );
         return (
           <ul>
             {matches.map(n => (
-              <li key={n.context.integration.name}>
-                <SmartLink to={n.path}>{n.context.integration.title}</SmartLink>
+              <li key={n.context.guide.name}>
+                <SmartLink to={n.path}>{n.context.guide.title}</SmartLink>
               </li>
             ))}
           </ul>
