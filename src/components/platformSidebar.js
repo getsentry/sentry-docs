@@ -47,9 +47,23 @@ export default ({ platform, framework }) => {
               <DynamicNav
                 root={`platforms/${platformName}/frameworks/${frameworkName}`}
                 tree={tree}
+                noHeadingLink
+                prependLinks={[
+                  [
+                    `/platforms/${platformName}/frameworks/${frameworkName}/`,
+                    "Getting Started",
+                  ],
+                ]}
               />
             ) : (
-              <DynamicNav root={`platforms/${platformName}`} tree={tree} />
+              <DynamicNav
+                root={`platforms/${platformName}`}
+                tree={tree}
+                noHeadingLink
+                prependLinks={[
+                  [`/platforms/${platformName}/`, "Getting Started"],
+                ]}
+              />
             )}
             <DynamicNav
               root={`/platforms/${platformName}/frameworks`}

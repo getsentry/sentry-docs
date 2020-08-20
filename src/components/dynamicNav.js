@@ -57,6 +57,7 @@ export default ({
   collapse = false,
   exclude = [],
   prependLinks = [],
+  noHeadingLink = false,
 }) => {
   if (root.indexOf("/") === 0) root = root.substr(1);
 
@@ -77,20 +78,21 @@ export default ({
     location && location.pathname.indexOf(withPrefix(`/${root}/`)) === 0;
 
   const headerClassName = "sidebar-title d-flex align-items-center mb-0";
-  const header = parentNode ? (
-    <SmartLink
-      to={`/${root}/`}
-      className={headerClassName}
-      activeClassName=""
-      data-sidebar-link
-    >
-      <h6>{title}</h6>
-    </SmartLink>
-  ) : (
-    <div className={headerClassName} data-sidebar-link>
-      <h6>{title}</h6>
-    </div>
-  );
+  const header =
+    parentNode && !noHeadingLink ? (
+      <SmartLink
+        to={`/${root}/`}
+        className={headerClassName}
+        activeClassName=""
+        data-sidebar-link
+      >
+        <h6>{title}</h6>
+      </SmartLink>
+    ) : (
+      <div className={headerClassName} data-sidebar-link>
+        <h6>{title}</h6>
+      </div>
+    );
 
   return (
     <li className="mb-3" data-sidebar-branch>

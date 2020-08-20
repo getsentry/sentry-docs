@@ -209,7 +209,8 @@ export default async function({ actions, getNode, graphql, reporter }) {
       reporter
     );
 
-    const platforms = buildPlatformData(nodes);
+    // filter out nodes with no markdown content
+    const platforms = buildPlatformData(nodes.filter(n => getChild(n)));
 
     // begin creating pages from `platforms`
     const component = require.resolve(`../components/pages/platform.js`);
@@ -240,10 +241,13 @@ export default async function({ actions, getNode, graphql, reporter }) {
         },
       });
 
-      // create all direct children (similar behavior to framework children)
-      pData.children.forEach(node => {
-        const path = `/platforms${createFilePath({ node, getNode })}`;
-        console.info(`Creating platform child for ${platformName}: ${path}`);
+      // duplicate common for platform (similar behavior to framework common)
+      pData.common.forEach(node => {
+        const path = `/platforms${createFilePath({ node, getNode }).replace(
+          /^\/[^\/]+\/common\//,
+          `/${platformName}/`
+        )}`;
+        console.info(`Creating platform common for ${platformName}: ${path}`);
         actions.createPage({
           path,
           component,
@@ -256,13 +260,10 @@ export default async function({ actions, getNode, graphql, reporter }) {
         });
       });
 
-      // duplicate common for platform (similar behavior to framework common)
-      pData.common.forEach(node => {
-        const path = `/platforms${createFilePath({ node, getNode }).replace(
-          /^\/[^\/]+\/common\//,
-          `/${platformName}/`
-        )}`;
-        console.info(`Creating platform common for ${platformName}: ${path}`);
+      // LAST (to allow overrides) create all direct children (similar behavior to framework children)
+      pData.children.forEach(node => {
+        const path = `/platforms${createFilePath({ node, getNode })}`;
+        console.info(`Creating platform child for ${platformName}: ${path}`);
         actions.createPage({
           path,
           component,
@@ -306,24 +307,6 @@ export default async function({ actions, getNode, graphql, reporter }) {
           },
         });
 
-        // create framework children
-        iData.children.forEach(node => {
-          const path = `/platforms${createFilePath({ node, getNode })}`;
-          console.info(
-            `Creating platform child for ${platformName} -> ${frameworkName}: ${path}`
-          );
-          actions.createPage({
-            path,
-            component,
-            context: {
-              id: node.id,
-              title: getChild(node).frontmatter.title,
-              sidebar_order: getChild(node).frontmatter.sidebar_order,
-              ...frameworkPageContext,
-            },
-          });
-        });
-
         // duplicate common for framework
         pData.common.forEach(node => {
           const path = `/platforms${createFilePath({ node, getNode }).replace(
@@ -339,6 +322,24 @@ export default async function({ actions, getNode, graphql, reporter }) {
             context: {
               id: node.id,
               title: getChild(node).frontmatter.title,
+              ...frameworkPageContext,
+            },
+          });
+        });
+
+        // LAST (to allow overrides) create framework children
+        iData.children.forEach(node => {
+          const path = `/platforms${createFilePath({ node, getNode })}`;
+          console.info(
+            `Creating platform child for ${platformName} -> ${frameworkName}: ${path}`
+          );
+          actions.createPage({
+            path,
+            component,
+            context: {
+              id: node.id,
+              title: getChild(node).frontmatter.title,
+              sidebar_order: getChild(node).frontmatter.sidebar_order,
               ...frameworkPageContext,
             },
           });
