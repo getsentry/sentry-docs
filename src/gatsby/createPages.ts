@@ -359,10 +359,10 @@ export default async function({ actions, getNode, graphql, reporter }) {
       console.info(
         `Creating platform root for ${platformName} -> ${guideName}`
       );
-      const pathRoot = `/platforms${createFilePath({
+      const pathRoot = createFilePath({
         node: guideData.node,
         getNode,
-      })}`;
+      });
       createPlatformPage(guideData.node, pathRoot, guidePageContext);
 
       // duplicate global common
