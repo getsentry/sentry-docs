@@ -14,10 +14,10 @@ Add the Sentry SDK as a dependency using yarn or npm:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/react
+$ yarn add @sentry/react @sentry/apm
 
 # Using npm
-$ npm install @sentry/react
+$ npm install @sentry/react @sentry/apm
 ```
 
 ## Connecting the SDK to Sentry
@@ -27,15 +27,24 @@ After you've completed setting up a project in Sentry, Sentry will give you a va
 You should `init` the Sentry browser SDK as soon as possible during your application load up, before initializing React:
 
 ```jsx
-import React from "react";
-import ReactDOM from "react-dom";
-import * as Sentry from "@sentry/react";
-import App from "./App";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import * as Sentry from '@sentry/react';
+import { Integrations } from '@sentry/apm';
+import App from './App';
 
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Integrations.Tracing(),
+  ],
+  tracesSampleRate: 1.0,
+});
 
 ReactDOM.render(<App />, document.getElementById("root"));
 ```
+
+The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
 
 On its own, `@sentry/react` will report any uncaught exceptions triggered by your application.
 
