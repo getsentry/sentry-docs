@@ -35,7 +35,6 @@ export const renderChildren = (children, exclude) => {
     children.filter(
       ({ name, node }) =>
         node &&
-        node.context &&
         !!node.context.title &&
         name !== "" &&
         exclude.indexOf(node.path) === -1
@@ -73,7 +72,7 @@ export default ({
     }
     currentTree = entity.children;
   });
-  if (!title) title = entity.node.context.title;
+  if (!title && entity.node) title = entity.node.context.title;
   const parentNode = entity.children
     ? entity.children.find(n => n.name === "")
     : null;

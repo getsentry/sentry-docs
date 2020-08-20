@@ -287,12 +287,12 @@ export default async function({ actions, getNode, graphql, reporter }) {
         },
       };
 
-      console.info(`Creating platform root for ${platformName}`);
-      createPlatformPage(
-        platformData.node,
-        `/platforms${createFilePath({ node: platformData.node, getNode })}`,
-        platformPageContext
-      );
+      const path = `/platforms${createFilePath({
+        node: platformData.node,
+        getNode,
+      })}`;
+      console.info(`Creating platform root for ${platformName}: ${path}`);
+      createPlatformPage(platformData.node, path, platformPageContext);
 
       // duplicate global common
       sharedCommon.forEach(node => {
@@ -356,18 +356,18 @@ export default async function({ actions, getNode, graphql, reporter }) {
         ...sharedContext,
       };
 
-      console.info(
-        `Creating platform root for ${platformName} -> ${guideName}`
-      );
-      const pathRoot = createFilePath({
+      const pathRoot = `/platforms${createFilePath({
         node: guideData.node,
         getNode,
-      });
+      })}`;
+      console.info(
+        `Creating platform root for ${platformName} -> ${guideName}: ${pathRoot}`
+      );
       createPlatformPage(guideData.node, pathRoot, guidePageContext);
 
       // duplicate global common
       sharedCommon.forEach(node => {
-        const path = `/platforms${createFilePath({ node, getNode }).replace(
+        const path = `${createFilePath({ node, getNode }).replace(
           /^\/common\//,
           pathRoot
         )}`;
@@ -377,7 +377,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
 
       // duplicate platform common
       platformData.common.forEach(node => {
-        const path = `/platforms${createFilePath({ node, getNode }).replace(
+        const path = `${createFilePath({ node, getNode }).replace(
           /^\/[^\/]+\/common\//,
           pathRoot
         )}`;
