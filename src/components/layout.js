@@ -1,6 +1,7 @@
 import React from "react";
 import { StaticQuery, graphql } from "gatsby";
 
+import Breadcrumbs from "./breadcrumbs";
 import Header from "./header";
 import Sidebar from "./sidebar";
 import Navbar from "./navbar";
@@ -8,7 +9,7 @@ import Navbar from "./navbar";
 import "~src/css/screen.scss";
 
 const query = graphql`
-  query Layoutquery {
+  query LayoutQuery {
     site {
       siteMetadata {
         title
@@ -52,6 +53,7 @@ export default ({ children }) => {
                 </div>
 
                 <section className="pt-3 px-3 content-max prose">
+                  <Breadcrumbs />
                   {children}
                 </section>
               </div>
