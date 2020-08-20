@@ -3,7 +3,6 @@ import { StaticQuery, graphql } from "gatsby";
 
 import DynamicNav, { toTree } from "./dynamicNav";
 import SidebarLink from "./sidebarLink";
-import { sortBy } from "../utils";
 
 const navQuery = graphql`
   query NavQuery {
@@ -26,12 +25,9 @@ export default () => {
       query={navQuery}
       render={data => {
         const tree = toTree(
-          sortBy(
-            data.allSitePage.nodes
-              .filter(n => !!n.context)
-              .filter(n => !n.context.draft),
-            n => n.path
-          )
+          data.allSitePage.nodes
+            .filter(n => !!n.context)
+            .filter(n => !n.context.draft)
         );
         return (
           <ul className="list-unstyled" data-sidebar-tree>

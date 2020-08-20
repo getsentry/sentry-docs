@@ -157,6 +157,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
                 title
                 draft
                 noindex
+                sidebar_order
               }
               fields {
                 slug
@@ -169,6 +170,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
                 title
                 draft
                 noindex
+                sidebar_order
               }
               fields {
                 slug
@@ -221,6 +223,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
                   title
                   draft
                   noindex
+                  sidebar_order
                 }
                 fields {
                   slug
@@ -232,6 +235,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
                   title
                   draft
                   noindex
+                  sidebar_order
                 }
                 fields {
                   slug
