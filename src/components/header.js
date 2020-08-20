@@ -5,7 +5,7 @@ const Header = ({ homeUrl, sitePath }) => {
   return (
     <div className="navbar navbar-expand-md navbar-light bg-white global-header">
       <a
-        href={`${homeUrl}/welcome/`}
+        href={homeUrl}
         title="Sentry error monitoring"
         className="navbar-brand pb-0"
       >
