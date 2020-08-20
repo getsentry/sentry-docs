@@ -372,7 +372,10 @@ export default async function({ actions, getNode, graphql, reporter }) {
           pathRoot
         )}`;
         console.info(`Creating global common for ${platformName}: ${path}`);
-        createPlatformPage(node, path, guidePageContext);
+        createPlatformPage(node, path, {
+          ...guidePageContext,
+          noindex: true,
+        });
       });
 
       // duplicate platform common
@@ -384,7 +387,10 @@ export default async function({ actions, getNode, graphql, reporter }) {
         console.info(
           `Creating platform common for ${platformName} -> ${guideName}: ${path}`
         );
-        createPlatformPage(node, path, guidePageContext);
+        createPlatformPage(node, path, {
+          ...guidePageContext,
+          noindex: true,
+        });
       });
 
       // LAST (to allow overrides) create all direct children
