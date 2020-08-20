@@ -202,7 +202,7 @@ Description of send-default-pii
 
 ### Code Blocks
 
-Consecutively code blocks will be automatically collapsed into a tabulated container.  This behavior is generally useful if you want to define an example in multiple languages:
+Consecutive code blocks will be automatically collapsed into a tabulated container.  This behavior is generally useful if you want to define an example in multiple languages:
 
 
 ````markdown
@@ -213,6 +213,7 @@ function foo() { return 'bar' }
 ```python
 def foo():
   return 'bar'
+```
 ````
 
 Some times you may not want this behavior. To solve this you can either break up the code blocks with some additional text, or you can use the ``<Break />`` component.
