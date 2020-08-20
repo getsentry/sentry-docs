@@ -10,7 +10,7 @@ import SmartLink from "./smartLink";
 import CodeBlock from "./codeBlock";
 import CodeTabs from "./codeTabs";
 import ConfigKey from "./configKey";
-import FrameworkGrid from "./frameworkGrid";
+import IntegrationGrid from "./integrationGrid";
 import JsCdnTag from "./jsCdnTag";
 import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
@@ -22,7 +22,7 @@ const mdxComponents = {
   CodeBlock,
   CodeTabs,
   ConfigKey,
-  FrameworkGrid,
+  IntegrationGrid,
   JsCdnTag,
   Link: SmartLink,
   ParamTable,

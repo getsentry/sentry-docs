@@ -22,9 +22,9 @@ const navQuery = graphql`
   }
 `;
 
-export default ({ platform, framework }) => {
+export default ({ platform, integration }) => {
   const platformName = platform.name;
-  const frameworkName = framework ? framework.name : null;
+  const integrationName = integration ? integration.name : null;
 
   return (
     <StaticQuery
@@ -43,14 +43,14 @@ export default ({ platform, framework }) => {
         );
         return (
           <ul className="list-unstyled" data-sidebar-tree>
-            {frameworkName ? (
+            {integrationName ? (
               <DynamicNav
-                root={`platforms/${platformName}/frameworks/${frameworkName}`}
+                root={`platforms/${platformName}/integrations/${integrationName}`}
                 tree={tree}
                 noHeadingLink
                 prependLinks={[
                   [
-                    `/platforms/${platformName}/frameworks/${frameworkName}/`,
+                    `/platforms/${platformName}/integrations/${integrationName}/`,
                     "Getting Started",
                   ],
                 ]}
@@ -66,16 +66,18 @@ export default ({ platform, framework }) => {
               />
             )}
             <DynamicNav
-              root={`/platforms/${platformName}/frameworks`}
-              title={frameworkName ? "Other Frameworks" : "Frameworks"}
+              root={`/platforms/${platformName}/integrations`}
+              title={integrationName ? "Other Integrations" : "Integrations"}
               prependLinks={
-                frameworkName
+                integrationName
                   ? [[`/platforms/${platformName}/`, platform.title]]
                   : null
               }
               exclude={
-                frameworkName
-                  ? [`/platforms/${platformName}/frameworks/${frameworkName}/`]
+                integrationName
+                  ? [
+                      `/platforms/${platformName}/integrations/${integrationName}/`,
+                    ]
                   : []
               }
               tree={tree}

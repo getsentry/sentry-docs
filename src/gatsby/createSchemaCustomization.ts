@@ -9,7 +9,7 @@ export default ({ actions, schema }) => {
       draft: Boolean
 
       platform: PlatformContext
-      framework: FrameworkContext
+      integration: IntegrationContext
     }
 
     type PlatformContext {
@@ -17,7 +17,7 @@ export default ({ actions, schema }) => {
       title: String!
     }
 
-    type FrameworkContext {
+    type IntegrationContext {
       name: String!
       title: String!
     }

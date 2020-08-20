@@ -8,8 +8,8 @@ const query = graphql`
   query FrameworkQuery {
     allSitePage(
       filter: {
-        path: { regex: "//frameworks/[^/]+/$/" }
-        context: { framework: { name: { ne: null } } }
+        path: { regex: "//integration/[^/]+/$/" }
+        context: { integration: { name: { ne: null } } }
       }
     ) {
       nodes {
@@ -19,7 +19,7 @@ const query = graphql`
           platform {
             name
           }
-          framework {
+          integration {
             name
             title
           }
@@ -36,13 +36,13 @@ export default ({ platform }) => {
       render={({ allSitePage: { nodes } }) => {
         let matches = sortBy(
           nodes.filter(n => n.context.platform.name === platform),
-          n => n.context.framework.title
+          n => n.context.integration.title
         );
         return (
           <ul>
             {matches.map(n => (
-              <li key={n.context.framework.name}>
-                <SmartLink to={n.path}>{n.context.framework.title}</SmartLink>
+              <li key={n.context.integration.name}>
+                <SmartLink to={n.path}>{n.context.integration.title}</SmartLink>
               </li>
             ))}
           </ul>

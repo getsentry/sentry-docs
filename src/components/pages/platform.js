@@ -14,7 +14,7 @@ const PlatformPage = props => {
       sidebar={
         <PlatformSidebar
           platform={pageContext.platform}
-          framework={pageContext.framework}
+          integration={pageContext.integration}
         />
       }
     >
@@ -33,7 +33,7 @@ PlatformPage.propTypes = {
       name: PropTypes.string.isRequired,
       title: PropTypes.string.isRequired,
     }).isRequired,
-    framework: PropTypes.shape({
+    integration: PropTypes.shape({
       name: PropTypes.string.isRequired,
       title: PropTypes.string.isRequired,
     }),
