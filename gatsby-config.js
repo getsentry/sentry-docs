@@ -192,7 +192,7 @@ module.exports = {
   // pathPrefix: `/develop`,
   siteMetadata: {
     title: "Sentry Documentation",
-    homeUrl: "https://sentry.io",
+    homeUrl: "https://docs.sentry.io",
     sitePath: "docs.sentry.io",
     description: "",
     author: "@getsentry",
