@@ -35,6 +35,7 @@ export const renderChildren = (children, exclude) => {
     children.filter(
       ({ name, node }) =>
         node &&
+        node.context &&
         !!node.context.title &&
         name !== "" &&
         exclude.indexOf(node.path) === -1
