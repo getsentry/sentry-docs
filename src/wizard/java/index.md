@@ -1,6 +1,6 @@
 ---
 name: Java
-doc_link: https://docs.sentry.io/clients/java/
+doc_link: https://docs.sentry.io/platforms/java/
 support_level: production
 type: language
 ---

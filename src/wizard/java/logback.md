@@ -1,6 +1,6 @@
 ---
 name: Logback
-doc_link: https://docs.sentry.io/clients/java/modules/logback/
+doc_link: https://docs.sentry.io/platforms/java/guides/logback/
 support_level: production
 type: framework
 ---
@@ -66,6 +66,6 @@ Example configuration using the `logback.xml` format:
 </configuration>
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#setting-the-dsn) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/platforms/java/guides/logback/config/#setting-the-dsn) for ways you can do this.
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
