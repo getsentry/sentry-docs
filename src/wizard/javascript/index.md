@@ -1,6 +1,6 @@
 ---
 name: JavaScript
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=browser
+doc_link: https://docs.sentry.io/platforms/javascript/
 support_level: production
 type: language
 ---

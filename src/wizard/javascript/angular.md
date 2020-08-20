@@ -1,6 +1,6 @@
 ---
 name: Angular
-doc_link: https://docs.sentry.io/platforms/javascript/angular/
+doc_link: https://docs.sentry.io/platforms/javascript/guides/angular/
 support_level: production
 type: framework
 ---
