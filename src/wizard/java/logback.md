@@ -4,6 +4,7 @@ doc_link: https://docs.sentry.io/clients/java/modules/logback/
 support_level: production
 type: framework
 ---
+
 ### Installation
 
 Using Maven:
@@ -66,4 +67,5 @@ Example configuration using the `logback.xml` format:
 ```
 
 Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#setting-the-dsn) for ways you can do this.
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->

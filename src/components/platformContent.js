@@ -37,8 +37,9 @@ const slugMatches = (slug1, slug2) => {
   return slug1 === slug2;
 };
 
-const PlatformContent = ({ includePath }) => {
+const PlatformContent = ({ includePath, platform }) => {
   const [dropdown, setDropdown] = React.useState(null);
+  const hasDropdown = !platform;
 
   return (
     <StaticQuery
@@ -50,7 +51,7 @@ const PlatformContent = ({ includePath }) => {
         return (
           <Location>
             {({ location, navigate }) => {
-              const platform = parse(location.search).platform || null;
+              if (!platform) platform = parse(location.search).platform || null;
 
               const matches = files.filter(
                 node => node.relativePath.indexOf(includePath) === 0
@@ -74,48 +75,50 @@ const PlatformContent = ({ includePath }) => {
 
               return (
                 <div className="platform-specific-content">
-                  <div className="nav pb-1 flex">
-                    <div className="dropdown mr-2 mb-1">
-                      <button
-                        className="btn btn-sm btn-secondary dropdown-toggle"
-                        onClick={() => setDropdown(!dropdown)}
-                      >
-                        {activePlatform.name}
-                      </button>
+                  {hasDropdown && (
+                    <div className="nav pb-1 flex">
+                      <div className="dropdown mr-2 mb-1">
+                        <button
+                          className="btn btn-sm btn-secondary dropdown-toggle"
+                          onClick={() => setDropdown(!dropdown)}
+                        >
+                          {activePlatform.name}
+                        </button>
 
-                      <div
-                        className="nav dropdown-menu"
-                        role="tablist"
-                        style={{ display: dropdown ? "block" : "none" }}
-                      >
-                        {matches.map(node => {
-                          const platform = platforms.find(p =>
-                            slugMatches(p.slug, node.name)
-                          );
-                          return (
-                            <a
-                              className="dropdown-item"
-                              role="tab"
-                              key={platform.slug}
-                              onClick={() => {
-                                setDropdown(false);
-                                navigate(
-                                  `${location.pathname}?platform=${platform.slug}`
-                                );
-                                // TODO: retain scroll
-                                // window.scrollTo(window.scrollX, window.scrollY);
-                              }}
-                            >
-                              {platform.name}
-                            </a>
-                          );
-                        })}
-                        <SmartLink className="dropdown-item" to="/platforms/">
-                          <em>Platform not listed?</em>
-                        </SmartLink>
+                        <div
+                          className="nav dropdown-menu"
+                          role="tablist"
+                          style={{ display: dropdown ? "block" : "none" }}
+                        >
+                          {matches.map(node => {
+                            const platform = platforms.find(p =>
+                              slugMatches(p.slug, node.name)
+                            );
+                            return (
+                              <a
+                                className="dropdown-item"
+                                role="tab"
+                                key={platform.slug}
+                                onClick={() => {
+                                  setDropdown(false);
+                                  navigate(
+                                    `${location.pathname}?platform=${platform.slug}`
+                                  );
+                                  // TODO: retain scroll
+                                  // window.scrollTo(window.scrollX, window.scrollY);
+                                }}
+                              >
+                                {platform.name}
+                              </a>
+                            );
+                          })}
+                          <SmartLink className="dropdown-item" to="/platforms/">
+                            <em>Platform not listed?</em>
+                          </SmartLink>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="tab-content">
                     <div className="tab-pane show active">

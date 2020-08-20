@@ -25,8 +25,8 @@ export default ({ apm = false }) => {
     : {
         version: "{VERSION}",
         files: {
-          [packageName]: { checksums: { "sha384-base64": "{CHECKSUM}" } }
-        }
+          [packageName]: { checksums: { "sha384-base64": "{CHECKSUM}" } },
+        },
       };
 
   return (
