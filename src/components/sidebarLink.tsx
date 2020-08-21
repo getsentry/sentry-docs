@@ -9,20 +9,22 @@ type Props = {
   title?: string;
   children?: React.ReactNode;
   className?: string;
+  collapsed?: boolean | null;
 };
 
 export default ({
   to,
   title,
   children,
+  collapsed = null,
   className = "",
 }: Props): JSX.Element => {
   const location = useLocation();
   const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
 
   className += " toc-item";
-  if (isActive) {
-    className += " toc-active";
+  if (isActive || collapsed === false) {
+    className += " toc-visible";
   }
 
   return (

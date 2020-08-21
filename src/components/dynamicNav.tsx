@@ -50,7 +50,7 @@ export const toTree = (nodeList: Node[]): EntityTree[] => {
 export const renderChildren = (
   children: EntityTree[],
   exclude: string[],
-  showDepth: number = 1,
+  showDepth: number = 0,
   depth: number = 0
 ): React.ReactNode[] => {
   return children
@@ -70,9 +70,13 @@ export const renderChildren = (
     })
     .map(({ node, children }) => {
       return (
-        <SidebarLink to={node.path} key={node.path} title={node.context.title}>
-          {depth < showDepth &&
-            renderChildren(children, exclude, showDepth, depth + 1)}
+        <SidebarLink
+          to={node.path}
+          key={node.path}
+          title={node.context.title}
+          collapsed={depth >= showDepth}
+        >
+          {renderChildren(children, exclude, showDepth, depth + 1)}
         </SidebarLink>
       );
     });
