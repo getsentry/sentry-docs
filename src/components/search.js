@@ -33,7 +33,7 @@ const useClickOutside = (ref, handler, events) => {
   });
 };
 
-export default function Search() {
+const Search = () => {
   const ref = useRef(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([]);
@@ -63,13 +63,13 @@ export default function Search() {
       />
 
       {query.length > 0 && focus && (
-        <div className="search-results">
+        <div className="sgs-search-results">
           {loading && <Logo loading={true} />}
 
           {!loading &&
             (totalHits > 0 ? (
               <>
-                <div className="search-results-scroll-container">
+                <div className="sgs-search-results-scroll-container">
                   {results.map((result, i) => {
                     const expand = i === 0 || showOffsiteResults;
                     const hits = result.hits.slice(0, MAX_HITS);
@@ -79,18 +79,18 @@ export default function Search() {
                     return (
                       <React.Fragment key={result.site}>
                         {result.site !== "docs" && (
-                          <h4 className="site-result-heading">
+                          <h4 className="sgs-site-result-heading">
                             From {result.name}
                           </h4>
                         )}
                         <ul
-                          className={`hit-list ${
-                            result.site === "docs" ? "" : "offsite"
+                          className={`sgs-hit-list ${
+                            result.site === "docs" ? "" : "sgs-offsite"
                           }`}
                         >
                           {hits.length > 0 ? (
                             hits.map((hit) => (
-                              <li key={hit.id} className="hit-item">
+                              <li key={hit.id} className="sgs-hit-item">
                                 <a href={hit.url}>
                                   {hit.title && (
                                     <h6>
@@ -109,20 +109,24 @@ export default function Search() {
                                     />
                                   )}
                                   {hit.context && (
-                                    <div className="hit-context">
-                                      {hit.context.categories &&
-                                        hit.context.categories.length > 0 && (
-                                          <div className="hit-context-left">
-                                            {hit.context.categories.join(", ")}
-                                          </div>
-                                        )}
+                                    <div className="sgs-hit-context">
+                                      {hit.context.context1 && (
+                                        <div className="sgs-hit-context-left">
+                                          {hit.context.context1}
+                                        </div>
+                                      )}
+                                      {hit.context.context2 && (
+                                        <div className="sgs-hit-context-right">
+                                          {hit.context.context2}
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </a>
                               </li>
                             ))
                           ) : (
-                            <li className="hit-item hit-empty-state">
+                            <li className="sgs-hit-item sgs-hit-empty-state">
                               No results for <em>{query}</em>
                             </li>
                           )}
@@ -132,9 +136,9 @@ export default function Search() {
                   })}
                 </div>
                 {!showOffsiteResults && (
-                  <div className="expand-results">
+                  <div className="sgs-expand-results">
                     <button
-                      className="expand-results-button"
+                      className="sgs-expand-results-button"
                       onClick={() => setShowOffsiteResults(true)}
                     >
                       Search <em>{query}</em> across all Sentry sites
@@ -143,7 +147,7 @@ export default function Search() {
                 )}
               </>
             ) : (
-              <div className="hit-empty-state">
+              <div className="sgs-hit-empty-state">
                 No results for <em>{query}</em>
               </div>
             ))}
@@ -151,4 +155,6 @@ export default function Search() {
       )}
     </div>
   );
-}
+};
+
+export default Search;
