@@ -94,6 +94,11 @@ const PlatformContent = ({ includePath, platform }) => {
                             const platform = platforms.find(p =>
                               slugMatches(p.slug, node.name)
                             );
+                            if (!platform) {
+                              throw new Error(
+                                `Cannot find platform for ${node.name}`
+                              );
+                            }
                             return (
                               <a
                                 className="dropdown-item"
