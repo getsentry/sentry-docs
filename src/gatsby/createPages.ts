@@ -158,6 +158,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
                 draft
                 noindex
                 sidebar_order
+                redirect_from
               }
               fields {
                 slug
@@ -171,6 +172,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
                 draft
                 noindex
                 sidebar_order
+                redirect_from
               }
               fields {
                 slug
@@ -224,6 +226,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
                   draft
                   noindex
                   sidebar_order
+                  redirect_from
                 }
                 fields {
                   slug
@@ -236,6 +239,7 @@ export default async function({ actions, getNode, graphql, reporter }) {
                   draft
                   noindex
                   sidebar_order
+                  redirect_from
                 }
                 fields {
                   slug
@@ -268,9 +272,9 @@ export default async function({ actions, getNode, graphql, reporter }) {
         path: path,
         component,
         context: {
-          ...context,
           excerpt: child.excerpt,
           ...child.frontmatter,
+          ...context,
           id: node.id,
         },
       });
@@ -376,9 +380,11 @@ export default async function({ actions, getNode, graphql, reporter }) {
           pathRoot
         )}`;
         console.info(`Creating global common for ${platformName}: ${path}`);
+        // XXX: we dont index or add redirects for guide-common pages
         createPlatformPage(node, path, {
           ...guidePageContext,
           noindex: true,
+          redirect_from: [],
         });
       });
 
@@ -391,9 +397,11 @@ export default async function({ actions, getNode, graphql, reporter }) {
         console.info(
           `Creating platform common for ${platformName} -> ${guideName}: ${path}`
         );
+        // XXX: we dont index or add redirects for guide-common pages
         createPlatformPage(node, path, {
           ...guidePageContext,
           noindex: true,
+          redirect_from: [],
         });
       });
 
