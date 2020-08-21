@@ -31,3 +31,32 @@ dependencies {
     implementation 'io.sentry:sentry-android:{version}'
 }
 ```
+
+### Connecting the SDK to Sentry
+
+After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
+
+Add your DSN to the manifest file.
+
+```xml
+<application>
+    <meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+</application>
+```
+
+### Verifying Your Setup
+
+Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
+
+```java
+public class MyActivity extends AppCompatActivity {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        try {
+            throw new Exception("This is a test.");
+        } catch (Exception e) {
+            Sentry.captureException(e);
+        }
+    }
+}
+```

@@ -10,6 +10,7 @@ import SmartLink from "./smartLink";
 import CodeBlock from "./codeBlock";
 import CodeTabs from "./codeTabs";
 import ConfigKey from "./configKey";
+import GuideGrid from "./guideGrid";
 import JsCdnTag from "./jsCdnTag";
 import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
@@ -17,14 +18,15 @@ import PlatformContent from "./platformContent";
 const mdxComponents = {
   Alert,
   a: SmartLink,
-  Link: SmartLink,
+  Break,
   CodeBlock,
   CodeTabs,
   ConfigKey,
-  Break,
+  GuideGrid,
+  JsCdnTag,
+  Link: SmartLink,
   ParamTable,
   PlatformContent,
-  JsCdnTag,
 };
 
 export default ({ value }) => {

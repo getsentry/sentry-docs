@@ -5,9 +5,7 @@ module.exports = ({ markdownAST }, {}) => {
   let idx = 0;
 
   visit(markdownAST, "import", node => {
-    const match = node.value.match(
-      /^\s*import\s(?:"([^"]*\.mdx)"|'([^']*\.mdx)')\s*;?\s*$/
-    );
+    const match = node.value.match(/^\s*import\s"([^"]*\.mdx)"\s*;?\s*$/);
     let componentName = null;
     if (match) {
       const path = match[1];

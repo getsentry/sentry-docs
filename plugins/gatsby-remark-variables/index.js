@@ -53,10 +53,7 @@ module.exports = async ({ markdownAST, markdownNode }, options) => {
           });
           if (result instanceof Promise) result = await result;
         } catch (err) {
-          console.warn(
-            `Error executing variable-like construct: ${match[0]}`,
-            err
-          );
+          console.warn(`Error executing variable-like construct: ${match[0]}`);
         }
         if (result) {
           node.value = node.value.replace(match[0], result);

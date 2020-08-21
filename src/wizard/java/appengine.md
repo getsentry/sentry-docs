@@ -1,6 +1,6 @@
 ---
 name: Google App Engine
-doc_link: https://docs.sentry.io/clients/java/modules/appengine/
+doc_link: https://docs.sentry.io/platforms/java/guides/google-app-engine/
 support_level: production
 type: framework
 ---
