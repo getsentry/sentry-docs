@@ -31,14 +31,14 @@ Alert.propTypes = {
   title: PropTypes.string,
   level: PropTypes.string,
   deepLink: PropTypes.string,
-  dismiss: PropTypes.bool
+  dismiss: PropTypes.bool,
 };
 
 Alert.defaultProps = {
   title: null,
   level: "",
   deepLink: null,
-  dismiss: false
+  dismiss: false,
 };
 
 export default Alert;

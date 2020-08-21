@@ -21,7 +21,12 @@ const GitHubCTA = ({ sourceInstanceName, relativePath }) => (
   </div>
 );
 
-export default ({ data: { file }, pageContext: { title }, children }) => {
+export default ({
+  data: { file },
+  pageContext: { title },
+  sidebar,
+  children,
+}) => {
   const tx = Sentry.getCurrentHub()
     .getScope()
     .getTransaction();
@@ -32,7 +37,7 @@ export default ({ data: { file }, pageContext: { title }, children }) => {
   const child = file && (file.childMarkdownRemark || file.childMdx);
   const hasToc = child && !!child.tableOfContents.items;
   return (
-    <Layout title={title} file={file}>
+    <Layout title={title} file={file} sidebar={sidebar}>
       <SEO title={title} file={file} />
 
       <div className="row">

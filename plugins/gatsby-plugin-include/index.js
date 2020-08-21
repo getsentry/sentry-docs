@@ -5,9 +5,7 @@ module.exports = ({ markdownAST }, {}) => {
   let idx = 0;
 
   visit(markdownAST, "import", node => {
-    const match = node.value.match(
-      /^\s*import\s(?:"([^"]*\.mdx)"|'([^']*\.mdx)')\s*;?\s*$/
-    );
+    const match = node.value.match(/^\s*import\s"([^"]*\.mdx)"\s*;?\s*$/);
     let componentName = null;
     if (match) {
       const path = match[1];
@@ -16,7 +14,7 @@ module.exports = ({ markdownAST }, {}) => {
       } else {
         imports[path] = {
           componentName: (componentName = `ImportedComponent${idx++}`),
-          position: node.position
+          position: node.position,
         };
       }
     }
@@ -34,7 +32,7 @@ module.exports = ({ markdownAST }, {}) => {
         return {
           type: "import",
           value: `import ${componentName} from "${path}";`,
-          position
+          position,
         };
       })
       .concat(markdownAST.children);

@@ -13,7 +13,7 @@ const LANGUAGES = {
   csharp: "C#",
   es6: "JavaScript (ES6)",
   yml: "YAML",
-  yaml: "YAML"
+  yaml: "YAML",
 };
 
 function CodeTabs({ children }) {
@@ -22,15 +22,6 @@ function CodeTabs({ children }) {
   } else {
     children = [...children];
   }
-
-  children.sort((a, b) => {
-    function makeKey({ language, title }) {
-      return `${language || "_"}-${title || ""}`;
-    }
-    return makeKey(a.props).localeCompare(makeKey(b.props), ["en"], {
-      sensitivity: "base"
-    });
-  });
 
   // the idea here is that we have two selection states.  The shared selection
   // always wins unless what is in the shared selection does not exist on the

@@ -4,23 +4,24 @@ doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=python
 support_level: production
 type: language
 ---
+
 Install our Python SDK using [`pip`](https://pip.pypa.io/en/stable/):
 
 ```bash
 $ pip install --upgrade sentry-sdk==0.16.2
 ```
 
-
-
-
 Import and initialize the Sentry SDK early in your application's setup:
 
 ```python
 import sentry_sdk
-sentry_sdk.init("___PUBLIC_DSN___")
+sentry_sdk.init(
+    "___PUBLIC_DSN___",
+    traces_sample_rate = 1.0
+)
 ```
 
-
+The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `traces_sample_rate` to a value between 0 and 1.
 
 One way to verify your setup is by intentionally sending an event that breaks your application.
 

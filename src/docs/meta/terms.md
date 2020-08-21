@@ -1,5 +1,5 @@
 ---
-title: 'Terms of Service'
+title: "Terms of Service"
 sidebar_order: 1
 ---
 

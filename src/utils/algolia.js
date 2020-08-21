@@ -1,35 +1,14 @@
 const pageQuery = `{
-    pages: allFile(
-      filter: {
-        sourceInstanceName: {in: ["docs"]}
-      }
-    ) {
+    pages: allSitePage {
       edges {
         node {
           objectID: id
-          childMarkdownRemark {
-            frontmatter {
-              title
-              draft
-              noindex
-            }
-            fields {
-              slug
-              legacy
-            }
-            excerpt(pruneLength: 5000)
-          }
-          childMdx {
-            frontmatter {
-              title
-              draft
-              noindex
-            }
-            fields {
-              slug
-              legacy
-            }
-            excerpt(pruneLength: 5000)
+          path
+          context {
+            draft
+            title
+            excerpt
+            noindex
           }
         }
       }
@@ -39,22 +18,15 @@ const pageQuery = `{
 const flatten = arr =>
   arr
     .filter(
-      ({ node: { childMarkdownRemark, childMdx } }) =>
-        childMarkdownRemark || childMdx
+      ({ node: { context } }) =>
+        context && !context.draft && !context.noindex && context.title
     )
-    .map(({ node: { childMarkdownRemark, childMdx, objectID } }) => [
-      childMarkdownRemark || childMdx,
+    .map(({ node: { objectID, context, path } }) => ({
       objectID,
-    ])
-    .filter(
-      ([child, _]) => !child.frontmatter.noindex && !child.frontmatter.draft
-    )
-    .map(([child, objectID]) => ({
-      objectID,
-      title: child.frontmatter.title,
-      url: child.fields.slug,
-      content: child.excerpt,
-      score: child.legacy ? 0 : 1,
+      title: context.title,
+      url: path,
+      content: context.excerpt,
+      // score: child.legacy ? 0 : 1,
     }))
     .filter(n => !n.draft);
 

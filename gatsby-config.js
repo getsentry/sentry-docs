@@ -1,4 +1,7 @@
-// const path = require("path");
+require("ts-node").register({
+  files: true, // to that TS node hooks have access to local typings too
+});
+
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
 
@@ -96,7 +99,7 @@ const getPlugins = () => {
       resolve: `gatsby-transformer-json`,
       options: {
         typeName: ({ node, object, isArray }) => {
-          if (node.sourceInstanceName === "api-docs") {
+          if (node.sourceInstanceName === "api") {
             return "ApiDoc";
           }
           return null;
@@ -113,7 +116,14 @@ const getPlugins = () => {
     {
       resolve: `gatsby-source-filesystem`,
       options: {
-        name: `api-docs`,
+        name: `platforms`,
+        path: `${__dirname}/src/platforms`,
+      },
+    },
+    {
+      resolve: `gatsby-source-filesystem`,
+      options: {
+        name: `api`,
         path: `${__dirname}/src/api`,
       },
     },
@@ -150,7 +160,7 @@ const getPlugins = () => {
       resolve: "./plugins/gatsby-plugin-sentry-wizard",
       options: {
         source: "wizard",
-        output: `${__dirname}/static/_platforms`,
+        output: `${__dirname}/public/_platforms`,
       },
     },
     {
@@ -182,7 +192,7 @@ module.exports = {
   // pathPrefix: `/develop`,
   siteMetadata: {
     title: "Sentry Documentation",
-    homeUrl: "https://sentry.io",
+    homeUrl: "https://docs.sentry.io",
     sitePath: "docs.sentry.io",
     description: "",
     author: "@getsentry",
