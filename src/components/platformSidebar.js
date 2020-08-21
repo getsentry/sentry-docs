@@ -37,6 +37,7 @@ export default ({ platform, guide }) => {
                 root={`platforms/${platformName}/guides/${guideName}`}
                 tree={tree}
                 noHeadingLink
+                showDepth={1}
                 prependLinks={[
                   [
                     `/platforms/${platformName}/guides/${guideName}/`,
@@ -49,6 +50,7 @@ export default ({ platform, guide }) => {
                 root={`platforms/${platformName}`}
                 tree={tree}
                 noHeadingLink
+                showDepth={1}
                 prependLinks={[
                   [`/platforms/${platformName}/`, "Getting Started"],
                 ]}

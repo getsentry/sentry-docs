@@ -31,7 +31,7 @@ export const toTree = nodeList => {
   return result[0].children;
 };
 
-export const renderChildren = (children, exclude) => {
+export const renderChildren = (children, exclude, showDepth = 1, depth = 0) => {
   return children
     .filter(
       ({ name, node }) =>
@@ -50,7 +50,8 @@ export const renderChildren = (children, exclude) => {
     .map(({ node, children }) => {
       return (
         <SidebarLink to={node.path} key={node.path} title={node.context.title}>
-          {renderChildren(children, exclude)}
+          {depth < showDepth &&
+            renderChildren(children, exclude, showDepth, depth + 1)}
         </SidebarLink>
       );
     });
@@ -62,6 +63,7 @@ export default ({
   tree,
   collapse = false,
   exclude = [],
+  showDepth = 0,
   prependLinks = [],
   noHeadingLink = false,
 }) => {
@@ -116,7 +118,7 @@ export default ({
                 {link[1]}
               </SidebarLink>
             ))}
-          {renderChildren(entity.children, exclude)}
+          {renderChildren(entity.children, exclude, showDepth)}
         </ul>
       )}
     </li>
