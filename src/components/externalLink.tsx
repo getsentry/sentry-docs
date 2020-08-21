@@ -1,6 +1,12 @@
 import React from "react";
 
-export default ({ children, ...props }) => (
+type Props =
+  | {
+      children?: React.ReactNode;
+    }
+  | React.HTMLProps<HTMLAnchorElement>;
+
+export default ({ children, ...props }: Props): JSX.Element => (
   <a {...props}>
     {children}
 

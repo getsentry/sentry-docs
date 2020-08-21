@@ -1,9 +1,47 @@
 import React, { useState, useEffect } from "react";
 
+type ProjectCodeKeywords = {
+  DSN: string;
+  PUBLIC_DSN: string;
+  PUBLIC_KEY: string;
+  SECRET_KEY: string;
+  API_URL: string;
+  PROJECT_ID: number;
+  PROJECT_NAME: string;
+  ORG_ID: number;
+  ORG_NAME: string;
+  ORG_SLUG: string;
+  MINIDUMP_URL: string;
+  UNREAL_URL: string;
+  title: string;
+};
+
+type CodeKeywords = {
+  PROJECT: ProjectCodeKeywords[];
+};
+
+type Dsn = {
+  scheme: string;
+  publicKey: string;
+  secretKey?: string;
+  host: string;
+  pathname: string;
+};
+
+type ProjectApiResult = {
+  dsn: string;
+  dsnPublic: string;
+  id: string;
+  slug: string;
+  organizationId: string;
+  organizationSlug: string;
+  projectSlug: string;
+};
+
 // only fetch them once
 let cachedCodeKeywords = null;
 
-const DEFAULTS = {
+const DEFAULTS: CodeKeywords = {
   PROJECT: [
     {
       DSN: "https://examplePublicKey@o0.ingest.sentry.io/0",
@@ -25,7 +63,7 @@ const DEFAULTS = {
 
 const CodeContext = React.createContext(DEFAULTS);
 
-const parseDsn = function(dsn) {
+const parseDsn = function(dsn: string): Dsn {
   const match = dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
 
   return {
@@ -33,19 +71,19 @@ const parseDsn = function(dsn) {
     publicKey: escape(match[2]),
     secretKey: escape(match[3]),
     host: escape(match[4]),
-    pathSection: escape(match[5]),
+    pathname: escape(match[5]),
   };
 };
 
-const formatMinidumpURL = ({ scheme, host, pathSection, publicKey }) => {
-  return `${scheme}${host}/api${pathSection}/minidump/?sentry_key=${publicKey}`;
+const formatMinidumpURL = ({ scheme, host, pathname, publicKey }: Dsn) => {
+  return `${scheme}${host}/api${pathname}/minidump/?sentry_key=${publicKey}`;
 };
 
-const formatUnrealEngineURL = ({ scheme, host, pathSection, publicKey }) => {
-  return `${scheme}${host}/api${pathSection}/unreal/${publicKey}/`;
+const formatUnrealEngineURL = ({ scheme, host, pathname, publicKey }: Dsn) => {
+  return `${scheme}${host}/api${pathname}/unreal/${publicKey}/`;
 };
 
-const formatApiUrl = ({ scheme, host }) => {
+const formatApiUrl = ({ scheme, host }: Dsn) => {
   const apiHost =
     host.indexOf(".ingest.") >= 0 ? host.split(".ingest.")[1] : host;
 
@@ -54,7 +92,7 @@ const formatApiUrl = ({ scheme, host }) => {
 
 export function fetchCodeKeywords() {
   return new Promise(resolve => {
-    function transformResults(projects) {
+    function transformResults(projects: ProjectApiResult[]) {
       if (projects.length === 0) {
         console.warn("Unable to fetch codeContext - using defaults.");
         resolve(DEFAULTS);
@@ -91,7 +129,11 @@ export function fetchCodeKeywords() {
         if (xhr.status === 0) {
           transformResults([]);
         } else {
-          const { projects } = xhr.response;
+          const {
+            projects,
+          }: {
+            projects: ProjectApiResult[];
+          } = xhr.response;
           transformResults(projects);
         }
       }
