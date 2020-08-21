@@ -62,10 +62,10 @@ export const renderChildren = (
         exclude.indexOf(node.path) === -1
     )
     .sort((a, b) => {
-      let aso = a.node.context.sidebar_order || 10;
-      let bso = b.node.context.sidebar_order || 10;
+      let aso = a.node.context.sidebar_order ?? 10;
+      let bso = b.node.context.sidebar_order ?? 10;
       if (aso > bso) return 1;
-      else if (bso > aso) return 1;
+      else if (bso > aso) return -1;
       return a.node.context.title.localeCompare(b.node.context.title);
     })
     .map(({ node, children }) => {
