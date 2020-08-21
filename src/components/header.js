@@ -1,11 +1,13 @@
 import PropTypes from "prop-types";
 import React from "react";
 
+import SmartLink from "./smartLink";
+
 const Header = ({ homeUrl, sitePath }) => {
   return (
     <div className="navbar navbar-expand-md navbar-light bg-white global-header">
-      <a
-        href={homeUrl}
+      <SmartLink
+        to="/"
         title="Sentry error monitoring"
         className="navbar-brand pb-0"
       >
@@ -20,7 +22,7 @@ const Header = ({ homeUrl, sitePath }) => {
             />
           </g>
         </svg>
-      </a>
+      </SmartLink>
 
       <button
         className="d-md-none btn btn-outline-dark"

@@ -4,49 +4,56 @@ import { useLocation } from "@reach/router";
 
 import SmartLink from "./smartLink";
 import SidebarLink from "./sidebarLink";
-import { sortBy } from "../utils";
 
 export const toTree = nodeList => {
   const result = [];
   const level = { result };
 
-  nodeList.forEach(node => {
-    let curPath = "";
-    node.path.split("/").reduce((r, name, i, a) => {
-      curPath += `${name}/`;
-      if (!r[name]) {
-        r[name] = { result: [] };
-        r.result.push({
-          name,
-          children: r[name].result,
-          node: curPath === node.path ? node : null,
-        });
-      }
+  nodeList
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .forEach(node => {
+      let curPath = "";
+      node.path.split("/").reduce((r, name, i, a) => {
+        curPath += `${name}/`;
+        if (!r[name]) {
+          r[name] = { result: [] };
+          r.result.push({
+            name,
+            children: r[name].result,
+            node: curPath === node.path ? node : null,
+          });
+        }
 
-      return r[name];
-    }, level);
-  });
+        return r[name];
+      }, level);
+    });
 
   return result[0].children;
 };
 
 export const renderChildren = (children, exclude) => {
-  return sortBy(
-    children.filter(
+  return children
+    .filter(
       ({ name, node }) =>
         node &&
         !!node.context.title &&
         name !== "" &&
         exclude.indexOf(node.path) === -1
-    ),
-    n => n.node.context.sidebar_order
-  ).map(({ node, children }) => {
-    return (
-      <SidebarLink to={node.path} key={node.path} title={node.context.title}>
-        {renderChildren(children, exclude)}
-      </SidebarLink>
-    );
-  });
+    )
+    .sort((a, b) => {
+      let aso = a.node.context.sidebar_order || 10;
+      let bso = b.node.context.sidebar_order || 10;
+      if (aso > bso) return 1;
+      else if (bso > aso) return 1;
+      return a.node.context.title.localeCompare(b.node.context.title);
+    })
+    .map(({ node, children }) => {
+      return (
+        <SidebarLink to={node.path} key={node.path} title={node.context.title}>
+          {renderChildren(children, exclude)}
+        </SidebarLink>
+      );
+    });
 };
 
 export default ({
@@ -66,12 +73,12 @@ export default ({
   rootBits.forEach(bit => {
     entity = currentTree.find(n => n.name === bit);
     if (!entity) {
-      throw new Error(
-        `Could not find entity at ${root} (specifically at ${bit})`
-      );
+      console.warn(`Could not find entity at ${root} (specifically at ${bit})`);
+      return;
     }
     currentTree = entity.children;
   });
+  if (!entity) return null;
   if (!title && entity.node) title = entity.node.context.title;
   const parentNode = entity.children
     ? entity.children.find(n => n.name === "")

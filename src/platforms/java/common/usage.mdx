@@ -1,8 +1,8 @@
 ---
-name: Java
-doc_link: https://docs.sentry.io/platforms/java/
-support_level: production
-type: language
+title: Manual Usage
+sidebar_order: 5
+redirect_from:
+  - /clients/java/usage/
 ---
 
 ## Installation
@@ -140,6 +140,88 @@ public class MyClass {
             // This sends an exception event to Sentry.
             sentry.sendException(e);
         }
+    }
+}
+```
+
+### Building More Complex Events
+
+For more complex messages, you’ll need to build an `Event` with the `EventBuilder` class:
+
+```java
+import io.sentry.Sentry;
+   import io.sentry.event.Event;
+   import io.sentry.event.EventBuilder;
+   import io.sentry.event.interfaces.ExceptionInterface;
+
+   public class MyClass {
+       public static void main(String... args) {
+           Sentry.init();
+       }
+
+       void unsafeMethod() {
+           throw new UnsupportedOperationException("You shouldn't call this!");
+       }
+
+       void logSimpleMessage() {
+           // This sends an event to Sentry.
+           EventBuilder eventBuilder = new EventBuilder()
+                           .withMessage("This is a test")
+                           .withLevel(Event.Level.INFO)
+                           .withLogger(MyClass.class.getName());
+
+           // Note that the *unbuilt* EventBuilder instance is passed in so that
+           // EventBuilderHelpers are run to add extra information to your event.
+           Sentry.capture(eventBuilder);
+       }
+
+       void logException() {
+           try {
+               unsafeMethod();
+           } catch (Exception e) {
+               // This sends an exception event to Sentry.
+               EventBuilder eventBuilder = new EventBuilder()
+                               .withMessage("Exception caught")
+                               .withLevel(Event.Level.ERROR)
+                               .withLogger(MyClass.class.getName())
+                               .withSentryInterface(new ExceptionInterface(e));
+
+               // Note that the *unbuilt* EventBuilder instance is passed in so that
+               // EventBuilderHelpers are run to add extra information to your event.
+               Sentry.capture(eventBuilder);
+           }
+       }
+}
+```
+
+### Automatically Enhancing Events
+
+You can also implement an `EventBuilderHelper` that is able to automatically enhance outgoing events.
+
+```java
+import io.sentry.Sentry;
+import io.sentry.SentryClient;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.helper.EventBuilderHelper;
+
+public class MyClass {
+    public void myMethod() {
+        SentryClient client = Sentry.getStoredClient();
+
+        EventBuilderHelper myEventBuilderHelper = new EventBuilderHelper() {
+            @Override
+            public void helpBuildingEvent(EventBuilder eventBuilder) {
+                eventBuilder.withMessage("Overwritten by myEventBuilderHelper!");
+            }
+        };
+
+        // Add an ``EventBuilderHelper`` to the current client instance. Note that
+        // this helper will process *all* future events.
+        client.addBuilderHelper(myEventBuilderHelper);
+
+        // Send an event to Sentry. During construction of the event the message
+        // body will be overwritten by ``myEventBuilderHelper``.
+        Sentry.capture("Hello, world!");
     }
 }
 ```

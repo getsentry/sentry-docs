@@ -2,7 +2,6 @@ import React from "react";
 import { StaticQuery, graphql } from "gatsby";
 
 import DynamicNav, { toTree } from "./dynamicNav";
-import { sortBy } from "~src/utils";
 
 const navQuery = graphql`
   query PlatformNavQuery {
@@ -31,15 +30,12 @@ export default ({ platform, guide }) => {
       query={navQuery}
       render={data => {
         const tree = toTree(
-          sortBy(
-            data.allSitePage.nodes
-              .filter(
-                n =>
-                  n.context.platform && n.context.platform.name === platformName
-              )
-              .filter(n => !n.context.draft),
-            n => n.path
-          )
+          data.allSitePage.nodes
+            .filter(
+              n =>
+                n.context.platform && n.context.platform.name === platformName
+            )
+            .filter(n => !n.context.draft)
         );
         return (
           <ul className="list-unstyled" data-sidebar-tree>
