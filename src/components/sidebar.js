@@ -6,7 +6,7 @@ import SidebarLink from "./sidebarLink";
 
 const navQuery = graphql`
   query NavQuery {
-    allSitePage {
+    allSitePage(filter: { context: { draft: { ne: false } } }) {
       nodes {
         path
         context {
@@ -24,11 +24,7 @@ export default () => {
     <StaticQuery
       query={navQuery}
       render={data => {
-        const tree = toTree(
-          data.allSitePage.nodes
-            .filter(n => !!n.context)
-            .filter(n => !n.context.draft)
-        );
+        const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
         return (
           <ul className="list-unstyled" data-sidebar-tree>
             <DynamicNav

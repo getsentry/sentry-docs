@@ -5,7 +5,7 @@ import DynamicNav, { toTree } from "./dynamicNav";
 
 const navQuery = graphql`
   query PlatformNavQuery {
-    allSitePage(filter: { path: { regex: "/^/platforms//" } }) {
+    allSitePage(filter: { context: { draft: { ne: false } } }) {
       nodes {
         path
         context {
@@ -29,14 +29,7 @@ export default ({ platform, guide }) => {
     <StaticQuery
       query={navQuery}
       render={data => {
-        const tree = toTree(
-          data.allSitePage.nodes
-            .filter(
-              n =>
-                n.context.platform && n.context.platform.name === platformName
-            )
-            .filter(n => !n.context.draft)
-        );
+        const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
         return (
           <ul className="list-unstyled" data-sidebar-tree>
             {guideName ? (
@@ -75,6 +68,12 @@ export default ({ platform, guide }) => {
                   : []
               }
               tree={tree}
+            />
+            <DynamicNav
+              root="platforms"
+              title="Other Platforms"
+              tree={tree}
+              exclude={[`/platforms/${platformName}/`]}
             />
           </ul>
         );
