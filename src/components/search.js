@@ -16,7 +16,7 @@ const search = new SentryGlobalSearch([
 const useClickOutside = (ref, handler, events) => {
   if (!events) events = [`mousedown`, `touchstart`];
 
-  const detectClickOutside = (event) => {
+  const detectClickOutside = event => {
     return !ref.current.contains(event.target) && handler();
   };
 
@@ -53,13 +53,13 @@ const Search = () => {
         className="form-control"
         onChange={({ target: { value: query } }) => {
           setQuery(query);
-          search.query(query).then((results) => {
+          search.query(query).then(results => {
             if (loading) setLoading(false);
             setResults(results);
           });
         }}
         value={query}
-        onFocus={(e) => setFocus(true)}
+        onFocus={e => setFocus(true)}
       />
 
       {query.length > 0 && focus && (
@@ -89,7 +89,7 @@ const Search = () => {
                           }`}
                         >
                           {hits.length > 0 ? (
-                            hits.map((hit) => (
+                            hits.map(hit => (
                               <li key={hit.id} className="sgs-hit-item">
                                 <a href={hit.url}>
                                   {hit.title && (
