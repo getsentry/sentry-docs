@@ -22,15 +22,6 @@ use Plug.ErrorHandler
 use Sentry.Plug
 ```
 
-If you are using Phoenix, you can also include [Sentry.Phoenix.Endpoint](https://hexdocs.pm/sentry/Sentry.Phoenix.Endpoint.html) in your Endpoint. This module captures errors occurring in the Phoenix pipeline before the request reaches the Router:
-
-```elixir
-use Phoenix.Endpoint, otp_app: :my_app
-use Sentry.Phoenix.Endpoint
-```
-
-More information on why this may be necessary can be found here: https://github.com/getsentry/sentry-elixir/issues/229 and https://github.com/phoenixframework/phoenix/issues/2791
-
 ### Capture Crashed Process Exceptions
 
 This library comes with an extension to capture all error messages that the Plug handler might not. This is based on [Logger.Backend](https://hexdocs.pm/logger/Logger.html#module-backends).
@@ -64,7 +55,7 @@ The backend can also be configured to capture Logger metadata, which is detailed
 
 `included_environments`
 
-: The list of environments you want to send reports to sentry, this defaults to `~w(prod test dev)a`.
+: The list of environments you want to send reports to sentry, this defaults to `[:prod]`.
 
 `tags`
 
@@ -80,23 +71,23 @@ The backend can also be configured to capture Logger metadata, which is detailed
 
 `client`
 
-: If you need different functionality for the HTTP client, you can define your own module that implements the _Sentry.HTTPClient_ behaviour and set _client_ to that module.
+: If you need different functionality for the HTTP client, you can define your own module that implements the `Sentry.HTTPClient` behaviour and set `client` to that module. Defaults to `Sentry.HackneyClient`.
 
 `filter`
 
-: Set this to a module that implements the `Sentry.EventFilter` behaviour if you would like to prevent certain exceptions from being sent. See below for further documentation.
+: Set this to a module that implements the `Sentry.EventFilter` behaviour if you would like to prevent certain exceptions from being sent. See below for further documentation. Defaults to excluding exceptions from `Sentry.PlugCapture` that match route not found exceptions from Phoenix and Plug.
 
 `hackney_pool_max_connections`
 
-: Number of connections for Sentry’s hackney pool. This defaults to 50.
+: Number of connections for Sentry's hackney pool. This defaults to 50.
 
 `hackney_pool_timeout`
 
-: Timeout for Sentry’s hackney pool. This defaults to 5000 milliseconds.
+: Timeout for Sentry's hackney pool. This defaults to 5000 milliseconds.
 
 `hackney_opts`
 
-: Sentry starts its own hackney pool named `:sentry_pool`, and defaults to using it. Hackney’s `pool` configuration as well others like proxy or response timeout can be set through this configuration as it is passed directly to hackney when making a request.
+: Sentry starts its own hackney pool named `:sentry_pool`, and defaults to using it. Hackney's `pool` configuration as well others like proxy or response timeout can be set through this configuration as it is passed directly to hackney when making a request.
 
 `before_send_event`
 
@@ -112,7 +103,7 @@ The backend can also be configured to capture Logger metadata, which is detailed
 
 `in_app_module_whitelist`
 
-: Expects a list of modules that is used to distinguish among stack trace frames that belong to your app and ones that are part of libraries or core Elixir. This is used to better display the significant part of stack traces. The logic is greedy, so if your app’s root module is `MyApp` and your setting is `[MyApp]`, that module as well as any submodules like `MyApp.Submodule` would be considered part of your app. Defaults to `[]`.
+: Expects a list of modules that is used to distinguish among stack trace frames that belong to your app and ones that are part of libraries or core Elixir. This is used to better display the significant part of stack traces. The logic is greedy, so if your app's root module is `MyApp` and your setting is `[MyApp]`, that module as well as any submodules like `MyApp.Submodule` would be considered part of your app. Defaults to `[]`.
 
 `report_deps`
 
@@ -143,7 +134,7 @@ The backend can also be configured to capture Logger metadata, which is detailed
 
 ## Testing Your Configuration
 
-To ensure you’ve set up your configuration correctly, we recommend running the included mix task. It can be tested on different Mix environments and will tell you if it is not currently configured to send events in that environment:
+To ensure you've set up your configuration correctly, we recommend running the included mix task. It can be tested on different Mix environments and will tell you if it is not currently configured to send events in that environment:
 
 ```bash
 $ MIX_ENV=dev mix sentry.send_test_event
@@ -151,10 +142,10 @@ Client configuration:
 server: https://sentry.io/
 public_key: public
 secret_key: secret
-included_environments: [:prod]
+included_environments: [:prod, :staging]
 current environment_name: :dev
 
-:dev is not in [:prod] so no test event will be sent
+:dev is not in [:prod, :staging] so no test event will be sent
 
 $ MIX_ENV=prod mix sentry.send_test_event
 Client configuration:
