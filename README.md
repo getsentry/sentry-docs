@@ -138,19 +138,6 @@ The sidebar on platform pages (handled by ``<PlatformSidebar>``) will generate w
 
 In addition to platform-shared content (via ``common/``) you can also defined globally shared content (shared by all platforms and guides). This is done by placing the content into the top-level ``/platforms/common/`` path. It works very much the same as the platform-level common content.
 
-### Creating new SDK docs
-
-TODO: This needs updated!
-
-If you want to create new docs for SDKs you should start by choosing an SDK to copy from and change the parts necessary. Start by calling
-
-```bash
-yarn sdk:copy javascript angular
-```
-
-This for example will take the `src/platforms/javascript` content and symlink everything into `src/platforms/angular`.
-Since all the files are symlinks the content will be the same. Files that have different content in the new folder need to be deleted and created manually again to be able to change the content. If you change something in the symlink it will change the original file.
-
 ## Extended Markdown Syntax
 
 ### Variables
