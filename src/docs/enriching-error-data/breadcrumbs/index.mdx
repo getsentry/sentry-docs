@@ -1,0 +1,91 @@
+---
+title: Breadcrumbs
+sidebar_order: 2
+redirect_from:
+  - /learn/breadcrumbs/
+---
+
+Sentry supports a concept called Breadcrumbs, which is a trail of events that happened prior to an issue. Oftentimes these events are very similar to traditional logs, but also have the ability to record more rich structured data.
+
+<Alert level="" title="Learn about SDK usage"><markdown>
+
+This page will provide an overview of of the Breadcrumbs section. Developers who want to modify the breadcrumbs interface can read about this in detail using the developer documentation devoted to the [Breadcrumbs Interface](https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/). Manual breadcrumb recording and customization of breadcrumbs are documented on this page.
+
+</markdown></Alert>
+
+If an event of type error provides a trail, Sentry will display that trail in a form of breadcrumbs on the event’s issues details page. It looks like:
+
+![Breadcrumb section](crumb-section.png)
+
+## Table
+
+The crumb’s table renders each trail a separate row and it’s information in 5 different columns: `type`, `category`, `description`, `level`, and `time`.
+
+### Type
+
+A semi-internal attribute `type` can control the type of the breadcrumb. By default all breadcrumbs are recorded as `default`, which makes them appear as a `Debug` entry, but Sentry provides other types that influence how the breadcrumbs are rendered.
+
+### Category
+
+A category under which to label the event. This data is similar to a logger name, and will let you more easily understand the area an event took place, such as auth.
+
+### Description
+
+A description it's a set of:
+
+- Message: A string describing the event. It is rendered as text with all whitespace preserved. Often used as a drop-in for a traditional log message.
+
+- Data: A key-value mapping of metadata around the event. This is often used instead of message, but may be used in addition. The Sentry UI will display all the data sent.
+
+### Level
+
+The severity of an event. The level is set to one of five values, which are, in order of severity `fatal`, `error`, `warning`, `info` and `debug`
+
+### Time
+
+A timestamp representing when the breadcrumb occurred. The format is either a string as defined in RFC 3339 or a numeric (integer or float) value representing the number of seconds that have elapsed since the Unix epoch.
+
+_By default, the UI displays the timestamp as an absolute time, but by clicking on the toggle button, the column will be updated, displaying the relative time:_
+
+![Switch time format button](toggle-time-btn.png)
+
+_You can read about the crumb's data in detail in the developer documentation [Breadcrumbs Interface](https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/)._
+
+## Filter
+
+#### Filter By
+
+The provided types and levels are displayed as options in this filter, as for example:
+
+![Filter By Types/Levels](filter-by.png)
+
+The crumb’s list will be filtered according to the selected options.
+
+#### Full-Text Search
+
+When typing anything in the input field, Sentry filters out all fragmented data, trying to find a match to the search criteria. If a match is found, it will be highlighted.
+
+_Be aware that the full-text search works in conjunction with the ‘Filter By’ filter._
+
+## Recording Crumbs
+
+Manual breadcrumb recording is also available and easy to use. This way breadcrumbs
+can be added whenever something interesting happens. For instance, it might make sense
+to record a breadcrumb if the user authenticates or another state change happens.
+
+<PlatformContent includePath="breadcrumbs-example" />
+
+## Automatic Breadcrumbs
+
+SDKs will automatically start recording breadcrumbs by enabling integrations. For instance,
+the browser JavaScript SDK will automatically record all location changes.
+
+## Breadcrumb Customization
+
+SDKs following the unified API support customizing breadcrumbs through the `before_breadcrumb`
+hook. This hook is passed an already assembled breadcrumb and in some SDKs an optional
+hint. The function can modify the breadcrumb or decide to discard it entirely:
+
+<PlatformContent includePath="before-breadcrumb" />
+
+For information about what can be done with the hint see [_Filtering Events_](/error-reporting/configuration/filtering/#before-breadcrumb).
