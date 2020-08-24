@@ -4,25 +4,31 @@ To get started with performance monitoring with Vue.js, first install these pack
 
 ```bash
 # Using yarn
-$ yarn add @sentry/browser @sentry/integrations @sentry/apm
+$ yarn add @sentry/browser @sentry/integrations @sentry/tracing
 
 # Using npm
-$ npm install @sentry/browser @sentry/integrations @sentry/apm
+$ npm install @sentry/browser @sentry/integrations @sentry/tracing
 ```
+
+<Alert level="warning" title="Note"><markdown>
+
+We switched our package name from `@sentry/apm` to `@sentry/tracing`. If you were previously using `@sentry/apm`, please see [Switching to @sentry/tracing](/product/performance/apm-to-tracing/).
+
+</markdown></Alert>
 
 The Vue Tracing Integration allows you to track rendering performance during an initial application load.
 
 Sentry injects a handler inside Vue's `beforeCreate` mixin, providing access to a Vue component during its life cycle stages.
-When Sentry encounters a component named `root`, which is a top-level Vue instance (as in `new Vue({})`), we use our AM Tracing integration,
-and create a new activity named `Vue Application Render`. Once the activity has been created, it will wait until all of its child components render, and there aren't new rendering events triggered within the configured `timeout`, before marking the activity as completed.
+When Sentry encounters a component named `root`, which is a top-level Vue instance (as in `new Vue({})`), we use our AM BrowserTracing integration,
+and create a new span named `Vue Application Render`. Once the `Vue Application Render` span has been created, it will wait until all of its child components render before marking the span as finished.
 
 The described instrumentation functionality will give you very high-level information about the rendering performance of the Vue instance. However, the integration can also provide more fine-grained details about what actually happened during a specific activity.
 To do that, you need to specify which components to track and what hooks to listen to (you can find a list of all available hooks [here](https://vuejs.org/v2/api/#Options-Lifecycle-Hooks)). You can also turn on tracking for all the components. However, it may be rather noisy if your app consists of hundreds of components. We encourage being more specific. If you don't provide hooks, Sentry will track a component's `mount` and `update` hooks.
 
-Note that we don't use `before` and `-ed` pairs for hooks, and you should provide a simple verb instead. For example, `update` is correct. `beforeUpdate` and `updated` are incorrect.
+Note that when specifying hooks we use the simple verb rather than `before` and `-ed` pairs. For example, `destroy` is correct. `beforeDestroy` and `destroyed` are incorrect.
 
-To set up the Vue Tracing Integration, you will first need to configure the AM Tracing integration itself. For details on how to do this, see the [JavaScript](/performance-monitoring/distributed-tracing/#javascript) section above.
-Once you've configured the Tracing integration, move on to configuring the Vue integration itself.
+To set up the Vue Tracing Integration, you will first need to configure the AM BrowserTracing integration itself. For details on how to do this, see the [JavaScript](/performance-monitoring/distributed-tracing/#javascript) section above.
+Once you've configured the BrowserTracing integration, move on to configuring the Vue integration itself.
 Sentry built the new tracing capabilities into the original Vue error handler integrations, so there is no need to add any new packages. You only need to provide an appropriate configuration.
 
 The most basic configuration for tracing your Vue app, which would track only the top-level component, looks like this:
@@ -30,13 +36,13 @@ The most basic configuration for tracing your Vue app, which would track only th
 ```js
 import * as Sentry from "@sentry/browser";
 import { Vue as VueIntegration } from "@sentry/integrations";
-import { Integrations } from "@sentry/apm";
+import { Integrations } from "@sentry/tracing";
 import Vue from "vue";
 
 Sentry.init({
   // ...
   integrations: [
-    new Integrations.Tracing(),
+    new Integrations.BrowserTracing(),
     new VueIntegration({
       Vue,
       tracing: true,
