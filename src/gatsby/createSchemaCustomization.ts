@@ -7,6 +7,7 @@ export default ({ actions, schema }) => {
       title: String
       sidebar_order: Int
       draft: Boolean
+      redirect_from: [String!]
 
       platform: PlatformContext
       guide: GuideContext

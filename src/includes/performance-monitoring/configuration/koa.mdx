@@ -4,17 +4,23 @@ To get started with performance monitoring with Koa, first install these package
 
 ```bash
 # Using yarn
-$ yarn add @sentry/node @sentry/apm
+$ yarn add @sentry/node @sentry/tracing
 
 # Using npm
-$ npm install @sentry/node @sentry/apm
+$ npm install @sentry/node @sentry/tracing
 ```
+
+<Alert level="warning" title="Note"><markdown>
+
+We switched our package name from `@sentry/apm` to `@sentry/tracing`. If you were previously using `@sentry/apm`, please see [Switching to @sentry/tracing](/product/performance/apm-to-tracing/).
+
+</markdown></Alert>
 
 Creates and attach a transaction to each context
 
 ```javascript
 const Sentry = require("@sentry/node");
-const { Span } = require("@sentry/apm");
+const { Span } = require("@sentry/tracing");
 const Koa = require("koa");
 const app = new Koa();
 const domain = require("domain");
@@ -85,8 +91,8 @@ app.use(tracingMiddleWare);
 
 // usual error handler
 app.on("error", (err, ctx) => {
-  Sentry.withScope(function(scope) {
-    scope.addEventProcessor(function(event) {
+  Sentry.withScope((scope) => {
+    scope.addEventProcessor((event) => {
       return Sentry.Handlers.parseRequest(event, ctx.request);
     });
     Sentry.captureException(err);

@@ -1,36 +1,42 @@
-To get started with performance monitoring using Sentry's JavaScript SDK, first install the `@sentry/browser` and `@sentry/apm` packages:
+To get started with performance monitoring using Sentry's JavaScript SDK, first install the `@sentry/browser` and `@sentry/tracing` packages:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/browser @sentry/apm
+$ yarn add @sentry/browser @sentry/tracing
 
 # Using npm
-$ npm install @sentry/browser @sentry/apm
+$ npm install @sentry/browser @sentry/tracing
 ```
+
+<Alert level="warning" title="Note"><markdown>
+
+We switched our package name from `@sentry/apm` to `@sentry/tracing`. If you were previously using `@sentry/apm`, please see [Switching to @sentry/tracing](/product/performance/apm-to-tracing/).
+
+</markdown></Alert>
 
 Next, initialize the integration in your call to `Sentry.init`:
 
 ```jsx
 import * as Sentry from "@sentry/browser";
-import { Integrations as ApmIntegrations } from "@sentry/apm";
+import { Integrations } from "@sentry/tracing";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   release: "my-project-name@" + process.env.npm_package_version,
-  integrations: [new ApmIntegrations.Tracing()],
+  integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
 
-Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/apm`:
+Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/tracing`:
 
-<JsCdnTag apm />
+<JsCdnTag tracing />
 
 Next, initialize the integration in your call to `Sentry.init`:
 
 ```js
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new Sentry.Integrations.Tracing()],
+  integrations: [new Sentry.Integrations.BrowserTracing()],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
@@ -41,21 +47,21 @@ Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/
 
 **Automatic Instrumentation**
 
-For `@sentry/browser`, we provide an integration called `Tracing` that does automatic instrumentation in the browser. The `Tracing` integration creates `pageload` and `navigation` transactions containing spans for XHR/fetch requests and Performance API entries such as marks, measures, and resource timings.
+For `@sentry/browser`, we provide an integration called `BrowserTracing` that does automatic instrumentation in the browser. The `BrowserTracing` integration creates `pageload` and `navigation` transactions containing spans for XHR/fetch requests and Performance API entries such as marks, measures, and resource timings.
 
-The `Tracing` integration is specific to `@sentry/browser` and does not work with `@sentry/node`.
+The `BrowserTracing` integration is specific to `@sentry/browser` and does not work with `@sentry/node`.
 
-The `Tracing` integration resides in the `@sentry/apm` package. You can add it to your `Sentry.init` call:
+The `BrowserTracing` integration resides in the `@sentry/tracing` package. You can add it to your `Sentry.init` call:
 
 ```javascript
 // Without CDN
 
 import * as Sentry from "@sentry/browser";
-import { Integrations as ApmIntegrations } from "@sentry/apm";
+import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new ApmIntegrations.Tracing()],
+  integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 
@@ -63,20 +69,20 @@ Sentry.init({
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new Sentry.Integrations.Tracing()],
+  integrations: [new Sentry.Integrations.BrowserTracing()],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
 
-_NOTE:_ The `Tracing` integration is available under `Sentry.Integrations.Tracing` when using the CDN bundle.
+_NOTE:_ The `BrowserTracing` integration is available under `Sentry.Integrations.BrowserTracing` when using the CDN bundle.
 
 To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 100% of your transactions.
 
 By default, the `pageload` and `navigation` transactions set a transaction name using `window.location.pathname`.
 
-You can pass many different options to the `Tracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box.
+You can pass many different options to the `BrowserTracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box.
 
-For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/apm.tracingoptions.html).
+For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/tracing.browsertracingoptions.html).
 
 **tracingOrigins Option**
 
@@ -87,30 +93,35 @@ _Example:_
 - A frontend application is served from `example.com`
 - A backend service is served from `api.example.com`
 - The frontend application makes API calls to the backend
-- Therefore, the option needs to be configured like this: `new ApmIntegrations.Tracing({tracingOrigins: ['api.example.com']})`
+- Therefore, the option needs to be configured like this: `new Integrations.BrowserTracing({tracingOrigins: ['api.example.com']})`
 - Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
 
 _NOTE:_ You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
 
-**beforeNavigation Option**
+**beforeNavigate Option**
 
-For `pageload` and `navigation` transactions, the `Tracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigation` option to the `Tracing` integration. This option allows you to pass in a function that takes in the location at the time of navigation and returns a new transaction name.
+For `pageload` and `navigation` transactions, the `BrowserTracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigate` option to the `BrowserTracing` integration. This option allows you to pass in a function that takes in the location at the time of navigation and returns a new transaction name.
 
-`beforeNavigation` is useful if you would like to leverage the routes from a custom routing library like `React Router` or if you want to reduce the cardinality of particular transactions.
+`beforeNavigate` is useful if you would like to leverage the routes from a custom routing library like `React Router` or if you want to reduce the cardinality of particular transactions.
 
 ```javascript
 import * as Sentry from "@sentry/browser";
-import { Integrations as ApmIntegrations } from "@sentry/apm";
+import { Integrations } from "@sentry/tracing";
+
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new ApmIntegrations.Tracing({
-      beforeNavigate: location => {
-        // Here we are doing some basic parameter replacements, but we recommend
-        // using your UI's routing library to find the matching route template here
-        return location.pathname
-          .replace(/\d+/g, "<digits>")
-          .replace(/[a-f0-9]{32}/g, "<hash>");
+    new Integrations.BrowserTracing({
+      beforeNavigate: context => {
+        return {
+          ...context,
+          // You could use your UI's routing library to find the matching
+          // route template here. We don't have one right now, so do some basic
+          // parameter replacements.
+          name: location.pathname
+            .replace(/\d+/g, "<digits>")
+            .replace(/[a-f0-9]{32}/g, "<hash>"),
+        };
       },
     }),
   ],
@@ -121,7 +132,7 @@ Sentry.init({
 **Manual Instrumentation**
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
-This is valid for both JavaScript Browser and Node and works independently of the `Tracing` integration.
+This is valid for both JavaScript Browser and Node and works independently of the `BrowserTracing` integration.
 
 ```javascript
 const transaction = Sentry.startTransaction({ name: "test-transaction" });
@@ -138,6 +149,8 @@ Here is a different example. If you want to create a transaction for a user inte
 shopCheckout() {
   // This will create a new Transaction for you
   const transaction = Sentry.startTransaction('shopCheckout');
+  // set the transaction on the scope so it picks up any errors
+  hub.configureScope(scope => scope.setSpan(transaction));
 
   // Assume this function makes an xhr/fetch call
   const result = validateShoppingCartOnServer();
@@ -201,23 +214,26 @@ addGlobalEventProcess(event => {
 });
 ```
 
-For browser JavaScript applications using the `Tracing` integration, the `beforeNavigate` option can be used to better group navigation/pageload transactions together based on URL.
+For browser JavaScript applications using the `BrowserTracing` integration, the `beforeNavigate` option can be used to better group navigation/pageload transactions together based on URL.
 
 ```javascript
 import * as Sentry from "@sentry/browser";
-import { Integrations as ApmIntegrations } from "@sentry/apm";
+import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
   // ...
   integrations: [
-    new ApmIntegrations.Tracing({
-      beforeNavigate: location => {
-        // You could use your UI's routing library to find the matching
-        // route template here. We don't have one right now, so do some basic
-        // parameter replacements.
-        return location.pathname
-          .replace(/\d+/g, "<digits>")
-          .replace(/[a-f0-9]{32}/g, "<hash>");
+    new Integrations.BrowserTracing({
+      beforeNavigate: context => {
+        return {
+          ...context,
+          // You could use your UI's routing library to find the matching
+          // route template here. We don't have one right now, so do some basic
+          // parameter replacements.
+          name: location.pathname
+            .replace(/\d+/g, "<digits>")
+            .replace(/[a-f0-9]{32}/g, "<hash>"),
+        };
       },
     }),
   ],
@@ -226,7 +242,7 @@ Sentry.init({
 
 **Retrieving a Transaction**
 
-In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `undefined`. If you are using our Tracing integration by default we attach the Transaction to the Scope. So you could do something like this:
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` in case there is a running Transaction on the scope, otherwise it returns `undefined`. If you are using our BrowserTracing integration by default we attach the Transaction to the Scope. So you could do something like this:
 
 ```javascript
 function myJsFunction() {

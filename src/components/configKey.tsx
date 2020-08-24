@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import React from "react";
 import { StaticQuery, graphql } from "gatsby";
 import { Location } from "@reach/router";
@@ -16,7 +15,7 @@ const query = graphql`
   }
 `;
 
-const normalizeSlug = slug => {
+const normalizeSlug = (slug: string) => {
   switch (slug) {
     case "browser":
       return "javascript";
@@ -27,7 +26,7 @@ const normalizeSlug = slug => {
   }
 };
 
-const formatCase = (style, value) => {
+const formatCase = (style: string, value: string): string => {
   switch (style) {
     case "snake_case":
       return value.replace(/-/g, "_");
@@ -48,13 +47,21 @@ const formatCase = (style, value) => {
   }
 };
 
-const ConfigKey = ({
+type Props = {
+  name: string;
+  supported?: string[];
+  notSupported?: string[];
+  children?: React.ReactNode;
+  platform?: string;
+};
+
+export default ({
   name,
   supported = [],
   notSupported = [],
   children,
   platform,
-}) => {
+}: Props): JSX.Element => {
   return (
     <StaticQuery
       query={query}
@@ -63,9 +70,12 @@ const ConfigKey = ({
           <Location>
             {({ location }) => {
               if (!platform) {
-                platform = normalizeSlug(
-                  parse(location.search).platform || null
-                );
+                const qsPlatform = parse(location.search).platform;
+                if (qsPlatform instanceof Array) {
+                  platform = normalizeSlug(qsPlatform[0]);
+                } else {
+                  platform = normalizeSlug(qsPlatform || null);
+                }
               }
               let activePlatform =
                 platforms.find(p => normalizeSlug(p.slug) === platform) || {};
@@ -108,17 +118,3 @@ const ConfigKey = ({
     />
   );
 };
-
-ConfigKey.propTypes = {
-  name: PropTypes.string.isRequired,
-  platform: PropTypes.string,
-  supported: PropTypes.arrayOf(PropTypes.string),
-  notSupported: PropTypes.arrayOf(PropTypes.string),
-};
-
-ConfigKey.defaultProps = {
-  supported: [],
-  notSupported: [],
-};
-
-export default ConfigKey;

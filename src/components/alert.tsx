@@ -1,7 +1,20 @@
-import PropTypes from "prop-types";
 import React from "react";
 
-const Alert = ({ title, children, level, deepLink, dismiss }) => {
+type Props = {
+  title?: string;
+  level?: string;
+  deepLink?: string;
+  dismiss?: boolean;
+  children?: any;
+};
+
+export default ({
+  title,
+  children,
+  level,
+  deepLink,
+  dismiss = false,
+}: Props): JSX.Element => {
   let className = "alert";
   if (level) {
     className += ` alert-${level}`;
@@ -26,19 +39,3 @@ const Alert = ({ title, children, level, deepLink, dismiss }) => {
     </div>
   );
 };
-
-Alert.propTypes = {
-  title: PropTypes.string,
-  level: PropTypes.string,
-  deepLink: PropTypes.string,
-  dismiss: PropTypes.bool,
-};
-
-Alert.defaultProps = {
-  title: null,
-  level: "",
-  deepLink: null,
-  dismiss: false,
-};
-
-export default Alert;

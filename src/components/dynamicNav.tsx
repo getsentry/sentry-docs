@@ -5,7 +5,23 @@ import { useLocation } from "@reach/router";
 import SmartLink from "./smartLink";
 import SidebarLink from "./sidebarLink";
 
-export const toTree = nodeList => {
+type Node = {
+  path: string;
+  context: {
+    title?: string | null;
+    sidebar_order?: number | null;
+  };
+};
+
+type Entity<T> = {
+  name: string;
+  children: T[];
+  node: Node | null;
+};
+
+interface EntityTree extends Entity<EntityTree> {}
+
+export const toTree = (nodeList: Node[]): EntityTree[] => {
   const result = [];
   const level = { result };
 
@@ -13,7 +29,7 @@ export const toTree = nodeList => {
     .sort((a, b) => a.path.localeCompare(b.path))
     .forEach(node => {
       let curPath = "";
-      node.path.split("/").reduce((r, name, i, a) => {
+      node.path.split("/").reduce((r, name: string, i, a) => {
         curPath += `${name}/`;
         if (!r[name]) {
           r[name] = { result: [] };
@@ -31,7 +47,12 @@ export const toTree = nodeList => {
   return result[0].children;
 };
 
-export const renderChildren = (children, exclude) => {
+export const renderChildren = (
+  children: EntityTree[],
+  exclude: string[],
+  showDepth: number = 0,
+  depth: number = 0
+): React.ReactNode[] => {
   return children
     .filter(
       ({ name, node }) =>
@@ -41,19 +62,35 @@ export const renderChildren = (children, exclude) => {
         exclude.indexOf(node.path) === -1
     )
     .sort((a, b) => {
-      let aso = a.node.context.sidebar_order || 10;
-      let bso = b.node.context.sidebar_order || 10;
+      let aso = a.node.context.sidebar_order ?? 10;
+      let bso = b.node.context.sidebar_order ?? 10;
       if (aso > bso) return 1;
-      else if (bso > aso) return 1;
+      else if (bso > aso) return -1;
       return a.node.context.title.localeCompare(b.node.context.title);
     })
     .map(({ node, children }) => {
       return (
-        <SidebarLink to={node.path} key={node.path} title={node.context.title}>
-          {renderChildren(children, exclude)}
+        <SidebarLink
+          to={node.path}
+          key={node.path}
+          title={node.context.title}
+          collapsed={depth >= showDepth}
+        >
+          {renderChildren(children, exclude, showDepth, depth + 1)}
         </SidebarLink>
       );
     });
+};
+
+type Props = {
+  root: string;
+  title?: string;
+  tree: EntityTree[];
+  collapse: boolean;
+  exclude: string[];
+  showDepth: number;
+  prependLinks: [string, string][];
+  noHeadingLink: boolean;
 };
 
 export default ({
@@ -62,12 +99,13 @@ export default ({
   tree,
   collapse = false,
   exclude = [],
+  showDepth = 0,
   prependLinks = [],
   noHeadingLink = false,
-}) => {
+}: Props): JSX.Element | null => {
   if (root.indexOf("/") === 0) root = root.substr(1);
 
-  let entity;
+  let entity: EntityTree;
   let currentTree = tree;
   let rootBits = root.split("/");
   rootBits.forEach(bit => {
@@ -81,7 +119,7 @@ export default ({
   if (!entity) return null;
   if (!title && entity.node) title = entity.node.context.title;
   const parentNode = entity.children
-    ? entity.children.find(n => n.name === "")
+    ? entity.children.find((n: EntityTree) => n.name === "")
     : null;
 
   const location = useLocation();
@@ -116,7 +154,7 @@ export default ({
                 {link[1]}
               </SidebarLink>
             ))}
-          {renderChildren(entity.children, exclude)}
+          {renderChildren(entity.children, exclude, showDepth)}
         </ul>
       )}
     </li>
