@@ -43,13 +43,13 @@ public function report(Exception $exception)
 
 Create the Sentry configuration file (`config/sentry.php`) with this command:
 
-```sh
+```shell
 $ php artisan vendor:publish --provider="Sentry\Laravel\ServiceProvider"
 ```
 
 Add your DSN to `.env`:
 
-```sh
+```shell
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
 
