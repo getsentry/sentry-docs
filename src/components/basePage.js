@@ -22,8 +22,8 @@ const GitHubCTA = ({ sourceInstanceName, relativePath }) => (
 );
 
 export default ({
-  data: { file },
-  pageContext: { title },
+  data: { file } = { data: {} },
+  pageContext: { title } = { pageContext: {} },
   sidebar,
   children,
 }) => {

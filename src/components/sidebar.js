@@ -80,6 +80,9 @@ export default () => {
                 </SidebarLink>
               </ul>
             </li>
+            {process.env.NODE_ENV !== "production" && (
+              <DynamicNav root="_debug" title="Debug (Dev Only)" tree={tree} />
+            )}
           </ul>
         );
       }}

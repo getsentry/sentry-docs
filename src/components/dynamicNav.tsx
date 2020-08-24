@@ -82,15 +82,31 @@ export const renderChildren = (
     });
 };
 
+type ChildrenProps = {
+  tree: EntityTree[];
+  exclude?: string[];
+  showDepth?: number;
+};
+
+export const Children = ({
+  tree,
+  exclude = [],
+  showDepth = 0,
+}: ChildrenProps): JSX.Element => {
+  return (
+    <React.Fragment>{renderChildren(tree, exclude, showDepth)}</React.Fragment>
+  );
+};
+
 type Props = {
   root: string;
-  title?: string;
   tree: EntityTree[];
-  collapse: boolean;
-  exclude: string[];
-  showDepth: number;
-  prependLinks: [string, string][];
-  noHeadingLink: boolean;
+  title?: string;
+  collapse?: boolean;
+  exclude?: string[];
+  showDepth?: number;
+  prependLinks?: [string, string][];
+  noHeadingLink?: boolean;
 };
 
 export default ({
@@ -154,7 +170,11 @@ export default ({
                 {link[1]}
               </SidebarLink>
             ))}
-          {renderChildren(entity.children, exclude, showDepth)}
+          <Children
+            tree={entity.children}
+            exclude={exclude}
+            showDepth={showDepth}
+          />
         </ul>
       )}
     </li>

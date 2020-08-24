@@ -1,8 +1,8 @@
 import React from "react";
 import { graphql } from "gatsby";
 
-import BasePage from "../basePage";
-import Markdown from "../markdown";
+import BasePage from "~src/components/basePage";
+import Markdown from "~src/components/markdown";
 
 const Params = ({ params }) => (
   <ul className="api-params">
