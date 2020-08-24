@@ -1,0 +1,89 @@
+---
+title: Track Angular Components
+---
+
+To track Angular components as part of your transactions, use any of these three options:
+
+1. `TraceDirective` to track a duration between `OnInit` and `AfterViewInit` lifecycle hooks in template:
+
+  ```javascript
+  import * as Sentry from '@sentry/angular';
+
+  @NgModule({
+    // ...
+    declarations: [Sentry.TraceDirective],
+    // ...
+  })
+  export class AppModule {}
+  ```
+
+ Then, inside your components template, (remember that the directive name attribute is required):
+
+  ```html
+  <app-header [trace]="'header'"></app-header>
+  <articles-list [trace]="'articles-list'"></articles-list>
+  <app-footer [trace]="'footer'"></app-footer>
+  ```
+
+2. `TraceClassDecorator` tracks a duration between `OnInit` and `AfterViewInit` lifecycle hooks in components:
+
+  ```javascript
+  import { Component } from '@angular/core';
+  import * as Sentry from '@sentry/angular';
+
+  @Component({
+    selector: 'layout-header',
+    templateUrl: './header.component.html',
+  })
+  @Sentry.TraceClassDecorator()
+  export class HeaderComponent {
+    // ...
+  }
+  ```
+
+3. `TraceMethodDecorator` tracks a specific lifecycle hooks as point-in-time spans in components:
+
+  ```javascript
+  import { Component, OnInit } from '@angular/core';
+  import * as Sentry from '@sentry/angular';
+
+  @Component({
+    selector: 'app-footer',
+    templateUrl: './footer.component.html',
+  })
+  export class FooterComponent implements OnInit {
+    @Sentry.TraceMethodDecorator()
+    ngOnInit() {}
+  }
+  ```
+
+You can also add your own custom spans by attaching them to the current active transaction using `getActiveTransaction`
+helper. For example, to track the duration of the Angular bootstraping process:
+
+```javascript
+import { enableProdMode } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import * as Sentry from '@sentry/angular';
+
+import { AppModule } from './app/app.module';
+
+// ...
+
+const activeTransaction = Sentry.getActiveTransaction();
+const boostrapSpan =
+  activeTransaction &&
+  activeTransaction.startChild({
+    description: 'platform-browser-dynamic',
+    op: 'angular.bootstrap',
+  });
+
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
+  .then(() => console.log(`Bootstrap success`))
+  .catch(err => console.error(err));
+  .finally(() => {
+    if (bootstrapSpan) {
+      boostrapSpan.finish();
+    }
+  })
+```
