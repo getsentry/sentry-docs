@@ -4,6 +4,8 @@ import Logo from "./logo";
 
 import { SentryGlobalSearch } from "sentry-global-search";
 
+import DOMPurify from "dompurify";
+
 const MAX_HITS = 10;
 
 const search = new SentryGlobalSearch([
@@ -96,7 +98,10 @@ const Search = () => {
                                     <h6>
                                       <span
                                         dangerouslySetInnerHTML={{
-                                          __html: hit.title,
+                                          __html: DOMPurify.sanitize(
+                                            hit.title,
+                                            { ALLOWED_TAGS: ["mark"] }
+                                          ),
                                         }}
                                       ></span>
                                     </h6>
@@ -104,7 +109,9 @@ const Search = () => {
                                   {hit.text && (
                                     <span
                                       dangerouslySetInnerHTML={{
-                                        __html: hit.text,
+                                        __html: DOMPurify.sanitize(hit.text, {
+                                          ALLOWED_TAGS: ["mark"],
+                                        }),
                                       }}
                                     />
                                   )}
