@@ -34,7 +34,7 @@ Pre-built distributions of Raven.js and the Raven.js AngularJS plugin are availa
 
 ##### Bower
 
-```sh
+```shell
 $ bower install raven-js --save
 ```
 
@@ -51,7 +51,7 @@ $ bower install raven-js --save
 
 ##### npm
 
-```sh
+```shell
 $ npm install raven-js --save
 ```
 
