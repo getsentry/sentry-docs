@@ -1,0 +1,176 @@
+---
+title: React Router Integration
+excerpt: ""
+---
+
+_(New in version 5.21.0)_
+
+React Router support is included in the `@sentry/react` package since version `5.21.0`.
+
+<Alert level="info" title="Note"><markdown>
+
+The React Router integration is designed to work with our Tracing SDK, `@sentry/tracing`. Please see [Getting Started with React Performance](/product/performance/getting-started/?platform=react) for more details on how to set up and install the SDK.
+
+</markdown></Alert>
+
+We support integrations for React Router 3, 4 and 5.
+
+## React Router v4/v5
+
+To use the router integration, import and set a custom routing instrumentation using a custom history. Make sure you use a `Router` component combined with `createBrowserHistory` (or equivalent).
+
+```js
+import { Router } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+
+import * as Sentry from '@sentry/react';
+import { Integrations } from '@sentry/tracing';
+
+const history = createBrowserHistory();
+
+Sentry.init({
+  tracesSampleRate: 1,
+  integrations: [
+    new Integrations.BrowserTracing({
+      // Can also use reactRouterV4Instrumentation
+      routingInstrumentation: Sentry.reactRouterV5Instrumentation(history),
+    });
+  ],
+  // ...
+});
+
+// ...
+
+// In your App render:
+render() {
+  return (
+    // Use custom history with a Router component
+    <Router history={history}>
+      <Components />
+    </Router>
+  );
+}
+```
+
+Now you should be generating pageload/navigation transactions from the `BrowserTracing` integration using react router instrumentation.
+
+### Parameterized transaction names
+
+To get parameterized transaction names (ex. `/teams/:teamid/user/:userid` instead of `/teams/123/user/345`), you must give the SDK access to the match path of the route render. This is as there is no static route config that the SDK can use in React Router v4/v5. There are two ways to accomplish this:
+
+1. Pass a Route Config Object
+
+You can pass an array of route config objects as per [react-router-config](https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config). to the instrumentation function call. You will also need to provide the `matchPath` function exported from the `react-router-dom` or `react-router` packages.
+
+```js
+import { Route, Router, Switch, matchPath } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+
+import * as Sentry from '@sentry/react';
+import { Integrations } from '@sentry/tracing';
+
+const history = createBrowserHistory();
+
+// Array of Route Config Objects
+const routes = [{ path: '/users/:userid' }, { path: '/users' }, { path: '/' }];
+
+Sentry.init({
+  tracesSampleRate: 1,
+  integrations: [
+    new Integrations.BrowserTracing({
+      routingInstrumentation: Sentry.reactRouterV5Instrumentation(history, routes, matchPath),
+    });
+  ]
+});
+
+// In your App render:
+render() {
+  return (
+    <Router history={history}>
+      <Switch>
+         <Route path="/users/:userid" component={() => <div>UserId</div>} />
+         <Route path="/users" component={() => <div>Users</div>} />
+         <Route path="/" component={() => <div>Home</div>} />
+      </Switch>
+    </Router>
+  );
+}
+```
+
+2. Use Sentry Route component
+
+Use the `withSentryRouting` higher order component to create a `SentryRoute` component that will update the match path on render.
+
+```
+import {Route, Router, Switch } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+
+import * as Sentry from '@sentry/react';
+import { Integrations } from '@sentry/tracing';
+
+// Create Custom Sentry Route component
+const SentryRoute = Sentry.withSentryRouting(Route);
+
+const history = createBrowserHistory();
+
+Sentry.init({
+  tracesSampleRate: 1,
+  integrations: [
+    new Integrations.BrowserTracing({
+      routingInstrumentation: Sentry.reactRouterV5Instrumentation(history),
+    });
+  ]
+});
+
+render() {
+  return (
+    <Router history={history}>
+      <Switch>
+         <SentryRoute path="/users/:userid" component={() => <div>UserId</div>} />
+         <SentryRoute path="/users" component={() => <div>Users</div>} />
+         <SentryRoute path="/" component={() => <div>Home</div>} />
+      </Switch>
+    </Router>
+  );
+}
+```
+
+## React Router v3
+
+To use the router integration, import and set a custom routing instrumentation and pass it the history, your routes and a match function. React Router v3 support is maintained for React Router >= 3.2.0 and < 4.0.0.
+
+```js
+import * as Router from 'react-router';
+
+import * as Sentry from '@sentry/react';
+import { Integrations } from '@sentry/tracing';
+
+// Routes looks like this:
+const routes = (
+  <Route path="/">
+    <Route path="organizations/">
+      <Route path=":orgid" component={() => <div>OrgId</div>} />
+      <Route path=":orgid/v1/:teamid" component={() => <div>Team</div>} />
+    </Route>
+  </Route>
+);
+
+Sentry.init({
+  tracesSampleRate: 1,
+  integrations: [
+    new Integrations.BrowserTracing({
+      routingInstrumentation: Sentry.reactRouterV3Instrumentation(
+        Router.browserHistory,
+        // Must be Plain Routes.
+        Router.createRoutes(routes),
+        Router.match,
+      ),
+    });
+  ]
+});
+```
+
+## Next Steps:
+
+- [Return to **Getting Started**](../../)
+- [Return to the main integrations page](../)
