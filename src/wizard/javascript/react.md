@@ -14,10 +14,10 @@ Add the Sentry SDK as a dependency using yarn or npm:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/react @sentry/apm
+$ yarn add @sentry/react @sentry/tracing
 
 # Using npm
-$ npm install @sentry/react @sentry/apm
+$ npm install @sentry/react @sentry/tracing
 ```
 
 ## Connecting the SDK to Sentry
@@ -30,18 +30,21 @@ You should `init` the Sentry browser SDK as soon as possible during your applica
 import React from 'react';
 import ReactDOM from 'react-dom';
 import * as Sentry from '@sentry/react';
-import { Integrations } from '@sentry/apm';
+import { Integrations } from '@sentry/tracing';
 import App from './App';
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new Integrations.Tracing(),
+    new Integrations.BrowserTracing(),
   ],
   tracesSampleRate: 1.0,
 });
 
 ReactDOM.render(<App />, document.getElementById("root"));
+
+// Can also use with React Concurrent Mode
+// ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 ```
 
 The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.

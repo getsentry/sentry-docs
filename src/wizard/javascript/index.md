@@ -9,8 +9,8 @@ The quickest way to get started is to use the CDN hosted version of the JavaScri
 
 ```html
 <script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.apm.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.apm.min.js', 'sha384-base64') }}"
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
   crossorigin="anonymous"
 ></script>
 ```
@@ -19,12 +19,12 @@ You should `init` the Sentry Browser SDK as soon as possible during your page lo
 
 ```javascript
 import * as Sentry from '@sentry/browser';
-import { Integrations as ApmIntegrations } from '@sentry/apm';
+import { Integrations } from '@sentry/tracing';
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
   integrations: [
-    new ApmIntegrations.Tracing(),
+    new Integrations.BrowserTracing(),
   ],
   tracesSampleRate: 1.0,
 });
