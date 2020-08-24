@@ -3,6 +3,7 @@ import {
   InstantSearch,
   Index,
   Hits,
+  Configure,
   connectStateResults,
 } from "react-instantsearch-dom";
 import algoliasearch from "algoliasearch/lite";
@@ -39,7 +40,7 @@ const useClickOutside = (ref, handler, events) => {
   });
 };
 
-export default function Search({ indices, collapse, hitsAsGrid }) {
+export default function Search({ indices, collapse, hitsAsGrid, filters }) {
   const ref = useRef(null);
   const [query, setQuery] = useState(``);
   const [focus, setFocus] = useState(false);
@@ -50,12 +51,15 @@ export default function Search({ indices, collapse, hitsAsGrid }) {
 
   useClickOutside(ref, () => setFocus(false));
 
+  const filtersString = filters && filters.length > 0 ? filters.join(" ") : null;
+
   return (
     <InstantSearch
       searchClient={searchClient}
       indexName={indices[0].name}
       onSearchStateChange={({ query }) => setQuery(query)}
     >
+      <Configure filters={filtersString}/>
       <div ref={ref}>
         <Input onFocus={() => setFocus(true)} {...{ collapse, focus }} />
         <div
