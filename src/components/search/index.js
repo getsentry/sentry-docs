@@ -51,7 +51,8 @@ export default function Search({ indices, collapse, hitsAsGrid, filters }) {
 
   useClickOutside(ref, () => setFocus(false));
 
-  const filtersString = filters && filters.length > 0 ? filters.join(" ") : null;
+  const filtersString =
+    filters && filters.length > 0 ? filters.join(" ") : null;
 
   return (
     <InstantSearch
@@ -59,7 +60,7 @@ export default function Search({ indices, collapse, hitsAsGrid, filters }) {
       indexName={indices[0].name}
       onSearchStateChange={({ query }) => setQuery(query)}
     >
-      <Configure filters={filtersString}/>
+      <Configure filters={filtersString} />
       <div ref={ref}>
         <Input onFocus={() => setFocus(true)} {...{ collapse, focus }} />
         <div
