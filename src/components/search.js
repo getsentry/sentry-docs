@@ -42,7 +42,10 @@ const Search = () => {
   const [focus, setFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
-  useClickOutside(ref, () => setFocus(false));
+  useClickOutside(ref, () => {
+    setFocus(false);
+    setShowOffsiteResults(false);
+  });
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
 
