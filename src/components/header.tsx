@@ -1,9 +1,8 @@
-import PropTypes from "prop-types";
 import React from "react";
 
 import SmartLink from "./smartLink";
 
-const Header = ({ homeUrl, sitePath }) => {
+export default (): JSX.Element => {
   return (
     <div className="navbar navbar-expand-md navbar-light bg-white global-header">
       <SmartLink
@@ -44,14 +43,3 @@ const Header = ({ homeUrl, sitePath }) => {
     </div>
   );
 };
-
-Header.propTypes = {
-  siteTitle: PropTypes.string,
-  homeUrl: PropTypes.string,
-};
-
-Header.defaultProps = {
-  siteTitle: "",
-};
-
-export default Header;

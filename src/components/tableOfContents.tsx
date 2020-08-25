@@ -1,6 +1,20 @@
 import React from "react";
 
-export default ({ toc: { items } }) => {
+type _Item<T> = {
+  title?: string;
+  url?: string;
+  items: T[];
+};
+
+interface Item extends _Item<Item> {}
+
+type Props = {
+  toc: {
+    items: Item;
+  };
+};
+
+export default ({ toc: { items } }: Props) => {
   if (!items) return null;
 
   const recurse = items =>

@@ -5,7 +5,11 @@ import CodeTabs from "./codeTabs";
 
 let cachedVersionData = null;
 
-export default ({ tracing = false }) => {
+type Props = {
+  tracing?: boolean;
+};
+
+export default ({ tracing = false }: Props): JSX.Element => {
   const [versionData, setVersionData] = useState(cachedVersionData);
 
   if (!versionData && typeof fetch !== "undefined") {
@@ -31,10 +35,10 @@ export default ({ tracing = false }) => {
 
   return (
     <CodeTabs>
-      <CodeBlock language="html">
-        <div class="gatsby-highlight" data-language="html">
-          <pre class="language-html">
-            <code class="language-html">{`<script src="https://browser.sentry-cdn.com/${packageData.version}/${packageName}" integrity="sha384-${packageData.files[packageName].checksums["sha384-base64"]}" crossorigin="anonymous"></script>`}</code>
+      <CodeBlock>
+        <div className="gatsby-highlight" data-language="html">
+          <pre className="language-html">
+            <code className="language-html">{`<script src="https://browser.sentry-cdn.com/${packageData.version}/${packageName}" integrity="sha384-${packageData.files[packageName].checksums["sha384-base64"]}" crossorigin="anonymous"></script>`}</code>
           </pre>
         </div>
       </CodeBlock>

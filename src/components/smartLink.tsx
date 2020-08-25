@@ -10,6 +10,7 @@ type Props = {
   children?: React.ReactNode;
   activeClassName?: string;
   className?: string;
+  title?: string;
 };
 
 export default ({

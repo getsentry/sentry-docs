@@ -16,7 +16,11 @@ const LANGUAGES = {
   yaml: "YAML",
 };
 
-function CodeTabs({ children }) {
+type Props = {
+  children: JSX.Element | JSX.Element[];
+};
+
+export default ({ children }: Props): JSX.Element => {
   if (!Array.isArray(children)) {
     children = [children];
   } else {
@@ -119,6 +123,4 @@ function CodeTabs({ children }) {
       <div className="tab-content">{code}</div>
     </div>
   );
-}
-
-export default CodeTabs;
+};
