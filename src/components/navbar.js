@@ -1,18 +1,11 @@
 import React from "react";
 
 import Search from "./search";
-import queries from "../utils/algolia";
-
-const searchIndices = queries.map(query => ({
-  name: query.indexName,
-  title: `Docs`,
-  hitComp: `PageHit`,
-}));
 
 const Navbar = ({ homeUrl, sitePath }) => (
   <div className="navbar navbar-expand-md navbar-light global-header">
     <div className="collapse navbar-collapse content-max" id="navbar-menu">
-      <Search collapse indices={searchIndices} />
+      <Search />
       <ul className="navbar-nav ml-auto rounded">
         <li className="nav-item mr-md-1 mr-lg-2" data-hide-when-logged-in>
           <a className="nav-link" href={`https://sentry.io/auth/login/`}>
