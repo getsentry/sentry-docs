@@ -55,63 +55,83 @@ type Props = {
   platform?: string;
 };
 
-export default ({
+type PlatformNode = {
+  name?: string;
+  slug?: string;
+  case_style?: string;
+};
+
+type ChildProps = Props & {
+  location: any;
+  data: {
+    allPlatformsYaml: {
+      nodes: PlatformNode[];
+    };
+  };
+};
+
+export const ConfigKey = ({
   name,
   supported = [],
   notSupported = [],
   children,
   platform,
-}: Props): JSX.Element => {
+  location,
+  data,
+}: ChildProps): JSX.Element => {
+  const {
+    allPlatformsYaml: { nodes: platforms },
+  } = data;
+  if (!platform) {
+    const qsPlatform = parse(location.search).platform;
+    if (qsPlatform instanceof Array) {
+      platform = normalizeSlug(qsPlatform[0]);
+    } else {
+      platform = normalizeSlug(qsPlatform || null);
+    }
+  }
+  let activePlatform =
+    platforms.find(p => normalizeSlug(p.slug) === platform) || {};
+
+  const isSupported = notSupported.length
+    ? !notSupported.find(p => p === platform)
+    : supported.length
+    ? supported.find(p => p === platform)
+    : true;
+
+  const style = activePlatform.case_style || "canonical";
+  const header = (
+    <h3>
+      <code>{formatCase(style, name)}</code>
+    </h3>
+  );
+
+  if (children) {
+    return (
+      <div className={`unsupported ${!isSupported && "is-unsupported"}`}>
+        {header}
+        {!isSupported && (
+          <div className="unsupported-hint">
+            Not available for {activePlatform.name || "this platform"}.
+          </div>
+        )}
+        {children}
+      </div>
+    );
+  }
+  return header;
+};
+
+export default (props: Props): JSX.Element => {
   return (
     <StaticQuery
       query={query}
-      render={({ allPlatformsYaml: { nodes: platforms } }) => {
+      render={data => {
         return (
           <Location>
-            {({ location }) => {
-              if (!platform) {
-                const qsPlatform = parse(location.search).platform;
-                if (qsPlatform instanceof Array) {
-                  platform = normalizeSlug(qsPlatform[0]);
-                } else {
-                  platform = normalizeSlug(qsPlatform || null);
-                }
-              }
-              let activePlatform =
-                platforms.find(p => normalizeSlug(p.slug) === platform) || {};
-
-              const isSupported = notSupported.length
-                ? !notSupported.find(p => p === platform)
-                : supported.length
-                ? supported.find(p => p === platform)
-                : true;
-
-              const style = activePlatform.case_style || "canonical";
-              const header = (
-                <h3>
-                  <code>{formatCase(style, name)}</code>
-                </h3>
-              );
-
-              if (children) {
-                return (
-                  <div
-                    className={`unsupported ${!isSupported &&
-                      "is-unsupported"}`}
-                  >
-                    {header}
-                    {!isSupported && (
-                      <div className="unsupported-hint">
-                        Not available for{" "}
-                        {activePlatform.name || "this platform"}.
-                      </div>
-                    )}
-                    {children}
-                  </div>
-                );
-              }
-              return header;
-            }}
+            {({ location }) => (
+              <ConfigKey data={data} location={location} {...props} />
+            )}
           </Location>
         );
       }}

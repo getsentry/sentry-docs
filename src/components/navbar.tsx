@@ -2,7 +2,7 @@ import React from "react";
 
 import Search from "./search";
 
-const Navbar = ({ homeUrl, sitePath }) => (
+export default (): JSX.Element => (
   <div className="navbar navbar-expand-md navbar-light global-header">
     <div className="collapse navbar-collapse content-max" id="navbar-menu">
       <Search />
@@ -27,5 +27,3 @@ const Navbar = ({ homeUrl, sitePath }) => (
     </div>
   </div>
 );
-
-export default Navbar;

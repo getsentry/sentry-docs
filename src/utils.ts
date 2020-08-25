@@ -1,9 +1,15 @@
 import { useEffect, useCallback, useRef } from "react";
 
-export function useOnClickOutside(ref, handler) {
+type ClickOutsideCallback = (event: MouseEvent) => void;
+
+export function useOnClickOutside<T>(
+  ref: React.RefObject<T>,
+  handler: ClickOutsideCallback
+) {
   useEffect(() => {
-    const cb = event => {
-      if (!ref.current || !ref.current.contains(event.target)) {
+    const cb = (event: MouseEvent) => {
+      // TODO(dcramer): fix any type here
+      if (!ref.current || !(ref.current as any).contains(event.target)) {
         handler(event);
       }
     };
@@ -14,8 +20,12 @@ export function useOnClickOutside(ref, handler) {
   }, [ref, handler]);
 }
 
-export function useRefWithCallback(callback) {
-  const ref = useRef();
+type RefCallback<T> = (node: HTMLElement, old: T) => void;
+
+export function useRefWithCallback<T>(
+  callback: RefCallback<T>
+): [React.MutableRefObject<T>, (node: any) => void] {
+  const ref = useRef<T>();
   const setRef = useCallback(
     node => {
       let old = ref.current;
@@ -27,7 +37,7 @@ export function useRefWithCallback(callback) {
   return [ref, setRef];
 }
 
-export const sortBy = (arr, comp) => {
+export const sortBy = (arr: { [key: string]: any }[], comp: Function) => {
   return arr.sort((a, b) => {
     const aComp = comp(a);
     const bComp = comp(b);

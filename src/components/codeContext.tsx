@@ -61,7 +61,13 @@ const DEFAULTS: CodeKeywords = {
   ],
 };
 
-const CodeContext = React.createContext(DEFAULTS);
+type CodeContextType = {
+  codeKeywords: CodeKeywords;
+  sharedCodeSelection: any;
+  sharedKeywordSelection: any;
+};
+
+const CodeContext = React.createContext(null as CodeContextType | null);
 
 const parseDsn = function(dsn: string): Dsn {
   const match = dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);
@@ -145,7 +151,7 @@ export function fetchCodeKeywords() {
 export default CodeContext;
 
 export function useCodeContextState(fetcher = fetchCodeKeywords) {
-  let [codeKeywords, setCodeKeywords] = useState(null);
+  let [codeKeywords, setCodeKeywords] = useState(DEFAULTS);
   if (codeKeywords === null && cachedCodeKeywords !== null) {
     setCodeKeywords(cachedCodeKeywords);
     codeKeywords = cachedCodeKeywords;
@@ -153,7 +159,7 @@ export function useCodeContextState(fetcher = fetchCodeKeywords) {
 
   useEffect(() => {
     if (cachedCodeKeywords === null) {
-      fetcher().then(config => {
+      fetcher().then((config: CodeKeywords) => {
         cachedCodeKeywords = config;
         setCodeKeywords(config);
       });

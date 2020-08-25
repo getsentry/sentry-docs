@@ -7,7 +7,15 @@ import SmartLink from "./smartLink";
 import TableOfContents from "./tableOfContents";
 import * as Sentry from "@sentry/gatsby";
 
-const GitHubCTA = ({ sourceInstanceName, relativePath }) => (
+type GitHubCTAProps = {
+  sourceInstanceName: string;
+  relativePath: string;
+};
+
+const GitHubCTA = ({
+  sourceInstanceName,
+  relativePath,
+}: GitHubCTAProps): JSX.Element => (
   <div className="github-cta">
     <small>
       You can{" "}
@@ -21,12 +29,33 @@ const GitHubCTA = ({ sourceInstanceName, relativePath }) => (
   </div>
 );
 
+type Props = {
+  data?: {
+    file?: {
+      childMarkdownRemark?: {
+        tableOfContents?: any;
+        [key: string]: any;
+      };
+      childMdx?: {
+        tableOfContents?: any;
+        [key: string]: any;
+      };
+      [key: string]: any;
+    };
+  };
+  pageContext?: {
+    title?: string;
+  };
+  sidebar?: JSX.Element;
+  children?: JSX.Element;
+};
+
 export default ({
-  data: { file } = { data: {} },
-  pageContext: { title } = { pageContext: {} },
+  data: { file } = {},
+  pageContext: { title } = {},
   sidebar,
   children,
-}) => {
+}: Props): JSX.Element => {
   const tx = Sentry.getCurrentHub()
     .getScope()
     .getTransaction();
@@ -37,7 +66,7 @@ export default ({
   const child = file && (file.childMarkdownRemark || file.childMdx);
   const hasToc = child && !!child.tableOfContents.items;
   return (
-    <Layout title={title} file={file} sidebar={sidebar}>
+    <Layout sidebar={sidebar}>
       <SEO title={title} file={file} />
 
       <div className="row">

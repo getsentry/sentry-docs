@@ -1,5 +1,4 @@
 import React, { useState, useRef, useContext } from "react";
-import PropTypes from "prop-types";
 import copy from "copy-to-clipboard";
 import { MDXProvider } from "@mdx-js/react";
 import { Clipboard } from "react-feather";
@@ -15,7 +14,7 @@ function makeKeywordsClickable(children) {
 
   KEYWORDS_REGEX.lastIndex = 0;
 
-  return children.reduce((arr, child) => {
+  return children.reduce((arr: any[], child) => {
     if (typeof child !== "string") {
       arr.push(child);
       return arr;
@@ -55,20 +54,22 @@ function Selector({ keyword, group, ...props }) {
     sharedSelection,
     setSharedSelection,
   ] = codeContext.sharedKeywordSelection;
-  const spanRef = useRef();
-  const [menuRef, setMenuRef] = useRefWithCallback(menuNode => {
-    if (menuNode) {
-      for (const node of menuNode.childNodes) {
-        if (node.getAttribute("data-active") === "1") {
-          node.parentNode.scrollTop =
-            node.offsetTop -
-            node.parentNode.getBoundingClientRect().height / 2 +
-            node.getBoundingClientRect().height / 2;
-          break;
+  const spanRef = useRef<HTMLSpanElement>();
+  const [menuRef, setMenuRef] = useRefWithCallback<HTMLSpanElement>(
+    menuNode => {
+      if (menuNode) {
+        for (const node of menuNode.childNodes as any) {
+          if (node.getAttribute("data-active") === "1") {
+            node.parentNode.scrollTop =
+              node.offsetTop -
+              node.parentNode.getBoundingClientRect().height / 2 +
+              node.getBoundingClientRect().height / 2;
+            break;
+          }
         }
       }
     }
-  });
+  );
 
   useOnClickOutside(menuRef, () => {
     if (isOpen) {
@@ -87,7 +88,9 @@ function Selector({ keyword, group, ...props }) {
 
   // this is not super clean but since we can depend on the span
   // rendering before the menu this works.
-  const style = {};
+  const style: {
+    [key: string]: any;
+  } = {};
   if (spanRef.current) {
     const rect = spanRef.current.getBoundingClientRect();
     style.left = spanRef.current.offsetLeft - 10 + "px";
@@ -140,7 +143,7 @@ function Selector({ keyword, group, ...props }) {
   );
 }
 
-function CodeWrapper(props) {
+function CodeWrapper(props): JSX.Element {
   let { children, class: className, ...rest } = props;
   if (children) {
     children = makeKeywordsClickable(children);
@@ -152,7 +155,7 @@ function CodeWrapper(props) {
   );
 }
 
-function SpanWrapper(props) {
+function SpanWrapper(props): JSX.Element {
   let { children, class: className, ...rest } = props;
   if (children) {
     children = makeKeywordsClickable(children);
@@ -164,7 +167,12 @@ function SpanWrapper(props) {
   );
 }
 
-function CodeBlock({ filename, children }) {
+type Props = {
+  filename?: string;
+  children: JSX.Element;
+};
+
+export default ({ filename, children }: Props): JSX.Element => {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef(null);
 
@@ -197,12 +205,4 @@ function CodeBlock({ filename, children }) {
       </div>
     </div>
   );
-}
-
-CodeBlock.propTypes = {
-  language: PropTypes.string,
-  filename: PropTypes.string,
-  title: PropTypes.string,
 };
-
-export default CodeBlock;

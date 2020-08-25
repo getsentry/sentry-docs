@@ -15,7 +15,7 @@ const search = new SentryGlobalSearch([
   "blog",
 ]);
 
-const useClickOutside = (ref, handler, events) => {
+const useClickOutside = (ref, handler, events?: string[]) => {
   if (!events) events = [`mousedown`, `touchstart`];
 
   const detectClickOutside = event => {
@@ -35,10 +35,27 @@ const useClickOutside = (ref, handler, events) => {
   });
 };
 
-const Search = () => {
+type Hit = {
+  id: string;
+  url: string;
+  title?: string;
+  text?: string;
+  context?: {
+    context1?: string;
+    context2?: string;
+  };
+};
+
+type Result = {
+  site: string;
+  name: string;
+  hits: Hit[];
+};
+
+export default (): JSX.Element => {
   const ref = useRef(null);
   const [query, setQuery] = useState(``);
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState([] as Result[]);
   const [focus, setFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -55,7 +72,7 @@ const Search = () => {
         className="form-control"
         onChange={({ target: { value: query } }) => {
           setQuery(query);
-          search.query(query).then(results => {
+          search.query(query).then((results: Result[]) => {
             if (loading) setLoading(false);
             setResults(results);
           });
@@ -163,5 +180,3 @@ const Search = () => {
     </div>
   );
 };
-
-export default Search;
