@@ -11,7 +11,7 @@ To get you started, you might find some of these links relevant:
 - New to Sentry? Have a look at [_Getting Started_](/error-reporting/quickstart/).
 - No account yet? You can sign up for one at [sentry.io](https://sentry.io/signup/).
 - Stuck? Feel free to contact [Support](/support/).
-- Self-hosting the Sentry server? See [_Installation_](https://github.com/getsentry/onpremise).
+- Self-hosting the Sentry server? See [our documentation for On-Premise Installations](https://github.com/getsentry/onpremise/releases/latest).
 
 ## Contributing
 

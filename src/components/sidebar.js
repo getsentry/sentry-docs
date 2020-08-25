@@ -75,7 +75,7 @@ export default () => {
                 <SidebarLink to="https://develop.sentry.dev">
                   Developer Documentation
                 </SidebarLink>
-                <SidebarLink to="https://github.com/getsentry/onpremise">
+                <SidebarLink to="https://github.com/getsentry/onpremise/releases/latest">
                   Self-Hosting Sentry
                 </SidebarLink>
               </ul>
