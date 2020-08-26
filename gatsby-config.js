@@ -1,3 +1,6 @@
+const fs = require("fs").promises;
+const path = require("path");
+
 require("ts-node").register({
   files: true, // to that TS node hooks have access to local typings too
 });
@@ -168,6 +171,15 @@ const getPlugins = () => {
       options: {
         inputConfigFile: `${__dirname}/nginx.conf`,
         outputConfigFile: `${__dirname}/nginx.out.conf`,
+      },
+    },
+    {
+      resolve: "./plugins/gatsby-plugin-openapi",
+      options: {
+        name: "openapi",
+        resolve: async () =>
+          await fs.readFile(path.resolve(__dirname, "./bundle.json"), "utf8"),
+        // required, function which returns a Promise resolving Swagger JSON
       },
     },
     // generate normal redirects so when you're running without nginx
