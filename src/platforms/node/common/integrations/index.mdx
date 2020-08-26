@@ -1,0 +1,77 @@
+---
+title: Integrations
+sidebar_order: 1000
+---
+
+All of our SDKs provide _Integrations_, similar to a plugin. All JavaScript SDKs provide default _Integrations_; please check details of a specific SDK to see which _Integrations_ it offers.
+
+One thing that is the same across all our JavaScript SDKs --- how you add or remove _Integrations_. (Example: for `@sentry/node`)
+
+## Adding an Integration
+
+```javascript
+const Sentry = require("@sentry/node");
+// or use es6 import statements
+// import * as Sentry from '@sentry/node';
+
+// All integrations that come with an SDK can be found on the Sentry.Integrations object
+// Custom integrations must conform Integration interface: https://github.com/getsentry/sentry-javascript/blob/master/packages/types/src/index.ts
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new MyAwesomeIntegration()],
+});
+```
+
+Alterantively, you can simply extend the built-in list of integrations:
+
+```javascript
+const Sentry = require("@sentry/node");
+// or use es6 import statements
+// import * as Sentry from '@sentry/node';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: function(integrations) {
+    // integrations will be all default integrations
+    return integrations.concat(new MyCustomIntegrations());
+  },
+});
+```
+
+### Adding Integration from @sentry/integrations
+
+All pluggable / optional integrations do live inside `@sentry/integrations`.
+
+```js
+import * as Sentry from "@sentry/node";
+import { Dedupe as DedupeIntegration } from "@sentry/integrations";
+// or using CommonJS
+// const Sentry = require('@sentry/node');
+// const { Dedupe: DedupeIntegration } = require('@sentry/integrations');
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new DedupeIntegration()],
+});
+```
+
+## Removing an Integration
+
+In this example, we will remove the by default enabled integration for adding breadcrumbs to the event:
+
+```javascript
+const Sentry = require("@sentry/node");
+// or use es6 import statements
+// import * as Sentry from '@sentry/node';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: function(integrations) {
+    // integrations will be all default integrations
+    return integrations.filter(function(integration) {
+      return integration.name !== "Console";
+    });
+  },
+});
+```
