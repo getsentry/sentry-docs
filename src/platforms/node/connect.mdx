@@ -9,11 +9,12 @@ If you are using `yarn` or `npm`, you can add our package as a dependency:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/node@5.20.1
+$ yarn add @sentry/node
 
 # Using npm
-$ npm install @sentry/node@5.20.1
+$ npm install @sentry/node
 ```
+<Break />
 
 ```javascript
 import connect from "connect";
@@ -38,7 +39,7 @@ function onError(err, req, res, next) {
 }
 
 connect(
-  // The request handler be the first item
+  // The request handler must be the first item
   Sentry.Handlers.requestHandler(),
 
   connect.bodyParser(),
@@ -53,26 +54,32 @@ connect(
 ).listen(3000);
 ```
 
-`requestHandler` accepts some options that let you decide what data should be included in the event sent to Sentry.
+`requestHandler` accepts some options that let you control its behavior and decide what data should be included in the event sent to Sentry.
 
 Possible options are:
 
 ```js
-// keys to be extracted from req
+// keys to be extracted from the request
 request?: boolean | string[]; // default: true = ['cookies', 'data', 'headers', 'method', 'query_string', 'url']
-// server name
+
+// include server name in the event data?
 serverName?: boolean; // default: true
-// generate transaction name
+
+// pattern for transaction name
 //   path == request.path (eg. "/foo")
 //   methodPath == request.method + request.path (eg. "GET|/foo")
 //   handler == function name (eg. "fooHandler")
 transaction?: boolean | 'path' | 'methodPath' | 'handler'; // default: true = 'methodPath'
+
 // keys to be extracted from req.user
 user?: boolean | string[]; // default: true = ['id', 'username', 'email']
-// client ip address
+
+// include client ip address in the event data?
 ip?: boolean; // default: false
-// node version
+
+// include node version in the event data?
 version?: boolean; // default: true
+
 // timeout for fatal route errors to be delivered
 flushTimeout?: number; // default: 2000
 ```
@@ -88,7 +95,7 @@ app.use(
 );
 ```
 
-By default, `errorHandler` will capture only errors with a status code of `500` or higher. If you want to change it, provide it with the `shouldHandleError` callback, which accepts middleware errors as its argument and decides, whether an error should be sent or not, by returning an appropriate boolean value.
+By default, `errorHandler` will capture only errors with a status code of `500` or higher. If you want to change it, provide it with the `shouldHandleError` callback, which accepts a middleware error as its argument, decides whether an event should be sent to Sentry or not, and returns the appropriate boolean value.
 
 ```js
 app.use(
