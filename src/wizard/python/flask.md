@@ -1,6 +1,6 @@
 ---
 name: Flask
-doc_link: https://docs.sentry.io/platforms/python/flask/
+doc_link: https://docs.sentry.io/platforms/python/guides/flask/
 support_level: production
 type: framework
 ---
