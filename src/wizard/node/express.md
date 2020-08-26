@@ -1,18 +1,18 @@
 ---
 name: Express
-doc_link: https://docs.sentry.io/platforms/node/express/
+doc_link: https://docs.sentry.io/platforms/node/guides/express/
 support_level: production
 type: framework
 ---
 
-If you are using `yarn` or `npm`, you can add our package as a dependency:
+Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
 $ yarn add @sentry/node
 
 # Using npm
-$ npm install @sentry/node
+$ npm install --save @sentry/node
 ```
 
 Sentry should be initialized as early in your app as possible.

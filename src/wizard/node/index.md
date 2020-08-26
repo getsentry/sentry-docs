@@ -1,18 +1,18 @@
 ---
 name: Node.js
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=node
+doc_link: https://docs.sentry.io/platforms/node/
 support_level: production
 type: language
 ---
 
-If you are using `yarn` or `npm` you can add our package as a dependency:
+Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
 $ yarn add @sentry/node
 
 # Using npm
-$ npm install @sentry/node
+$ npm install --save @sentry/node
 ```
 
 You need to inform the Sentry Node SDK about your DSN:
