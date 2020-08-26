@@ -1,11 +1,11 @@
 ---
 name: Elixir
-doc_link: https://docs.sentry.io/clients/elixir/
+doc_link: https://docs.sentry.io/platforms/elixir/
 support_level: production
 type: language
 ---
 
-## Installation {#install}
+## Install {#install}
 
 Edit your mix.exs file to add it as a dependency and add the `:sentry` package to your applications:
 
@@ -21,7 +21,7 @@ defp deps do
 end
 ```
 
-## Configuration {#configure}
+## Configure {#configure}
 
 Setup the application production environment in your `config/prod.exs`
 
@@ -89,8 +89,6 @@ To capture crashed crashed process exceptions, add `Sentry.LoggerBackend` to you
 config :logger,
   backends: [:console, Sentry.LoggerBackend]
 ```
-
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
 ## Capturing Errors
 
