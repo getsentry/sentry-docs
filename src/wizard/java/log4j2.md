@@ -20,7 +20,7 @@ Using Maven:
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-log4j2:{{ packages.version('sentry.java', '1.7.30') }}'
+implementation 'io.sentry:sentry-log4j2:{{ packages.version('sentry.java', '1.7.30') }}'
 ```
 
 Using SBT:
