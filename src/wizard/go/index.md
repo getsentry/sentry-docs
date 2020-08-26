@@ -1,6 +1,6 @@
 ---
 name: Go
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=go
+doc_link: https://docs.sentry.io/platforms/go/
 support_level: production
 type: language
 ---
