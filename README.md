@@ -178,6 +178,12 @@ Returns the latest version of the given package.
 packages.version('sentry.javacript.browser')
 ```
 
+You may also optionally specify a fallback for if the package isnt found (or theres an upstream error):
+
+```javascript
+packages.version('sentry.javacript.browser', '1.0.0')
+```
+
 #### ``packages.checksum``
 
 Returns the checksum of a given file in a package.
