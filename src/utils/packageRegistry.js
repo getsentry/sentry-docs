@@ -8,19 +8,23 @@ module.exports = class PackageRegistry {
   getData = async name => {
     if (!this.cache[name]) {
       console.info(`Fetching release registry for ${name}`);
-      const result = await axios({
-        url: `https://release-registry.services.sentry.io/sdks/${name}/latest`,
-      });
-
-      this.cache[name] = result.data;
+      try {
+        const result = await axios({
+          url: `https://release-registry.services.sentry.io/sdks/${name}/latest`,
+        });
+        this.cache[name] = result.data;
+      } catch (err) {
+        console.error(`Unable to fetch registry for ${name}: ${err.message}`);
+        this.cache[name] = {};
+      }
     }
 
     return this.cache[name];
   };
 
-  version = async name => {
+  version = async (name, defaultValue = "") => {
     const data = await this.getData(name);
-    return data.version || "";
+    return data.version || defaultValue;
   };
 
   checksum = async (name, fileName, checksum) => {
