@@ -1,6 +1,6 @@
 ---
 name: Ruby
-doc_link: https://docs.sentry.io/clients/ruby/
+doc_link: https://docs.sentry.io/platform/ruby/
 support_level: production
 type: language
 ---
@@ -13,7 +13,7 @@ Raven Ruby comes as a gem and is straightforward to install. If you are using Bu
 gem "sentry-raven"
 ```
 
-For other means of installation see [_Installation_](/clients/ruby/install/).
+For other means of installation see [_Installation_](/platform/ruby/install/).
 
 ## Configuration {#configure}
 
@@ -27,9 +27,9 @@ end
 
 ## Reporting Failures
 
-If you use Rails, Rake, Sidekiq, etc, you’re already done - no more configuration required! Check [_Integrations_](/clients/ruby/integrations/) for more details on other gems Sentry integrates with automatically.
+If you use Rails, Rake, Sidekiq, etc, you’re already done - no more configuration required! Check [_Integrations_](/platform/ruby/integrations/) for more details on other gems Sentry integrates with automatically.
 
-Rack requires a little more setup: [_Rack (Sinatra etc.)_](/clients/ruby/integrations/#rack-sinatra-etc)
+Rack requires a little more setup: [_Rack (Sinatra etc.)_](/platform/ruby/integrations/#rack-sinatra-etc)
 
 Otherwise, Raven supports two methods of capturing exceptions:
 
