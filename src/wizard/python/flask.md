@@ -11,7 +11,7 @@ Framework](http://flask.pocoo.org/).
 Install `sentry-sdk` from PyPI with the `flask` extra:
 
 ```bash
-$ pip install --upgrade 'sentry-sdk[flask]==0.16.2'
+$ pip install --upgrade 'sentry-sdk[flask]'
 ```
 
 To configure the SDK, initialize it with the integration before or after your app has been initialized:

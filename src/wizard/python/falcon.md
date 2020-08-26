@@ -11,7 +11,7 @@ The integration has been confirmed to work with Falcon 1.4 and 2.0.
 1. Install `sentry-sdk` from PyPI with the `falcon` extra:
 
    ```bash
-   $ pip install --upgrade 'sentry-sdk[falcon]==0.16.2'
+   $ pip install --upgrade 'sentry-sdk[falcon]'
    ```
 
 2. To configure the SDK, initialize it with the integration before your app has been initialized:

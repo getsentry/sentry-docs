@@ -12,7 +12,7 @@ However the integration with the development version (0.13) doesn't work properl
 1. Install `sentry-sdk` from PyPI with the `bottle` extra:
 
    ```bash
-   $ pip install --upgrade 'sentry-sdk[bottle]==0.16.2'
+   $ pip install --upgrade 'sentry-sdk[bottle]'
    ```
 
 2. To configure the SDK, initialize it with the integration before your app has been initialized:

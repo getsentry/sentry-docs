@@ -8,7 +8,7 @@ type: language
 Install our Python SDK using [`pip`](https://pip.pypa.io/en/stable/):
 
 ```bash
-$ pip install --upgrade sentry-sdk==0.16.2
+$ pip install --upgrade sentry-sdk
 ```
 
 Import and initialize the Sentry SDK early in your application's setup:
