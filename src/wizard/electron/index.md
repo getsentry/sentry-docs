@@ -9,10 +9,10 @@ If you are using `yarn` or `npm` you can add our package as a dependency:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/electron@1.5.2
+$ yarn add @sentry/electron
 
 # Using npm
-$ npm install @sentry/electron@1.5.2
+$ npm install @sentry/electron
 ```
 
 You need to call `init` in your `main` and every `renderer` process you spawn.
