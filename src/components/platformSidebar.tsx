@@ -36,9 +36,11 @@ type Node = {
 type Props = {
   platform: {
     name: string;
+    title: string;
   };
   guide?: {
     name: string;
+    title: string;
   };
 };
 
@@ -86,7 +88,7 @@ export const PlatformSidebar = ({
         root={`/platforms/${platformName}/guides`}
         title={guideName ? "Other Guides" : "Guides"}
         prependLinks={
-          guideName ? [[`/platforms/${platformName}/`, platform.name]] : null
+          guideName ? [[`/platforms/${platformName}/`, platform.title]] : null
         }
         exclude={
           guideName ? [`/platforms/${platformName}/guides/${guideName}/`] : []
