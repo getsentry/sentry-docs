@@ -1,0 +1,182 @@
+---
+title: Transports
+sidebar_order: 800
+---
+
+Sentry PHP is not tied to any specific library that sends HTTP messages. Instead,
+it uses [Httplug](https://github.com/php-http/httplug) to let users choose whichever PSR-7 implementation and HTTP client
+they want to use.
+
+We recommend that you use the `sentry/sdk` meta-package which provides our recommend HTTP client.
+
+If you want to use a different HTTP client just install `sentry/sentry` with the clients you prefer:
+
+```bash
+composer require sentry/sentry php-http/curl-client guzzlehttp/psr7
+```
+
+This will install the library itself along with an HTTP client adapter that uses
+cURL as the transport method (provided by [Httplug](https://github.com/php-http/httplug) and a PSR-7 implementation
+(provided by Guzzle). You do not have to use those packages if you do not want to.
+The SDK does not care about which transport method you want to use because it's
+an implementation detail of your application. You may use any package that provides
+[php-http/async-client-implementation](https://packagist.org/providers/php-http/async-client-implementation) and [http-message-implementation](https://packagist.org/providers/psr/http-message-implementation).
+
+If you want to use Guzzle as an underlying HTTP client, you just need to run the
+following command to install the adapter and Guzzle itself:
+
+```bash
+composer require php-http/guzzle6-adapter
+```
+
+#### Transport Classes
+
+Transports are the classes in Sentry PHP that are responsible for communicating
+with a service in order to deliver an event. There are several types of transports
+available out-of-the-box, all of which implement the `TransportInterface`
+interface;
+
+- The `NullTransport` which is used in case you do not define a `DSN` in the options. It will not send events.
+- The `HttpTransport` which is the default and will be used when the server
+  is set in the client configuration.
+- The `SpoolTransport` which can be used to defer the sending of events (e.g.
+  by putting them into a queue).
+
+The examples below pretty much replace the `init()` call.
+Please also keep in mind that once a Client is initialized with a Transport it cannot be
+changed.
+
+##### NullTransport
+
+Although not so common there could be cases in which you don't want to send
+events at all. The `NullTransport` transport does this: it simply ignores
+the events, but report them as sent.
+
+```php
+use Sentry\ClientBuilder;
+use Sentry\Transport\NullTransport;
+use Sentry\State\Hub;
+use Sentry\Transport\TransportFactoryInterface;
+
+$transportFactory = new class implements TransportFactoryInterface {
+
+    public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
+    {
+        return new NullTransport();
+    }
+};
+
+$builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
+$builder->setTransportFactory($transportFactory);
+
+Hub::getCurrent()->bindClient($builder->getClient());
+```
+
+<Alert level="warning" title="Note"><markdown>
+
+`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead.
+
+</markdown></Alert>
+
+##### HttpTransport
+
+The `HttpTransport` sends events over the HTTP protocol using [Httplug](http://httplug.io/).
+The best adapter available is automatically selected when creating a client instance
+through the client builder, but you can override it using the appropriate methods.
+
+```php
+use Http\Discovery\HttpAsyncClientDiscovery;
+use Http\Discovery\MessageFactoryDiscovery;
+use Http\Discovery\StreamFactoryDiscovery;
+use Http\Discovery\UriFactoryDiscovery;
+use Http\Message\ResponseFactory;
+use Http\Message\UriFactory;
+use Sentry\ClientBuilder;
+use Sentry\HttpClient\HttpClientFactory;
+use Sentry\HttpClient\HttpClientFactoryInterface;
+use Sentry\Transport\HttpTransport;
+use Sentry\State\Hub;
+use Sentry\Transport\TransportFactoryInterface;
+
+$httpClientFactory = new HttpClientFactory(
+    UriFactoryDiscovery::find(),
+    MessageFactoryDiscovery::find(),
+    StreamFactoryDiscovery::find(),
+    HttpAsyncClientDiscovery::find(),
+    'sentry.php',
+    '2.3'
+);
+
+$transportFactory = new class($httpClientFactory) implements TransportFactoryInterface  {
+    /**
+     * @var HttpClientFactoryInterface
+     */
+    private $clientFactory;
+
+    public function __construct(HttpClientFactoryInterface $clientFactory)
+    {
+        $this->clientFactory = $clientFactory;
+    }
+
+    public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
+    {
+        return new HttpTransport($options, $this->clientFactory->create($options), MessageFactoryDiscovery::find());
+    }
+};
+
+
+$builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
+$builder->setTransportFactory($transportFactory);
+
+Hub::getCurrent()->bindClient($builder->getClient());
+```
+
+<Alert level="warning" title="Note"><markdown>
+
+`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead.
+
+</markdown></Alert>
+
+##### SpoolTransport
+
+The default behavior is to send events immediately. You may, however, want to
+avoid waiting for the communication to the Sentry server that could be slow
+or unreliable. Avoid this by choosing the `SpoolTransport` which
+stores the events in a queue so that another process can read it and take
+care of sending them. Currently only spooling to memory is supported.
+
+```php
+use Sentry\ClientBuilder;
+use Sentry\Transport\SpoolTransport;
+use Sentry\Transport\HttpTransport;
+use Sentry\State\Hub;
+
+$options = ['dsn' => '___PUBLIC_DSN___'];
+
+$httpTransport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
+
+$spool = new MemorySpool();
+
+$transportFactory = new class implements TransportFactoryInterface {
+    public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
+    {
+        return new SpoolTransport($spool);
+    }
+};
+
+$builder = ClientBuilder::create($options);
+$builder->setTransportFactory($transportFactory);
+
+Hub::getCurrent()->bindClient($builder->getClient());
+
+// When the spool queue is flushed the events are sent using the transport
+// passed as parameter of the flushQueue method.
+
+$spool->flushQueue($httpTransport);
+```
+
+<Alert level="warning" title="Note"><markdown>
+
+`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead.
+
+</markdown></Alert>

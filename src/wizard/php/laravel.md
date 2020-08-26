@@ -1,6 +1,6 @@
 ---
 name: Laravel
-doc_link: https://docs.sentry.io/platforms/php/laravel/
+doc_link: https://docs.sentry.io/platforms/php/guides/laravel/
 support_level: production
 type: framework
 ---

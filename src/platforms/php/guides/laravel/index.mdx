@@ -1,15 +1,15 @@
 ---
 title: Laravel
-sidebar_order: 50
 redirect_from:
   - /clients/php/integrations/laravel/
+  - /platforms/php/laravel/
 ---
 
 Laravel is supported via a native package, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
-## Installation
+Sentry supports Laravel 5+.
 
-### Laravel 5.x, 6.x & 7.x
+## Install
 
 Install the `sentry/sentry-laravel` package:
 
@@ -19,7 +19,7 @@ $ composer require sentry/sentry-laravel
 
 If you're on Laravel 5.5 or later the package will be auto-discovered. Otherwise you will need to manually configure it in your `config/app.php`.
 
-```php
+```php {filename:config/app.php}
 'providers' => array(
     // ...
     Sentry\Laravel\ServiceProvider::class,
@@ -34,7 +34,7 @@ Add Sentry reporting to `App/Exceptions/Handler.php`.
 
 **For Laravel 7.x and later:**
 
-```php
+```php {filename:App/Exceptions/Handler.php}
 public function report(Throwable $exception)
 {
     if (app()->bound('sentry') && $this->shouldReport($exception)) {
@@ -47,7 +47,7 @@ public function report(Throwable $exception)
 
 **For Laravel 5.x and 6.x:**
 
-```php
+```php {filename:App/Exceptions/Handler.php}
 public function report(Exception $exception)
 {
     if (app()->bound('sentry') && $this->shouldReport($exception)) {
@@ -58,6 +58,8 @@ public function report(Exception $exception)
 }
 ```
 
+## Configure
+
 Create the Sentry configuration file (`config/sentry.php`) with this command:
 
 ```shell
@@ -66,9 +68,11 @@ $ php artisan vendor:publish --provider="Sentry\Laravel\ServiceProvider"
 
 Add your DSN to `.env`:
 
-```shell
+```shell {filename:.env}
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
+
+## Verify Setup
 
 You can easily verify that Sentry is capturing errors in your Laravel application by creating a debug route that will throw an exception:
 
@@ -79,122 +83,6 @@ Route::get('/debug-sentry', function () {
 ```
 
 Visiting this route will trigger an exception that will be captured by Sentry.
-
-### Lumen 5.x & 6.x
-
-Install the `sentry/sentry-laravel` package:
-
-```bash
-$ composer require sentry/sentry-laravel
-```
-
-Register Sentry in `bootstrap/app.php`:
-
-```php
-$app->register('Sentry\Laravel\ServiceProvider');
-
-# Sentry must be registered before routes are included
-require __DIR__ . '/../app/Http/routes.php';
-```
-
-Add Sentry reporting to `app/Exceptions/Handler.php`:
-
-```php
-public function report(Exception $exception)
-{
-    if (app()->bound('sentry') && $this->shouldReport($exception)) {
-        app('sentry')->captureException($exception);
-    }
-
-    parent::report($exception);
-}
-```
-
-Create the Sentry configuration file (`config/sentry.php`):
-
-```php
-<?php
-
-return array(
-    'dsn' => '___PUBLIC_DSN___',
-
-    // capture release as git sha
-    // 'release' => trim(exec('git log --pretty="%h" -n1 HEAD')),
-);
-```
-
-### Laravel 4.x
-
-Install the `sentry/sentry-laravel` package:
-
-Laravel 4.x is supported until version 0.8.x.
-
-```shell
-$ composer require sentry/sentry-laravel
-```
-
-Add the Sentry service provider and facade in `config/app.php`:
-
-```php
-'providers' => array(
-    // ...
-    'Sentry\SentryLaravel\SentryLaravelServiceProvider',
-),
-'aliases' => array(
-    // ...
-    'Sentry' => 'Sentry\SentryLaravel\SentryFacade',
-)
-```
-
-Create the Sentry configuration file (`config/sentry.php`):
-
-```bash
-$ php artisan config:publish sentry/sentry-laravel
-```
-
-Add your DSN to `config/sentry.php`:
-
-```php
-<?php
-
-return array(
-    'dsn' => '___PUBLIC_DSN___',
-
-    // ...
-);
-```
-
-If you wish to wire up Sentry anywhere outside of the standard error handlers, or
-if you need to configure additional settings, you can access the Sentry instance
-through `$app`:
-
-```php
-$app['sentry']->setRelease(Git::sha());
-```
-
-## Configuration
-
-The configuration file should be placed in `config/sentry.php` here you can configure all the [options](/error-reporting/configuration/?platform=php) the PHP SDK supports and a few Laravel specific options documented below.
-
-### Laravel specific options
-
-The Laravel integration will create [breadcrumbs](/platforms/php/#breadcrumbs) for certain events occurring in the framework, the capture of this information can be configured using the following options:
-
-```php
-'breadcrumbs' => [
-    // Capture Laravel logs. Defaults to `true`.
-    'logs' => true,
-
-    // Capture queue job information. Defaults to `true`.
-    'queue_info' => true,
-
-    // Capture SQL queries. Defaults to `true`.
-    'sql_queries' => true,
-
-    // Capture bindings (parameters) on SQL queries. Defaults to `false`.
-    'sql_bindings' => false,
-],
-```
 
 ### Testing with Artisan
 
