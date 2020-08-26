@@ -9,10 +9,10 @@ If you are using `yarn` or `npm`, you can add our package as a dependency:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/node@5.20.1
+$ yarn add @sentry/node
 
 # Using npm
-$ npm install @sentry/node@5.20.1
+$ npm install @sentry/node
 ```
 
 ```javascript
