@@ -20,16 +20,14 @@ export default async ({ actions, graphql, reporter }) => {
   );
 
   const component = require.resolve(`../../templates/api.js`);
-  await Promise.all(
-    data.allApiDoc.nodes.map(async (node: any) => {
-      actions.createPage({
-        path: node.fields.slug,
-        component,
-        context: {
-          id: node.id,
-          title: node.title,
-        },
-      });
-    })
-  );
+  data.allApiDoc.nodes.map((node: any) => {
+    actions.createPage({
+      path: node.fields.slug,
+      component,
+      context: {
+        id: node.id,
+        title: node.title,
+      },
+    });
+  });
 };
