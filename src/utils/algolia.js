@@ -1,3 +1,5 @@
+const { standardSDKSlug } = require("sentry-global-search");
+
 const pageQuery = `{
     pages: allSitePage {
       edges {
@@ -9,6 +11,9 @@ const pageQuery = `{
             title
             excerpt
             noindex
+            platform {
+              name
+            }
           }
         }
       }
@@ -26,11 +31,17 @@ const flatten = arr =>
       title: context.title,
       url: path,
       content: context.excerpt,
+      platforms: context.platform
+        ? [standardSDKSlug(context.platform.name).slug]
+        : [],
       // score: child.legacy ? 0 : 1,
     }))
     .filter(n => !n.draft);
 
-const settings = { attributesToSnippet: [`content:20`] };
+const settings = {
+  attributesToSnippet: [`content:20`],
+  attributesForFaceting: ["platforms"],
+};
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
 if (!indexPrefix) {
