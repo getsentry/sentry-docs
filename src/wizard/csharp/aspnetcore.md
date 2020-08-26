@@ -1,6 +1,6 @@
 ---
 name: ASP.NET Core
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=aspnetcore
+doc_link: https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/
 support_level: production
 type: framework
 ---
