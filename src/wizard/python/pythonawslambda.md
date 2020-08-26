@@ -1,6 +1,6 @@
 ---
 name: AWS Lambda
-doc_link: https://docs.sentry.io/platforms/python/aws_lambda/
+doc_link: https://docs.sentry.io/platforms/python/guides/aws-lambda/
 support_level: production
 type: framework
 ---

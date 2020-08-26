@@ -1,6 +1,6 @@
 ---
 name: Serverless (Python)
-doc_link: https://docs.sentry.io/platforms/python/serverless/
+doc_link: https://docs.sentry.io/platforms/python/guides/serverless/
 support_level: production
 type: framework
 ---

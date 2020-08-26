@@ -1,6 +1,6 @@
 ---
 name: Bottle
-doc_link: https://docs.sentry.io/platforms/python/bottle/
+doc_link: https://docs.sentry.io/platforms/python/guides/bottle/
 support_level: production
 type: framework
 ---
