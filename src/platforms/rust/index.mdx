@@ -4,25 +4,44 @@ redirect_from:
   - /clients/rust/
 ---
 
-<Alert level="" title="Learn about SDK usage"><markdown>
+On this page, we get you up and running with Sentry's Rust SDK.
 
-This page will provide you with details that are very specific to the platform. To learn how to use our unified
-SDKs in general, please visit the [Error Reporting](/error-reporting/quickstart/?platform=rust), [Enriching Error Data](/enriching-error-data/additional-data/?platform=rust), [Releases](/workflow/releases/?platform=rust), and [Data Management](/data-management/event-grouping/?platform=rust) sections.
+**Note:** If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
 
-</markdown></Alert>
+Using a framework? Take a look at our specific guides to get started.
 
-Sentry-Rust is the official Rust SDK for Sentry. It maps the entire Sentry
-protocol for Rust and provides convenient helpers for sending common types of
-events to Sentry.
+<GuideGrid platform="rust" />
 
-The Rust SDK follows the new unified SDK architecture. To get started have a
-look at the [quickstart](/error-reporting/quickstart/?platform=rust) docs and the crates [API Docs](https://docs.rs/sentry).
+## Install
 
-## Quick Start
+To add Sentry to your Rust project, just add a new dependency to your `Cargo.toml`:
 
-```rust
+```toml {filename:Cargo.toml}
+[dependencies]
+sentry = "*"
+```
+
+## Configure
+
+The most convenient way to use this library is the `sentry::init` function, which starts a Sentry client with a default set of integrations, and binds it to the current Hub.
+
+The `sentry::init` function returns a guard that, when dropped, will flush Events that were not yet sent to the Sentry service. It has a two second deadline for this, so shutdown of applications might slightly delay as a result. Keeping the guard around or sending events will not work.
+
+```rust {filename:main.rs}
 let _guard = sentry::init("___PUBLIC_DSN___");
-sentry::capture_message("Hello World!", sentry::Level::Info);
+```
+**Important:** Note your DSN. The DSN (Data Source Name) tells the SDK where to send events. If you forget it, view Settings -> Projects -> Client Keys (DSN) in sentry.io.
+## Verify Setup
+
+The quickest way to verify Sentry in your Rust application is to cause a panic:
+
+```rust {filename:main.rs}
+fn main() {
+  let _guard = sentry::init("___PUBLIC_DSN___");
+
+  // Sentry will capture this
+  panic!("Everything is on fire!");
+}
 ```
 
 ## Integrations
@@ -32,10 +51,6 @@ and libraries.
 
 A list of integrations and their feature flags can be found
 [in the integration API docs](https://docs.rs/sentry/0/sentry/integrations/index.html).
-
-Apart from those, the Rust SDK also supports the following application frameworks:
-
-- [actix-web 0.7](/platforms/rust/actix/)
 
 ## More Information
 
