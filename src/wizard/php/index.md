@@ -1,12 +1,11 @@
 ---
 name: PHP
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=php
+doc_link: https://docs.sentry.io/platforms/php/
 support_level: production
 type: language
 ---
 
-To install the SDK you will need to be using `composer` in your project. If you
-are not already using Composer please see the [Composer documentation](https://getcomposer.org/download/).
+To install the SDK you will need to be using `composer` in your project. If you are not already using Composer please see the [Composer documentation](https://getcomposer.org/download/).
 
 ```bash
 composer require sentry/sdk
