@@ -55,7 +55,8 @@ const flatten = arr =>
 
 const settings = {
   attributesToSnippet: [`content:20`],
-  attributesForFaceting: ["platforms"],
+  attributesForFaceting: ["platforms", "pathSegments", "legacy"],
+  searchableAttributes: ["content", "title"],
 };
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
