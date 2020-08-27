@@ -20,6 +20,14 @@ const pageQuery = `{
     }
   }`;
 
+const extrapolate = (str, separator) => {
+  const segments = str.split(separator).filter(Boolean);
+  const fragments = segments.map((segment, i, array) =>
+    array.slice(0, i + 1).join(separator)
+  );
+  return fragments;
+};
+
 const flatten = arr =>
   arr
     .filter(
@@ -31,8 +39,10 @@ const flatten = arr =>
       title: context.title,
       url: path,
       content: context.excerpt,
+
+      // https://github.com/getsentry/sentry-global-search#sorting-by-a-platform
       platforms: context.platform
-        ? [standardSDKSlug(context.platform.name).slug]
+        ? extrapolate(standardSDKSlug(context.platform.name).slug, ".")
         : [],
       // score: child.legacy ? 0 : 1,
     }))
