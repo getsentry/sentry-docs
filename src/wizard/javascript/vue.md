@@ -7,7 +7,7 @@ type: framework
 
 ## Instrument your application
 
-To begin collecting error and performance data from your Vue application, you'll need these packages:
+To begin collecting error and performance data from your Vue application, you'll need the following packages:
 
 * `@sentry/browser` (Sentry's core browser SDK)
 * `@sentry/integrations` (contains Sentry's Vue integration)
@@ -27,7 +27,7 @@ $ yarn add @sentry/browser @sentry/integrations @sentry/tracing
 $ npm install @sentry/browser @sentry/integrations @sentry/tracing
 ```
 
-Next, initialize Sentry in your `app.js`:
+Next, initialize Sentry in your app entry point before you initialize your root component. 
 
 ```javascript
 import Vue from "vue";
@@ -98,4 +98,3 @@ Please note that if you enable this integration, Vue will not call its `logError
 If you want to preserve this functionality, make sure to pass the `logErrors: true` option.
 </div>
 </div>
-
