@@ -126,6 +126,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
                 }
                 fields {
                   slug
+                  legacy
                 }
                 excerpt(pruneLength: 5000)
               }
@@ -139,6 +140,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
                 }
                 fields {
                   slug
+                  legacy
                 }
                 excerpt(pruneLength: 5000)
               }
@@ -172,6 +174,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         ...child.frontmatter,
         ...context,
         id: node.id,
+        legacy: child.fields.legacy,
       },
     });
   };

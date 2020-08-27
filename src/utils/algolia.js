@@ -44,10 +44,12 @@ const flatten = arr =>
       platforms: context.platform
         ? extrapolate(standardSDKSlug(context.platform.name).slug, ".")
         : [],
-      // score: child.legacy ? 0 : 1,
 
       // https://github.com/getsentry/sentry-global-search#sorting-by-path
       pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
+
+      // https://github.com/getsentry/sentry-global-search#sorting-by-legacy
+      legacy: context.legacy || false,
     }))
     .filter(n => !n.draft);
 
