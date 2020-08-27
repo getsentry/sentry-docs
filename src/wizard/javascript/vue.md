@@ -5,43 +5,87 @@ support_level: production
 type: framework
 ---
 
-To use Sentry with your Vue application, you will need to use Sentry’s browser JavaScript SDK: `@sentry/browser`.
+## Instrument your application
+
+To begin collecting error and performance data from your Vue application, you'll need the following packages:
+
+* `@sentry/browser` (Sentry's core browser SDK)
+* `@sentry/integrations` (contains Sentry's Vue integration)
+* `@sentry/tracing` (instruments performance data)
+
+Below are instructions for using your favorite package manager, or alternatively loaded directly from our CDN.
+
+### Using yarn or npm
+
+Install the dependencies:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/browser
+$ yarn add @sentry/browser @sentry/integrations @sentry/tracing
 
 # Using npm
-$ npm install @sentry/browser
+$ npm install @sentry/browser @sentry/integrations @sentry/tracing
 ```
 
-On its own, `@sentry/browser` will report any uncaught exceptions triggered by your application.
-
-Additionally, the Vue _integration_ will capture the name and props state of the active component where the error was thrown. This is reported via Vue’s `config.errorHandler` hook.
-
-Starting with version `5.x` our `Vue` integration lives in its own package `@sentry/integrations`.
-You can install it with `npm` / `yarn`:
-
-```bash
-# Using yarn
-yarn add @sentry/integrations
-
-# Using npm
-npm install @sentry/integrations
-```
-
-Then add this to your `app.js`:
+Next, initialize Sentry in your app entry point before you initialize your root component. 
 
 ```javascript
 import Vue from "vue";
 import * as Sentry from "@sentry/browser";
 import { Vue as VueIntegration } from "@sentry/integrations";
+import { Integrations } from '@sentry/tracing';
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  integrations: [new VueIntegration({ Vue, attachProps: true })],
+  integrations: [
+    new VueIntegration({
+      Vue,
+      tracing: true
+    }),
+    new Integrations.BrowserTracing()
+  ],
+  tracesSampleRate: 1
 });
 ```
+
+### Using our CDN
+
+Alternatively, you can load these packages directly from our CDN using two script tags:
+
+```html
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/vue.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'vue.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+If you load the Sentry packages this way, they are available under the `Sentry` namespace on the global scope.
+
+Next, initialize Sentry in your `app.js`:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.Integrations.Vue({
+      Vue,
+      tracing: true
+    }),
+    new Sentry.Integrations.BrowserTracing()
+  ],
+  tracesSampleRate: 1
+});
+```
+
+After this, Sentry will automatically catch and report any uncaught exceptions, and report on the performance of your application.
+
+### Additional Options
 
 Additionally, `Integrations.Vue` accepts a few different configuration options that let you change its behavior:
 
@@ -54,32 +98,3 @@ Please note that if you enable this integration, Vue will not call its `logError
 If you want to preserve this functionality, make sure to pass the `logErrors: true` option.
 </div>
 </div>
-
-In case you are using the CDN version or the Loader, we provide a standalone file for every integration, you can use it
-like this:
-
-```html
-<!-- Note that we now also provide a es6 build only -->
-<!-- <script src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.es6.min.js" integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.es6.min.js', 'sha384-base64') }}" crossorigin="anonymous"></script> -->
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-
-<!-- If you include the integration it will be available under Sentry.Integrations.Vue -->
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/vue.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'vue.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-
-<script>
-  Sentry.init({
-    dsn: "___PUBLIC_DSN___",
-    integrations: [new Sentry.Integrations.Vue({ Vue, attachProps: true })],
-  });
-</script>
-```
-
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
