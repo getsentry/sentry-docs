@@ -45,6 +45,9 @@ const flatten = arr =>
         ? extrapolate(standardSDKSlug(context.platform.name).slug, ".")
         : [],
       // score: child.legacy ? 0 : 1,
+
+      // https://github.com/getsentry/sentry-global-search#sorting-by-path
+      pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
     }))
     .filter(n => !n.draft);
 
