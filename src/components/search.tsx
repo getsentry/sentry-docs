@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 
 import Logo from "./logo";
 
-import { SentryGlobalSearch } from "sentry-global-search";
+import { SentryGlobalSearch, standardSDKSlug } from "sentry-global-search";
 
 import DOMPurify from "dompurify";
 
@@ -52,7 +52,12 @@ type Result = {
   hits: Hit[];
 };
 
-export default (): JSX.Element => {
+type Props = {
+  path?: string;
+  platforms?: string[];
+};
+
+export default ({ path, platforms }: Props): JSX.Element => {
   const ref = useRef(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
@@ -72,10 +77,18 @@ export default (): JSX.Element => {
         className="form-control"
         onChange={({ target: { value: query } }) => {
           setQuery(query);
-          search.query(query).then((results: Result[]) => {
-            if (loading) setLoading(false);
-            setResults(results);
-          });
+
+          search
+            .query(query, {
+              path,
+              platforms: platforms.map(
+                platform => standardSDKSlug(platform).slug
+              ),
+            })
+            .then((results: Result[]) => {
+              if (loading) setLoading(false);
+              setResults(results);
+            });
         }}
         value={query}
         onFocus={e => setFocus(true)}
