@@ -41,7 +41,7 @@ On its own, `@sentry/angular` will report any uncaught exceptions triggered by y
 
 ### ErrorHandler
 
-`@sentry/angular` exports a function to instantiate `ErrorHandler` provider that will automatically send Javascript errors captured by the Angular's error handler.
+`@sentry/angular` exports a function to instantiate `ErrorHandler` provider that will automatically send JavaScript errors captured by the Angular's error handler.
 
 ```javascript
 import { NgModule, ErrorHandler } from '@angular/core';
