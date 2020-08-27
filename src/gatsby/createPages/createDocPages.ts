@@ -54,6 +54,7 @@ export default async ({ actions, graphql, reporter }) => {
           excerpt: child.excerpt,
           ...child.frontmatter,
           id: node.id,
+          legacy: child.fields.legacy,
         },
       });
     }
