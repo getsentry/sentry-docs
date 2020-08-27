@@ -1,6 +1,6 @@
 ---
 name: Celery
-doc_link: https://docs.sentry.io/platforms/python/celery/
+doc_link: https://docs.sentry.io/platforms/python/guides/celery/
 support_level: production
 type: library
 ---

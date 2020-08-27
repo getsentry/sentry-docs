@@ -1,0 +1,46 @@
+---
+title: Transports
+---
+
+The Native SDK uses _Transports_ to send event payloads to Sentry. The default
+transport depends on the target platform:
+
+- **Windows**: WinHTTP
+- **Linux**: Curl
+- **macOS**: Curl
+
+To specify a custom transport, use the `sentry_options_set_transport` function
+and supply a transport that implements the `sentry_transport_t` interface.
+
+```c
+#include <sentry.h>
+
+void custom_transport(sentry_envelope_t *envelope, void *state) {
+  /*
+   * Send the event here. If the transport requires state, such as an HTTP
+   * client object or request queue, it can be specified in the `state`
+   * parameter when configuring the transport. It will be passed as second
+   * argument to this function.
+   * The transport takes ownership of the `envelope`, and must free it once it
+   * is done.
+   */
+  sentry_envelope_free(envelope);
+}
+
+int main(void) {
+  void *transport_state = 0;
+
+  sentry_options_t *options = sentry_options_new();
+  sentry_transport_t *transport = sentry_transport_new(custom_transport);
+  sentry_transport_set_state(transport, transport_state);
+
+  sentry_options_set_transport(options, transport);
+  sentry_init(options);
+
+  /* ... */
+}
+```
+
+The transport is invoked in the same thread as the call to
+`sentry_capture_event`. Consider to offload network communication to a
+background thread or thread pool to avoid blocking execution.

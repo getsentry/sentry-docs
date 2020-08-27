@@ -1,6 +1,6 @@
 ---
 name: Python
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=python
+doc_link: https://docs.sentry.io/platforms/python/
 support_level: production
 type: language
 ---

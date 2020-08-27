@@ -1,6 +1,6 @@
 ---
 name: Sanic
-doc_link: https://docs.sentry.io/platforms/python/sanic/
+doc_link: https://docs.sentry.io/platforms/python/guides/sanic/
 support_level: production
 type: framework
 ---
