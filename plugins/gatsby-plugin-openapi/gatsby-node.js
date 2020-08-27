@@ -19,7 +19,13 @@ exports.sourceNodes = async (
     return;
   }
   try {
-    const parsedContent = JSON.parse(content);
+    const parsedContent = (() => {
+      try {
+        return JSON.parse(content);
+      } catch (error) {
+        return content;
+      }
+    })();
 
     Object.entries(parsedContent).map(([keys, values]) => {
       console.log(keys);
@@ -79,27 +85,51 @@ exports.sourceNodes = async (
       Object.keys(parsedContent.paths).reduce((acc, path) => {
         let result = Object.entries(parsedContent.paths[path]).map(
           ([method, rest]) => {
-            let responses = Object.entries(
-              parsedContent.paths[path][method]["responses"]
-            ).map(([status_code, responses_rest]) => ({
-              ...responses_rest,
-              content:
-                (responses_rest.content &&
-                  Object.entries(responses_rest.content).reduce(
-                    (acc, [content_type, content_values]) => {
-                      Object.entries(content_values).map(
-                        ([k, v]) => (acc[k] = JSON.stringify(v))
-                      );
-                      acc["content-type"] = content_type;
-                      return acc;
-                    },
-                    {}
-                  )) ||
-                responses_rest.content,
-              status_code,
-            }));
+            const methodPath = parsedContent.paths[path][method];
 
-            return { ...rest, method, path, responses };
+            let responses =
+              (methodPath["responses"] &&
+                Object.entries(methodPath["responses"]).map(
+                  ([status_code, responses_rest]) => ({
+                    ...responses_rest,
+                    content:
+                      (responses_rest.content &&
+                        Object.entries(responses_rest.content).reduce(
+                          (acc, [content_type, content_values]) => {
+                            Object.entries(content_values).map(
+                              ([k, v]) => (acc[k] = JSON.stringify(v))
+                            );
+                            acc["content-type"] = content_type;
+                            return acc;
+                          },
+                          {}
+                        )) ||
+                      null,
+                    status_code,
+                  })
+                )) ||
+              null;
+
+            let requestBody =
+              (methodPath["requestBody"] && {
+                ...methodPath["requestBody"],
+                content:
+                  (methodPath["requestBody"]["content"] &&
+                    Object.entries(methodPath["requestBody"]["content"]).reduce(
+                      (acc, [content_type, content_values]) => {
+                        Object.entries(content_values).map(
+                          ([k, v]) => (acc[k] = JSON.stringify(v))
+                        );
+                        acc["content-type"] = content_type;
+                        return acc;
+                      },
+                      {}
+                    )) ||
+                  null,
+              }) ||
+              null;
+
+            return { ...rest, method, path, responses, requestBody };
           }
         );
 

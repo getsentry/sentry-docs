@@ -1,5 +1,4 @@
-const fs = require("fs").promises;
-const path = require("path");
+const axios = require("axios");
 
 require("ts-node").register({
   files: true, // to that TS node hooks have access to local typings too
@@ -25,7 +24,7 @@ const packages = new (require("./src/utils/packageRegistry"))();
 
 const getPlugins = () => {
   const remarkPlugins = [
-    {
+    /* {
       resolve: require.resolve("./plugins/gatsby-remark-variables"),
       options: {
         scope: {
@@ -57,7 +56,7 @@ const getPlugins = () => {
       options: {
         noInlineHighlight: true,
       },
-    },
+    }, */
     // {
     //   resolve: `gatsby-remark-check-links`
     // }
@@ -177,8 +176,16 @@ const getPlugins = () => {
       resolve: "./plugins/gatsby-plugin-openapi",
       options: {
         name: "openapi",
-        resolve: async () =>
-          await fs.readFile(path.resolve(__dirname, "./bundle.json"), "utf8"),
+        resolve: async () => {
+          try {
+            const response = await axios.get(
+              "https://raw.githubusercontent.com/getsentry/sentry-api-schema/68bb79acfbbee062bd8d2f71ee3a07d43dc934c9/openapi-derefed.json"
+            );
+            return response.data;
+          } catch (err) {
+            throw err;
+          }
+        },
         // required, function which returns a Promise resolving Swagger JSON
       },
     },
