@@ -71,8 +71,9 @@ export const PlatformSidebar = ({
       <DynamicNav
         root={pathRoot}
         tree={tree}
-        title="Getting Started"
+        title={`Sentry for ${(guide || platform).title}`}
         showDepth={1}
+        prependLinks={[[`/${pathRoot}`, "Getting Started"]]}
       />
       <DynamicNav
         root={`/${pathRoot}/enriching-error-data`}
