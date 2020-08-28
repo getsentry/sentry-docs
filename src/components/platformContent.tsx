@@ -3,6 +3,7 @@ import { StaticQuery, graphql } from "gatsby";
 import { Location } from "@reach/router";
 import { parse } from "query-string";
 
+import usePlatform from "./hooks/usePlatform";
 import Content from "./content";
 import SmartLink from "./smartLink";
 
@@ -83,9 +84,10 @@ const PlatformContent = ({
     allPlatformsYaml: { nodes: platforms },
   } = data;
   const [dropdown, setDropdown] = React.useState(null);
-  const hasDropdown = !platform;
+  const [activePlatform, _] = usePlatform(platform);
+  const hasDropdown = !activePlatform;
 
-  if (!platform) {
+  if (!activePlatform) {
     const qsPlatform = parse(location.search).platform;
     if (qsPlatform instanceof Array) {
       platform = qsPlatform[0];
@@ -97,19 +99,16 @@ const PlatformContent = ({
   const matches = files.filter(
     node => node.relativePath.indexOf(includePath) === 0
   );
-  const defaultPlatform = platforms.find(p =>
-    matches.find(m => slugMatches(m.name, p.slug))
-  );
 
-  let activePlatform =
-    platforms.find(p => slugMatches(p.slug, platform)) || defaultPlatform;
-  if (!activePlatform) activePlatform = defaultPlatform;
+  // let activePlatform =
+  //   platforms.find(p => slugMatches(p.slug, platform)) || defaultPlatform;
+  // if (!activePlatform) activePlatform = defaultPlatform;
   const contentMatch = matches.find(m =>
-    slugMatches(m.name, activePlatform.slug)
+    slugMatches(m.name, activePlatform.name)
   );
   if (!contentMatch) {
     console.warn(
-      `Couldn't find content in ${includePath} for selected platform: ${activePlatform.slug}`
+      `Couldn't find content in ${includePath} for selected platform: ${activePlatform.name}`
     );
   }
 

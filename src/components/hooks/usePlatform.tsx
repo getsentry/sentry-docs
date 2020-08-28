@@ -44,7 +44,10 @@ const rebuildPathForPlatform = (
     : newPathPrefix;
 };
 
-export default (): [Platform, (value: string) => void] => {
+export default (
+  defaultValue: string | null,
+  readLocalStorage = true
+): [Platform, (value: string) => void] => {
   // State to store our value
   // Pass initial state function to useState so logic is only executed once
   const location = useLocation();
@@ -52,7 +55,7 @@ export default (): [Platform, (value: string) => void] => {
 
   const [storedValue, setStoredValue] = useLocalStorage<string | null>(
     "platform",
-    DEFAULT_PLATFORM
+    null
   );
 
   let valueFromLocation = getPlatformFromLocation(location);
@@ -60,7 +63,7 @@ export default (): [Platform, (value: string) => void] => {
     ? valueFromLocation.join(".")
     : null;
 
-  if (!currentValue) {
+  if (!currentValue && readLocalStorage) {
     currentValue = storedValue;
   }
 
@@ -78,7 +81,9 @@ export default (): [Platform, (value: string) => void] => {
   }
 
   if (!activeValue) {
-    activeValue = PLATFORMS.find(p => p.name === DEFAULT_PLATFORM);
+    activeValue = PLATFORMS.find(
+      p => p.name === defaultValue || DEFAULT_PLATFORM
+    );
     // TODO(dcramer): ideally we'd clear invalid saved values, but its not a huge deal
     // if (currentValue) {
     //   setStoredValue(DEFAULT_PLATFORM);
