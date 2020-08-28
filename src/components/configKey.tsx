@@ -103,6 +103,8 @@ export const ConfigKey = ({
     ? supported.find(p => p === platform)
     : true;
 
+  if (!isSupported) return null;
+
   const style = activePlatform.case_style || "canonical";
   const header = (
     <h3>
