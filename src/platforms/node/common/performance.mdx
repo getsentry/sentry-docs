@@ -1,8 +1,7 @@
 ---
-hide_from_sidebar: true
+title: Performance
+sidebar_order: 900
 ---
-
-**Node**
 
 To get started with performance monitoring with Node.js, first install these packages:
 
@@ -20,7 +19,7 @@ We switched our package name from `@sentry/apm` to `@sentry/tracing`. If you wer
 
 </markdown></Alert>
 
-**Sending Traces**
+## Set up Performance Monitoring
 
 To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 100% of all your transactions:
 
@@ -38,9 +37,15 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
+```
 
-// Your test code to verify it works
+Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` option to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Be sure to lower this value in production otherwise you could burn through your quota quickly.
 
+## Verify Setup
+
+Verify your setup by intentionally sending a transaction manually to Sentry. Make sure your sampling rate is at `1.0` so that your transaction captured and sent to Sentry.
+
+```javascript
 const transaction = Sentry.startTransaction({
   op: "test",
   name: "My First Test Transaction",
@@ -55,13 +60,9 @@ setTimeout(() => {
     transaction.finish();
   }
 }, 99);
-
-// ---------------------------------
 ```
 
-Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` option to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Be sure to lower this value in production otherwise you could burn through your quota quickly.
-
-**Automatic Instrumentation**
+## Automatic Instrumentation with Express
 
 It’s possible to add tracing to all popular frameworks; however, we only provide pre-written handlers for Express.
 
@@ -151,7 +152,7 @@ request.on("close", () => {
 });
 ```
 
-**Manual Instrumentation**
+## Manual Instrumentation
 
 To manually instrument a specific region of your code, you can create a transaction to capture it.
 
@@ -173,7 +174,7 @@ app.use(function processItems(req, res, next) {
 });
 ```
 
-#### Retrieving a Transaction
+### Retrieving a Transaction
 
 In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `undefined`. If you are using our Express integration by default we attach the Transaction to the Scope. So you could do something like this:
 
