@@ -5,10 +5,10 @@ support_level: production
 type: framework
 ---
 
-Install our Sentry SDK in the `requirements.txt` section:
+Install our Python SDK using `pip`:
 
-```python
-sentry_sdk
+```bash
+$ pip install --upgrade sentry-sdk
 ```
 
 You can use the GCP Functions integration for the Python SDK like this:
@@ -19,10 +19,10 @@ from sentry_sdk.integrations.gcp import GcpIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=GcpIntegration()]
+    integrations=[GcpIntegration()],
 )
 
-def my_function(event, context):
+def http_function_entrypoint(request):
     ...
 ```
 
@@ -33,7 +33,7 @@ Update the sentry initialization to set ```timeout_warning``` to ```true```
 ```python
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[GcpIntegration(timeout_warning=True)]
+    integrations=[GcpIntegration(timeout_warning=True)],
 )
 ```
 The timeout warning is sent only if the "timeout" in the GCP Funtion configuration is set to a value greater than one second.
