@@ -19,13 +19,15 @@ exports.sourceNodes = async (
     return;
   }
   try {
-    const parsedContent = (() => {
+    const parseContent = () => {
       try {
         return JSON.parse(content);
       } catch (error) {
         return content;
       }
-    })();
+    };
+
+    const parsedContent = parseContent();
 
     Object.entries(parsedContent).map(([keys, values]) => {
       console.log(keys);
@@ -80,12 +82,20 @@ exports.sourceNodes = async (
     // ];
     // createTypes(typeDefs);
 
+    const readableUrls = {};
+
     var data =
       parsedContent.paths &&
-      Object.keys(parsedContent.paths).reduce((acc, path) => {
-        let result = Object.entries(parsedContent.paths[path]).map(
+      Object.keys(parsedContent.paths).reduce((acc, apiPath) => {
+        let result = Object.entries(parsedContent.paths[apiPath]).map(
           ([method, rest]) => {
-            const methodPath = parsedContent.paths[path][method];
+            const methodPath = parsedContent.paths[apiPath][method];
+
+            let readableUrl = methodPath["operationId"]
+              .replace(/(?:(the|a|an) +)/g, "")
+              .trim()
+              .replace(/\s/g, "-")
+              .toLowerCase();
 
             let responses =
               (methodPath["responses"] &&
@@ -97,7 +107,7 @@ exports.sourceNodes = async (
                         Object.entries(responses_rest.content).reduce(
                           (acc, [content_type, content_values]) => {
                             Object.entries(content_values).map(
-                              ([k, v]) => (acc[k] = JSON.stringify(v))
+                              ([k, v]) => (acc[k] = JSON.stringify(v, null, 2))
                             );
                             acc["content-type"] = content_type;
                             return acc;
@@ -118,7 +128,7 @@ exports.sourceNodes = async (
                     Object.entries(methodPath["requestBody"]["content"]).reduce(
                       (acc, [content_type, content_values]) => {
                         Object.entries(content_values).map(
-                          ([k, v]) => (acc[k] = JSON.stringify(v))
+                          ([k, v]) => (acc[k] = JSON.stringify(v, null, 2))
                         );
                         acc["content-type"] = content_type;
                         return acc;
@@ -129,7 +139,14 @@ exports.sourceNodes = async (
               }) ||
               null;
 
-            return { ...rest, method, path, responses, requestBody };
+            return {
+              ...rest,
+              method,
+              apiPath,
+              responses,
+              requestBody,
+              readableUrl,
+            };
           }
         );
 
@@ -153,85 +170,4 @@ exports.sourceNodes = async (
   } catch (error) {
     console.log(error);
   }
-
-  function transformObject(obj, id, type) {
-    const apiNode = {
-      ...obj,
-      id,
-      children: [],
-      parent: node.id,
-      internal: {
-        contentDigest: createContentDigest(obj),
-        type,
-      },
-    };
-    createNode(apiNode);
-    createParentChildLink({ parent: node, child: apiNode });
-  }
-
-  // if (node.internal.mediaType !== `text/yaml`) {
-  //   return
-  // }
-
-  // const content = await loadNodeContent(node)
-  // const parsedContent = jsYaml.load(content)
-
-  // if (_.isArray(parsedContent)) {
-  //   parsedContent.forEach((obj, i) => {
-  //     transformObject(
-  //       obj,
-  //       obj.id ? obj.id : createNodeId(`${node.id} [${i}] >>> YAML`),
-  //       getType({ node, object: obj, isArray: true })
-  //     )
-  //   })
-  // } else if (_.isPlainObject(parsedContent)) {
-  //   transformObject(
-  //     parsedContent,
-  //     parsedContent.id ? parsedContent.id : createNodeId(`${node.id} >>> YAML`),
-  //     getType({ node, object: parsedContent, isArray: false })
-  //   )
-  // }
 };
-
-// exports.onCreateNode = async (
-//   { node, actions, loadNodeContent, createNodeId, createContentDigest },
-//   pluginOptions
-// ) => {
-//   const { createNode, createParentChildLink } = actions;
-
-//   console.log(node.internal.owner);
-//   if (node.internal["owner"] === "gatsby-plugin-openapi") {
-//     console.log("plugin-openapi");
-
-//     let content = null;
-//     try {
-//       content = await pluginOptions.resolve();
-//       // console.log(jsonText)
-//     } catch (exception) {
-//       console.warn(
-//         `There was an error resolving spec '${spec.name}', ${exception.name} ${exception.message} ${exception.stack}`
-//       );
-//     }
-
-//     if (content === null) {
-//       return;
-//     }
-//     try {
-//       const parsedContent = JSON.parse(content);
-//       const infoNode = {
-//         ...parsedContent["info"],
-//         id: createNodeId(`info`),
-//         children: [],
-//         parent: node.id,
-//         internal: {
-//           contentDigest: createContentDigest("info"),
-//           type: "info",
-//         },
-//       };
-//       createNode(infoNode);
-//       createParentChildLink({ parent: node, child: infoNode });
-//     } catch (err) {
-//       console.log(err);
-//     }
-//   }
-// };
