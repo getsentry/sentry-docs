@@ -45,6 +45,8 @@ platformBrowserDynamic()
   .catch(err => console.error(err));
 ```
 
+The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
+
 On its own, `@sentry/angular` will report any uncaught exceptions triggered by your application. Additionally, you can configure `@sentry/angular` to catch any Angular-specific exceptions reported through the [@angular/core/ErrorHandler](https://angular.io/api/core/ErrorHandler) provider.
 
 ### ErrorHandler and Tracer
