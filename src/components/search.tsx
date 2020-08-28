@@ -60,7 +60,7 @@ type Props = {
   platforms?: string[];
 };
 
-export default ({ path, platforms }: Props): JSX.Element => {
+export default ({ path, platforms = [] }: Props): JSX.Element => {
   const ref = useRef(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
