@@ -39,7 +39,9 @@ export const Breadcrumbs = ({
   },
 }: Props) => {
   const location = useLocation();
-  const currentPath = location.pathname;
+  let currentPath = location.pathname;
+  if (currentPath.substr(currentPath.length - 1) !== "/")
+    currentPath = currentPath += "/";
   let rootNode = nodes.find(n => n.path === currentPath);
   if (!rootNode) {
     console.warn(`Cant find root node for breadcrumbs: ${currentPath}`);
