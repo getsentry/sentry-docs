@@ -6,6 +6,7 @@ export type Platform = {
   name: string;
   displayName: string;
   children?: Platform[];
+  case_style?: string;
 };
 
 export const PLATFORMS: Platform[] = [

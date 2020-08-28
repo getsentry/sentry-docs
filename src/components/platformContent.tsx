@@ -84,10 +84,10 @@ const PlatformContent = ({
     allPlatformsYaml: { nodes: platforms },
   } = data;
   const [dropdown, setDropdown] = React.useState(null);
-  const [activePlatform] = usePlatform(platform);
-  const hasDropdown = !activePlatform;
+  const [currentPlatform] = usePlatform(platform);
+  const hasDropdown = !currentPlatform;
 
-  if (!activePlatform) {
+  if (!currentPlatform) {
     const qsPlatform = parse(location.search).platform;
     if (qsPlatform instanceof Array) {
       platform = qsPlatform[0];
@@ -95,13 +95,13 @@ const PlatformContent = ({
       platform = qsPlatform || null;
     }
   }
+  const activePlatform =
+    currentPlatform || platforms.find(p => slugMatches(p.slug, platform));
 
   const matches = files.filter(
     node => node.relativePath.indexOf(includePath) === 0
   );
 
-  // let activePlatform =
-  //   platforms.find(p => slugMatches(p.slug, platform)) || defaultPlatform;
   // if (!activePlatform) activePlatform = defaultPlatform;
   const contentMatch = matches.find(m =>
     slugMatches(m.name, activePlatform.name)

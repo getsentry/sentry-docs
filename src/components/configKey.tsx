@@ -3,6 +3,8 @@ import { StaticQuery, graphql } from "gatsby";
 import { Location } from "@reach/router";
 import { parse } from "query-string";
 
+import usePlatform from "./hooks/usePlatform";
+
 const query = graphql`
   query ConfigKeyQuery {
     allPlatformsYaml(sort: { fields: slug, order: ASC }) {
@@ -82,7 +84,9 @@ export const ConfigKey = ({
   const {
     allPlatformsYaml: { nodes: platforms },
   } = data;
-  if (!platform) {
+
+  const [currentPlatform] = usePlatform(platform);
+  if (!currentPlatform) {
     const qsPlatform = parse(location.search).platform;
     if (qsPlatform instanceof Array) {
       platform = normalizeSlug(qsPlatform[0]);
@@ -90,8 +94,8 @@ export const ConfigKey = ({
       platform = normalizeSlug(qsPlatform || null);
     }
   }
-  let activePlatform =
-    platforms.find(p => normalizeSlug(p.slug) === platform) || {};
+  const activePlatform =
+    currentPlatform || platforms.find(p => slugMatches(p.slug, platform));
 
   const isSupported = notSupported.length
     ? !notSupported.find(p => p === platform)
