@@ -10,9 +10,19 @@ import "~src/css/screen.scss";
 type Props = {
   children: JSX.Element | JSX.Element[];
   sidebar?: JSX.Element;
+  pageContext?: {
+    platform?: {
+      name?: string;
+      [key: string]: any;
+    };
+  };
 };
 
-export default ({ children, sidebar }: Props): JSX.Element => {
+export default ({
+  children,
+  sidebar,
+  pageContext = {},
+}: Props): JSX.Element => {
   return (
     <div className="document-wrapper">
       <div className="sidebar">
@@ -33,7 +43,11 @@ export default ({ children, sidebar }: Props): JSX.Element => {
       <main role="main" className="px-0">
         <div className="flex-grow-1">
           <div className="d-none d-md-block">
-            <Navbar />
+            <Navbar
+              {...(pageContext.platform && {
+                platforms: [pageContext.platform.name],
+              })}
+            />
           </div>
 
           <section className="pt-3 px-3 content-max prose">

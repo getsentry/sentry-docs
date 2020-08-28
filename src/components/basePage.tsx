@@ -52,7 +52,7 @@ type Props = {
 
 export default ({
   data: { file } = {},
-  pageContext: { title } = {},
+  pageContext = {},
   sidebar,
   children,
 }: Props): JSX.Element => {
@@ -63,10 +63,11 @@ export default ({
     tx.setStatus("ok");
   }
 
+  const { title } = pageContext;
   const child = file && (file.childMarkdownRemark || file.childMdx);
   const hasToc = child && !!child.tableOfContents.items;
   return (
-    <Layout sidebar={sidebar}>
+    <Layout {...{ sidebar, pageContext }}>
       <SEO title={title} file={file} />
 
       <div className="row">
