@@ -1,6 +1,7 @@
 import React from "react";
 import Select from "react-select";
 import { useLocation, useNavigate } from "@reach/router";
+import { StaticQuery, graphql } from "gatsby";
 
 type Platform = {
   name: string;
@@ -8,28 +9,74 @@ type Platform = {
   children?: Platform[];
 };
 
+const query = graphql`
+  query PlatformSelectorQuery {
+    allSitePage(
+      filter: {
+        context: { draft: { ne: false } }
+        path: { regex: "/^/platforms/" }
+      }
+    ) {
+      nodes {
+        path
+        context {
+          title
+          platform {
+            name
+          }
+          guide {
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+
 const getPlatformFromLocation = (location): [string, string | null] | null => {
   const pattern = /\/platforms\/([^\/]+)\/(?:guides\/([^\/]+)\/)?/i;
   const match = location.pathname.match(pattern);
   return match ? [match[1], match[2]] : null;
 };
 
-const getPathWithPlatform = (
-  currentPath: string,
-  platformValue: string
+const getPathForPlatform = (
+  platformValue: string,
+  currentPath?: string
 ): string => {
-  const pattern = /\/platforms\/([^\/]+)\/(?:guides\/([^\/]+)\/)?/i;
-
-  let [platformName, guideName] = platformValue.split(".");
-
+  const [platformName, guideName] = platformValue.split(".");
   const newPathPrefix = guideName
     ? `/platforms/${platformName}/guides/${guideName}/`
     : `/platforms/${platformName}/`;
-
-  return currentPath.replace(pattern, newPathPrefix);
+  const pattern = /\/platforms\/([^\/]+)\/(?:guides\/([^\/]+)\/)?/i;
+  return currentPath
+    ? currentPath.replace(pattern, newPathPrefix)
+    : newPathPrefix;
 };
 
-export default (): JSX.Element => {
+type Props = {
+  data: {
+    allSitePage: {
+      nodes: {
+        path: string;
+        context: {
+          title: string;
+          platform?: {
+            name: string;
+          };
+          guide?: {
+            name: string;
+          };
+        };
+      }[];
+    };
+  };
+};
+
+export const PlatformSelector = ({
+  data: {
+    allSitePage: { nodes },
+  },
+}: Props): JSX.Element => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -85,7 +132,10 @@ export default (): JSX.Element => {
     try {
       storage.setItem("platform", value.value);
     } catch (ex) {}
-    const path = getPathWithPlatform(location.pathname, value.value);
+    let path = getPathForPlatform(value.value, location.pathname);
+    if (!nodes.find(n => n.path === path)) {
+      path = getPathForPlatform(value.value);
+    }
     if (path !== location.pathname) {
       navigate(path);
     }
@@ -110,6 +160,15 @@ export default (): JSX.Element => {
       defaultValue={activePlatform ? toOption(activePlatform) : null}
       options={platforms.map(toOption)}
       onChange={onChange}
+    />
+  );
+};
+
+export default (): JSX.Element => {
+  return (
+    <StaticQuery
+      query={query}
+      render={data => <PlatformSelector data={data} />}
     />
   );
 };

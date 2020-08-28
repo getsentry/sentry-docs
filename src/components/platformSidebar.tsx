@@ -5,11 +5,15 @@ import DynamicNav, { toTree } from "./dynamicNav";
 
 const navQuery = graphql`
   query PlatformNavQuery {
-    allSitePage(filter: { context: { draft: { ne: false } } }) {
+    allSitePage(
+      filter: {
+        context: { draft: { ne: false } }
+        path: { regex: "/^/platforms/" }
+      }
+    ) {
       nodes {
         path
         context {
-          draft
           title
           sidebar_order
           platform {
@@ -25,7 +29,6 @@ type Node = {
   path: string;
   context: {
     title: string;
-    draft?: boolean;
     siebar_order?: number;
     platform: {
       name: string;
