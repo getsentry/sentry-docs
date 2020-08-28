@@ -9,7 +9,10 @@ import DOMPurify from "dompurify";
 const MAX_HITS = 10;
 
 const search = new SentryGlobalSearch([
-  "docs",
+  {
+    site: "docs",
+    pathBias: true,
+  },
   "help-center",
   "develop",
   "blog",
