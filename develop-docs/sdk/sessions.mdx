@@ -83,7 +83,7 @@ The following fields exist:
 `seq` (optional)
 
 > A logical clock. Defaults to the current UNIX time stamp in milliseconds
-> during ingestion.  THe value `0` is reserved in the sense that a session with
+> during ingestion.  The value `0` is reserved in the sense that a session with
 > `init` set to `true` will automatically have `seq` forced to `0`.
 
 `timestamp` (optional)
@@ -124,7 +124,7 @@ The following fields exist:
 
 > A running counter of errors encountered while this session was ongoing.
 > It's important that this counter is also incremented when a session goes to
-> crashed`. (eg: the crash itself is always an error as well).
+> `crashed`. (eg: the crash itself is always an error as well).
 > Ingest should force `errors` to 1 if not set or 0.
 
 `attrs` (all but release optional)
@@ -239,25 +239,65 @@ sessions over time.
 Generally speaking there are two separate modes for health reporting that SDKs
 can use. One is very short lived sessions, the other are user attended sessions.
 
-**Short lived sessions** *(req-mode)*
+**Short lived sessions** *(server-mode / request-mode)*
 
-These are sessions that correspond to a single HTTP request or RPC call.
+These sessions roughly correspond to HTTP requests or RPC calls in a
+server setting.
 
-- high in volume
+- high in volume, typically one session for each request
+- the number of sessions is usually higher than the number of events
+- sessions are attached to a single hub / concurrency unit
 - timing information is typically useless because session time in the milliseconds
-- typically send a single session update for the entire session
 
-**User attended sessions** *(user-mode)*
+**User attended sessions** *(user-mode / application-mode)*
 
-These are sessions that are more corresponding to an actual user session. This
-is what you would see in a web browser, mobile world or similar.
+These are sessions that are more corresponding to an actual user session or
+application run. This is what you would see in a web browser, mobile world, 
+command line application or similar.
 
-- session duration typically in the minutes
-- timing information is useful
-- typically send in two or more session updates (start and end)
+- typically just a single session from application start to quit
+- there are usually fewer sessions than events
+- sessions span multiple hubs / threads
+- session duration typically in the minutes, timing information is useful
 
 Both of those cases look similar from the API point of view but different
 recommendations apply for SDKs.
+
+### Unified API Implications
+
+The <Link to="/sdk/unified-api/">Unified API</Link> that SDKs should
+adhere to defines the concepts of `Hub`, `Scope` and `Client`.
+
+Conceptually speaking, the session is a concern of the `Hub`, and unlike scopes,
+sessions should not be nested. When any kind of event happens, there should be
+only one unambiguous session which keeps track of the error count.
+
+When considering the flow of events through the SDK, from the static
+`capture_event` function, through the thread local `Hub`, and into the
+`Client::capture_event(event, scope)` method; depending on the internal
+implementation details of the SDK, it might make sense to attach the session to
+the `Scope`, which would make it possible for the `Client` to bundle an event
+and a session update into a single envelope to be sent to Sentry.
+
+### Session Updates and when to send Updates upstream
+
+For all SDKs the current session shall be automatically updated whenever data is
+captured at a similar place where `apply_to_scope` is called to increase the
+`error` count, or update the session based on the distinct ID / user ID.
+
+SDKs should generally aim to decrease the number of envelopes sent upstream.
+
+*server-mode* SDKs that track a great number of sessions should consider using
+a periodic session flusher (every 30/60 secs) that assembles envelopes of
+session items and forwards them to the transport as a single request.
+
+*user-mode* SDKs may instead opt into sending session updates along with
+captured events in the same envelope. The final session update that closes the
+session may be batched similar to *server-mode* sessions.
+
+In either case the `init` flag must be set correctly for the *first
+transmission* of the session, and session metadata such as the distinct ID must
+be immutable after the initial transmission.
 
 ### Exposed API
 
@@ -275,32 +315,10 @@ The most basic API exposed is on the hub level and lets you start and stop sessi
 
 `Hub.start_auto_session_tracking()` / `Hub.stop_auto_session_tracking()`
 
-> Reactivates automatic session tracking.
+> Stops and reactivates automatic session tracking.
 
 **Options:**
 
 `auto_session_tracking`
 
 > This enables / disables automatic session tracking through integrations.
-
-### When to Send Sessions
-
-SDKs should generally aim to send session updates upstream as little as
-possible. *req-mode* SDKs should use a periodic session flusher (every 30/60 secs)
-that assembles envelopes of session items and forwards them to the transport.
-
-Sessions should in most cases be sent once or twice:
-
-- When started
-- When crashed/exited
-
-If the time between those two events is short it's permissible to send a single
-event. In either case the `init` flag must be set correctly for the *first
-transmission* of the session.
-
-### Implicit Session updates
-
-For all SDKs the current session shall be automatically updated whenever data is
-captured at a similar place where `apply_to_scope` is called to increase the
-`error` count.  For server side SDKs with delayed session sending the user ID
-can also be pulled in there.
