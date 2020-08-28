@@ -5,10 +5,10 @@ support_level: production
 type: framework
 ---
 
-Install our Sentry SDK in the `requirements.txt` section:
+Install our Python SDK using `pip`:
 
-```python
-sentry_sdk>=0.17.0
+```bash
+$ pip install --upgrade sentry-sdk
 ```
 
 You can use the GCP Functions integration for the Python SDK like this:
