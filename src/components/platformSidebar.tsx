@@ -71,9 +71,8 @@ export const PlatformSidebar = ({
       <DynamicNav
         root={pathRoot}
         tree={tree}
-        noHeadingLink
+        title="Getting Started"
         showDepth={1}
-        prependLinks={[[`/${pathRoot}`, "Getting Started"]]}
       />
       <DynamicNav
         root={`/${pathRoot}/enriching-error-data`}
