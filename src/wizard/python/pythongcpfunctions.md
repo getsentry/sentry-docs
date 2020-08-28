@@ -19,7 +19,7 @@ from sentry_sdk.integrations.gcp import GcpIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=GcpIntegration()]
+    integrations=[GcpIntegration()],
 )
 
 def my_function(event, context):
@@ -33,7 +33,7 @@ Update the sentry initialization to set ```timeout_warning``` to ```true```
 ```python
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[GcpIntegration(timeout_warning=True)]
+    integrations=[GcpIntegration(timeout_warning=True)],
 )
 ```
 The timeout warning is sent only if the "timeout" in the GCP Funtion configuration is set to a value greater than one second.
