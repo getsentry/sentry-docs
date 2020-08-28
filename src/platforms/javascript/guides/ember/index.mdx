@@ -6,60 +6,54 @@ redirect_from:
   - /clients/javascript/integrations/ember/
 ---
 
-To use Sentry with your Ember application, you will need to use Sentry’s browser JavaScript SDK: `@sentry/browser`.
+On this page, we provide concise information to get you up and running with Sentry's Ember SDK, automatically reporting errors and exceptions in your application.
 
-On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
-In order to use ESM imports without any additional configuration, you can use `ember-auto-import`
-by installing it with `ember install ember-auto-import`.
+**Note:** If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
 
-Starting with version `5.x` our `Ember` integration lives in it's own package `@sentry/integrations`.
-You can install it with `npm` / `yarn` like:
+Currently supports all lts versions of Ember 3.x
+
+## Install
+
+Sentry captures data by using an SDK within your application’s runtime. Add the Ember addon using ember-cli:
 
 ```bash
-# Using yarn
-yarn add @sentry/integrations
-
-# Using npm
-npm install @sentry/integrations
+ember install @sentry/ember
 ```
 
-Then add this to your `app.js`:
+## Configure
+
+You should initialize the Sentry Ember SDK as soon as possible during your application load up, before initializing the
+application in `app.js`:
 
 ```javascript
-import * as Sentry from "@sentry/browser";
-import { Ember as EmberIntegration } from "@sentry/integrations";
+import Application from '@ember/application';
+import Resolver from 'ember-resolver';
+import loadInitializers from 'ember-load-initializers';
+import config from './config/environment';
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [new EmberIntegration()],
-});
+import { InitSentryForEmber } from '@sentry/ember';
+
+InitSentryForEmber();
+
+export default class App extends Application {
+  modulePrefix = config.modulePrefix;
+  podModulePrefix = config.podModulePrefix;
+  Resolver = Resolver;
+}
 ```
 
-In case you are using the CDN version or the Loader, we provide a standalone file for every integration, you can use it
-like this:
+Then add the following config to your `config/environment.js`:
 
-```html
-<!-- Note that we now also provide a es6 build only -->
-<!-- <script src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.es6.min.js" integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.es6.min.js', 'sha384-base64') }}" crossorigin="anonymous"></script> -->
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-
-<!-- If you include the integration it will be available under Sentry.Integrations.Ember -->
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/ember.min.js"
-  integirty="sha384-{{ packages.checksum('sentry.javascript.browser', 'ember.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-
-<script>
-  Sentry.init({
-    dsn: "___PUBLIC_DSN___",
-    integrations: [new Sentry.Integrations.Ember()],
-  });
-</script>
+```javascript
+ENV['@sentry/ember'] = {
+  sentry: {
+    dsn: '___PUBLIC_DSN___',
+  }
+};
 ```
+
+Once this is done, all unhandled exceptions are automatically captured by Sentry.
+
+**Important:** Note your DSN. The _DSN_ (Data Source Name) tells the SDK where to send events. If you forget it, view _Settings -> Projects -> Client Keys (DSN)_ in the Sentry web UI.
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
