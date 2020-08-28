@@ -48,7 +48,7 @@ export const Breadcrumbs = ({
   let trailNodes = nodes.filter(n => rootNode.path.indexOf(n.path) === 0);
 
   return (
-    <ul className="breadcrumb" style={{ marginBottom: "1rem" }}>
+    <ul className="breadcrumb" style={{ margin: 0 }}>
       {trailNodes
         .sort((a, b) => a.path.localeCompare(b.path))
         .map(n => {
