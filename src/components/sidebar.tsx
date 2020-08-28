@@ -42,13 +42,7 @@ export const Sidebar = ({ data }: ChildProps): JSX.Element => {
     <ul className="list-unstyled" data-sidebar-tree>
       <DynamicNav root="error-reporting" title="Error Monitoring" tree={tree} />
       <DynamicNav root="platforms" title="Platforms" tree={tree} />
-      <DynamicNav
-        root="enriching-error-data"
-        title="Enriching Error Data"
-        tree={tree}
-      />
       <DynamicNav root="product" title="Product" tree={tree} />
-      <DynamicNav root="data-management" title="Data Management" tree={tree} />
       <DynamicNav root="accounts" title="Account Management" tree={tree} />
       <DynamicNav root="meta" title="Security and Legal" tree={tree} />
       <DynamicNav

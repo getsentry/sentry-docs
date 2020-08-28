@@ -63,30 +63,30 @@ export const PlatformSidebar = ({
   const platformName = platform.name;
   const guideName = guide ? guide.name : null;
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
+  const pathRoot = guideName
+    ? `platforms/${platformName}/guides/${guideName}`
+    : `platforms/${platformName}`;
   return (
     <ul className="list-unstyled" data-sidebar-tree>
-      {guideName ? (
-        <DynamicNav
-          root={`platforms/${platformName}/guides/${guideName}`}
-          tree={tree}
-          noHeadingLink
-          showDepth={1}
-          prependLinks={[
-            [
-              `/platforms/${platformName}/guides/${guideName}/`,
-              "Getting Started",
-            ],
-          ]}
-        />
-      ) : (
-        <DynamicNav
-          root={`platforms/${platformName}`}
-          tree={tree}
-          noHeadingLink
-          showDepth={1}
-          prependLinks={[[`/platforms/${platformName}/`, "Getting Started"]]}
-        />
-      )}
+      <DynamicNav
+        root={pathRoot}
+        tree={tree}
+        noHeadingLink
+        showDepth={1}
+        prependLinks={[[`/${pathRoot}`, "Getting Started"]]}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/enriching-error-data`}
+        title="Enriching Error Data"
+        showDepth={1}
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/data-management`}
+        title="Data Management"
+        showDepth={1}
+        tree={tree}
+      />
       <DynamicNav
         root={`/platforms/${platformName}/guides`}
         title={guideName ? "Other Guides" : "Guides"}

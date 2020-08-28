@@ -49,9 +49,7 @@ const isGuideRoot = (node: any): boolean => {
 const buildPlatformData = (nodes: any[]) => {
   const data: PlatformData = {
     platforms: {},
-    common: nodes.filter(node => {
-      getPlatfromFromNode(node) === "common";
-    }),
+    common: nodes.filter(node => getPlatfromFromNode(node) === "common"),
   };
   const platforms = data.platforms;
 
