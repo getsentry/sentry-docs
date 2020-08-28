@@ -45,7 +45,7 @@ const rebuildPathForPlatform = (
 };
 
 export default (
-  defaultValue: string | null,
+  defaultValue: string | null = DEFAULT_PLATFORM,
   readLocalStorage = true
 ): [Platform, (value: string) => void] => {
   // State to store our value

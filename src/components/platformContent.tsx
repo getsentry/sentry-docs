@@ -84,7 +84,7 @@ const PlatformContent = ({
     allPlatformsYaml: { nodes: platforms },
   } = data;
   const [dropdown, setDropdown] = React.useState(null);
-  const [activePlatform, _] = usePlatform(platform);
+  const [activePlatform] = usePlatform(platform);
   const hasDropdown = !activePlatform;
 
   if (!activePlatform) {
