@@ -8,7 +8,7 @@ type: framework
 Install our Sentry SDK in the `requirements.txt` section:
 
 ```python
-sentry_sdk
+sentry_sdk>=0.17.0
 ```
 
 You can use the GCP Functions integration for the Python SDK like this:
@@ -22,7 +22,7 @@ sentry_sdk.init(
     integrations=[GcpIntegration()],
 )
 
-def my_function(event, context):
+def http_function_entrypoint(request):
     ...
 ```
 
