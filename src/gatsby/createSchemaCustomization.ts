@@ -94,6 +94,14 @@ export default ({ actions, schema }) => {
           },
         },
 
+        // platform pages
+        supported: {
+          type: "[String!]",
+        },
+        notSupported: {
+          type: "[String!]",
+        },
+
         // wizard fields
         // TODO(dcramer): move to a diff schema/type
         support_level: {

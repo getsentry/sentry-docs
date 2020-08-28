@@ -101,6 +101,30 @@ const buildPlatformData = (nodes: any[]) => {
   return data;
 };
 
+const canInclude = (
+  node: Node,
+  platformName: string,
+  guideName?: string
+): boolean => {
+  const canonical = guideName ? `${platformName}.${guideName}` : platformName;
+  const { frontmatter } = getChild(node);
+  if (
+    frontmatter.supported &&
+    frontmatter.supported.length &&
+    frontmatter.supported.indexOf(canonical) === -1 &&
+    frontmatter.supported.indexOf(platformName) === -1
+  ) {
+    return false;
+  } else if (
+    frontmatter.unsupported &&
+    (frontmatter.unsupported.indexOf(canonical) !== -1 ||
+      frontmatter.unsupported.indexOf(platformName))
+  ) {
+    return false;
+  }
+  return true;
+};
+
 export default async ({ actions, graphql, reporter, getNode }) => {
   const {
     allFile: { nodes },
@@ -121,6 +145,8 @@ export default async ({ actions, graphql, reporter, getNode }) => {
                   noindex
                   sidebar_order
                   redirect_from
+                  supported
+                  notSupported
                 }
                 fields {
                   slug
@@ -135,6 +161,8 @@ export default async ({ actions, graphql, reporter, getNode }) => {
                   noindex
                   sidebar_order
                   redirect_from
+                  supported
+                  notSupported
                 }
                 fields {
                   slug
@@ -201,6 +229,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
 
     // duplicate global common
     sharedCommon.forEach((node: Node) => {
+      if (!canInclude(node, platformName)) return;
       const path = `/platforms${createFilePath({ node, getNode }).replace(
         /^\/common\//,
         `/${platformName}/`
@@ -211,6 +240,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
 
     // duplicate platform common
     platformData.common.forEach((node: Node) => {
+      if (!canInclude(node, platformName)) return;
       const path = `/platforms${createFilePath({ node, getNode }).replace(
         /^\/[^\/]+\/common\//,
         `/${platformName}/`
@@ -272,6 +302,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
 
     // duplicate global common
     sharedCommon.forEach((node: Node) => {
+      if (!canInclude(node, platformName, guideName)) return;
       const path = `${createFilePath({ node, getNode }).replace(
         /^\/common\//,
         pathRoot
@@ -287,6 +318,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
 
     // duplicate platform common
     platformData.common.forEach((node: Node) => {
+      if (!canInclude(node, platformName, guideName)) return;
       const path = `${createFilePath({ node, getNode }).replace(
         /^\/[^\/]+\/common\//,
         pathRoot
