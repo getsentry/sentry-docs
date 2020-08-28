@@ -88,7 +88,7 @@ export const PlatformSidebar = ({
       />
       <DynamicNav
         root={`/platforms/${platformName}/guides`}
-        title={guideName ? "Other Guides" : "Guides"}
+        title="Other Guides"
         prependLinks={
           guideName ? [[`/platforms/${platformName}/`, platform.title]] : null
         }
