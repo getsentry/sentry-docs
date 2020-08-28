@@ -18,7 +18,11 @@ type Props = {
   };
 };
 
-export default ({ children, sidebar, pageContext }: Props): JSX.Element => {
+export default ({
+  children,
+  sidebar,
+  pageContext = {},
+}: Props): JSX.Element => {
   return (
     <div className="document-wrapper">
       <div className="sidebar">
