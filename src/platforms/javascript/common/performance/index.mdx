@@ -1,3 +1,10 @@
+---
+title: Performance
+excerpt: ""
+---
+
+Performance Monitoring helps you see everything from macro-level metrics to micro-level spans, and you’ll be able to cross-reference transactions with related issues, customize queries based on your personal needs, and substantially more.
+
 To get started with performance monitoring using Sentry's JavaScript SDK, first install the `@sentry/browser` and `@sentry/tracing` packages:
 
 ```bash
@@ -14,11 +21,12 @@ We switched our package name from `@sentry/apm` to `@sentry/tracing`. If you wer
 
 </markdown></Alert>
 
-Next, initialize the integration in your call to `Sentry.init`:
+Next, import in the `@sentry/tracing` package. For added functionality, we recommend adding the `BrowserTracing` integration to your Sentry.init:
 
-```jsx
+```JavaScript
 import * as Sentry from "@sentry/browser";
 import { Integrations } from "@sentry/tracing";
+
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   release: "my-project-name@" + process.env.npm_package_version,
@@ -43,13 +51,11 @@ Sentry.init({
 
 Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Be sure to lower this value in production otherwise you could burn through your quota quickly.
 
-Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
+## Automatic Instrumentation
 
-### Automatic Instrumentation
+For `@sentry/browser`, we provide an integration called `BrowserTracing` that does automatic instrumentation in the browser. The `BrowserTracing` integration creates `pageload` and `navigation` transactions containing spans for XHR/fetch requests and [Performance API](https://developer.mozilla.org/en-US/docs/Web/API/Performance) entries such as marks, measures, and resource timings.
 
-For `@sentry/browser`, we provide an integration called `BrowserTracing` that does automatic instrumentation in the browser. The `BrowserTracing` integration creates `pageload` and `navigation` transactions containing spans for XHR/fetch requests and Performance API entries such as marks, measures, and resource timings.
-
-The `BrowserTracing` integration is specific to `@sentry/browser` and does not work with `@sentry/node`.
+_NOTE_: The `BrowserTracing` integration is specific to `@sentry/browser` and does not work with `@sentry/node`.
 
 The `BrowserTracing` integration resides in the `@sentry/tracing` package. You can add it to your `Sentry.init` call:
 
@@ -74,65 +80,16 @@ Sentry.init({
 });
 ```
 
-_NOTE:_ The `BrowserTracing` integration is available under `Sentry.Integrations.BrowserTracing` when using the CDN bundle.
+_NOTE_: The `BrowserTracing` integration is available under `Sentry.Integrations.BrowserTracing` when using the CDN bundle.
 
-To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 100% of your transactions.
+To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 100% of your transactions. By default, the `pageload` and `navigation` transactions set a transaction name using `window.location.pathname`.
 
-By default, the `pageload` and `navigation` transactions set a transaction name using `window.location.pathname`.
+To learn more about automatic instrumentation in the browser and the `BrowserTracing` integration, please see [Configuring BrowserTracing](./browsertracing/)
 
-You can pass many different options to the `BrowserTracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box.
-
-For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/tracing.browsertracingoptions.html).
-
-#### tracingOrigins Option
-
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **One important thing to note is that the `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL can help make sure that requests do not unnecessarily have the `sentry-trace` header attached.**
-
-_Example:_
-
-- A frontend application is served from `example.com`
-- A backend service is served from `api.example.com`
-- The frontend application makes API calls to the backend
-- Therefore, the option needs to be configured like this: `new Integrations.BrowserTracing({tracingOrigins: ['api.example.com']})`
-- Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
-
-_NOTE:_ You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
-
-#### beforeNavigate Option
-
-For `pageload` and `navigation` transactions, the `BrowserTracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigate` option to the `BrowserTracing` integration. This option allows you to pass in a function that takes in the location at the time of navigation and returns a new transaction name.
-
-`beforeNavigate` is useful if you would like to leverage the routes from a custom routing library like `React Router` or if you want to reduce the cardinality of particular transactions.
-
-```javascript
-import * as Sentry from "@sentry/browser";
-import { Integrations } from "@sentry/tracing";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Integrations.BrowserTracing({
-      beforeNavigate: context => {
-        return {
-          ...context,
-          // You could use your UI's routing library to find the matching
-          // route template here. We don't have one right now, so do some basic
-          // parameter replacements.
-          name: location.pathname
-            .replace(/\d+/g, "<digits>")
-            .replace(/[a-f0-9]{32}/g, "<hash>"),
-        };
-      },
-    }),
-  ],
-  tracesSampleRate: 1.0, // Be sure to lower this in production
-});
-```
-
-### Manual Instrumentation
+## Manual Instrumentation
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
-This is valid for both JavaScript Browser and Node and works independently of the `BrowserTracing` integration.
+This is valid for both JavaScript Browser and Node and works independently of automatic instrumentation provided by the the `BrowserTracing` integration.
 
 ```javascript
 const transaction = Sentry.startTransaction({ name: "test-transaction" });
@@ -171,7 +128,7 @@ shopCheckout() {
 
 This example will send a transaction `shopCheckout` to Sentry. The transaction will contain a `task` span that measures how long `processAndValidateShoppingCart` took. Finally, the call to `transaction.finish()` will finish the transaction and send it to Sentry.
 
-#### Adding Additional Spans to the Transaction
+### Adding Additional Spans to the Transaction
 
 The next example contains the implementation of the hypothetical `processItem` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add to it all newly created spans as child operations. Keep in mind that each individual span needs to be manually finished; otherwise, that span will not show up in the transaction.
 
