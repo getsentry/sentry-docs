@@ -71,7 +71,7 @@ export default (
   if (currentValue) {
     let valueSearch = PLATFORMS;
     currentValue.split(".").forEach(bit => {
-      if (bit) {
+      if (bit && valueSearch) {
         activeValue = valueSearch.find(p => p.name === bit);
         if (activeValue) {
           valueSearch = activeValue.children;
