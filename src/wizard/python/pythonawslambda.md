@@ -42,7 +42,7 @@ sentry_sdk.init(
 )
 ```
 
-The timeout warning is sent only if the "timeout" in the Lambda Funtion configuration is set to a value greater than one second.
+The timeout warning is sent only if the "timeout" in the Lambda Function configuration is set to a value greater than one second.
 
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Note</h5><div class="alert-body content-flush-bottom">If you are using another web framework inside of AWS Lambda, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [*Integrations*](/platforms/python/#integrations) for more information.</div>
 </div>
