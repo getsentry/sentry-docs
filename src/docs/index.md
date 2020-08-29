@@ -2,18 +2,89 @@
 title: "Sentry Documentation"
 ---
 
-Welcome to the Sentry documentation. Sentry is an open-source company, providing an application monitoring platform that helps you identify issues in real-time. Here we cover everything about the product, the platform integrations, and self-hosted Sentry.
+## Get up and running quickly with our library of integrations
 
-## Getting Started
+<div class="could-it-be">
+  <a href="#">
+    <div class="image-frame"><img src="./javascript.svg" /></div>
+    Javascript
+  </a>
+  <a href="#">
+    <div class="image-frame"><img src="./nodejs-icon.svg" /></div>
+    Node
+  </a>
+  <a href="#">
+    <div class="image-frame"><img src="./python-5.svg" /></div>
+    Python
+  </a>
+  <a href="#">
+    <div class="image-frame"><img src="./java-14.svg" /></div>
+    Java
+  </a>
+  <a href="#">
+    <div class="image-frame"><img src="./php-1.svg" /></div>
+    PHP
+  </a>
+  <a href="#">
+    <div class="image-frame"><img src="./laravel-2.svg" /></div>
+    Laravel
+  </a>
+  <a href="#">
+    <div class="image-frame"><img src="./react.svg" /></div>
+    React Native
+  </a>
+  <a href="#">
+    <div class="image-frame"><img src="./apple-black.svg" /></div>
+    Cocoa
+  </a>
+  <a href="#">
+    <div class="image-frame"><img src="./go-6.svg" /></div>
+    Go
+  </a>
+  <a href="#">
+    <div class="image-frame"><img src="./swift-15.svg" /></div>
+    Swift
+  </a>
+  <a href="#">
+    <div class="image-frame"><img src="./symfony.svg" /></div>
+    Symfony
+  </a>
+</div>
 
-To get you started, you might find some of these links relevant:
+<div class="flex-row link-row">
+  <a href="#">Web and Event API</a>
+  <a href="#">Slef-Hosted Sentry</a>
+  <a href="#">Developer Guidlines</a>
+</div>
 
-- New to Sentry? Have a look at [_Getting Started_](/error-reporting/quickstart/).
-- No account yet? You can sign up for one at [sentry.io](https://sentry.io/signup/).
-- Stuck? Feel free to contact [Support](/support/).
-- Self-hosting the Sentry server? See [our documentation for On-Premise Installations](https://github.com/getsentry/onpremise/releases/latest).
+## Useful docs
 
-## Contributing
-
-Looking to get started contributing to Sentry? Our [_developer documentation_](https://develop.sentry.dev) has you covered. Want an SDK for a language we don't yet support? Check out the [_SDK development_](https://develop.sentry.dev/sdk/overview/) docs. Also
-have a look at our [_Forums_](https://forum.sentry.io/) and our [_GitHub_](https://github.com/getsentry).
+<div class="flex-row">
+  <div>
+    <ul>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+    </ul>
+  </div>
+  <div>
+    <ul>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+    </ul>
+  </div>
+  <div>
+    <ul>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+      <li><a href="#">Useful doc</a></li>
+    </ul>
+  </div>
+</div>
