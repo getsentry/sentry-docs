@@ -13,7 +13,7 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
     }
 
 
-    type Guide {
+    type PlatformGuide {
       name: String!
       title: String!
       caseStyle: PlatformCaseStyle!
@@ -26,7 +26,7 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
       title: String!
       caseStyle: PlatformCaseStyle!
       supportLevel: PlatformSupportLevel!
-      guides: [Guide!]
+      guides: [PlatformGuide!]
       url: String!
     }
     `,

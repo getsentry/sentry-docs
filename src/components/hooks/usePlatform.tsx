@@ -16,18 +16,37 @@ const query = graphql`
           name
           title
           caseStyle
+          supportLevel
         }
       }
     }
   }
 `;
 
+export enum CaseStyle {
+  canonical,
+  camelCase,
+  PascalCase,
+  snake_case,
+}
+
+export enum SupportLevel {
+  production,
+}
+
+export type Guide = {
+  name: string;
+  title: string;
+  caseStyle: CaseStyle;
+  supportLevel: SupportLevel;
+};
+
 export type Platform = {
   name: string;
   title: string;
-  caseStyle: string;
-  supportLevel: string;
-  guides?: Platform[];
+  caseStyle: CaseStyle;
+  supportLevel: SupportLevel;
+  guides?: Guide[];
 };
 
 export const DEFAULT_PLATFORM = "javascript";
