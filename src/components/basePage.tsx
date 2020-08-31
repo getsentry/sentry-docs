@@ -33,7 +33,6 @@ type Props = {
   data?: {
     file?: {
       childMarkdownRemark?: {
-        tableOfContents?: any;
         [key: string]: any;
       };
       childMdx?: {
