@@ -228,7 +228,7 @@ Attributes:
 - notSupported (string[])
 
 ```javascript
-<ConfigKey name="send-default-pii" notSupported={["browser", "node"]}><markdown>
+<ConfigKey name="send-default-pii" notSupported={["javascript", "node"]}><markdown>
 
 Description of send-default-pii
 
@@ -290,9 +290,9 @@ Attributes:
 - notSupported (string[])
 
 ```javascript
-<PlatformSection notSupported={["browser", "node"]}><markdown>
+<PlatformSection notSupported={["javascript", "node"]}><markdown>
 
-Description of send-default-pii
+Something that applies to all platforms, but not javascript or node.
 
 </PlatformSection></ConfigKey>
 ```
