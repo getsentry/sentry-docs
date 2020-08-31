@@ -224,7 +224,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       node: platformData.node,
       getNode,
     })}`;
-    console.info(`Creating platform root for ${platformName}: ${path}`);
+    reporter.verbose(`Creating platform root for ${platformName}: ${path}`);
     createPlatformPage(platformData.node, path, platformPageContext);
 
     // duplicate global common
@@ -234,7 +234,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         /^\/common\//,
         `/${platformName}/`
       )}`;
-      console.info(`Creating global common for ${platformName}: ${path}`);
+      reporter.verbose(`Creating global common for ${platformName}: ${path}`);
       createPlatformPage(node, path, platformPageContext);
     });
 
@@ -245,14 +245,14 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         /^\/[^\/]+\/common\//,
         `/${platformName}/`
       )}`;
-      console.info(`Creating platform common for ${platformName}: ${path}`);
+      reporter.verbose(`Creating platform common for ${platformName}: ${path}`);
       createPlatformPage(node, path, platformPageContext);
     });
 
     // LAST (to allow overrides) create all direct children
     platformData.children.forEach((node: Node) => {
       const path = `/platforms${createFilePath({ node, getNode })}`;
-      console.info(`Creating platform child for ${platformName}: ${path}`);
+      reporter.verbose(`Creating platform child for ${platformName}: ${path}`);
       createPlatformPage(node, path, platformPageContext);
     });
 
@@ -295,7 +295,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       node: guideData.node,
       getNode,
     })}`;
-    console.info(
+    reporter.verbose(
       `Creating platform root for ${platformName} -> ${guideName}: ${pathRoot}`
     );
     createPlatformPage(guideData.node, pathRoot, guidePageContext);
@@ -307,7 +307,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         /^\/common\//,
         pathRoot
       )}`;
-      console.info(`Creating global common for ${platformName}: ${path}`);
+      reporter.verbose(`Creating global common for ${platformName}: ${path}`);
       // XXX: we dont index or add redirects for guide-common pages
       createPlatformPage(node, path, {
         ...guidePageContext,
@@ -323,7 +323,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         /^\/[^\/]+\/common\//,
         pathRoot
       )}`;
-      console.info(
+      reporter.verbose(
         `Creating platform common for ${platformName} -> ${guideName}: ${path}`
       );
       // XXX: we dont index or add redirects for guide-common pages
@@ -337,7 +337,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     // LAST (to allow overrides) create all direct children
     guideData.children.forEach((node: Node) => {
       const path = `/platforms${createFilePath({ node, getNode })}`;
-      console.info(
+      reporter.verbose(
         `Creating platform child for ${platformName} -> ${guideName}: ${path}`
       );
       createPlatformPage(node, path, guidePageContext);
