@@ -1,25 +1,34 @@
+import { graphql, useStaticQuery } from "gatsby";
 import { useLocation, useNavigate, WindowLocation } from "@reach/router";
 
 import useLocalStorage from "./useLocaleStorage";
 
+const query = graphql`
+  query UsePlatformQuery {
+    allPlatform {
+      nodes {
+        id
+        name
+        title
+        caseStyle
+        supportLevel
+        guides {
+          name
+          title
+          caseStyle
+        }
+      }
+    }
+  }
+`;
+
 export type Platform = {
   name: string;
-  displayName: string;
-  children?: Platform[];
-  case_style?: string;
+  title: string;
+  caseStyle: string;
+  supportLevel: string;
+  guides?: Platform[];
 };
-
-export const PLATFORMS: Platform[] = [
-  {
-    name: "python",
-    displayName: "Python",
-    children: [{ name: "django", displayName: "Django" }],
-  },
-  {
-    name: "javascript",
-    displayName: "JavaScript",
-  },
-];
 
 export const DEFAULT_PLATFORM = "javascript";
 
@@ -74,6 +83,9 @@ export default (
   // Pass initial state function to useState so logic is only executed once
   const location = useLocation();
   const navigate = useNavigate();
+  const {
+    allPlatform: { nodes: platformList },
+  } = useStaticQuery(query);
 
   const [storedValue, setStoredValue] = useLocalStorage<string | null>(
     "platform",
@@ -91,19 +103,19 @@ export default (
 
   let activeValue: Platform = null;
   if (currentValue) {
-    let valueSearch = PLATFORMS;
+    let valueSearch = platformList;
     currentValue.split(".").forEach(bit => {
       if (bit && valueSearch) {
         activeValue = valueSearch.find(p => p.name === bit);
         if (activeValue) {
-          valueSearch = activeValue.children;
+          valueSearch = activeValue.guides;
         }
       }
     });
   }
 
   if (!activeValue) {
-    activeValue = PLATFORMS.find(
+    activeValue = platformList.find(
       p => p.name === defaultValue || DEFAULT_PLATFORM
     );
     // TODO(dcramer): ideally we'd clear invalid saved values, but its not a huge deal
@@ -121,11 +133,11 @@ export default (
     if (!value) return;
     let activeValue: Platform;
     value.split(".").forEach(bit => {
-      let valueSearch = PLATFORMS;
+      let valueSearch = platformList;
       if (bit) {
         activeValue = valueSearch.find(p => p.name === bit);
         if (activeValue) {
-          valueSearch = activeValue.children;
+          valueSearch = activeValue.guides;
         }
       }
     });

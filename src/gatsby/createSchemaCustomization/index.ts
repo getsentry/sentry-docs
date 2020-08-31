@@ -1,3 +1,6 @@
+import { getApiTypeDefs } from "./apiSchema";
+import { getPlatformTypeDefs } from "./platformSchema";
+
 // TODO(dcramer): move frontmatter out of ApiDoc and into Frontmatter
 export default ({ actions, schema }) => {
   const { createTypes } = actions;
@@ -40,29 +43,6 @@ export default ({ actions, schema }) => {
     type Fields {
       slug: String!
       legacy: Boolean
-    }
-
-    type ApiParam {
-      type: String!
-      name: String!
-      description: String
-    }
-
-    type ApiDoc implements Node {
-      sidebar_order: Int
-      title: String!
-      fields: Fields
-
-      api_path: String!
-      authentication:  String
-      description: String
-      example_request: String
-      example_response: String
-      method: String!
-      parameters: [ApiParam]
-      path_parameters: [ApiParam]
-      query_parameters: [ApiParam]
-      warning: String
     }
   `,
     schema.buildObjectType({
@@ -119,5 +99,9 @@ export default ({ actions, schema }) => {
       },
     }),
   ];
-  createTypes(typeDefs);
+  createTypes([
+    ...typeDefs,
+    ...getApiTypeDefs({ actions, schema }),
+    ...getPlatformTypeDefs({ actions, schema }),
+  ]);
 };

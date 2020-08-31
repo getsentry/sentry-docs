@@ -2,26 +2,17 @@ import React from "react";
 import Select from "react-select";
 import { StaticQuery, graphql } from "gatsby";
 
-import usePlatform, { Platform, PLATFORMS } from "./hooks/usePlatform";
+import usePlatform from "./hooks/usePlatform";
 
 const query = graphql`
   query PlatformSelectorQuery {
-    allSitePage(
-      filter: {
-        context: { draft: { ne: false } }
-        path: { regex: "/^/platforms/" }
-      }
-    ) {
+    allPlatform(sort: { fields: name }) {
       nodes {
-        path
-        context {
+        name
+        title
+        guides {
+          name
           title
-          platform {
-            name
-          }
-          guide {
-            name
-          }
         }
       }
     }
@@ -30,18 +21,14 @@ const query = graphql`
 
 type Props = {
   data: {
-    allSitePage: {
+    allPlatform: {
       nodes: {
-        path: string;
-        context: {
+        name: string;
+        title: string;
+        guides: {
+          name: string;
           title: string;
-          platform?: {
-            name: string;
-          };
-          guide?: {
-            name: string;
-          };
-        };
+        }[];
       }[];
     };
   };
@@ -49,7 +36,7 @@ type Props = {
 
 export const PlatformSelector = ({
   data: {
-    allSitePage: { nodes },
+    allPlatform: { nodes: platformList },
   },
 }: Props): JSX.Element => {
   const [platform, setPlatform] = usePlatform();
@@ -59,14 +46,14 @@ export const PlatformSelector = ({
     setPlatform(value.value);
   };
 
-  const toOption = (platform: Platform) => {
+  const toOption = platform => {
     return {
-      label: platform.displayName,
+      label: platform.title,
       options: [
-        { value: platform.name, label: platform.displayName },
-        ...(platform.children || []).map((p: Platform) => ({
-          value: `${platform.name}.${p.name}`,
-          label: p.displayName,
+        { value: platform.name, label: platform.title },
+        ...(platform.guides || []).map(g => ({
+          value: `${platform.name}.${g.name}`,
+          label: g.title,
         })),
       ],
     };
@@ -76,7 +63,7 @@ export const PlatformSelector = ({
     <Select
       placeholder="Select Platform"
       defaultValue={toOption(platform)}
-      options={PLATFORMS.map(toOption)}
+      options={platformList.map(toOption)}
       onChange={onChange}
     />
   );

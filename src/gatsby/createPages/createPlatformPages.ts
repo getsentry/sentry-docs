@@ -1,7 +1,7 @@
 import { Node } from "gatsby";
 import { createFilePath } from "gatsby-source-filesystem";
 
-import { getChild, getDataOrPanic } from "./helpers";
+import { getChild, getDataOrPanic } from "../helpers";
 
 type Guide = {
   node: Node;

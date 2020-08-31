@@ -1,4 +1,4 @@
-import { getChild, getDataOrPanic } from "./helpers";
+import { getChild, getDataOrPanic } from "../helpers";
 
 export default async ({ actions, graphql, reporter }) => {
   const data = await getDataOrPanic(
