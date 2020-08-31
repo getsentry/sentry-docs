@@ -1,21 +1,6 @@
 import React from "react";
-import { StaticQuery, graphql } from "gatsby";
-import { Location } from "@reach/router";
-import { parse } from "query-string";
 
-import usePlatform from "./hooks/usePlatform";
-
-const query = graphql`
-  query ConfigKeyQuery {
-    allPlatformsYaml(sort: { fields: slug, order: ASC }) {
-      nodes {
-        name
-        slug
-        case_style
-      }
-    }
-  }
-`;
+import usePlatform, { formatCaseStyle } from "./hooks/usePlatform";
 
 const normalizeSlug = (slug: string) => {
   switch (slug) {
@@ -28,27 +13,6 @@ const normalizeSlug = (slug: string) => {
   }
 };
 
-const formatCase = (style: string, value: string): string => {
-  switch (style) {
-    case "snake_case":
-      return value.replace(/-/g, "_");
-    case "camelCase":
-      return value
-        .split(/-/g)
-        .map((val, idx) =>
-          idx === 0 ? val : val.charAt(0).toUpperCase() + val.substr(1)
-        )
-        .join("");
-    case "PascalCase":
-      return value
-        .split(/-/g)
-        .map(val => val.charAt(0).toUpperCase() + val.substr(1))
-        .join("");
-    default:
-      return value;
-  }
-};
-
 type Props = {
   name: string;
   supported?: string[];
@@ -57,46 +21,14 @@ type Props = {
   platform?: string;
 };
 
-type PlatformNode = {
-  name?: string;
-  slug?: string;
-  case_style?: string;
-};
-
-type ChildProps = Props & {
-  location: any;
-  data: {
-    allPlatformsYaml: {
-      nodes: PlatformNode[];
-    };
-  };
-};
-
-export const ConfigKey = ({
+export default ({
   name,
   supported = [],
   notSupported = [],
   children,
   platform,
-  location,
-  data,
-}: ChildProps): JSX.Element => {
-  const {
-    allPlatformsYaml: { nodes: platforms },
-  } = data;
-
+}: Props): JSX.Element => {
   const [currentPlatform] = usePlatform(platform);
-  if (!currentPlatform) {
-    const qsPlatform = parse(location.search).platform;
-    if (qsPlatform instanceof Array) {
-      platform = normalizeSlug(qsPlatform[0]);
-    } else {
-      platform = normalizeSlug(qsPlatform || null);
-    }
-  }
-  const activePlatform =
-    currentPlatform || platforms.find(p => slugMatches(p.slug, platform));
-
   const isSupported = notSupported.length
     ? !notSupported.find(p => p === platform)
     : supported.length
@@ -105,10 +37,9 @@ export const ConfigKey = ({
 
   if (!isSupported) return null;
 
-  const style = activePlatform.case_style || "canonical";
   const header = (
     <h3>
-      <code>{formatCase(style, name)}</code>
+      <code>{formatCaseStyle(currentPlatform.caseStyle, name)}</code>
     </h3>
   );
 
@@ -118,7 +49,7 @@ export const ConfigKey = ({
         {header}
         {!isSupported && (
           <div className="unsupported-hint">
-            Not available for {activePlatform.name || "this platform"}.
+            Not available for {currentPlatform.title}.
           </div>
         )}
         {children}
@@ -126,21 +57,4 @@ export const ConfigKey = ({
     );
   }
   return header;
-};
-
-export default (props: Props): JSX.Element => {
-  return (
-    <StaticQuery
-      query={query}
-      render={data => {
-        return (
-          <Location>
-            {({ location }) => (
-              <ConfigKey data={data} location={location} {...props} />
-            )}
-          </Location>
-        );
-      }}
-    />
-  );
 };

@@ -1,5 +1,6 @@
 import { graphql, useStaticQuery } from "gatsby";
 import { useLocation, useNavigate, WindowLocation } from "@reach/router";
+import { parse } from "query-string";
 
 import useLocalStorage from "./useLocaleStorage";
 
@@ -17,11 +18,33 @@ const query = graphql`
           title
           caseStyle
           supportLevel
+          fallbackPlatform
         }
       }
     }
   }
 `;
+
+export const formatCaseStyle = (style: CaseStyle, value: string): string => {
+  switch (style) {
+    case CaseStyle.snake_case:
+      return value.replace(/-/g, "_");
+    case CaseStyle.camelCase:
+      return value
+        .split(/-/g)
+        .map((val, idx) =>
+          idx === 0 ? val : val.charAt(0).toUpperCase() + val.substr(1)
+        )
+        .join("");
+    case CaseStyle.PascalCase:
+      return value
+        .split(/-/g)
+        .map(val => val.charAt(0).toUpperCase() + val.substr(1))
+        .join("");
+    default:
+      return value;
+  }
+};
 
 export enum CaseStyle {
   canonical,
@@ -39,6 +62,7 @@ export type Guide = {
   title: string;
   caseStyle: CaseStyle;
   supportLevel: SupportLevel;
+  fallbackPlatform: string;
 };
 
 export type Platform = {
@@ -51,19 +75,51 @@ export type Platform = {
 
 export const DEFAULT_PLATFORM = "javascript";
 
+const normalizeSlug = (name: string): string => {
+  switch (name) {
+    case "browser":
+    case "browsernpm":
+      return "javascript";
+    default:
+      return name;
+  }
+};
+
+/**
+ * Return the platform given the current location, if available.
+ *
+ * In order:
+ * - identify platform from path
+ * - identify platform from querystring
+ *
+ * The resulting tuple is `[platformName, guideName]`.
+ *
+ * @param location
+ */
 const getPlatformFromLocation = (
   location: WindowLocation
 ): [string, string | null] | null => {
   const pattern = /\/platforms\/([^\/]+)\/(?:guides\/([^\/]+)\/)?/i;
   const match = location.pathname.match(pattern);
-  return match ? [match[1], match[2]] : null;
+  if (match) return [match[1], match[2]];
+
+  const qsPlatform = parse(location.search).platform;
+  let qsMatch: [string, string | null];
+  if (qsPlatform instanceof Array) {
+    qsMatch = normalizeSlug(qsPlatform[0]).split(".", 2) as [string, null];
+  } else {
+    qsMatch = normalizeSlug(qsPlatform || "").split(".", 2) as [string, null];
+  }
+
+  return qsMatch ?? null;
 };
 
 const rebuildPathForPlatform = (
-  platformValue: string,
+  platformIdentifier: string,
   currentPath?: string
 ): string => {
-  const [platformName, guideName] = platformValue.split(".");
+  const [platformName, guideName] = platformIdentifier.split(".", 2);
+  console.log({ platformName, guideName });
   const newPathPrefix = guideName
     ? `/platforms/${platformName}/guides/${guideName}/`
     : `/platforms/${platformName}/`;
@@ -71,6 +127,31 @@ const rebuildPathForPlatform = (
   return currentPath
     ? currentPath.replace(pattern, newPathPrefix)
     : newPathPrefix;
+};
+
+/**
+ * Return the active platform or guide.
+
+ * @param value platform identifier in format of `platformName[.guideName]`
+ */
+export const getPlatform = (
+  platformIdentifier: string
+): Platform | Guide | null => {
+  if (!platformIdentifier) return;
+
+  const {
+    allPlatform: { nodes: platformList },
+  } = useStaticQuery(query);
+
+  const [platformName, guideName] = platformIdentifier.split(".", 2);
+  const activePlatform = platformList.find(
+    (p: Platform) => p.name === platformName
+  );
+  const activeGuide =
+    activePlatform &&
+    activePlatform.guides.find((g: Guide) => g.name === guideName);
+
+  return activeGuide ?? activePlatform ?? null;
 };
 
 /**
@@ -95,16 +176,13 @@ const rebuildPathForPlatform = (
  * want to pass `defaultValue` with the effective platform to avoid fallbacks.
  */
 export default (
-  defaultValue: string | null = DEFAULT_PLATFORM,
+  defaultValue: string = DEFAULT_PLATFORM,
   readLocalStorage = true
-): [Platform, (value: string) => void] => {
+): [Platform | Guide, (value: string) => void] => {
   // State to store our value
   // Pass initial state function to useState so logic is only executed once
   const location = useLocation();
   const navigate = useNavigate();
-  const {
-    allPlatform: { nodes: platformList },
-  } = useStaticQuery(query);
 
   const [storedValue, setStoredValue] = useLocalStorage<string | null>(
     "platform",
@@ -120,28 +198,9 @@ export default (
     currentValue = storedValue;
   }
 
-  let activeValue: Platform = null;
-  if (currentValue) {
-    let valueSearch = platformList;
-    currentValue.split(".").forEach(bit => {
-      if (bit && valueSearch) {
-        activeValue = valueSearch.find(p => p.name === bit);
-        if (activeValue) {
-          valueSearch = activeValue.guides;
-        }
-      }
-    });
-  }
-
-  if (!activeValue) {
-    activeValue = platformList.find(
-      p => p.name === defaultValue || DEFAULT_PLATFORM
-    );
-    // TODO(dcramer): ideally we'd clear invalid saved values, but its not a huge deal
-    // if (currentValue) {
-    //   setStoredValue(DEFAULT_PLATFORM);
-    // }
-  }
+  let activeValue: Platform | Guide =
+    getPlatform(currentValue) ?? getPlatform(defaultValue);
+  console.log({ currentValue, activeValue });
 
   const setValue = (value: string) => {
     if (value == currentValue) return;
@@ -149,17 +208,8 @@ export default (
     // if (!nodes.find(n => n.path === path)) {
     //   path = rebuildPathForPlatform(value);
     // }
-    if (!value) return;
-    let activeValue: Platform;
-    value.split(".").forEach(bit => {
-      let valueSearch = platformList;
-      if (bit) {
-        activeValue = valueSearch.find(p => p.name === bit);
-        if (activeValue) {
-          valueSearch = activeValue.guides;
-        }
-      }
-    });
+    if (!value) value = defaultValue;
+    // activeValue = getPlatform(value);
     let path = rebuildPathForPlatform(value, location.pathname);
     if (path !== location.pathname) {
       navigate(path);

@@ -19,6 +19,7 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
       caseStyle: PlatformCaseStyle!
       supportLevel: PlatformSupportLevel!
       url: String!
+      fallbackPlatform: String!
     }
 
     type Platform implements Node {

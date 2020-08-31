@@ -1,9 +1,8 @@
 import React from "react";
 import { StaticQuery, graphql } from "gatsby";
 import { Location } from "@reach/router";
-import { parse } from "query-string";
 
-import usePlatform from "./hooks/usePlatform";
+import usePlatform, { Guide } from "./hooks/usePlatform";
 import Content from "./content";
 import SmartLink from "./smartLink";
 
@@ -87,28 +86,22 @@ const PlatformContent = ({
   const [currentPlatform] = usePlatform(platform);
   const hasDropdown = !currentPlatform;
 
-  if (!currentPlatform) {
-    const qsPlatform = parse(location.search).platform;
-    if (qsPlatform instanceof Array) {
-      platform = qsPlatform[0];
-    } else {
-      platform = qsPlatform || null;
-    }
-  }
-  const activePlatform =
-    currentPlatform || platforms.find(p => slugMatches(p.slug, platform));
-
   const matches = files.filter(
     node => node.relativePath.indexOf(includePath) === 0
   );
 
   // if (!activePlatform) activePlatform = defaultPlatform;
-  const contentMatch = matches.find(m =>
-    slugMatches(m.name, activePlatform.name)
+  let contentMatch = matches.find(m =>
+    slugMatches(m.name, currentPlatform.name)
   );
+  if (!contentMatch && (currentPlatform as Guide).fallbackPlatform) {
+    contentMatch = matches.find(m =>
+      slugMatches(m.name, (currentPlatform as Guide).fallbackPlatform)
+    );
+  }
   if (!contentMatch) {
     console.warn(
-      `Couldn't find content in ${includePath} for selected platform: ${activePlatform.name}`
+      `Couldn't find content in ${includePath} for selected platform: ${currentPlatform.name}`
     );
   }
 
@@ -121,7 +114,7 @@ const PlatformContent = ({
               className="btn btn-sm btn-secondary dropdown-toggle"
               onClick={() => setDropdown(!dropdown)}
             >
-              {activePlatform.name}
+              {currentPlatform.name}
             </button>
 
             <div

@@ -1,5 +1,9 @@
 import { Node } from "gatsby";
 
+const DEFAULT_CASE_STYLE = "canonical";
+
+const DEFAULT_SUPPORT_LEVEL = "production";
+
 type PlatformFrontmatter = {
   title?: string;
   caseStyle?: string;
@@ -197,17 +201,24 @@ export const sourcePlatformNodes = async ({
     const data = {
       name: platformName,
       title: frontmatter.title || toTitleCase(platformName),
-      caseStyle: frontmatter.caseStyle || "canonical",
-      supportLevel: frontmatter.supportLevel || "production",
+      caseStyle: frontmatter.caseStyle || DEFAULT_CASE_STYLE,
+      supportLevel: frontmatter.supportLevel || DEFAULT_SUPPORT_LEVEL,
       url: `/platforms/${platformName}/`,
       guides: Object.entries(platformData.guides)
         .map(([guideName, guide]) => {
-          const { frontmatter = {} } = guide.node;
+          const { frontmatter: guideFrontmatter = {} } = guide.node;
           return {
             name: guideName,
-            title: frontmatter.title || toTitleCase(guideName),
-            caseStyle: frontmatter.caseStyle || "canonical",
-            supportLevel: frontmatter.supportLevel || "production",
+            title: guideFrontmatter.title || toTitleCase(guideName),
+            caseStyle:
+              guideFrontmatter.caseStyle ||
+              frontmatter.caseStyle ||
+              DEFAULT_CASE_STYLE,
+            supportLevel:
+              guideFrontmatter.supportLevel ||
+              frontmatter.supportLevel ||
+              DEFAULT_SUPPORT_LEVEL,
+            fallbackPlatform: guideFrontmatter.fallbackPlatform || platformName,
             url: `/platforms/${platformName}/guides/${guideName}/`,
           };
         })
