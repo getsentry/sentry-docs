@@ -4,14 +4,15 @@ const DEFAULT_CASE_STYLE = "canonical";
 
 const DEFAULT_SUPPORT_LEVEL = "production";
 
-type PlatformFrontmatter = {
+type Frontmatter = {
   title?: string;
   caseStyle?: string;
   supportLevel?: string;
+  fallbackPlatform?: string;
 };
 
 type PlatformMdx = {
-  frontmatter: PlatformFrontmatter;
+  frontmatter: Frontmatter;
 };
 
 type PlatformNode = {
@@ -25,7 +26,7 @@ type Guide = {
 };
 
 type Platform = {
-  node: PlatformMdx;
+  node: PlatformNode;
   children: Node[];
   guides: {
     [name: string]: Guide;
@@ -183,21 +184,38 @@ export const sourcePlatformNodes = async ({
 }) => {
   const { createNode } = actions;
 
-  const nodes: PlatformNode[] = getNodesByType("File").filter(
-    (n: any) => n.sourceInstanceName === "platforms"
-  );
+  const nodes: PlatformNode[] = getNodesByType("File")
+    .filter((n: any) => n.sourceInstanceName === "platforms")
+    .map((node: PlatformNode) => {
+      const newNode = {
+        ...node,
+      };
+      node.children.forEach((childId: string) => {
+        const child = getNode(childId);
+        newNode[`child${child.internal.type}`] = child;
+      });
+      return newNode;
+    });
 
   const { platforms } = buildPlatformData(
-    nodes.filter((n: PlatformNode) =>
-      // Find our nodes with MDX children
-      n.children.map(c => getNode(c)).find(c => c.internal.type === "Mdx")
-    )
+    nodes
+      .map((node: PlatformNode) => {
+        const newNode = {
+          ...node,
+        };
+        node.children.forEach((childId: string) => {
+          const child = getNode(childId);
+          newNode[`child${child.internal.type}`] = child;
+        });
+        return newNode;
+      })
+      .filter((n: PlatformNode) => !!n.childMdx)
   );
 
   Object.keys(platforms).forEach(platformName => {
     reporter.info(`Registering platform ${platformName}`);
     const platformData = platforms[platformName];
-    const { frontmatter = {} } = platformData.node;
+    const frontmatter = platformData.node.childMdx.frontmatter;
     const data = {
       key: platformName,
       name: platformName,
@@ -207,7 +225,7 @@ export const sourcePlatformNodes = async ({
       url: `/platforms/${platformName}/`,
       guides: Object.entries(platformData.guides)
         .map(([guideName, guide]) => {
-          const { frontmatter: guideFrontmatter = {} } = guide.node;
+          const guideFrontmatter = guide.node.childMdx.frontmatter;
           return {
             key: `${platformName}.${guideName}`,
             name: guideName,

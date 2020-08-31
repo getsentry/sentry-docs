@@ -88,6 +88,8 @@ const normalizeSlug = (name: string): string => {
   }
 };
 
+type GetPlatformFromLocation = [[string, string | null] | null, boolean];
+
 /**
  * Return the platform given the current location, if available.
  *
@@ -101,10 +103,10 @@ const normalizeSlug = (name: string): string => {
  */
 const getPlatformFromLocation = (
   location: WindowLocation
-): [string, string | null] | null => {
+): GetPlatformFromLocation => {
   const pattern = /\/platforms\/([^\/]+)\/(?:guides\/([^\/]+)\/)?/i;
   const match = location.pathname.match(pattern);
-  if (match) return [match[1], match[2]];
+  if (match) return [[match[1], match[2]], true];
 
   const qsPlatform = parse(location.search).platform;
   let qsMatch: [string, string | null];
@@ -114,7 +116,7 @@ const getPlatformFromLocation = (
     qsMatch = normalizeSlug(qsPlatform || "").split(".", 2) as [string, null];
   }
 
-  return qsMatch ?? null;
+  return [qsMatch ?? null, false];
 };
 
 const rebuildPathForPlatform = (key: string, currentPath?: string): string => {
@@ -151,6 +153,8 @@ export const getPlatform = (key: string): Platform | Guide | null => {
   return activeGuide ?? activePlatform ?? null;
 };
 
+type UseLocation = [Platform | Guide, (value: string) => void, boolean];
+
 /**
  * The usePlatform() hook will allow you to reference the currently active platform.
  *
@@ -166,18 +170,10 @@ export const getPlatform = (key: string): Platform | Guide | null => {
  * - otherwise its pulled from local storage (last platform selected)
  * - otherwise its pulled from `defaultValue` (or `DEFAULT_PLATFORM` if none)
  *
- * If the `readLocalStorage` option is disabled the saved value will be ignored
- * when falling back to a default.
- *
  * If you're operating in a context that is _only_ for a specific platform, you
  * want to pass `defaultValue` with the effective platform to avoid fallbacks.
  */
-export default (
-  defaultValue: string = DEFAULT_PLATFORM,
-  readLocalStorage = true
-): [Platform | Guide, (value: string) => void] => {
-  // State to store our value
-  // Pass initial state function to useState so logic is only executed once
+export default (defaultValue: string = DEFAULT_PLATFORM): UseLocation => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -186,12 +182,12 @@ export default (
     null
   );
 
-  let valueFromLocation = getPlatformFromLocation(location);
+  let [valueFromLocation, isFixed] = getPlatformFromLocation(location);
   let currentValue: string | null = valueFromLocation
     ? valueFromLocation.join(".")
     : null;
 
-  if (!currentValue && readLocalStorage) {
+  if (!currentValue && !isFixed) {
     currentValue = storedValue;
   }
 
@@ -207,10 +203,13 @@ export default (
     if (!value) value = defaultValue;
     // activeValue = getPlatform(value);
     let path = rebuildPathForPlatform(value, location.pathname);
+    if (!isFixed) {
+      path += `?platform=${value}`;
+    }
     if (path !== location.pathname) {
       navigate(path);
     }
   };
 
-  return [activeValue, setValue];
+  return [activeValue, setValue, isFixed];
 };

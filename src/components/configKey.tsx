@@ -2,17 +2,6 @@ import React from "react";
 
 import usePlatform, { formatCaseStyle } from "./hooks/usePlatform";
 
-const normalizeSlug = (slug: string) => {
-  switch (slug) {
-    case "browser":
-      return "javascript";
-    case "browsernpm":
-      return "javascript";
-    default:
-      return slug;
-  }
-};
-
 type Props = {
   name: string;
   supported?: string[];

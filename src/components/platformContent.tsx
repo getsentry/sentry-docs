@@ -2,18 +2,12 @@ import React from "react";
 import { StaticQuery, graphql } from "gatsby";
 import { Location } from "@reach/router";
 
-import usePlatform, { Guide } from "./hooks/usePlatform";
+import usePlatform, { getPlatform, Guide } from "./hooks/usePlatform";
 import Content from "./content";
 import SmartLink from "./smartLink";
 
 const includeQuery = graphql`
   query IncludeQuery {
-    allPlatformsYaml(sort: { fields: slug, order: ASC }) {
-      nodes {
-        name
-        slug
-      }
-    }
     allFile(filter: { sourceInstanceName: { eq: "includes" } }) {
       nodes {
         id
@@ -34,11 +28,6 @@ const slugMatches = (slug1: string, slug2: string): boolean => {
   if (slug1 === "browser") slug1 = "javascript";
   if (slug2 === "browser") slug2 = "javascript";
   return slug1 === slug2;
-};
-
-type PlatformNode = {
-  name: string;
-  slug: string;
 };
 
 type FileNode = {
@@ -65,9 +54,6 @@ type ChildProps = Props & {
     allFile: {
       nodes: FileNode[];
     };
-    allPlatformsYaml: {
-      nodes: PlatformNode[];
-    };
   };
 };
 
@@ -80,11 +66,10 @@ const PlatformContent = ({
 }: ChildProps): JSX.Element => {
   const {
     allFile: { nodes: files },
-    allPlatformsYaml: { nodes: platforms },
   } = data;
   const [dropdown, setDropdown] = React.useState(null);
-  const [currentPlatform] = usePlatform(platform);
-  const hasDropdown = !currentPlatform;
+  const [currentPlatform, _, isFixed] = usePlatform(platform);
+  const hasDropdown = !isFixed;
 
   const matches = files.filter(
     node => node.relativePath.indexOf(includePath) === 0
@@ -101,7 +86,7 @@ const PlatformContent = ({
   }
   if (!contentMatch) {
     console.warn(
-      `Couldn't find content in ${includePath} for selected platform: ${currentPlatform.name}`
+      `Couldn't find content in ${includePath} for selected platform: ${currentPlatform.key}`
     );
   }
 
@@ -114,7 +99,7 @@ const PlatformContent = ({
               className="btn btn-sm btn-secondary dropdown-toggle"
               onClick={() => setDropdown(!dropdown)}
             >
-              {currentPlatform.name}
+              {currentPlatform.title}
             </button>
 
             <div
@@ -123,27 +108,24 @@ const PlatformContent = ({
               style={{ display: dropdown ? "block" : "none" }}
             >
               {matches.map(node => {
-                const platform = platforms.find(p =>
-                  slugMatches(p.slug, node.name)
-                );
+                const platform = getPlatform(node.name);
                 if (!platform) {
-                  throw new Error(`Cannot find platform for ${node.name}`);
+                  console.warn(`Cannot find platform for ${node.name}`);
+                  return null;
                 }
                 return (
                   <a
                     className="dropdown-item"
                     role="tab"
-                    key={platform.slug}
+                    key={platform.key}
                     onClick={() => {
                       setDropdown(false);
-                      navigate(
-                        `${location.pathname}?platform=${platform.slug}`
-                      );
+                      navigate(`${location.pathname}?platform=${platform.key}`);
                       // TODO: retain scroll
                       // window.scrollTo(window.scrollX, window.scrollY);
                     }}
                   >
-                    {platform.name}
+                    {platform.title}
                   </a>
                 );
               })}
