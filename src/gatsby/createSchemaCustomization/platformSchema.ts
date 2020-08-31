@@ -12,6 +12,13 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
       production
     }
 
+    enum PlatformCategory {
+      browser
+      desktop
+      mobile
+      server
+      serverless
+    }
 
     type PlatformGuide {
       key: String!
@@ -19,6 +26,7 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
       title: String!
       caseStyle: PlatformCaseStyle!
       supportLevel: PlatformSupportLevel!
+      categories: [PlatformCategory!]
       url: String!
       fallbackPlatform: String!
     }
@@ -30,6 +38,7 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
       caseStyle: PlatformCaseStyle!
       supportLevel: PlatformSupportLevel!
       guides: [PlatformGuide!]
+      categories: [PlatformCategory!]
       url: String!
     }
     `,

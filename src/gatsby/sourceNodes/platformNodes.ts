@@ -9,6 +9,7 @@ type Frontmatter = {
   caseStyle?: string;
   supportLevel?: string;
   fallbackPlatform?: string;
+  categories?: string[];
 };
 
 type PlatformMdx = {
@@ -150,30 +151,6 @@ const buildPlatformData = (nodes: any[]) => {
 //   return true;
 // };
 
-// const query = `
-// query {
-//   allFile(filter: { sourceInstanceName: { eq: "platforms" } }) {
-//     nodes {
-//       id
-//       relativePath
-//       childMdx {
-//         frontmatter {
-//           title
-//           draft
-
-//           type
-//           supportLevel
-//           caseStyle
-
-//           supported
-//           notSupported
-//         }
-//       }
-//     }
-//   }
-// }
-// `;
-
 export const sourcePlatformNodes = async ({
   actions,
   getNode,
@@ -216,12 +193,27 @@ export const sourcePlatformNodes = async ({
     reporter.info(`Registering platform ${platformName}`);
     const platformData = platforms[platformName];
     const frontmatter = platformData.node.childMdx.frontmatter;
+    if (!frontmatter.categories) {
+      reporter.warn(`${platformName}: Missing categories`);
+    }
+    if (!frontmatter.caseStyle) {
+      reporter.warn(`${platformName}: Missing caseStyle`);
+    }
+    if (!frontmatter.supportLevel) {
+      reporter.warn(`${platformName}: Missing supportLevel`);
+    }
+    if (!frontmatter.title) {
+      reporter.warn(`${platformName}: Missing title`);
+    }
+
     const data = {
       key: platformName,
       name: platformName,
       title: frontmatter.title || toTitleCase(platformName),
       caseStyle: frontmatter.caseStyle || DEFAULT_CASE_STYLE,
       supportLevel: frontmatter.supportLevel || DEFAULT_SUPPORT_LEVEL,
+      fallbackPlatform: frontmatter.fallbackPlatform,
+      categories: frontmatter.categories || [],
       url: `/platforms/${platformName}/`,
       guides: Object.entries(platformData.guides)
         .map(([guideName, guide]) => {
@@ -238,7 +230,12 @@ export const sourcePlatformNodes = async ({
               guideFrontmatter.supportLevel ||
               frontmatter.supportLevel ||
               DEFAULT_SUPPORT_LEVEL,
-            fallbackPlatform: guideFrontmatter.fallbackPlatform || platformName,
+            fallbackPlatform:
+              guideFrontmatter.fallbackPlatform ||
+              frontmatter.fallbackPlatform ||
+              platformName,
+            categories:
+              guideFrontmatter.categories || frontmatter.categories || [],
             url: `/platforms/${platformName}/guides/${guideName}/`,
           };
         })
