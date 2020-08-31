@@ -73,7 +73,7 @@ const PlatformContent = ({
   let activePlatform = currentPlatform;
   // if (!activePlatform) activePlatform = defaultPlatform;
   let contentMatch = matches.find(m =>
-    slugMatches(m.name, currentPlatform.name)
+    slugMatches(m.name, currentPlatform.key)
   );
   if (!contentMatch && (currentPlatform as Guide).fallbackPlatform) {
     const fallbackPlatform = (currentPlatform as Guide).fallbackPlatform;
