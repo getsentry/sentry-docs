@@ -8,7 +8,6 @@ const query = graphql`
   query UsePlatformQuery {
     allPlatform {
       nodes {
-        id
         key
         name
         title
