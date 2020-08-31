@@ -10,6 +10,7 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
 
     enum PlatformSupportLevel {
       production
+      community
     }
 
     enum PlatformCategory {

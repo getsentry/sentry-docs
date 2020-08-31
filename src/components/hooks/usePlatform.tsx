@@ -56,6 +56,7 @@ export enum CaseStyle {
 
 export enum SupportLevel {
   production,
+  community,
 }
 
 export type Guide = {
