@@ -119,7 +119,6 @@ const rebuildPathForPlatform = (
   currentPath?: string
 ): string => {
   const [platformName, guideName] = platformIdentifier.split(".", 2);
-  console.log({ platformName, guideName });
   const newPathPrefix = guideName
     ? `/platforms/${platformName}/guides/${guideName}/`
     : `/platforms/${platformName}/`;
@@ -200,7 +199,6 @@ export default (
 
   let activeValue: Platform | Guide =
     getPlatform(currentValue) ?? getPlatform(defaultValue);
-  console.log({ currentValue, activeValue });
 
   const setValue = (value: string) => {
     if (value == currentValue) return;
