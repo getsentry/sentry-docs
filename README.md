@@ -218,12 +218,12 @@ This is an alert
 
 Render a heading with a configuration key in the correctly cased format for a given platform.
 
-If content is specified, it will automatically notate when the configuration is unsupported for the selected platform.
+If content is specified, it will automatically hide the content when the given `platform` is not selected in context.
 
 Attributes:
 
 - name (string)
-- platform (string) - defaults to the `platform` value from the query string
+- platform (string) - defaults to the `platform` value from the URL (path or querystring)
 - supported (string[])
 - notSupported (string[])
 
@@ -260,6 +260,42 @@ Additionally code blocks also support `tabTitle` and `filename` properties:
 var foo = "bar";
 ```
 ````
+
+
+### PlatformContent
+
+Render an include based on the currently selected `platform` in context.
+
+Attributes:
+
+- includePath (string) - the subfolder within `src/includes` to map to
+- platform (string) - defaults to the `platform` value from the URL (path or querystring)
+
+```javascript
+<PlatformContent includePath="sdk-init" />
+```
+
+When the current platform comes from the URL and no matching include is found, the content will be hidden.
+
+When the current platform comes from the URL path (not the querystring) the platform selector dropdown will be hidden.
+
+### PlatformSection
+
+Render a section based on the currently selected `platform` in context.  When the platform is not valid, the content will be hidden.
+
+Attributes:
+
+- platform (string) - defaults to the `platform` value from the URL (path or querystring)
+- supported (string[])
+- notSupported (string[])
+
+```javascript
+<PlatformSection notSupported={["browser", "node"]}><markdown>
+
+Description of send-default-pii
+
+</PlatformSection></ConfigKey>
+```
 
 ## Linting
 
