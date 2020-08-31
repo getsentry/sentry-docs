@@ -1,6 +1,5 @@
 import React from "react";
 import { StaticQuery, graphql } from "gatsby";
-import { Location } from "@reach/router";
 
 import usePlatform, { getPlatform, Guide } from "./hooks/usePlatform";
 import Content from "./content";
@@ -48,8 +47,6 @@ type Props = {
 };
 
 type ChildProps = Props & {
-  location: any;
-  navigate: any;
   data: {
     allFile: {
       nodes: FileNode[];
@@ -59,8 +56,6 @@ type ChildProps = Props & {
 
 const PlatformContent = ({
   data,
-  location,
-  navigate,
   includePath,
   platform,
 }: ChildProps): JSX.Element => {
@@ -68,21 +63,25 @@ const PlatformContent = ({
     allFile: { nodes: files },
   } = data;
   const [dropdown, setDropdown] = React.useState(null);
-  const [currentPlatform, _, isFixed] = usePlatform(platform);
+  const [currentPlatform, setPlatform, isFixed] = usePlatform(platform);
   const hasDropdown = !isFixed;
 
   const matches = files.filter(
     node => node.relativePath.indexOf(includePath) === 0
   );
 
+  let activePlatform = currentPlatform;
   // if (!activePlatform) activePlatform = defaultPlatform;
   let contentMatch = matches.find(m =>
     slugMatches(m.name, currentPlatform.name)
   );
   if (!contentMatch && (currentPlatform as Guide).fallbackPlatform) {
-    contentMatch = matches.find(m =>
-      slugMatches(m.name, (currentPlatform as Guide).fallbackPlatform)
-    );
+    const fallbackPlatform = (currentPlatform as Guide).fallbackPlatform;
+    if (
+      (contentMatch = matches.find(m => slugMatches(m.name, fallbackPlatform)))
+    ) {
+      activePlatform = getPlatform(fallbackPlatform);
+    }
   }
   if (!contentMatch) {
     console.warn(
@@ -99,7 +98,7 @@ const PlatformContent = ({
               className="btn btn-sm btn-secondary dropdown-toggle"
               onClick={() => setDropdown(!dropdown)}
             >
-              {currentPlatform.title}
+              {activePlatform.title}
             </button>
 
             <div
@@ -118,9 +117,10 @@ const PlatformContent = ({
                     className="dropdown-item"
                     role="tab"
                     key={platform.key}
+                    style={{ cursor: "pointer" }}
                     onClick={() => {
                       setDropdown(false);
-                      navigate(`${location.pathname}?platform=${platform.key}`);
+                      setPlatform(platform.key);
                       // TODO: retain scroll
                       // window.scrollTo(window.scrollX, window.scrollY);
                     }}
@@ -153,18 +153,7 @@ export default (props: Props): JSX.Element => {
     <StaticQuery
       query={includeQuery}
       render={data => {
-        return (
-          <Location>
-            {({ location, navigate }) => (
-              <PlatformContent
-                location={location}
-                navigate={navigate}
-                data={data}
-                {...props}
-              />
-            )}
-          </Location>
-        );
+        return <PlatformContent data={data} {...props} />;
       }}
     />
   );
