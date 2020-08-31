@@ -45,6 +45,24 @@ const rebuildPathForPlatform = (
     : newPathPrefix;
 };
 
+/**
+ * The usePlatform() hook will allow you to reference the currently active platform.
+ *
+ * ```
+ * const [platform, setPlatform] = usePlatform()
+ * ```
+ *
+ * The function signatures differ, where the returned `platform` value is an object of
+ * type `Platform`, and `setPlatform` takes the platform name as a string.
+ *
+ * The active platform is decided based on a few heuristics:
+ * - if you're on a platform page, its _always_ pulled from the URL
+ * - otherwise its pulled from local storage (last platform selected)
+ * - otherwise its pulled from `defaultValue` (or `DEFAULT_PLATFORM` if none)
+ *
+ * If the `readLocalStorage` option is disabled the saved value will be ignored
+ * when falling back to a default.
+ */
 export default (
   defaultValue: string | null = DEFAULT_PLATFORM,
   readLocalStorage = true
