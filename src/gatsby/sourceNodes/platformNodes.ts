@@ -199,6 +199,7 @@ export const sourcePlatformNodes = async ({
     const platformData = platforms[platformName];
     const { frontmatter = {} } = platformData.node;
     const data = {
+      key: platformName,
       name: platformName,
       title: frontmatter.title || toTitleCase(platformName),
       caseStyle: frontmatter.caseStyle || DEFAULT_CASE_STYLE,
@@ -208,6 +209,7 @@ export const sourcePlatformNodes = async ({
         .map(([guideName, guide]) => {
           const { frontmatter: guideFrontmatter = {} } = guide.node;
           return {
+            key: `${platformName}.${guideName}`,
             name: guideName,
             title: guideFrontmatter.title || toTitleCase(guideName),
             caseStyle:

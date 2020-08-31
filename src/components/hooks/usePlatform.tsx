@@ -9,11 +9,13 @@ const query = graphql`
     allPlatform {
       nodes {
         id
+        key
         name
         title
         caseStyle
         supportLevel
         guides {
+          key
           name
           title
           caseStyle
@@ -58,6 +60,7 @@ export enum SupportLevel {
 }
 
 export type Guide = {
+  key: string;
   name: string;
   title: string;
   caseStyle: CaseStyle;
@@ -66,6 +69,7 @@ export type Guide = {
 };
 
 export type Platform = {
+  key: string;
   name: string;
   title: string;
   caseStyle: CaseStyle;
@@ -114,11 +118,8 @@ const getPlatformFromLocation = (
   return qsMatch ?? null;
 };
 
-const rebuildPathForPlatform = (
-  platformIdentifier: string,
-  currentPath?: string
-): string => {
-  const [platformName, guideName] = platformIdentifier.split(".", 2);
+const rebuildPathForPlatform = (key: string, currentPath?: string): string => {
+  const [platformName, guideName] = key.split(".", 2);
   const newPathPrefix = guideName
     ? `/platforms/${platformName}/guides/${guideName}/`
     : `/platforms/${platformName}/`;
@@ -131,20 +132,18 @@ const rebuildPathForPlatform = (
 /**
  * Return the active platform or guide.
 
- * @param value platform identifier in format of `platformName[.guideName]`
+ * @param value platform key in format of `platformName[.guideName]`
  */
-export const getPlatform = (
-  platformIdentifier: string
-): Platform | Guide | null => {
-  if (!platformIdentifier) return;
+export const getPlatform = (key: string): Platform | Guide | null => {
+  if (!key) return;
 
   const {
     allPlatform: { nodes: platformList },
   } = useStaticQuery(query);
 
-  const [platformName, guideName] = platformIdentifier.split(".", 2);
+  const [platformName, guideName] = key.split(".", 2);
   const activePlatform = platformList.find(
-    (p: Platform) => p.name === platformName
+    (p: Platform) => p.key === platformName
   );
   const activeGuide =
     activePlatform &&

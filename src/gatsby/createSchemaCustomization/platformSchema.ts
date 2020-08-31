@@ -14,6 +14,7 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
 
 
     type PlatformGuide {
+      key: String!
       name: String!
       title: String!
       caseStyle: PlatformCaseStyle!
@@ -23,6 +24,7 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
     }
 
     type Platform implements Node {
+      key: String!
       name: String!
       title: String!
       caseStyle: PlatformCaseStyle!

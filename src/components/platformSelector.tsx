@@ -8,11 +8,13 @@ const query = graphql`
   query PlatformSelectorQuery {
     allPlatform(sort: { fields: name }) {
       nodes {
+        key
         name
         title
         guides {
           name
           title
+          key
         }
       }
     }
@@ -23,10 +25,10 @@ type Props = {
   data: {
     allPlatform: {
       nodes: {
-        name: string;
+        key: string;
         title: string;
         guides: {
-          name: string;
+          key: string;
           title: string;
         }[];
       }[];
@@ -50,9 +52,9 @@ export const PlatformSelector = ({
     return {
       label: platform.title,
       options: [
-        { value: platform.name, label: platform.title },
+        { value: platform.key, label: platform.title },
         ...(platform.guides || []).map(g => ({
-          value: `${platform.name}.${g.name}`,
+          value: g.key,
           label: g.title,
         })),
       ],
@@ -62,7 +64,7 @@ export const PlatformSelector = ({
   return (
     <Select
       placeholder="Select Platform"
-      defaultValue={toOption(platform)}
+      defaultValue={{ label: platform.title, value: platform.key }}
       options={platformList.map(toOption)}
       onChange={onChange}
     />
