@@ -1,6 +1,6 @@
 ---
 name: Rack
-doc_link: https://docs.sentry.io/platform/ruby/guides/rack/
+doc_link: https://docs.sentry.io/platforms/ruby/guides/rack/
 support_level: production
 type: framework
 ---

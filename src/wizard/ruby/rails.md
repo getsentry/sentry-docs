@@ -1,6 +1,6 @@
 ---
 name: Rails
-doc_link: https://docs.sentry.io/platform/ruby/guides/rails/
+doc_link: https://docs.sentry.io/platforms/ruby/guides/rails/
 support_level: production
 type: framework
 ---
@@ -19,7 +19,7 @@ gem "sentry-raven"
 
 ### Configuration
 
-Open up `config/application.rb` and configure the DSN, and any other [_settings_](/platform/ruby/guides/rails/config/) you need:
+Open up `config/application.rb` and configure the DSN, and any other [_settings_](/platforms/ruby/guides/rails/config/) you need:
 
 ```ruby
 Raven.configure do |config|
