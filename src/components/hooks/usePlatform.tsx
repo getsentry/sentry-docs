@@ -26,45 +26,47 @@ const query = graphql`
   }
 `;
 
-export const formatCaseStyle = (style: CaseStyle, value: string): string => {
+export const formatCaseStyle = (style: string, value: string): string => {
   switch (style) {
-    case CaseStyle.snake_case:
+    case "snake_case":
+      console.log("snake");
       return value.replace(/-/g, "_");
-    case CaseStyle.camelCase:
+    case "camelCase":
       return value
         .split(/-/g)
         .map((val, idx) =>
           idx === 0 ? val : val.charAt(0).toUpperCase() + val.substr(1)
         )
         .join("");
-    case CaseStyle.PascalCase:
+    case "PascalCase":
       return value
         .split(/-/g)
         .map(val => val.charAt(0).toUpperCase() + val.substr(1))
         .join("");
     default:
+      console.log("no match");
       return value;
   }
 };
 
-export enum CaseStyle {
-  canonical,
-  camelCase,
-  PascalCase,
-  snake_case,
-}
+// export enum CaseStyle {
+//   canonical,
+//   camelCase,
+//   PascalCase,
+//   snake_case,
+// }
 
-export enum SupportLevel {
-  production,
-  community,
-}
+// export enum SupportLevel {
+//   production,
+//   community,
+// }
 
 export type Guide = {
   key: string;
   name: string;
   title: string;
-  caseStyle: CaseStyle;
-  supportLevel: SupportLevel;
+  caseStyle: string;
+  supportLevel: string;
   fallbackPlatform: string;
 };
 
@@ -72,8 +74,8 @@ export type Platform = {
   key: string;
   name: string;
   title: string;
-  caseStyle: CaseStyle;
-  supportLevel: SupportLevel;
+  caseStyle: string;
+  supportLevel: string;
   guides?: Guide[];
 };
 
