@@ -2,7 +2,7 @@ import { graphql, useStaticQuery } from "gatsby";
 import { useLocation, useNavigate, WindowLocation } from "@reach/router";
 import { parse } from "query-string";
 
-import useLocalStorage from "./useLocaleStorage";
+import useLocalStorage from "./useLocalStorage";
 
 const query = graphql`
   query UsePlatformQuery {
