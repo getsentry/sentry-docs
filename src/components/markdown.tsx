@@ -14,6 +14,7 @@ import GuideGrid from "./guideGrid";
 import JsCdnTag from "./jsCdnTag";
 import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
+import PlatformSection from "./platformSection";
 
 const mdxComponents = {
   Alert,
@@ -27,6 +28,7 @@ const mdxComponents = {
   Link: SmartLink,
   ParamTable,
   PlatformContent,
+  PlatformSection,
 };
 
 export default ({ value }) => {

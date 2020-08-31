@@ -1,6 +1,7 @@
 import React from "react";
 
 import usePlatform, { formatCaseStyle } from "./hooks/usePlatform";
+import PlatformSection from "./platformSection";
 
 type Props = {
   name: string;
@@ -18,32 +19,18 @@ export default ({
   platform,
 }: Props): JSX.Element => {
   const [currentPlatform] = usePlatform(platform);
-  const isSupported = notSupported.length
-    ? !notSupported.find(p => p === platform)
-    : supported.length
-    ? supported.find(p => p === platform)
-    : true;
 
-  if (!isSupported) return null;
+  return (
+    <PlatformSection
+      supported={supported}
+      notSupported={notSupported}
+      platform={platform}
+    >
+      <h3>
+        <code>{formatCaseStyle(currentPlatform.caseStyle, name)}</code>
+      </h3>
 
-  const header = (
-    <h3>
-      <code>{formatCaseStyle(currentPlatform.caseStyle, name)}</code>
-    </h3>
+      {children}
+    </PlatformSection>
   );
-
-  if (children) {
-    return (
-      <div className={`unsupported ${!isSupported && "is-unsupported"}`}>
-        {header}
-        {!isSupported && (
-          <div className="unsupported-hint">
-            Not available for {currentPlatform.title}.
-          </div>
-        )}
-        {children}
-      </div>
-    );
-  }
-  return header;
 };
