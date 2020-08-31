@@ -29,7 +29,6 @@ const query = graphql`
 export const formatCaseStyle = (style: string, value: string): string => {
   switch (style) {
     case "snake_case":
-      console.log("snake");
       return value.replace(/-/g, "_");
     case "camelCase":
       return value
@@ -44,7 +43,6 @@ export const formatCaseStyle = (style: string, value: string): string => {
         .map(val => val.charAt(0).toUpperCase() + val.substr(1))
         .join("");
     default:
-      console.log("no match");
       return value;
   }
 };
