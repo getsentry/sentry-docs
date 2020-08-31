@@ -62,6 +62,9 @@ const rebuildPathForPlatform = (
  *
  * If the `readLocalStorage` option is disabled the saved value will be ignored
  * when falling back to a default.
+ *
+ * If you're operating in a context that is _only_ for a specific platform, you
+ * want to pass `defaultValue` with the effective platform to avoid fallbacks.
  */
 export default (
   defaultValue: string | null = DEFAULT_PLATFORM,
