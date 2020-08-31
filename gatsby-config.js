@@ -24,7 +24,7 @@ const packages = new (require("./src/utils/packageRegistry"))();
 
 const getPlugins = () => {
   const remarkPlugins = [
-    /* {
+    {
       resolve: require.resolve("./plugins/gatsby-remark-variables"),
       options: {
         scope: {
@@ -56,7 +56,7 @@ const getPlugins = () => {
       options: {
         noInlineHighlight: true,
       },
-    }, */
+    },
     // {
     //   resolve: `gatsby-remark-check-links`
     // }

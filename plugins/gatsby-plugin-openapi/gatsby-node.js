@@ -1,18 +1,14 @@
 exports.sourceNodes = async (
-  { actions, createNodeId, createContentDigest, schema, ...otherfunctions },
+  { actions, createNodeId, createContentDigest },
   pluginOptions
 ) => {
-  const { createNode, createParentChildLink, createTypes } = actions;
-
-  console.log("plugin-openapi", otherfunctions);
+  const { createNode } = actions;
 
   let content = null;
   try {
     content = await pluginOptions.resolve();
-  } catch (exception) {
-    console.warn(
-      `There was an error resolving spec '${spec.name}', ${exception.name} ${exception.message} ${exception.stack}`
-    );
+  } catch (error) {
+    console.warn(`There was an error resolving spec '${spec.name}': `, error);
   }
 
   if (content === null) {
@@ -28,61 +24,6 @@ exports.sourceNodes = async (
     };
 
     const parsedContent = parseContent();
-
-    Object.entries(parsedContent).map(([keys, values]) => {
-      console.log(keys);
-    });
-
-    // const typeDefs = [
-    //   `
-    // type OpenApiInfo {
-    //   title: String
-    //   description: String
-    //   termsOfService: String
-    //   contact: OpenApiInfoContact
-    //   license: OpenApiInfoLicense
-    //   version: String
-    // }
-
-    // type OpenApiInfoContact {
-    //   email: String
-    // }
-
-    // type OpenApiInfoLicense {
-    //   name: String
-    //   url: String
-    // }
-
-    // `,
-    //   schema.buildObjectType({
-    //     name: "OpenApi",
-    //     fields: {
-    //       openapi: {
-    //         type: "String",
-    //         resolve: source => source["openapi"],
-    //       },
-    //       info: {
-    //         type: "OpenApiInfo",
-    //         resolve: source => source["info"],
-    //       },
-    //       // servers: {
-    //       //   type: "OpenApiServers",
-    //       //   fields: {
-    //       //     url: "String"
-    //       //   },
-    //       //   resolve: source => source["servers"]
-    //       // },
-    //       // tags: {
-    //       //   type: "OpenApiTags",
-    //       //   resolve: source => source["tags"]
-    //       // },
-    //     },
-    //     interfaces: ["Node"],
-    //   }),
-    // ];
-    // createTypes(typeDefs);
-
-    const readableUrls = {};
 
     var data =
       parsedContent.paths &&

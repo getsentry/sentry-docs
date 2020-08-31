@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { graphql } from "gatsby";
 import Prism from "prismjs";
 
 import BasePage from "~src/components/basePage";
-import Markdown from "~src/components/markdown";
 import SmartLink from "~src/components/smartLink";
-
-import "prismjs/themes/prism-tomorrow.css";
 
 import "prismjs/components/prism-json";
 
@@ -38,7 +34,6 @@ const strFormat = str => {
 };
 
 export default props => {
-  console.log({ props });
   const data = props.pageContext;
   const parameters =
     (data.requestBody?.content?.schema &&
@@ -51,7 +46,6 @@ export default props => {
   ];
 
   if (parameters) {
-    console.log({ parameters });
     let body = {};
     Object.entries(parameters.properties).map(
       ([key, { example }]) => (body[key] = example)
@@ -59,8 +53,6 @@ export default props => {
 
     apiExample.push(` -d '${JSON.stringify(body)}'`);
   }
-
-  console.log({ apiExample });
 
   const [selectedResponse, selectResponse] = useState(0);
   useEffect(() => {
@@ -71,12 +63,6 @@ export default props => {
     <BasePage {...props}>
       <div className="row">
         <div className="col-6">
-          {/*<p>
-            <strong>
-              {data.method.toUpperCase()} {data.apiPath}
-            </strong>
-          </p>*/}
-
           {data.summary && <p>{data.summary}</p>}
 
           {data.description && (
