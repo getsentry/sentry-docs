@@ -127,30 +127,6 @@ const buildPlatformData = (nodes: any[]) => {
   return data;
 };
 
-// const canInclude = (
-//   node: Node,
-//   platformName: string,
-//   guideName?: string
-// ): boolean => {
-//   const canonical = guideName ? `${platformName}.${guideName}` : platformName;
-//   const { frontmatter } = getChild(node);
-//   if (
-//     frontmatter.supported &&
-//     frontmatter.supported.length &&
-//     frontmatter.supported.indexOf(canonical) === -1 &&
-//     frontmatter.supported.indexOf(platformName) === -1
-//   ) {
-//     return false;
-//   } else if (
-//     frontmatter.unsupported &&
-//     (frontmatter.unsupported.indexOf(canonical) !== -1 ||
-//       frontmatter.unsupported.indexOf(platformName))
-//   ) {
-//     return false;
-//   }
-//   return true;
-// };
-
 export const sourcePlatformNodes = async ({
   actions,
   getNode,

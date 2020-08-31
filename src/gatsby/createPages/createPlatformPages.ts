@@ -130,50 +130,42 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     allFile: { nodes },
   } = await getDataOrPanic(
     `
-        query {
-          allFile(filter: { sourceInstanceName: { eq: "platforms" } }) {
-            nodes {
-              id
-              relativePath
-              internal {
-                type
-              }
-              childMarkdownRemark {
-                frontmatter {
-                  title
-                  draft
-                  noindex
-                  sidebar_order
-                  redirect_from
-                  supported
-                  notSupported
-                }
-                fields {
-                  slug
-                  legacy
-                }
-                excerpt(pruneLength: 5000)
-              }
-              childMdx {
-                frontmatter {
-                  title
-                  draft
-                  noindex
-                  sidebar_order
-                  redirect_from
-                  supported
-                  notSupported
-                }
-                fields {
-                  slug
-                  legacy
-                }
-                excerpt(pruneLength: 5000)
-              }
+    query {
+      allFile(filter: { sourceInstanceName: { eq: "platforms" } }) {
+        nodes {
+          id
+          relativePath
+          internal {
+            type
+          }
+          childMarkdownRemark {
+            frontmatter {
+              title
+              draft
+              noindex
+              sidebar_order
+              redirect_from
+              supported
+              notSupported
             }
+            excerpt(pruneLength: 5000)
+          }
+          childMdx {
+            frontmatter {
+              title
+              draft
+              noindex
+              sidebar_order
+              redirect_from
+              supported
+              notSupported
+            }
+            excerpt(pruneLength: 5000)
           }
         }
-      `,
+      }
+    }
+    `,
     graphql,
     reporter
   );
