@@ -4,7 +4,7 @@ const { remove } = require("fs-extra");
 exports.onCreatePage = ({ page, reporter, actions: { createRedirect } }) => {
   if (page.context && page.context.redirect_from) {
     page.context.redirect_from.forEach(fromPath => {
-      reporter.debug(`Adding redirect from ${fromPath} to ${page.path}`);
+      reporter.verbose(`Adding redirect from ${fromPath} to ${page.path}`);
       createRedirect({
         fromPath,
         toPath: page.path,
