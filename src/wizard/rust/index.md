@@ -1,6 +1,6 @@
 ---
 name: Rust
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=rust
+doc_link: https://docs.sentry.io/platforms/rust/
 support_level: production
 type: language
 ---

@@ -1,11 +1,21 @@
 ---
 name: Koa
-doc_link: https://docs.sentry.io/platforms/node/koa/
+doc_link: https://docs.sentry.io/platforms/node/guides/koa/
 support_level: production
 type: framework
 ---
 
-Our Koa integration only requires the installation of `@sentry/node`, and then you can use it like this:
+Add `@sentry/node` as a dependency:
+
+```bash
+# Using yarn
+$ yarn add @sentry/node
+
+# Using npm
+$ npm install --save @sentry/node
+```
+
+Initialize the Sentry SDK and install the on error hook:
 
 ```javascript
 import Koa from "koa";
@@ -30,5 +40,3 @@ app.on("error", (err, ctx) => {
 
 app.listen(3000);
 ```
-
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->

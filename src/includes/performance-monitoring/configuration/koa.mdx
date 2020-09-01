@@ -7,7 +7,7 @@ To get started with performance monitoring with Koa, first install these package
 $ yarn add @sentry/node @sentry/tracing
 
 # Using npm
-$ npm install @sentry/node @sentry/tracing
+$ npm install --save @sentry/node @sentry/tracing
 ```
 
 <Alert level="warning" title="Note"><markdown>
@@ -91,8 +91,8 @@ app.use(tracingMiddleWare);
 
 // usual error handler
 app.on("error", (err, ctx) => {
-  Sentry.withScope((scope) => {
-    scope.addEventProcessor((event) => {
+  Sentry.withScope(scope => {
+    scope.addEventProcessor(event => {
       return Sentry.Handlers.parseRequest(event, ctx.request);
     });
     Sentry.captureException(err);
@@ -101,9 +101,11 @@ app.on("error", (err, ctx) => {
 // the rest of your app
 ```
 
-**Subsequent manual child transactions**
+**Subsequent manual child spans**
 
-The following example creates a transaction for a part of the code that contains an expensive operation, and sends the result to Sentry, you will need to use the transaction stored in the context
+The following example creates a span for a part of the code that contains an
+expensive operation and sends the result to Sentry. You will need to use the
+transaction stored in the context.
 
 ```javascript
 const myMiddleware = async (ctx, next) => {

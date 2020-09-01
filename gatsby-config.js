@@ -1,3 +1,5 @@
+const axios = require("axios");
+
 require("ts-node").register({
   files: true, // to that TS node hooks have access to local typings too
 });
@@ -11,7 +13,10 @@ require("dotenv").config({
   path: `.env.${activeEnv}`,
 });
 
-if (process.env.BRANCH_NAME === "master" && process.env.ALGOLIA_ADMIN_KEY) {
+if (
+  process.env.VERCEL_GITHUB_COMMIT_REF === "master" &&
+  process.env.ALGOLIA_ADMIN_KEY
+) {
   process.env.ALGOLIA_INDEX = "1";
 }
 
@@ -168,6 +173,23 @@ const getPlugins = () => {
       options: {
         inputConfigFile: `${__dirname}/nginx.conf`,
         outputConfigFile: `${__dirname}/nginx.out.conf`,
+      },
+    },
+    {
+      resolve: "./plugins/gatsby-plugin-openapi",
+      options: {
+        name: "openapi",
+        resolve: async () => {
+          try {
+            const response = await axios.get(
+              "https://raw.githubusercontent.com/getsentry/sentry-api-schema/68bb79acfbbee062bd8d2f71ee3a07d43dc934c9/openapi-derefed.json"
+            );
+            return response.data;
+          } catch (err) {
+            throw err;
+          }
+        },
+        // required, function which returns a Promise resolving Swagger JSON
       },
     },
     // generate normal redirects so when you're running without nginx

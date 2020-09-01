@@ -126,6 +126,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
                 }
                 fields {
                   slug
+                  legacy
                 }
                 excerpt(pruneLength: 5000)
               }
@@ -139,6 +140,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
                 }
                 fields {
                   slug
+                  legacy
                 }
                 excerpt(pruneLength: 5000)
               }
@@ -172,6 +174,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         ...child.frontmatter,
         ...context,
         id: node.id,
+        legacy: child.fields.legacy,
       },
     });
   };
@@ -314,4 +317,17 @@ export default async ({ actions, graphql, reporter, getNode }) => {
   Object.keys(platforms).forEach(platformName => {
     createPlatformPages(platformName, platforms[platformName], common);
   });
+
+  let indexPage = nodes.find(n => n.relativePath === "index.mdx");
+  if (indexPage) {
+    actions.createPage({
+      path: "/platforms/",
+      component: require.resolve(`../../templates/doc.js`),
+      context: {
+        title: "Platforms",
+        ...getChild(indexPage).frontmatter,
+        id: indexPage.id,
+      },
+    });
+  }
 };

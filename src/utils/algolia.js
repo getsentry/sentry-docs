@@ -1,3 +1,5 @@
+const { standardSDKSlug } = require("sentry-global-search");
+
 const pageQuery = `{
     pages: allSitePage {
       edges {
@@ -9,11 +11,22 @@ const pageQuery = `{
             title
             excerpt
             noindex
+            platform {
+              name
+            }
           }
         }
       }
     }
   }`;
+
+const extrapolate = (str, separator) => {
+  const segments = str.split(separator).filter(Boolean);
+  const fragments = segments.map((segment, i, array) =>
+    array.slice(0, i + 1).join(separator)
+  );
+  return fragments;
+};
 
 const flatten = arr =>
   arr
@@ -26,11 +39,25 @@ const flatten = arr =>
       title: context.title,
       url: path,
       content: context.excerpt,
-      // score: child.legacy ? 0 : 1,
+
+      // https://github.com/getsentry/sentry-global-search#sorting-by-a-platform
+      platforms: context.platform
+        ? extrapolate(standardSDKSlug(context.platform.name).slug, ".")
+        : [],
+
+      // https://github.com/getsentry/sentry-global-search#sorting-by-path
+      pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
+
+      // https://github.com/getsentry/sentry-global-search#sorting-by-legacy
+      legacy: context.legacy || false,
     }))
     .filter(n => !n.draft);
 
-const settings = { attributesToSnippet: [`content:20`] };
+const settings = {
+  attributesToSnippet: [`content:20`],
+  attributesForFaceting: ["platforms", "pathSegments", "legacy"],
+  searchableAttributes: ["content", "title"],
+};
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
 if (!indexPrefix) {

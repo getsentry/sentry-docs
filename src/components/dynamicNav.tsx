@@ -10,7 +10,9 @@ type Node = {
   context: {
     title?: string | null;
     sidebar_order?: number | null;
+    [key: string]: any;
   };
+  [key: string]: any;
 };
 
 type Entity<T> = {

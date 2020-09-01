@@ -1,6 +1,6 @@
 ---
 name: Django
-doc_link: https://docs.sentry.io/platforms/python/django/
+doc_link: https://docs.sentry.io/platforms/python/guides/django/
 support_level: production
 type: framework
 ---
@@ -23,7 +23,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     integrations=[DjangoIntegration()],
-    traces_sample_rate = 1.0,
+    traces_sample_rate=1.0,
 
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.

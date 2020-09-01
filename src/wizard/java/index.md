@@ -13,23 +13,21 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
-    <version>1.7.30</version>
+    <version>{{ packages.version('sentry.java', '1.7.30') }}</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry:1.7.30'
+implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '1.7.30') }}'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry" % "1.7.30"
+libraryDependencies += "io.sentry" % "sentry" % "{{ packages.version('sentry.java', '1.7.30') }}"
 ```
-
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.30%7Cjar).
 
 ## Capture an Error
 

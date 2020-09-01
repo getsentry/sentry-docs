@@ -1,18 +1,18 @@
 ---
 name: Connect
-doc_link: https://docs.sentry.io/platforms/node/connect/
+doc_link: https://docs.sentry.io/platforms/node/guides/connect/
 support_level: production
 type: framework
 ---
 
-If you are using `yarn` or `npm`, you can add our package as a dependency:
+Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/node@5.20.1
+$ yarn add @sentry/node
 
 # Using npm
-$ npm install @sentry/node@5.20.1
+$ npm install --save @sentry/node
 ```
 
 ```javascript

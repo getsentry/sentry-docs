@@ -1,6 +1,6 @@
 ---
 name: ASGI
-doc_link: https://docs.sentry.io/platforms/python/asgi/
+doc_link: https://docs.sentry.io/platforms/python/guides/asgi/
 support_level: production
 type: framework
 ---

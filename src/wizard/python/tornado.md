@@ -1,6 +1,6 @@
 ---
 name: Tornado
-doc_link: https://docs.sentry.io/platforms/python/tornado/
+doc_link: https://docs.sentry.io/platforms/python/guides/tornado/
 support_level: production
 type: framework
 ---
@@ -12,7 +12,7 @@ Python 3.6 or greater is required.
 1. Install `sentry-sdk` from PyPI:
 
    ```bash
-   $ pip install --upgrade sentry-sdk==0.16.2
+   $ pip install --upgrade sentry-sdk
    ```
 
 2. If you're on Python 3.6, you also need the `aiocontextvars` package:

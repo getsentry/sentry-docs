@@ -1,30 +1,10 @@
 ---
-draft: false
-categories: []
-toc: true
 title: .NET
-tags: []
 ---
-
-<Alert level="" title="Learn about SDK usage"><markdown>
-
-This page will provide you with details that are very specific to the platform. To learn how to use our unified
-SDKs in general, please visit the [Error Reporting](/error-reporting/quickstart/?platform=csharp), [Enriching Error Data](/enriching-error-data/additional-data/?platform=csharp), [Releases](/workflow/releases/?platform=csharp), and [Data Management](/data-management/event-grouping/?platform=csharp) sections.
-
-</markdown></Alert>
 
 This section will describe features, configurations and general functionality which are specific to the .NET SDK.
 
-## Integrations
-
-- [_ASP.NET Core_](/platforms/dotnet/aspnetcore/)
-- [_EntityFramework_](/platforms/dotnet/entityframework/)
-- [_log4net_](/platforms/dotnet/log4net/)
-- [_Microsoft.Extensions.Logging_](/platforms/dotnet/microsoft-extensions-logging/)
-- [_Serilog_](/platforms/dotnet/serilog/)
-- [_NLog_](/platforms/dotnet/nlog/)
-- [_WinForms_](/platforms/dotnet/winforms/)
-- [_WPF_](/platforms/dotnet/wpf/)
+<GuideGrid platform="dotnet" />
 
 ## Compatibility
 
@@ -51,51 +31,42 @@ Of those, we run our unit/integration tests against:
 
 </markdown></Alert>
 
-<Alert level="info" title="Upgrading the SDK and want to understand what's new?"><markdown>
+## Install
 
-Have a look at the [Changelog](https://github.com/getsentry/sentry-dotnet/releases).
+Add the Sentry dependency:
 
-</markdown></Alert>
-
-## Ignoring Exceptions
-
-You can ignore exceptions by their type when initializing the SDK:
-
-```csharp
-SentrySdk.Init(o => o.AddExceptionFilterForType<OperationCanceledException>());
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry -Version {{ packages.version('sentry.dotnet') }}
 ```
 
-It works in the whole inheritance chain.
-The example above will also filter out `TaskCanceledException` because it derives from `OperationCanceledException`.
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry -v {{ packages.version('sentry.dotnet') }}
+```
 
-## Automatically discovering release version
+## Configure
 
-The SDK attempts to locate the release to add that to the events sent to Sentry.
+Initialize the SDK as early as possible, like in the `Main` method in `Program.cs`:
 
-> [Default values like 1.0 or 1.0.0.0 are ignored](https://github.com/getsentry/sentry-dotnet/blob/dbb5a3af054d0ca6f801de37fb7db3632ca2c65a/src/Sentry/Internal/ApplicationVersionLocator.cs#L14-L21).
+```csharp {filename:Program.cs}
+using (SentrySdk.Init("___PUBLIC_DSN___"))
+{
+    // App code
+}
+```
 
-The SDK will firstly look at the [entry assembly's](<https://msdn.microsoft.com/en-us/library/system.reflection.assembly.getentryassembly(v=vs.110).aspx>) `AssemblyInformationalVersionAttribute`, which accepts a string as
-value and is often used to set a GIT commit hash.
+## Verify
 
-If that returns null, it'll look at the default `AssemblyVersionAttribute` which accepts the numeric version number. When creating a project with Visual Studio, the value is set to _1.0.0.0_.
-Since that usually means that the version is either not being set, or is set via a different method. The **automatic version detection will disregard** this value and no _Release_ will be reported automatically.
+Verify Sentry is capturing unhandled exceptions by raising an exception. For example, you can use the following snippet to raise a `DivideByZeroException`:
 
-## Unit testing
+```csharp
+using (SentrySdk.Init("___PUBLIC_DSN___"))
+{
+    Console.WriteLine(1 / 0);
+}
+```
 
-We often don't want to couple our code with a static class like `SentrySdk`. Especially to allow our code to be testable.
-If that's your case, you can use 2 abstractions:
+## Resources
 
-- `ISentryClient`
-- `IHub`
-
-The `ISentryClient` exposes the `CaptureEvent` method and its implementation `SentryClient` is responsible for queueing the event to be sent to Sentry. It also abstracts away the internal transport.
-
-The `IHub` on the other hand, holds a client and the current [scope](/enriching-error-data/scopes/). In fact, it extends `ISentryClient` and is able to dispatch calls to the right client depending on the current scope.
-
-In order to allow different events to hold different contextual data, you need to know in which scope you are in.
-That's the job of the [`Hub`](https://github.com/getsentry/sentry-dotnet/blob/master/src/Sentry/Internal/Hub.cs). It holds the scope management as well as a client.
-
-If all you are doing is sending events, without modification/access to the current scope, then you depend on `ISentryClient`. If on the other hand you would like to have access to the current scope by configuring it or binding a different client to it, you depend on `IHub`.
-
-An example using `IHub` for testability is [SentryLogger](https://github.com/getsentry/sentry-dotnet/blob/master/src/Sentry.Extensions.Logging/SentryLogger.cs) and its unit tests [SentryLoggerTests](https://github.com/getsentry/sentry-dotnet/blob/master/test/Sentry.Extensions.Logging.Tests/SentryLoggerTests.cs).
-`SentryLogger` depends on `IHub` because it does modify the scope (through `AddBreadcrumb`). In case it only sent events, it should instead depend on `ISentryClient`
+- [Changelog](https://github.com/getsentry/sentry-dotnet/releases).
+- [Bug Tracker](http://github.com/getsentry/sentry-dotnet/issues)
+- [Code](http://github.com/getsentry/sentry-dotnet)
