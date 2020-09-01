@@ -1,0 +1,58 @@
+### Decluttering Sentry
+
+You can construct an allowed list of domains which might raise acceptable exceptions. For example, if your scripts are loaded from `cdn.example.com` and your site is `example.com`, you can set `allowUrls` to:
+
+
+You can also use `denyUrls` if you want to block specific URLs forever.
+
+<Alert level="warning" title="Note"><markdown>
+
+Prior to version 5.17.0, `allowUrls` and `denyUrls` were called `whitelistUrls` and `blacklistUrls` respectively. These options are still supported due to backward compatibility reasons; however, they will be removed in version 6.0. For more information, please see our [Inclusive Language Policy](https://develop.sentry.dev/inclusion/).
+
+</markdown></Alert>
+
+Additionally, our community has compiled a list of common ignore rules for everyday things, like Facebook, Chrome extensions, and so forth. It's useful and recommended to check these out and see if they apply to you. [Here is the original gist](https://gist.github.com/impressiver/5092952). This is not the default value of our SDK; it's just a highlight of an extensive example.
+
+```javascript
+Sentry.init({
+  ignoreErrors: [
+    // Random plugins/extensions
+    "top.GLOBALS",
+    // See: http://blog.errorception.com/2012/03/tale-of-unfindable-js-error.html
+    "originalCreateNotification",
+    "canvas.contentDocument",
+    "MyApp_RemoveAllHighlights",
+    "http://tt.epicplay.com",
+    "Can't find variable: ZiteReader",
+    "jigsaw is not defined",
+    "ComboSearch is not defined",
+    "http://loading.retry.widdit.com/",
+    "atomicFindClose",
+    // Facebook borked
+    "fb_xd_fragment",
+    // ISP "optimizing" proxy - `Cache-Control: no-transform` seems to
+    // reduce this. (thanks @acdha)
+    // See http://stackoverflow.com/questions/4113268
+    "bmi_SafeAddOnload",
+    "EBCallBackMessageReceived",
+    // See http://toolbar.conduit.com/Developer/HtmlAndGadget/Methods/JSInjection.aspx
+    "conduitPage",
+  ],
+  denyUrls: [
+    // Facebook flakiness
+    /graph\.facebook\.com/i,
+    // Facebook blocked
+    /connect\.facebook\.net\/en_US\/all\.js/i,
+    // Woopra flakiness
+    /eatdifferent\.com\.woopra-ns\.com/i,
+    /static\.woopra\.com\/js\/woopra\.js/i,
+    // Chrome extensions
+    /extensions\//i,
+    /^chrome:\/\//i,
+    // Other plugins
+    /127\.0\.0\.1:4001\/isrunning/i, // Cacaoweb
+    /webappstoolbarba\.texthelp\.com\//i,
+    /metrics\.itunes\.apple\.com\.edgesuite\.net\//i,
+  ],
+});
+```
