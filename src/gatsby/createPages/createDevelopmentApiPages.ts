@@ -8,45 +8,8 @@ export default async ({ actions, graphql, reporter }) => {
           nodes {
             id
             path {
-              description
-              method
               operationId
-              summary
-              tags
-              apiPath
               readableUrl
-              parameters {
-                schema {
-                  type
-                  format
-                  enum
-                }
-                name
-                in
-                description
-                required
-              }
-              responses {
-                content {
-                  content_type
-                  example
-                  schema
-                }
-                description
-                status_code
-              }
-              requestBody {
-                content {
-                  content_type
-                  schema
-                }
-                required
-              }
-              summary
-              tags
-              security {
-                auth_token
-              }
             }
           }
         }
