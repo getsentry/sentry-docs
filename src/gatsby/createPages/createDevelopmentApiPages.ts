@@ -7,7 +7,7 @@ export default async ({ actions, graphql, reporter }) => {
         allOpenApi {
           nodes {
             id
-            paths {
+            path {
               description
               method
               operationId
@@ -59,18 +59,14 @@ export default async ({ actions, graphql, reporter }) => {
   const component = require.resolve(`../../templates/developmentAPI.js`);
   await Promise.all(
     data.allOpenApi.nodes.map(async node => {
-      await Promise.all(
-        node.paths.map(async p => {
-          actions.createPage({
-            path: `/development-api/${p.readableUrl}`,
-            component,
-            context: {
-              ...p,
-              title: p.operationId
-            },
-          });
-        })
-      );
+      actions.createPage({
+        path: `/development-api/${node.path.readableUrl}`,
+        component,
+        context: {
+          id: node.id,
+          title: node.path.operationId,
+        },
+      });
     })
   );
 };

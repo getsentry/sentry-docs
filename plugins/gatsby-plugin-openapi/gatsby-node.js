@@ -95,19 +95,23 @@ exports.sourceNodes = async (
         return acc;
       }, []);
 
-    const rootNode = {
-      ...parsedContent,
-      paths: data,
-      id: createNodeId(`openAPI-root`),
-      children: [],
-      parent: null,
-      internal: {
-        contentDigest: createContentDigest("openAPI"),
-        type: "openAPI",
-      },
-    };
+    data.forEach(path => {
+      let nodeContent = { ...parsedContent, path };
+      delete nodeContent.paths;
 
-    createNode(rootNode);
+      let apiNode = {
+        ...nodeContent,
+        id: createNodeId(`openAPI-${path.method}-${path.apiPath}`),
+        children: [],
+        parent: null,
+        internal: {
+          contentDigest: createContentDigest(nodeContent),
+          type: "openAPI",
+        },
+      };
+
+      createNode(apiNode);
+    });
   } catch (error) {
     console.log(error);
   }

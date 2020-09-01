@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { graphql } from "gatsby";
 import Prism from "prismjs";
 
 import BasePage from "~src/components/basePage";
@@ -34,7 +35,7 @@ const strFormat = str => {
 };
 
 export default props => {
-  const data = props.pageContext;
+  const data = props.data?.openApi?.path || {};
   const parameters =
     (data.requestBody?.content?.schema &&
       JSON.parse(data.requestBody.content.schema)) ||
@@ -180,3 +181,52 @@ export default props => {
     </BasePage>
   );
 };
+
+export const pageQuery = graphql`
+  query OpenApiQuery($id: String) {
+    openApi(id: { eq: $id }) {
+      id
+      path {
+        description
+        method
+        operationId
+        summary
+        tags
+        apiPath
+        readableUrl
+        parameters {
+          schema {
+            type
+            format
+            enum
+          }
+          name
+          in
+          description
+          required
+        }
+        responses {
+          content {
+            content_type
+            example
+            schema
+          }
+          description
+          status_code
+        }
+        requestBody {
+          content {
+            content_type
+            schema
+          }
+          required
+        }
+        summary
+        tags
+        security {
+          auth_token
+        }
+      }
+    }
+  }
+`;
