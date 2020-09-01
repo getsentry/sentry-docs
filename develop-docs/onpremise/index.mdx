@@ -1,18 +1,20 @@
-# On-Premise Basics
+---
+title: 'Sentry On-Premise / Self-Hosting'
+---
 
 In addition to making its source code available publicly, Sentry offers and maintains a minimal setup that works out-of-the-box for simple use cases. This repository also serves as a blueprint for how various Sentry services connect for a complete setup, which is useful for folks willing to maintain larger installations. For the sake of simplicity, we have chosen to use [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) for this, along with a bash-based install and upgrade script.
 
-# Getting Started
+## Getting Started
 
 Our recommendation is to download the [latest release of the on-premise repository](https://github.com/getsentry/onpremise/releases/latest), and then run `./install.sh` inside this directory. This script will take care of all the things you need to get started, including a base-line configuration, and then will tell you to run `docker-compose up -d` to start Sentry. Sentry binds to port `9000` by default. You should be able to reach the login page at [http://127.0.0.1:9000](http://127.0.0.1:9000/).
 
-# Configuration
+## Configuration
 
 You are very likely to want to change the default configuration for Sentry. Most, if not all, configuration options that you'd like to tweak are in `sentry/config.yml`, which is generated from [`sentry/config.example.yml`](https://github.com/getsentry/onpremise/blob/master/sentry/config.example.yml) at the time of installation. The file itself documents the most common configuration options as code comments, and you can find more about configuring Sentry over at <Link to="/config/">the configuration section of our developer documentation</Link>. You would likely need to change `system.url-prefix` (this is also prompted at the welcome screen, right after the installation) and settings starting with `mail.` even if we ship with a built-in SMTP server for basic stuff. GitHub and Slack integration settings also reside in this file. For more advanced things, you can have a look at [`sentry/sentry.conf.example.py`](https://github.com/getsentry/onpremise/blob/master/sentry/sentry.conf.example.py).
 
 **Once you change your configuration, you'll need to restart all Sentry services by running `docker-compose restart web worker cron sentry-cleanup` (or just `docker-compose restart` to restart everything).**
 
-# Troubleshooting
+## Troubleshooting
 
 You can see the logs of each service by running `docker-compose logs <service_name>`. You can use the `-f` flag to "follow" the logs as they come in, and use the `-t` flag for timestamps. If you don't pass any service names, you will get the logs for all running services. See the [reference for the logs command](https://docs.docker.com/compose/reference/logs/) for more info.
 
@@ -20,13 +22,15 @@ If you get stuck, you can always visit our [community forum](https://forum.sent
 
 Sharing your install logs, service logs, and your Sentry version when [reporting an issue](https://github.com/getsentry/onpremise/issues/new/choose) or asking a question on the forums would save time and effort for both you and people trying to help you.
 
-# Productionalizing
+## Productionalizing
 
 We strongly recommend using a dedicated load balancer in front of your Sentry setup bound to a dedicated domain or subdomain. A dedicated load balancer that does SSL/TLS termination that also forwards the client IP address as Docker Compose internal network (as this is [close to impossible to get otherwise)](https://github.com/getsentry/onpremise/issues/554) would give you the best Sentry experience.
 
 Keep in mind that all this setup uses single-nodes for all services, including Kafka. For larger loads, you'd need a beefy machine with lots of RAM and disk storage. To scale up even further, you are very likely to use clusters with a more complex tool, such as Kubernetes. Due to on-premise installations' very custom nature, we do not offer any recommendations or guidance around scaling up. We do what works for us for our thousands of customers over at [sentry.io](https://sentry.io/) and would love to have you over when you feel your local install's maintenance becomes a burden instead of a joy.
 
-# Upgrading
+## Upgrading
+
+Sentry cuts regular releases for self-hosting to keep it as close to [sentry.io](https://sentry.io) as possible. We encourage everyone to regularly update their Sentry installations to get the best and the most recent Sentry experience. You can read more about our versioning strategy and philosophy over at the <Link to="/onpremise/releases/">on-premise releases page</Link>.
 
 We recommend (and sometimes require) you to upgrade Sentry one version at a time. That means if you are running 20.6.0, instead of going directly to 20.8.0, first go through 20.7.0. Skipping versions would work most of the time, but there will be times that we require you to stop at specific versions to ensure essential data migrations along the way.
 
