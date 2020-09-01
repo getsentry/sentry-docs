@@ -27,6 +27,7 @@ export const pageQuery = graphql`
         frontmatter {
           title
           noindex
+          notoc
         }
       }
       childMdx {
@@ -38,6 +39,7 @@ export const pageQuery = graphql`
         frontmatter {
           title
           noindex
+          notoc
         }
       }
     }
