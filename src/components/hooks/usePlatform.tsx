@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { graphql, useStaticQuery } from "gatsby";
 import { useLocation, useNavigate, WindowLocation } from "@reach/router";
 import { parse } from "query-string";
@@ -192,17 +193,12 @@ export default (defaultValue: string = DEFAULT_PLATFORM): UseLocation => {
     currentValue = storedValue;
   }
 
-  let activeValue: Platform | Guide =
-    getPlatform(currentValue) ?? getPlatform(defaultValue);
+  const [stateValue, setStateValue] = useState(currentValue);
 
   const setValue = (value: string) => {
     if (value == currentValue) return;
     setStoredValue(value);
-    // if (!nodes.find(n => n.path === path)) {
-    //   path = rebuildPathForPlatform(value);
-    // }
     if (!value) value = defaultValue;
-    // activeValue = getPlatform(value);
     let path = rebuildPathForPlatform(value, location.pathname);
     if (!isFixed) {
       path += `?platform=${value}`;
@@ -210,7 +206,11 @@ export default (defaultValue: string = DEFAULT_PLATFORM): UseLocation => {
     if (path !== location.pathname) {
       navigate(path);
     }
+    setStateValue(value);
   };
+
+  let activeValue: Platform | Guide =
+    getPlatform(stateValue) ?? getPlatform(defaultValue);
 
   return [activeValue, setValue, isFixed];
 };
