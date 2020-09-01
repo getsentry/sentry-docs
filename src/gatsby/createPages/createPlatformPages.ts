@@ -118,7 +118,7 @@ const canInclude = (
   } else if (
     frontmatter.notSupported &&
     (frontmatter.notSupported.indexOf(canonical) !== -1 ||
-      frontmatter.notSupported.indexOf(platformName))
+      frontmatter.notSupported.indexOf(platformName) !== -1)
   ) {
     return false;
   }
