@@ -193,7 +193,7 @@ const IndexPage = () => {
           <a className="hover-card-link" href="/api/">
             Web and Event API
           </a>
-          <a className="hover-card-link" href="/self-hosted">
+          <a className="hover-card-link" href="https://github.com/getsentry/onpremise/releases/tag/20.8.0">
             Self-Hosted Sentry
           </a>
           <a className="hover-card-link" href="/support/">
@@ -203,7 +203,7 @@ const IndexPage = () => {
 
         <div className="flex-row link-row">
           <div>
-            <h3>First steps</h3>
+            <h3>Learn more...</h3>
             <ul className="unstyled-list">
               <li>
                 <a href="/product/performance/getting-started/">
@@ -231,7 +231,7 @@ const IndexPage = () => {
             </ul>
           </div>
           <div>
-            <h3>Next things</h3>
+            <h3></h3>
             <ul className="unstyled-list">
               <li>
                 <a href="/product/sentry-basics/guides/">Best Practices</a>
@@ -251,22 +251,22 @@ const IndexPage = () => {
             </ul>
           </div>
           <div>
-            <h3>And then</h3>
+            <h3></h3>
             <ul className="unstyled-list">
               <li>
-                <a href="#">Grouping Events</a>
+                <a href="/product/integrations/integration-platform/">Integration Platform</a>
               </li>
               <li>
-                <a href="#">Event Context</a>
+                <a href="/product/sentry-basics/guides/migration/">Moving to Hosted Sentry</a>
               </li>
               <li>
-                <a href="#">Basic Configuration</a>
+                <a href="/accounts/membership/">Organization and User Management</a>
               </li>
               <li>
-                <a href="#">Attachments</a>
+                <a href="/product/performance/metrics/">Performance Metrics</a>
               </li>
               <li>
-                <a href="#">Source Maps</a>
+                <a href="/product/releases/health/">Monitor Release Health</a>
               </li>
             </ul>
           </div>
