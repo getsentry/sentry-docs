@@ -20,14 +20,6 @@ const query = graphql`
   }
 `;
 
-type Node = {
-  path: string;
-  context: {
-    title?: string;
-    description?: string;
-  };
-};
-
 export default (): JSX.Element => {
   const data = useStaticQuery(query);
   const location = useLocation();
