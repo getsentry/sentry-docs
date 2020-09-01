@@ -28,11 +28,26 @@ const query = graphql`
 const PlatformCell = styled.div`
   display: flex;
   justify-content: space-between;
+  width: 100%;
+  height: 116px;
+
+  overflow: hidden;
+
+  background: #fff;
+  color: purple;
+  border: 1px solid #fff;
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  line-height: 1.5;
+  transition-property: transform, box-shadow, border-color;
+  transition-duration: 0.25s;
+  transition-timing-function: ease-out;
+  box-shadow: 0px 2px 4px rgba(64, 30, 76, 0.1);
 `;
 
 const PlatformCellIcon = styled.div`
-  width: 64px;
-  height: 64px;
+  width: 82px;
+  height: 82px;
 `;
 
 const PlatformCellContent = styled.div`
@@ -44,13 +59,14 @@ const PlatformCellContent = styled.div`
   }
 `;
 
-const GuideList = styled.ul`
-  margin: 0;
-  padding: 0;
-  list-style: none;
+const GuideList = styled.div`
   font-size: 0.8em;
+  width: 100%;
+  height: 54px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
-  li {
+  a {
     display: inline-block;
 
     &:after {
@@ -74,11 +90,11 @@ export default (): JSX.Element => {
         .sort((a, b) => a.title.localeCompare(b.title))
         .map(platform => {
           return (
-            <div className="col-4 col-sm-6 platform-link mb-3">
+            <div className="col-lg-6 col-md-12 platform-link mb-3">
               <PlatformCell>
                 <PlatformCellIcon>
                   <SmartLink to={platform.url}>
-                    <PlatformIcon platform={platform.key} />
+                    <PlatformIcon size={82} platform={platform.key} />
                   </SmartLink>
                 </PlatformCellIcon>
                 <PlatformCellContent>
@@ -89,9 +105,7 @@ export default (): JSX.Element => {
                   <GuideList>
                     {platform.guides.map(guide => {
                       return (
-                        <li key={guide.key}>
-                          <SmartLink to={guide.url}>{guide.title}</SmartLink>
-                        </li>
+                        <SmartLink to={guide.url}>{guide.title}</SmartLink>
                       );
                     })}
                   </GuideList>
