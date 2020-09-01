@@ -192,7 +192,6 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         ...child.frontmatter,
         ...context,
         id: node.id,
-        legacy: child.fields.legacy,
       },
     });
   };
