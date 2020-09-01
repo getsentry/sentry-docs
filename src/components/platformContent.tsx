@@ -45,6 +45,7 @@ type Props = {
   includePath: string;
   platform?: string;
   children?: React.ReactNode;
+  fallbackPlatform?: string;
 };
 
 type ChildProps = Props & {
@@ -59,6 +60,7 @@ const PlatformContent = ({
   data,
   includePath,
   platform,
+  fallbackPlatform,
   children,
 }: ChildProps): JSX.Element => {
   const {
@@ -78,11 +80,25 @@ const PlatformContent = ({
     slugMatches(m.name, currentPlatform.key)
   );
   if (!contentMatch && (currentPlatform as Guide).fallbackPlatform) {
-    const fallbackPlatform = (currentPlatform as Guide).fallbackPlatform;
+    const guideFallbackPlatform = (currentPlatform as Guide).fallbackPlatform;
+    if (
+      (contentMatch = matches.find(m =>
+        slugMatches(m.name, guideFallbackPlatform)
+      ))
+    ) {
+      activePlatform = getPlatform(guideFallbackPlatform);
+    }
+  }
+  if (!contentMatch && fallbackPlatform) {
     if (
       (contentMatch = matches.find(m => slugMatches(m.name, fallbackPlatform)))
     ) {
       activePlatform = getPlatform(fallbackPlatform);
+    }
+  }
+  if (!contentMatch) {
+    if ((contentMatch = matches.find(m => m.name === "_default"))) {
+      activePlatform = currentPlatform;
     }
   }
   if (!contentMatch) {
