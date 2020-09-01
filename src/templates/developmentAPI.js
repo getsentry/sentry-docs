@@ -56,6 +56,12 @@ export default props => {
   }
 
   const [selectedResponse, selectResponse] = useState(0);
+
+  const [selectedTabView, selectTabView] = useState(0);
+  const tabViews = data.responses[selectedResponse].content?.schema
+    ? ["RESPONSE", "SCHEMA"]
+    : ["RESPONSE"];
+
   useEffect(() => {
     Prism.highlightAll();
   }, []);
@@ -143,7 +149,16 @@ export default props => {
           </div>
           <div className="api-block">
             <div className="api-block-header response">
-              {"RESPONSE"}{" "}
+              <div className="tabs-group">
+                {tabViews.map((view, i) => (
+                  <span
+                    className={`tab ${selectedTabView === i && "selected"}`}
+                    onClick={() => selectTabView(i)}
+                  >
+                    {view}
+                  </span>
+                ))}
+              </div>
               <div className="response-status-btn-group">
                 {data.responses.map(
                   (res, i) =>
@@ -152,7 +167,10 @@ export default props => {
                         className={`response-status-btn ${selectedResponse ===
                           i && "selected"}`}
                         key={res.status_code}
-                        onClick={() => selectResponse(i)}
+                        onClick={() => {
+                          selectResponse(i);
+                          selectTabView(0);
+                        }}
                       >
                         {res.status_code}
                       </button>
@@ -161,18 +179,30 @@ export default props => {
               </div>
             </div>
             <pre className="api-block-example response">
-              {data.responses[selectedResponse].content?.example ? (
+              {selectedTabView === 0 &&
+                (data.responses[selectedResponse].content?.example ? (
+                  <code
+                    dangerouslySetInnerHTML={{
+                      __html: Prism.highlight(
+                        data.responses[selectedResponse].content.example,
+                        Prism.languages.json,
+                        "json"
+                      ),
+                    }}
+                  />
+                ) : (
+                  strFormat(data.responses[selectedResponse].description)
+                ))}
+              {selectedTabView === 1 && (
                 <code
                   dangerouslySetInnerHTML={{
                     __html: Prism.highlight(
-                      data.responses[selectedResponse].content.example,
+                      data.responses[selectedResponse].content.schema,
                       Prism.languages.json,
                       "json"
                     ),
                   }}
                 />
-              ) : (
-                strFormat(data.responses[selectedResponse].description)
               )}
             </pre>
           </div>
