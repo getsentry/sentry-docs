@@ -116,9 +116,9 @@ const canInclude = (
   ) {
     return false;
   } else if (
-    frontmatter.unsupported &&
-    (frontmatter.unsupported.indexOf(canonical) !== -1 ||
-      frontmatter.unsupported.indexOf(platformName))
+    frontmatter.notSupported &&
+    (frontmatter.notSupported.indexOf(canonical) !== -1 ||
+      frontmatter.notSupported.indexOf(platformName))
   ) {
     return false;
   }
@@ -341,7 +341,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     createPlatformPages(platformName, platforms[platformName], common);
   });
 
-  let indexPage = nodes.find(n => n.relativePath === "index.mdx");
+  const indexPage = nodes.find(n => n.relativePath === "index.mdx");
   if (indexPage) {
     actions.createPage({
       path: "/platforms/",
