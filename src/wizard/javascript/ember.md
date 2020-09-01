@@ -16,10 +16,10 @@ You can install it with `npm` / `yarn` like:
 
 ```bash
 # Using yarn
-yarn add @sentry/integrations
+yarn add @sentry/browser @sentry/integrations
 
 # Using npm
-npm install @sentry/integrations
+npm install --save @sentry/browser @sentry/integrations
 ```
 
 Then add this to your `app.js`:

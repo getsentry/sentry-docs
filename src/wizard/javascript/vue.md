@@ -24,10 +24,10 @@ Install the dependencies:
 $ yarn add @sentry/browser @sentry/integrations @sentry/tracing
 
 # Using npm
-$ npm install @sentry/browser @sentry/integrations @sentry/tracing
+$ npm install --save @sentry/browser @sentry/integrations @sentry/tracing
 ```
 
-Next, initialize Sentry in your app entry point before you initialize your root component. 
+Next, initialize Sentry in your app entry point before you initialize your root component.
 
 ```javascript
 import Vue from "vue";

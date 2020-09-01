@@ -12,7 +12,7 @@ If you are using `yarn` or `npm` you can add our package as a dependency:
 $ yarn add @sentry/electron
 
 # Using npm
-$ npm install @sentry/electron
+$ npm install --save @sentry/electron
 ```
 
 You need to call `init` in your `main` and every `renderer` process you spawn.
