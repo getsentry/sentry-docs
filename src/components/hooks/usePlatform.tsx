@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { graphql, useStaticQuery } from "gatsby";
 import { useLocation, useNavigate, WindowLocation } from "@reach/router";
 import { parse } from "query-string";
 
+import PageContext from "~src/components/pageContext";
 import useLocalStorage from "./useLocalStorage";
 
 const query = graphql`
@@ -90,6 +91,16 @@ const normalizeSlug = (name: string): string => {
   }
 };
 
+type PageContext = {
+  platform?: {
+    name: string;
+  };
+  guide?: {
+    name: string;
+  };
+  [key: string]: any;
+};
+
 type GetPlatformFromLocation = [[string, string | null] | null, boolean];
 
 /**
@@ -104,11 +115,14 @@ type GetPlatformFromLocation = [[string, string | null] | null, boolean];
  * @param location
  */
 const getPlatformFromLocation = (
-  location: WindowLocation
+  pageContext: PageContext,
+  location?: WindowLocation
 ): GetPlatformFromLocation => {
-  const pattern = /\/platforms\/([^\/]+)\/(?:guides\/([^\/]+)\/)?/i;
-  const match = location.pathname.match(pattern);
-  if (match) return [[match[1], match[2]], true];
+  if (pageContext && pageContext.platform) {
+    return [[pageContext.platform.name, pageContext.guide?.name], true];
+  }
+
+  if (!location) return [null, false];
 
   const qsPlatform = parse(location.search).platform;
   let qsMatch: [string, string | null];
@@ -179,12 +193,17 @@ export default (defaultValue: string = DEFAULT_PLATFORM): UseLocation => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const pageContext = useContext(PageContext);
+
   const [storedValue, setStoredValue] = useLocalStorage<string | null>(
     "platform",
     null
   );
 
-  let [valueFromLocation, isFixed] = getPlatformFromLocation(location);
+  const [valueFromLocation, isFixed] = getPlatformFromLocation(
+    pageContext,
+    location
+  );
   let currentValue: string | null = valueFromLocation
     ? valueFromLocation.join(".")
     : null;
@@ -209,7 +228,7 @@ export default (defaultValue: string = DEFAULT_PLATFORM): UseLocation => {
     setStateValue(value);
   };
 
-  let activeValue: Platform | Guide =
+  const activeValue: Platform | Guide =
     getPlatform(stateValue) ?? getPlatform(defaultValue);
 
   return [activeValue, setValue, isFixed];
