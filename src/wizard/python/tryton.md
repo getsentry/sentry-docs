@@ -1,6 +1,6 @@
 ---
 name: Tryton
-doc_link: https://docs.sentry.io/platforms/python/tryton/
+doc_link: https://docs.sentry.io/platforms/python/guides/tryton/
 support_level: production
 type: framework
 ---

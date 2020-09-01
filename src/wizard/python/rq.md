@@ -1,6 +1,6 @@
 ---
 name: RQ (Redis Queue)
-doc_link: https://docs.sentry.io/platforms/python/rq/
+doc_link: https://docs.sentry.io/platforms/python/guides/rq/
 support_level: production
 type: library
 ---

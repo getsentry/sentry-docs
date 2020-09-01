@@ -1,6 +1,6 @@
 ---
 name: Django
-doc_link: https://docs.sentry.io/platforms/python/django/
+doc_link: https://docs.sentry.io/platforms/python/guides/django/
 support_level: production
 type: framework
 ---

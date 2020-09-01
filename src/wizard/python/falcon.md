@@ -1,6 +1,6 @@
 ---
 name: Falcon
-doc_link: https://docs.sentry.io/platforms/python/falcon/
+doc_link: https://docs.sentry.io/platforms/python/guides/falcon/
 support_level: production
 type: framework
 ---

@@ -34,8 +34,11 @@ Webpack is a powerful build tool that resolves and bundles your JavaScript modul
 
 We have created a convenient [Webpack plugin](https://github.com/getsentry/sentry-webpack-plugin) that configures source maps and uploads them to Sentry during the build. This process is the recommended one for uploading sources to Sentry:
 
-```shell
+```shell {tabTitle:npm}
 $ npm install --save-dev @sentry/webpack-plugin
+```
+
+```shell {tabTitle:yarn}
 $ yarn add --dev @sentry/webpack-plugin
 ```
 
@@ -45,18 +48,20 @@ To allow the plugin to upload source maps automatically, create a `.sentryclirc`
 const SentryWebpackPlugin = require("@sentry/webpack-plugin");
 
 module.exports = {
-  // other configuration
-  plugins: [
-    new SentryWebpackPlugin({
-      include: ".",
-      ignoreFile: ".sentrycliignore",
-      ignore: ["node_modules", "webpack.config.js"],
-      configFile: "sentry.properties",
-    }),
-  ],
+    // other configuration
+    configureWebpack: {
+        plugins: [
+            new SentryWebpackPlugin({
+                include: ".",
+                ignoreFile: ".sentrycliignore",
+                ignore: ["node_modules", "webpack.config.js"],
+                configFile: "sentry.properties",
+            }),
+        ],
+    }
 };
 ```
-
+**Note:** If you are using vue.js v2.x,  you should  `vue.config.js` instead of `webpack.config.js`, and use `include: "./dist"` instead of `include: "."`
 <Alert level="warning" title="Note"><markdown>
 
 Set up the `SentryWebpackPlugin` as the last running plugin, otherwise, the resulting source maps the plugin receives may not be the final one.

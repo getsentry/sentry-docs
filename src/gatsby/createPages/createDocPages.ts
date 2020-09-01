@@ -44,20 +44,19 @@ export default async ({ actions, graphql, reporter }) => {
   );
 
   const component = require.resolve(`../../templates/doc.js`);
-  await Promise.all(
-    data.allFile.nodes.map(async (node: any) => {
-      const child = getChild(node);
-      if (child && child.fields) {
-        actions.createPage({
-          path: child.fields.slug,
-          component,
-          context: {
-            excerpt: child.excerpt,
-            ...child.frontmatter,
-            id: node.id,
-          },
-        });
-      }
-    })
-  );
+  data.allFile.nodes.map((node: any) => {
+    const child = getChild(node);
+    if (child && child.fields) {
+      actions.createPage({
+        path: child.fields.slug,
+        component,
+        context: {
+          excerpt: child.excerpt,
+          ...child.frontmatter,
+          id: node.id,
+          legacy: child.fields.legacy,
+        },
+      });
+    }
+  });
 };

@@ -169,15 +169,25 @@ function SpanWrapper(props): JSX.Element {
 
 type Props = {
   filename?: string;
+  language?: string;
+  title?: string;
   children: JSX.Element;
 };
 
-export default ({ filename, children }: Props): JSX.Element => {
+export default ({ filename, language, children }: Props): JSX.Element => {
   const [showCopied, setShowCopied] = useState(false);
   const codeRef = useRef(null);
 
   function copyCode() {
-    copy(codeRef.current.innerText);
+    let code = codeRef.current.innerText;
+    // don't copy leading prompt for bash
+    if (language === "bash" || language === "shell") {
+      const match = code.match(/^\$\s*/);
+      if (match) {
+        code = code.substr(match[0].length);
+      }
+    }
+    copy(code);
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 1200);
   }

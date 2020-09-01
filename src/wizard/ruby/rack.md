@@ -1,6 +1,6 @@
 ---
 name: Rack
-doc_link: https://docs.sentry.io/clients/ruby/integrations/rack/
+doc_link: https://docs.sentry.io/platform/ruby/guides/rack/
 support_level: production
 type: framework
 ---
@@ -21,10 +21,8 @@ Add `use Raven::Rack` to your `config.ru` or other rackup file (this is automati
 require 'raven'
 
 Raven.configure do |config|
-  config.dsn = '___DSN___'
+  config.dsn = '___PUBLIC_DSN___'
 end
 
 use Raven::Rack
 ```
-
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->

@@ -1,6 +1,6 @@
 ---
 name: Pyramid
-doc_link: https://docs.sentry.io/platforms/python/pyramid/
+doc_link: https://docs.sentry.io/platforms/python/guides/pyramid/
 support_level: production
 type: framework
 ---

@@ -11,7 +11,10 @@ require("dotenv").config({
   path: `.env.${activeEnv}`,
 });
 
-if (process.env.BRANCH_NAME === "master" && process.env.ALGOLIA_ADMIN_KEY) {
+if (
+  process.env.VERCEL_GITHUB_COMMIT_REF === "master" &&
+  process.env.ALGOLIA_ADMIN_KEY
+) {
   process.env.ALGOLIA_INDEX = "1";
 }
 

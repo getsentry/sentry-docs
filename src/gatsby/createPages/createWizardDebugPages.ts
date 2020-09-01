@@ -36,19 +36,17 @@ export default async ({ actions, graphql, reporter }) => {
   });
 
   const component = require.resolve(`../../templates/wizardDebug.js`);
-  await Promise.all(
-    data.allFile.nodes.map(async (node: any) => {
-      const child = getChild(node);
-      actions.createPage({
-        path: `/_debug/wizard${child.fields.slug}`,
-        component,
-        context: {
-          title: child.frontmatter.name,
-          ...child.frontmatter,
-          noindex: true,
-          id: node.id,
-        },
-      });
-    })
-  );
+  data.allFile.nodes.map((node: any) => {
+    const child = getChild(node);
+    actions.createPage({
+      path: `/_debug/wizard${child.fields.slug}`,
+      component,
+      context: {
+        title: child.frontmatter.name,
+        ...child.frontmatter,
+        noindex: true,
+        id: node.id,
+      },
+    });
+  });
 };

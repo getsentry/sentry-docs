@@ -1,6 +1,6 @@
 ---
 name: AIOHTTP
-doc_link: https://docs.sentry.io/platforms/python/aiohttp/
+doc_link: https://docs.sentry.io/platforms/python/guides/aiohttp/
 support_level: production
 type: framework
 ---

@@ -1,6 +1,6 @@
 ---
 name: Tornado
-doc_link: https://docs.sentry.io/platforms/python/tornado/
+doc_link: https://docs.sentry.io/platforms/python/guides/tornado/
 support_level: production
 type: framework
 ---
