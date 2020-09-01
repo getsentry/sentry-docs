@@ -18,8 +18,6 @@ if (
   process.env.ALGOLIA_INDEX = "1";
 }
 
-const IS_DEV = activeEnv === "development";
-
 const queries = require("./src/utils/algolia");
 const packages = new (require("./src/utils/packageRegistry"))();
 
@@ -101,7 +99,7 @@ const getPlugins = () => {
     {
       resolve: `gatsby-transformer-json`,
       options: {
-        typeName: ({ node, object, isArray }) => {
+        typeName: ({ node }) => {
           if (node.sourceInstanceName === "api") {
             return "ApiDoc";
           }
@@ -143,7 +141,7 @@ const getPlugins = () => {
       options: {
         name: `wizard`,
         path: `${__dirname}/src/wizard`,
-        ignore: [`**/README\.md`],
+        ignore: [`**/README.md`],
       },
     },
     {

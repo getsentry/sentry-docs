@@ -1,6 +1,4 @@
 const Remark = require("remark");
-const toString = require("mdast-util-to-string");
-const visit = require("unist-util-visit");
 const remarkMdx = require("remark-mdx");
 
 const plugin = require("../");
