@@ -141,6 +141,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
           childMarkdownRemark {
             frontmatter {
               title
+              description
               draft
               noindex
               sidebar_order
@@ -153,6 +154,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
           childMdx {
             frontmatter {
               title
+              description
               draft
               noindex
               sidebar_order

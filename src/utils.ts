@@ -37,7 +37,7 @@ export function useRefWithCallback<T>(
   return [ref, setRef];
 }
 
-export const sortBy = (arr: { [key: string]: any }[], comp: Function) => {
+export const sortBy = (arr: T[], comp: (T) => any) => {
   return arr.sort((a, b) => {
     const aComp = comp(a);
     const bComp = comp(b);
@@ -48,5 +48,24 @@ export const sortBy = (arr: { [key: string]: any }[], comp: Function) => {
       return 1;
     }
     return 0;
+  });
+};
+
+type Page = {
+  context: {
+    title?: string;
+    sidebar_order?: number;
+  };
+};
+
+export const sortPages = (arr: T, extractor: (T) => Page = n => n): T[] => {
+  return arr.sort((a, b) => {
+    a = extractor(a);
+    b = extractor(b);
+    let aso = a.context.sidebar_order ?? 10;
+    let bso = b.context.sidebar_order ?? 10;
+    if (aso > bso) return 1;
+    else if (bso > aso) return -1;
+    return a.context.title.localeCompare(b.context.title);
   });
 };
