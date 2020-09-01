@@ -11,6 +11,7 @@ describe("ConfigKey", () => {
   it("renders correctly", () => {
     usePlatform.mockReturnValue([
       {
+        key: "ruby",
         caseStyle: "snake_case",
       },
       jest.fn(),

@@ -31,12 +31,6 @@ const PLATFORMS = [
   },
 ];
 
-jest.mock("@reach/router", () => ({
-  ...jest.requireActual("@reach/router"),
-  useLocation: jest.fn(),
-  useNavigate: jest.fn(() => jest.fn()),
-}));
-
 jest.mock("../useLocalStorage");
 
 describe("usePlatform", () => {

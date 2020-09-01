@@ -16,19 +16,28 @@ export default ({
   children,
 }: Props): JSX.Element => {
   const [currentPlatform] = usePlatform(platform);
-  const isSupported = notSupported.length
-    ? !notSupported.find(
-        p =>
-          p === currentPlatform.key &&
-          p !== currentPlatform.key.split(".", 1)[0]
-      )
-    : supported.length
-    ? supported.find(
-        p =>
-          p === currentPlatform.key ||
-          p === currentPlatform.key.split(".", 1)[0]
-      )
-    : true;
+
+  let isSupported = !supported.length;
+  if (currentPlatform) {
+    const [platformName, guideName] = currentPlatform.key.split(".", 2);
+    if (supported.length && supported.find(p => p === currentPlatform.key)) {
+      isSupported = true;
+    } else if (
+      notSupported.length &&
+      notSupported.find(p => p === currentPlatform.key)
+    ) {
+      isSupported = false;
+    } else if (guideName) {
+      if (supported.length && supported.find(p => p === platformName)) {
+        isSupported = true;
+      } else if (
+        notSupported.length &&
+        notSupported.find(p => p === platformName)
+      ) {
+        isSupported = false;
+      }
+    }
+  }
 
   if (!isSupported) return null;
 
