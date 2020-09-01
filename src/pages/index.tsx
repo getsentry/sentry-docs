@@ -196,7 +196,7 @@ const IndexPage = () => {
             Self-Hosted Sentry
           </a>
           <a className="hover-card-link" href="https://develop.sentry.io/">
-            Developer Guidlines
+            Developer Guidelines
           </a>
           <a className="hover-card-link" href="/product/">
             Product Guides
@@ -208,19 +208,27 @@ const IndexPage = () => {
             <h3>First steps</h3>
             <ul className="unstyled-list">
               <li>
-                <a href="#">Additional Data</a>
+                <a href="/product/performance/getting-started/">
+                  Performance Monitoring
+                </a>
               </li>
               <li>
-                <a href="#">Breadcrumbs</a>
+                <a href="/product/performance/distributed-tracing/">
+                  Distributed Tracing
+                </a>
               </li>
               <li>
-                <a href="#">User Feedback</a>
+                <a href="/product/alerts-notifications/">
+                  Alerts & Notifications
+                </a>
               </li>
               <li>
-                <a href="#">Scopes and Hubs</a>
+                <a href="/product/releases/">Releases</a>
               </li>
               <li>
-                <a href="#">Attachments</a>
+                <a href="/product/sentry-basics/search/">
+                  Sentry Basics: Search
+                </a>
               </li>
             </ul>
           </div>
@@ -228,28 +236,19 @@ const IndexPage = () => {
             <h3>Next things</h3>
             <ul className="unstyled-list">
               <li>
-                <a href="#">Sentry Basics</a>
+                <a href="/product/sentry-basics/guides/">Best Practices</a>
               </li>
               <li>
-                <a href="#">Error Monitoring</a>
+                <a href="/product/sentry-basics/environments/">Environments</a>
               </li>
               <li>
-                <a href="#">Alerts & Notifications</a>
+                <a href="/product/integrations/">Integrations</a>
               </li>
               <li>
-                <a href="#">Performance Monitoring</a>
+                <a href="/product/discover-queries/">Discover Queries</a>
               </li>
               <li>
-                <a href="#">Releases</a>
-              </li>
-              <li>
-                <a href="#">Discover Queries</a>
-              </li>
-              <li>
-                <a href="#">Security Policy Reporting</a>
-              </li>
-              <li>
-                <a href="#">Integrations</a>
+                <a href="/accounts/quotas/#">Quota Management</a>
               </li>
             </ul>
           </div>
@@ -257,19 +256,19 @@ const IndexPage = () => {
             <h3>And then</h3>
             <ul className="unstyled-list">
               <li>
-                <a href="#">Grouping Events into Issues</a>
+                <a href="#">Grouping Events</a>
               </li>
               <li>
-                <a href="#">Sensitive Data</a>
+                <a href="#">Event Context</a>
               </li>
               <li>
-                <a href="#">Data Forwarding</a>
+                <a href="#">Basic Configuration</a>
               </li>
               <li>
-                <a href="#">Advanced Data Scrubbing</a>
+                <a href="#">Attachments</a>
               </li>
               <li>
-                <a href="#">Debug Informatino Files</a>
+                <a href="#">Source Maps</a>
               </li>
             </ul>
           </div>
