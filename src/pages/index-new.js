@@ -56,92 +56,97 @@ const IndexPage = () => {
           <h1>Sentry Documentation</h1>
 
           <div class="integrations-logo-row">
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={JavascriptSVG} />
               </div>
               Javascript
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={NodeSVG} />
               </div>
               Node
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={PythonSVG} />
               </div>
               Python
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={JavaSVG} />
               </div>
               Java
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={PhpSVG} />
               </div>
               PHP
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={LaravelSVG} />
               </div>
               Laravel
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={ReactNativeSVG} />
               </div>
               React Native
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={DotNetSVG} />
               </div>
               .NET
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={ReactSVG} />
               </div>
               React
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={SymfonySVG} />
               </div>
               Symfony
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={GoSVG} />
               </div>
               Go
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={CocoaSVG} />
               </div>
               Cocoa
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={dotNetCoreSVG} />
               </div>
               .NET Core
             </a>
-            <a href="#">
+            <a href="#" class="hover-card-link">
               <div class="image-frame">
                 <img src={SwiftSVG} />
               </div>
               Swift
             </a>
           </div>
-          <button class="btn btn-all-platforms">Go to all platforms</button>
+
+          <div class="">
+            <a href="#" class="hover-card-link">
+              Go to all platforms
+            </a>
+          </div>
 
           <Search />
         </div>
@@ -149,31 +154,39 @@ const IndexPage = () => {
       <div class="index-container">
         <h2>Quick links</h2>
 
-        <div class="flex-row link-row">
-          <a href="#">Web and Event API</a>
-          <a href="#">Slef-Hosted Sentry</a>
-          <a href="#">Developer Guidlines</a>
-          <a href="#">Product Guides</a>
+        <div class="flex-row card-row">
+          <a class="hover-card-link" href="#">
+            Web and Event API
+          </a>
+          <a class="hover-card-link" href="#">
+            Slef-Hosted Sentry
+          </a>
+          <a class="hover-card-link" href="#">
+            Developer Guidlines
+          </a>
+          <a class="hover-card-link" href="#">
+            Product Guides
+          </a>
         </div>
 
-        <div class="flex-row">
+        <div class="flex-row link-row">
           <div>
             <h3>First steps</h3>
             <ul class="unstyled-list">
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Additional Data</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Breadcrumbs</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">User Feedback</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Scopes and Hubs</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Attachments</a>
               </li>
             </ul>
           </div>
@@ -181,19 +194,28 @@ const IndexPage = () => {
             <h3>Next things</h3>
             <ul class="unstyled-list">
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Sentry Basics</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Error Monitoring</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Alerts & Notifications</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Performance Monitoring</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Releases</a>
+              </li>
+              <li>
+                <a href="#">Discover Queries</a>
+              </li>
+              <li>
+                <a href="#">Security Policy Reporting</a>
+              </li>
+              <li>
+                <a href="#">Integrations</a>
               </li>
             </ul>
           </div>
@@ -201,19 +223,19 @@ const IndexPage = () => {
             <h3>And then</h3>
             <ul class="unstyled-list">
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Grouping Events into Issues</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Sensitive Data</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Data Forwarding</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Advanced Data Scrubbing</a>
               </li>
               <li>
-                <a href="#">Useful doc</a>
+                <a href="#">Debug Informatino Files</a>
               </li>
             </ul>
           </div>
