@@ -39,3 +39,5 @@ with Configurator() as config:
     server = make_server('0.0.0.0', 6543, app)
     server.serve_forever()
 ```
+
+The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `traces_sample_rate` to a value between 0 and 1.
