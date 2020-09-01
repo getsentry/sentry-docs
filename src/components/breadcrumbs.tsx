@@ -33,6 +33,12 @@ type Props = {
   };
 };
 
+const getTitle = node => {
+  // TODO(dcramer): support frontmatter somehow from js files
+  if (node.path === "/") return "Home";
+  return node.context.title;
+};
+
 export const Breadcrumbs = ({
   data: {
     allSitePage: { nodes },
@@ -56,7 +62,7 @@ export const Breadcrumbs = ({
         .map(n => {
           return (
             <li className="breadcrumb-item" key={n.id}>
-              <SmartLink to={n.path}>{n.context.title}</SmartLink>
+              <SmartLink to={n.path}>{getTitle(n)}</SmartLink>
             </li>
           );
         })}
