@@ -35,12 +35,13 @@ export default (): JSX.Element => {
   const currentPath = location.pathname;
   const currentPathLen = currentPath.length;
 
-  let matches = sortPages(
+  const matches = sortPages(
     data.allSitePage.nodes.filter(
       n =>
         n.context.title &&
         n.path !== currentPath &&
-        n.path.indexOf(currentPath) === 0
+        n.path.indexOf(currentPath) === 0 &&
+        n.path.slice(currentPathLen).split("/", 2)[1] === ""
     )
   );
 
