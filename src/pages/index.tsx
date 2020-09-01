@@ -1,4 +1,5 @@
 import React from "react";
+import { graphql, useStaticQuery } from "gatsby";
 
 import SEO from "../components/seo";
 
@@ -24,14 +25,34 @@ import CocoaSVG from "../logos/cocoa.svg";
 import dotNetCoreSVG from "../logos/dotnetcore.svg";
 import SwiftSVG from "../logos/swift.svg";
 
+const query = graphql`
+  query GetAllPlatforms {
+    allPlatform {
+      nodes {
+        key
+        guides {
+          key
+        }
+      }
+    }
+  }
+`;
+
 const IndexPage = () => {
+  const {
+    allPlatform: { nodes: platformList },
+  } = useStaticQuery(query);
+  const totalPlatformCount =
+    platformList.length +
+    platformList.map(n => n.guides.length).reduce((a, b) => a + b, 0);
+
   return (
-    <div class="index-wrapper">
+    <div className="index-wrapper">
       <SEO title="Sentry Documentation" />
-      <div class="hero-section">
-        <div class="index-container">
-          <div class="index-navbar">
-            <a href="/" title="Sentry error monitoring" class="index-logo">
+      <div className="hero-section">
+        <div className="index-container">
+          <div className="index-navbar">
+            <a href="/" title="Sentry error monitoring" className="index-logo">
               <img src={SentryWordmarkSVG} />
             </a>
             <ul className="navbar-nav">
@@ -54,130 +75,138 @@ const IndexPage = () => {
 
           <h1>Sentry Documentation</h1>
 
-          <div class="integrations-logo-row">
-            <a href="/platforms/javascript/" class="hover-card-link">
-              <div class="image-frame">
+          <div className="integrations-logo-row">
+            <a href="/platforms/javascript/" className="hover-card-link">
+              <div className="image-frame">
                 <img src={JavascriptSVG} />
               </div>
               Javascript
             </a>
-            <a href="/platforms/node/" class="hover-card-link">
-              <div class="image-frame">
+            <a href="/platforms/node/" className="hover-card-link">
+              <div className="image-frame">
                 <img src={NodeSVG} />
               </div>
               Node
             </a>
-            <a href="/platforms/python/" class="hover-card-link">
-              <div class="image-frame">
+            <a href="/platforms/python/" className="hover-card-link">
+              <div className="image-frame">
                 <img src={PythonSVG} />
               </div>
               Python
             </a>
-            <a href="/platforms/java/" class="hover-card-link">
-              <div class="image-frame">
+            <a href="/platforms/java/" className="hover-card-link">
+              <div className="image-frame">
                 <img src={JavaSVG} />
               </div>
               Java
             </a>
-            <a href="/platforms/php/" class="hover-card-link">
-              <div class="image-frame">
+            <a href="/platforms/php/" className="hover-card-link">
+              <div className="image-frame">
                 <img src={PhpSVG} />
               </div>
               PHP
             </a>
-            <a href="/platforms/laravel/" class="hover-card-link">
-              <div class="image-frame">
+            <a href="/platforms/laravel/" className="hover-card-link">
+              <div className="image-frame">
                 <img src={LaravelSVG} />
               </div>
               Laravel
             </a>
-            <a href="/platforms/react-native/" class="hover-card-link">
-              <div class="image-frame">
+            <a href="/platforms/react-native/" className="hover-card-link">
+              <div className="image-frame">
                 <img src={ReactNativeSVG} />
               </div>
               React Native
             </a>
-            <a href="/platforms/dotnet/" class="hover-card-link">
-              <div class="image-frame">
+            <a href="/platforms/dotnet/" className="hover-card-link">
+              <div className="image-frame">
                 <img src={DotNetSVG} />
               </div>
               .NET
             </a>
             <a
               href="/platforms/javascript/guides/react/"
-              class="hover-card-link"
+              className="hover-card-link"
             >
-              <div class="image-frame">
+              <div className="image-frame">
                 <img src={ReactSVG} />
               </div>
               React
             </a>
-            <a href="/platforms/php/guides/symfony/" class="hover-card-link">
-              <div class="image-frame">
+            <a
+              href="/platforms/php/guides/symfony/"
+              className="hover-card-link"
+            >
+              <div className="image-frame">
                 <img src={SymfonySVG} />
               </div>
               Symfony
             </a>
-            <a href="/platforms/go/" class="hover-card-link">
-              <div class="image-frame">
+            <a href="/platforms/go/" className="hover-card-link">
+              <div className="image-frame">
                 <img src={GoSVG} />
               </div>
               Go
             </a>
-            <a href="/platforms/cocoa/" class="hover-card-link">
-              <div class="image-frame">
+            <a href="/platforms/cocoa/" className="hover-card-link">
+              <div className="image-frame">
                 <img src={CocoaSVG} />
               </div>
               Cocoa
             </a>
             <a
               href="/platforms/dotnet/guides/aspnetcore/"
-              class="hover-card-link"
+              className="hover-card-link"
             >
-              <div class="image-frame">
+              <div className="image-frame">
                 <img src={dotNetCoreSVG} />
               </div>
               .NET Core
             </a>
-            <a href="/platforms/cocoa/guides/swift/" class="hover-card-link">
-              <div class="image-frame">
+            <a
+              href="/platforms/cocoa/guides/swift/"
+              className="hover-card-link"
+            >
+              <div className="image-frame">
                 <img src={SwiftSVG} />
               </div>
               Swift
             </a>
           </div>
 
-          <div class="">
-            <a href="/platforms/" class="hover-card-link">
-              Go to all platforms
+          <div className="integrations-all">
+            <a href="/platforms/" className="hover-card-link">
+              See all {totalPlatformCount} supported platforms
             </a>
           </div>
 
-          <Search />
+          <div className="index-search">
+            <Search />
+          </div>
         </div>
       </div>
-      <div class="index-container">
+      <div className="index-container">
         <h2>Quick links</h2>
 
-        <div class="flex-row card-row">
-          <a class="hover-card-link" href="/api/">
+        <div className="flex-row card-row">
+          <a className="hover-card-link" href="/api/">
             Web and Event API
           </a>
-          <a class="hover-card-link" href="/self-hosted">
+          <a className="hover-card-link" href="/self-hosted">
             Self-Hosted Sentry
           </a>
-          <a class="hover-card-link" href="https://develop.sentry.io/">
+          <a className="hover-card-link" href="https://develop.sentry.io/">
             Developer Guidlines
           </a>
-          <a class="hover-card-link" href="/product/">
+          <a className="hover-card-link" href="/product/">
             Product Guides
           </a>
         </div>
 
-        <div class="flex-row link-row">
+        <div className="flex-row link-row">
           <div>
             <h3>First steps</h3>
-            <ul class="unstyled-list">
+            <ul className="unstyled-list">
               <li>
                 <a href="#">Additional Data</a>
               </li>
@@ -197,7 +226,7 @@ const IndexPage = () => {
           </div>
           <div>
             <h3>Next things</h3>
-            <ul class="unstyled-list">
+            <ul className="unstyled-list">
               <li>
                 <a href="#">Sentry Basics</a>
               </li>
@@ -226,7 +255,7 @@ const IndexPage = () => {
           </div>
           <div>
             <h3>And then</h3>
-            <ul class="unstyled-list">
+            <ul className="unstyled-list">
               <li>
                 <a href="#">Grouping Events into Issues</a>
               </li>
