@@ -53,3 +53,18 @@ jobs:
       - run: yarn install
       - name: Run Tests
         run: yarn test
+
+  job_test_build:
+    name: Test (Build)
+    needs: job_build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: volta-cli/action@v1
+      - uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - run: yarn install
+      - name: Run Tests
+        run: yarn build:test
