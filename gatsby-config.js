@@ -109,6 +109,7 @@ const getPlugins = () => {
         },
       },
     },
+    `gatsby-transformer-javascript-frontmatter`,
     {
       resolve: `gatsby-source-filesystem`,
       options: {

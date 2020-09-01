@@ -56,85 +56,91 @@ const IndexPage = () => {
           <h1>Sentry Documentation</h1>
 
           <div class="integrations-logo-row">
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/javascript/" class="hover-card-link">
               <div class="image-frame">
                 <img src={JavascriptSVG} />
               </div>
               Javascript
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/node/" class="hover-card-link">
               <div class="image-frame">
                 <img src={NodeSVG} />
               </div>
               Node
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/python/" class="hover-card-link">
               <div class="image-frame">
                 <img src={PythonSVG} />
               </div>
               Python
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/java/" class="hover-card-link">
               <div class="image-frame">
                 <img src={JavaSVG} />
               </div>
               Java
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/php/" class="hover-card-link">
               <div class="image-frame">
                 <img src={PhpSVG} />
               </div>
               PHP
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/laravel/" class="hover-card-link">
               <div class="image-frame">
                 <img src={LaravelSVG} />
               </div>
               Laravel
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/react-native/" class="hover-card-link">
               <div class="image-frame">
                 <img src={ReactNativeSVG} />
               </div>
               React Native
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/dotnet/" class="hover-card-link">
               <div class="image-frame">
                 <img src={DotNetSVG} />
               </div>
               .NET
             </a>
-            <a href="#" class="hover-card-link">
+            <a
+              href="/platforms/javascript/guides/react/"
+              class="hover-card-link"
+            >
               <div class="image-frame">
                 <img src={ReactSVG} />
               </div>
               React
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/php/guides/symfony/" class="hover-card-link">
               <div class="image-frame">
                 <img src={SymfonySVG} />
               </div>
               Symfony
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/go/" class="hover-card-link">
               <div class="image-frame">
                 <img src={GoSVG} />
               </div>
               Go
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/cocoa/" class="hover-card-link">
               <div class="image-frame">
                 <img src={CocoaSVG} />
               </div>
               Cocoa
             </a>
-            <a href="#" class="hover-card-link">
+            <a
+              href="/platforms/dotnet/guides/aspnetcore/"
+              class="hover-card-link"
+            >
               <div class="image-frame">
                 <img src={dotNetCoreSVG} />
               </div>
               .NET Core
             </a>
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/cocoa/guides/swift/" class="hover-card-link">
               <div class="image-frame">
                 <img src={SwiftSVG} />
               </div>
@@ -143,7 +149,7 @@ const IndexPage = () => {
           </div>
 
           <div class="">
-            <a href="#" class="hover-card-link">
+            <a href="/platforms/" class="hover-card-link">
               Go to all platforms
             </a>
           </div>
@@ -155,16 +161,16 @@ const IndexPage = () => {
         <h2>Quick links</h2>
 
         <div class="flex-row card-row">
-          <a class="hover-card-link" href="#">
+          <a class="hover-card-link" href="/api/">
             Web and Event API
           </a>
-          <a class="hover-card-link" href="#">
-            Slef-Hosted Sentry
+          <a class="hover-card-link" href="/self-hosted">
+            Self-Hosted Sentry
           </a>
-          <a class="hover-card-link" href="#">
+          <a class="hover-card-link" href="https://develop.sentry.io/">
             Developer Guidlines
           </a>
-          <a class="hover-card-link" href="#">
+          <a class="hover-card-link" href="/product/">
             Product Guides
           </a>
         </div>
@@ -254,6 +260,10 @@ const IndexPage = () => {
       </div>
     </div>
   );
+};
+
+export const frontmatter = {
+  title: "Sentry Documentation",
 };
 
 export default IndexPage;
