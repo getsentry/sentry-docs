@@ -186,8 +186,6 @@ const IndexPage = () => {
         </div>
       </div>
       <div className="index-container">
-        <h2>Quick links</h2>
-
         <div className="flex-row card-row">
           <a className="hover-card-link" href="/product/">
             Product Guides
