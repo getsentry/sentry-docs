@@ -4,24 +4,30 @@ To get started with performance monitoring with Koa, first install these package
 
 ```bash
 # Using yarn
-$ yarn add @sentry/node @sentry/apm
+$ yarn add @sentry/node @sentry/tracing
 
 # Using npm
-$ npm install @sentry/node @sentry/apm
+$ npm install --save @sentry/node @sentry/tracing
 ```
+
+<Alert level="warning" title="Note"><markdown>
+
+We switched our package name from `@sentry/apm` to `@sentry/tracing`. If you were previously using `@sentry/apm`, please see [Switching to @sentry/tracing](/product/performance/apm-to-tracing/).
+
+</markdown></Alert>
 
 Creates and attach a transaction to each context
 
 ```javascript
 const Sentry = require("@sentry/node");
-const { Span } = require("@sentry/apm");
+const { Span } = require("@sentry/tracing");
 const Koa = require("koa");
 const app = new Koa();
 const domain = require("domain");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0 // Be sure to lower this in production
+  tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 
 // not mandatory, but adding domains do help a lot with breadcrumbs
@@ -29,14 +35,14 @@ const requestHandler = (ctx, next) => {
   return new Promise((resolve, _) => {
     const local = domain.create();
     local.add(ctx);
-    local.on("error", (err) => {
+    local.on("error", err => {
       ctx.status = err.status || 500;
       ctx.body = err.message;
       ctx.app.emit("error", err, ctx);
     });
     local.run(async () => {
-      Sentry.getCurrentHub().configureScope((scope) =>
-        scope.addEventProcessor((event) =>
+      Sentry.getCurrentHub().configureScope(scope =>
+        scope.addEventProcessor(event =>
           Sentry.Handlers.parseRequest(event, ctx.request, { user: false })
         )
       );
@@ -85,8 +91,8 @@ app.use(tracingMiddleWare);
 
 // usual error handler
 app.on("error", (err, ctx) => {
-  Sentry.withScope(function (scope) {
-    scope.addEventProcessor(function (event) {
+  Sentry.withScope(scope => {
+    scope.addEventProcessor(event => {
       return Sentry.Handlers.parseRequest(event, ctx.request);
     });
     Sentry.captureException(err);
@@ -95,9 +101,11 @@ app.on("error", (err, ctx) => {
 // the rest of your app
 ```
 
-**Subsequent manual child transactions**
+**Subsequent manual child spans**
 
-The following example creates a transaction for a part of the code that contains an expensive operation, and sends the result to Sentry, you will need to use the transaction stored in the context
+The following example creates a span for a part of the code that contains an
+expensive operation and sends the result to Sentry. You will need to use the
+transaction stored in the context.
 
 ```javascript
 const myMiddleware = async (ctx, next) => {

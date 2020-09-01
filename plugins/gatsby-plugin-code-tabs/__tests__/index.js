@@ -7,7 +7,7 @@ const plugin = require("../");
 const remark = new Remark().data("settings", {
   commonmark: true,
   footnotes: true,
-  pedantic: true
+  pedantic: true,
 });
 
 describe("gatsby-plugin-code-tabs", () => {

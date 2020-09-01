@@ -1,64 +1,63 @@
+const { standardSDKSlug } = require("sentry-global-search");
+
 const pageQuery = `{
-    pages: allFile(
-      filter: {
-        sourceInstanceName: {in: ["docs"]}
-      }
-    ) {
+    pages: allSitePage {
       edges {
         node {
           objectID: id
-          childMarkdownRemark {
-            frontmatter {
-              title
-              draft
-              noindex
+          path
+          context {
+            draft
+            title
+            excerpt
+            noindex
+            platform {
+              name
             }
-            fields {
-              slug
-              legacy
-            }
-            excerpt(pruneLength: 5000)
-          }
-          childMdx {
-            frontmatter {
-              title
-              draft
-              noindex
-            }
-            fields {
-              slug
-              legacy
-            }
-            excerpt(pruneLength: 5000)
           }
         }
       }
     }
   }`;
 
+const extrapolate = (str, separator) => {
+  const segments = str.split(separator).filter(Boolean);
+  const fragments = segments.map((segment, i, array) =>
+    array.slice(0, i + 1).join(separator)
+  );
+  return fragments;
+};
+
 const flatten = arr =>
   arr
     .filter(
-      ({ node: { childMarkdownRemark, childMdx } }) =>
-        childMarkdownRemark || childMdx
+      ({ node: { context } }) =>
+        context && !context.draft && !context.noindex && context.title
     )
-    .map(({ node: { childMarkdownRemark, childMdx, objectID } }) => [
-      childMarkdownRemark || childMdx,
+    .map(({ node: { objectID, context, path } }) => ({
       objectID,
-    ])
-    .filter(
-      ([child, _]) => !child.frontmatter.noindex && !child.frontmatter.draft
-    )
-    .map(([child, objectID]) => ({
-      objectID,
-      title: child.frontmatter.title,
-      url: child.fields.slug,
-      content: child.excerpt,
-      score: child.legacy ? 0 : 1,
+      title: context.title,
+      url: path,
+      content: context.excerpt,
+
+      // https://github.com/getsentry/sentry-global-search#sorting-by-a-platform
+      platforms: context.platform
+        ? extrapolate(standardSDKSlug(context.platform.name).slug, ".")
+        : [],
+
+      // https://github.com/getsentry/sentry-global-search#sorting-by-path
+      pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
+
+      // https://github.com/getsentry/sentry-global-search#sorting-by-legacy
+      legacy: context.legacy || false,
     }))
     .filter(n => !n.draft);
 
-const settings = { attributesToSnippet: [`content:20`] };
+const settings = {
+  attributesToSnippet: [`content:20`],
+  attributesForFaceting: ["platforms", "pathSegments", "legacy"],
+  searchableAttributes: ["content", "title"],
+};
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
 if (!indexPrefix) {

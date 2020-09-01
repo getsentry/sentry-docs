@@ -1,23 +1,23 @@
 ---
 name: ASP.NET Core
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=aspnetcore
+doc_link: https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/
 support_level: production
 type: framework
 ---
+
 Install the **NuGet** package:
 
 Package Manager:
+
 ```shell
 Install-Package Sentry.AspNetCore -Version 2.1.5
 ```
 
 .NET Core CLI:
+
 ```shell
 dotnet add package Sentry.AspNetCore -v 2.1.5
 ```
-
-
-
 
 Add Sentry to `Program.cs` through the `WebHostBuilder`:
 
@@ -41,7 +41,5 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
             webBuilder.UseSentry("___PUBLIC_DSN___");
         });
 ```
-
-
 
 See the [provided examples in the `dotnet` SDK repository](https://github.com/getsentry/sentry-dotnet/tree/main/samples) for examples to send your first event to Sentry.

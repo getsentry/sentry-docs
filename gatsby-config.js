@@ -1,4 +1,9 @@
-// const path = require("path");
+const axios = require("axios");
+
+require("ts-node").register({
+  files: true, // to that TS node hooks have access to local typings too
+});
+
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
 
@@ -8,7 +13,10 @@ require("dotenv").config({
   path: `.env.${activeEnv}`,
 });
 
-if (process.env.BRANCH_NAME === "master" && process.env.ALGOLIA_ADMIN_KEY) {
+if (
+  process.env.VERCEL_GITHUB_COMMIT_REF === "master" &&
+  process.env.ALGOLIA_ADMIN_KEY
+) {
   process.env.ALGOLIA_INDEX = "1";
 }
 
@@ -96,7 +104,7 @@ const getPlugins = () => {
       resolve: `gatsby-transformer-json`,
       options: {
         typeName: ({ node, object, isArray }) => {
-          if (node.sourceInstanceName === "api-docs") {
+          if (node.sourceInstanceName === "api") {
             return "ApiDoc";
           }
           return null;
@@ -113,7 +121,14 @@ const getPlugins = () => {
     {
       resolve: `gatsby-source-filesystem`,
       options: {
-        name: `api-docs`,
+        name: `platforms`,
+        path: `${__dirname}/src/platforms`,
+      },
+    },
+    {
+      resolve: `gatsby-source-filesystem`,
+      options: {
+        name: `api`,
         path: `${__dirname}/src/api`,
       },
     },
@@ -160,6 +175,23 @@ const getPlugins = () => {
         outputConfigFile: `${__dirname}/nginx.out.conf`,
       },
     },
+    {
+      resolve: "./plugins/gatsby-plugin-openapi",
+      options: {
+        name: "openapi",
+        resolve: async () => {
+          try {
+            const response = await axios.get(
+              "https://raw.githubusercontent.com/getsentry/sentry-api-schema/68bb79acfbbee062bd8d2f71ee3a07d43dc934c9/openapi-derefed.json"
+            );
+            return response.data;
+          } catch (err) {
+            throw err;
+          }
+        },
+        // required, function which returns a Promise resolving Swagger JSON
+      },
+    },
     // generate normal redirects so when you're running without nginx
     // you receive similar behavior
     `gatsby-plugin-meta-redirect`,
@@ -182,7 +214,7 @@ module.exports = {
   // pathPrefix: `/develop`,
   siteMetadata: {
     title: "Sentry Documentation",
-    homeUrl: "https://sentry.io",
+    homeUrl: "https://docs.sentry.io",
     sitePath: "docs.sentry.io",
     description: "",
     author: "@getsentry",

@@ -1,9 +1,10 @@
 ---
 name: Rails
-doc_link: https://docs.sentry.io/clients/ruby/integrations/rails/
+doc_link: https://docs.sentry.io/platforms/ruby/guides/rails/
 support_level: production
 type: framework
 ---
+
 In Rails, all uncaught exceptions will be automatically reported.
 
 We support Rails 4 and newer.
@@ -18,11 +19,11 @@ gem "sentry-raven"
 
 ### Configuration
 
-Open up `config/application.rb` and configure the DSN, and any other [_settings_](/clients/ruby/config/) you need:
+Open up `config/application.rb` and configure the DSN, and any other [_settings_](/platforms/ruby/guides/rails/config/) you need:
 
 ```ruby
 Raven.configure do |config|
-  config.dsn = '___DSN___'
+  config.dsn = '___PUBLIC_DSN___'
 end
 ```
 
@@ -56,4 +57,3 @@ end
 ### Caveats
 
 Currently, custom exception applications (_config.exceptions_app_) are not supported. If you are using a custom exception app, you must manually integrate Raven yourself.
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->

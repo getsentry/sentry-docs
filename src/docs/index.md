@@ -1,5 +1,5 @@
 ---
-title: 'Sentry Documentation'
+title: "Sentry Documentation"
 ---
 
 Welcome to the Sentry documentation. Sentry is an open-source company, providing an application monitoring platform that helps you identify issues in real-time. Here we cover everything about the product, the platform integrations, and self-hosted Sentry.
@@ -11,7 +11,7 @@ To get you started, you might find some of these links relevant:
 - New to Sentry? Have a look at [_Getting Started_](/error-reporting/quickstart/).
 - No account yet? You can sign up for one at [sentry.io](https://sentry.io/signup/).
 - Stuck? Feel free to contact [Support](/support/).
-- Self-hosting the Sentry server? See [_Installation_](https://github.com/getsentry/onpremise).
+- Self-hosting the Sentry server? See [our documentation for On-Premise Installations](https://github.com/getsentry/onpremise/releases/latest).
 
 ## Contributing
 

@@ -1,27 +1,30 @@
-
 **React**
 
-To get started with performance monitoring using Sentry's React SDK, first install the `@sentry/react` and `@sentry/apm` packages:
+To get started with performance monitoring using Sentry's React SDK, first install the `@sentry/react` and `@sentry/tracing` packages:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/react @sentry/apm
+$ yarn add @sentry/react @sentry/tracing
 
 # Using npm
-$ npm install @sentry/react @sentry/apm
+$ npm install --save @sentry/react @sentry/tracing
 ```
+
+<Alert level="warning" title="Note"><markdown>
+
+We switched our package name from `@sentry/apm` to `@sentry/tracing`. If you were previously using `@sentry/apm`, please see [Switching to @sentry/tracing](/product/performance/apm-to-tracing/).
+
+</markdown></Alert>
 
 Next, initialize the integration in your call to `Sentry.init`. Make sure this happens before you mount your React component on the page.
 
 ```jsx
-import * as Sentry from '@sentry/react';
-import { Integrations } from '@sentry/apm';
+import * as Sentry from "@sentry/react";
+import { Integrations } from "@sentry/tracing";
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  release: 'my-project-name@' + process.env.npm_package_version,
-  integrations: [
-    new Integrations.Tracing(),
-  ],
+  dsn: "___PUBLIC_DSN___",
+  release: "my-project-name@" + process.env.npm_package_version,
+  integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 
@@ -35,13 +38,13 @@ ReactDOM.render(<App />, rootNode);
 
 **`withProfiler` Higher-Order Component**
 
-`@sentry/react` exports a `withProfiler` higher-order component that leverages the `@sentry/apm` Tracing integration to add React related spans to transactions. If the Tracing integration is not enabled, the Profiler will not work.
+`@sentry/react` exports a `withProfiler` higher-order component that leverages the `@sentry/tracing` package to add React-related spans to transactions.
 
 In the example below, the `withProfiler` higher-order component is used to instrument an App component.
 
 ```jsx
-import React from 'react';
-import * as Sentry from '@sentry/react';
+import React from "react";
+import * as Sentry from "@sentry/react";
 
 class App extends React.Component {
   render() {
@@ -50,7 +53,7 @@ class App extends React.Component {
         <NestedComponent someProp={2} />
         <AnotherComponent />
       </FancyComponent>
-    )
+    );
   }
 }
 
@@ -82,7 +85,7 @@ The React Profiler currently generates spans with three different kinds of op-co
 The `withProfiler` higher-order component has a variety of options for further customization. They can be passed in as the second argument to the `withProfiler` function.
 
 ```jsx
-export default Sentry.withProfiler(App, { name: "CustomAppName" })
+export default Sentry.withProfiler(App, { name: "CustomAppName" });
 ```
 
 `name` (string)

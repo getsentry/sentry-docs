@@ -1,9 +1,10 @@
 ---
 name: Ember
-doc_link: https://docs.sentry.io/platforms/javascript/ember/
+doc_link: https://docs.sentry.io/platforms/javascript/guides/ember/
 support_level: production
 type: framework
 ---
+
 To use Sentry with your Ember application, you will need to use Sentry’s browser JavaScript SDK: `@sentry/browser`.
 
 On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
@@ -15,21 +16,21 @@ You can install it with `npm` / `yarn` like:
 
 ```bash
 # Using yarn
-yarn add @sentry/integrations
+yarn add @sentry/browser @sentry/integrations
 
 # Using npm
-npm install @sentry/integrations
+npm install --save @sentry/browser @sentry/integrations
 ```
 
 Then add this to your `app.js`:
 
 ```javascript
-import * as Sentry from '@sentry/browser'
-import { Ember as EmberIntegration } from '@sentry/integrations';
+import * as Sentry from "@sentry/browser";
+import { Ember as EmberIntegration } from "@sentry/integrations";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [new EmberIntegration()]
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new EmberIntegration()],
 });
 ```
 
@@ -54,10 +55,8 @@ like this:
 
 <script>
   Sentry.init({
-    dsn: '___PUBLIC_DSN___',
-    integrations: [
-      new Sentry.Integrations.Ember(),
-    ],
+    dsn: "___PUBLIC_DSN___",
+    integrations: [new Sentry.Integrations.Ember()],
   });
 </script>
 ```

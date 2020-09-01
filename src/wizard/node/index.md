@@ -1,33 +1,29 @@
 ---
 name: Node.js
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=node
+doc_link: https://docs.sentry.io/platforms/node/
 support_level: production
 type: language
 ---
-If you are using `yarn` or `npm` you can add our package as a dependency:
+
+Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/node@5.20.1
+$ yarn add @sentry/node
 
 # Using npm
-$ npm install @sentry/node@5.20.1
+$ npm install --save @sentry/node
 ```
-
-
-
 
 You need to inform the Sentry Node SDK about your DSN:
 
 ```javascript
-const Sentry = require('@sentry/node');
+const Sentry = require("@sentry/node");
 // or use es6 import statements
 // import * as Sentry from '@sentry/node';
 
-Sentry.init({ dsn: '___PUBLIC_DSN___' });
+Sentry.init({ dsn: "___PUBLIC_DSN___" });
 ```
-
-
 
 One way to verify your setup is by intentionally sending an event that breaks your application.
 
