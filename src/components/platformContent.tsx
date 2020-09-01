@@ -44,6 +44,7 @@ type FileNode = {
 type Props = {
   includePath: string;
   platform?: string;
+  children?: React.ReactNode;
 };
 
 type ChildProps = Props & {
@@ -58,6 +59,7 @@ const PlatformContent = ({
   data,
   includePath,
   platform,
+  children,
 }: ChildProps): JSX.Element => {
   const {
     allFile: { nodes: files },
@@ -140,7 +142,10 @@ const PlatformContent = ({
       <div className="tab-content">
         <div className="tab-pane show active">
           {contentMatch && (
-            <Content key={contentMatch.id} file={contentMatch} />
+            <React.Fragment>
+              {children || null}
+              <Content key={contentMatch.id} file={contentMatch} />
+            </React.Fragment>
           )}
         </div>
       </div>
