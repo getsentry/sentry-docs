@@ -189,17 +189,17 @@ const IndexPage = () => {
         <h2>Quick links</h2>
 
         <div className="flex-row card-row">
+          <a className="hover-card-link" href="/product/">
+            Product Guides
+          </a>
           <a className="hover-card-link" href="/api/">
             Web and Event API
           </a>
           <a className="hover-card-link" href="/self-hosted">
             Self-Hosted Sentry
           </a>
-          <a className="hover-card-link" href="https://develop.sentry.io/">
-            Developer Guidelines
-          </a>
-          <a className="hover-card-link" href="/product/">
-            Product Guides
+          <a className="hover-card-link" href="https://develop.sentry.dev/">
+            Sentry Development
           </a>
         </div>
 
