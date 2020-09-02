@@ -228,7 +228,11 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         `/${platformName}/`
       )}`;
       reporter.verbose(`Creating global common for ${platformName}: ${path}`);
-      createPlatformPage(node, path, platformPageContext);
+      createPlatformPage(node, path, {
+        ...platformPageContext,
+        // TODO(dcramer): toc is broken for hidden sections
+        notoc: true,
+      });
     });
 
     // duplicate platform common
@@ -239,7 +243,11 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         `/${platformName}/`
       )}`;
       reporter.verbose(`Creating platform common for ${platformName}: ${path}`);
-      createPlatformPage(node, path, platformPageContext);
+      createPlatformPage(node, path, {
+        ...platformPageContext,
+        // TODO(dcramer): toc is broken for hidden sections
+        notoc: true,
+      });
     });
 
     // LAST (to allow overrides) create all direct children
@@ -305,6 +313,8 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       createPlatformPage(node, path, {
         ...guidePageContext,
         noindex: true,
+        // TODO(dcramer): toc is broken for hidden sections
+        notoc: true,
         redirect_from: [],
       });
     });
@@ -323,6 +333,8 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       createPlatformPage(node, path, {
         ...guidePageContext,
         noindex: true,
+        // TODO(dcramer): toc is broken for hidden sections
+        notoc: true,
         redirect_from: [],
       });
     });

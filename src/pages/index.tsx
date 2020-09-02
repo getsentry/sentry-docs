@@ -6,7 +6,6 @@ import SEO from "../components/seo";
 import "~src/css/screen.scss";
 
 import Search from "../components/search";
-import SmartLink from "../components/smartLink";
 
 import SentryWordmarkSVG from "../logos/sentry-wordmark-dark.svg";
 
