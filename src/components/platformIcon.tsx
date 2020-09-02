@@ -72,6 +72,7 @@ export function getIcon(platform: string): string {
 type Props = {
   platform: string;
   size?: string | number;
+  [key: string]: any;
 };
 
 const PlatformIcon = ({ platform, size = 64, ...props }: Props) => {
