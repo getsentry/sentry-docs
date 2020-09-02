@@ -30,6 +30,7 @@ export default (): JSX.Element => {
   const matches = sortPages(
     data.allSitePage.nodes.filter(
       n =>
+        n.context &&
         n.context.title &&
         n.path !== currentPath &&
         n.path.indexOf(currentPath) === 0 &&
