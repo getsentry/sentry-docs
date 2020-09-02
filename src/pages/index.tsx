@@ -193,7 +193,10 @@ const IndexPage = () => {
           <a className="hover-card-link" href="/api/">
             Web and Event API
           </a>
-          <a className="hover-card-link" href="https://github.com/getsentry/onpremise/releases/tag/20.8.0">
+          <a
+            className="hover-card-link"
+            href="https://github.com/getsentry/onpremise/releases/tag/20.8.0"
+          >
             Self-Hosted Sentry
           </a>
           <a className="hover-card-link" href="/support/">
@@ -201,9 +204,9 @@ const IndexPage = () => {
           </a>
         </div>
 
+        <h3>Learn more...</h3>
         <div className="flex-row link-row">
           <div>
-            <h3>Learn more...</h3>
             <ul className="unstyled-list">
               <li>
                 <a href="/product/performance/getting-started/">
@@ -231,7 +234,6 @@ const IndexPage = () => {
             </ul>
           </div>
           <div>
-            <h3></h3>
             <ul className="unstyled-list">
               <li>
                 <a href="/product/sentry-basics/guides/">Best Practices</a>
@@ -251,16 +253,21 @@ const IndexPage = () => {
             </ul>
           </div>
           <div>
-            <h3></h3>
             <ul className="unstyled-list">
               <li>
-                <a href="/product/integrations/integration-platform/">Integration Platform</a>
+                <a href="/product/integrations/integration-platform/">
+                  Integration Platform
+                </a>
               </li>
               <li>
-                <a href="/product/sentry-basics/guides/migration/">Moving to Hosted Sentry</a>
+                <a href="/product/sentry-basics/guides/migration/">
+                  Moving to Hosted Sentry
+                </a>
               </li>
               <li>
-                <a href="/accounts/membership/">Organization and User Management</a>
+                <a href="/accounts/membership/">
+                  Organization and User Management
+                </a>
               </li>
               <li>
                 <a href="/product/performance/metrics/">Performance Metrics</a>
