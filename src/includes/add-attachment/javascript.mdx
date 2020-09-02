@@ -1,0 +1,38 @@
+```javascript
+import * as Sentry from "@sentry/browser";
+
+public attachmentUrlFromDsn(dsn: Dsn, eventId: string) {
+  const { host, path, projectId, port, protocol, user } = dsn;
+  return `${protocol}://${host}${port !== '' ? `:${port}` : ''}${
+    path !== '' ? `/${path}` : ''
+  }/api/${projectId}/events/${eventId}/attachments/?sentry_key=${user}&sentry_version=7&sentry_client=rrweb`;
+}
+
+Sentry.addGlobalEventProcessor((event: Event) => {
+  try {
+    const client = Sentry.getCurrentHub().getClient();
+    const endpoint = attachmentUrlFromDsn(
+      client.getDsn(),
+      event.event_id
+    );
+    const formData = new FormData();
+    formData.append(
+      'my-attachment',
+      new Blob([JSON.stringify({ logEntries: ["my log"] })], {
+        type: 'application/json',
+      }),
+      'logs.json'
+    );
+    fetch(endpoint, {
+      method: 'POST',
+      body: formData,
+    }).catch((ex) => {
+      // we have to catch this otherwise it throws an infinite loop in Sentry
+      console.error(ex);
+    });
+    return event;
+  } catch (ex) {
+    console.error(ex);
+  }
+});
+```
