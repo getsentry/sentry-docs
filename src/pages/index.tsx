@@ -278,17 +278,6 @@ const IndexPage = () => {
             </ul>
           </div>
         </div>
-        <div className="github-cta">
-          <small>
-            You can{" "}
-            <SmartLink
-              to={`https://github.com/getsentry/sentry-docs/edit/master/src/`}
-            >
-              edit this page
-            </SmartLink>{" "}
-            on GitHub.
-          </small>
-        </div>
       </div>
     </div>
   );
