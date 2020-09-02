@@ -198,7 +198,7 @@ const IndexPage = () => {
           </a>
           <a
             className="hover-card-link"
-            href="https://github.com/getsentry/onpremise/releases/tag/20.8.0"
+            href="https://develop.sentry.dev/self-hosted/"
           >
             Self-Hosted Sentry
           </a>
