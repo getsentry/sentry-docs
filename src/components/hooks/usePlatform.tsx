@@ -154,11 +154,13 @@ const rebuildPathForPlatform = (key: string, currentPath?: string): string => {
     : newPathPrefix;
 };
 
-export const usePlatformList = (): (Platform | Guide)[] => {
+export const usePlatformList = (): Platform[] => {
   const {
     allPlatform: { nodes: platformList },
   } = useStaticQuery(query);
-  return platformList.sort((a, b) => a.title.localeCompare(b.title));
+  return platformList.sort((a: Platform, b: Platform) =>
+    a.title.localeCompare(b.title)
+  );
 };
 
 /**
