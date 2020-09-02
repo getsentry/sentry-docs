@@ -21,6 +21,7 @@ export default (): JSX.Element => {
             />
           </g>
         </svg>
+        <h6>Docs</h6>
       </SmartLink>
 
       <button

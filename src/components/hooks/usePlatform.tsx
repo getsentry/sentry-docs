@@ -154,6 +154,13 @@ const rebuildPathForPlatform = (key: string, currentPath?: string): string => {
     : newPathPrefix;
 };
 
+export const usePlatformList = (): (Platform | Guide)[] => {
+  const {
+    allPlatform: { nodes: platformList },
+  } = useStaticQuery(query);
+  return platformList.sort((a, b) => a.title.localeCompare(b.title));
+};
+
 /**
  * Return the active platform or guide.
 
@@ -162,9 +169,7 @@ const rebuildPathForPlatform = (key: string, currentPath?: string): string => {
 export const getPlatform = (key: string): Platform | Guide | null => {
   if (!key) return;
 
-  const {
-    allPlatform: { nodes: platformList },
-  } = useStaticQuery(query);
+  const platformList = usePlatformList();
 
   const [platformName, guideName] = key.split(".", 2);
   const activePlatform = platformList.find(
@@ -172,12 +177,22 @@ export const getPlatform = (key: string): Platform | Guide | null => {
   );
   const activeGuide =
     activePlatform &&
-    activePlatform.guides.find((g: Guide) => g.name === guideName);
+    (activePlatform as Platform).guides.find(
+      (g: Guide) => g.name === guideName
+    );
 
   return activeGuide ?? activePlatform ?? null;
 };
 
-type UseLocation = [Platform | Guide, (value: string) => void, boolean];
+type UsePlatform = [
+  Platform | Guide,
+  (value: string, options?: SetPlatformOptions) => void,
+  boolean
+];
+
+type SetPlatformOptions = {
+  noQueryString?: boolean;
+};
 
 /**
  * The usePlatform() hook will allow you to reference the currently active platform.
@@ -197,7 +212,10 @@ type UseLocation = [Platform | Guide, (value: string) => void, boolean];
  * If you're operating in a context that is _only_ for a specific platform, you
  * want to pass `defaultValue` with the effective platform to avoid fallbacks.
  */
-export default (defaultValue: string = DEFAULT_PLATFORM): UseLocation => {
+export default (
+  defaultValue: string = DEFAULT_PLATFORM,
+  useStoredValue: boolean = true
+): UsePlatform => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -216,18 +234,18 @@ export default (defaultValue: string = DEFAULT_PLATFORM): UseLocation => {
     ? valueFromLocation.join(".")
     : null;
 
-  if (!currentValue && !isFixed) {
+  if (!currentValue && !isFixed && useStoredValue) {
     currentValue = storedValue;
   }
 
   const [stateValue, setStateValue] = useState(currentValue);
 
-  const setValue = (value: string) => {
+  const setValue = (value: string, options: SetPlatformOptions = {}) => {
     if (value == currentValue) return;
     setStoredValue(value);
     if (!value) value = defaultValue;
     let path = rebuildPathForPlatform(value, location.pathname);
-    if (!isFixed) {
+    if (!isFixed && !options.noQueryString) {
       path += `?platform=${value}`;
     }
     if (path !== location.pathname) {
