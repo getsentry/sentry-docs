@@ -6,9 +6,15 @@ categories:
   - browser
 ---
 
-On this page, we provide concise information to get you up and running with Sentry's JavaScript SDK, automatically reporting errors and exceptions in your application.
+On this page, we get you up and running with Sentry's JavaScript SDK, so that it will automatically report errors and exceptions in your application.
 
-**Note:** If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+<Alert>
+<markdown>
+
+If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
+</markdown>
+</Alert>
 
 Using a framework? Take a look at our specific guides to get started.
 
@@ -26,75 +32,57 @@ $ yarn add @sentry/browser
 $ npm install --save @sentry/browser
 ```
 
-```html {tabTitle: CDN}
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-```
+<Alert>
+<markdown>
 
-**Use of Defer**
+If you are using CDN to install our SDK, please see our documentation for [installing with CDN](/platforms/javascript/configuration/install-cdn).
 
-It's possible to include `defer` in your script tag, but keep in mind that any errors which occur in scripts that execute before the browser SDK script executes won’t be caught (because the SDK won’t be initialized yet). We strongly recommend that if you use `defer`, you a) place the script tag for the browser SDK first, and b) mark it, and all of your other scripts, `defer` (but not `async`), thereby guaranteeing that it’s executed before any of the others.
+</markdown>
+</Alert>
 
-**Note:** If you have Content Security Policy (CSP) set up on your site, you will need to add the `script-src` of wherever you're loading the SDK from, and the origin of your DSN. For example:
+## Configure and Verify
 
-- `script-src: https://browser.sentry-cdn.com`
-- `connect-src: *.sentry.io`
+`init` Sentry as soon as possible in your app, to make sure it can monitor everything that follows it. Once this is done, all unhandled exceptions are automatically captured by Sentry.
 
-## Configure
-
-`init` Sentry as soon as possible:
+The snippet below includes an intentional error, so you can test that everything is working as soon as you set it up. To view and resolve the recorded error, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
 
 ```javascript {tabTitle: ESM}
 import * as Sentry from "@sentry/browser";
 
 Sentry.init({ dsn: "___PUBLIC_DSN___" });
+
+myUndefinedFunction(); // To test your setup
 ```
-
-```javascript {tabTitle: CDN}
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
-```
-
-Once this is done, all unhandled exceptions are automatically captured by Sentry.
-
-**Important:** Note your DSN. The _DSN_ (Data Source Name) tells the SDK where to send events. If you forget it, view _Settings -> Projects -> Client Keys (DSN)_ in the Sentry web UI.
-
-## Verify Setup
-
-Verify your setup by intentionally sending an error that breaks your application. For example, in JavaScript, calling an undefined function throws an exception:
-
-```JavaScript
-myUndefinedFunction();
-```
-
-Resolve the created error by logging in to Sentry, then opening your project. On the **Issue Details** page, scroll down to the Exception stack trace and view the error.
 
 ## Capture Errors
 
-A few key terms to know as we proceed:
+<Alert>
+<markdown>
+Key terms:
 
 - An _event_ is one instance of sending data to Sentry. Generally, this data is an error or exception.
 - An _issue_ is a grouping of similar events.
 - The reporting of an event is called _capturing_.
   When an event is captured, it’s sent to Sentry.
 
+</markdown>
+</Alert>
+
 By including and configuring Sentry, our JavaScript SDK automatically attaches global handlers to _capture_ uncaught exceptions and unhandled promise rejections, as described in the official ECMAScript 6 standard. You can disable this default behavior by changing the `onunhandledrejection` option to `false` in your GlobalHandlers integration and manually hook into each event handler, then call `Sentry.captureException` or `Sentry.captureMessage` directly.
 
-You may also need to manage your configuration if you are using a third-party library to implement promises. Also, keep in mind that browsers may take security measures when serving script files from different origins that can block error reporting.
+You may also need to manage your configuration if you are using a third-party library to implement promises. Also, remember that browsers often implement security measures that can block error reporting when serving script files from different origins.
 
-Learn more about how to manually capture errors or enable message capture with Sentry's JavaScript SDK in [Capture Errors](./errors/capture).
+Learn more about how to manually capture errors or enable message capture with Sentry's JavaScript SDK in [Capture Errors](/platforms/javascript/enriching-error-data/capture).
 
 ### Automatically Enrich Error Data
 
 Events sent by the JavaScript SDK to Sentry are enriched with data that helps identify the source of the event. Much of this data is sent automatically - including the error context and environment - as well as the trail of events that led up to the event, which we call breadcrumbs. You don't need to configure these, though you may modify them.
 
-Learn more about the data sent to with events in [Enrich Event Data](./errors/).
+Learn more about the data sent to with events in [Enrich Event Data](/platforms/javascript/enriching-error-data/additional-data/).
 
 ### Set the Release Version
 
-When you configure Sentry to include the version of your application, Sentry can tell you about regressions as well as detailed information about the suspect commit.
+When you configure Sentry to include the version of your application, Sentry can tell you about regressions as well as detailed information about the suspect commit. You will also need releases for source maps.
 
 Use the `process.env.npm_package_version`:
 
@@ -105,25 +93,15 @@ Sentry.init({
 });
 ```
 
-After you inform Sentry of a new release, you will see information about it, such as new issues and regressions introduced in the release.
-
-Learn more about what releases can do, including using a repository integration, creating the release and associated commits, and telling Sentry when you deploy a release in [our documentation for Releases](/product/releases/).
+Learn more about what releases can do in [our documentation for releases](/product/releases/).
 
 ### Upload Source Maps
 
-Sentry supports un-minifying JavaScript via source maps. This lets you view source code context obtained from stack traces in their original untransformed form, which is particularly useful for debugging minified code (for example, UglifyJS), or transpiled code from a higher-level language (for example, TypeScript, ES6).
-
-We **highly recommend** you incorporate source maps to receive the full benefit of error tracking and monitoring.
-
-When you’re using the Sentry JavaScript SDK, the SDK automatically fetches the source code and source maps by scraping the URLs within the stack trace. If you need to disable the JavaScript source fetching, log in to Sentry and toggle off `Allow JavaScript source fetching` in your organization's settings for Security & Privacy. See our [source maps documentation](./config/config/sourcemaps) to learn more.
-
-Upload source maps using either our [Webpack plugin](./config/sourcemaps/#webpack) or the [Sentry CLI](/cli/). Sourcemaps can be generated by [Uglify JS](./config/config/sourcemaps/#uglifyjs), [System JS](./config/sourcemaps/#systemjs), or [TypeScript](./config/config/sourcemaps/#typescript).
+We **highly recommend** you incorporate source maps to receive the full benefit of error tracking and monitoring. See our [source maps documentation](/platforms/javascript/configuration/sourcemaps) to learn more.
 
 ## Monitor Performance
 
-Performance Monitoring helps you see everything from macro-level metrics to micro-level spans, and you’ll be able to cross-reference transactions with related issues, customize queries based on your personal needs, and substantially more.
-
-To get started with performance monitoring using Sentry’s JavaScript SDK, install both the `@sentry/browser` and `@sentry/tracing` packages, or link directly to our combined minified bundle via CDN:
+Install performance monitoring using Sentry’s JavaScript SDK using both the `@sentry/browser` and `@sentry/tracing` packages:
 
 ```bash {tabTitle: ESM}
 # Using yarn
@@ -133,21 +111,15 @@ $ yarn add @sentry/browser @sentry/tracing
 $ npm install --save @sentry/browser @sentry/tracing
 ```
 
-<Alert level="warning" title="Note"><markdown>
+<Alert level="note" title="Note"><markdown>
 
 We switched our package name from `@sentry/apm` to `@sentry/tracing`. If you were previously using `@sentry/apm`, please see [Switching to @sentry/tracing](/product/performance/apm-to-tracing/).
 
+If you are using our CDN, please see our documentation for [installing with CDN](/platforms/javascript/configuration/install-cdn).
+
 </markdown></Alert>
 
-```html {tabTitle: CDN}
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-```
-
-Next, initialize the integration in your call to `Sentry.init`:
+Initialize the integration in your call to `Sentry.init`:
 
 ```javascript {tabTitle: ESM}
 import * as Sentry from "@sentry/browser";
@@ -160,18 +132,9 @@ Sentry.init({
 });
 ```
 
-```javascript {tabTitle: CDN}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  release: "my-project-name@" + process.env.npm_package_version,
-  integrations: [new Sentry.Integrations.BrowserTracing()],
-  tracesSampleRate: 1.0, // Be sure to lower this in production
-});
-```
+Performance data is transmitted using a new event type called “transactions”, which you can learn about in [Distributed Tracing](/product/performance/distributed-tracing). To capture transactions, install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value. The example configuration above will transmit 100% of captured transactions; lower this value in production to avoid consuming your quota too quickly.
 
-Performance data is transmitted using a new event type called “transactions”, which you can learn about in [Distributed Tracing](/product/performance/distributed-tracing). To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value. The example configuration above will transmit 100% of captured transactions; lower this value in production to avoid consuming your quota too quickly.
-
-Learn more about sampling in [Filtering Events Reported to Sentry](./config/filter).
+Learn more about sampling in [Filtering Events Reported to Sentry](/platforms/javascript/configuration/filtering).
 
 ## Next Steps
 
