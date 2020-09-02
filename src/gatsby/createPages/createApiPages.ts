@@ -1,4 +1,4 @@
-import { getDataOrPanic } from "./helpers";
+import { getDataOrPanic } from "../helpers";
 
 export default async ({ actions, graphql, reporter }) => {
   const data = await getDataOrPanic(
@@ -19,7 +19,7 @@ export default async ({ actions, graphql, reporter }) => {
     reporter
   );
 
-  const component = require.resolve(`../../templates/api.js`);
+  const component = require.resolve(`../../templates/api.tsx`);
   data.allApiDoc.nodes.map((node: any) => {
     actions.createPage({
       path: node.fields.slug,

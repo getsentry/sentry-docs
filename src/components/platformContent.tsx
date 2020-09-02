@@ -1,19 +1,12 @@
 import React from "react";
 import { StaticQuery, graphql } from "gatsby";
-import { Location } from "@reach/router";
-import { parse } from "query-string";
 
+import usePlatform, { getPlatform, Guide } from "./hooks/usePlatform";
 import Content from "./content";
 import SmartLink from "./smartLink";
 
 const includeQuery = graphql`
   query IncludeQuery {
-    allPlatformsYaml(sort: { fields: slug, order: ASC }) {
-      nodes {
-        name
-        slug
-      }
-    }
     allFile(filter: { sourceInstanceName: { eq: "includes" } }) {
       nodes {
         id
@@ -36,11 +29,6 @@ const slugMatches = (slug1: string, slug2: string): boolean => {
   return slug1 === slug2;
 };
 
-type PlatformNode = {
-  name: string;
-  slug: string;
-};
-
 type FileNode = {
   id: string;
   relativePath: string;
@@ -56,60 +44,66 @@ type FileNode = {
 type Props = {
   includePath: string;
   platform?: string;
+  children?: React.ReactNode;
+  fallbackPlatform?: string;
 };
 
 type ChildProps = Props & {
-  location: any;
-  navigate: any;
   data: {
     allFile: {
       nodes: FileNode[];
-    };
-    allPlatformsYaml: {
-      nodes: PlatformNode[];
     };
   };
 };
 
 const PlatformContent = ({
   data,
-  location,
-  navigate,
   includePath,
   platform,
+  fallbackPlatform,
+  children,
 }: ChildProps): JSX.Element => {
   const {
     allFile: { nodes: files },
-    allPlatformsYaml: { nodes: platforms },
   } = data;
   const [dropdown, setDropdown] = React.useState(null);
-  const hasDropdown = !platform;
-
-  if (!platform) {
-    const qsPlatform = parse(location.search).platform;
-    if (qsPlatform instanceof Array) {
-      platform = qsPlatform[0];
-    } else {
-      platform = qsPlatform || null;
-    }
-  }
+  const [currentPlatform, setPlatform, isFixed] = usePlatform(platform);
+  const hasDropdown = !isFixed;
 
   const matches = files.filter(
     node => node.relativePath.indexOf(includePath) === 0
   );
-  const defaultPlatform = platforms.find(p =>
-    matches.find(m => slugMatches(m.name, p.slug))
-  );
 
-  let activePlatform =
-    platforms.find(p => slugMatches(p.slug, platform)) || defaultPlatform;
-  if (!activePlatform) activePlatform = defaultPlatform;
-  const contentMatch = matches.find(m =>
-    slugMatches(m.name, activePlatform.slug)
+  let activePlatform = currentPlatform;
+  // if (!activePlatform) activePlatform = defaultPlatform;
+  let contentMatch = matches.find(m =>
+    slugMatches(m.name, currentPlatform.key)
   );
+  if (!contentMatch && (currentPlatform as Guide).fallbackPlatform) {
+    const guideFallbackPlatform = (currentPlatform as Guide).fallbackPlatform;
+    if (
+      (contentMatch = matches.find(m =>
+        slugMatches(m.name, guideFallbackPlatform)
+      ))
+    ) {
+      activePlatform = getPlatform(guideFallbackPlatform);
+    }
+  }
+  if (!contentMatch && fallbackPlatform) {
+    if (
+      (contentMatch = matches.find(m => slugMatches(m.name, fallbackPlatform)))
+    ) {
+      activePlatform = getPlatform(fallbackPlatform);
+    }
+  }
+  if (!contentMatch) {
+    if ((contentMatch = matches.find(m => m.name === "_default"))) {
+      activePlatform = currentPlatform;
+    }
+  }
   if (!contentMatch) {
     console.warn(
-      `Couldn't find content in ${includePath} for selected platform: ${activePlatform.slug}`
+      `Couldn't find content in ${includePath} for selected platform: ${currentPlatform.key}`
     );
   }
 
@@ -122,7 +116,7 @@ const PlatformContent = ({
               className="btn btn-sm btn-secondary dropdown-toggle"
               onClick={() => setDropdown(!dropdown)}
             >
-              {activePlatform.name}
+              {activePlatform.title}
             </button>
 
             <div
@@ -131,27 +125,25 @@ const PlatformContent = ({
               style={{ display: dropdown ? "block" : "none" }}
             >
               {matches.map(node => {
-                const platform = platforms.find(p =>
-                  slugMatches(p.slug, node.name)
-                );
+                const platform = getPlatform(node.name);
                 if (!platform) {
-                  throw new Error(`Cannot find platform for ${node.name}`);
+                  console.warn(`Cannot find platform for ${node.name}`);
+                  return null;
                 }
                 return (
                   <a
                     className="dropdown-item"
                     role="tab"
-                    key={platform.slug}
+                    key={platform.key}
+                    style={{ cursor: "pointer" }}
                     onClick={() => {
                       setDropdown(false);
-                      navigate(
-                        `${location.pathname}?platform=${platform.slug}`
-                      );
+                      setPlatform(platform.key);
                       // TODO: retain scroll
                       // window.scrollTo(window.scrollX, window.scrollY);
                     }}
                   >
-                    {platform.name}
+                    {platform.title}
                   </a>
                 );
               })}
@@ -166,7 +158,10 @@ const PlatformContent = ({
       <div className="tab-content">
         <div className="tab-pane show active">
           {contentMatch && (
-            <Content key={contentMatch.id} file={contentMatch} />
+            <React.Fragment>
+              {children || null}
+              <Content key={contentMatch.id} file={contentMatch} />
+            </React.Fragment>
           )}
         </div>
       </div>
@@ -179,18 +174,7 @@ export default (props: Props): JSX.Element => {
     <StaticQuery
       query={includeQuery}
       render={data => {
-        return (
-          <Location>
-            {({ location, navigate }) => (
-              <PlatformContent
-                location={location}
-                navigate={navigate}
-                data={data}
-                {...props}
-              />
-            )}
-          </Location>
-        );
+        return <PlatformContent data={data} {...props} />;
       }}
     />
   );

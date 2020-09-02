@@ -1,4 +1,4 @@
-import { getChild, getDataOrPanic } from "./helpers";
+import { getChild, getDataOrPanic } from "../helpers";
 
 export default async ({ actions, graphql, reporter }) => {
   const data = await getDataOrPanic(
@@ -28,14 +28,14 @@ export default async ({ actions, graphql, reporter }) => {
 
   actions.createPage({
     path: `/_debug/wizard/`,
-    component: require.resolve(`../../templates/wizardDebugIndex.js`),
+    component: require.resolve(`../../templates/wizardDebugIndex.tsx`),
     context: {
       noindex: true,
       title: "Wizard Previews",
     },
   });
 
-  const component = require.resolve(`../../templates/wizardDebug.js`);
+  const component = require.resolve(`../../templates/wizardDebug.tsx`);
   data.allFile.nodes.map((node: any) => {
     const child = getChild(node);
     actions.createPage({

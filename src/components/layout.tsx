@@ -4,6 +4,7 @@ import Breadcrumbs from "./breadcrumbs";
 import Header from "./header";
 import Sidebar from "./sidebar";
 import Navbar from "./navbar";
+import PlatformSelector from "./platformSelector";
 
 import "~src/css/screen.scss";
 
@@ -51,7 +52,27 @@ export default ({
           </div>
 
           <section className="pt-3 px-3 content-max prose">
-            <Breadcrumbs />
+            <div
+              style={{ display: "flex", justifyContent: "center" }}
+              className="row pb-3"
+            >
+              <div
+                className="col-sm-8 col-md-12 col-lg-8 col-xl-9"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                }}
+              >
+                <Breadcrumbs />
+              </div>
+              <div
+                className="col-sm-4 col-md-12 col-lg-4 col-xl-3"
+                style={{ fontSize: "0.8rem" }}
+              >
+                <PlatformSelector />
+              </div>
+            </div>
             {children}
           </section>
         </div>

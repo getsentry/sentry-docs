@@ -54,7 +54,7 @@ type ChildProps = Props & {
 };
 
 export const GuideGrid = ({ platform, data }: ChildProps): JSX.Element => {
-  let matches = sortBy(
+  const matches = sortBy(
     data.allSitePage.nodes.filter(n => n.context.platform.name === platform),
     (n: Node) => n.context.guide.title
   );

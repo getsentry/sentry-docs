@@ -5,6 +5,7 @@ import CodeContext from "./codeContext";
 const LANGUAGES = {
   javascript: "JavaScript",
   typescript: "TypeScript",
+  jsx: "JSX",
   html: "HTML",
   coffee: "CoffeeScript",
   powershell: "PowerShell",

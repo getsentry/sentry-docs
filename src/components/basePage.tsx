@@ -45,6 +45,7 @@ type Props = {
   };
   pageContext?: {
     title?: string;
+    description?: string;
   };
   sidebar?: JSX.Element;
   children?: JSX.Element;
@@ -63,12 +64,14 @@ export default ({
     tx.setStatus("ok");
   }
 
-  const { title } = pageContext;
+  const { title, description } = pageContext;
   const child = file && (file.childMarkdownRemark || file.childMdx);
-  const hasToc = child && !!child.tableOfContents.items;
+  const hasToc =
+    child && !child.frontmatter.notoc && !!child.tableOfContents.items;
+
   return (
     <Layout {...{ sidebar, pageContext }}>
-      <SEO title={title} file={file} />
+      <SEO title={title} description={description} file={file} />
 
       <div className="row">
         <div

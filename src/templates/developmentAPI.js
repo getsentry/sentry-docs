@@ -22,12 +22,12 @@ const Params = ({ params }) => (
 );
 
 const getScopes = (data, securityScheme) => {
-  let obj = data.security.find(e => e[securityScheme]);
+  const obj = data.security.find(e => e[securityScheme]);
   return obj[securityScheme];
 };
 
 const strFormat = str => {
-  let s = str.trim();
+  const s = str.trim();
   if (s.endsWith(".")) {
     return s;
   }
@@ -47,7 +47,7 @@ export default props => {
   ];
 
   if (parameters) {
-    let body = {};
+    const body = {};
     Object.entries(parameters.properties).map(
       ([key, { example }]) => (body[key] = example)
     );
