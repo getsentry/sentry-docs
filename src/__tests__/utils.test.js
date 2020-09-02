@@ -1,5 +1,3 @@
-import "@testing-library/jest-dom/extend-expect";
-
 import { sortPages } from "../utils";
 
 const PAGE_ONE = { context: { title: "Test", sidebar_order: 5 } };

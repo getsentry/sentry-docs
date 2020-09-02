@@ -1,6 +1,5 @@
 import React from "react";
 import renderer from "react-test-renderer";
-import "@testing-library/jest-dom/extend-expect";
 
 import PlatformSection from "../platformSection";
 import usePlatform from "../hooks/usePlatform";
