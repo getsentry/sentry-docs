@@ -1,15 +1,8 @@
-import Gatsby from "gatsby";
 import React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
-import {
-  Router,
-  Link,
-  createHistory,
-  createMemorySource,
-  LocationProvider,
-} from "@reach/router";
 import "@testing-library/jest-dom/extend-expect";
 
+import PageContext from "../../pageContext";
 import usePlatform from "../usePlatform";
 import useLocalStorage from "../useLocalStorage";
 
@@ -35,6 +28,10 @@ jest.mock("../useLocalStorage");
 
 describe("usePlatform", () => {
   it("uses the default of javascript", () => {
+    const wrapper = ({ children }) => (
+      <PageContext.Provider value={{}}>{children}</PageContext.Provider>
+    );
+
     useLocalStorage.mockReturnValue([null, jest.fn()]);
     useLocation.mockReturnValue({
       pathname: "/",
@@ -45,11 +42,17 @@ describe("usePlatform", () => {
       },
     }));
 
-    const { result } = renderHook(() => usePlatform());
+    const { result } = renderHook(() => usePlatform(), { wrapper });
     expect(result.current[0].key).toBe("javascript");
   });
 
   it("identifies platform from route", () => {
+    const wrapper = ({ children }) => (
+      <PageContext.Provider value={{ platform: { name: "ruby" } }}>
+        {children}
+      </PageContext.Provider>
+    );
+
     useLocalStorage.mockReturnValue([null, jest.fn()]);
     useLocation.mockReturnValue({
       pathname: "/platforms/ruby/",
@@ -60,38 +63,17 @@ describe("usePlatform", () => {
       },
     }));
 
-    const { result } = renderHook(() => usePlatform());
+    const { result } = renderHook(() => usePlatform(), { wrapper });
     expect(result.current[0].key).toBe("ruby");
   });
 
   it("sets and navigates to new path", () => {
-    useLocalStorage.mockReturnValue([null, jest.fn()]);
-    useLocation.mockReturnValue({
-      pathname: "/platforms/javascript/",
-    });
+    const wrapper = ({ children }) => (
+      <PageContext.Provider value={{ platform: { name: "ruby" } }}>
+        {children}
+      </PageContext.Provider>
+    );
 
-    const navigate = jest.fn();
-
-    useNavigate.mockImplementation(() => navigate);
-    useStaticQuery.mockImplementation(() => ({
-      allPlatform: {
-        nodes: PLATFORMS,
-      },
-    }));
-
-    const { result } = renderHook(() => usePlatform());
-
-    act(() => {
-      result.current[1]("ruby");
-    });
-
-    expect(navigate.mock.calls.length).toBe(1);
-    expect(navigate.mock.calls[0][0]).toBe("/platforms/ruby/");
-
-    expect(result.current[0].key).toBe("ruby");
-  });
-
-  it("sets and navigates to doesnt navigate if path unchanged", () => {
     useLocalStorage.mockReturnValue([null, jest.fn()]);
     useLocation.mockReturnValue({
       pathname: "/platforms/ruby/",
@@ -106,7 +88,40 @@ describe("usePlatform", () => {
       },
     }));
 
-    const { result } = renderHook(() => usePlatform());
+    const { result } = renderHook(() => usePlatform(), { wrapper });
+
+    act(() => {
+      result.current[1]("javascript");
+    });
+
+    expect(navigate.mock.calls.length).toBe(1);
+    expect(navigate.mock.calls[0][0]).toBe("/platforms/javascript/");
+
+    expect(result.current[0].key).toBe("javascript");
+  });
+
+  it("sets and navigates to doesnt navigate if path unchanged", () => {
+    const wrapper = ({ children }) => (
+      <PageContext.Provider value={{ platform: { name: "ruby" } }}>
+        {children}
+      </PageContext.Provider>
+    );
+
+    useLocalStorage.mockReturnValue([null, jest.fn()]);
+    useLocation.mockReturnValue({
+      pathname: "/platforms/ruby/",
+    });
+
+    const navigate = jest.fn();
+
+    useNavigate.mockImplementation(() => navigate);
+    useStaticQuery.mockImplementation(() => ({
+      allPlatform: {
+        nodes: PLATFORMS,
+      },
+    }));
+
+    const { result } = renderHook(() => usePlatform(), { wrapper });
 
     act(() => {
       result.current[1]("ruby");
@@ -118,6 +133,10 @@ describe("usePlatform", () => {
   });
 
   it("identifies platform from querystring", () => {
+    const wrapper = ({ children }) => (
+      <PageContext.Provider value={{}}>{children}</PageContext.Provider>
+    );
+
     useLocalStorage.mockReturnValue([null, jest.fn()]);
     useLocation.mockReturnValue({
       pathname: "/",
@@ -129,11 +148,15 @@ describe("usePlatform", () => {
       },
     }));
 
-    const { result } = renderHook(() => usePlatform());
+    const { result } = renderHook(() => usePlatform(), { wrapper });
     expect(result.current[0].key).toBe("ruby");
   });
 
   it("sets and navigates to new querystring", () => {
+    const wrapper = ({ children }) => (
+      <PageContext.Provider value={{}}>{children}</PageContext.Provider>
+    );
+
     useLocalStorage.mockReturnValue([null, jest.fn()]);
     useLocation.mockReturnValue({
       pathname: "/",
@@ -148,7 +171,7 @@ describe("usePlatform", () => {
       },
     }));
 
-    const { result } = renderHook(() => usePlatform());
+    const { result } = renderHook(() => usePlatform(), { wrapper });
 
     act(() => {
       result.current[1]("ruby");
