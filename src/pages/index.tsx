@@ -162,10 +162,7 @@ const IndexPage = () => {
               </div>
               .NET Core
             </a>
-            <a
-              href="/platforms/cocoa/guides/swift/"
-              className="hover-card-link"
-            >
+            <a href="/platforms/cocoa/" className="hover-card-link">
               <div className="image-frame">
                 <img src={SwiftSVG} />
               </div>
