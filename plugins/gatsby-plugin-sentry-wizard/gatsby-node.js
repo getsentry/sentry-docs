@@ -64,6 +64,7 @@ const writeJson = async (path, nodes) => {
   nodes.forEach(n => {
     const pathMatch = n.fields.slug.match(/^\/([^/]+)(?:\/([^/]+))?\/$/);
     if (!pathMatch) throw new Error("cant identify language");
+    // eslint-disable-next-line no-unused-vars
     const [_, main, sub] = pathMatch;
     if (!platforms[main]) platforms[main] = {};
     if (!n.frontmatter.doc_link) {
@@ -89,6 +90,7 @@ const writeJson = async (path, nodes) => {
   Promise.all(
     nodes.map(async node => {
       const pathMatch = node.fields.slug.match(/^\/([^/]+)(?:\/([^/]+))?\/$/);
+      // eslint-disable-next-line no-unused-vars
       const [_, main, sub] = pathMatch;
 
       console.info(`Writing '${sub ? `${main}/${sub}.json` : `${main}.json`}'`);

@@ -8,7 +8,7 @@ exports.sourceNodes = async (
   try {
     content = await pluginOptions.resolve();
   } catch (error) {
-    console.warn(`There was an error resolving spec '${spec.name}': `, error);
+    console.warn(`There was an error resolving spec: `, error);
   }
 
   if (content === null) {
