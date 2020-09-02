@@ -160,7 +160,7 @@ const IndexPage = () => {
               <div className="image-frame">
                 <img src={dotNetCoreSVG} />
               </div>
-              .NET Core
+              ASP.NET Core
             </a>
             <a href="/platforms/cocoa/" className="hover-card-link">
               <div className="image-frame">
