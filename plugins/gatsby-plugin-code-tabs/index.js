@@ -9,13 +9,13 @@ function getFullMeta(node) {
 
 function getFilename(node) {
   const meta = getFullMeta(node);
-  const match = (meta || "").match(/\{filename:\s*([^\}]+)\}/);
+  const match = (meta || "").match(/\{filename:\s*([^}]+)\}/);
   return (match && match[1]) || "";
 }
 
 function getTabTitle(node) {
   const meta = getFullMeta(node);
-  const match = (meta || "").match(/\{tabTitle:\s*([^\}]+)\}/);
+  const match = (meta || "").match(/\{tabTitle:\s*([^}]+)\}/);
   return (match && match[1]) || "";
 }
 
@@ -89,7 +89,7 @@ module.exports = ({ markdownAST }, { className = "code-tabs-wrapper" }) => {
 
   flushPendingCode();
 
-  toRemove.forEach(([node, parent], index) => {
+  toRemove.forEach(([node, parent]) => {
     parent.children = parent.children.filter(n => n !== node);
   });
 

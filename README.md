@@ -36,6 +36,39 @@ Documentation is written in Markdown (via Remark) and MDX.
 
 [<kbd>Read the quick reference</kbd>](https://daringfireball.net/projects/markdown/syntax)
 
+## Standard Frontmatter
+
+The standard frontmatter will apply on nearly every page:
+
+`title`
+
+: Document title - used in `<title>` as well as things like search titles.
+
+`noindex` (false)
+
+: Set this to true to disable indexing (robots, algolia) of this content.
+
+`notoc` (false)
+
+: Set this to true to disable table of contents rendering.
+
+`draft` (false)
+
+: Set this to true to mark this page as a draft, and hide it from various other components.
+
+`keywords` ([])
+
+: A list of keywords for indexing with search.
+
+`description`
+
+: A description to use in the `<meta>` header, as well as in auto generated page grids.
+
+`sidebar_order` (10)
+
+: The order of this page in auto generated sidebars and grids.
+
+
 ## Redirects
 
 Redirects are supported via yaml frontmatter in `.md` and `.mdx` files:
@@ -202,9 +235,9 @@ Render an alert callout.
 
 Attributes:
 
-- title (string)
-- level (string)
-- dismiss (boolean)
+- `title` (string)
+- `level` (string)
+- `dismiss` (boolean)
 
 ```javascript
 <Alert level="info" title="Note"><markdown>
@@ -218,17 +251,17 @@ This is an alert
 
 Render a heading with a configuration key in the correctly cased format for a given platform.
 
-If content is specified, it will automatically notate when the configuration is unsupported for the selected platform.
+If content is specified, it will automatically hide the content when the given `platform` is not selected in context.
 
 Attributes:
 
-- name (string)
-- platform (string) - defaults to the `platform` value from the query string
-- supported (string[])
-- notSupported (string[])
+- `name` (string)
+- `platform` (string) - defaults to the `platform` value from the page context or querystring
+- `supported` (string[])
+- `notSupported` (string[])
 
 ```javascript
-<ConfigKey name="send-default-pii" notSupported={["browser", "node"]}><markdown>
+<ConfigKey name="send-default-pii" notSupported={["javascript", "node"]}><markdown>
 
 Description of send-default-pii
 
@@ -260,6 +293,60 @@ Additionally code blocks also support `tabTitle` and `filename` properties:
 var foo = "bar";
 ```
 ````
+
+### PageGrid
+
+Render all child pages of this document, including their `description` if available.
+
+```markdown
+<PageGrid />
+```
+
+### PlatformContent
+
+Render an include based on the currently selected `platform` in context.
+
+Attributes:
+
+- `includePath` (string) - the subfolder within `src/includes` to map to
+- `platform` (string) - defaults to the `platform` value from the page context or querystring
+- `fallbackPlatform` (string) - default platform for when no content matches
+
+```javascript
+<PlatformContent includePath="sdk-init" />
+```
+
+Some notes:
+
+- When the current platform comes from the page context and no matching include is found, the content will be hidden.
+
+- When the current platform comes from the page context path (not the querystring) the platform selector dropdown will be hidden.
+
+- Similar to `PlatformSection`, you can embed content in the block which will render _before_ the given include, but only when an include is available.
+
+- A file named `_default` will be used if no other content matches.
+
+Note: This currently causes issues with tableOfContents generation, so its recommended to disable the TOC when using it.
+
+### PlatformSection
+
+Render a section based on the currently selected `platform` in context.  When the platform is not valid, the content will be hidden.
+
+Attributes:
+
+- `platform` (string) - defaults to the `platform` value from the page context or querystring
+- `supported` (string[])
+- `notSupported` (string[])
+
+```javascript
+<PlatformSection notSupported={["javascript", "node"]}><markdown>
+
+Something that applies to all platforms, but not javascript or node.
+
+</PlatformSection></ConfigKey>
+```
+
+Note: This currently causes issues with tableOfContents generation, so its recommended to disable the TOC when using it.
 
 ## Linting
 

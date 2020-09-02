@@ -1,4 +1,4 @@
-import { getDataOrPanic } from "./helpers";
+import { getDataOrPanic } from "../helpers";
 
 export default async ({ actions, graphql, reporter }) => {
   const data = await getDataOrPanic(

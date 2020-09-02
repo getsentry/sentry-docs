@@ -1,6 +1,6 @@
 const visit = require("unist-util-visit");
 
-module.exports = ({ markdownAST }, {}) => {
+module.exports = ({ markdownAST }) => {
   const imports = {};
   let idx = 0;
 

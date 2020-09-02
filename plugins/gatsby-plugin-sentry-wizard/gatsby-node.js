@@ -62,7 +62,7 @@ exports.onPostBuild = async ({ graphql }, { source, output }) => {
 const writeJson = async (path, nodes) => {
   const platforms = {};
   nodes.forEach(n => {
-    const pathMatch = n.fields.slug.match(/^\/([^\/]+)(?:\/([^\/]+))?\/$/);
+    const pathMatch = n.fields.slug.match(/^\/([^/]+)(?:\/([^/]+))?\/$/);
     if (!pathMatch) throw new Error("cant identify language");
     const [_, main, sub] = pathMatch;
     if (!platforms[main]) platforms[main] = {};
@@ -80,7 +80,7 @@ const writeJson = async (path, nodes) => {
   });
 
   // remove files to ensure we're working correctly in prod
-  // rmDirSync(path);
+  rmDirSync(path);
 
   console.info(`Writing '_index.json'`);
   fs.mkdirSync(path, { recursive: true });
@@ -88,7 +88,7 @@ const writeJson = async (path, nodes) => {
 
   Promise.all(
     nodes.map(async node => {
-      const pathMatch = node.fields.slug.match(/^\/([^\/]+)(?:\/([^\/]+))?\/$/);
+      const pathMatch = node.fields.slug.match(/^\/([^/]+)(?:\/([^/]+))?\/$/);
       const [_, main, sub] = pathMatch;
 
       console.info(`Writing '${sub ? `${main}/${sub}.json` : `${main}.json`}'`);

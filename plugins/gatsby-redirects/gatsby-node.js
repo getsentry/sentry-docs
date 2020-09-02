@@ -1,10 +1,10 @@
 const { NginxConfFile } = require("nginx-conf");
 const { remove } = require("fs-extra");
 
-exports.onCreatePage = ({ page, actions: { createRedirect } }) => {
+exports.onCreatePage = ({ page, reporter, actions: { createRedirect } }) => {
   if (page.context && page.context.redirect_from) {
     page.context.redirect_from.forEach(fromPath => {
-      console.debug(`Adding redirect from ${fromPath} to ${page.path}`);
+      reporter.verbose(`Adding redirect from ${fromPath} to ${page.path}`);
       createRedirect({
         fromPath,
         toPath: page.path,

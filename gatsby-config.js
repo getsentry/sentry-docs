@@ -20,8 +20,6 @@ if (
   process.env.ALGOLIA_INDEX = "1";
 }
 
-const IS_DEV = activeEnv === "development";
-
 const queries = require("./src/utils/algolia");
 const packages = new (require("./src/utils/packageRegistry"))();
 
@@ -103,7 +101,7 @@ const getPlugins = () => {
     {
       resolve: `gatsby-transformer-json`,
       options: {
-        typeName: ({ node, object, isArray }) => {
+        typeName: ({ node }) => {
           if (node.sourceInstanceName === "api") {
             return "ApiDoc";
           }
@@ -111,6 +109,7 @@ const getPlugins = () => {
         },
       },
     },
+    `gatsby-transformer-javascript-frontmatter`,
     {
       resolve: `gatsby-source-filesystem`,
       options: {
@@ -144,7 +143,7 @@ const getPlugins = () => {
       options: {
         name: `wizard`,
         path: `${__dirname}/src/wizard`,
-        ignore: [`**/README\.md`],
+        ignore: [`**/README.md`],
       },
     },
     {
@@ -180,14 +179,10 @@ const getPlugins = () => {
       options: {
         name: "openapi",
         resolve: async () => {
-          try {
-            const response = await axios.get(
-              "https://raw.githubusercontent.com/getsentry/sentry-api-schema/68bb79acfbbee062bd8d2f71ee3a07d43dc934c9/openapi-derefed.json"
-            );
-            return response.data;
-          } catch (err) {
-            throw err;
-          }
+          const response = await axios.get(
+            "https://raw.githubusercontent.com/getsentry/sentry-api-schema/68bb79acfbbee062bd8d2f71ee3a07d43dc934c9/openapi-derefed.json"
+          );
+          return response.data;
         },
         // required, function which returns a Promise resolving Swagger JSON
       },

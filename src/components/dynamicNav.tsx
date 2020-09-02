@@ -4,6 +4,7 @@ import { useLocation } from "@reach/router";
 
 import SmartLink from "./smartLink";
 import SidebarLink from "./sidebarLink";
+import { sortPages } from "~src/utils";
 
 type Node = {
   path: string;
@@ -55,33 +56,27 @@ export const renderChildren = (
   showDepth: number = 0,
   depth: number = 0
 ): React.ReactNode[] => {
-  return children
-    .filter(
+  return sortPages(
+    children.filter(
       ({ name, node }) =>
         node &&
         !!node.context.title &&
         name !== "" &&
         exclude.indexOf(node.path) === -1
-    )
-    .sort((a, b) => {
-      let aso = a.node.context.sidebar_order ?? 10;
-      let bso = b.node.context.sidebar_order ?? 10;
-      if (aso > bso) return 1;
-      else if (bso > aso) return -1;
-      return a.node.context.title.localeCompare(b.node.context.title);
-    })
-    .map(({ node, children }) => {
-      return (
-        <SidebarLink
-          to={node.path}
-          key={node.path}
-          title={node.context.title}
-          collapsed={depth >= showDepth}
-        >
-          {renderChildren(children, exclude, showDepth, depth + 1)}
-        </SidebarLink>
-      );
-    });
+    ),
+    ({ node }) => node
+  ).map(({ node, children }) => {
+    return (
+      <SidebarLink
+        to={node.path}
+        key={node.path}
+        title={node.context.title}
+        collapsed={depth >= showDepth}
+      >
+        {renderChildren(children, exclude, showDepth, depth + 1)}
+      </SidebarLink>
+    );
+  });
 };
 
 type ChildrenProps = {
