@@ -235,9 +235,9 @@ Render an alert callout.
 
 Attributes:
 
-- title (string)
-- level (string)
-- dismiss (boolean)
+- `title` (string)
+- `level` (string)
+- `dismiss` (boolean)
 
 ```javascript
 <Alert level="info" title="Note"><markdown>
@@ -255,10 +255,10 @@ If content is specified, it will automatically hide the content when the given `
 
 Attributes:
 
-- name (string)
-- platform (string) - defaults to the `platform` value from the URL (path or querystring)
-- supported (string[])
-- notSupported (string[])
+- `name` (string)
+- `platform` (string) - defaults to the `platform` value from the page context or querystring
+- `supported` (string[])
+- `notSupported` (string[])
 
 ```javascript
 <ConfigKey name="send-default-pii" notSupported={["javascript", "node"]}><markdown>
@@ -309,7 +309,7 @@ Render an include based on the currently selected `platform` in context.
 Attributes:
 
 - `includePath` (string) - the subfolder within `src/includes` to map to
-- `platform` (string) - defaults to the `platform` value from the URL (path or querystring)
+- `platform` (string) - defaults to the `platform` value from the page context or querystring
 - `fallbackPlatform` (string) - default platform for when no content matches
 
 ```javascript
@@ -334,7 +334,7 @@ Render a section based on the currently selected `platform` in context.  When th
 
 Attributes:
 
-- `platform` (string) - defaults to the `platform` value from the URL (path or querystring)
+- `platform` (string) - defaults to the `platform` value from the page context or querystring
 - `supported` (string[])
 - `notSupported` (string[])
 
