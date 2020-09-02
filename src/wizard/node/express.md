@@ -9,10 +9,10 @@ Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/node
+$ yarn add @sentry/node @sentry/tracing
 
 # Using npm
-$ npm install --save @sentry/node
+$ npm install --save @sentry/node @sentry/tracing
 ```
 
 Sentry should be initialized as early in your app as possible.
@@ -20,17 +20,31 @@ Sentry should be initialized as early in your app as possible.
 ```javascript
 import express from "express";
 import * as Sentry from "@sentry/node";
+import * as Tracing from '@sentry/tracing';
 
 // or using CommonJS
 // const express = require('express');
 // const Sentry = require('@sentry/node');
+// const Tracing = require("@sentry/tracing");
 
 const app = express();
 
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+    // enable Express.js middleware tracing
+    new Tracing.Integrations.Express({ app }),
+  ],
+  tracesSampleRate: 1.0,
+});
 
-// The request handler must be the first middleware on the app
+// RequestHandler creates a separate execution context using domains, so that every
+// transaction/span/breadcrumb is attached to its own Hub instance
 app.use(Sentry.Handlers.requestHandler());
+// TracingHandler creates a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
 
 // All controllers should live here
 app.get("/", function rootHandler(req, res) {
@@ -50,6 +64,8 @@ app.use(function onError(err, req, res, next) {
 
 app.listen(3000);
 ```
+
+The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
 
 You can verify the Sentry integration by creating a route that will throw an error:
 
