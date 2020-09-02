@@ -91,7 +91,7 @@ const normalizeSlug = (name: string): string => {
   }
 };
 
-type PageContext = {
+type PageContextType = {
   platform?: {
     name: string;
   };
@@ -115,7 +115,7 @@ type GetPlatformFromLocation = [[string, string | null] | null, boolean];
  * @param location
  */
 const getPlatformFromLocation = (
-  pageContext: PageContext,
+  pageContext: PageContextType,
   location?: WindowLocation
 ): GetPlatformFromLocation => {
   if (pageContext && pageContext.platform) {

@@ -151,7 +151,7 @@ export function fetchCodeKeywords() {
 export default CodeContext;
 
 export function useCodeContextState(fetcher = fetchCodeKeywords) {
-  const [codeKeywords, setCodeKeywords] = useState(DEFAULTS);
+  let [codeKeywords, setCodeKeywords] = useState(DEFAULTS);
   if (codeKeywords === null && cachedCodeKeywords !== null) {
     setCodeKeywords(cachedCodeKeywords);
     codeKeywords = cachedCodeKeywords;

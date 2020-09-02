@@ -4,7 +4,6 @@ import styled from "@emotion/styled";
 
 import PlatformIcon from "./platformIcon";
 import SmartLink from "./smartLink";
-import { sortBy } from "../utils";
 
 const query = graphql`
   query PlatformGridQuery {

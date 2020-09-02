@@ -28,7 +28,7 @@ export function useRefWithCallback<T>(
   const ref = useRef<T>();
   const setRef = useCallback(
     node => {
-      let old = ref.current;
+      const old = ref.current;
       ref.current = node;
       callback(node, old);
     },
@@ -37,7 +37,7 @@ export function useRefWithCallback<T>(
   return [ref, setRef];
 }
 
-export const sortBy = (arr: T[], comp: (T) => any) => {
+export const sortBy = (arr: any[], comp: (any) => any): any[] => {
   return arr.sort((a, b) => {
     const aComp = comp(a);
     const bComp = comp(b);
@@ -58,12 +58,15 @@ type Page = {
   };
 };
 
-export const sortPages = (arr: T, extractor: (T) => Page = n => n): T[] => {
+export const sortPages = (
+  arr: any,
+  extractor: (any) => Page = n => n
+): any[] => {
   return arr.sort((a, b) => {
     a = extractor(a);
     b = extractor(b);
-    let aso = a.context.sidebar_order ?? 10;
-    let bso = b.context.sidebar_order ?? 10;
+    const aso = a.context.sidebar_order ?? 10;
+    const bso = b.context.sidebar_order ?? 10;
     if (aso > bso) return 1;
     else if (bso > aso) return -1;
     return a.context.title.localeCompare(b.context.title);
