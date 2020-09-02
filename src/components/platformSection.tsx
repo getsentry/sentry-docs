@@ -9,6 +9,19 @@ type Props = {
   children?: React.ReactNode;
 };
 
+const isSupported = (
+  platformKey: string,
+  supported: string[],
+  notSupported: string[]
+): boolean | null => {
+  if (supported.length && supported.find(p => p === platformKey)) {
+    return true;
+  } else if (notSupported.length && notSupported.find(p => p === platformKey)) {
+    return false;
+  }
+  return null;
+};
+
 export default ({
   supported = [],
   notSupported = [],
@@ -17,29 +30,20 @@ export default ({
 }: Props): JSX.Element => {
   const [currentPlatform] = usePlatform(platform);
 
-  let isSupported = !supported.length;
-  if (currentPlatform) {
-    const [platformName, guideName] = currentPlatform.key.split(".", 2);
-    if (supported.length && supported.find(p => p === currentPlatform.key)) {
-      isSupported = true;
-    } else if (
-      notSupported.length &&
-      notSupported.find(p => p === currentPlatform.key)
-    ) {
-      isSupported = false;
-    } else if (guideName) {
-      if (supported.length && supported.find(p => p === platformName)) {
-        isSupported = true;
-      } else if (
-        notSupported.length &&
-        notSupported.find(p => p === platformName)
-      ) {
-        isSupported = false;
-      }
-    }
-  }
+  const platformsToSearch = [
+    currentPlatform.key,
+    currentPlatform.key.split(".", 2)[0],
+    currentPlatform.fallbackPlatform,
+  ];
 
-  if (!isSupported) return null;
+  let result: boolean | null = null;
+  for (let platformKey, i = 0; (platformKey = platformsToSearch[i]); i++) {
+    if (!platformKey) continue;
+    result = isSupported(platformKey, supported, notSupported);
+    if (result === false) return null;
+    else if (result === true) break;
+  }
+  if (result === null && supported.length) return null;
 
   return <React.Fragment>{children}</React.Fragment>;
 };

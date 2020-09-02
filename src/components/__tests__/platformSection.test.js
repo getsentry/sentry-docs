@@ -16,9 +16,7 @@ describe("PlatformSection", () => {
       false,
     ]);
     const tree = renderer
-      .create(<PlatformSection supported={["python"]}>Test</PlatformSection>, {
-        path: "/",
-      })
+      .create(<PlatformSection supported={["python"]}>Test</PlatformSection>)
       .toJSON();
 
     expect(tree).toBe(null);
@@ -33,9 +31,7 @@ describe("PlatformSection", () => {
       false,
     ]);
     const tree = renderer
-      .create(<PlatformSection supported={["python"]}>Test</PlatformSection>, {
-        path: "/",
-      })
+      .create(<PlatformSection supported={["python"]}>Test</PlatformSection>)
       .toJSON();
 
     expect(tree).toBe("Test");
@@ -50,9 +46,7 @@ describe("PlatformSection", () => {
       false,
     ]);
     const tree = renderer
-      .create(<PlatformSection supported={["ruby"]}>Test</PlatformSection>, {
-        path: "/",
-      })
+      .create(<PlatformSection supported={["ruby"]}>Test</PlatformSection>)
       .toJSON();
 
     expect(tree).toBe("Test");
@@ -67,9 +61,7 @@ describe("PlatformSection", () => {
       false,
     ]);
     const tree = renderer
-      .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>, {
-        path: "/",
-      })
+      .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>)
       .toJSON();
 
     expect(tree).toBe(null);
@@ -84,9 +76,7 @@ describe("PlatformSection", () => {
       false,
     ]);
     const tree = renderer
-      .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>, {
-        path: "/",
-      })
+      .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>)
       .toJSON();
 
     expect(tree).toBe(null);
@@ -101,9 +91,7 @@ describe("PlatformSection", () => {
       false,
     ]);
     const tree = renderer
-      .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>, {
-        path: "/",
-      })
+      .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>)
       .toJSON();
 
     expect(tree).toBe("Test");
@@ -121,10 +109,43 @@ describe("PlatformSection", () => {
       .create(
         <PlatformSection supported={["ruby.rails"]} notSupported={["ruby"]}>
           Test
-        </PlatformSection>,
-        {
-          path: "/",
-        }
+        </PlatformSection>
+      )
+      .toJSON();
+
+    expect(tree).toBe("Test");
+  });
+
+  it("hides content with notSupported fallbackPlatform", () => {
+    usePlatform.mockReturnValue([
+      {
+        key: "ruby.rails",
+        fallbackPlatform: "javascript",
+      },
+      jest.fn(),
+      false,
+    ]);
+    const tree = renderer
+      .create(
+        <PlatformSection notSupported={["javascript"]}>Test</PlatformSection>
+      )
+      .toJSON();
+
+    expect(tree).toBe(null);
+  });
+
+  it("shows content with supported fallbackPlatform", () => {
+    usePlatform.mockReturnValue([
+      {
+        key: "ruby.rails",
+        fallbackPlatform: "javascript",
+      },
+      jest.fn(),
+      false,
+    ]);
+    const tree = renderer
+      .create(
+        <PlatformSection supported={["javascript"]}>Test</PlatformSection>
       )
       .toJSON();
 
