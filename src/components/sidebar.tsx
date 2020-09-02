@@ -40,8 +40,6 @@ export const Sidebar = ({ data }: ChildProps): JSX.Element => {
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
   return (
     <ul className="list-unstyled" data-sidebar-tree>
-      <DynamicNav root="error-reporting" title="Error Monitoring" tree={tree} />
-      <DynamicNav root="platforms" title="Platforms" tree={tree} />
       <DynamicNav root="product" title="Product" tree={tree} />
       <DynamicNav root="accounts" title="Account Management" tree={tree} />
       <DynamicNav root="meta" title="Security and Legal" tree={tree} />
@@ -52,6 +50,7 @@ export const Sidebar = ({ data }: ChildProps): JSX.Element => {
         collapse
       />
       <DynamicNav root="api" title="API Reference" tree={tree} collapse />
+      <DynamicNav root="platforms" title="Platforms" tree={tree} collapse />
       <DynamicNav root="clients" title="Legacy Clients" tree={tree} collapse />
       <DynamicNav root="support" title="Support" tree={tree} collapse />
       <li className="mb-3" data-sidebar-branch>
