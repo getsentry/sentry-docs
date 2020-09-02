@@ -16,7 +16,9 @@ These rules can be configured on a per-project basis under _Project Settings > G
 ```
 
 All values are matched against, and in the case of stack traces, all frames are considered.
-If all matches in a line match then the fingerprint is applied.
+If all matches in a line match, then the fingerprint is applied. The syntax follows
+the syntax from Discover queries. If you want to negate the match, you can prefix
+the expression with an exclamation mark (`!`).
 
 The matchers are:
 
@@ -30,7 +32,19 @@ The matchers are:
 
 `message`
 
-: matches on a log message
+: matches on a log message. This will also automatically check for the additional exception value.
+
+`logger`
+
+: matches on the name of the logger.
+
+`level`
+
+: matches on the log level.
+
+`tags.tag_name`
+
+: matches on the value of the tag `tag_name`.
 
 The matchers also include the following from Custom Grouping Enhancements. See [grouping enhancements](/data-management/event-grouping/grouping-enhancements/#rules) for more info on how they work:
 
@@ -41,13 +55,13 @@ The matchers also include the following from Custom Grouping Enhancements. See [
 - `package`
 - `app`
 
-Don't forget that you can also use the variables `{{ function }}`, `{{ default }}`, `{{ transaction }}`, `{{ type }}`, `{{ function }}`, `{{ module }}` and
-`{{ package }}` to customize fingerprinting like you can do if the client
-submits them.
+Don't forget that you can also use the variables `{{ function }}`, `{{ default }}`, `{{ transaction }}`, `{{ type }}`, `{{ function }}`, `{{ module }}`, `{{ package }}`, `{{ logger }}`, `{{ level }}`, and
+`{{ tags.tag_name }}` to customize fingerprinting as you can if the client
+submits them. See also [SDK Fingerprinting](../sdk-fingerprinting/).
 
 ## Examples
 
-```
+```ini {tabTitle:Fingerprinting Config}
 # force all errors of the same type to have the same fingerprint
 type:DatabaseUnavailable -> system-down
 type:RedisConnectionError -> system-down
@@ -58,12 +72,17 @@ message:"unexpected i/o error: *" -> io-error
 # group all TimeoutError exceptions by the transaction that caused them
 type:TimeoutError -> {{ transaction }}
 
-# group all javascript errors in a module by the topmost module and function name
+# group all JavaScript errors in a module by the topmost module and
+# function name
 path:**/some-module/** -> {{ module }}, {{ function }}
 
 # force all memory allocation errors to be grouped together
 family:native function:malloc -> memory-allocation-error
 
-# group all allocation errors by the package (dylib, executable) that caused them
+# group all allocation errors by the package (dylib, executable)
+# that caused them
 function:*alloc* -> {{ package }}
+
+# group all messages of some loggers by logger name and log level.
+logger:myproject.noisy.* -> noisy, {{ logger }}, {{ level }}
 ```
