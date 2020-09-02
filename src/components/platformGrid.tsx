@@ -89,7 +89,10 @@ export default (): JSX.Element => {
         .sort((a, b) => a.title.localeCompare(b.title))
         .map(platform => {
           return (
-            <div className="col-lg-6 col-md-12 platform-link mb-3">
+            <div
+              className="col-lg-6 col-md-12 platform-link mb-3"
+              key={platform.key}
+            >
               <PlatformCell>
                 <PlatformCellIcon>
                   <SmartLink to={platform.url}>
@@ -104,7 +107,9 @@ export default (): JSX.Element => {
                   <GuideList>
                     {platform.guides.map(guide => {
                       return (
-                        <SmartLink to={guide.url}>{guide.title}</SmartLink>
+                        <SmartLink to={guide.url} key={guide.key}>
+                          {guide.title}
+                        </SmartLink>
                       );
                     })}
                   </GuideList>

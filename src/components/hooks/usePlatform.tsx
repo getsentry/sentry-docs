@@ -13,6 +13,7 @@ const query = graphql`
         key
         name
         title
+        url
         caseStyle
         supportLevel
         fallbackPlatform
@@ -20,6 +21,7 @@ const query = graphql`
           key
           name
           title
+          url
           caseStyle
           supportLevel
           fallbackPlatform
@@ -66,6 +68,7 @@ export type Guide = {
   key: string;
   name: string;
   title: string;
+  url: string;
   caseStyle: string;
   supportLevel: string;
   fallbackPlatform: string;
@@ -75,6 +78,7 @@ export type Platform = {
   key: string;
   name: string;
   title: string;
+  url: string;
   caseStyle: string;
   supportLevel: string;
   guides?: Guide[];
