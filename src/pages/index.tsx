@@ -105,7 +105,7 @@ const IndexPage = () => {
               </div>
               PHP
             </a>
-            <a href="/platforms/laravel/" className="hover-card-link">
+            <a href="/platforms/guides/laravel/" className="hover-card-link">
               <div className="image-frame">
                 <img src={LaravelSVG} />
               </div>
