@@ -136,11 +136,13 @@ const getPlatformFromLocation = (
 };
 
 const rebuildPathForPlatform = (key: string, currentPath?: string): string => {
+  // TODO(dcramer: we'd like to redirect them to the _same_ page on the new platform
+  // if we can, but until this is aware of pages that dont exist we direct them to platform home
   const [platformName, guideName] = key.split(".", 2);
   const newPathPrefix = guideName
     ? `/platforms/${platformName}/guides/${guideName}/`
     : `/platforms/${platformName}/`;
-  const pattern = /\/platforms\/([^\/]+)\/(?:guides\/([^\/]+)\/)?/i;
+  const pattern = /\/platforms\/([^/]+)\/(?:guides\/([^/]+)\/)?.*$/i;
   return currentPath
     ? currentPath.replace(pattern, newPathPrefix)
     : newPathPrefix;
