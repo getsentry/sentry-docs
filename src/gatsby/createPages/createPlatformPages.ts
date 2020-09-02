@@ -178,7 +178,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
   );
 
   // begin creating pages from `platforms`
-  const component = require.resolve(`../../templates/platform.js`);
+  const component = require.resolve(`../../templates/platform.tsx`);
 
   const createPlatformPage = (
     node: any,
@@ -345,7 +345,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
   if (indexPage) {
     actions.createPage({
       path: "/platforms/",
-      component: require.resolve(`../../templates/doc.js`),
+      component: require.resolve(`../../templates/doc.tsx`),
       context: {
         title: "Platforms",
         ...getChild(indexPage).frontmatter,

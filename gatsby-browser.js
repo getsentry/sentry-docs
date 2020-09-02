@@ -1,6 +1,6 @@
 import React from "react";
-import { PageContextProvider } from "~src/components/pageContext";
+import PageContext from "~src/components/pageContext";
 
 export const wrapPageElement = ({ element, props: { pageContext } }) => (
-  <PageContextProvider value={pageContext}>{element}</PageContextProvider>
+  <PageContext.Provider value={pageContext}>{element}</PageContext.Provider>
 );

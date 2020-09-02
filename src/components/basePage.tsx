@@ -69,7 +69,6 @@ export default ({
   const hasToc =
     child && !child.frontmatter.notoc && !!child.tableOfContents.items;
 
-  console.log(child.frontmatter);
   return (
     <Layout {...{ sidebar, pageContext }}>
       <SEO title={title} description={description} file={file} />

@@ -45,7 +45,7 @@ export default async ({ actions, graphql, reporter }) => {
     reporter
   );
 
-  const component = require.resolve(`../../templates/doc.js`);
+  const component = require.resolve(`../../templates/doc.tsx`);
   data.allFile.nodes.map((node: any) => {
     const child = getChild(node);
     if (child && child.fields) {
