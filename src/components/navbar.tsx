@@ -4,6 +4,7 @@ import { Nav, NavDropdown } from "react-bootstrap";
 
 import PlatformIcon from "./platformIcon";
 import Search from "./search";
+import SmartLink from "./smartLink";
 import usePlatform, { usePlatformList } from "./hooks/usePlatform";
 
 type Props = {
@@ -21,7 +22,9 @@ export default ({ platforms }: Props): JSX.Element => {
         <Search path={location.pathname} platforms={platforms} />
         <Nav className="justify-content-end" style={{ flex: 1 }}>
           <Nav.Item>
-            <Nav.Link href="/product/">Product</Nav.Link>
+            <SmartLink className="nav-link" to="/product/">
+              Product
+            </SmartLink>
           </Nav.Item>
           <NavDropdown
             title={
@@ -41,12 +44,14 @@ export default ({ platforms }: Props): JSX.Element => {
             id="platforms"
           >
             {platformList.map(platform => (
-              <NavDropdown.Item
+              <SmartLink
+                className={`dropdown-item ${
+                  currentPlatform && currentPlatform.key == platform.key
+                    ? "active"
+                    : ""
+                }`}
                 key={platform.key}
-                active={
-                  currentPlatform ? currentPlatform.key == platform.key : false
-                }
-                href={platform.url}
+                to={platform.url}
               >
                 <PlatformIcon
                   platform={platform.key}
@@ -54,18 +59,20 @@ export default ({ platforms }: Props): JSX.Element => {
                   style={{ marginRight: "0.5rem" }}
                 />
                 {platform.title}
-              </NavDropdown.Item>
+              </SmartLink>
             ))}
             <NavDropdown.Divider />
-            <NavDropdown.Item href="/platforms/">
+            <SmartLink className="dropdown-item" to="/platforms/">
               Show all platforms
-            </NavDropdown.Item>
+            </SmartLink>
           </NavDropdown>
           <Nav.Item>
-            <Nav.Link href="/api/">API</Nav.Link>
+            <SmartLink className="nav-link" to="/api/">
+              API
+            </SmartLink>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link href="https://sentry.io/">
+            <SmartLink className="nav-link" to="https://sentry.io/">
               Sign In
               <svg
                 width="1em"
@@ -80,7 +87,7 @@ export default ({ platforms }: Props): JSX.Element => {
                   d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
                 />
               </svg>
-            </Nav.Link>
+            </SmartLink>
           </Nav.Item>
         </Nav>
       </div>
