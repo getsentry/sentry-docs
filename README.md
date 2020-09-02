@@ -294,6 +294,14 @@ var foo = "bar";
 ```
 ````
 
+### PageGrid
+
+Render all child pages of this document, including their `description` if available.
+
+```markdown
+<PageGrid />
+```
+
 ### PlatformContent
 
 Render an include based on the currently selected `platform` in context.
