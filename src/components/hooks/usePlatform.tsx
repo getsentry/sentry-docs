@@ -3,7 +3,7 @@ import { graphql, useStaticQuery } from "gatsby";
 import { useLocation, useNavigate, WindowLocation } from "@reach/router";
 import { parse } from "query-string";
 
-import PageContext from "~src/components/pageContext";
+import PageContext from "../pageContext";
 import useLocalStorage from "./useLocalStorage";
 
 const query = graphql`
