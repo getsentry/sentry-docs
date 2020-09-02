@@ -15,6 +15,7 @@ const query = graphql`
         title
         caseStyle
         supportLevel
+        fallbackPlatform
         guides {
           key
           name
@@ -77,6 +78,7 @@ export type Platform = {
   caseStyle: string;
   supportLevel: string;
   guides?: Guide[];
+  fallbackPlatform?: string;
 };
 
 export const DEFAULT_PLATFORM = "javascript";

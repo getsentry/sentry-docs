@@ -1,7 +1,7 @@
 import React from "react";
-import { StaticQuery, graphql } from "gatsby";
+import { graphql, useStaticQuery } from "gatsby";
 
-import usePlatform, { getPlatform, Guide } from "./hooks/usePlatform";
+import usePlatform, { getPlatform, Platform } from "./hooks/usePlatform";
 import Content from "./content";
 import SmartLink from "./smartLink";
 
@@ -48,24 +48,38 @@ type Props = {
   fallbackPlatform?: string;
 };
 
-type ChildProps = Props & {
-  data: {
-    allFile: {
-      nodes: FileNode[];
-    };
-  };
+const getFileForPlatform = (
+  includePath: string,
+  fileList: FileNode[],
+  platform: Platform,
+  fallbackPlatform?: string
+): FileNode | null => {
+  const platformsToSearch = [
+    platform.key,
+    platform.fallbackPlatform,
+    fallbackPlatform,
+    "_default",
+  ];
+  const contentMatch = platformsToSearch
+    .map(name => name && fileList.find(m => slugMatches(m.name, name)))
+    .find(m => m);
+  if (!contentMatch) {
+    console.warn(
+      `Couldn't find content in ${includePath} for selected platform: ${platform.key}`
+    );
+  }
+  return contentMatch;
 };
 
-const PlatformContent = ({
-  data,
+export default ({
   includePath,
   platform,
   fallbackPlatform,
   children,
-}: ChildProps): JSX.Element => {
+}: Props): JSX.Element => {
   const {
     allFile: { nodes: files },
-  } = data;
+  } = useStaticQuery(includeQuery);
   const [dropdown, setDropdown] = React.useState(null);
   const [currentPlatform, setPlatform, isFixed] = usePlatform(platform);
   const hasDropdown = !isFixed;
@@ -74,38 +88,12 @@ const PlatformContent = ({
     node => node.relativePath.indexOf(includePath) === 0
   );
 
-  let activePlatform = currentPlatform;
-  // if (!activePlatform) activePlatform = defaultPlatform;
-  let contentMatch = matches.find(m =>
-    slugMatches(m.name, currentPlatform.key)
+  const contentMatch = getFileForPlatform(
+    includePath,
+    matches,
+    currentPlatform,
+    fallbackPlatform
   );
-  if (!contentMatch && (currentPlatform as Guide).fallbackPlatform) {
-    const guideFallbackPlatform = (currentPlatform as Guide).fallbackPlatform;
-    if (
-      (contentMatch = matches.find(m =>
-        slugMatches(m.name, guideFallbackPlatform)
-      ))
-    ) {
-      activePlatform = getPlatform(guideFallbackPlatform);
-    }
-  }
-  if (!contentMatch && fallbackPlatform) {
-    if (
-      (contentMatch = matches.find(m => slugMatches(m.name, fallbackPlatform)))
-    ) {
-      activePlatform = getPlatform(fallbackPlatform);
-    }
-  }
-  if (!contentMatch) {
-    if ((contentMatch = matches.find(m => m.name === "_default"))) {
-      activePlatform = currentPlatform;
-    }
-  }
-  if (!contentMatch) {
-    console.warn(
-      `Couldn't find content in ${includePath} for selected platform: ${currentPlatform.key}`
-    );
-  }
 
   return (
     <div className="platform-specific-content">
@@ -116,7 +104,7 @@ const PlatformContent = ({
               className="btn btn-sm btn-secondary dropdown-toggle"
               onClick={() => setDropdown(!dropdown)}
             >
-              {activePlatform.title}
+              {currentPlatform.title}
             </button>
 
             <div
@@ -166,16 +154,5 @@ const PlatformContent = ({
         </div>
       </div>
     </div>
-  );
-};
-
-export default (props: Props): JSX.Element => {
-  return (
-    <StaticQuery
-      query={includeQuery}
-      render={data => {
-        return <PlatformContent data={data} {...props} />;
-      }}
-    />
   );
 };
