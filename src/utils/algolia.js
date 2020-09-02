@@ -1,4 +1,8 @@
-const { standardSDKSlug } = require("sentry-global-search");
+const {
+  standardSDKSlug,
+  extrapolate,
+  sentryAlgoliaIndexSettings: { disableTypoToleranceOnWords },
+} = require("sentry-global-search");
 
 const pageQuery = `{
     pages: allSitePage {
@@ -19,14 +23,6 @@ const pageQuery = `{
       }
     }
   }`;
-
-const extrapolate = (str, separator) => {
-  const segments = str.split(separator).filter(Boolean);
-  const fragments = segments.map((segment, i, array) =>
-    array.slice(0, i + 1).join(separator)
-  );
-  return fragments;
-};
 
 const flatten = arr =>
   arr
@@ -54,9 +50,21 @@ const flatten = arr =>
     .filter(n => !n.draft);
 
 const settings = {
-  attributesToSnippet: [`content:20`],
-  attributesForFaceting: ["platforms", "pathSegments", "legacy"],
+  snippetEllipsisText: "…",
+  highlightPreTag: "<mark>",
+  highlightPostTag: "</mark>",
+  attributesToSnippet: [`content:15`],
+  attributesForFaceting: [
+    "filterOnly(platforms)",
+    "filterOnly(pathSegments)",
+    "filterOnly(legacy)",
+  ],
   searchableAttributes: ["content", "title"],
+  attributesToHighlight: ["content", "title"],
+  attributeForDistinct: "title",
+  attributesToRetrieve: ["content", "title", "url"],
+  disableTypoToleranceOnWords,
+  advancedSyntax: true,
 };
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;

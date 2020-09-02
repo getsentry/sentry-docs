@@ -116,14 +116,14 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
 
                     return (
                       <React.Fragment key={result.site}>
-                        {result.site !== "docs" && (
+                        {i !== 0 && (
                           <h4 className="sgs-site-result-heading">
                             From {result.name}
                           </h4>
                         )}
                         <ul
                           className={`sgs-hit-list ${
-                            result.site === "docs" ? "" : "sgs-offsite"
+                            i === 0 ? "" : "sgs-offsite"
                           }`}
                         >
                           {hits.length > 0 ? (
