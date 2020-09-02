@@ -1,9 +1,8 @@
 import React from "react";
 import { useLocation } from "@reach/router";
-import { NavDropdown } from "react-bootstrap";
+import { Nav, NavDropdown } from "react-bootstrap";
 
 import PlatformIcon from "./platformIcon";
-import SmartLink from "./smartLink";
 import Search from "./search";
 import usePlatform, { usePlatformList } from "./hooks/usePlatform";
 
@@ -20,12 +19,10 @@ export default ({ platforms }: Props): JSX.Element => {
     <div className="navbar navbar-expand-md navbar-light global-header">
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Search path={location.pathname} platforms={platforms} />
-        <ul className="navbar-nav ml-auto rounded">
-          <li className="nav-item mr-md-1 mr-lg-2">
-            <SmartLink className="nav-link" to="/product/">
-              Product
-            </SmartLink>
-          </li>
+        <Nav className="justify-content-end" style={{ flex: 1 }}>
+          <Nav.Item>
+            <Nav.Link href="/product/">Product</Nav.Link>
+          </Nav.Item>
           <NavDropdown
             title={
               currentPlatform ? (
@@ -64,13 +61,11 @@ export default ({ platforms }: Props): JSX.Element => {
               Show all platforms
             </NavDropdown.Item>
           </NavDropdown>
-          <li className="nav-item mr-md-1 mr-lg-2">
-            <SmartLink className="nav-link" to="/api/">
-              API
-            </SmartLink>
-          </li>
-          <li className="nav-item mr-md-1 mr-lg-2">
-            <a className="nav-link" href={`https://sentry.io/`}>
+          <Nav.Item>
+            <Nav.Link href="/api/">API</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link href="https://sentry.io/">
               Sign In
               <svg
                 width="1em"
@@ -85,9 +80,9 @@ export default ({ platforms }: Props): JSX.Element => {
                   d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
                 />
               </svg>
-            </a>
-          </li>
-        </ul>
+            </Nav.Link>
+          </Nav.Item>
+        </Nav>
       </div>
     </div>
   );
