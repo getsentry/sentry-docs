@@ -33,8 +33,10 @@ const flatten = arr =>
     .map(({ node: { objectID, context, path } }) => ({
       objectID,
       title: context.title,
+      section: context.title,
       url: path,
       content: context.excerpt,
+      text: context.excerpt,
 
       // https://github.com/getsentry/sentry-global-search#sorting-by-a-platform
       platforms: context.platform
@@ -53,16 +55,16 @@ const settings = {
   snippetEllipsisText: "…",
   highlightPreTag: "<mark>",
   highlightPostTag: "</mark>",
-  attributesToSnippet: [`content:15`],
+  attributesToSnippet: [`content:15`, `text:15`],
   attributesForFaceting: [
     "filterOnly(platforms)",
     "filterOnly(pathSegments)",
     "filterOnly(legacy)",
   ],
-  searchableAttributes: ["content", "title"],
-  attributesToHighlight: ["content", "title"],
-  attributeForDistinct: "title",
-  attributesToRetrieve: ["content", "title", "url"],
+  searchableAttributes: ["content", "title", "text", "section"],
+  attributesToHighlight: ["content", "title", "section"],
+  attributeForDistinct: "section",
+  attributesToRetrieve: ["content", "title", "url", "section", "text"],
   disableTypoToleranceOnWords,
   advancedSyntax: true,
 };

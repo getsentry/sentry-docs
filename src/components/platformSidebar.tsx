@@ -74,6 +74,11 @@ export const PlatformSidebar = ({
         title={`Sentry for ${(guide || platform).title}`}
         showDepth={1}
         prependLinks={[[`/${pathRoot}/`, "Getting Started"]]}
+        exclude={[
+          `/${pathRoot}/enriching-error-data/`,
+          `/${pathRoot}/data-management/`,
+          `/${pathRoot}/guides/`,
+        ]}
       />
       <DynamicNav
         root={`/${pathRoot}/enriching-error-data`}

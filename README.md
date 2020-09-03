@@ -247,6 +247,8 @@ This is an alert
 </markdown></Alert>
 ```
 
+See also the Note component.
+
 ### ConfigKey
 
 Render a heading with a configuration key in the correctly cased format for a given platform.
@@ -293,6 +295,21 @@ Additionally code blocks also support `tabTitle` and `filename` properties:
 var foo = "bar";
 ```
 ````
+
+### Note
+
+Render a note.
+
+
+```javascript
+<Note><markdown>
+
+Something important, but maybe not _that_ important.
+
+</markdown></Note>
+```
+
+See also the Alert component.
 
 ### PageGrid
 
@@ -347,6 +364,17 @@ Something that applies to all platforms, but not javascript or node.
 ```
 
 Note: This currently causes issues with tableOfContents generation, so its recommended to disable the TOC when using it.
+
+### PlatformRedirectLink
+
+Useful for linking to platform-specific content when there's not a specific platform already selected.
+
+```javascript
+
+<PlatformRedirectLink to="/enriching-error-data/" />
+```
+
+This will direct them to a page where they can choose the platform, and then to the appropriate link.
 
 ## Linting
 
