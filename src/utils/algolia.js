@@ -35,6 +35,7 @@ const flatten = arr =>
       title: context.title,
       url: path,
       content: context.excerpt,
+      text: context.excerpt,
 
       // https://github.com/getsentry/sentry-global-search#sorting-by-a-platform
       platforms: context.platform
