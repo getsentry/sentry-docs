@@ -30,25 +30,21 @@ const flatten = arr =>
       ({ node: { context } }) =>
         context && !context.draft && !context.noindex && context.title
     )
-    .map(({ node: { objectID, context, path } }) => ({
-      objectID,
-      title: context.title,
-      section: context.title,
-      url: path,
-      content: context.excerpt,
-      text: context.excerpt,
-
-      // https://github.com/getsentry/sentry-global-search#sorting-by-a-platform
-      platforms: context.platform
-        ? extrapolate(standardSDKSlug(context.platform.name).slug, ".")
-        : [],
-
-      // https://github.com/getsentry/sentry-global-search#sorting-by-path
-      pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
-
-      // https://github.com/getsentry/sentry-global-search#sorting-by-legacy
-      legacy: context.legacy || false,
-    }))
+    .map(({ node: { objectID, context, path } }) => {
+      // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
+      const { slug } = standardSDKSlug(context.platform.name);
+      return {
+        objectID,
+        title: context.title,
+        section: context.title,
+        url: path,
+        content: context.excerpt,
+        text: context.excerpt,
+        platforms: context.platform ? extrapolate(slug, ".") : [],
+        pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
+        legacy: context.legacy || false,
+      };
+    })
     .filter(n => !n.draft);
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
