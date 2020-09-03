@@ -27,6 +27,9 @@ export default (props: Props) => {
   return (
     <BasePage
       {...props}
+      seoTitle={`${props.pageContext.title} for ${
+        (props.pageContext.guide || props.pageContext.platform).title
+      }`}
       sidebar={
         <PlatformSidebar
           platform={pageContext.platform}

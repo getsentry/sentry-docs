@@ -47,6 +47,7 @@ type Props = {
     title?: string;
     description?: string;
   };
+  seoTitle?: string;
   sidebar?: JSX.Element;
   children?: JSX.Element;
 };
@@ -54,6 +55,7 @@ type Props = {
 export default ({
   data: { file } = {},
   pageContext = {},
+  seoTitle,
   sidebar,
   children,
 }: Props): JSX.Element => {
@@ -71,7 +73,7 @@ export default ({
 
   return (
     <Layout {...{ sidebar, pageContext }}>
-      <SEO title={title} description={description} file={file} />
+      <SEO title={seoTitle || title} description={description} file={file} />
 
       <div className="row">
         <div
