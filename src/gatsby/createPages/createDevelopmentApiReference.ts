@@ -49,7 +49,6 @@ export default async ({ actions, graphql, reporter }) => {
   data.allFile.nodes.map((node: any) => {
     const child = getChild(node);
     if (child && child.fields) {
-      console.log({ path: child.fields.slug });
       actions.createPage({
         path: `development-api${child.fields.slug}`,
         component,
