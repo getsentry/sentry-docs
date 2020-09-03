@@ -1,7 +1,7 @@
 import { getApiTypeDefs } from "./apiSchema";
 import { getPlatformTypeDefs } from "./platformSchema";
 
-// TODO(dcramer): move frontmatter out of ApiDoc and into Frontmatter
+// TODO(dcramer): move frontmatter out of ApiEndpoint and into Frontmatter
 export default ({ actions, schema }) => {
   const { createTypes } = actions;
   const typeDefs = [
