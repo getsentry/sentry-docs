@@ -18,6 +18,7 @@ import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
 import PlatformRedirectLink from "./platformRedirectLink";
 import PlatformSection from "./platformSection";
+import PlatformIdentifier from "./platformIdentifier";
 
 const mdxComponents = {
   Alert,
@@ -35,6 +36,7 @@ const mdxComponents = {
   PlatformContent,
   PlatformRedirectLink,
   PlatformSection,
+  PlatformIdentifier,
 };
 
 export default ({ value }) => {
