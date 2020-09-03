@@ -1,6 +1,5 @@
 import React from "react";
 
-import usePlatform  from "./hooks/usePlatform";
 import PlatformSection from "./platformSection";
 import PlatformIdentifier from "./platformIdentifier";
 
