@@ -12,6 +12,7 @@ import CodeTabs from "./codeTabs";
 import ConfigKey from "./configKey";
 import GuideGrid from "./guideGrid";
 import JsCdnTag from "./jsCdnTag";
+import Note from "./note";
 import PageGrid from "./pageGrid";
 import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
@@ -28,6 +29,7 @@ const mdxComponents = {
   GuideGrid,
   JsCdnTag,
   Link: SmartLink,
+  Note,
   PageGrid,
   ParamTable,
   PlatformContent,
