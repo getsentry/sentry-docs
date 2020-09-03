@@ -20,7 +20,7 @@ export default ({
       node,
       value: value.indexOf("/clients/") === 0,
     });
-  } else if (node.internal.type === "ApiDoc") {
+  } else if (node.internal.type === "ApiEndpoint") {
     const value = createFilePath({ node, getNode });
     createNodeField({
       name: "slug",
@@ -41,7 +41,7 @@ export default ({
         content: node.description,
         contentDigest: createContentDigest(node.description),
         mediaType: `text/markdown`,
-        type: `ApiDocMarkdown`,
+        type: `ApiEndpointMarkdown`,
       },
     };
     createNode(markdownNode);

@@ -7,7 +7,7 @@ export const getApiTypeDefs = ({ actions, schema }) => {
         description: String
       }
 
-      type ApiDoc implements Node {
+      type ApiEndpoint implements Node {
         sidebar_order: Int
         title: String!
         fields: Fields
