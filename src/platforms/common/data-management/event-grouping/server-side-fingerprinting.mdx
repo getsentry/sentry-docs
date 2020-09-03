@@ -45,6 +45,8 @@ the expression with an exclamation mark (`!`).
 
 Matchers generally use globbing syntax. The following matchers exist:
 
+<DefinitionList>
+
 ### `error.type`
 
 alias: `type`
@@ -176,6 +178,8 @@ when combined with another matcher. Possible values are `yes` and `no`:
 app:yes stack.function:"assert" -> assert
 ```
 
+</DefinitionList>
+
 ## Combining Matchers
 
 When multiple matchers are combined they all need to match. Matchers that
@@ -199,6 +203,8 @@ can be used. Variables are substituded automatically. Variables have the same
 name as matchers but they might be filled in differently.
 
 Variables are enclosed in double braces (`{{ variable_name }}`).
+
+<DefinitionList>
 
 ### `{{ default }}`
 
@@ -289,30 +295,4 @@ be used to split events by server name or something similar.
 message:"connection error*" -> connection-error, {{ tags.server_name }}
 ```
 
-## Examples
-
-```discover {tabTitle:Fingerprinting Config}
-# force all errors of the same type to have the same fingerprint
-error.type:DatabaseUnavailable -> system-down
-error.type:RedisConnectionError -> system-down
-
-# force all events with a certain message to be matched together
-message:"unexpected i/o error: *" -> io-error
-
-# group all TimeoutError exceptions by the transaction that caused them
-error.type:TimeoutError -> {{ transaction }}
-
-# group all JavaScript errors in a module by the topmost module and
-# function name
-stack.abs_path:**/some-module/** -> {{ stack.module }}, {{ stack.function }}
-
-# force all memory allocation errors to be grouped together
-family:native stack.function:malloc -> memory-allocation-error
-
-# group all allocation errors by the package (dylib, executable)
-# that caused them
-stack.function:*alloc* -> {{ stack.package }}
-
-# group all messages of some loggers by logger name and log level.
-logger:myproject.noisy.* -> noisy, {{ logger }}, {{ level }}
-```
+</DefinitionList>
