@@ -19,8 +19,6 @@ export default ({
   children,
   platform,
 }: Props): JSX.Element => {
-  const [currentPlatform] = usePlatform(platform);
-
   return (
     <PlatformSection
       supported={supported}
