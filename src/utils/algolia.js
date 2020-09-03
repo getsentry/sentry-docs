@@ -32,7 +32,12 @@ const flatten = arr =>
     )
     .map(({ node: { objectID, context, path } }) => {
       // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
-      const { slug } = standardSDKSlug(context.platform.name);
+      let platforms = [];
+      if (context.platform) {
+        const { slug } = standardSDKSlug(context.platform.name);
+        platforms = extrapolate(slug, ".");
+      }
+
       return {
         objectID,
         title: context.title,
@@ -41,7 +46,7 @@ const flatten = arr =>
         // Do not remove until the global lib is in sentry. Removing will break sentry.
         content: context.excerpt,
         text: context.excerpt,
-        platforms: context.platform ? extrapolate(slug, ".") : [],
+        platforms,
         pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
         legacy: context.legacy || false,
       };
