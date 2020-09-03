@@ -2,7 +2,7 @@ import React from "react";
 
 import "../css/screen.scss";
 
-import PlatformIcon from "../components/PlatformIcon";
+import PlatformIcon from "../components/platformIcon";
 import SEO from "../components/seo";
 import Search from "../components/search";
 import SmartLink from "../components/smartLink";
