@@ -12,8 +12,12 @@ const Params = ({ params }) => (
     {params.map(param => (
       <React.Fragment key={param.name}>
         <dt>
-          <code>{param.name}</code>
-          {!!param.schema?.type && <em> ({param.schema.type})</em>}
+          <div>
+            <code>{param.name}</code>
+            {!!param.schema?.type && <em> ({param.schema.type})</em>}
+          </div>
+
+          {!!param.required && <div className="required">REQUIRED</div>}
         </dt>
         <dd>{!!param.description && param.description}</dd>
       </React.Fragment>
@@ -105,6 +109,7 @@ export default props => {
                     schema: { type },
                     description,
                     name,
+                    required: parameters.required.includes(name),
                   })
                 )}
               />
@@ -152,6 +157,7 @@ export default props => {
               <div className="tabs-group">
                 {tabViews.map((view, i) => (
                   <span
+                    key={view}
                     className={`tab ${selectedTabView === i && "selected"}`}
                     onClick={() => selectTabView(i)}
                   >
