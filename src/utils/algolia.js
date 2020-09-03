@@ -1,7 +1,7 @@
 const {
   standardSDKSlug,
   extrapolate,
-  sentryAlgoliaIndexSettings: { disableTypoToleranceOnWords },
+  sentryAlgoliaIndexSettings,
 } = require("sentry-global-search");
 
 const pageQuery = `{
@@ -51,24 +51,6 @@ const flatten = arr =>
     }))
     .filter(n => !n.draft);
 
-const settings = {
-  snippetEllipsisText: "…",
-  highlightPreTag: "<mark>",
-  highlightPostTag: "</mark>",
-  attributesToSnippet: [`content:15`, `text:15`],
-  attributesForFaceting: [
-    "filterOnly(platforms)",
-    "filterOnly(pathSegments)",
-    "filterOnly(legacy)",
-  ],
-  searchableAttributes: ["content", "title", "text", "section"],
-  attributesToHighlight: ["content", "title", "section"],
-  attributeForDistinct: "section",
-  attributesToRetrieve: ["content", "title", "url", "section", "text"],
-  disableTypoToleranceOnWords,
-  advancedSyntax: true,
-};
-
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
 if (!indexPrefix) {
   throw new Error("`GATSBY_ALGOLIA_INDEX_PREFIX` must be configured!");
@@ -79,7 +61,7 @@ const queries = [
     query: pageQuery,
     transformer: ({ data }) => flatten(data.pages.edges),
     indexName: `${indexPrefix}docs`,
-    settings,
+    settings: sentryAlgoliaIndexSettings,
   },
 ];
 
