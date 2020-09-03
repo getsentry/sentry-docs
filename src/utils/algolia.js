@@ -1,7 +1,7 @@
 const {
   standardSDKSlug,
   extrapolate,
-  sentryAlgoliaIndexSettings: { disableTypoToleranceOnWords },
+  sentryAlgoliaIndexSettings,
 } = require("sentry-global-search");
 
 const pageQuery = `{
@@ -30,44 +30,23 @@ const flatten = arr =>
       ({ node: { context } }) =>
         context && !context.draft && !context.noindex && context.title
     )
-    .map(({ node: { objectID, context, path } }) => ({
-      objectID,
-      title: context.title,
-      section: context.title,
-      url: path,
-      content: context.excerpt,
-      text: context.excerpt,
-
-      // https://github.com/getsentry/sentry-global-search#sorting-by-a-platform
-      platforms: context.platform
-        ? extrapolate(standardSDKSlug(context.platform.name).slug, ".")
-        : [],
-
-      // https://github.com/getsentry/sentry-global-search#sorting-by-path
-      pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
-
-      // https://github.com/getsentry/sentry-global-search#sorting-by-legacy
-      legacy: context.legacy || false,
-    }))
+    .map(({ node: { objectID, context, path } }) => {
+      // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
+      const { slug } = standardSDKSlug(context.platform.name);
+      return {
+        objectID,
+        title: context.title,
+        section: context.title,
+        url: path,
+        // Do not remove until the global lib is in sentry. Removing will break sentry.
+        content: context.excerpt,
+        text: context.excerpt,
+        platforms: context.platform ? extrapolate(slug, ".") : [],
+        pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
+        legacy: context.legacy || false,
+      };
+    })
     .filter(n => !n.draft);
-
-const settings = {
-  snippetEllipsisText: "…",
-  highlightPreTag: "<mark>",
-  highlightPostTag: "</mark>",
-  attributesToSnippet: [`content:15`, `text:15`],
-  attributesForFaceting: [
-    "filterOnly(platforms)",
-    "filterOnly(pathSegments)",
-    "filterOnly(legacy)",
-  ],
-  searchableAttributes: ["content", "title", "text", "section"],
-  attributesToHighlight: ["content", "title", "section"],
-  attributeForDistinct: "section",
-  attributesToRetrieve: ["content", "title", "url", "section", "text"],
-  disableTypoToleranceOnWords,
-  advancedSyntax: true,
-};
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
 if (!indexPrefix) {
@@ -79,7 +58,17 @@ const queries = [
     query: pageQuery,
     transformer: ({ data }) => flatten(data.pages.edges),
     indexName: `${indexPrefix}docs`,
-    settings,
+    settings: {
+      ...sentryAlgoliaIndexSettings,
+
+      // Do not remove until the global lib is in sentry
+      attributesToSnippet: [`content:15`, `text:15`],
+      searchableAttributes: ["content", "title", "text", "section"],
+      attributesToHighlight: ["content", "title", "section"],
+      attributesToRetrieve: ["content", "title", "url", "section", "text"],
+    },
+    enablePartialUpdates: true,
+    matchFields: ["text", "section", "title", "url", "legacy"],
   },
 ];
 
