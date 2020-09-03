@@ -1,6 +1,7 @@
 import React from "react";
 import { graphql } from "gatsby";
 
+import ApiSidebar from "~src/components/apiSidebar";
 import BasePage from "~src/components/basePage";
 import Markdown from "~src/components/markdown";
 
@@ -17,98 +18,100 @@ const Params = ({ params }) => (
 );
 
 export default props => {
-  const { apiDoc } = props.data;
+  const { apiEndpoint } = props.data;
   return (
-    <BasePage {...props}>
+    <BasePage sidebar={<ApiSidebar />} {...props}>
       <p>
         <strong>
-          {apiDoc.method} {apiDoc.api_path}
+          {apiEndpoint.method} {apiEndpoint.api_path}
         </strong>
       </p>
 
-      {apiDoc.warning && <p>Caution: {apiDoc.warning}</p>}
+      {apiEndpoint.warning && <p>Caution: {apiEndpoint.warning}</p>}
 
-      {apiDoc.description && (
+      {apiEndpoint.description && (
         <div className="pb-3 content-flush-bottom">
-          <Markdown value={apiDoc.fields.markdownDescription.childMdx.body} />
+          <Markdown
+            value={apiEndpoint.fields.markdownDescription.childMdx.body}
+          />
         </div>
       )}
 
       <table className="table">
-        {apiDoc.path_parameters && (
+        {apiEndpoint.path_parameters && (
           <tr>
             <td>
               <strong>Path Parameters:</strong>
             </td>
             <td className="content-flush-bottom">
-              <Params params={apiDoc.path_parameters} />
+              <Params params={apiEndpoint.path_parameters} />
             </td>
           </tr>
         )}
 
-        {apiDoc.query_parameters && (
+        {apiEndpoint.query_parameters && (
           <tr>
             <td>
               <strong>Query Parameters:</strong>
             </td>
             <td className="content-flush-bottom">
-              <Params params={apiDoc.query_parameters} />
+              <Params params={apiEndpoint.query_parameters} />
             </td>
           </tr>
         )}
 
-        {apiDoc.parameters && (
+        {apiEndpoint.parameters && (
           <tr>
             <td>
               <strong>Parameters:</strong>
             </td>
             <td className="content-flush-bottom">
-              <Params params={apiDoc.parameters} />
+              <Params params={apiEndpoint.parameters} />
             </td>
           </tr>
         )}
 
-        {apiDoc.authentication && (
+        {apiEndpoint.authentication && (
           <tr>
             <td>
               <strong>Authentication:</strong>
             </td>
-            <td>{apiDoc.authentication}</td>
+            <td>{apiEndpoint.authentication}</td>
           </tr>
         )}
 
-        {apiDoc.method && (
+        {apiEndpoint.method && (
           <tr>
             <td>
               <strong>Method:</strong>
             </td>
-            <td>{apiDoc.method}</td>
+            <td>{apiEndpoint.method}</td>
           </tr>
         )}
 
-        {apiDoc.api_path && (
+        {apiEndpoint.api_path && (
           <tr>
             <td>
               <strong>Path:</strong>
             </td>
-            <td>{apiDoc.api_path}</td>
+            <td>{apiEndpoint.api_path}</td>
           </tr>
         )}
       </table>
 
-      {apiDoc.example_request && (
+      {apiEndpoint.example_request && (
         <React.Fragment>
           <h2>Example Request</h2>
 
-          <pre>{apiDoc.example_request}</pre>
+          <pre>{apiEndpoint.example_request}</pre>
         </React.Fragment>
       )}
 
-      {apiDoc.example_response && (
+      {apiEndpoint.example_response && (
         <React.Fragment>
           <h2>Example Response</h2>
 
-          <pre>{apiDoc.example_response}</pre>
+          <pre>{apiEndpoint.example_response}</pre>
         </React.Fragment>
       )}
     </BasePage>
@@ -116,8 +119,8 @@ export default props => {
 };
 
 export const pageQuery = graphql`
-  query ApiQuery($id: String) {
-    apiDoc(id: { eq: $id }) {
+  query ApiEndpointQuery($id: String) {
+    apiEndpoint(id: { eq: $id }) {
       title
 
       fields {

@@ -103,7 +103,7 @@ const getPlugins = () => {
       options: {
         typeName: ({ node }) => {
           if (node.sourceInstanceName === "api") {
-            return "ApiDoc";
+            return "ApiEndpoint";
           }
           return null;
         },
