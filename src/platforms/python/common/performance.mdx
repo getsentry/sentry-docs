@@ -1,27 +1,14 @@
 ---
-hide_from_sidebar: true
+title: Performance
+excerpt: ""
+description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
 ---
 
-To get started with performance monitoring using Sentry's Python SDK, first install `sentry_sdk`:
+Performance Monitoring helps you see everything from macro-level metrics to micro-level spans, and you’ll be able to cross-reference transactions with related issues, customize queries based on your personal needs, and substantially more and is avaliable for the Sentry Python SDK version ≥ 0.11.2.
 
-```python
-import sentry_sdk
-```
+For information on how to set up performance monitoring with Python, see [the Performance documentation](../../#monitor-performance)
 
-Next, initialize the integration in your call to `sentry_sdk.init`:
-
-```python
-sentry_sdk.init(
-    "___PUBLIC_DSN___",
-    traces_sample_rate=1.0 # be sure to lower this in production to prevent quota issues
-)
-```
-
-Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install and configure your SDK to set the `traces_sample_rate` option to a nonzero value.** The example configuration above will transmit 100% of captured traces. Be sure to lower this value in production otherwise you could burn through your quota quickly.
-
-Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
-
-**Automatic Instrumentation**
+## Automatic Instrumentation
 
 Many integrations for popular frameworks automatically capture transactions. If you already have any of the following frameworks set up for Sentry error reporting, you will start to see traces immediately:
 
@@ -48,7 +35,7 @@ sentry_sdk.init(
 )
 ```
 
-**Manual Instrumentation**
+## Manual Instrumentation
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
 
@@ -65,7 +52,7 @@ while True:
       process_item(item)
 ```
 
-**Adding More Spans to the Transaction**
+### Adding More Spans to the Transaction
 
 The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add all newly created spans as child operations to that transaction. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction. When using spans and transactions as context managers, they are automatically finished at the end of the `with` block.
 
@@ -101,7 +88,7 @@ def process_item(item):
         span.set_data("http.foobarsessionid", get_foobar_sessionid())
 ```
 
-#### Retrieving a Transaction
+### Retrieving a Transaction
 
 In cases where you want to attach Spans to an already ongoing Transaction you can use `Hub.current.scope.transaction`. This property will return a `Transaction` in case there is a running Transaction otherwise it returns `None`.
 
@@ -119,7 +106,7 @@ else:
         do_task()
 ```
 
-#### Retrieving the current Span
+### Retrieving the Current Span
 
 Started spans are stored in the scope, and can be fetched off the scope:
 
@@ -138,7 +125,7 @@ else:
         do_task()
 ```
 
-**Adding Query Information and Parameters to Spans**
+### Adding Query Information and Parameters to Spans
 
 Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
 

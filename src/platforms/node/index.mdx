@@ -53,3 +53,60 @@ try {
   Sentry.captureException(e);
 }
 ```
+
+## Monitor Performance
+
+To get started with performance monitoring with Node.js, first install these packages:
+
+```bash {tabTitle:npm}
+$ npm install --save @sentry/node @sentry/tracing
+```
+
+```bash {tabTitle:Yarn}
+$ yarn add @sentry/node @sentry/tracing
+```
+
+To send traces, set the `tracesSampleRate` to a nonzero value. The following configuration will capture 100% of all your transactions:
+
+```javascript {tabTitle:CommonJS}
+const Sentry = require("@sentry/node");
+const Tracing = require("@sentry/tracing");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0, // Be sure to lower this in production
+});
+```
+
+```javascript {tabTitle:ESM}
+import * as Sentry from '@sentry/node';
+import * as Tracing from '@sentry/tracing';
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0, // Be sure to lower this in production
+});
+```
+
+Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` option to a nonzero value.** The example configuration above will transmit 100% of captured transactions. You will want to lower this value in production, otherwise you could burn through your quota quickly.
+
+## Verify Setup
+
+Verify your setup by intentionally sending a transaction manually to Sentry. Make sure your sampling rate is at `1.0` so that your transaction captured and sent to Sentry.
+
+```javascript
+const transaction = Sentry.startTransaction({
+  op: "test",
+  name: "My First Test Transaction",
+});
+
+setTimeout(() => {
+  try {
+    foo();
+  } catch (e) {
+    Sentry.captureException(e);
+  } finally {
+    transaction.finish();
+  }
+}, 99);
+```

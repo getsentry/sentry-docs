@@ -140,6 +140,53 @@ app.use(Sentry.Handlers.errorHandler());
 app.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
 ```
 
+## Monitor Performance
+
+```bash {tabTitle:npm}
+$ npm install --save @sentry/node @sentry/tracing
+```
+
+```bash {tabTitle:Yarn}
+$ yarn add @sentry/node @sentry/tracing
+```
+
+It’s possible to add tracing to all popular frameworks; however, we only provide pre-written handlers for Express.
+
+```javascript
+const Sentry = require("@sentry/node");
+const Tracing = require("@sentry/tracing");
+const express = require("express");
+const app = express();
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+    // enable Express.js middleware tracing
+    new Tracing.Integrations.Express({ app }),
+  ],
+  tracesSampleRate: 1.0, // Be sure to lower this in production
+});
+
+// RequestHandler creates a separate execution context using domains, so that every
+// transaction/span/breadcrumb is attached to its own Hub instance
+app.use(Sentry.Handlers.requestHandler());
+// TracingHandler creates a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler());
+
+// the rest of your app
+
+app.use(Sentry.Handlers.errorHandler());
+app.listen(3000);
+```
+
+Spans are instrumented for the following operations within a transaction:
+
+- HTTP requests made with `request`
+- `get` calls using native `http` and `https` modules
+- Middleware (Express.js only)
+
 ### Troubleshooting
 
 When capturing errors locally, ensure that your project's data filter for filtering localhost events is toggled off:
