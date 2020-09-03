@@ -16,6 +16,7 @@ import PageGrid from "./pageGrid";
 import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
 import PlatformSection from "./platformSection";
+import PlatformIdentifier from "./platformIdentifier";
 
 const mdxComponents = {
   Alert,
@@ -31,6 +32,7 @@ const mdxComponents = {
   ParamTable,
   PlatformContent,
   PlatformSection,
+  PlatformIdentifier,
 };
 
 export default ({ value }) => {

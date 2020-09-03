@@ -1,7 +1,8 @@
 import React from "react";
 
-import usePlatform, { formatCaseStyle } from "./hooks/usePlatform";
+import usePlatform  from "./hooks/usePlatform";
 import PlatformSection from "./platformSection";
+import PlatformIdentifier from "./platformIdentifier";
 
 type Props = {
   name: string;
@@ -27,7 +28,7 @@ export default ({
       platform={platform}
     >
       <h3>
-        <code>{formatCaseStyle(currentPlatform.caseStyle, name)}</code>
+        <PlatformIdentifier platform={platform} name={name} />
       </h3>
 
       {children}
