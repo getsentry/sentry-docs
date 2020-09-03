@@ -21,11 +21,10 @@ if (
 }
 
 const queries = require("./src/utils/algolia");
-const packages = new (require("./src/utils/packageRegistry"))();
+const packages = new(require("./src/utils/packageRegistry"))();
 
 const getPlugins = () => {
-  const remarkPlugins = [
-    {
+  const remarkPlugins = [{
       resolve: require.resolve("./plugins/gatsby-remark-variables"),
       options: {
         scope: {
@@ -56,6 +55,21 @@ const getPlugins = () => {
       resolve: "gatsby-remark-prismjs",
       options: {
         noInlineHighlight: true,
+        languageExtensions: [{
+          language: "discover",
+          definition: {
+            comment: /#.*/,
+            string: {
+              pattern: /("[^"]*"|(?<=:)\S+)/,
+              greedy: true,
+            },
+            boolean: /\b(?:true|false|yes|no)\b/,
+            variable: /\{\{.*?\}\}/,
+            keyword: /\b([^:\s]*?)(?=:)\b/,
+            number: /[+-]?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b|\b0x[\dA-Fa-f]+\b|\b0xK[\dA-Fa-f]{20}\b|\b0x[ML][\dA-Fa-f]{32}\b|\b0xH[\dA-Fa-f]{4}\b/,
+            punctuation: /[{}[\];(),.!*=<>]/,
+          }
+        }]
       },
     },
     // {
@@ -63,8 +77,7 @@ const getPlugins = () => {
     // }
   ];
 
-  const plugins = [
-    {
+  const plugins = [{
       resolve: "@sentry/gatsby",
       options: {
         dsn: process.env.SENTRY_DSN,
@@ -85,8 +98,7 @@ const getPlugins = () => {
       resolve: "gatsby-plugin-mdx",
       options: {
         remarkPlugins: [require("remark-deflist")],
-        gatsbyRemarkPlugins: [
-          {
+        gatsbyRemarkPlugins: [{
             resolve: require.resolve("./plugins/gatsby-plugin-code-tabs"),
           },
           {
@@ -101,7 +113,9 @@ const getPlugins = () => {
     {
       resolve: `gatsby-transformer-json`,
       options: {
-        typeName: ({ node }) => {
+        typeName: ({
+          node
+        }) => {
           if (node.sourceInstanceName === "api") {
             return "ApiEndpoint";
           }
