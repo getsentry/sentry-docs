@@ -33,6 +33,7 @@ const flatten = arr =>
     .map(({ node: { objectID, context, path } }) => ({
       objectID,
       title: context.title,
+      section: context.title,
       url: path,
       content: context.excerpt,
       text: context.excerpt,
