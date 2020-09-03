@@ -38,6 +38,7 @@ const flatten = arr =>
         title: context.title,
         section: context.title,
         url: path,
+        // Do not remove until the global lib is in sentry. Removing will break sentry.
         content: context.excerpt,
         text: context.excerpt,
         platforms: context.platform ? extrapolate(slug, ".") : [],
@@ -57,7 +58,15 @@ const queries = [
     query: pageQuery,
     transformer: ({ data }) => flatten(data.pages.edges),
     indexName: `${indexPrefix}docs`,
-    settings: sentryAlgoliaIndexSettings,
+    settings: {
+      ...sentryAlgoliaIndexSettings,
+
+      // Do not remove until the global lib is in sentry
+      attributesToSnippet: [`content:15`, `text:15`],
+      searchableAttributes: ["content", "title", "text", "section"],
+      attributesToHighlight: ["content", "title", "section"],
+      attributesToRetrieve: ["content", "title", "url", "section", "text"],
+    },
     enablePartialUpdates: true,
     matchFields: ["text", "section", "title", "url", "legacy"],
   },
