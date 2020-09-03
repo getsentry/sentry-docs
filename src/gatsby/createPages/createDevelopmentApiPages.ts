@@ -19,7 +19,7 @@ export default async ({ actions, graphql, reporter }) => {
     reporter
   );
 
-  const component = require.resolve(`../../templates/developmentApi.js`);
+  const component = require.resolve(`../../templates/developmentAPI.js`);
   await Promise.all(
     data.allOpenApi.nodes.map(async node => {
       actions.createPage({
