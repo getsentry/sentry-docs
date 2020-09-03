@@ -1,28 +1,9 @@
 import React from "react";
-import { useStaticQuery, graphql } from "gatsby";
 import styled from "@emotion/styled";
 
 import PlatformIcon from "./platformIcon";
 import SmartLink from "./smartLink";
-
-const query = graphql`
-  query PlatformGridQuery {
-    allPlatform {
-      nodes {
-        key
-        name
-        title
-        url
-        guides {
-          key
-          name
-          title
-          url
-        }
-      }
-    }
-  }
-`;
+import { usePlatformList } from "./hooks/usePlatform";
 
 const PlatformCell = styled.div`
   display: flex;
@@ -79,10 +60,12 @@ const GuideList = styled.div`
   }
 `;
 
-export default (): JSX.Element => {
-  const {
-    allPlatform: { nodes: platformList },
-  } = useStaticQuery(query);
+type Props = {
+  noGuides: boolean;
+};
+
+export default ({ noGuides = false }: Props): JSX.Element => {
+  const platformList = usePlatformList();
   return (
     <div className="row">
       {platformList
@@ -104,15 +87,17 @@ export default (): JSX.Element => {
                     <h4>{platform.title}</h4>
                   </SmartLink>
 
-                  <GuideList>
-                    {platform.guides.map(guide => {
-                      return (
-                        <SmartLink to={guide.url} key={guide.key}>
-                          {guide.title}
-                        </SmartLink>
-                      );
-                    })}
-                  </GuideList>
+                  {!noGuides && (
+                    <GuideList>
+                      {platform.guides.map(guide => {
+                        return (
+                          <SmartLink to={guide.url} key={guide.key}>
+                            {guide.title}
+                          </SmartLink>
+                        );
+                      })}
+                    </GuideList>
+                  )}
                 </PlatformCellContent>
               </PlatformCell>
             </div>

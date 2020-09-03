@@ -348,6 +348,17 @@ Something that applies to all platforms, but not javascript or node.
 
 Note: This currently causes issues with tableOfContents generation, so its recommended to disable the TOC when using it.
 
+### PlatformRedirectLink
+
+Useful for linking to platform-specific content when there's not a specific platform already selected.
+
+```javascript
+
+<PlatformRedirectLink to="/enriching-error-data/" />
+```
+
+This will direct them to a page where they can choose the platform, and then to the appropriate link.
+
 ## Linting
 
 We use prettier to format our code. Run prettier if you get linting errors in CI.

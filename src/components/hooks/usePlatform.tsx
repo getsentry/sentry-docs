@@ -130,13 +130,12 @@ const getPlatformFromLocation = (
 
   if (!location) return [null, false];
 
-  const qsPlatform = parse(location.search).platform;
-  let qsMatch: [string, string | null];
-  if (qsPlatform instanceof Array) {
-    qsMatch = normalizeSlug(qsPlatform[0]).split(".", 2) as [string, null];
-  } else {
-    qsMatch = normalizeSlug(qsPlatform || "").split(".", 2) as [string, null];
-  }
+  const qsPlatform = parse(location.search, { arrayFormat: "none" })
+    .platform as string | null;
+  const qsMatch = normalizeSlug(qsPlatform || "").split(".", 2) as [
+    string,
+    null
+  ];
 
   return [qsMatch ?? null, false];
 };
