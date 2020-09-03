@@ -62,6 +62,8 @@ const queries = [
     transformer: ({ data }) => flatten(data.pages.edges),
     indexName: `${indexPrefix}docs`,
     settings: sentryAlgoliaIndexSettings,
+    enablePartialUpdates: true,
+    matchFields: ["text", "section", "title", "url", "legacy"],
   },
 ];
 
