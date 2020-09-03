@@ -15,6 +15,7 @@ import JsCdnTag from "./jsCdnTag";
 import PageGrid from "./pageGrid";
 import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
+import DefinitionList from "./definitionList";
 import PlatformSection from "./platformSection";
 
 const mdxComponents = {
@@ -30,6 +31,7 @@ const mdxComponents = {
   PageGrid,
   ParamTable,
   PlatformContent,
+  DefinitionList,
   PlatformSection,
 };
 
