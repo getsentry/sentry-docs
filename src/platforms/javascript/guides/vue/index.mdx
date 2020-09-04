@@ -73,4 +73,45 @@ like this:
 </script>
 ```
 
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
+## Monitor Performance
+
+```bash {tabTitle:npm}
+$ npm install --save @sentry/browser @sentry/integrations @sentry/tracing
+```
+
+```bash {tabTitle:Yarn}
+$ yarn add @sentry/browser @sentry/integrations @sentry/tracing
+```
+
+The most basic configuration for tracing your Vue app, which would track only the top-level component, looks like this:
+
+```js
+import * as Sentry from "@sentry/browser";
+import { Vue as VueIntegration } from "@sentry/integrations";
+import { Integrations } from "@sentry/tracing";
+import Vue from "vue";
+
+Sentry.init({
+  // ...
+  integrations: [
+    new Integrations.BrowserTracing(),
+    new VueIntegration({
+      Vue,
+      tracing: true,
+    }),
+  ],
+  tracesSampleRate: 1.0, // Be sure to lower this in production
+});
+```
+
+If you want to track child components, and see more details about the rendering process, configure the integration to track them all:
+
+```js
+new VueIntegration({
+  Vue,
+  tracing: true,
+  tracingOptions: {
+    trackComponents: true,
+  },
+});
+```

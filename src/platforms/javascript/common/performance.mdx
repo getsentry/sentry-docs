@@ -1,72 +1,37 @@
-To get started with performance monitoring using Sentry's JavaScript SDK, first install the `@sentry/browser` and `@sentry/tracing` packages:
+---
+title: Performance
+description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
+---
 
-```bash
-# Using yarn
-$ yarn add @sentry/browser @sentry/tracing
+<Alert level="info" title="Note"><markdown>
 
-# Using npm
-$ npm install --save @sentry/browser @sentry/tracing
-```
+The `BrowserTracing` package is designed to work with `@sentry/tracing` and one of our browser JavaScript packages (`@sentry/browser`, `@sentry/react`, `@sentry/angular` etc.) and requires those packages to be installed and set up. For information on how to set up performance monitoring with JavaScript, see [the Performance documentation](../../#monitor-performance)
 
 <Note><markdown>
 
-The integration name was updated from `@sentry/apm` to `@sentry/tracing`. If you were previously using `@sentry/apm`, please see [Switching to @sentry/tracing](/product/performance/apm-to-tracing/).
+The integration name was updated from `@sentry/apm` to `@sentry/tracing`. If you were previously using `@sentry/apm`, please see [Switching to @sentry/tracing](./apm-to-tracing/).
 
 </markdown></Note>
 
-Next, initialize the integration in your call to `Sentry.init`:
-
-```jsx
-import * as Sentry from "@sentry/browser";
-import { Integrations } from "@sentry/tracing";
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  release: "my-project-name@" + process.env.npm_package_version,
-  integrations: [new Integrations.BrowserTracing()],
-  tracesSampleRate: 1.0, // Be sure to lower this in production
-});
-```
-
-Alternatively, instead of npm packages, you can use our pre-built CDN bundle that combines both `@sentry/browser` and `@sentry/tracing`:
-
-<JsCdnTag tracing />
-
-Next, initialize the integration in your call to `Sentry.init`:
-
-```js
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [new Sentry.Integrations.BrowserTracing()],
-  tracesSampleRate: 1.0, // Be sure to lower this in production
-});
-```
-
-Performance data is transmitted using a new event type called "transactions," which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` configuration to a nonzero value.** The example configuration above will transmit 100% of captured transactions. Be sure to lower this value in production otherwise you could burn through your quota quickly.
-
-Learn more about sampling in [Using Your SDK to Filter Events](/error-reporting/configuration/filtering/).
+</markdown></Alert>
 
 ### Automatic Instrumentation
 
-For `@sentry/browser`, we provide an integration called `BrowserTracing` that does automatic instrumentation in the browser. The `BrowserTracing` integration creates `pageload` and `navigation` transactions containing spans for XHR/fetch requests and Performance API entries such as marks, measures, and resource timings.
-
-The `BrowserTracing` integration is specific to `@sentry/browser` and does not work with `@sentry/node`.
+The `BrowserTracing` integration provides automatic instrumentation to monitor the performance of browser applications.
 
 The `BrowserTracing` integration resides in the `@sentry/tracing` package. You can add it to your `Sentry.init` call:
 
-```javascript
-// Without CDN
-
+```javascript {tabTitle: ESM}
 import * as Sentry from "@sentry/browser";
 import { Integrations } from "@sentry/tracing";
-
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
+```
 
-// With CDN
-
+```javascript {tabTitle: CDN}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [new Sentry.Integrations.BrowserTracing()],
@@ -74,17 +39,25 @@ Sentry.init({
 });
 ```
 
-_NOTE:_ The `BrowserTracing` integration is available under `Sentry.Integrations.BrowserTracing` when using the CDN bundle.
+After configuration, you should see both pageload and navigation transactions show up in your Sentry UI.
 
-To send traces, you will need to set the `tracesSampleRate` to a nonzero value. The configuration above will capture 100% of your transactions.
+You can pass many different options to the `BrowserTracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/tracing.browsertracingoptions.html).
 
-By default, the `pageload` and `navigation` transactions set a transaction name using `window.location.pathname`.
+### tracingOrigins
 
-You can pass many different options to the `BrowserTracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box.
+Usage:
 
-For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/tracing.browsertracingoptions.html).
-
-#### tracingOrigins Option
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Integrations.BrowserTracing({
+      tracingOrigins: ["localhost", "my-site-url.com"],
+    }),
+  ],
+  tracesSampleRate: 1.0, // Be sure to lower this in production
+});
+```
 
 The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **One important thing to note is that the `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL can help make sure that requests do not unnecessarily have the `sentry-trace` header attached.**
 
@@ -96,9 +69,9 @@ _Example:_
 - Therefore, the option needs to be configured like this: `new Integrations.BrowserTracing({tracingOrigins: ['api.example.com']})`
 - Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
 
-_NOTE:_ You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but this depends a lot on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
+_NOTE:_ You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your set up. If you do not allow the `sentry-trace` header, the request might be blocked.
 
-#### beforeNavigate Option
+### beforeNavigate
 
 For `pageload` and `navigation` transactions, the `BrowserTracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigate` option to the `BrowserTracing` integration. This option allows you to pass in a function that takes in the location at the time of navigation and returns a new transaction name.
 
@@ -128,6 +101,31 @@ Sentry.init({
   tracesSampleRate: 1.0, // Be sure to lower this in production
 });
 ```
+
+### shouldCreateSpanForRequest
+
+This function can be used to filter our unwanted Spans like XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` is already filtering out what was defined in `tracingOrigins`.
+
+```javascript
+import * as Sentry from "@sentry/browser";
+import { Integrations } from "@sentry/tracing";
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Integrations.BrowserTracing({
+      shouldCreateSpanForRequest: url => {
+        // Example of filter out spans that contain `health`
+        if (url.match(/health/)) { 
+            return false;
+        }
+        return true;
+      },
+    }),
+  ],
+  tracesSampleRate: 1.0, // Be sure to lower this in production
+});
+```
+
 
 ### Manual Instrumentation
 
@@ -296,3 +294,8 @@ span.setData("parameters", parameters);
 span.setData("user_id", parameters.user_id);
 http.get(`${base_url}/${endpoint}/`, (data = parameters));
 ```
+
+## Next Steps:
+
+- [Return to performance monitoring page](../)
+- [Return to **Getting Started**](../../)
