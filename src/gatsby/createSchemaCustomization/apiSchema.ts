@@ -1,4 +1,4 @@
-export const getApiTypeDefs = ({ actions, schema }) => {
+export const getApiTypeDefs = () => {
   return [
     `
       type ApiParam {

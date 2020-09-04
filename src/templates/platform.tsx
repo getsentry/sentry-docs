@@ -1,9 +1,10 @@
 import React from "react";
 import { graphql } from "gatsby";
 
-import BasePage from "~src/components/basePage";
-import Content from "~src/components/content";
-import PlatformSidebar from "~src/components/platformSidebar";
+import BasePage from "../components/basePage";
+import Content from "../components/content";
+import PlatformSdkDetail from "../components/platformSdkDetail";
+import PlatformSidebar from "../components/platformSidebar";
 
 type Props = {
   data: {
@@ -39,6 +40,7 @@ export default (props: Props) => {
     <BasePage
       {...props}
       seoTitle={seoTitle}
+      prependToc={<PlatformSdkDetail />}
       sidebar={
         <PlatformSidebar
           platform={pageContext.platform}
