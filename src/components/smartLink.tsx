@@ -26,14 +26,14 @@ export default ({
   if (realTo.indexOf("://") !== -1) {
     return (
       <ExternalLink href={realTo} className={className} {...props}>
-        {children}
+        {children || to || href}
       </ExternalLink>
     );
   } else if (realTo.indexOf("/") !== 0 || remote) {
     // this handles cases like anchor tags (where Link messes thats up)
     return (
       <a href={realTo} className={className} {...props}>
-        {children}
+        {children || to || href}
       </a>
     );
   }
@@ -44,7 +44,7 @@ export default ({
       className={className}
       {...props}
     >
-      {children}
+      {children || to || href}
     </Link>
   );
 };

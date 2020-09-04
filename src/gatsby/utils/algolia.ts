@@ -1,8 +1,8 @@
-const {
+import {
   standardSDKSlug,
   extrapolate,
   sentryAlgoliaIndexSettings,
-} = require("sentry-global-search");
+} from "sentry-global-search";
 
 const pageQuery = `{
     pages: allSitePage {
@@ -24,7 +24,7 @@ const pageQuery = `{
     }
   }`;
 
-const flatten = arr =>
+const flatten = (arr: any[]) =>
   arr
     .filter(
       ({ node: { context } }) =>
@@ -50,15 +50,14 @@ const flatten = arr =>
         pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
         legacy: context.legacy || false,
       };
-    })
-    .filter(n => !n.draft);
+    });
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
 if (!indexPrefix) {
   throw new Error("`GATSBY_ALGOLIA_INDEX_PREFIX` must be configured!");
 }
 
-const queries = [
+export default [
   {
     query: pageQuery,
     transformer: ({ data }) => flatten(data.pages.edges),
@@ -76,5 +75,3 @@ const queries = [
     matchFields: ["text", "section", "title", "url", "legacy"],
   },
 ];
-
-module.exports = queries;

@@ -1,44 +1,47 @@
-import React, { useState } from "react";
+import React from "react";
+import { graphql, useStaticQuery } from "gatsby";
 
 import CodeBlock from "./codeBlock";
 import CodeTabs from "./codeTabs";
 
-let cachedVersionData = null;
-
 type Props = {
   tracing?: boolean;
+  name?: string;
 };
 
-export default ({ tracing = false }: Props): JSX.Element => {
-  const [versionData, setVersionData] = useState(cachedVersionData);
-
-  if (!versionData && typeof fetch !== "undefined") {
-    fetch(
-      "https://release-registry.services.sentry.io/sdks/sentry.javascript.browser/latest"
-    ).then(data => {
-      data.json().then(jsonData => {
-        setVersionData(jsonData);
-        cachedVersionData = jsonData;
-      });
-    });
+const query = graphql`
+  query JsCdnPackage {
+    package(id: { eq: "sentry.javascript.browser" }) {
+      files {
+        name
+        checksums {
+          name
+          value
+        }
+      }
+    }
   }
+`;
 
-  const packageName = tracing ? "bundle.tracing.min.js" : "bundle.min.js";
-  const packageData = versionData
-    ? versionData
-    : {
-        version: "{VERSION}",
-        files: {
-          [packageName]: { checksums: { "sha384-base64": "{CHECKSUM}" } },
-        },
-      };
+export default ({ tracing = false, name = "" }: Props): JSX.Element => {
+  const { package: packageData } = useStaticQuery(query);
+
+  const bundleName = tracing
+    ? "bundle.tracing.min.js"
+    : name || "bundle.min.js";
 
   return (
     <CodeTabs>
       <CodeBlock>
         <div className="gatsby-highlight" data-language="html">
           <pre className="language-html">
-            <code className="language-html">{`<script src="https://browser.sentry-cdn.com/${packageData.version}/${packageName}" integrity="sha384-${packageData.files[packageName].checksums["sha384-base64"]}" crossorigin="anonymous"></script>`}</code>
+            <code className="language-html">{`<script src="https://browser.sentry-cdn.com/${
+              packageData.version
+            }/${bundleName}" integrity="sha384-${
+              packageData.files
+                .find(f => f.name === bundleName)
+                .checksums.find(c => c.name === "sha384-base64").value
+            }" crossorigin="anonymous"></script>`}</code>
           </pre>
         </div>
       </CodeBlock>

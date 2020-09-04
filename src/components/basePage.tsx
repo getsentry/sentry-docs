@@ -50,6 +50,7 @@ type Props = {
   seoTitle?: string;
   sidebar?: JSX.Element;
   children?: JSX.Element;
+  prependToc?: JSX.Element;
 };
 
 export default ({
@@ -58,6 +59,7 @@ export default ({
   seoTitle,
   sidebar,
   children,
+  prependToc,
 }: Props): JSX.Element => {
   const tx = Sentry.getCurrentHub()
     .getScope()
@@ -93,14 +95,19 @@ export default ({
             )}
           </div>
         </div>
-        {hasToc && (
+        {(hasToc || prependToc) && (
           <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
-            <div className="doc-toc">
-              <div className="doc-toc-title">
-                <h6>On this page</h6>
-              </div>
-              <TableOfContents toc={child.tableOfContents} />
-            </div>
+            <React.Fragment>
+              {prependToc}
+              {hasToc && (
+                <div className="doc-toc">
+                  <div className="doc-toc-title">
+                    <h6>On this page</h6>
+                  </div>
+                  <TableOfContents toc={child.tableOfContents} />
+                </div>
+              )}
+            </React.Fragment>
           </div>
         )}
       </div>
