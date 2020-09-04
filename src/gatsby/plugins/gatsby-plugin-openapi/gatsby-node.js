@@ -32,11 +32,13 @@ exports.sourceNodes = async (
           ([method, rest]) => {
             const methodPath = parsedContent.paths[apiPath][method];
 
-            let readableUrl = methodPath["operationId"]
-              .replace(/(?:(the|a|an) +)/g, "")
-              .trim()
-              .replace(/\s/g, "-")
-              .toLowerCase();
+            let readableUrl =
+              `/development-api/` +
+              `${methodPath["tags"][0]}/${methodPath["operationId"]}/`
+                .replace(/[^a-zA-Z0-9/ ]/g, "")
+                .trim()
+                .replace(/\s/g, "-")
+                .toLowerCase();
 
             let responses =
               (methodPath["responses"] &&

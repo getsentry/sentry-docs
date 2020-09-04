@@ -12,8 +12,12 @@ const Params = ({ params }) => (
     {params.map(param => (
       <React.Fragment key={param.name}>
         <dt>
-          <code>{param.name}</code>
-          {!!param.schema?.type && <em> ({param.schema.type})</em>}
+          <div>
+            <code>{param.name}</code>
+            {!!param.schema?.type && <em> ({param.schema.type})</em>}
+          </div>
+
+          {!!param.required && <div className="required">REQUIRED</div>}
         </dt>
         <dd>{!!param.description && param.description}</dd>
       </React.Fragment>
@@ -56,6 +60,12 @@ export default props => {
   }
 
   const [selectedResponse, selectResponse] = useState(0);
+
+  const [selectedTabView, selectTabView] = useState(0);
+  const tabViews = data.responses[selectedResponse].content?.schema
+    ? ["RESPONSE", "SCHEMA"]
+    : ["RESPONSE"];
+
   useEffect(() => {
     Prism.highlightAll();
   }, []);
@@ -99,6 +109,7 @@ export default props => {
                     schema: { type },
                     description,
                     name,
+                    required: parameters.required.includes(name),
                   })
                 )}
               />
@@ -143,7 +154,17 @@ export default props => {
           </div>
           <div className="api-block">
             <div className="api-block-header response">
-              {"RESPONSE"}{" "}
+              <div className="tabs-group">
+                {tabViews.map((view, i) => (
+                  <span
+                    key={view}
+                    className={`tab ${selectedTabView === i && "selected"}`}
+                    onClick={() => selectTabView(i)}
+                  >
+                    {view}
+                  </span>
+                ))}
+              </div>
               <div className="response-status-btn-group">
                 {data.responses.map(
                   (res, i) =>
@@ -152,7 +173,10 @@ export default props => {
                         className={`response-status-btn ${selectedResponse ===
                           i && "selected"}`}
                         key={res.status_code}
-                        onClick={() => selectResponse(i)}
+                        onClick={() => {
+                          selectResponse(i);
+                          selectTabView(0);
+                        }}
                       >
                         {res.status_code}
                       </button>
@@ -161,18 +185,30 @@ export default props => {
               </div>
             </div>
             <pre className="api-block-example response">
-              {data.responses[selectedResponse].content?.example ? (
+              {selectedTabView === 0 &&
+                (data.responses[selectedResponse].content?.example ? (
+                  <code
+                    dangerouslySetInnerHTML={{
+                      __html: Prism.highlight(
+                        data.responses[selectedResponse].content.example,
+                        Prism.languages.json,
+                        "json"
+                      ),
+                    }}
+                  />
+                ) : (
+                  strFormat(data.responses[selectedResponse].description)
+                ))}
+              {selectedTabView === 1 && (
                 <code
                   dangerouslySetInnerHTML={{
                     __html: Prism.highlight(
-                      data.responses[selectedResponse].content.example,
+                      data.responses[selectedResponse].content.schema,
                       Prism.languages.json,
                       "json"
                     ),
                   }}
                 />
-              ) : (
-                strFormat(data.responses[selectedResponse].description)
               )}
             </pre>
           </div>

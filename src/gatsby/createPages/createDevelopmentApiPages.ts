@@ -23,7 +23,7 @@ export default async ({ actions, graphql, reporter }) => {
   await Promise.all(
     data.allOpenApi.nodes.map(async node => {
       actions.createPage({
-        path: `/development-api/${node.path.readableUrl}`,
+        path: `${node.path.readableUrl}`,
         component,
         context: {
           id: node.id,
