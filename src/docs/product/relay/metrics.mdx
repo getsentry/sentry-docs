@@ -1,0 +1,386 @@
+---
+title: Errors and Metrics
+sidebar_order: 3
+---
+
+## Error Reporting
+
+By default, Relay logs errors to the configured logger. You can enable error
+reporting to your own project in Sentry in the configuration file:
+
+```yaml
+sentry:
+  enabled: true
+  dsn: <your_dsn>
+```
+
+## Configuration
+
+Stats can be submitted to a statsd server by configuring `metrics` key. It can
+be put to a `ip:port` tuple:
+
+```yaml
+metrics:
+  statsd: 127.0.0.1:8126
+  prefix: mycompany.relay
+```
+
+### `statsd`
+
+Configures the host and port of the statsd client. We recommend to run a statsd
+client on the same host as Relay for performance reasons.
+
+### `prefix`
+
+Configures a prefix that is prepended to all reported metrics. By default, all
+metrics are reported with a `"sentry.relay"` prefix.
+
+### `hostname_tag`
+
+Adds a tag of the given name and sets it to the hostname of the machine that is running Relay. This is useful to separate multiple Relays. For example, setting this to:
+
+```yaml
+metrics:
+  hostname_tag: pod_name
+```
+
+The above example adds a `"pod_name"` tag that is set to the host name to every
+metric.
+
+## Metrics
+
+Relay emits the following metrics:
+
+### `event.queue_size.pct`
+
+_Histogram._
+The number of envelopes in the queue as a percentage of the maximum number of envelopes that
+can be stored in the queue.
+
+The value ranges from `0` (the queue is empty) to `1` (the queue is full and no additional
+events can be added).
+
+### `event.queue_size`
+
+_Histogram._
+The number of envelopes in the queue.
+
+The event queue represents the envelopes that are being processed at a particular time in
+Relay. Once a request is received, the envelope receives some preliminary (quick) processing
+to determine if it can be processed or it is rejected. Once this determination has been
+done, the http request that created the envelope terminates and, if the request is to be
+further processed, the envelope enters a queue.
+
+Once the envelope finishes processing and is sent downstream, the envelope is considered
+handled and it leaves the queue.
+
+### `event.size_bytes.raw`
+
+_Histogram._
+The size of the request body as seen by Relay after it is extracted from a request.
+
+For envelope requests, this is the full size of the envelope. For JSON store requests, this
+is the size of the JSON body.
+
+If this request contains a base64 zlib compressed payload without a proper
+`content-encoding` header, then this is the size before decompression.
+
+### `event.size_bytes.uncompressed`
+
+_Histogram._
+The size of the request body as seen by Relay after it has been decompressed and decoded in
+case this request contains a base64 zlib compressed payload without a proper
+`content-encoding` header. Otherwise, this metric is always equal to `event.size_bytes.raw`.
+
+### `project_state.pending`
+
+_Histogram._
+Number of projects in the in-memory project cache that are waiting for their state to be
+updated.
+
+### `project_state.request.batch_size`
+
+_Histogram._
+Number of project states requested from the Upstream for the current batch request.
+
+### `project_state.received`
+
+_Histogram._
+Number of project states received from the Upstream for the current batch request.
+
+### `project_cache.size`
+
+_Histogram._
+Number of project states currently held in the in-memory project cache.
+
+### `connector.wait_queue`
+
+_Histogram._
+The number of upstream requests queued up for a connection in the connection pool.
+
+### `http_queue.size`
+
+_Histogram._
+Number of messages queued by the Upstream actor and waiting to be sent over http.
+This metric is tagged with a priority label (for high and low priority queues).
+
+### `event_processing.deserialize`
+
+_Timer._
+The time spent deserializing an event from a JSON byte array into the native data structure
+on which Relay operates.
+
+### `event_processing.process`
+
+**Note**: This metric is emitted only when Relay is built with the `processing` feature.
+
+_Timer._
+Time spent running event processors on an event. Event processing happens before filtering.
+
+### `event_processing.filtering`
+
+**Note**: This metric is emitted only when Relay is built with the `processing` feature.
+
+_Timer._
+Time spent running filtering on an event.
+
+### `event_processing.rate_limiting`
+
+**Note**: This metric is emitted only when Relay is built with the `processing` feature.
+
+_Timer._
+Time spent checking for rate limits in Redis.
+
+Note that not all events are checked against Redis. After an event is rate limited for the
+first time, the rate limit is cached. Events coming in during this period will be discarded
+earlier in the request queue and do not reach the processing queue.
+
+### `event_processing.pii`
+
+_Timer._
+Time spent in data scrubbing for the current event. Data scrubbing happens last before
+serializing the event back to JSON.
+
+### `event_processing.serialization`
+
+_Timer._
+Time spent converting the event from its in-memory reprsentation into a JSON string.
+
+### `event.wait_time`
+
+_Timer._
+Time spent between receiving a request in Relay (that is, beginning of request handling) and
+the start of synchronous processing in the EventProcessor. This metric primarily indicates
+backlog in event processing.
+
+### `event.processing_time`
+
+_Timer._
+The time spent in synchronous processing of envelopes.
+
+This timing covers the end-to-end processing in the CPU pool and comprises:
+
+- `event_processing.deserialize`
+- `event_processing.pii`
+- `event_processing.serialization`
+
+With Relay in processing mode, this includes the following additional timings:
+
+- `event_processing.process`
+- `event_processing.filtering`
+- `event_processing.rate_limiting`
+
+### `event.total_time`
+
+_Timer._
+The total time an envelope spends in Relay from the time it is received until it finishes
+processing and has been submitted.
+
+### `project_state.eviction.duration`
+
+_Timer._
+The total time spent during `ProjectCache.fetch_states` in which eviction of outdated
+projects happens.
+
+### `project_state.request.duration`
+
+_Timer._
+The total time spent during `ProjectCache.fetch_states` spent waiting for all ProjectState
+requests to resolve. During a fetch_states request, we pick up to max_num_requests \*
+max_num_project_states_per_request projects that need their state updated and batch
+them into max_num_requests requests. This metric represents the time spent from issuing
+the first request until all requests are finished.
+
+### `project_id.request.duration`
+
+_Timer._
+The total time spent getting the project id from upstream.
+**Note** that ProjectIdRequests happen only for the legacy
+endpoint that does not specify the project id in the url, for the new endpoints the
+project id is extracted from the url path. Only projects with the id not already fetched
+are counted.
+The project id is only fetched once and it is not refreshed.
+
+### `requests.duration`
+
+_Timer._
+The total duration of a request as seen from Relay from the moment the request is
+received until a http result is returned. Note that this does **not** represent the
+total duration for processing an event. Requests for events that are not immediately
+rejected ( because the project has hit a rate limit) are scheduled for processing at
+a latter time and an HTTP OK (200) is returned.
+
+### `unique_projects`
+
+_Set._
+Represents the number of active projects in the current slice of time
+
+### `event.accepted`
+
+_Counter._
+Number of envelopes accepted in the current time slot. This represents requests that have
+successfully passed rate limits, filters and have been successfully handled.
+
+### `event.rejected`
+
+_Counter._
+Number of envelopes rejected in the current time slot. This includes envelopes being
+rejected because they are malformed or any other errors during processing (including
+filtered events, invalid payloads and rate limits).
+
+### `events.outcomes`
+
+**Note**: This metric is emitted only when Relay is built with the `processing` feature.
+
+_Counter._
+Represents a group of counters incremented for every outcome emitted by Relay, implemented
+with tags. The following tags are present for each event outcome:
+
+- `outcome` which is an `Outcome` enumeration
+- `reason` which is the reason string for all outcomes that are not `Accepted`.
+
+### `project_state.get`
+
+_Counter._
+Counts the number of times a project state lookup is done. This includes requests
+for projects that are cached and requests for projects that are not yet cached.
+All requests that return a `EventAction::Accept` i.e. are not rate limited (on
+the fast path) or are discarded because we know the project is disabled or invalid
+will be counted.
+
+### `project_state.request`
+
+_Counter._
+Counts the number of project state http requests. Note that a project state HTTP request
+typically contains a number of projects (the project state requests are batched).
+
+### `project_cache.hit`
+
+_Counter._
+Counts the number of times a request for a project is already present, this effectively
+represents the fraction of `project_state.get` that will **not** result in a ProjectState
+request.
+
+### `project_cache.miss`
+
+_Counter._
+Counts the number of times a request for a project is not already present.
+`project_state.get` = `project_cache.miss` + `project_cache.hit`.
+Requests that are generating a cache hit will be queued and batched and eventually will
+generate a `project_state.request`.
+
+### `project_id.request`
+
+_Counter._
+Counts the number of requests for the ProjectId (the timing is tracked
+by `project_id.request.duration`). Note that ProjectIdRequests happen only for the legacy
+endpoint that does not specify the project id in the url, for the new endpoints the
+project id is extracted from the url path. Only projects with the id not already fetched
+are counted. Once the ProjectId is successfully cached it will be retained indefinitely.
+
+### `server.starting`
+
+_Counter._
+Counts the number of times Relay started.
+This can be used to track unwanted restarts due to crashes or termination.
+
+### `processing.event.produced`
+
+**Note**: This metric is emitted only when Relay is built with the `processing` feature.
+
+_Counter._
+Counts the number of messages placed on the Kafka queue.
+
+When Relay operates with processing enabled and an item is successfully processed, each item
+will generate a message on the Kafka. The counter has an `event_type` tag which is set to
+either `event` or `attachment` representing the type of message produced on the Kafka queue.
+
+### `processing.produce.error`
+
+**Note**: This metric is emitted only when Relay is built with the `processing` feature.
+
+_Counter._
+Counts the number of producer errors occurred after an event was already enqueued for
+sending to Kafka. These errors might include e.g. MessageTooLarge errors when the broker
+does not accept the requests over a certain size, which is usually due to invalic or
+inconsistent broker/producer configurations.
+
+### `event.protocol`
+
+_Counter._
+Counts the number of events that hit any of the Store like endpoints (Store, Security,
+MiniDump, Unreal). The events are counted before they are rate limited , filtered or
+processed in any way. The counter has a `version` tag that tracks the message event
+protocol version.
+
+### `requests`
+
+_Counter._
+Counts the number of requests reaching Relay.
+
+### `responses.status_codes`
+
+_Counter._
+Counts the number of requests that have finished during the current interval.
+The counter has the following tags:
+
+- `status_code` The HTTP status code number.
+- `method` The HTTP method used in the request in uppercase.
+- `route` Unique dashed identifier of the endpoint.
+
+### `project_cache.eviction`
+
+_Counter._
+We are scanning our in-memory project cache for stale entries. This counter is incremented
+before doing the expensive operation.
+
+### `connector.reused`
+
+_Counter._
+The number of requests that reused an already open upstream connection.
+
+Relay employs connection keep-alive whenever possible. Connections are kept open for 15
+seconds of inactivity, or 75 seconds of activity.
+
+### `connector.opened`
+
+_Counter._
+The number of upstream connections opened.
+
+### `connector.closed`
+
+_Counter._
+The number of upstream connections closed due to connection timeouts.
+
+Relay employs connection keep-alive whenever possible. Connections are kept open for 15
+seconds of inactivity, or 75 seconds of activity.
+
+### `connector.errors`
+
+_Counter._
+The number of upstream connections that experienced errors.
+
+### `connector.timeouts`
+
+_Counter._
+The number of upstream connections that experienced a timeout.
