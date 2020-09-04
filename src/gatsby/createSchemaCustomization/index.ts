@@ -1,5 +1,6 @@
 import { getApiTypeDefs } from "./apiSchema";
 import { getPlatformTypeDefs } from "./platformSchema";
+import { getPackageTypeDefs } from "./packageSchema";
 
 // TODO(dcramer): move frontmatter out of ApiEndpoint and into Frontmatter
 export default ({ actions, schema }) => {
@@ -101,7 +102,8 @@ export default ({ actions, schema }) => {
   ];
   createTypes([
     ...typeDefs,
-    ...getApiTypeDefs({ actions, schema }),
-    ...getPlatformTypeDefs({ actions, schema }),
+    ...getApiTypeDefs(),
+    ...getPlatformTypeDefs(),
+    ...getPackageTypeDefs(),
   ]);
 };

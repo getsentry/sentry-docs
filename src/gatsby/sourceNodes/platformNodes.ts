@@ -8,6 +8,7 @@ type Frontmatter = {
   title?: string;
   caseStyle?: string;
   supportLevel?: string;
+  sdk?: string;
   fallbackPlatform?: string;
   categories?: string[];
 };
@@ -186,6 +187,7 @@ export const sourcePlatformNodes = async ({
       key: platformName,
       name: platformName,
       title: frontmatter.title || toTitleCase(platformName),
+      sdk: frontmatter.sdk,
       caseStyle: frontmatter.caseStyle || DEFAULT_CASE_STYLE,
       supportLevel: frontmatter.supportLevel || DEFAULT_SUPPORT_LEVEL,
       fallbackPlatform: frontmatter.fallbackPlatform,
@@ -198,6 +200,7 @@ export const sourcePlatformNodes = async ({
             key: `${platformName}.${guideName}`,
             name: guideName,
             title: guideFrontmatter.title || toTitleCase(guideName),
+            sdk: guideFrontmatter.sdk || frontmatter.sdk,
             caseStyle:
               guideFrontmatter.caseStyle ||
               frontmatter.caseStyle ||
@@ -224,7 +227,7 @@ export const sourcePlatformNodes = async ({
       children: [],
       internal: {
         type: `Platform`,
-        mediaType: `text/html`,
+        // mediaType: `text/html`,
         content,
         contentDigest: createContentDigest(data),
       },

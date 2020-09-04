@@ -1,5 +1,5 @@
 ---
-title: CDN Configuration
+title: CDN Installation
 sidebar_order: 1
 caseStyle: camelCase
 supportLevel: production
@@ -8,19 +8,9 @@ categories:
 description: "Learn more about installation and configuration for those using a content delivery network (CDN)."
 ---
 
-On this page, we provide installation and configuration information for those using a content delivery network (CDN).
+import JsBundleList from "~src/components/jsBundleList";
 
-<Alert>
-<markdown>
-
-If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
-
-</markdown>
-</Alert>
-
-## CDN Installation
-
-Sentry captures data by using an SDK within your application’s runtime. Add the Sentry SDK to your application:
+Sentry supports loading it's JavaScript SDK via a CDN. Generally we suggest using our npm package (`@sentry/browser`) as utilizing a CDN create scenarios where Sentry is unable to load due to networking issues or common extensions like ad blockers. If you _must_ use a CDN, take a look at [loading Sentry lazily with our JS loader](../lazy-load-sentry/).
 
 ```html {tabTitle: CDN}
 <script
@@ -30,43 +20,9 @@ Sentry captures data by using an SDK within your application’s runtime. Add th
 ></script>
 ```
 
-<Alert>
-<markdown>
+## Performance Bundle
 
-Using `defer`
-
-If you include `defer` in your script your app, to make sure it can monitor everything that follows it. We strongly recommend that if you use `defer`, you both place the script tag for the browser SDK first and also mark it -- and all of your other scripts -- `defer` (but not `async`), guaranteeing that it’s executed before any of the others.
-
-</markdown>
-</Alert>
-
-<Note><markdown>
-
-If you have a Content Security Policy (CSP) set up on your site, you will need to add the `script-src` of wherever you're loading the SDK from, and the origin of your DSN. For example:
-
-</markdown></Note>
-
-- `script-src: https://browser.sentry-cdn.com`
-- `connect-src: *.sentry.io`
-
-Return now to the [Getting Started](/platforms/javascript/) for our JavaScript SDK to learn about how you can:
-
-- Capture Errors
-- Automatically Enrich Error Data
-- Set the Release Version
-- Upload Source Maps
-
-## Monitor Performance
-
-Performance Monitoring helps you see everything from macro-level metrics to micro-level spans, and you’ll be able to cross-reference transactions with related issues, customize queries based on your personal needs, and substantially more.
-
-To get started with performance monitoring using Sentry’s JavaScript SDK, install both the `@sentry/browser` and `@sentry/tracing` packages, or link directly to our combined minified bundle via CDN:
-
-<Alert level="note" title="Note"><markdown>
-
-We switched our package name from `@sentry/apm` to `@sentry/tracing`. If you were previously using `@sentry/apm`, please see [Switching to @sentry/tracing](/product/performance/apm-to-tracing/).
-
-</markdown></Alert>
+To utilize Sentry's performance tracing alternative bundle is needed. This allows us to keep the filesize down for users who only need error monitoring.
 
 ```html {tabTitle: CDN}
 <script
@@ -76,7 +32,7 @@ We switched our package name from `@sentry/apm` to `@sentry/tracing`. If you wer
 ></script>
 ```
 
-Next, initialize the integration in your call to `Sentry.init`:
+The most important thing to note here is that `Sentry.Integrations` has been made available, and can be referenced in your call to `Sentry.init`:
 
 ```javascript {tabTitle: CDN}
 Sentry.init({
@@ -87,6 +43,23 @@ Sentry.init({
 });
 ```
 
-Performance data is transmitted using a new event type called “transactions,” which you can learn about in [Distributed Tracing](/product/performance/distributed-tracing). To capture transactions, you must install the performance package and configure your SDK to set the `tracesSampleRate` option to a nonzero value. The example configuration above will transmit 100% of captured transactions; lower this value in production to avoid consuming your quota too quickly.
+## Available Bundles
 
-Learn more about sampling in [Filtering Events Reported to Sentry](/platforms/javascript/configuration/filtering).
+A variety of bundles are provided which are optimized for Sentry's various integrations.
+
+<JsBundleList />
+
+## Additional Configuration
+
+### Using defer
+
+If you include `defer` in your script your app, to make sure it can monitor everything that follows it. We strongly recommend that if you use `defer`, you both place the script tag for the browser SDK first and also mark it -- and all of your other scripts -- `defer` (but not `async`), guaranteeing that it’s executed before any of the others.
+
+Without doing this you will find that it's possible for errors to occur before Sentry is loaded, which means you'll be flying blind to those issues.
+
+### Content Security Policy
+
+If you have a Content Security Policy (CSP) set up on your site, you will need to add the `script-src` of wherever you're loading the SDK from, and the origin of your DSN. For example:
+
+- `script-src: https://browser.sentry-cdn.com`
+- `connect-src: *.sentry.io`

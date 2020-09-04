@@ -1,4 +1,4 @@
-export const getPlatformTypeDefs = ({ actions, schema }) => {
+export const getPlatformTypeDefs = () => {
   return [
     `
     enum PlatformCaseStyle {
@@ -25,6 +25,7 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
       key: String!
       name: String!
       title: String!
+      sdk: String
       caseStyle: PlatformCaseStyle!
       supportLevel: PlatformSupportLevel!
       categories: [PlatformCategory!]
@@ -36,6 +37,7 @@ export const getPlatformTypeDefs = ({ actions, schema }) => {
       key: String!
       name: String!
       title: String!
+      sdk: String
       caseStyle: PlatformCaseStyle!
       supportLevel: PlatformSupportLevel!
       guides: [PlatformGuide!]
