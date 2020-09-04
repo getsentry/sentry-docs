@@ -12,6 +12,7 @@ type Props = {
 const query = graphql`
   query JsCdnPackage {
     package(id: { eq: "sentry.javascript.browser" }) {
+      version
       files {
         name
         checksums {
