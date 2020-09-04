@@ -24,12 +24,21 @@ type Props = {
 
 export default (props: Props) => {
   const { pageContext } = props;
+  // Ruby
+  // Rails
+  // X for Ruby
+  // X for Rails
+  const seoTitle =
+    props.pageContext.title ===
+    (props.pageContext.guide || props.pageContext.platform).title
+      ? props.pageContext.title
+      : `${props.pageContext.title} for ${
+          (props.pageContext.guide || props.pageContext.platform).title
+        }`;
   return (
     <BasePage
       {...props}
-      seoTitle={`${props.pageContext.title} for ${
-        (props.pageContext.guide || props.pageContext.platform).title
-      }`}
+      seoTitle={seoTitle}
       sidebar={
         <PlatformSidebar
           platform={pageContext.platform}

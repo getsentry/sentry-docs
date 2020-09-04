@@ -12,11 +12,13 @@ import CodeTabs from "./codeTabs";
 import ConfigKey from "./configKey";
 import GuideGrid from "./guideGrid";
 import JsCdnTag from "./jsCdnTag";
+import Note from "./note";
 import PageGrid from "./pageGrid";
 import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
 import PlatformRedirectLink from "./platformRedirectLink";
 import PlatformSection from "./platformSection";
+import PlatformIdentifier from "./platformIdentifier";
 
 const mdxComponents = {
   Alert,
@@ -28,11 +30,13 @@ const mdxComponents = {
   GuideGrid,
   JsCdnTag,
   Link: SmartLink,
+  Note,
   PageGrid,
   ParamTable,
   PlatformContent,
   PlatformRedirectLink,
   PlatformSection,
+  PlatformIdentifier,
 };
 
 export default ({ value }) => {

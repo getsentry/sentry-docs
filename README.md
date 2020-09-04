@@ -247,6 +247,8 @@ This is an alert
 </markdown></Alert>
 ```
 
+See also the Note component.
+
 ### ConfigKey
 
 Render a heading with a configuration key in the correctly cased format for a given platform.
@@ -293,6 +295,21 @@ Additionally code blocks also support `tabTitle` and `filename` properties:
 var foo = "bar";
 ```
 ````
+
+### Note
+
+Render a note.
+
+
+```javascript
+<Note><markdown>
+
+Something important, but maybe not _that_ important.
+
+</markdown></Note>
+```
+
+See also the Alert component.
 
 ### PageGrid
 
