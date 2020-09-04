@@ -23,8 +23,8 @@ function makeKeywordsClickable(children) {
     let match;
     let lastIndex = 0;
     while ((match = KEYWORDS_REGEX.exec(child)) !== null) {
-      let afterMatch = KEYWORDS_REGEX.lastIndex - match[0].length;
-      let before = child.substring(lastIndex, afterMatch);
+      const afterMatch = KEYWORDS_REGEX.lastIndex - match[0].length;
+      const before = child.substring(lastIndex, afterMatch);
       if (before.length > 0) {
         arr.push(before);
       }
@@ -38,7 +38,7 @@ function makeKeywordsClickable(children) {
       lastIndex = KEYWORDS_REGEX.lastIndex;
     }
 
-    let after = child.substr(lastIndex);
+    const after = child.substr(lastIndex);
     if (after.length > 0) {
       arr.push(after);
     }
@@ -126,12 +126,12 @@ function Selector({ keyword, group, ...props }) {
                 key={idx}
                 data-active={isActive ? "1" : ""}
                 onClick={() => {
-                  let newSharedSelection = { ...sharedSelection };
+                  const newSharedSelection = { ...sharedSelection };
                   newSharedSelection[group] = idx;
                   setSharedSelection(newSharedSelection);
                   setIsOpen(false);
                 }}
-                className={!!isActive ? "active" : ""}
+                className={isActive ? "active" : ""}
               >
                 {item.title}
               </button>

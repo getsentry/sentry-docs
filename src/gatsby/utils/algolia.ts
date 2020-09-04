@@ -1,8 +1,8 @@
-const {
+import {
   standardSDKSlug,
   extrapolate,
   sentryAlgoliaIndexSettings,
-} = require("sentry-global-search");
+} from "sentry-global-search";
 
 const pageQuery = `{
     pages: allSitePage {
@@ -24,7 +24,7 @@ const pageQuery = `{
     }
   }`;
 
-const flatten = arr =>
+const flatten = (arr: any[]) =>
   arr
     .filter(
       ({ node: { context } }) =>
@@ -32,7 +32,12 @@ const flatten = arr =>
     )
     .map(({ node: { objectID, context, path } }) => {
       // https://github.com/getsentry/sentry-global-search#algolia-record-stategy
-      const { slug } = standardSDKSlug(context.platform.name);
+      let platforms = [];
+      if (context.platform) {
+        const { slug } = standardSDKSlug(context.platform.name);
+        platforms = extrapolate(slug, ".");
+      }
+
       return {
         objectID,
         title: context.title,
@@ -41,19 +46,18 @@ const flatten = arr =>
         // Do not remove until the global lib is in sentry. Removing will break sentry.
         content: context.excerpt,
         text: context.excerpt,
-        platforms: context.platform ? extrapolate(slug, ".") : [],
+        platforms,
         pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
         legacy: context.legacy || false,
       };
-    })
-    .filter(n => !n.draft);
+    });
 
 const indexPrefix = process.env.GATSBY_ALGOLIA_INDEX_PREFIX;
 if (!indexPrefix) {
   throw new Error("`GATSBY_ALGOLIA_INDEX_PREFIX` must be configured!");
 }
 
-const queries = [
+export default [
   {
     query: pageQuery,
     transformer: ({ data }) => flatten(data.pages.edges),
@@ -71,5 +75,3 @@ const queries = [
     matchFields: ["text", "section", "title", "url", "legacy"],
   },
 ];
-
-module.exports = queries;

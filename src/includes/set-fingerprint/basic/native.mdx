@@ -1,0 +1,21 @@
+```cpp
+#include <sentry.h>
+
+void send_request(request_t *req) {
+    response_t *resp = request_send(req);
+
+    if (response_failed(resp)) {
+        sentry_value_t fp = sentry_value_new_list();
+        sentry_value_append(fp, sentry_value_new_string(req->method));
+        sentry_value_append(fp, sentry_value_new_string(req->path));
+        sentry_value_append(fp, sentry_value_new_string(resp->status));
+
+        sentry_value_t event = sentry_value_new_event();
+        sentry_value_set_by_key(event, "fingerprint", fp);
+
+        // create an event here
+
+        sentry_capture_event(event);
+    }
+}
+```
