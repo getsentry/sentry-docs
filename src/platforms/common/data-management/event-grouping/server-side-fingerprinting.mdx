@@ -26,7 +26,7 @@ matcher:expression -> list, of, values
 This list of values can be hardcoded values or alternatively some variables
 whch are substituded.
 
-This is a practical example which would group exceptions of a specific type
+This is a practical example, which groups exceptions of a specific type
 together:
 
 ```discover {tabTitle:Fingerprinting Config}
@@ -43,7 +43,7 @@ If all matches in a line match, then the fingerprint is applied. The syntax foll
 the syntax from Discover queries. If you want to negate the match, you can prefix
 the expression with an exclamation mark (`!`).
 
-Matchers generally use globbing syntax. The following matchers exist:
+Matchers generally use globbing syntax. The following matchers are available:
 
 <DefinitionList>
 
@@ -64,8 +64,8 @@ error.type:ConnectionError -> connection-error
 alias: `value`
 
 Matches on the exception value. Errors or exceptions often have human readable
-descriptions (values) associated with them. This mathchers lets you do a case
-insensitive match on it.
+descriptions (values) associated with them. This matcher allows a case
+insensitive match.
 
 ```discover {tabTitle:Fingerprinting Config}
 error.value:"connection error (code: *)" -> connection-error
@@ -74,7 +74,7 @@ error.value:"could not connect (*)" -> connection-error
 
 ### `message`
 
-This matcher matches on a log message. This will also automatically check for
+This matcher matches on a log message. It will also automatically check for
 the additional exception value as they can be hard to keep apart. The matching
 is done case insensitive.
 
@@ -84,8 +84,8 @@ message:"system encountered a fatal problem: *" -> fatal-log
 
 ### `logger`
 
-Matches on the name of the logger. This is useful to combine all messages of a
-logger together. The match is done case sensitively.
+Matches on the name of the logger, which is useful to combine all messages of a
+logger together. This match is case sensitive.
 
 ```discover {tabTitle:Fingerprinting Config}
 logger:"com.myapp.mypackage.*" -> mypackage-logger
@@ -93,7 +93,7 @@ logger:"com.myapp.mypackage.*" -> mypackage-logger
 
 ### `level`
 
-Matches on the log level. The match is done case insensitively.
+Matches on the log level. The match is case insensitive.
 
 ```discover {tabTitle:Fingerprinting Config}
 logger:"com.myapp.FooLogger" level:"error" -> mylogger-error
@@ -102,7 +102,7 @@ logger:"com.myapp.FooLogger" level:"error" -> mylogger-error
 ### `tags.tag_name`
 
 Matches on the value of the tag `tag_name`. This can be useful to filter down
-certain types of events. For instance you can separate out events caused by a
+certain types of events. For instance, you can separate out events caused by a
 certain server:
 
 ```discover {tabTitle:Fingerprinting Config}
@@ -113,7 +113,7 @@ tags.server_name:"canary-*.mycompany.internal" -> canary-events
 
 alias: `path`
 
-This matcher matches case insensitively on the path of an event. It uses path
+This matcher is case insensitive matching on the path of an event. It uses path
 globbing semantics which means that `*` does not match a slash but `**` does.
 Note that this matcher actually matches on both `abs_path` and `filename` as
 SDKs can be quite inconsistent about how these values are supported. If the
@@ -128,7 +128,7 @@ stack.abs_path:"**/my-utils/*.js" -> my-utils, {{ error.type }}
 alias: `module`
 
 This matcher is similar to `stack.abs_path` but matches on the module name
-instead. The match is performed case sensitively and regular globbing rules
+instead. The match is case sensitive and regular globbing rules
 apply (`*` also matches slashes).
 
 ```discover {tabTitle:Fingerprinting Config}
@@ -140,7 +140,7 @@ stack.module:"*/my-utils/*" -> my-utils, {{ error.type }}
 alias: `function`
 
 This matcher checks if any of the functions in the stack trace match the
-glob. The match is done case sensitively:
+glob. The match is case sensitive:
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.function:"my_assertion_failed" -> my-assertion-failed
@@ -182,11 +182,11 @@ app:yes stack.function:"assert" -> assert
 
 ## Combining Matchers
 
-When multiple matchers are combined they all need to match. Matchers that
+When multiple matchers are combined, they all need to match. Matchers that
 operate on frames must all apply to the same frame otherwise they are not
-considered to match. For instance if you match on both function name and module
-name then a match only exists if a frame exists that matches both the function
-name and the module name. It's not enough for a frame to exist with the
+considered to match. For instance, if you match on both function name and module
+name then a match only exists if a frame matches both the function
+name and the module name. It's not enough for a frame to match only with the function name, even if another frame would match the module name by itself.
 matching function name only even if there is another frame that would match
 the module name by itself.
 
@@ -288,7 +288,7 @@ message:"connection error*" -> connection-error, {{ logger }}, {{ level }}
 
 ### `{{ tags.tag_name }}`
 
-This fills in the value of a tag into the fingerprint. This can for instance
+This fills in the value of a tag into the fingerprint, which can, for instance,
 be used to split events by server name or something similar.
 
 ```discover {tabTitle:Fingerprinting Config}
