@@ -1,0 +1,278 @@
+[
+  {
+    "type": "Counter",
+    "name": "connector.closed",
+    "description": "The number of upstream connections closed due to connection timeouts.\n\nRelay employs connection keep-alive whenever possible. Connections are kept open for 15\nseconds of inactivity, or 75 seconds of activity.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "connector.errors",
+    "description": "The number of upstream connections that experienced errors.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "connector.opened",
+    "description": "The number of upstream connections opened.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "connector.reused",
+    "description": "The number of requests that reused an already open upstream connection.\n\nRelay employs connection keep-alive whenever possible. Connections are kept open for 15\nseconds of inactivity, or 75 seconds of activity.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "connector.timeouts",
+    "description": "The number of upstream connections that experienced a timeout.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "connector.wait_queue",
+    "description": "The number of upstream requests queued up for a connection in the connection pool.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.accepted",
+    "description": "Number of envelopes accepted in the current time slot. This represents requests that have\nsuccessfully passed rate limits, filters and have been successfully handled.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event.processing_time",
+    "description": "The time spent in synchronous processing of envelopes.\n\nThis timing covers the end-to-end processing in the CPU pool and comprises:\n\n- `event_processing.deserialize`\n- `event_processing.pii`\n- `event_processing.serialization`\n\nWith Relay in processing mode, this includes the following additional timings:\n\n- `event_processing.process`\n- `event_processing.filtering`\n- `event_processing.rate_limiting`",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.protocol",
+    "description": "Counts the number of events that hit any of the Store like endpoints (Store, Security,\nMiniDump, Unreal). The events are counted before they are rate limited , filtered or\nprocessed in any way. The counter has a `version` tag that tracks the message event\nprotocol version.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "event.queue_size",
+    "description": "The number of envelopes in the queue.\n\nThe event queue represents the envelopes that are being processed at a particular time in\nRelay. Once a request is received, the envelope receives some preliminary (quick) processing\nto determine if it can be processed or it is rejected. Once this determination has been\ndone, the http request that created the envelope terminates and, if the request is to be\nfurther processed, the envelope enters a queue.\n\nOnce the envelope finishes processing and is sent downstream, the envelope is considered\nhandled and it leaves the queue.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "event.queue_size.pct",
+    "description": "The number of envelopes in the queue as a percentage of the maximum number of envelopes that\ncan be stored in the queue.\n\nThe value ranges from `0` (the queue is empty) to `1` (the queue is full and no additional\nevents can be added).",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "event.rejected",
+    "description": "Number of envelopes rejected in the current time slot. This includes envelopes being\nrejected because they are malformed or any other errors during processing (including\nfiltered events, invalid payloads and rate limits).",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "event.size_bytes.raw",
+    "description": "The size of the request body as seen by Relay after it is extracted from a request.\n\nFor envelope requests, this is the full size of the envelope. For JSON store requests, this\nis the size of the JSON body.\n\nIf this request contains a base64 zlib compressed payload without a proper\n`content-encoding` header, then this is the size before decompression.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "event.size_bytes.uncompressed",
+    "description": "The size of the request body as seen by Relay after it has been decompressed and decoded in\ncase this request contains a base64 zlib compressed payload without a proper\n`content-encoding` header. Otherwise, this metric is always equal to `event.size_bytes.raw`.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event.total_time",
+    "description": "The total time an envelope spends in Relay from the time it is received until it finishes\nprocessing and has been submitted.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event.wait_time",
+    "description": "Time spent between receiving a request in Relay (that is, beginning of request handling) and\nthe start of synchronous processing in the EventProcessor. This metric primarily indicates\nbacklog in event processing.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.deserialize",
+    "description": "The time spent deserializing an event from a JSON byte array into the native data structure\non which Relay operates.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.filtering",
+    "description": "Time spent running filtering on an event.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.pii",
+    "description": "Time spent in data scrubbing for the current event. Data scrubbing happens last before\nserializing the event back to JSON.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.process",
+    "description": "Time spent running event processors on an event. Event processing happens before filtering.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.rate_limiting",
+    "description": "Time spent checking for rate limits in Redis.\n\nNote that not all events are checked against Redis. After an event is rate limited for the\nfirst time, the rate limit is cached. Events coming in during this period will be discarded\nearlier in the request queue and do not reach the processing queue.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Timer",
+    "name": "event_processing.serialization",
+    "description": "Time spent converting the event from its in-memory reprsentation into a JSON string.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "events.outcomes",
+    "description": "Represents a group of counters incremented for every outcome emitted by Relay, implemented\nwith tags. The following tags are present for each event outcome:\n\n- `outcome` which is an `Outcome` enumeration\n- `reason` which is the reason string for all outcomes that are not `Accepted`.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Histogram",
+    "name": "http_queue.size",
+    "description": "Number of messages queued by the Upstream actor and waiting to be sent over http.\nThis metric is tagged with a priority label (for high and low priority queues).",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "processing.event.produced",
+    "description": "Counts the number of messages placed on the Kafka queue.\n\nWhen Relay operates with processing enabled and an item is successfully processed, each item\nwill generate a message on the Kafka. The counter has an `event_type` tag which is set to\neither `event` or `attachment` representing the type of message produced on the Kafka queue.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Counter",
+    "name": "processing.produce.error",
+    "description": "Counts the number of producer errors occurred after an event was already enqueued for\nsending to Kafka. These errors might include e.g. MessageTooLarge errors when the broker\ndoes not accept the requests over a certain size, which is usually due to invalic or\ninconsistent broker/producer configurations.",
+    "features": [
+      "processing"
+    ]
+  },
+  {
+    "type": "Counter",
+    "name": "project_cache.eviction",
+    "description": "We are scanning our in-memory project cache for stale entries. This counter is incremented\nbefore doing the expensive operation.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_cache.hit",
+    "description": "Counts the number of times a request for a project is already present, this effectively\nrepresents the fraction of `project_state.get` that will **not** result in a ProjectState\nrequest.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_cache.miss",
+    "description": "Counts the number of times a request for a project is not already present.\n`project_state.get` = `project_cache.miss` + `project_cache.hit`.\nRequests that are generating a cache hit will be queued and batched and eventually will\ngenerate a `project_state.request`.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "project_cache.size",
+    "description": "Number of project states currently held in the in-memory project cache.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_id.request",
+    "description": "Counts the number of requests for the  ProjectId (the timing is tracked\nby `project_id.request.duration`). Note that ProjectIdRequests happen only for the legacy\nendpoint that does not specify the project id in the url, for the new endpoints the\nproject id is extracted from the url path. Only projects with the id not already fetched\nare counted. Once the ProjectId is successfully cached it will be retained indefinitely.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "project_id.request.duration",
+    "description": "The total time spent getting the project id from upstream.\n**Note** that ProjectIdRequests happen only for the legacy\nendpoint that does not specify the project id in the url, for the new endpoints the\nproject id is extracted from the url path. Only projects with the id not already fetched\nare counted.\nThe project id is only fetched once and it is not refreshed.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "project_state.eviction.duration",
+    "description": "The total time spent during `ProjectCache.fetch_states` in which eviction of outdated\nprojects happens.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_state.get",
+    "description": "Counts the number of times a project state lookup is done. This includes requests\nfor projects that are cached and requests for projects that are not yet cached.\nAll requests that return a  `EventAction::Accept` i.e. are not rate limited (on\nthe fast path) or are discarded because we know the project is disabled or invalid\nwill be counted.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "project_state.pending",
+    "description": "Number of projects in the in-memory project cache that are waiting for their state to be\nupdated.",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "project_state.received",
+    "description": "Number of project states received from the Upstream for the current batch request.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "project_state.request",
+    "description": "Counts the number of project state http requests. Note that a project state HTTP request\ntypically contains a number of projects (the project state requests are batched).",
+    "features": []
+  },
+  {
+    "type": "Histogram",
+    "name": "project_state.request.batch_size",
+    "description": "Number of project states requested from the Upstream for the current batch request.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "project_state.request.duration",
+    "description": "The total time spent during `ProjectCache.fetch_states` spent waiting for all ProjectState\nrequests to resolve. During a fetch_states request, we pick up to max_num_requests *\nmax_num_project_states_per_request projects that need their state updated and batch\nthem into max_num_requests requests. This metric represents the time spent from issuing\nthe first request until all requests are finished.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "requests",
+    "description": "Counts the number of requests reaching Relay.",
+    "features": []
+  },
+  {
+    "type": "Timer",
+    "name": "requests.duration",
+    "description": "The total duration of a request as seen from Relay from the moment the request is\nreceived until a http result is returned. Note that this does **not** represent the\ntotal duration for processing an event. Requests for events that are not immediately\nrejected ( because the project has hit a rate limit) are scheduled for processing at\na latter time and an HTTP OK (200) is returned.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "responses.status_codes",
+    "description": "Counts the number of requests that have finished during the current interval.\nThe counter has the following tags:\n\n- `status_code` The HTTP status code number.\n- `method` The HTTP method used in the request in uppercase.\n- `route` Unique dashed identifier of the endpoint.",
+    "features": []
+  },
+  {
+    "type": "Counter",
+    "name": "server.starting",
+    "description": "Counts the number of times Relay started.\nThis can be used to track unwanted restarts due to crashes or termination.",
+    "features": []
+  },
+  {
+    "type": "Set",
+    "name": "unique_projects",
+    "description": "Represents the number of active projects in the current slice of time",
+    "features": []
+  }
+]

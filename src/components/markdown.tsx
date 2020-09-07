@@ -20,6 +20,7 @@ import DefinitionList from "./definitionList";
 import PlatformRedirectLink from "./platformRedirectLink";
 import PlatformSection from "./platformSection";
 import PlatformIdentifier from "./platformIdentifier";
+import RelayMetrics from "./relayMetrics";
 
 const mdxComponents = {
   Alert,
@@ -39,6 +40,7 @@ const mdxComponents = {
   PlatformRedirectLink,
   PlatformSection,
   PlatformIdentifier,
+  RelayMetrics,
 };
 
 export default ({ value }) => {

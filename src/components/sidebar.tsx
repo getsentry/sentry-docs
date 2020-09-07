@@ -40,7 +40,12 @@ export const Sidebar = ({ data }: ChildProps): JSX.Element => {
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
   return (
     <ul className="list-unstyled" data-sidebar-tree>
-      <DynamicNav root="product" title="Product" tree={tree} />
+      <DynamicNav
+        root="product"
+        title="Product"
+        tree={tree}
+        exclude={["/product/relay/"]}
+      />
       <DynamicNav root="accounts" title="Account Management" tree={tree} />
       <DynamicNav root="cli" title="sentry-cli" tree={tree} />
       <DynamicNav root="meta" title="Security and Legal" tree={tree} />
