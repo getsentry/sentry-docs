@@ -8,7 +8,10 @@ export default ({
   createNodeId,
 }) => {
   const { createNodeField, createNode } = actions;
-  if (node.internal.type === "Mdx" || node.internal.type === "MarkdownRemark") {
+  if (
+    (node.internal.type === "Mdx" || node.internal.type === "MarkdownRemark") &&
+    node.fileAbsolutePath
+  ) {
     const value = createFilePath({ node, getNode });
     createNodeField({
       name: "slug",

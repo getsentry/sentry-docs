@@ -11,7 +11,7 @@ const query = graphql`
         type
         features
 
-        childrenRelayMetricDescription {
+        childRelayMetricDescription {
           childMarkdownRemark {
             html
           }
@@ -41,7 +41,7 @@ function RelayFeatures({ features }) {
 
 function Metric({ metric }) {
   const descriptionHtml =
-    metric.childrenRelayMetricDescription[0].childMarkdownRemark.html;
+    metric.childRelayMetricDescription.childMarkdownRemark.html;
 
   return (
     <>

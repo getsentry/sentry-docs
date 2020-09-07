@@ -8,18 +8,6 @@ export const relayMetricsNodes = async ({
   const { createNode, createParentChildLink } = actions;
 
   metrics.forEach(metric => {
-    const descriptionNode = {
-      id: createNodeId(metric.name + "_description"),
-      internal: {
-        content: metric.description,
-        contentDigest: createContentDigest(metric.description),
-        mediaType: "text/markdown",
-        type: "RelayMetricDescription",
-      },
-    };
-
-    createNode(descriptionNode);
-
     const metricNode = {
       ...metric,
       id: createNodeId(metric.name),
@@ -30,6 +18,19 @@ export const relayMetricsNodes = async ({
     };
 
     createNode(metricNode);
+
+    const descriptionNode = {
+      id: createNodeId(metric.name + "_description"),
+      parent: metricNode.id,
+      internal: {
+        content: metric.description,
+        contentDigest: createContentDigest(metric.description),
+        mediaType: "text/markdown",
+        type: "RelayMetricDescription",
+      },
+    };
+
+    createNode(descriptionNode);
 
     createParentChildLink({
       parent: metricNode,
