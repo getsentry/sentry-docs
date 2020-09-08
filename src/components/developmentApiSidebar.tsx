@@ -1,9 +1,9 @@
 import React from "react";
-import { graphql, useStaticQuery, withPrefix } from "gatsby";
+import { graphql, useStaticQuery } from "gatsby";
 import { useLocation } from "@reach/router";
 
 import SidebarLink from "./sidebarLink";
-import DynamicNav, { toTree, EntityTree } from "./dynamicNav";
+import DynamicNav, { toTree } from "./dynamicNav";
 
 const query = graphql`
   query DevelopmentApiNavQuery {
@@ -24,17 +24,10 @@ const query = graphql`
 export default () => {
   const data = useStaticQuery(query);
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
-
-  let endpoints = tree[0].children.reduce((acc: EntityTree[], curr: EntityTree) => {
-    if (curr.children.length > 1) {
-      acc.push(curr);
-    }
-    return acc;
-  }, []);
-
+  const endpoints = tree[0].children.filter(curr => curr.children.length > 1);
   const location = useLocation();
-  const isActive = path =>
-    location && location.pathname.indexOf(withPrefix(path)) === 0;
+
+  const isActive = path => location && location.pathname.startsWith(path);
 
   return (
     <ul className="list-unstyled" data-sidebar-tree>
