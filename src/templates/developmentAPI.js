@@ -4,6 +4,7 @@ import Prism from "prismjs";
 
 import BasePage from "~src/components/basePage";
 import SmartLink from "~src/components/smartLink";
+import DevelopmentApiSidebar from "~src/components/developmentApiSidebar";
 
 import "prismjs/components/prism-json";
 
@@ -71,7 +72,7 @@ export default props => {
   }, []);
 
   return (
-    <BasePage {...props}>
+    <BasePage sidebar={<DevelopmentApiSidebar />} {...props}>
       <div className="row">
         <div className="col-6">
           {data.summary && <p>{data.summary}</p>}

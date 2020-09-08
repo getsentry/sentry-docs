@@ -16,13 +16,13 @@ type Node = {
   [key: string]: any;
 };
 
-type Entity<T> = {
+export type Entity<T> = {
   name: string;
   children: T[];
   node: Node | null;
 };
 
-interface EntityTree extends Entity<EntityTree> {}
+export interface EntityTree extends Entity<EntityTree> {}
 
 export const toTree = (nodeList: Node[]): EntityTree[] => {
   const result = [];
