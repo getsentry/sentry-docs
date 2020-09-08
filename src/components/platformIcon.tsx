@@ -80,7 +80,7 @@ const PlatformIcon = ({ platform, size = 64, ...props }: Props) => {
 
   return (
     <img
-      src={require(`platformicons/svg/${icon}.svg`)}
+      src={require(`platformicons/svg_80x80/${icon}.svg`)}
       width={size}
       height={size}
       style={{ maxWidth: "none", border: 0, boxShadow: "none" }}
