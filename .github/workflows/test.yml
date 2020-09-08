@@ -66,3 +66,27 @@ jobs:
       - run: yarn install
       - name: Run Tests
         run: yarn build:test
+
+  job_linkcheck:
+    name: Test (Linkchecker)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: volta-cli/action@v1
+      - uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+      - run: yarn install
+      - run: yarn build
+      - name: Install linkcheck
+        run: |-
+          wget https://github.com/filiph/linkcheck/releases/download/v2.0.12/linkcheck-linux-x64.exe -O ./linkcheck
+          chmod +x ./linkcheck
+      - name: Install httpserver
+        run: volta install http-server
+      - name: Run linkcheck
+        run: |-
+          http-server public/ > /dev/null &
+          sleep 5
+          ./linkcheck
