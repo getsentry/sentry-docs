@@ -16,7 +16,7 @@ type Node = {
   [key: string]: any;
 };
 
-export type Entity<T> = {
+type Entity<T> = {
   name: string;
   children: T[];
   node: Node | null;

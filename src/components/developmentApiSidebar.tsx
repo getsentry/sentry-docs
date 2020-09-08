@@ -25,7 +25,7 @@ export default () => {
   const data = useStaticQuery(query);
   const tree = toTree(data.allSitePage.nodes.filter(n => !!n.context));
 
-  let endpoints = tree[0].children.reduce((acc: EntityTree[], curr: any) => {
+  let endpoints = tree[0].children.reduce((acc: EntityTree[], curr: EntityTree) => {
     if (curr.children.length > 1) {
       acc.push(curr);
     }
