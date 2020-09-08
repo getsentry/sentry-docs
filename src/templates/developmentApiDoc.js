@@ -3,6 +3,7 @@ import { graphql } from "gatsby";
 
 import BasePage from "~src/components/basePage";
 import SmartLink from "~src/components/smartLink";
+import DevelopmentApiSidebar from "~src/components/developmentApiSidebar";
 
 export default props => {
   const {
@@ -10,7 +11,7 @@ export default props => {
   } = props;
 
   return (
-    <BasePage {...props}>
+    <BasePage sidebar={<DevelopmentApiSidebar />} {...props}>
       <ul>
         {allOpenApi.edges.map(({ node: { path } }) => (
           <li
