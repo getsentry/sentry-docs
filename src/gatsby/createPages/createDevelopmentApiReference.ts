@@ -4,7 +4,7 @@ export default async ({ actions, graphql, reporter }) => {
   const data = await getDataOrPanic(
     `
           query {
-            allFile(filter: {absolutePath: {}, relativePath: {in: ["permissions.mdx", "auth.mdx", "index.mdx", "requests.mdx"]}, dir: {regex: "/api/"}}) {
+            allFile(filter: {absolutePath: {}, relativePath: {in: ["permissions.mdx", "auth.mdx", "index.mdx", "requests.mdx", "pagination.mdx"]}, dir: {regex: "/api/"}}) {
               nodes {
                 id
                 childMarkdownRemark {
