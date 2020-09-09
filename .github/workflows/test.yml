@@ -80,10 +80,8 @@ jobs:
         run: |-
           wget https://github.com/filiph/linkcheck/releases/download/v2.0.12/linkcheck-linux-x64.exe -O ./linkcheck
           chmod +x ./linkcheck
-      - name: Install httpserver
-        run: volta install http-server
       - name: Run linkcheck
         run: |-
-          http-server public/ > /dev/null &
-          sleep 5
+          yarn develop > /dev/null &
+          printf "Waiting for server to be up"; timeout 60 bash -c 'until $(curl -Isf -o /dev/null "http://localhost:3000"); do printf '.'; sleep 0.5; done'
           ./linkcheck
