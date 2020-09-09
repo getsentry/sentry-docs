@@ -702,6 +702,17 @@ Be aware that by removing those transitive dependencies, the automatic session t
 
 ## Integrating the NDK
 
+Due to current limitations in how `sentry-native` works, it cannot yet identify native libraries loaded directly from
+`.apk` files and instead needs to have access to the extracted libraries on the file-system.
+This functionality is [disabled by default](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs)
+when using a Android Gradle Plugin >= v3.6.0, and it needs to be enabled with the following configuration option (AndroidManifest.xml):
+
+```xml
+<application
+    android:extractNativeLibs="true">
+</application>
+```
+
 To use the Android NDK in your native code, include the Sentry NDK libraries into your project so that the compiler can link the libraries during the build.
 
 To do so, use the AndroidNativeBundle Gradle plugin that copies the native libraries from the Sentry NDK into the location that can provide links via the CmakeLists.txt configuration file.
@@ -766,3 +777,5 @@ Example of uploading all your .so files:
 sentry-cli login
 sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/merged_native_libs/{buildVariant}
 ```
+
+The Sentry Gradle Plugin can be [configured](#gradle-configuration) to upload the debug symbols and sources automatically.
