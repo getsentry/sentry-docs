@@ -70,18 +70,23 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: volta-cli/action@v1
-      - name: Install linkcheck
-        run: |-
-          wget -nc https://github.com/filiph/linkcheck/releases/download/v2.0.12/linkcheck-linux-x64.exe -O ./linkcheck
-          chmod +x ./linkcheck
       - uses: actions/cache@v2
         with:
           path: |
             ${{ github.workspace }}/node_modules
             ./linkcheck
           key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-linkcheck
-      - run: yarn install
+      - name: yarn install
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: yarn install
+      - name: Install linkcheck
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |-
+          wget -nc https://github.com/filiph/linkcheck/releases/download/v2.0.12/linkcheck-linux-x64.exe -O ./linkcheck
+          chmod +x ./linkcheck
       - name: Run linkcheck
+        env:
+          NODE_ENV=development
         run: |-
           make  # need to prepare development config
           yarn develop > /dev/null &
