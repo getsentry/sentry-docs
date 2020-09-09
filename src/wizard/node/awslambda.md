@@ -20,35 +20,39 @@ $ yarn add @sentry/node
 You can use the AWS Lambda integration for the Node SDK like this:
 
 ```javascript
-*Update Sample Code*
-const http = require("http");
-const Sentry = require("@sentry/node");
-const { AWSLambdaIntegration } = require("@sentry/integrations");
+const Sentry = require("@sentry/serverless");
 
-// Configure the Sentry SDK.
 Sentry.init({
   dsn:
     "___PUBLIC_DSN___",
-  integrations: [AWSLambdaIntegration],
 });
 
-exports.handler = (event, context) => {
-  AWSLambdaIntegration.providedContext(context);
-  throw new Error("this is a dummy error")
+const myAsyncHandler = async (event, context, callback) => {
+  //Your handler code
 };
+
+exports.handler = Sentry.AWSLambda.wrapHandler(myAsyncHandler);
 ```
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
 
-## Enable Timeout Warning
+## Timeout Warning
 
-Timeout warning indicates high probability of the function timing out. Update the sentry initialization to set `timeoutWarning` to `true`
+Sentry reports timeout warning when the function is within 500ms of it's execution time. You can turn off timeout warnings by setting `captureTimeoutWarning` to `false` during initiatlization. To change timeout warning limit, assign a numeric value (in ms) to `timeoutWarning`.
 
-```javascript
+```javascript {tabTitle:captumeTimeoutWarning}
 Sentry.init({
   dsn:
     "___PUBLIC_DSN___",
-  integrations: [AWSLambdaIntegration(true)],
+    captureTimeoutWarning: false
+});
+```
+
+```javascript {tabTitle:timeoutWarning}
+Sentry.init({
+  dsn:
+    "___PUBLIC_DSN___",
+    timeoutWarning: 50
 });
 ```
 
