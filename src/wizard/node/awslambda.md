@@ -7,14 +7,14 @@ type: framework
 
 Create a deployment package on your local machine and install the required dependencies in the deployment package. For more information, see [Building an AWS Lambda deployment package for Node.js](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-deployment-package-nodejs/).
 
-Add `@sentry/node` as a dependency:
+Add `@sentry/serverless` as a dependency:
 
 ```bash {tabTitle:npm}
-$ npm install --save @sentry/node
+$ npm install --save @sentry/serverless
 ```
 
 ```bash {tabTitle:Yarn}
-$ yarn add @sentry/node
+$ yarn add @sentry/serverless
 ```
 
 You can use the AWS Lambda integration for the Node like this:
@@ -23,7 +23,7 @@ const Sentry = require("@sentry/serverless");
 Sentry.init({
   dsn: "___PUBLIC_DSN___"
 });
-const yourHandler = async (event, context) => {
+const yourHandler = (event, context, callback) => {
   // Your handler code
 };
 exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler);
