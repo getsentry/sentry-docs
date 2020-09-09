@@ -6,7 +6,6 @@ import Content from "~src/components/content";
 import DevelopmentApiSidebar from "~src/components/developmentApiSidebar";
 
 export default props => {
-  console.log({ props });
   return (
     <BasePage
       sidebar={
