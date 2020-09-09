@@ -4,9 +4,10 @@ categories: []
 toc: true
 title: TypeScript
 sidebar_order: 3
-robots: noindex
+noindex: true
 tags: []
 ---
+
 Please read [Source Maps docs](/clients/node/sourcemaps/) first to learn how to configure Raven SDK, upload artifacts to our servers or use Webpack (if you’re willing to use _ts-loader_ for your TypeScript compilation).
 
 Using Raven and Source Maps with TypeScript unfortunatelly requires slightly more configuration.
@@ -24,16 +25,14 @@ Assuming you already have a _tsconfig.json_ file similar to this:
 
 ```json
 {
-    "compilerOptions": {
-        "target": "es6",
-        "module": "commonjs",
-        "allowJs": true,
-        "moduleResolution": "node",
-        "outDir": "dist"
-    },
-    "include": [
-        "./src/**/*"
-    ]
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "outDir": "dist"
+  },
+  "include": ["./src/**/*"]
 }
 ```
 
@@ -41,12 +40,12 @@ create a new one called _tsconfig.production.json_ and paste the snippet below:
 
 ```json
 {
-    "extends": "./tsconfig",
-    "compilerOptions": {
-        "sourceMap": true,
-        "inlineSources": true,
-        "sourceRoot": "/"
-    }
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": "/"
+  }
 }
 ```
 
@@ -56,7 +55,7 @@ The second step is changing events frames, so that Sentry can link stack traces 
 
 This can be done using _dataCallback_, in a very similar manner as we do with a single entrypoint described in Source Maps docs, with one, very important difference. Instead of using _basename_, we have to somehow detect and pass the root directory of our project.
 
-Unfortunately, Node is very fragile in that manner and doesn’t have a very reliable way to do this. The easiest and the most reliable way we found, is to store the ___dirname_ or _process.cwd()_ in the global variable and using it in other places of your app. This _has to be done_ as the first thing in your code and from the entrypoint, otherwise the path will be incorrect.
+Unfortunately, Node is very fragile in that manner and doesn’t have a very reliable way to do this. The easiest and the most reliable way we found, is to store the _\_\_dirname_ or _process.cwd()_ in the global variable and using it in other places of your app. This _has to be done_ as the first thing in your code and from the entrypoint, otherwise the path will be incorrect.
 
 If you want, you can set this value by hand to something like _/var/www/html/some-app_ if you can get this from some external source or you know it won’t ever change.
 
@@ -78,25 +77,25 @@ global.__rootdir__ = __dirname || process.cwd();
 ```
 
 ```javascript
-import * as path from 'path';
+import * as path from "path";
 const root = global.__rootdir__;
 
-Raven.config('your-dsn', {
+Raven.config("your-dsn", {
   // the rest of configuration
 
-  dataCallback: function (data) {
+  dataCallback: function(data) {
     var stacktrace = data.exception && data.exception[0].stacktrace;
 
     if (stacktrace && stacktrace.frames) {
       stacktrace.frames.forEach(function(frame) {
-        if (frame.filename.startsWith('/')) {
+        if (frame.filename.startsWith("/")) {
           frame.filename = "app:///" + path.relative(root, frame.filename);
         }
       });
     }
 
     return data;
-  }
+  },
 }).install();
 ```
 

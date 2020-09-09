@@ -1,17 +1,15 @@
 ---
 name: Go
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=go
+doc_link: https://docs.sentry.io/platforms/go/
 support_level: production
 type: language
 ---
+
 Install our Go SDK using [`go get`](https://golang.org/cmd/go/#hdr-Module_aware_go_get):
 
 ```bash
 $ go get github.com/getsentry/sentry-go
 ```
-
-
-
 
 Import and initialize the Sentry SDK early in your application's setup:
 
@@ -33,8 +31,6 @@ func main() {
 	}
 }
 ```
-
-
 
 The quickest way to verify Sentry in your Go program is to capture a message:
 

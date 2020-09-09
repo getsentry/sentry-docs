@@ -1,9 +1,10 @@
 ---
 name: RQ (Redis Queue)
-doc_link: https://docs.sentry.io/platforms/python/rq/
+doc_link: https://docs.sentry.io/platforms/python/guides/rq/
 support_level: production
 type: library
 ---
+
 The RQ integration adds support for the [RQ Job Queue System](https://python-rq.org/).
 
 Create a file called `mysettings.py` with the following content:

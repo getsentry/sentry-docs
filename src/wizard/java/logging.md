@@ -1,9 +1,10 @@
 ---
 name: java.util.logging
-doc_link: https://docs.sentry.io/clients/java/modules/jul/
+doc_link: https://docs.sentry.io/platforms/java/guides/logging/
 support_level: production
 type: framework
 ---
+
 ### Installation
 
 Using Maven:
@@ -12,23 +13,21 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
-    <version>1.7.30</version>
+    <version>{{ packages.version('sentry.java', '1.7.30') }}</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry:1.7.30'
+implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '1.7.30') }}'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry" % "1.7.30"
+libraryDependencies += "io.sentry" % "sentry" % "{{ packages.version('sentry.java', '1.7.30') }}"
 ```
-
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry%7C1.7.30%7Cjar).
 
 ### Usage
 
@@ -53,5 +52,6 @@ When starting your application, add the `java.util.logging.config.file` to the s
 $ java -Djava.util.logging.config.file=/path/to/app.properties MyClass
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#configuration) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/platforms/java/guides/logging/config/#configuration) for ways you can do this.
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->

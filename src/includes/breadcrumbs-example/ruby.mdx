@@ -1,0 +1,27 @@
+```ruby
+Raven.breadcrumbs.record do |crumb|
+  crumb.category = "auth"
+  crumb.message = "Authenticated user #{user.email}"
+  crumb.level = "info"
+end
+```
+
+Appropriate places to inject Breadcrumbs may be places like your HTTP library:
+
+```ruby
+# Instrumenting Faraday with a middleware:
+
+class RavenFaradayMiddleware
+  def call
+    # Add a breadcrumb every time we complete an HTTP request
+    @app.call(request_env).on_complete do |response_env|
+      Raven.breadcrumbs.record do |crumb|
+        crumb.data = { response_env: response_env }
+        crumb.category = "faraday"
+        crumb.timestamp = Time.now.to_i
+        crumb.message = "Completed request to #{request_env[:url]}"
+      end
+    end
+  end
+end
+```

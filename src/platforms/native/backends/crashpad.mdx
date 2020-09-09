@@ -1,0 +1,42 @@
+---
+title: Crashpad
+---
+
+[Crashpad](https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md)
+is an open-source multiplatform crash reporting system written in C++ by Google.
+It supports macOS, Windows, and Linux, and features an uploader to
+submit Minidumps to a configured URL right when the process crashes.
+
+To use the Crashpad backend with the Native SDK, configure the CMake build
+with the `SENTRY_BACKEND=crashpad` option. This will automatically create a
+`crashpad_handler` executable alongside the `sentry` library.
+
+```shell
+$ cmake -B build -D SENTRY_BACKEND=crashpad
+```
+
+The SDK will automatically look for a `crashpad_handler` executable in the same
+directory as the running application. It will also use the `.sentry-native`
+directory as its database by default, relative to the current working directory
+of your application.
+This location temporarily hosts Minidumps before they are uploaded to Sentry.
+
+Both of these paths can be customized like this:
+
+```c
+sentry_options_t *options = sentry_options_new();
+sentry_options_set_handler_path(options, "path/to/crashpad_handler");
+sentry_options_set_database_path(options, "sentry-db-directory");
+sentry_init(options);
+```
+
+The crashpad handler executable must be shipped alongside your application so
+that it can be launched when initializing the SDK. The path is evaluated
+according to shell lookup rules at runtime.
+
+It is advised to specify both the path to the `crashpad_handler` executable
+as well as the path to the database directory manually.
+
+## Known Limitations
+
+When using the Crashpad backend on macOS, the duration and status of crashes sessions can not be reliably determined, and may be classified as [`abnormal`](/workflow/releases/health/#release-details) exits instead.

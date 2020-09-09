@@ -1,9 +1,10 @@
 ---
 name: Log4j 1.x
-doc_link: https://docs.sentry.io/clients/java/modules/log4j/
+doc_link: https://docs.sentry.io/platforms/java/guides/log4j/
 support_level: production
 type: framework
 ---
+
 ### Installation
 
 Using Maven:
@@ -12,23 +13,21 @@ Using Maven:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-log4j</artifactId>
-    <version>1.7.30</version>
+    <version>{{ packages.version('sentry.java', '1.7.30') }}</version>
 </dependency>
 ```
 
 Using Gradle:
 
 ```groovy
-compile 'io.sentry:sentry-log4j:1.7.30'
+compile 'io.sentry:sentry-log4j:{{ packages.version('sentry.java', '1.7.30') }}'
 ```
 
 Using SBT:
 
 ```scala
-libraryDependencies += "io.sentry" % "sentry-log4j" % "1.7.30"
+libraryDependencies += "io.sentry" % "sentry-log4j" % "{{ packages.version('sentry.java', '1.7.30') }}"
 ```
-
-For other dependency managers see the [central Maven repository](https://search.maven.org/#artifactdetails%7Cio.sentry%7Csentry-log4j%7C1.7.30%7Cjar).
 
 ### Usage
 
@@ -83,5 +82,6 @@ Alternatively, using the `log4j.xml` format:
 </log4j:configuration>
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/clients/java/config/#configuration) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/platforms/java/guides/log4j/config/#configuration) for ways you can do this.
+
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->

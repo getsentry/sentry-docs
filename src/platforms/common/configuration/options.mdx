@@ -1,0 +1,204 @@
+---
+title: Basic Options
+sidebar_order: 0
+description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the `init()` as an object."
+---
+
+SDKs are configurable using a variety of options. The options are largely standardized among SDKs, but there are some differences to better accommodate platform peculiarities. Options are set when the SDK is first
+initialized.
+
+<PlatformContent includePath="configuration/config-intro" />
+
+## Common Options
+
+The list of common options across SDKs. These work more or less the same in all SDKs, but some subtle differences will exist to better support the platform. Options that can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically. See [Working with Projects](/cli/configuration/#sentry-cli-working-with-projects) for more information.
+
+<ConfigKey name="dsn"><markdown>
+
+The _DSN_ tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
+
+In runtimes without a process environment (such as the browser) that fallback does not apply.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="debug" notSupported={["php"]}><markdown>
+
+Turns debug mode on or off. If debug is enabled SDK will attempt to print out useful debugging information if something goes wrong with sending the event. The default is always `false`. It's generally not recommended to turn it on in production, though turning `debug` mode on will not cause any safety concerns.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="release"><markdown>
+
+Sets the release. Some SDKs will try to automatically configure a release out of the box but it's a better idea to manually set it to guarantee that the release is in sync with your deploy integrations or source map uploads. Release names are strings, but some formats are detected by Sentry and might be rendered differently. Learn more about how to send release data so Sentry can tell you about regressions between releases and identify the potential source in [the releases documentation](/product/releases/).
+
+By default the SDK will try to read this value from the `SENTRY_RELEASE` environment variable (in the browser SDK, this will be read off of the `window.SENTRY_RELEASE` if available).
+
+</markdown></ConfigKey>
+
+<ConfigKey name="environment"><markdown>
+
+Sets the environment. This string is freeform and not set by default. A release can be associated with more than one environment to separate them in the UI (think `staging` vs `prod` or similar).
+
+By default the SDK will try to read this value from the `SENTRY_ENVIRONMENT` environment variable (except for the browser SDK where this is not applicable).
+
+</markdown></ConfigKey>
+
+<ConfigKey name="error_types" supported={["php"]}><markdown>
+
+Sets which errors are reported. It takes the same values as PHP's [`error_reporting`](https://www.php.net/manual/errorfunc.configuration.php#ini.error-reporting) configuration parameter.
+
+By default all types of errors are be reported (equivalent to `E_ALL`).
+
+</markdown></ConfigKey>
+
+<ConfigKey name="sample-rate"><markdown>
+
+Configures the sample rate as a percentage of events to be sent in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of events are sent. If set to `0.1` only 10% of events will be sent. Events are picked randomly.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="max-breadcrumbs"><markdown>
+
+This variable controls the total amount of breadcrumbs that should be captured. This defaults to `100`.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="attach-stacktrace"><markdown>
+
+When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
+
+This option is `off` by default.
+
+Grouping in Sentry is different for events with stack traces and without. As a result, you will get new groups as you enable or disable this flag for certain events.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="send-default-pii" supported={["python"]}><markdown>
+
+If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
+
+If possible, we recommended turning on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_](/data-management/sensitive-data/).
+
+</markdown></ConfigKey>
+
+<ConfigKey name="server-name" supported={["python", "node", "ruby", "php"]}><markdown>
+
+This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server. Most SDKs
+will attempt to auto-discover this value.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="deny-urls" supported={["javascript"]}><markdown>
+
+A list of strings or regex patterns that match error URLs that should not be sent to Sentry. By default, all errors will be sent. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="allow-urls" supported={["javascript"]}><markdown>
+
+A legacy alias for a list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry. By default, all errors
+will be sent. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `[https://bar.com/myfile/foo.com](https://bar.com/myfile/foo.com)` By default, all errors will be sent.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="in-app-include" supported={["python", "rust", "csharp", "php"]}><markdown>
+
+A list of string prefixes of module names that belong to the app. This option takes precedence over `in_app_exclude`.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="in-app-exclude" supported={["python", "rust", "csharp", "php"]}><markdown>
+
+A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
+
+This option can be overridden using `in-app-include`.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="request-bodies" supported={["python", "php"]}><markdown>
+
+This parameter controls if integrations should capture HTTP request bodies. It can be set to one of the following values:
+
+- `never`: request bodies are never sent
+- `small`: only small request bodies will be captured where the cutoff for small depends on the SDK (typically 4KB)
+- `medium`: medium and small requests will be captured (typically 10KB)
+- `always`: the SDK will always capture the request body for as long as Sentry can make sense of it
+
+</markdown></ConfigKey>
+
+<ConfigKey name="with-locals" supported={["python"]}><markdown>
+
+When enabled, local variables are sent along with stackframes. This can have a performance and PII impact. Enabled by default on platforms where this is available.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="ca-certs" supported={["python"]}><markdown>
+
+A path to an alternative CA bundle file in PEM-format.
+
+</markdown></ConfigKey>
+
+<PlatformSection supported={["javascript", "python", "node"]}><markdown>
+
+## Integration Configuration
+
+For many platform SDKs integrations can be configured alongside it. On some platforms that happen as part of the `init()` call, in some others, different patterns apply.
+
+<ConfigKey name="integrations" />
+
+In some SDKs, the integrations are configured through this parameter on library initialization. For more information, please see our documentation for a specific integration.
+
+<ConfigKey name="default-integrations" />
+
+This can be used to disable integrations that are added by default. When set to `false`, no default integrations are added.
+
+</markdown></PlatformSection>
+
+## Hooks
+
+These options can be used to hook the SDK in various ways to customize the reporting of events.
+
+<ConfigKey name="before-send"><markdown>
+
+This function is called with an SDK-specific event object, and can return a modified event object or nothing to skip reporting the event. This can be used, for instance, for manual PII stripping before sending.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="before-breadcrumb"><markdown>
+
+This function is called with an SDK-specific breadcrumb object before the breadcrumb is added to the scope. When nothing is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the first argument, which contains the breadcrumb object.
+The callback typically gets a second argument (called a "hint") which contains the original object from which the breadcrumb was created to further customize what the breadcrumb should look like.
+
+</markdown></ConfigKey>
+
+<PlatformSection supported={["javascript", "python", "node", "php"]}><markdown>
+
+## Transport Options
+
+Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
+
+<ConfigKey name="transport" supported={["javascript", "php", "python"]}><markdown>
+
+Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="http-proxy" supported={["node", "php", "python"]}><markdown>
+
+When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https-proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="https-proxy" supported={["python", "node"]}><markdown>
+
+Configures a separate proxy for outgoing HTTPS requests. This value might not be supported by all SDKs. When not supported the `http-proxy` value is also used for HTTPS requests at all times.
+
+</markdown></ConfigKey>
+
+<ConfigKey name="shutdown-timeout" supported={["python", "node"]}><markdown>
+
+Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
+
+</markdown></ConfigKey>
+
+</markdown></PlatformSection>

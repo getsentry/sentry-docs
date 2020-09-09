@@ -1,8 +1,6 @@
+// https://www.gatsbyjs.com/docs/unit-testing/
 module.exports = {
-  transform: {
-    "^.+\\.[jt]sx?$": `<rootDir>/jest-transformer.js`
-  },
-  testEnvironment: `jest-environment-jsdom-fourteen`,
+  preset: "jest-preset-gatsby/typescript",
+  setupFilesAfterEnv: ["<rootDir>/setup-test-env.js"],
   testPathIgnorePatterns: [`node_modules`, `\\.cache`, `<rootDir>.*/public`],
-  transformIgnorePatterns: [`node_modules/(?!(gatsby)/)`]
 };

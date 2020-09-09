@@ -1,9 +1,10 @@
 ---
 name: Laravel
-doc_link: https://docs.sentry.io/platforms/php/laravel/
+doc_link: https://docs.sentry.io/platforms/php/guides/laravel/
 support_level: production
 type: framework
 ---
+
 Install the `sentry/sentry-laravel` package:
 
 ```bash
@@ -11,8 +12,6 @@ $ composer require sentry/sentry-laravel
 ```
 
 If you're on Laravel 5.5 or later the package will be auto-discovered. Otherwise you will need to manually configure it in your `config/app.php`.
-
-
 
 Add Sentry reporting to `App/Exceptions/Handler.php`.
 
@@ -44,15 +43,16 @@ public function report(Exception $exception)
 
 Create the Sentry configuration file (`config/sentry.php`) with this command:
 
-```sh
+```shell
 $ php artisan vendor:publish --provider="Sentry\Laravel\ServiceProvider"
 ```
 
-Add your DSN to ``.env``:
+Add your DSN to `.env`:
 
-```sh
+```shell
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 ```
+
 You can easily verify that Sentry is capturing errors in your Laravel application by creating a debug route that will throw an exception:
 
 ```php
