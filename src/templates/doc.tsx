@@ -3,10 +3,19 @@ import { graphql } from "gatsby";
 
 import BasePage from "~src/components/basePage";
 import Content from "~src/components/content";
+import DevelopmentApiSidebar from "~src/components/developmentApiSidebar";
 
 export default props => {
+  console.log({ props });
   return (
-    <BasePage {...props}>
+    <BasePage
+      sidebar={
+        props.path.startsWith("/development-api") ? (
+          <DevelopmentApiSidebar />
+        ) : null
+      }
+      {...props}
+    >
       <Content file={props.data.file} />
     </BasePage>
   );
