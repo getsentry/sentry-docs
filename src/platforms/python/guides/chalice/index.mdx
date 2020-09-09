@@ -1,0 +1,60 @@
+---
+title: Chalice
+redirect_from:
+  - /platforms/python/chalice/
+---
+
+_(New in version 0.17.4)_
+
+## Install
+
+Install `sentry-sdk` from PyPI:
+
+```bash
+$ pip install --upgrade sentry-sdk[chalice]
+```
+
+## Configure
+
+
+```python
+import sentry_sdk
+from chalice import Chalice
+
+from sentry_sdk.integrations.chalice import ChaliceIntegration
+
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[ChaliceIntegration()]
+)
+
+app = Chalice(app_name="appname")
+
+```
+
+## Testing
+
+You can create a route that triggers an error for validate your Sentry installation like this:
+
+```python
+@app.route("/boom")
+def boom():
+    raise Exception("boom goes the dynamite!")
+```
+
+when you enter the route will throw an error that will be captured by Sentry.
+
+for everything else (like events)
+
+```python
+@app.schedule(Rate(1, unit=Rate.MINUTES))
+def every_hour(event):
+    raise Exception("only chalice event!")
+```
+
+## Behavior
+
+- Request data is attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads. Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set send_default_pii to True.
+
+- Each request has a separate scope. Changes to the scope within a view, for example setting a tag, will only apply to events sent as part of the request being handled.
