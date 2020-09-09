@@ -1,33 +1,71 @@
 ---
-title: 'Guideline for AM support'
+title: 'Guidelines for Tracing Support'
 ---
 
-This document covers how unified SDKs should implement AM.
-Things listed here are in no specific order, cover the API shape and not how it should be internally implemented.
-Read this fully before asking questions.
+This document covers how SDKs should add support for [Distributed
+Tracing](https://docs.sentry.io/product/performance/distributed-tracing/).
 
-See [https://github.com/getsentry/sentry-javascript](https://github.com/getsentry/sentry-javascript)
+This should give an overview of the APIs that SDKs need to implement, without
+mandating internal implementation details.
 
-or
+Reference implementations:
 
-[https://github.com/getsentry/sentry-javascript/tree/master/packages/apm](https://github.com/getsentry/sentry-javascript/tree/master/packages/apm) for a reference implementation
+- [`@sentry/tracing`
+(JavaScript)](https://github.com/getsentry/sentry-javascript/tree/master/packages/tracing)
+- [Python SDK](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/tracing.py)
 
-- New option for the SDK `tracesSampleRate`
-    - Defaults to `0.0`, which means send no transactions (0% delivery rate)
-    - `1.0` (100% delivery rate) means send all transactions
-    - Value is expressed in `0.0` - `1.0` float, ranged from 0% to 100% rate
-    - Default makes AM an opt-in feature
-    - Transactions should be sampled only by `tracesSampleRate`.
-      The `sampleRate` configuration is used for error events and should not
-      apply to transactions. Pay special attention not to incur in evaluating
-      the sampling decision twice for transaction events from their creation
-      until their delivery to Sentry.
-- Introduce `Sentry.startTransaction`
-    - Internally this creates a `Transaction` and returns the instance
-    - Users need to interact with the instance and keep track of it themselves
-    - Internally we can use the `Scope` to hold on to a reference of the current `Transaction` if needed
-- Introduce the new type [Span](/sdk/event-payloads/span/)
-- Introduce new type [Transaction](/sdk/event-payloads/transaction/) which inherits from `Span`
+## SDK Configuration
+
+A new option `tracesSampleRate` must be added to `sentry.init`.
+
+The type is a `float` and expected values are in the range `[0.0, 1.0]`.  
+The default value is `0.0`.
+
+A `tracesSampleRate` of `0.0` means no transactions should be sent to Sentry.
+Conversely, `1.0` means all transactions should be sent.
+Anything in between means the fraction of uniformly random samples that should
+be sent. For example, `0.25` means send ~25% of all transactions.
+
+The default value being `0.0` is such that tracing is an opt-in feature.
+
+<Alert title="Note" level="info">
+<markdown>
+
+Transactions should be sampled only by `tracesSampleRate`. The `sampleRate`
+configuration is used for error events and should not apply to transactions.
+
+Pay special attention only evaluate the sampling decision once for transaction
+events from their creation until their delivery to Sentry, and only based on
+`tracesSampleRate`.
+
+</markdown>
+</Alert>
+
+## `Event` Changes
+
+As of writing, transactions are implemented as an extension of the `Event`
+model.
+
+The distinctive feature of a `Transaction` is `type: "transaction"`.
+
+Apart from that, the `Event` gets new fields: `spans`, `contexts.TraceContext`.
+
+## New `Span` and `Transaction` Classes
+
+The [Span](/sdk/event-payloads/span/) class stores each individual span in a
+trace.
+
+The [Transaction](/sdk/event-payloads/transaction/) class is like a span, with a
+few key differences:
+
+- Transactions have `name`, spans don't.
+- Calling the `finish` method on spans record the span's end timestamp. For
+  transactions, the `finish` method additionally sends an event to Sentry.
+
+The `Transaction` class may inherit from `Span`, but that's an implementation
+detail. Semantically, transactions represent both the top-level span of a span
+tree as well as the unit of reporting to Sentry.
+
 - `Span` Interface
     - When a `Span` is created, set the `startTimestamp` to the current time
     - `SpanContext` is the attribute collection for a `Span` (Can be an implementation detail)
@@ -37,19 +75,7 @@ or
     - `Transaction` has additionally a `setName` method the set the name of the transaction
     - `Transaction` receives a `TransactionContext` on creation (new property vs. `SpanContext` is `name`)
     - Since a `Transaction` inherits a `Span` it has all functions available and can be interacted with like it was a `Span`
-- `Hub` → Introduce a method called `startTransaction`
-    - Creates a new `Transaction` instance
-    - This method deals with sampling, and therefore it should take the `tracesSampleRate` option into account:
-        - Depending on the outcome, the sample decision should be stored in the `Transaction`'s `sampled` property and again forwarded to its children
-- `Hub` → Introduce a method called `startSpan`
-    - Creates a new `Span` instance
-    - If there is already a `Span` on the current `Scope`, the created `Span` should be its child
-- `Hub` → Introduce a method called `traceHeaders`
-    - This function returns a header (string) `sentry-trace`
-    - The value should be the trace header string of the `Span` that is currently on the `Scope`
-- `Scope` Introduce `setSpan`
-    - This can be used internally to pass a `Span` / `Transaction` around so that integrations can attach children to it
-    - Setting the `transaction` property on the `Scope` (legacy) should overwrite the name of the `Transaction` stored in the `Scope`, if there is one. With that we give users the option to change the transaction name even if they don't have access to the instance of the `Transaction` directly.
+
 - `Span.finish()`
     - Just set `endTimestamp` to the current time (in payload `timestamp`)
 - `Transaction.finish()`
@@ -59,6 +85,92 @@ or
     - The `Transport` should use the same internal queue for `Transactions` / `Events`
     - The `Transport` should implement category-based rate limiting →
     - The `Transport` should deal with wrapping a `Transaction` in an `Envelope` internally
-- A `Transaction` should **not** go through `beforeSend` (but `EventProcessors` are fine for now, since they are considered internal)
-    - The distinctive feature of a `Transaction` is `type: "transaction"`
-    - **Motivation**: If we ever want to move to individual Span ingestion, we can't users rely on using this for Transaction.
+
+## Static API Changes
+
+The `Sentry.startTransaction` function should take the same arguments as the
+`Transaction` constructor.
+
+It creates a `Transaction` bound to the current hub and returns the instance.
+Users interact with the instance for creating child spans and, thus, have to
+keep track of it themselves.
+
+## `Hub` Changes
+
+- Introduce a method called `traceHeaders`
+    - This function returns a header (string) `sentry-trace`
+    - The value should be the trace header string of the `Span` that is currently on the `Scope`
+
+- `Hub` → Introduce a method called `startTransaction`
+    - Creates a new `Transaction` instance
+    - This method deals with sampling, and therefore it should take the `tracesSampleRate` option into account:
+        - Depending on the outcome, the sample decision should be stored in the `Transaction`'s `sampled` property and again forwarded to its children
+
+<!--
+NOTE: we may omit this as a deprecated API replaced by `startTransaction` and
+`transaction.startChild`, or embrace it as a shortcut for creating a span that
+is the child of an existing transaction in the current scope or otherwise an
+orphan span (that will not be sent to Sentry on its own).
+
+- `Hub` → Introduce a method called `startSpan`
+    - Creates a new `Span` instance
+    - If there is already a `Span` on the current `Scope`, the created `Span`
+      should be its child
+-->
+
+## `Scope` Changes
+
+The `Scope` holds a reference to the current `Span` or `Transaction`.
+
+<!--
+TODO: as of writing, the reference in the scope is only done for automatically
+instrumented transactions and spans. It is yet-to-be-specified whether this
+behavior applies to manual instrumentation as well.
+-->
+
+- `Scope` Introduce `setSpan`
+    - This can be used internally to pass a `Span` / `Transaction` around so
+      that integrations can attach children to it
+    - Setting the `transaction` property on the `Scope` (legacy) should
+      overwrite the name of the `Transaction` stored in the `Scope`, if there is
+      one. With that we give users the option to change the transaction name
+      even if they don't have access to the instance of the `Transaction`
+      directly.
+
+## Interaction with `beforeSend` and Event Processors
+
+The `beforeSend` callback is a special Event Processor that we consider to be of
+most prominent use. Proper Event Processors are often considered internal.
+
+Transactions should **not** go through `beforeSend`. However, they are still
+processed by Event Processors. This is a compromise between some flexibility in
+dealing with the current implementation of transactions as events, and
+leaving room for different lifetime hooks for transactions and spans.
+
+Motivations:
+
+1. Future-proofing: if users rely on `beforeSend` for transactions, that would
+   complicate eventually implementing individual span ingestion without breaking
+   user code. As of writing, a transaction is sent as an event, but that is
+   considered an implementation detail.
+
+2. API compatibility: users have their existing implementation of `beforeSend`
+   that only ever had to deal with error events. We introduced transactions as a
+   new type of event. As users upgrade to a new SDK version and start using
+   tracing, their `beforeSend` would start seeing a new type that their code was
+   not meant to handle. Before transactions, they didn't have to care about
+   different event types at all. There are several possible consequences:
+   breaking user apps; silently and unintentionally dropping transactions;
+   transaction events modified in surprising ways.
+
+3. In terms of usability, `beforeSend` is not a perfect fit for dropping
+   transactions like it is for dropping errors. Errors are a point-in-time
+   event. When errors happen, users have full context in `beforeSend` and can
+   modify/drop the event before it goes to Sentry. With transactions the flow is
+   different. Transactions are created and then they are open for some time
+   while child spans are created and appended to it. Meanwhile outgoing HTTP
+   requests include the sampling decision of the current transaction with other
+   services. After spans and the transaction are finished, dropping the
+   transaction in a `beforeSend`-like hook would leave orphan transactions from
+   other services in a trace. Similarly, modifying the sampling decision to
+   "yes" at this late stage would also produce inconsistent traces.
