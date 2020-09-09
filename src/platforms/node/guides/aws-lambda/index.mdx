@@ -4,7 +4,9 @@ redirect_from:
   - /platforms/node/aws_lambda/
 ---
 
-Create a deployment package on your local machine and install the required dependencies in the deployment package. For more information, see [Building an AWS Lambda deployment package for Node.js](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-deployment-package-nodejs/).
+_(New in version 5.23.0 - Lambda integration is in Beta)_
+
+Create a deployment package on your local machine and install the required dependencies in the deployment package. For more information, see [Building an AWS Lambda deployment package for Node.js](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-deployment-package-nodejs/).
 
 Add `@sentry/node` as a dependency:
 
@@ -16,41 +18,44 @@ $ npm install --save @sentry/node
 $ yarn add @sentry/node
 ```
 
-To set up Sentry error logging for a Lambda Function, build a wrapper:
-
+You can use the AWS Lambda integration for the Node like this:
 ```javascript
-"use strict";
-
-const Sentry = require("@sentry/node");
-
+const Sentry = require("@sentry/serverless");
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: "___PUBLIC_DSN___"
 });
+const yourHandler = async (event, context) => {
+  // Your handler code
+};
+exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler);
+```
 
-function sentryHandler(lambdaHandler) {
-  return async event => {
-    try {
-      return await lambdaHandler(event);
-    } catch (e) {
-      Sentry.captureException(e);
-      await Sentry.flush(2000);
-      return e;
-    }
-  };
-}
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
+## Enable Timeout Warning
 
-module.exports.hello = sentryHandler(async event => {
-  notExistFunction();
-  return event;
+Sentry reports timeout warning when the function is within 500ms of it's execution time. You can turn off timeout warnings by setting `captureTimeoutWarning` to `false` in the handler options. To change timeout warning limit, assign a numeric value (in ms) to `timeoutWarning`
+
+```javascript {tabTitle:captureTimeoutWarning}
+Sentry.AWSLambda.wrapHandler(yourHandler, {
+  captureTimeoutWarning: false
 });
 ```
 
-You can obtain the DSN using your Sentry account from your organization's _Settings > Projects > Client Keys (DSN)_ in the Sentry web UI.
+```javascript {tabTitle:timeoutWarning}
+Sentry.AWSLambda.wrapHandler(yourHandler, {
+  timeoutWarning: 50
+});
+```
 
-Note: You need to call both `captureException` and `flush` for captured events to be successfully delivered to Sentry.
+## Behavior
 
-Create the deployment package in `.zip` format, then upload it to AWS Lambda as
-a Lambda Function. Check out Sentry's [AWS sample
-apps](https://github.com/getsentry/examples/tree/master/aws-lambda/node) for
-detailed examples. Refer to the [JavaScript docs](/platforms/javascript/) for
-more configuration options.
+With the AWS Lambda integration enabled, the Node SDK will:
+- Automatically report all exceptions from your lambda functions
+- Issue reports automatically include:
+  - A link to the cloudwatch logs
+  - Function details
+  - sys.argv for the function
+  - AWS Request ID
+  - Function execution time
+  - Function version
+- Sentry holds the thread for upto 2 seconds to report errors. You can change flush time limit by defining a `flushTimeout` value in the handler options
