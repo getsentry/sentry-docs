@@ -19,7 +19,7 @@ gem "sentry-raven"
 
 ### Configuration
 
-Open up `config/application.rb` and configure the DSN, and any other [_settings_](/platforms/ruby/guides/rails/config/) you need:
+Open up `config/application.rb` and configure the DSN, and any other [_settings_](/platforms/ruby/guides/rails/configuration/options/) you need:
 
 ```ruby
 Raven.configure do |config|

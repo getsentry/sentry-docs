@@ -109,7 +109,7 @@ const getPlugins = () => {
           if (node.sourceInstanceName === "api") {
             return "ApiEndpoint";
           }
-          return null;
+          return "value";
         },
       },
     },

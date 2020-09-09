@@ -3,6 +3,7 @@ import { graphql } from "gatsby";
 
 import BasePage from "~src/components/basePage";
 import SmartLink from "~src/components/smartLink";
+import DevelopmentApiSidebar from "~src/components/developmentApiSidebar";
 
 export default props => {
   const {
@@ -19,7 +20,7 @@ export default props => {
   }, {});
 
   return (
-    <BasePage {...props}>
+    <BasePage sidebar={<DevelopmentApiSidebar />} {...props}>
       <h2>Endpoints</h2>
       <p>A full list of the currently supported API endpoints:</p>
       <ul>

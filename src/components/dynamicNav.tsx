@@ -22,7 +22,7 @@ type Entity<T> = {
   node: Node | null;
 };
 
-interface EntityTree extends Entity<EntityTree> {}
+export interface EntityTree extends Entity<EntityTree> {}
 
 export const toTree = (nodeList: Node[]): EntityTree[] => {
   const result = [];
