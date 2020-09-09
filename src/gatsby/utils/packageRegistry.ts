@@ -13,18 +13,16 @@ type VersionData = {
   };
   main_docs_url: string;
   name: string;
-  package_url: string;
+  package_url?: string;
   repo_url: string;
   version: string;
 };
 
 export default class PackageRegistry {
   indexCache: { [name: string]: VersionData } | null;
-  cache: { [name: string]: VersionData | {} };
 
   constructor() {
     this.indexCache = null;
-    this.cache = {};
   }
 
   getList = async () => {
@@ -45,28 +43,16 @@ export default class PackageRegistry {
   };
 
   getData = async (name: string) => {
-    if (!this.cache[name]) {
-      console.info(`Fetching release registry for ${name}`);
-      try {
-        const result = await axios({
-          url: `https://release-registry.services.sentry.io/sdks/${name}/latest`,
-        });
-        this.cache[name] = result.data;
-      } catch (err) {
-        console.error(`Unable to fetch registry for ${name}: ${err.message}`);
-        this.cache[name] = {};
-      }
-    }
-
-    return this.cache[name];
+    await this.getList();
+    return this.indexCache[name]
   };
 
-  version = async (name, defaultValue: string = "") => {
+  version = async (name: string, defaultValue: string = "") => {
     const data = (await this.getData(name)) as VersionData;
-    return data.version || defaultValue;
+    return data && data.version || defaultValue;
   };
 
-  checksum = async (name, fileName: string, checksum: string) => {
+  checksum = async (name: string, fileName: string, checksum: string) => {
     const data = (await this.getData(name)) as VersionData;
     if (!data.files) return "";
     return data.files[fileName].checksums[checksum] || "";
