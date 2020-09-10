@@ -168,7 +168,7 @@ const IndexPage = () => {
                 <a href="/product/discover-queries/">Discover Queries</a>
               </li>
               <li>
-                <a href="/accounts/quotas/#">Quota Management</a>
+                <a href="/accounts/quotas/">Quota Management</a>
               </li>
             </ul>
           </div>
