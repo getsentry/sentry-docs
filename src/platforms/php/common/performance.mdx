@@ -1,0 +1,58 @@
+---
+title: Performance
+description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
+---
+
+: `traces_sampler`
+
+If you want to sample specific Transaction, use the `traces_sampler` option:
+
+```php
+Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'traces_sampler' => static function (Sentry\Tracing\SamplingContext $context): float {
+        // This example will discard all Transaction that have health in their name
+        if (false === strpos($context->getTransactionContext()->getName(), 'health')) {
+            return 1.0;
+        }
+        return 0;
+    },
+]);
+```
+
+### Manual Instrumentation
+
+To manually instrument certain regions of your code, you can create a transaction to capture them.
+
+```php
+$transactionContext = new TransactionContext();
+$transactionContext->setName('External Call');
+$transactionContext->setOp('http.caller');
+$transaction = \Sentry\startTransaction($transactionContext);
+
+$spanContext = new SpanContext();
+$spanContext->setOp('functionX');
+$span1 = $transaction->startChild($spanContext);
+
+// Calling functionX
+$this->functionX();
+$span1->finish();
+
+$transaction->finish();
+```
+
+### Retrieving a Transaction
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `SentrySdk::getCurrentHub()->getTransaction()`. This function will return a `Transaction` in case there is a running Transaction on the scope, otherwise it returns `null`.
+
+```javascript
+$transaction = SentrySdk::getCurrentHub()->getTransaction();
+
+if ($transaction instanceof Transaction) {
+    $transaction->setName($routeName);
+    $transaction->setData([
+        'action' => $route->getActionName(),
+        'name' => $route->getName()
+    ]);
+}
+```
