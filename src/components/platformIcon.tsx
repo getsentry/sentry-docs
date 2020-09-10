@@ -2,6 +2,7 @@ import React from "react";
 
 const PLATFORM_TO_ICON = {
   apple: "apple",
+  android: "android",
   cocoa: "apple",
   cordova: "cordova",
   csharp: "csharp",
@@ -46,7 +47,7 @@ const PLATFORM_TO_ICON = {
   ruby: "ruby",
   "ruby.rack": "ruby",
   "ruby.rails": "rails",
-  // "react-native": "react-native",
+  "react-native": "react",
   rust: "rust",
   swift: "swift",
   flutter: "flutter",
