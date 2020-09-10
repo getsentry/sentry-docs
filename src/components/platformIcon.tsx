@@ -66,7 +66,7 @@ export function getIcon(platform: string): string {
   if (icon) {
     return icon;
   }
-  return "generic";
+  return "default";
 }
 
 type Props = {
