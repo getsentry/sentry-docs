@@ -2,6 +2,7 @@ import React from "react";
 
 const PLATFORM_TO_ICON = {
   apple: "apple",
+  android: "android",
   cocoa: "apple",
   cordova: "cordova",
   csharp: "csharp",
@@ -46,7 +47,7 @@ const PLATFORM_TO_ICON = {
   ruby: "ruby",
   "ruby.rack": "ruby",
   "ruby.rails": "rails",
-  // "react-native": "react-native",
+  "react-native": "react",
   rust: "rust",
   swift: "swift",
   flutter: "flutter",
@@ -66,7 +67,7 @@ export function getIcon(platform: string): string {
   if (icon) {
     return icon;
   }
-  return "generic";
+  return "default";
 }
 
 type Props = {
@@ -80,7 +81,7 @@ const PlatformIcon = ({ platform, size = 64, ...props }: Props) => {
 
   return (
     <img
-      src={require(`platformicons/svg/${icon}.svg`)}
+      src={require(`platformicons/svg_80x80/${icon}.svg`)}
       width={size}
       height={size}
       style={{ maxWidth: "none", border: 0, boxShadow: "none" }}
