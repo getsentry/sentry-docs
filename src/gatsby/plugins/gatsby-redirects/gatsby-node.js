@@ -5,11 +5,29 @@ const { resolve } = require("url");
 exports.onCreatePage = ({ page, reporter, actions: { createRedirect } }) => {
   if (page.context && page.context.redirect_from) {
     page.context.redirect_from.forEach(fromPath => {
-      let realFromPath = resolve(page.path, fromPath);
-      reporter.verbose(`Adding redirect from ${realFromPath} to ${page.path}`);
+      let realFromPath;
+      let realToPath;
+
+      // because content gets duplicated we need to send stuff through an
+      // interstitial.  This is done if a page on `/platforms/foo/` has a
+      // redirect target starting with `platform:`.  Eg the page
+      // `/platforms/javascript/foobar/` creates a redirect_from that is
+      // named `platform:/legacy/` it will create a redirect from /legacy/
+      // via the platform-redirect interstitial with `/foobar/` as next target.
+      if (fromPath.match(/^platform:/)) {
+        realFromPath = fromPath.replace(/^platform:/, "");
+        realToPath =
+          "/platform-redirect/?next=" +
+          page.path.replace(/^\/platforms\/([^/]+)\//, "/");
+      } else {
+        realFromPath = resolve(page.path, fromPath);
+        realToPath = page.path;
+      }
+      reporter.verbose(`Adding redirect from ${realFromPath} to ${realToPath}`);
+
       createRedirect({
         fromPath: realFromPath,
-        toPath: page.path,
+        toPath: realToPath,
         redirectInBrowser: true,
         isPermanent: true,
       });
