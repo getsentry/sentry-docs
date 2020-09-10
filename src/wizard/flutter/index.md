@@ -17,7 +17,7 @@ Import `SentryClient` and initialize it:
 ```dart
 import 'package:sentry/sentry.dart';
 
-final sentry = SentryClient(dsn: "___PUBLIC_KEY___");
+final sentry = SentryClient(dsn: "___PUBLIC_DSN___");
 ```
 
 Run the whole app in a zone to capture all uncaught errors:
