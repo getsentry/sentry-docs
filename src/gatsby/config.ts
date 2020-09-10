@@ -203,6 +203,8 @@ const getPlugins = () => {
         apiKey: process.env.ALGOLIA_ADMIN_KEY,
         queries,
         chunkSize: 10000, // default: 1000
+        enablePartialUpdates: true,
+        matchFields: ["text", "section", "title", "url", "legacy"],
       } as any,
     });
   }

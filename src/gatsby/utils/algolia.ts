@@ -71,7 +71,5 @@ export default [
       attributesToHighlight: ["content", "title", "section"],
       attributesToRetrieve: ["content", "title", "url", "section", "text"],
     },
-    enablePartialUpdates: true,
-    matchFields: ["text", "section", "title", "url", "legacy"],
   },
 ];
