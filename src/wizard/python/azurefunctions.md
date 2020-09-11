@@ -1,5 +1,5 @@
 ---
-name: Azure Functions
+name: Azure Functions (Python)
 doc_link: https://docs.sentry.io/platforms/python/guides/azure-functions/
 support_level: production
 type: framework

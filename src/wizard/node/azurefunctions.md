@@ -1,5 +1,5 @@
 ---
-name: Azure Functions
+name: Azure Functions (Node)
 doc_link: https://docs.sentry.io/platforms/node/guides/azure-functions/
 support_level: production
 type: framework
