@@ -17,12 +17,10 @@ Add the Sentry SDK as a dependency using yarn or npm:
 $ yarn add @sentry/react @sentry/tracing
 
 # Using npm
-$ npm install @sentry/react @sentry/tracing
+$ npm install --save @sentry/react @sentry/tracing
 ```
 
 ## Connecting the SDK to Sentry
-
-After you've completed setting up a project in Sentry, Sentry will give you a value which we call a _DSN_ or _Data Source Name_. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
 
 You should `init` the Sentry browser SDK as soon as possible during your application load up, before initializing React:
 

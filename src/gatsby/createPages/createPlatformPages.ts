@@ -1,7 +1,7 @@
 import { Node } from "gatsby";
 import { createFilePath } from "gatsby-source-filesystem";
 
-import { getChild, getDataOrPanic } from "./helpers";
+import { getChild, getDataOrPanic } from "../helpers";
 
 type Guide = {
   node: Node;
@@ -49,9 +49,7 @@ const isGuideRoot = (node: any): boolean => {
 const buildPlatformData = (nodes: any[]) => {
   const data: PlatformData = {
     platforms: {},
-    common: nodes.filter(node => {
-      getPlatfromFromNode(node) === "common";
-    }),
+    common: nodes.filter(node => getPlatfromFromNode(node) === "common"),
   };
   const platforms = data.platforms;
 
@@ -103,51 +101,73 @@ const buildPlatformData = (nodes: any[]) => {
   return data;
 };
 
+const canInclude = (
+  node: Node,
+  platformName: string,
+  guideName?: string
+): boolean => {
+  const canonical = guideName ? `${platformName}.${guideName}` : platformName;
+  const { frontmatter } = getChild(node);
+  if (
+    frontmatter.supported &&
+    frontmatter.supported.length &&
+    frontmatter.supported.indexOf(canonical) === -1 &&
+    frontmatter.supported.indexOf(platformName) === -1
+  ) {
+    return false;
+  } else if (
+    frontmatter.notSupported &&
+    (frontmatter.notSupported.indexOf(canonical) !== -1 ||
+      frontmatter.notSupported.indexOf(platformName) !== -1)
+  ) {
+    return false;
+  }
+  return true;
+};
+
 export default async ({ actions, graphql, reporter, getNode }) => {
   const {
     allFile: { nodes },
   } = await getDataOrPanic(
     `
-        query {
-          allFile(filter: { sourceInstanceName: { eq: "platforms" } }) {
-            nodes {
-              id
-              relativePath
-              internal {
-                type
-              }
-              childMarkdownRemark {
-                frontmatter {
-                  title
-                  draft
-                  noindex
-                  sidebar_order
-                  redirect_from
-                }
-                fields {
-                  slug
-                  legacy
-                }
-                excerpt(pruneLength: 5000)
-              }
-              childMdx {
-                frontmatter {
-                  title
-                  draft
-                  noindex
-                  sidebar_order
-                  redirect_from
-                }
-                fields {
-                  slug
-                  legacy
-                }
-                excerpt(pruneLength: 5000)
-              }
+    query {
+      allFile(filter: { sourceInstanceName: { eq: "platforms" } }) {
+        nodes {
+          id
+          relativePath
+          internal {
+            type
+          }
+          childMarkdownRemark {
+            frontmatter {
+              title
+              description
+              draft
+              noindex
+              sidebar_order
+              redirect_from
+              supported
+              notSupported
             }
+            excerpt(pruneLength: 5000)
+          }
+          childMdx {
+            frontmatter {
+              title
+              description
+              draft
+              noindex
+              sidebar_order
+              redirect_from
+              supported
+              notSupported
+            }
+            excerpt(pruneLength: 5000)
           }
         }
-      `,
+      }
+    }
+    `,
     graphql,
     reporter
   );
@@ -158,7 +178,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
   );
 
   // begin creating pages from `platforms`
-  const component = require.resolve(`../../templates/platform.js`);
+  const component = require.resolve(`../../templates/platform.tsx`);
 
   const createPlatformPage = (
     node: any,
@@ -174,7 +194,6 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         ...child.frontmatter,
         ...context,
         id: node.id,
-        legacy: child.fields.legacy,
       },
     });
   };
@@ -198,33 +217,43 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       node: platformData.node,
       getNode,
     })}`;
-    console.info(`Creating platform root for ${platformName}: ${path}`);
+    reporter.verbose(`Creating platform root for ${platformName}: ${path}`);
     createPlatformPage(platformData.node, path, platformPageContext);
 
     // duplicate global common
     sharedCommon.forEach((node: Node) => {
+      if (!canInclude(node, platformName)) return;
       const path = `/platforms${createFilePath({ node, getNode }).replace(
         /^\/common\//,
         `/${platformName}/`
       )}`;
-      console.info(`Creating global common for ${platformName}: ${path}`);
-      createPlatformPage(node, path, platformPageContext);
+      reporter.verbose(`Creating global common for ${platformName}: ${path}`);
+      createPlatformPage(node, path, {
+        ...platformPageContext,
+        // TODO(dcramer): toc is broken for hidden sections
+        notoc: true,
+      });
     });
 
     // duplicate platform common
     platformData.common.forEach((node: Node) => {
+      if (!canInclude(node, platformName)) return;
       const path = `/platforms${createFilePath({ node, getNode }).replace(
         /^\/[^\/]+\/common\//,
         `/${platformName}/`
       )}`;
-      console.info(`Creating platform common for ${platformName}: ${path}`);
-      createPlatformPage(node, path, platformPageContext);
+      reporter.verbose(`Creating platform common for ${platformName}: ${path}`);
+      createPlatformPage(node, path, {
+        ...platformPageContext,
+        // TODO(dcramer): toc is broken for hidden sections
+        notoc: true,
+      });
     });
 
     // LAST (to allow overrides) create all direct children
     platformData.children.forEach((node: Node) => {
       const path = `/platforms${createFilePath({ node, getNode })}`;
-      console.info(`Creating platform child for ${platformName}: ${path}`);
+      reporter.verbose(`Creating platform child for ${platformName}: ${path}`);
       createPlatformPage(node, path, platformPageContext);
     });
 
@@ -267,39 +296,45 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       node: guideData.node,
       getNode,
     })}`;
-    console.info(
+    reporter.verbose(
       `Creating platform root for ${platformName} -> ${guideName}: ${pathRoot}`
     );
     createPlatformPage(guideData.node, pathRoot, guidePageContext);
 
     // duplicate global common
     sharedCommon.forEach((node: Node) => {
+      if (!canInclude(node, platformName, guideName)) return;
       const path = `${createFilePath({ node, getNode }).replace(
         /^\/common\//,
         pathRoot
       )}`;
-      console.info(`Creating global common for ${platformName}: ${path}`);
+      reporter.verbose(`Creating global common for ${platformName}: ${path}`);
       // XXX: we dont index or add redirects for guide-common pages
       createPlatformPage(node, path, {
         ...guidePageContext,
         noindex: true,
+        // TODO(dcramer): toc is broken for hidden sections
+        notoc: true,
         redirect_from: [],
       });
     });
 
     // duplicate platform common
     platformData.common.forEach((node: Node) => {
+      if (!canInclude(node, platformName, guideName)) return;
       const path = `${createFilePath({ node, getNode }).replace(
         /^\/[^\/]+\/common\//,
         pathRoot
       )}`;
-      console.info(
+      reporter.verbose(
         `Creating platform common for ${platformName} -> ${guideName}: ${path}`
       );
       // XXX: we dont index or add redirects for guide-common pages
       createPlatformPage(node, path, {
         ...guidePageContext,
         noindex: true,
+        // TODO(dcramer): toc is broken for hidden sections
+        notoc: true,
         redirect_from: [],
       });
     });
@@ -307,7 +342,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     // LAST (to allow overrides) create all direct children
     guideData.children.forEach((node: Node) => {
       const path = `/platforms${createFilePath({ node, getNode })}`;
-      console.info(
+      reporter.verbose(
         `Creating platform child for ${platformName} -> ${guideName}: ${path}`
       );
       createPlatformPage(node, path, guidePageContext);
@@ -318,11 +353,11 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     createPlatformPages(platformName, platforms[platformName], common);
   });
 
-  let indexPage = nodes.find(n => n.relativePath === "index.mdx");
+  const indexPage = nodes.find(n => n.relativePath === "index.mdx");
   if (indexPage) {
     actions.createPage({
       path: "/platforms/",
-      component: require.resolve(`../../templates/doc.js`),
+      component: require.resolve(`../../templates/doc.tsx`),
       context: {
         title: "Platforms",
         ...getChild(indexPage).frontmatter,

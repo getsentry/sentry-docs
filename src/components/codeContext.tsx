@@ -67,7 +67,7 @@ type CodeContextType = {
   sharedKeywordSelection: any;
 };
 
-const CodeContext = React.createContext(null as CodeContextType | null);
+const CodeContext = React.createContext<CodeContextType | null>(null);
 
 const parseDsn = function(dsn: string): Dsn {
   const match = dsn.match(/^(.*?\/\/)(.*?):(.*?)@(.*?)(\/.*?)$/);

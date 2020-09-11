@@ -33,28 +33,38 @@ type Props = {
   };
 };
 
+const getTitle = node => {
+  // TODO(dcramer): support frontmatter somehow from js files
+  if (node.path === "/") return "Home";
+  return node.context.title;
+};
+
 export const Breadcrumbs = ({
   data: {
     allSitePage: { nodes },
   },
 }: Props) => {
   const location = useLocation();
-  const currentPath = location.pathname;
-  let rootNode = nodes.find(n => n.path === currentPath);
+  let currentPath = location.pathname;
+  if (currentPath.substr(currentPath.length - 1) !== "/")
+    currentPath = currentPath += "/";
+  const rootNode = nodes.find(n => n.path === currentPath);
   if (!rootNode) {
     console.warn(`Cant find root node for breadcrumbs: ${currentPath}`);
     return null;
   }
-  let trailNodes = nodes.filter(n => rootNode.path.indexOf(n.path) === 0);
+  const trailNodes = nodes.filter(n => rootNode.path.indexOf(n.path) === 0);
 
   return (
-    <ul className="breadcrumb" style={{ marginBottom: "1rem" }}>
+    <ul className="breadcrumb" style={{ margin: 0 }}>
       {trailNodes
         .sort((a, b) => a.path.localeCompare(b.path))
         .map(n => {
+          const title = getTitle(n);
+          if (!title) return null;
           return (
             <li className="breadcrumb-item" key={n.id}>
-              <SmartLink to={n.path}>{n.context.title}</SmartLink>
+              <SmartLink to={n.path}>{title}</SmartLink>
             </li>
           );
         })}

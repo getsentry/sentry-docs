@@ -1,79 +1,30 @@
 import React from "react";
-import { StaticQuery, graphql } from "gatsby";
 
+import PlatformIcon from "./platformIcon";
 import SmartLink from "./smartLink";
-import { sortBy } from "../utils";
-
-const query = graphql`
-  query PlatformGuideQuery {
-    allSitePage(
-      filter: {
-        path: { regex: "//guides/[^/]+/$/" }
-        context: { guide: { name: { ne: null } } }
-      }
-    ) {
-      nodes {
-        path
-        context {
-          platform {
-            name
-          }
-          guide {
-            name
-            title
-          }
-        }
-      }
-    }
-  }
-`;
-
-type Node = {
-  path: string;
-  context: {
-    platform: {
-      name: string;
-    };
-    guide: {
-      name: string;
-      title: string;
-    };
-  };
-};
+import { getPlatform, Platform } from "./hooks/usePlatform";
 
 type Props = {
   platform: string;
 };
 
-type ChildProps = Props & {
-  data: {
-    allSitePage: {
-      nodes: Node[];
-    };
-  };
-};
+export default ({ platform }: Props): JSX.Element => {
+  const currentPlatform = getPlatform(platform) as Platform;
 
-export const GuideGrid = ({ platform, data }: ChildProps): JSX.Element => {
-  let matches = sortBy(
-    data.allSitePage.nodes.filter(n => n.context.platform.name === platform),
-    (n: Node) => n.context.guide.title
-  );
   return (
     <ul>
-      {matches.map(n => (
-        <li key={n.context.guide.name}>
-          <SmartLink to={n.path}>{n.context.guide.title}</SmartLink>
+      {currentPlatform.guides.map(guide => (
+        <li key={guide.key}>
+          <SmartLink to={guide.url}>
+            <PlatformIcon
+              size={16}
+              platform={guide.key}
+              style={{ marginRight: "0.5rem" }}
+            />
+            <h4 style={{ display: "inline-block" }}>{guide.title}</h4>
+          </SmartLink>
         </li>
       ))}
     </ul>
-  );
-};
-
-export default (props: Props): JSX.Element => {
-  return (
-    <StaticQuery
-      query={query}
-      render={data => <GuideGrid data={data} {...props} />}
-    />
   );
 };

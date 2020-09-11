@@ -1,4 +1,4 @@
-import { getChild, getDataOrPanic } from "./helpers";
+import { getChild, getDataOrPanic } from "../helpers";
 
 export default async ({ actions, graphql, reporter }) => {
   const data = await getDataOrPanic(
@@ -10,6 +10,7 @@ export default async ({ actions, graphql, reporter }) => {
                 childMarkdownRemark {
                   frontmatter {
                     title
+                    description
                     draft
                     noindex
                     sidebar_order
@@ -24,6 +25,7 @@ export default async ({ actions, graphql, reporter }) => {
                 childMdx {
                   frontmatter {
                     title
+                    description
                     draft
                     noindex
                     sidebar_order
@@ -43,7 +45,7 @@ export default async ({ actions, graphql, reporter }) => {
     reporter
   );
 
-  const component = require.resolve(`../../templates/doc.js`);
+  const component = require.resolve(`../../templates/doc.tsx`);
   data.allFile.nodes.map((node: any) => {
     const child = getChild(node);
     if (child && child.fields) {

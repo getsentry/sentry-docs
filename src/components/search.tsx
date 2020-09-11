@@ -67,7 +67,10 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
   const [focus, setFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
-  useClickOutside(ref, () => setFocus(false));
+  useClickOutside(ref, () => {
+    setFocus(false);
+    setShowOffsiteResults(false);
+  });
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
 
@@ -113,14 +116,14 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
 
                     return (
                       <React.Fragment key={result.site}>
-                        {result.site !== "docs" && (
+                        {i !== 0 && (
                           <h4 className="sgs-site-result-heading">
                             From {result.name}
                           </h4>
                         )}
                         <ul
                           className={`sgs-hit-list ${
-                            result.site === "docs" ? "" : "sgs-offsite"
+                            i === 0 ? "" : "sgs-offsite"
                           }`}
                         >
                           {hits.length > 0 ? (

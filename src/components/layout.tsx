@@ -51,7 +51,9 @@ export default ({
           </div>
 
           <section className="pt-3 px-3 content-max prose">
-            <Breadcrumbs />
+            <div className="pb-3">
+              <Breadcrumbs />
+            </div>
             {children}
           </section>
         </div>

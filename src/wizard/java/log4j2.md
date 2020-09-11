@@ -56,6 +56,6 @@ Example configuration using the `log4j2.xml` format:
 </configuration>
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/platforms/java/guides/lgo4j2/config/#configuration) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration options page](/platforms/java/guides/log4j2/configuration/options/) for ways you can do this.
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
