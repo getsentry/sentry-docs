@@ -6,7 +6,6 @@ export type RequestBodySchema = {
   };
 };
 
-
 export type Parameter = {
   schema: {
     type: string;
@@ -62,6 +61,14 @@ export type Response = {
   status_code: string;
 };
 
+export type RequestBody = {
+  content: {
+    content_type: string;
+    schema: string;
+  };
+  required: boolean;
+};
+
 export type OpenApiPath = {
   description: string;
   method: string;
@@ -72,16 +79,9 @@ export type OpenApiPath = {
   readableUrl: string;
   parameters: Parameter[];
   responses: Response[];
-  requestBody: {
-    content: {
-      content_type: string;
-      schema: string;
-    };
-    required: boolean;
-  } | null;
+  requestBody: RequestBody | null;
   security: { [key: string]: string[] }[];
 };
-
 
 export type OpenAPI = {
   id: string;

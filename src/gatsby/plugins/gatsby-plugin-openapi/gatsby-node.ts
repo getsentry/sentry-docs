@@ -1,4 +1,10 @@
-import { Response, ResponseContent, DeRefedOpenAPI, OpenApiPath } from "./types";
+import {
+  Response,
+  ResponseContent,
+  DeRefedOpenAPI,
+  OpenApiPath,
+  RequestBody,
+} from "./types";
 
 export const sourceNodes = async (
   { actions, createNodeId, createContentDigest },
@@ -54,7 +60,7 @@ export const sourceNodes = async (
                             Object.entries(content_values).map(
                               ([k, v]) => (acc[k] = JSON.stringify(v, null, 2))
                             );
-                            acc["content-type"] = content_type;
+                            acc["content_type"] = content_type;
                             return acc;
                           },
                           {} as ResponseContent
@@ -75,10 +81,10 @@ export const sourceNodes = async (
                         Object.entries(content_values).map(
                           ([k, v]) => (acc[k] = JSON.stringify(v, null, 2))
                         );
-                        acc["content-type"] = content_type;
+                        acc["content_type"] = content_type;
                         return acc;
                       },
-                      {}
+                      {} as RequestBody
                     )) ||
                   null,
               }) ||

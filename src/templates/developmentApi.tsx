@@ -45,8 +45,8 @@ const strFormat = str => {
 };
 
 export default props => {
-  const openApi: OpenAPI = props.data?.openApi;
-  const data = openApi.path;
+  const openApi: OpenAPI = props.data?.openApi || ({} as any);
+  const data = openApi?.path;
   const bodyParameters: RequestBodySchema | null =
     (data.requestBody?.content?.schema &&
       JSON.parse(data.requestBody.content.schema)) ||
