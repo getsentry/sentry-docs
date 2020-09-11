@@ -1,5 +1,5 @@
 ---
-name: GCP Cloud Functions
+name: GCP Cloud Functions (Node)
 doc_link: https://docs.sentry.io/platforms/node/guides/gcp-functions/
 support_level: production
 type: framework
