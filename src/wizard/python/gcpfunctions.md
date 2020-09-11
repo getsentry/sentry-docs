@@ -1,5 +1,5 @@
 ---
-name: GCP Cloud Functions
+name: Python GCP Cloud Functions
 doc_link: https://docs.sentry.io/platforms/python/guides/gcp-functions/
 support_level: production
 type: framework

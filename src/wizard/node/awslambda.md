@@ -1,5 +1,5 @@
 ---
-name: AWS Lambda
+name: Node AWS Lambda
 doc_link: https://docs.sentry.io/platforms/node/guides/aws-lambda/
 support_level: production
 type: framework
