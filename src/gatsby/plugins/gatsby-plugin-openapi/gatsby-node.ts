@@ -1,4 +1,6 @@
-exports.sourceNodes = async (
+import { Response, ResponseContent, DeRefedOpenAPI, OpenApiPath } from "./types";
+
+export const sourceNodes = async (
   { actions, createNodeId, createContentDigest },
   pluginOptions
 ) => {
@@ -15,7 +17,7 @@ exports.sourceNodes = async (
     return;
   }
   try {
-    const parseContent = () => {
+    const parseContent = (): DeRefedOpenAPI => {
       try {
         return JSON.parse(content);
       } catch (error) {
@@ -25,7 +27,7 @@ exports.sourceNodes = async (
 
     const parsedContent = parseContent();
 
-    var data =
+    var data: OpenApiPath[] =
       parsedContent.paths &&
       Object.keys(parsedContent.paths).reduce((acc, apiPath) => {
         let result = Object.entries(parsedContent.paths[apiPath]).map(
@@ -40,7 +42,7 @@ exports.sourceNodes = async (
                 .replace(/\s/g, "-")
                 .toLowerCase();
 
-            let responses =
+            let responses: Response[] =
               (methodPath["responses"] &&
                 Object.entries(methodPath["responses"]).map(
                   ([status_code, responses_rest]) => ({
@@ -55,7 +57,7 @@ exports.sourceNodes = async (
                             acc["content-type"] = content_type;
                             return acc;
                           },
-                          {}
+                          {} as ResponseContent
                         )) ||
                       null,
                     status_code,
