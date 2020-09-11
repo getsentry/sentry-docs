@@ -6,7 +6,7 @@ const PLATFORM_TO_ICON = {
   cocoa: "apple",
   cordova: "cordova",
   csharp: "csharp",
-  dotnet: "csharp",
+  dotnet: "dotnet",
   elixir: "elixir",
   electron: "electron",
   go: "go",
