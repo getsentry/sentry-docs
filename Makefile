@@ -1,5 +1,5 @@
 develop: setup-git
-	[ ! -f .env.develpoment ] && cp .env.example .env.development
+	[ ! -f .env.development ] && cp .env.example .env.development
 	yarn
 
 setup-git:
