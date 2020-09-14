@@ -365,16 +365,16 @@ Something that applies to all platforms, but not javascript or node.
 
 Note: This currently causes issues with tableOfContents generation, so its recommended to disable the TOC when using it.
 
-### PlatformRedirectLink
+### PlatformLink
 
 Useful for linking to platform-specific content when there's not a specific platform already selected.
 
 ```javascript
 
-<PlatformRedirectLink to="/enriching-error-data/" />
+<PlatformLink to="/enriching-error-data/" />
 ```
 
-This will direct them to a page where they can choose the platform, and then to the appropriate link.
+This will direct them to a page where they can choose the platform, and then to the appropriate link. If they're within a page that already has an active platform, it will simply link to the appropriate page and skip the redirect.
 
 ## Linting
 

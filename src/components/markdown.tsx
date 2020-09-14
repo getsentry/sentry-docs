@@ -17,7 +17,7 @@ import PageGrid from "./pageGrid";
 import ParamTable from "./paramTable";
 import PlatformContent from "./platformContent";
 import DefinitionList from "./definitionList";
-import PlatformRedirectLink from "./platformRedirectLink";
+import PlatformLink from "./platformLink";
 import PlatformSection from "./platformSection";
 import PlatformIdentifier from "./platformIdentifier";
 import RelayMetrics from "./relayMetrics";
@@ -37,7 +37,7 @@ const mdxComponents = {
   ParamTable,
   DefinitionList,
   PlatformContent,
-  PlatformRedirectLink,
+  PlatformLink,
   PlatformSection,
   PlatformIdentifier,
   RelayMetrics,
