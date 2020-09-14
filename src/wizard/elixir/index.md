@@ -81,6 +81,7 @@ plug Plug.Parsers,
  json_decoder: Phoenix.json_library()
 plug Sentry.PlugContext
 ```
+
 `Sentry.PlugContext` gathers the contextual information for errors, and `Sentry.PlugCapture` captures and sends any errors that occur in the Plug stack. `Sentry.PlugContext` should be below `Plug.Parsers` if you are using it.
 
 To capture crashed crashed process exceptions, add `Sentry.LoggerBackend` to your Logger backends:

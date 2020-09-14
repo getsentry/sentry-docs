@@ -15,7 +15,6 @@ $ pip install --upgrade sentry-sdk[chalice]
 
 ## Configure
 
-
 ```python
 import sentry_sdk
 from chalice import Chalice

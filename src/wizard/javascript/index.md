@@ -18,8 +18,8 @@ The quickest way to get started is to use the CDN hosted version of the JavaScri
 You should `init` the Sentry Browser SDK as soon as possible during your page load:
 
 ```javascript
-import * as Sentry from '@sentry/browser';
-import { Integrations } from '@sentry/tracing';
+import * as Sentry from "@sentry/browser";
+import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',

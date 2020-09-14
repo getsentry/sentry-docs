@@ -20,7 +20,7 @@ Sentry should be initialized as early in your app as possible.
 ```javascript
 import express from "express";
 import * as Sentry from "@sentry/node";
-import * as Tracing from '@sentry/tracing';
+import * as Tracing from "@sentry/tracing";
 
 // or using CommonJS
 // const express = require('express');
