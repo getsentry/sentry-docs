@@ -1,4 +1,5 @@
 import React from "react";
+import styled from "@emotion/styled";
 import { graphql, useStaticQuery } from "gatsby";
 
 import usePlatform, { getPlatform, Platform } from "./hooks/usePlatform";
@@ -46,6 +47,7 @@ type Props = {
   platform?: string;
   children?: React.ReactNode;
   fallbackPlatform?: string;
+  notateUnsupported?: boolean;
 };
 
 const getFileForPlatform = (
@@ -71,11 +73,25 @@ const getFileForPlatform = (
   return contentMatch;
 };
 
+const MissingContent = styled.div`
+  font-style: italic;
+  background: var(--lightest-purple-background);
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+`;
+
 export default ({
   includePath,
   platform,
   fallbackPlatform,
   children,
+  notateUnsupported = true,
 }: Props): JSX.Element => {
   const {
     allFile: { nodes: files },
@@ -145,11 +161,27 @@ export default ({
 
       <div className="tab-content">
         <div className="tab-pane show active">
-          {contentMatch && (
+          {contentMatch ? (
             <React.Fragment>
               {children || null}
               <Content key={contentMatch.id} file={contentMatch} />
             </React.Fragment>
+          ) : (
+            notateUnsupported && (
+              <MissingContent>
+                <p>
+                  The platform or SDK you've selected either does not support
+                  this functionality, or it is missing from documentation.
+                </p>
+                <p>
+                  If you think this is an error, feel free to{" "}
+                  <SmartLink to="https://github.com/getsentry/sentry-docs/issues/new">
+                    let us know on GitHub
+                  </SmartLink>
+                  .
+                </p>
+              </MissingContent>
+            )
           )}
         </div>
       </div>
