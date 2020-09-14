@@ -67,7 +67,7 @@ app.listen(3000);
 
 The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
 
-You can verify the Sentry integration by creating a route that will throw an error:
+You can verify the Sentry integration is working by creating a route that will throw an error:
 
 ```js
 app.get("/debug-sentry", function mainHandler(req, res) {

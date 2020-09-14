@@ -18,8 +18,6 @@ sentry = "0.19.0"
 let _guard = sentry::init("___PUBLIC_DSN___");
 ```
 
-One way to verify your setup is by intentionally sending an event that breaks your application.
-
 The quickest way to verify Sentry in your Rust application is to cause a panic:
 
 ```rust
