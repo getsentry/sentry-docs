@@ -21,7 +21,7 @@ You should `init` the Sentry Browser SDK as soon as possible during your page lo
 Sentry.init({ dsn: "___PUBLIC_DSN___" });
 ```
 
-One way to verify your setup is by intentionally sending an event that breaks your application.
+One way to verify your setup is by intentionally causing an error that breaks your application.
 
 Calling an undefined function will throw an exception:
 
