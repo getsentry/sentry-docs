@@ -16,10 +16,11 @@ const PlatformRedirect = ({ path = "/" }: Props) => {
 
   return (
     <Layout>
-      <h1>Content Moved</h1>
+      <h1>Platform Specific Content</h1>
       <p>
-        The page you are looking for has been moved. Select your platform below
-        and we&apos;ll direct you to the most up-to-date documentation on it.
+        The page you are looking for is customized for each platform. Select
+        your platform below and we&apos;ll direct you to the most specific
+        documentation on it.
       </p>
 
       <ul>

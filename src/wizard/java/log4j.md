@@ -82,6 +82,6 @@ Alternatively, using the `log4j.xml` format:
 </log4j:configuration>
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/platforms/java/guides/log4j/config/#configuration) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration options page](/platforms/java/guides/log4j/configuration/options/) for ways you can do this.
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->

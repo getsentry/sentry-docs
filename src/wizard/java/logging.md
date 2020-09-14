@@ -52,6 +52,6 @@ When starting your application, add the `java.util.logging.config.file` to the s
 $ java -Djava.util.logging.config.file=/path/to/app.properties MyClass
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/platforms/java/guides/logging/config/#configuration) for ways you can do this.
+Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration options page](/platforms/java/guides/logging/configuration/options/) for ways you can do this.
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->

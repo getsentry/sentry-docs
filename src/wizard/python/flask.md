@@ -6,7 +6,7 @@ type: framework
 ---
 
 The Flask integration adds support for the [Flask Web
-Framework](http://flask.pocoo.org/).
+Framework](https://flask.palletsprojects.com/).
 
 Install `sentry-sdk` from PyPI with the `flask` extra:
 
