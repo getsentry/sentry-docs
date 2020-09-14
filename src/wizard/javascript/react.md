@@ -25,11 +25,11 @@ $ npm install --save @sentry/react @sentry/tracing
 You should `init` the Sentry browser SDK as soon as possible during your application load up, before initializing React:
 
 ```jsx
-import React from 'react';
-import ReactDOM from 'react-dom';
-import * as Sentry from '@sentry/react';
-import { Integrations } from '@sentry/tracing';
-import App from './App';
+import React from "react";
+import ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
+import { Integrations } from "@sentry/tracing";
+import App from "./App";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",

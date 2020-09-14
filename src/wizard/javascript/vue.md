@@ -33,18 +33,18 @@ Next, initialize Sentry in your app entry point before you initialize your root 
 import Vue from "vue";
 import * as Sentry from "@sentry/browser";
 import { Vue as VueIntegration } from "@sentry/integrations";
-import { Integrations } from '@sentry/tracing';
+import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
   integrations: [
     new VueIntegration({
       Vue,
-      tracing: true
+      tracing: true,
     }),
-    new Integrations.BrowserTracing()
+    new Integrations.BrowserTracing(),
   ],
-  tracesSampleRate: 1
+  tracesSampleRate: 1,
 });
 ```
 
@@ -75,11 +75,11 @@ Sentry.init({
   integrations: [
     new Sentry.Integrations.Vue({
       Vue,
-      tracing: true
+      tracing: true,
     }),
-    new Sentry.Integrations.BrowserTracing()
+    new Sentry.Integrations.BrowserTracing(),
   ],
-  tracesSampleRate: 1
+  tracesSampleRate: 1,
 });
 ```
 

@@ -40,4 +40,5 @@ module.exports = async function(context, req) {
   };
 };
 ```
+
 Note: You need to call both `captureException` and `flush` for captured events to be successfully delivered to Sentry.
