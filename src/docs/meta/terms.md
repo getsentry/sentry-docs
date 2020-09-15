@@ -11,5 +11,5 @@ Available legal documents include:
 
 - [Terms of Service](https://sentry.io/terms/)
 - [Privacy Policy](https://sentry.io/privacy/)
-- [Data Processing Amendment (DPA)](https://sentry.io/legal/dpa/2.0.0/)
+- [Data Processing Addendum (DPA)](https://sentry.io/legal/dpa/2.0.0/)
 - [California Consumer Privacy Act Addendum (CCPA)](https://sentry.io/legal/ccpa/1.0.0/)

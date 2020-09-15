@@ -97,6 +97,7 @@ export const SEO = ({
           name: "twitter:description",
           content: metaDescription,
         },
+        { rel: "icon", type: "image/png", href: "favicon.ico" },
       ]
         .concat(
           keywords.length > 0

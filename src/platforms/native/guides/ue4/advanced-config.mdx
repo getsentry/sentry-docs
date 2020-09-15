@@ -1,0 +1,44 @@
+---
+title: Advanced Configuration
+---
+
+Basic attributes can be reconfigured by providing a special game data to the
+crash reporter by setting the `__sentry` game data key to a JSON value containing
+Sentry specific attributes:
+
+```cpp
+#include "GenericPlatform/GenericPlatformCrashContext.h"
+#include "Dom/Json.h"
+
+void ConfigureCrashReporter()
+{
+    TSharedPtr<FJsonObject> config = MakeShareable(new FJsonObject);
+
+    // sentry specific attributes to here
+    config->SetStringField("release", "name-of-app@1.0.0");
+    config->SetStringField("environment", "production");
+
+    FString jsonConfig;
+    TSharedRef<TJsonWriter<>> jsonWriter = TJsonWriterFactory<>::Create(&jsonConfig);
+    FJsonSerializer::Serialize(config, jsonWriter);
+
+    FGenericCrashContext::SetGameData(TEXT("__sentry"), jsonConfig);
+}
+```
+
+You need to call the `ConfigureCrashReporter` some time after your game
+starts up. Any [event attribute] can be set.
+
+[event attribute](https://develop.sentry.dev/sdk/event-payloads/)
+
+Depending on the version of Unreal Engine you are using, you may have to
+add JSON support to the build script (`MyProject.build.cs`):
+
+```csharp
+PublicDependencyModuleNames.AddRange(new string[] { ..., "Json" });
+```
+
+For more information, see:
+
+- [Sentry’s complete list of Common Options across SDKs](/error-reporting/configuration/)
+- [Full documentation on Environments](/enriching-error-data/environments/)

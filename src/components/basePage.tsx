@@ -45,16 +45,21 @@ type Props = {
   };
   pageContext?: {
     title?: string;
+    description?: string;
   };
+  seoTitle?: string;
   sidebar?: JSX.Element;
   children?: JSX.Element;
+  prependToc?: JSX.Element;
 };
 
 export default ({
   data: { file } = {},
   pageContext = {},
+  seoTitle,
   sidebar,
   children,
+  prependToc,
 }: Props): JSX.Element => {
   const tx = Sentry.getCurrentHub()
     .getScope()
@@ -63,12 +68,14 @@ export default ({
     tx.setStatus("ok");
   }
 
-  const { title } = pageContext;
+  const { title, description } = pageContext;
   const child = file && (file.childMarkdownRemark || file.childMdx);
-  const hasToc = child && !!child.tableOfContents.items;
+  const hasToc =
+    child && !child.frontmatter.notoc && !!child.tableOfContents.items;
+
   return (
     <Layout {...{ sidebar, pageContext }}>
-      <SEO title={title} file={file} />
+      <SEO title={seoTitle || title} description={description} file={file} />
 
       <div className="row">
         <div
@@ -88,14 +95,19 @@ export default ({
             )}
           </div>
         </div>
-        {hasToc && (
+        {(hasToc || prependToc) && (
           <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
-            <div className="doc-toc">
-              <div className="doc-toc-title">
-                <h6>On this page</h6>
-              </div>
-              <TableOfContents toc={child.tableOfContents} />
-            </div>
+            <React.Fragment>
+              {prependToc}
+              {hasToc && (
+                <div className="doc-toc">
+                  <div className="doc-toc-title">
+                    <h6>On this page</h6>
+                  </div>
+                  <TableOfContents toc={child.tableOfContents} />
+                </div>
+              )}
+            </React.Fragment>
           </div>
         )}
       </div>

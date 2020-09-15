@@ -1,0 +1,99 @@
+---
+title: Performance
+description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
+---
+
+### Trace Context for Errors
+
+By default, Sentry error events will not get trace context unless you configure the scope with the transaction. For example:
+
+```js
+const Sentry = require("@sentry/node");
+const Tracing = require("@sentry/tracing");
+
+const http = require("http");
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tracesSampleRate: 1.0,
+  integrations: [
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+  ],
+});
+
+const transaction = Sentry.startTransaction({
+  op: "transaction",
+  name: "My Transaction",
+});
+
+// Note that we set the transaction as the span on the scope.
+// This step makes sure that if an error happens during the lifetime of the transaction
+// the transaction context will be attached to the error event
+Sentry.configureScope(scope => {
+  scope.setSpan(transaction);
+});
+
+let request;
+
+try {
+  // this should generate an http span
+  request = http.get("http://sentry.io", res => {
+    console.log(`STATUS: ${res.statusCode}`);
+    console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
+  });
+
+  // this error event should have trace context
+  foo();
+} catch (err) {
+  Sentry.captureException(err);
+}
+
+request.on("close", () => {
+  transaction.finish();
+});
+```
+
+## Manual Instrumentation
+
+To manually instrument a specific region of your code, you can create a transaction to capture it.
+
+The following example creates a transaction for a part of the code that contains an expensive operation (for example, `processItem`), and sends the result to Sentry:
+
+```javascript
+app.use(function processItems(req, res, next) {
+  const item = getFromQueue();
+  const transaction = Sentry.startTransaction({
+    op: "task",
+    name: item.getTransaction(),
+  });
+
+  // processItem may create more spans internally (see next examples)
+  processItem(item, transaction).then(() => {
+    transaction.finish();
+    next();
+  });
+});
+```
+
+### Retrieving a Transaction
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` in case there is a running Transaction otherwise it returns `undefined`. If you are using our Express integration by default we attach the Transaction to the Scope. So you could do something like this:
+
+```javascript
+app.get("/success", function successHandler(req, res) {
+  const transaction = Sentry.getCurrentHub()
+    .getScope()
+    .getTransaction();
+
+  if (transaction) {
+    let span = transaction.startChild({
+      op: "encode",
+      description: "parseAvatarImages",
+    });
+    // Do something
+    span.finish();
+  }
+  res.status(200).end();
+});
+```

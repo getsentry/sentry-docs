@@ -19,7 +19,7 @@ gem "sentry-raven"
 
 ### Configuration
 
-Open up `config/application.rb` and configure the DSN, and any other [_settings_](/platforms/ruby/guides/rails/config/) you need:
+Open up `config/application.rb` and configure the DSN, and any other [_settings_](/platforms/ruby/guides/rails/configuration/options/) you need:
 
 ```ruby
 Raven.configure do |config|
@@ -27,7 +27,7 @@ Raven.configure do |config|
 end
 ```
 
-If you have added items to [Rails’ log filtering](http://guides.rubyonrails.org/action_controller_overview.html#parameters-filtering), you can also make sure that those items are not sent to Sentry:
+If you have added items to [Rails’ log filtering](https://guides.rubyonrails.org/action_controller_overview.html#parameters-filtering), you can also make sure that those items are not sent to Sentry:
 
 ```ruby
 # in your application.rb:

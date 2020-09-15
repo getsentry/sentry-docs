@@ -1,4 +1,4 @@
-import { getDataOrPanic } from "./helpers";
+import { getDataOrPanic } from "../helpers";
 
 export default async ({ actions, graphql, reporter }) => {
   const data = await getDataOrPanic(
@@ -19,11 +19,11 @@ export default async ({ actions, graphql, reporter }) => {
     reporter
   );
 
-  const component = require.resolve(`../../templates/developmentAPI.js`);
+  const component = require.resolve(`../../templates/developmentApi.tsx`);
   await Promise.all(
     data.allOpenApi.nodes.map(async node => {
       actions.createPage({
-        path: `/development-api/${node.path.readableUrl}`,
+        path: `${node.path.readableUrl}`,
         component,
         context: {
           id: node.id,
