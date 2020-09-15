@@ -1,19 +1,12 @@
 import React from "react";
-import { StaticQuery, graphql } from "gatsby";
-import { Location } from "@reach/router";
-import { parse } from "query-string";
+import { graphql, useStaticQuery } from "gatsby";
 
+import usePlatform, { getPlatform, Platform } from "./hooks/usePlatform";
 import Content from "./content";
 import SmartLink from "./smartLink";
 
 const includeQuery = graphql`
   query IncludeQuery {
-    allPlatformsYaml(sort: { fields: slug, order: ASC }) {
-      nodes {
-        name
-        slug
-      }
-    }
     allFile(filter: { sourceInstanceName: { eq: "includes" } }) {
       nodes {
         id
@@ -36,11 +29,6 @@ const slugMatches = (slug1: string, slug2: string): boolean => {
   return slug1 === slug2;
 };
 
-type PlatformNode = {
-  name: string;
-  slug: string;
-};
-
 type FileNode = {
   id: string;
   relativePath: string;
@@ -56,62 +44,56 @@ type FileNode = {
 type Props = {
   includePath: string;
   platform?: string;
+  children?: React.ReactNode;
+  fallbackPlatform?: string;
 };
 
-type ChildProps = Props & {
-  location: any;
-  navigate: any;
-  data: {
-    allFile: {
-      nodes: FileNode[];
-    };
-    allPlatformsYaml: {
-      nodes: PlatformNode[];
-    };
-  };
+const getFileForPlatform = (
+  includePath: string,
+  fileList: FileNode[],
+  platform: Platform,
+  fallbackPlatform?: string
+): FileNode | null => {
+  const platformsToSearch = [
+    platform.key,
+    platform.fallbackPlatform,
+    fallbackPlatform,
+    "_default",
+  ];
+  const contentMatch = platformsToSearch
+    .map(name => name && fileList.find(m => slugMatches(m.name, name)))
+    .find(m => m);
+  if (!contentMatch) {
+    console.warn(
+      `Couldn't find content in ${includePath} for selected platform: ${platform.key}`
+    );
+  }
+  return contentMatch;
 };
 
-const PlatformContent = ({
-  data,
-  location,
-  navigate,
+export default ({
   includePath,
   platform,
-}: ChildProps): JSX.Element => {
+  fallbackPlatform,
+  children,
+}: Props): JSX.Element => {
   const {
     allFile: { nodes: files },
-    allPlatformsYaml: { nodes: platforms },
-  } = data;
+  } = useStaticQuery(includeQuery);
   const [dropdown, setDropdown] = React.useState(null);
-  const hasDropdown = !platform;
-
-  if (!platform) {
-    const qsPlatform = parse(location.search).platform;
-    if (qsPlatform instanceof Array) {
-      platform = qsPlatform[0];
-    } else {
-      platform = qsPlatform || null;
-    }
-  }
+  const [currentPlatform, setPlatform, isFixed] = usePlatform(platform);
+  const hasDropdown = !isFixed;
 
   const matches = files.filter(
     node => node.relativePath.indexOf(includePath) === 0
   );
-  const defaultPlatform = platforms.find(p =>
-    matches.find(m => slugMatches(m.name, p.slug))
-  );
 
-  let activePlatform =
-    platforms.find(p => slugMatches(p.slug, platform)) || defaultPlatform;
-  if (!activePlatform) activePlatform = defaultPlatform;
-  const contentMatch = matches.find(m =>
-    slugMatches(m.name, activePlatform.slug)
+  const contentMatch = getFileForPlatform(
+    includePath,
+    matches,
+    currentPlatform,
+    fallbackPlatform
   );
-  if (!contentMatch) {
-    console.warn(
-      `Couldn't find content in ${includePath} for selected platform: ${activePlatform.slug}`
-    );
-  }
 
   return (
     <div className="platform-specific-content">
@@ -122,7 +104,7 @@ const PlatformContent = ({
               className="btn btn-sm btn-secondary dropdown-toggle"
               onClick={() => setDropdown(!dropdown)}
             >
-              {activePlatform.name}
+              {currentPlatform.title}
             </button>
 
             <div
@@ -131,27 +113,25 @@ const PlatformContent = ({
               style={{ display: dropdown ? "block" : "none" }}
             >
               {matches.map(node => {
-                const platform = platforms.find(p =>
-                  slugMatches(p.slug, node.name)
-                );
+                const platform = getPlatform(node.name);
                 if (!platform) {
-                  throw new Error(`Cannot find platform for ${node.name}`);
+                  console.warn(`Cannot find platform for ${node.name}`);
+                  return null;
                 }
                 return (
                   <a
                     className="dropdown-item"
                     role="tab"
-                    key={platform.slug}
+                    key={platform.key}
+                    style={{ cursor: "pointer" }}
                     onClick={() => {
                       setDropdown(false);
-                      navigate(
-                        `${location.pathname}?platform=${platform.slug}`
-                      );
+                      setPlatform(platform.key);
                       // TODO: retain scroll
                       // window.scrollTo(window.scrollX, window.scrollY);
                     }}
                   >
-                    {platform.name}
+                    {platform.title}
                   </a>
                 );
               })}
@@ -166,32 +146,13 @@ const PlatformContent = ({
       <div className="tab-content">
         <div className="tab-pane show active">
           {contentMatch && (
-            <Content key={contentMatch.id} file={contentMatch} />
+            <React.Fragment>
+              {children || null}
+              <Content key={contentMatch.id} file={contentMatch} />
+            </React.Fragment>
           )}
         </div>
       </div>
     </div>
-  );
-};
-
-export default (props: Props): JSX.Element => {
-  return (
-    <StaticQuery
-      query={includeQuery}
-      render={data => {
-        return (
-          <Location>
-            {({ location, navigate }) => (
-              <PlatformContent
-                location={location}
-                navigate={navigate}
-                data={data}
-                {...props}
-              />
-            )}
-          </Location>
-        );
-      }}
-    />
   );
 };

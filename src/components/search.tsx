@@ -2,14 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 
 import Logo from "./logo";
 
-import { SentryGlobalSearch } from "sentry-global-search";
+import { SentryGlobalSearch, standardSDKSlug } from "sentry-global-search";
 
 import DOMPurify from "dompurify";
 
 const MAX_HITS = 10;
 
 const search = new SentryGlobalSearch([
-  "docs",
+  {
+    site: "docs",
+    pathBias: true,
+  },
   "help-center",
   "develop",
   "blog",
@@ -52,14 +55,22 @@ type Result = {
   hits: Hit[];
 };
 
-export default (): JSX.Element => {
+type Props = {
+  path?: string;
+  platforms?: string[];
+};
+
+export default ({ path, platforms = [] }: Props): JSX.Element => {
   const ref = useRef(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
   const [focus, setFocus] = useState(false);
   const [showOffsiteResults, setShowOffsiteResults] = useState(false);
   const [loading, setLoading] = useState(true);
-  useClickOutside(ref, () => setFocus(false));
+  useClickOutside(ref, () => {
+    setFocus(false);
+    setShowOffsiteResults(false);
+  });
 
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
 
@@ -72,10 +83,18 @@ export default (): JSX.Element => {
         className="form-control"
         onChange={({ target: { value: query } }) => {
           setQuery(query);
-          search.query(query).then((results: Result[]) => {
-            if (loading) setLoading(false);
-            setResults(results);
-          });
+
+          search
+            .query(query, {
+              path,
+              platforms: platforms.map(
+                platform => standardSDKSlug(platform).slug
+              ),
+            })
+            .then((results: Result[]) => {
+              if (loading) setLoading(false);
+              setResults(results);
+            });
         }}
         value={query}
         onFocus={e => setFocus(true)}
@@ -97,14 +116,14 @@ export default (): JSX.Element => {
 
                     return (
                       <React.Fragment key={result.site}>
-                        {result.site !== "docs" && (
+                        {i !== 0 && (
                           <h4 className="sgs-site-result-heading">
                             From {result.name}
                           </h4>
                         )}
                         <ul
                           className={`sgs-hit-list ${
-                            result.site === "docs" ? "" : "sgs-offsite"
+                            i === 0 ? "" : "sgs-offsite"
                           }`}
                         >
                           {hits.length > 0 ? (
