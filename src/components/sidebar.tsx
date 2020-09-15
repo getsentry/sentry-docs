@@ -61,7 +61,7 @@ export const Sidebar = ({ data }: ChildProps): JSX.Element => {
           <SidebarLink to="/platforms/">Platforms</SidebarLink>
           <SidebarLink to="/clients/">Legacy SDKs</SidebarLink>
           <SidebarLink to="/api/">API Reference</SidebarLink>
-          <SidebarLink to="/internal/">Contributing to Docs</SidebarLink>
+          <SidebarLink to="/contributing/">Contributing to Docs</SidebarLink>
           <SidebarLink to="https://develop.sentry.dev">
             Developer Documentation
           </SidebarLink>

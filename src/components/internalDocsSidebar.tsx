@@ -7,7 +7,7 @@ const query = graphql`
   query InternalDocsSidebarQuery {
     allSitePage(
       filter: {
-        path: { regex: "/internal/" }
+        path: { regex: "/contributing/" }
         context: { draft: { ne: false } }
       }
     ) {
@@ -29,7 +29,7 @@ export default (): JSX.Element => {
   return (
     <ul className="list-unstyled" data-sidebar-tree>
       <DynamicNav
-        root="internal"
+        root="contributing"
         title="Contributing to Docs"
         tree={tree}
         showDepth={2}
