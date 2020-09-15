@@ -109,12 +109,6 @@ export const PlatformSidebar = ({
         tree={tree}
         exclude={[`/platforms/${platformName}/`]}
       />
-      <DynamicNav
-        root="integrations"
-        title="Integrations"
-        tree={tree}
-        exclude={[`/product/integrations/`]}
-      />
     </ul>
   );
 };
