@@ -46,6 +46,7 @@ export const Sidebar = ({ data }: ChildProps): JSX.Element => {
         tree={tree}
         exclude={["/product/relay/"]}
       />
+      <DynamicNav root="integrations" title="Integrations" tree={tree} />
       <DynamicNav root="accounts" title="Account Management" tree={tree} />
       <DynamicNav root="cli" title="sentry-cli" tree={tree} />
       <DynamicNav root="meta" title="Security and Legal" tree={tree} />
