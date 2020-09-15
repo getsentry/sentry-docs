@@ -1,5 +1,5 @@
 ---
-name: Azure Functions
+name: Azure Functions (Node)
 doc_link: https://docs.sentry.io/platforms/node/guides/azure-functions/
 support_level: production
 type: framework
@@ -40,4 +40,5 @@ module.exports = async function(context, req) {
   };
 };
 ```
+
 Note: You need to call both `captureException` and `flush` for captured events to be successfully delivered to Sentry.

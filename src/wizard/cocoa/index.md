@@ -10,7 +10,7 @@ If you are migrating from an older version, please consider our [Migration Guide
 
 ## Installation {#install}
 
-The SDK can be installed using [CocoaPods](http://cocoapods.org), [Carthage](https://github.com/Carthage/Carthage), or [Swift Package Manager](https://swift.org/package-manager/). This is the recommended SDK for both Swift and Objective-C projects.
+The SDK can be installed using [CocoaPods](https://cocoapods.org), [Carthage](https://github.com/Carthage/Carthage), or [Swift Package Manager](https://swift.org/package-manager/). This is the recommended SDK for both Swift and Objective-C projects.
 
 Support for
 
@@ -28,7 +28,7 @@ platform :ios, '8.0'
 use_frameworks! # This is important
 
 target 'YourApp' do
-    pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.2.0'
+  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '5.2.0'
 end
 ```
 
