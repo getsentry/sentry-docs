@@ -56,4 +56,65 @@ Once this is done, all unhandled exceptions are automatically captured by Sentry
 
 **Important:** Note your DSN. The _DSN_ (Data Source Name) tells the SDK where to send events. If you forget it, view _Settings -> Projects -> Client Keys (DSN)_ in the Sentry web UI.
 
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
+
+## Monitor Performance
+
+Performance Monitoring helps you see everything from macro-level metrics to micro-level spans, and you’ll be able to cross-reference transactions with related issues, customize queries based on your personal needs, and substantially more.
+
+`@sentry/ember` comes with some performance monitoring enabled by default, sideloading `@sentry/tracing` as a chunk to instrument your application. If you would like to disable performance and no longer receive transactions you can set `disablePerformance` in your config.
+
+```javascript
+ENV['@sentry/ember'] = {
+  disablePerformance: true
+};
+```
+
+Performance data is transmitted using a new event type called “transactions”, which you can learn about in [Distributed Tracing](/product/performance/distributed-tracing/). To capture transactions, you must configure your SDK to set the `tracesSampleRate` configuration to a nonzero value. The default configuration will transmit 100% of captured transactions; lower this value in production to avoid consuming your quota too quickly.
+
+### Routes
+If you would like to capture timings for the `beforeModel`, `model`, `afterModel` hooks as well as `setupController` in one of your Routes, `@sentry/ember` exports a `instrumentRoutePerformance` function which can be used by replacing the default export with a wrapped Route.
+
+```javascript
+import Route from '@ember/routing/route';
+import { instrumentRoutePerformance } from '@sentry/ember';
+
+class MyRoute extends Route {
+  model() {
+    //...
+  }
+}
+
+export default instrumentRoutePerformance(SlowLoadingRoute);
+```
+
+### Classic Components
+The render times of classic components are also enabled by default, with a setting to only capture render timings above a certain duration. If you would like to change this minimum you can modify `minimumComponentRenderDuration` in your config.
+
+```javascript
+  ENV['@sentry/ember'] = {
+    minimumComponentRenderDuration: 0, // Setting this to zero will capture all classic components.
+  };
+```
+
+If you would like to disable component instrumentation you can set `disableInstrumentComponents` in your config.
+```javascript
+ENV['@sentry/ember'] = {
+  disableInstrumentComponents: true
+};
+```
+
+### Runloop
+The duration of each queue in your application's runloop is instrumented by default, as long as the duration of the queue is longer than a threshold defined by `minimumRunloopQueueDuration` in your config.
+
+```javascript
+  ENV['@sentry/ember'] = {
+    minimumRunloopQueueDuration: 0, // Setting this to zero will capture all runloop queue durations
+  };
+```
+
+If you would like to disable runloop instrumentation you can set `disableRunloopPerformance` in your config.
+```javascript
+ENV['@sentry/ember'] = {
+  disableRunloopPerformance: true
+};
+```
