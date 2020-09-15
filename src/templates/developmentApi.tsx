@@ -6,6 +6,11 @@ import BasePage from "~src/components/basePage";
 import SmartLink from "~src/components/smartLink";
 import DevelopmentApiSidebar from "~src/components/developmentApiSidebar";
 
+import {
+  OpenAPI,
+  RequestBodySchema,
+} from "~src/gatsby/plugins/gatsby-plugin-openapi/types.ts";
+
 import "prismjs/components/prism-json";
 
 const Params = ({ params }) => (
@@ -40,8 +45,9 @@ const strFormat = str => {
 };
 
 export default props => {
-  const data = props.data?.openApi?.path || {};
-  const bodyParameters =
+  const openApi: OpenAPI = props.data?.openApi || ({} as any);
+  const data = openApi?.path;
+  const bodyParameters: RequestBodySchema | null =
     (data.requestBody?.content?.schema &&
       JSON.parse(data.requestBody.content.schema)) ||
     null;
