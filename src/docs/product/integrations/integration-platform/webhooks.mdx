@@ -30,6 +30,7 @@ This is the resource that triggered the action. The action will be in the payloa
 - installation
 - event_alert (payload will be a serialized event)
 - issue
+- metric_alert
 
 **`Sentry-Hook-Signature`**
 
@@ -102,45 +103,47 @@ All webhook requests have some common elements.
 - type: string
 - description: will either be `created` or `deleted`
 
-**data['installation']**
-
-- type: object
-- description: The installation
-
 **actor**
 
 - type: object
 - description: The user who either installed or uninstalled the integration
 
-```python
-    {
-        "action": "created",
-        "data": {
-            "installation": {
-                "status": "pending",
-                "organization": {
-                    "slug": "test-org"
-                },
-                "app": {
-                    "uuid": "2ebf071f-28df-4989-aca9-c37c763b278f",
-                    "slug": "webhooks-galore"
-                },
-                "code": "f3c71b491e3949b6b033ae45312a4fcb",
-                "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
-            }
-        },
+**data['installation']**
+
+- type: object
+- description: The installation
+
+#### Payload
+
+```json
+{
+    "action": "created",
+    "actor": {
+        "id": 1,
+        "name": "Meredith Heller",
+        "type": "user",
+    },
+    "data": {
         "installation": {
-            "uuid":"a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
-        },
-        "actor": {
-            "type": "user",
-            "id": 1,
-            "name": "Meredith Heller"
+            "status": "pending",
+            "organization": {
+                "slug": "test-org"
+            },
+            "app": {
+                "uuid": "2ebf071f-28df-4989-aca9-c37c763b278f",
+                "slug": "webhooks-galore"
+            },
+            "code": "f3c71b491e3949b6b033ae45312a4fcb",
+            "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
         }
+    },
+    "installation": {
+        "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
     }
+}
 ```
 
-### Webhook Alerts
+### Issue Alerts
 
 `'Sentry-Hook-Resource': 'event_alert'`
 
@@ -392,33 +395,124 @@ All webhook requests have some common elements.
 }
 ```
 
+### Metric Alerts
+
+`'Sentry-Hook-Resource': 'metric_alert'`
+
+**Attributes**
+
+**action**
+
+- type: string
+- description: will be one of (`critical`, `warning`, `resolved`)
+
+**data['metric_alert']**
+
+- type: object
+- description: the incident that triggered the alert rule
+
+**data['text']**
+
+- type: string
+- description: a human-readable description of the alert
+
+**data['title']**
+
+- type: string
+- description: a human-readable title for the alert
+
+**data['url']**
+
+- type: string
+- description: the api url for the incident
+
+#### Payload
+
+```json
+{
+  "action": "resolved",
+  "actor": {
+    "id": "sentry",
+    "name": "Sentry",
+    "type": "application"
+  },
+  "data": {
+    "metric_alert": {
+      "alert_rule": {
+        "aggregate": "count()",
+        "created_by": null,
+        "dataset": "events",
+        "date_created": "2020-09-13T12:26:40.000000Z",
+        "date_modified": "2020-09-13T12:26:40.000000Z",
+        "environment": null,
+        "id": "7",
+        "include_all_projects": false,
+        "name": "Too many errors",
+        "organization_id": "5",
+        "projects": [
+          "bar"
+        ],
+        "query": "level:error",
+        "resolution": 1,
+        "resolve_threshold": null,
+        "status": 0,
+        "threshold_period": 1,
+        "threshold_type": 0,
+        "time_window": 10,
+        "triggers": []
+      },
+      "date_closed": null,
+      "date_created": "2020-09-13T12:26:40.000000Z",
+      "date_detected": "2020-09-13T12:26:40.000000Z",
+      "date_started": "2020-09-13T12:26:40.000000Z",
+      "id": "4",
+      "identifier": "1",
+      "organization_id": "5",
+      "projects": [
+        "bar"
+      ],
+      "status": 2,
+      "status_method": 3,
+      "title": "Sacred Marmot",
+      "type": 2
+    },
+    "text": "1000 events in the last 10 minutes\\nFilter: level:error",
+    "title": "Resolved: Too many errors",
+    "url": "https://sentry.io/organizations/baz/alerts/1/",
+  },
+  "installation": {
+    "uuid": "a8e5d37a-696c-4c54-adb5-b3f28d64c7de"
+  }
+}
+```
+
 ### Issues
 
 `'Sentry-Hook-Resource': 'issue'`
 
 **Attributes**
 
-: **action**
+**action**
 
 - type: string
 - description: can be `created`, `resolved`, `assigned`, or `ignored`
 
-: **data['issue']**
+**data['issue']**
 
 - type: object
 - description: the issue
 
-: **data['issue']['url']**
+**data['issue']['url']**
 
 - type: string
 - description: the api url for the issue
 
-: **data['issue']['web_url']**
+**data['issue']['web_url']**
 
 - type: string
 - description: the web url for the issue
 
-: **data['issue']['project_url']**
+**data['issue']['project_url']**
 
 - type: string
 - description: the api url to the project the issue is a part of
@@ -482,33 +576,31 @@ All webhook requests have some common elements.
 
 The `error.created` resource subscription is only available for Business plans and above.
 
-```python
-'Sentry-Hook-Resource': 'error'
-```
+`'Sentry-Hook-Resource': 'error'`
 
 **Attributes**
 
-: **action**
+**action**
 
 - type: string
 - description: only option currently is `created`
 
-: **data['error']**
+**data['error']**
 
 - type: object
 - description: the error that was created
 
-: **data['error']['url']**
+**data['error']['url']**
 
 - type: string
 - description: the api url for the error
 
-: **data['error']['web_url']**
+**data['error']['web_url']**
 
 - type: string
 - description: the web url for the error
 
-: **data['error']['issue_url']**
+**data['error']['issue_url']**
 
 - type: string
 - description: the api url for the associated issue

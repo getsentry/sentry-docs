@@ -41,19 +41,24 @@ const strFormat = str => {
 
 export default props => {
   const data = props.data?.openApi?.path || {};
-  const parameters =
+  const bodyParameters =
     (data.requestBody?.content?.schema &&
       JSON.parse(data.requestBody.content.schema)) ||
     null;
-
+  const pathParameters = (data.parameters || []).filter(
+    param => param.in === "path"
+  );
+  const queryParameters = (data.parameters || []).filter(
+    param => param.in === "query"
+  );
   const apiExample = [
     `curl https://sentry.io${data.apiPath} `,
     ` -H "Authorization: Bearer <auth_token>" `,
   ];
 
-  if (parameters) {
+  if (bodyParameters) {
     const body = {};
-    Object.entries(parameters.properties).map(
+    Object.entries(bodyParameters.properties).map(
       ([key, { example }]) => (body[key] = example)
     );
 
@@ -82,35 +87,35 @@ export default props => {
               <p>{data.description}</p>
             </div>
           )}
-          {!!data.parameters.filter(param => param.in === "path").length && (
+
+          {!!pathParameters.length && (
             <div className="api-info-row">
               <strong>Path Parameters:</strong>
-              <Params
-                params={data.parameters.filter(param => param.in === "path")}
-              />
+              <Params params={pathParameters} />
             </div>
           )}
 
-          {!!data.parameters.filter(param => param.in === "query").length && (
+          {!!queryParameters.length && (
             <div className="api-info-row">
               <strong>Query Parameters:</strong>
 
-              <Params
-                params={data.parameters.filter(param => param.in === "query")}
-              />
+              <Params params={queryParameters} />
             </div>
           )}
 
-          {parameters && (
+          {bodyParameters && (
             <div className="api-info-row">
               <strong>Body Parameters:</strong>
               <Params
-                params={Object.entries(parameters.properties).map(
+                params={Object.entries(bodyParameters.properties).map(
                   ([name, { type, description }]) => ({
                     schema: { type },
                     description,
                     name,
-                    required: parameters.required.includes(name),
+                    required:
+                      (bodyParameters.required &&
+                        bodyParameters.required.includes(name)) ||
+                      false,
                   })
                 )}
               />

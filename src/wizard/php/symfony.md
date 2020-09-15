@@ -20,7 +20,7 @@ sentry:
 
 If you're using the Symfony Flex plugin, you'll find this file already created for you; it will suggest using an environment variable to inject the DSN value securely.
 
-If you **are not* using Symfony Flex plugin, you will need to enable the bundle in `app/AppKernel.php`:
+If you are _not_ using Symfony Flex plugin, you will need to enable the bundle in `app/AppKernel.php`:
 
 ```php
 <?php

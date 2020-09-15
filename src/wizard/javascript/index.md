@@ -18,8 +18,8 @@ The quickest way to get started is to use the CDN hosted version of the JavaScri
 You should `init` the Sentry Browser SDK as soon as possible during your page load:
 
 ```javascript
-import * as Sentry from '@sentry/browser';
-import { Integrations } from '@sentry/tracing';
+import * as Sentry from "@sentry/browser";
+import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
@@ -32,7 +32,7 @@ Sentry.init({
 
 The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
 
-One way to verify your setup is by intentionally sending an event that breaks your application.
+One way to verify your setup is by intentionally causing an error that breaks your application.
 
 Calling an undefined function will throw an exception:
 
