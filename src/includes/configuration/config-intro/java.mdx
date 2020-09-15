@@ -1,0 +1,48 @@
+Options can be set by passing a callback to the `init()` method which will
+pass the option object along for modifications:
+
+```java {tabTitle:Java}
+import io.sentry.Sentry;
+
+public class MyClass {
+  public static void main(String... args) {
+    Sentry.init(
+        options -> {
+          // NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in
+          // your Sentry project/dashboard
+          options.setDsn("https://f7f320d5c3a54709be7b28e0f2ca7081@sentry.io/1808954");
+          options.setRelease("io.sentry.samples.console@3.0.0+1");
+          options.setBeforeSend(
+              (event, hint) -> {
+                // Drop an event altogether:
+                if (event.getTag("SomeTag") != null) {
+                  return null;
+                }
+                return event;
+              });
+        });
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.SentryOptions.BeforeBreadcrumbCallback
+import io.sentry.SentryOptions.BeforeSendCallback
+
+fun main() {
+    Sentry.init {
+        // NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in
+        // your Sentry project/dashboard
+        it.dsn = "https://f7f320d5c3a54709be7b28e0f2ca7081@sentry.io/1808954"
+        it.release = "io.sentry.samples.console@3.0.0+1"
+        it.beforeSend = BeforeSendCallback { event: SentryEvent, hint: Any? ->
+            // Drop an event altogether:
+            if (event.getTag("SomeTag") != null) {
+                null
+            } else {
+                event
+            }
+        }
+    }
+}
+```
