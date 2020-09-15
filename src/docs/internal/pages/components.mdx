@@ -1,0 +1,176 @@
+---
+title: MDX Components
+noindex: true
+---
+
+## Alert
+
+Render an alert callout.
+
+<Alert level="info" title="Note"><markdown>
+
+This is an alert
+
+</markdown></Alert>
+
+```markdown {tabTitle:Example}
+<Alert level="info" title="Note">
+<markdown>
+
+This is an alert
+
+</markdown>
+</Alert>
+```
+
+Attributes:
+
+- `title` (string)
+- `level` (string)
+- `dismiss` (boolean)
+
+See also the Note component.
+
+## ConfigKey
+
+Render a heading with a configuration key in the correctly cased format for a given platform.
+
+<Note><markdown>
+
+If content is specified, it will automatically hide the content when the given `platform` is not selected in context.
+
+</markdown></Note>
+
+```markdown {tabTitle:Example}
+<ConfigKey name="send-default-pii" notSupported={["javascript", "node"]}>
+<markdown>
+
+Description of send-default-pii
+
+</markdown>
+</ConfigKey>
+```
+
+Attributes:
+
+- `name` (string)
+- `platform` (string) - defaults to the `platform` value from the page context or querystring
+- `supported` (string[])
+- `notSupported` (string[])
+
+## Code Blocks
+
+Consecutive code blocks will be automatically collapsed into a tabulated container. This behavior is generally useful if you want to define an example in multiple languages:
+
+````markdown {tabTitle:Example}
+```javascript
+function foo() {
+  return "bar";
+}
+```
+
+```python
+def foo():
+  return 'bar'
+```
+````
+
+Sometimes you may not want this behavior. To solve this, you can either break up the code blocks with some additional text, or use the `<Break />` component.
+
+Additionally code blocks also support `tabTitle` and `filename` properties:
+
+````markdown {tabTitle:Example}
+```javascript {tabTitle: Hello} {filename: index.js}
+var foo = "bar";
+```
+````
+
+## Note
+
+Render a note.
+
+<Note>
+<markdown>
+
+Something important, but maybe not _that_ important.
+
+</markdown>
+</Note>
+
+```markdown {tabTitle:Example}
+<Note>
+<markdown>
+
+Something important, but maybe not _that_ important.
+
+</markdown>
+</Note>
+```
+
+See also the [Alert component](#alert).
+
+## PageGrid
+
+Render all child pages of this document, including their `description` if available.
+
+```markdown {tabTitle:Example}
+<PageGrid />
+```
+
+## PlatformContent
+
+Render an include based on the currently selected `platform` in context.
+
+```markdown {tabTitle:Example}
+<PlatformContent includePath="sdk-init" />
+```
+
+Attributes:
+
+- `includePath` (string) - the subfolder within `src/includes` to map to
+- `platform` (string) - defaults to the `platform` value from the page context or querystring
+- `fallbackPlatform` (string) - default platform for when no content matches
+
+Some notes:
+
+- When the current platform comes from the page context and no matching include is found, the content will be hidden.
+
+- When the current platform comes from the page context path (not the querystring) the platform selector dropdown will be hidden.
+
+- Similar to `PlatformSection`, you can embed content in the block which will render _before_ the given include, but only when an include is available.
+
+- A file named `_default` will be used if no other content matches.
+
+Note: This currently causes issues with tableOfContents generation, so its recommended to disable the TOC when using it.
+
+## PlatformSection
+
+Render a section based on the currently selected `platform` in context. When the platform is not valid, the content will be hidden.
+
+```markdown {tabTitle:Example}
+<PlatformSection notSupported={["javascript", "node"]}>
+<markdown>
+
+Something that applies to all platforms, but not javascript or node.
+
+</markdown>
+</PlatformSection>
+```
+
+Attributes:
+
+- `platform` (string) - defaults to the `platform` value from the page context or querystring
+- `supported` (string[])
+- `notSupported` (string[])
+
+Note: This currently causes issues with tableOfContents generation, so we recommend disabling the TOC when using it.
+
+## PlatformLink
+
+Useful for linking to platform-specific content when there's not a specific platform already selected.
+
+```markdown {tabTitle:Example}
+<PlatformLink to="/enriching-error-data/" />
+```
+
+This will direct users to a page where they can choose the platform, and then to the appropriate link. If they're within a page that already has an active platform, it will simply link to the appropriate page and skip the redirect.

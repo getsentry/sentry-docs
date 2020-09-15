@@ -4,17 +4,17 @@ import { graphql } from "gatsby";
 import BasePage from "~src/components/basePage";
 import Content from "~src/components/content";
 import DevelopmentApiSidebar from "~src/components/developmentApiSidebar";
+import InternalDocsSidebar from "~src/components/internalDocsSidebar";
 
-export default props => {
+export default (props: any) => {
+  let sidebar = null;
+  if (props.path.startsWith("/development-api/")) {
+    sidebar = <DevelopmentApiSidebar />;
+  } else if (props.path.startsWith("/internal/")) {
+    sidebar = <InternalDocsSidebar />;
+  }
   return (
-    <BasePage
-      sidebar={
-        props.path.startsWith("/development-api") ? (
-          <DevelopmentApiSidebar />
-        ) : null
-      }
-      {...props}
-    >
+    <BasePage sidebar={sidebar} {...props}>
       <Content file={props.data.file} />
     </BasePage>
   );
