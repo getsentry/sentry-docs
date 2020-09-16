@@ -11,11 +11,12 @@ If you want to sample specific Transaction, use the `traces_sampler` option:
 Sentry\init([
     'dsn' => '___PUBLIC_DSN___',
     'traces_sampler' => static function (Sentry\Tracing\SamplingContext $context): float {
-        // This example will discard all Transaction that have health in their name
-        if (false === strpos($context->getTransactionContext()->getName(), 'health')) {
-            return 1.0;
+        if (false !== strpos($context->getTransactionContext()->getName(), 'health')) {
+            // Discard transactions that have 'health' in their name
+            return 0.0;
         }
-        return 0;
+        // Sample rate for all other transactions
+        return 1.0;
     },
 ]);
 ```
@@ -45,7 +46,7 @@ $transaction->finish();
 
 In cases where you want to attach Spans to an already ongoing Transaction you can use `SentrySdk::getCurrentHub()->getTransaction()`. This function will return a `Transaction` in case there is a running Transaction on the scope, otherwise it returns `null`.
 
-```javascript
+```php
 $transaction = SentrySdk::getCurrentHub()->getTransaction();
 
 if ($transaction instanceof Transaction) {
