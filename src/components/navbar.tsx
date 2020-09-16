@@ -1,8 +1,8 @@
 import React from "react";
 import { useLocation } from "@reach/router";
 import { Nav, NavDropdown } from "react-bootstrap";
+import PlatformIcon from "platformicons";
 
-import PlatformIcon from "./platformIcon";
 import Search from "./search";
 import SmartLink from "./smartLink";
 import usePlatform, { usePlatformList } from "./hooks/usePlatform";
@@ -34,6 +34,7 @@ export default ({ platforms }: Props): JSX.Element => {
                     platform={currentPlatform.key}
                     size={16}
                     style={{ marginRight: "0.5rem" }}
+                    format="lg"
                   />
                   {currentPlatform.title}
                 </React.Fragment>
@@ -57,6 +58,7 @@ export default ({ platforms }: Props): JSX.Element => {
                   platform={platform.key}
                   size={16}
                   style={{ marginRight: "0.5rem" }}
+                  format="lg"
                 />
                 {platform.title}
               </SmartLink>

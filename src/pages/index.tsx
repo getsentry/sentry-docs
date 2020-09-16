@@ -1,8 +1,8 @@
 import React from "react";
+import PlatformIcon from "platformicons";
 
 import "../css/screen.scss";
 
-import PlatformIcon from "../components/platformIcon";
 import SEO from "../components/seo";
 import Search from "../components/search";
 import SmartLink from "../components/smartLink";
@@ -87,7 +87,7 @@ const IndexPage = () => {
                 key={platform.key}
               >
                 <div className="image-frame">
-                  <PlatformIcon platform={platform.key} />
+                  <PlatformIcon size={64} platform={platform.key} format="lg" />
                 </div>
                 {platform.title}
               </SmartLink>
