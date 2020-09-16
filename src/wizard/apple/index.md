@@ -18,7 +18,7 @@ end
 
 Afterwards run `pod install`.
 
-For other installation methods, please see our [documentation](https://docs.sentry.ip/platforms/apple/install/)
+For other installation methods, please see our [documentation](install/)
 
 ## Configuration
 
