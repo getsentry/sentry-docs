@@ -96,14 +96,14 @@ export default props => {
 
           {!!pathParameters.length && (
             <div className="api-info-row">
-              <strong>Path Parameters:</strong>
+              <h3>Path Parameters</h3>
               <Params params={pathParameters} />
             </div>
           )}
 
           {!!queryParameters.length && (
             <div className="api-info-row">
-              <strong>Query Parameters:</strong>
+              <h3>Query Parameters:</h3>
 
               <Params params={queryParameters} />
             </div>
@@ -111,7 +111,7 @@ export default props => {
 
           {bodyParameters && (
             <div className="api-info-row">
-              <strong>Body Parameters:</strong>
+              <h3>Body Parameters</h3>
               <Params
                 params={Object.entries(bodyParameters.properties).map(
                   ([name, { type, description }]) => ({
@@ -130,12 +130,12 @@ export default props => {
 
           {data.security.length && (
             <div className="api-info-row">
-              <strong>Scopes:</strong>
+              <h3>Scopes</h3>
 
               <div>
                 <div>
                   {"You need to "}
-                  <SmartLink to={"/development-api/authentication"}>
+                  <SmartLink to={"/development-api/auth"}>
                     authenticate via bearer auth token.
                   </SmartLink>
                 </div>
