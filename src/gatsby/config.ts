@@ -204,7 +204,7 @@ const getPlugins = () => {
         queries,
         chunkSize: 10000, // default: 1000
         enablePartialUpdates: true,
-        matchFields: ["text", "section", "title", "url", "legacy"],
+        matchFields: ["text", "section", "title", "url", "legacy", "keywords"],
       } as any,
     });
   }

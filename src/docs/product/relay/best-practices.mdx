@@ -1,0 +1,65 @@
+---
+title: Self-hosting - Best Practices
+sidebar_order: 5
+---
+
+This page contains suggested best practices when self-hosting external Relays, that is, Relays that run on your hardware and forward events to `sentry.io`.
+
+## General Considerations
+
+* We recommend running Relay using the officially provided Docker image (`getsentry/relay`) found on [DockerHub] and tagged with its Git revision identifier, rather than building from source.
+
+* We recommend running at least two Relay instances (containers) with a reverse proxy (such as [HAProxy] or [Nginx]) in front of them for both improved availability and simplified Relay updates.
+
+* To monitor your Relay setup, you can configure [Logging] and [Metrics].
+
+## System Requirements and Recommendations
+
+- CPU
+    - x86-64 (amd64) CPU architecture
+    - Relay is a multi-threaded application that tries to leverage all available CPU cores. As a result, Sentry highly recommends running Relay on multi-core CPUs. If your set up is expected to handle more than 100 requests per second, we recommend running running Relay on at least four (4) CPU cores.
+        - By default, every Relay instance will use the total number of available cores to adjust the sizes of its thread pools. Adjust this behavior by configuring the `limits.max_thread_count`.
+- Memory
+    - At least 2GB of RAM per Relay container is recommended.
+- Storage
+    - Relay does not currently require disk storage.
+
+## Example Configuration
+
+This following configuration example contains values that you can adjust to change Relay's concurrency settings and buffering behavior.
+
+```yaml
+---
+relay:
+  upstream: https://o<YOUR_ORG_ID>.ingest.sentry.io
+  host: 0.0.0.0
+  port: 3000
+logging:
+  level: info
+  format: json
+metrics:
+  statsd: 127.0.0.1:8126
+  prefix: relay
+limits:
+  # Base size of various internal thread pools. Defaults to the number of logical CPU cores
+  max_thread_count: 8
+  # Number of concurrent upstream requests for event submission
+  max_concurrent_requests: 500
+cache:
+  # How many events relay buffers before it starts dropping new events
+  event_buffer_size: 10000
+  # How long a project configuration can still be used after having expired (in seconds).
+  # This might help when the upstream is unreachable (e.g., in case of network issues).
+  project_grace_period: 3600
+  # The cache timeout for buffered events before dropping them (in seconds)
+  event_expiry: 1800
+```
+
+See the [Configuration Options] page for detailed descriptions of all available options.
+
+[metrics]: /product/relay/metrics/
+[logging]: /product/relay/#logging-and-healthcheck
+[dockerhub]: https://hub.docker.com/r/getsentry/relay/
+[haproxy]: https://www.haproxy.org/
+[nginx]: https://nginx.org
+[configuration options]: /product/relay/options/

@@ -148,6 +148,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
               redirect_from
               supported
               notSupported
+              keywords
             }
             excerpt(pruneLength: 5000)
           }
@@ -161,6 +162,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
               redirect_from
               supported
               notSupported
+              keywords
             }
             excerpt(pruneLength: 5000)
           }

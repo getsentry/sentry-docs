@@ -10,7 +10,7 @@ export default (props: any) => {
   let sidebar = null;
   if (props.path.startsWith("/development-api/")) {
     sidebar = <DevelopmentApiSidebar />;
-  } else if (props.path.startsWith("/internal/")) {
+  } else if (props.path.startsWith("/contributing/")) {
     sidebar = <InternalDocsSidebar />;
   }
   return (

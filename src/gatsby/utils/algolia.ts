@@ -15,6 +15,7 @@ const pageQuery = `{
             title
             excerpt
             noindex
+            keywords
             platform {
               name
             }
@@ -48,6 +49,7 @@ const flatten = (arr: any[]) =>
         text: context.excerpt,
         platforms,
         pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
+        keywords: context.keywords || [],
         legacy: context.legacy || false,
       };
     });
