@@ -116,14 +116,65 @@ sentry:
 
 #### Registering Custom Event Processor
 
-TODO
+A Spring bean implementing `EventProcessor` will be automatically set on `SentryOptions` during Sentry SDK auto-configuration. There can be multiple event processors registered in single application.
+
+```java
+import io.sentry.SentryEvent;
+import io.sentry.EventProcessor;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomEventProcessor implements EventProcessor {
+  @Override
+  public SentryEvent process(SentryEvent event, Object hint) {
+    // modify the event or return null to drop it
+    return event;
+  }
+}
+```
 
 #### Registering Custom Before Send Callback
 
-TODO
+A Spring bean implementing `BeforeSendCallback` will be automatically set on `SentryOptions` during Sentry SDK auto-configuration. Note that there can be only single bean like that.
+
+```java
+import io.sentry.SentryEvent;
+import io.sentry.SentryOptions;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeSendCallback implements SentryOptions.BeforeSendCallback {
+  @Override
+  public SentryEvent execute(SentryEvent event, Object hint) {
+    event.setServerName(null);
+    return event;
+  }
+}
+```
+
 #### Registering Custom Before Breadcrumb Callback
 
-TODO
+A Spring bean implementing `BeforeBreadcrumbCallback` will be automatically set on `SentryOptions` during Sentry SDK auto-configuration. Note that there can be only single bean like that.
+
+```java
+import io.sentry.Breadcrumb;
+import io.sentry.SentryOptions;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeBreadcrumbCallback implements SentryOptions.BeforeBreadcrumbCallback {
+
+  @Override
+  public Breadcrumb execute(Breadcrumb breadcrumb, Object hint) {
+    // Don't add breadcrumbs with message containing:
+    if (breadcrumb.getMessage() != null
+      && breadcrumb.getMessage().contains("bad breadcrumb")) {
+      return null;
+    }
+    return breadcrumb;
+  }
+}
+```
 #### Registering Custom Integration
 
 TODO
