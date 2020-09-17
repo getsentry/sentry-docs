@@ -96,7 +96,7 @@ export default props => {
 
           {!!pathParameters.length && (
             <div className="api-info-row">
-              <strong>Path Parameters:</strong>
+              <strong>Path Parameters</strong>
               <Params params={pathParameters} />
             </div>
           )}
@@ -111,7 +111,7 @@ export default props => {
 
           {bodyParameters && (
             <div className="api-info-row">
-              <strong>Body Parameters:</strong>
+              <strong>Body Parameters</strong>
               <Params
                 params={Object.entries(bodyParameters.properties).map(
                   ([name, { type, description }]) => ({
@@ -130,12 +130,12 @@ export default props => {
 
           {data.security.length && (
             <div className="api-info-row">
-              <strong>Scopes:</strong>
+              <strong>Scopes</strong>
 
               <div>
                 <div>
                   {"You need to "}
-                  <SmartLink to={"/development-api/authentication"}>
+                  <SmartLink to={"/development-api/auth"}>
                     authenticate via bearer auth token.
                   </SmartLink>
                 </div>
