@@ -1,0 +1,32 @@
+A `BiFunction<SentryEvent, Object, SentryEvent>` can be used to mutate, discard (return null), or return a completely new event.
+
+```java
+import io.sentry.Sentry;
+
+Sentry.init(
+  options -> {
+    options.setBeforeSend(
+      (event, hint) -> {
+        // Modify the event here:
+        event.setServerName(null); // Don't send server names.
+        return event;
+      });
+  });
+```
+
+When using [Spring Boot integration](), `beforeSend` can be registered simply by creating a Spring `bean`:
+
+```java
+import io.sentry.SentryEvent;
+import io.sentry.SentryOptions;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeSendCallback implements SentryOptions.BeforeSendCallback {
+  @Override
+  public SentryEvent execute(SentryEvent event, Object hint) {
+    event.setServerName(null);
+    return event;
+  }
+}
+```
