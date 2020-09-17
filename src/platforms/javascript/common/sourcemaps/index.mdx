@@ -17,9 +17,9 @@ When you're using the Sentry JavaScript SDK, the SDK automatically fetches the s
 
 </markdown></Note>
 
-## Generating Source Maps
+## Capturing Source Maps
 
-Most modern JavaScript transpilers support source maps. Below you'll find our recommended instructions, but we also provide instructions for other common tools:
+Most modern JavaScript transpilers support source maps. Below you'll find our recommended instructions, but we also provide instructions for various common tools:
 
 - [Webpack](tools/webpack/)
 - [TypeScript](tools/typescript/)
@@ -38,7 +38,6 @@ $ npm install --save-dev @sentry/webpack-plugin
 $ yarn add --dev @sentry/webpack-plugin
 ```
 
-```suggestion
 Next you need to generate an access token for our API. Within your organization's settings, navigate to Developer Settings, [create a new internal integration](https://docs.sentry.io/product/integrations/integration-platform/#internal-integrations), and provide a name appropriate to your organization. **Important:** Select **Releases -> Admin** for Permissions.
 
 <Note><markdown>
@@ -47,7 +46,7 @@ The Releases -> Admin permission is also known as 'project:releases' in other AP
 
 </markdown></Note>
 
-From there, you will need to install and configure [sentry-cli](/cli/configuration/). Use the token you just created when configuring the CLI:
+The package automatically installs [sentry-cli](/cli/configuration/), but you will still need ot export your authentication token::
 
 ```bash
 export SENTRY_AUTH_TOKEN=your-auth-token
@@ -97,63 +96,9 @@ builder.bundle("src/app.js", "dist/app.min.js", {
 
 Additional information can be found in our [SystemJS documentation](tools/systemjs/).
 
+From here, you can [upload your source maps](uploading/) to Sentry.
+
 </markdown></PlatformSection>
-
-## Uploading Source Maps
-
-Sentry needs access to your source maps to effectively fingerprint errors (via source code context expansion).
-
-We recommend uploading source maps as part of your build process, but you can also [serve them publicly alongside your source files](hosting-publicly/).
-
-<Note><markdown>
-
-If you are not using [Sentry's Webpack plugin](tools/webpack/), the recommended way to upload source maps is using [Sentry CLI](/cli/). If you have used [_Sentry Wizard_](https://github.com/getsentry/sentry-wizard) to set up your project, it has already created all necessary configuration to upload source maps. Otherwise, follow the [CLI configuration docs](/cli/configuration/) to set up your project.
-
-</markdown></Note>
-
-You need to set up your build system to create a release and attach the various source files. For Sentry to de-minify your stack traces, you must provide both the minified files (for example, `app.min.js`) and the corresponding source maps. If the source map files do not contain your original source code (`sourcesContent`), you must also provide the original source files. (Alternatively, sentry-cli will automatically embed the sources (if missing) into your source maps if you pass the `--rewrite` flag.
-
-Sentry uses [**Releases**](/workflow/releases/) to match the correct source maps to your events. To create a new release, run the following command (for example, during publishing):
-
-```bash
-$ sentry-cli releases new <release_name>
-```
-
-<Note><markdown>
-
-The release name must be **unique within your organization** and match the `release` option in your SDK initialization code. Then, use the `upload-sourcemaps` command to scan a folder for source maps, process them and upload them to Sentry.
-
-</markdown></Note>
-
-```bash
-$ sentry-cli releases files <release_name> upload-sourcemaps /path/to/files
-```
-
-<Note><markdown>
-
-You can find the artifacts uploaded to Sentry by navigating to **[Project] » Project Settings » Source Maps**.
-
-</markdown></Note>
-
-This command will upload all files ending in _.js_ and _.map_ to the specified release. If you wish to change these extensions – for example, to upload typescript sources – use the `--ext` option:
-
-```bash
-$ sentry-cli releases files <release_name> upload-sourcemaps --ext ts --ext map /path/to/files
-```
-
-Until now, the release is in a draft state (“_unreleased_”). Once all source maps have been uploaded, and your app has been published successfully, finalize the release with the following command:
-
-```bash
-$ sentry-cli releases finalize <release_name>
-```
-
-For convenience, you can alternatively pass the `--finalize` flag to the `new` command which will immediately finalize the release.
-
-You don't _have_ to upload the source files (referenced by source maps), but without them, the grouping algorithm will not be as strong, and the UI will not show any contextual source.
-
-For more information, see our [Releases API documentation](/api/releases/).
-
-It’s not uncommon for a web application to be accessible at multiple origins. See our documentation on [multiple origins](multiple-origins/) on how to handle this.
 
 ## Additional Resources
 
