@@ -2,6 +2,8 @@ import React from "react";
 import Helmet from "react-helmet";
 import { StaticQuery, graphql } from "gatsby";
 
+import metaImg from "../img/meta-avatar.png";
+
 const detailsQuery = graphql`
   query DefaultSEOQuery {
     site {
@@ -92,6 +94,10 @@ export const SEO = ({
         {
           name: "twitter:title",
           content: title,
+        },
+        {
+          name: "twitter:image",
+          content: metaImg,
         },
         {
           name: "twitter:description",
