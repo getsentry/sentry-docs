@@ -1,0 +1,73 @@
+---
+title: Enterprise Security with Relay
+description: "Learn more about Relay, Sentry's enterprise-grader data security solution."
+draft: false
+noindex: true
+sidebar_order: 1
+---
+
+Sentry Relay offers enterprise-grade data security by providing a standalone service that acts as a middle layer between your application and sentry.io.
+
+Relay is specifically designed to:
+
+- Scrub personal information in a central place prior to sending it to Sentry, adding to the places Sentry already scrubs PII
+- Improve event response time in regions with low bandwidth or limited connectivity
+- Act as an opaque proxy for organizations that restrict all HTTP communication to a custom domain name
+
+
+<Alert level="info" title="Note">
+
+Relay is a work in progress. The default Relay mode is currently supported
+only for on-premise installations and beta testers. If you are using Relay to
+connect to Sentry and are not a beta tester, you need to use `proxy` or `static`
+mode.
+
+If you want to beta test the `managed` mode while connecting to Sentry, please
+contact us. See [Relay Modes] for more information.
+
+</Alert>
+
+## Use Cases for Relay
+
+Relay is designed to support organizations that have specific enterprise security requirements for data scrubbing of personally identifiable information (PII), response time, and enterprise domain management.
+
+### PII Data Scrubbing
+
+Sentry already scrubs PII in two places:
+
+1. In the SDK before sending the event
+2. Upon arrival on Sentry's infrastructure
+
+Relay adds a third option that scrubs data in a central place prior to sending
+it to Sentry.
+
+To choose the right place for data scrubbing, consider:
+
+- If you prefer to configure data scrubbing in a central place, you can let
+  Sentry handle data scrubbing. Upon arrival, Sentry immediately applies
+  [server-side scrubbing] and guarantees that personal information is never
+  stored.
+
+- If you cannot send PII outside your infrastructure, but you still prefer to
+  configure data scrubbing in a centralized place, configure your SDK to send events to Relay. Relay uses the privacy settings configured in Sentry, and scrubs PII before forwarding data to Sentry.
+
+- If you must enforce strict data privacy requirements, you can configure SDKs to
+  scrub PII using the [`before-send` hooks], which prevents data from being
+  collected on the device. This may require you to replicate the same logic across
+  your applications, but may impact performance.
+
+### Response Time
+
+Relay responds very quickly to requests. Installing Relay close to your infrastructure will further improve the response time when sending events. This installation approach can particularly reduce the roundtrip time in remote locations.
+
+### Enterprise Domain Management
+
+By default, SDKs need to be configured with a Data Source Name (DSN) that points to `sentry.io`. If you need to restrict all HTTP communication to a custom domain name, Relay can act as an opaque proxy that reliably forwards events to Sentry.
+
+## Configuration
+
+<PageGrid />
+
+
+[`before-send` hooks]: /platform-redirect/?next=configuration/options/%23hooks
+[server-side scrubbing]: /platform-redirect/?next=/data-management/sensitive-data/%23server-side-scrubbing
