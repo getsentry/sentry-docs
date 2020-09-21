@@ -79,7 +79,11 @@ export default ({
 
       <div className="row">
         <div
-          className={hasToc ? "col-sm-8 col-md-12 col-lg-8 col-xl-9" : "col-12"}
+          className={
+            hasToc || prependToc
+              ? "col-sm-8 col-md-12 col-lg-8 col-xl-9"
+              : "col-12"
+          }
         >
           <h1 className="mb-3">{title}</h1>
           <div id="main">
