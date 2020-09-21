@@ -43,6 +43,7 @@ export const getPlatformTypeDefs = () => {
       guides: [PlatformGuide!]
       categories: [PlatformCategory!]
       url: String!
+      fallbackPlatform: String
     }
     `,
   ];
