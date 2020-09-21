@@ -6,6 +6,7 @@ redirect_from:
   - /learn/sensitive-data/
 ---
 
+
 As with any third-party service it’s important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored. We recommend filtering or scrubbing sensitive data within the SDK, so that data is not sent with the event, and also configuring server-side scrubbing to ensure the data is not stored.
 
 There are two great examples for data scrubbing that every company should think about:
@@ -23,19 +24,7 @@ Turning this option on is required for certain features in Sentry to work, but a
 
 In the SDKs, you can configure a `before-send` function, which is invoked before an event is sent and can be used to modify the event data and remove sensitive information. Using `before-send` in the SDKs to **scrub any data before it is sent** is the recommended scrubbing approach, as SD never leaves the local environment.
 
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  beforeSend(event) {
-    // Modify the event here
-    if (event.user) {
-      // Don't send user's email address
-      delete event.user.email;
-    }
-    return event;
-  },
-});
-```
+<PlatformContent includePath="configuration/before-send/" />
 
 - Look out for SD **in event information** (stack trace, breadcrumbs, and other values the SDK is picking up such as headers/etc.) Some things to look out for:
   - Stack-locals → some SDKs (Python + PHP), will pick up variable values. This can be scrubbed or disabled altogether, if necessary
