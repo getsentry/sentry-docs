@@ -184,7 +184,7 @@ const getPlugins = () => {
         name: "openapi",
         resolve: async () => {
           const response = await axios.get(
-            "https://raw.githubusercontent.com/getsentry/sentry-api-schema/c8dfa2f0057a38b0275476eadae64b0e915e441e/openapi-derefed.json"
+            "https://raw.githubusercontent.com/getsentry/sentry-api-schema/e153de0cbc3af40bae082bdfeaf6dca2cb8d1eab/openapi-derefed.json"
           );
           return response.data;
         },
