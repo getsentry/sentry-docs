@@ -77,12 +77,14 @@ export default props => {
     Object.entries(bodyParameters.properties).map(
       ([key, { example }]) => (body[key] = example)
     );
-    if (contentType === "multipart/form-data" && body["file"]) {
-      apiExample.push(` -F ${body["file"]} `);
-      delete body["file"];
-    }
 
-    apiExample.push(` -d '${JSON.stringify(body)}' `);
+    if (contentType === "multipart/form-data") {
+      Object.entries(body).map(([key, value]) =>
+        apiExample.push(` -F ${key}=${value}`)
+      );
+    } else {
+      apiExample.push(` -d '${JSON.stringify(body)}' `);
+    }
   }
 
   const [selectedResponse, selectResponse] = useState(0);
