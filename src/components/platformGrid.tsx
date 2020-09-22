@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "@emotion/styled";
+import PlatformIcon from "platformicons";
 
-import PlatformIcon from "./platformIcon";
 import SmartLink from "./smartLink";
 import { usePlatformList } from "./hooks/usePlatform";
 
@@ -32,7 +32,7 @@ const PlatformCellIcon = styled.div`
 
 const PlatformCellContent = styled.div`
   flex: 1;
-  margin-left: 0.5rem;
+  margin-left: 1.5rem;
 
   h4 {
     margin: 0 0 0.5rem;
@@ -79,7 +79,12 @@ export default ({ noGuides = false }: Props): JSX.Element => {
               <PlatformCell>
                 <PlatformCellIcon>
                   <SmartLink to={platform.url}>
-                    <PlatformIcon size={82} platform={platform.key} />
+                    <PlatformIcon
+                      size={82}
+                      platform={platform.key}
+                      format="lg"
+                      style={{ maxWidth: "none", border: 0, boxShadow: "none" }}
+                    />
                   </SmartLink>
                 </PlatformCellIcon>
                 <PlatformCellContent>
