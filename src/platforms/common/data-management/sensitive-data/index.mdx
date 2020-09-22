@@ -20,23 +20,23 @@ Our newer SDKs do not purposefully send PII to stay on the safe side. This behav
 
 Turning this option on is required for certain features in Sentry to work, but also means you will need to be even more careful about what data is being sent to Sentry (using the options below).
 
-If you _do not_ wish to use the default PII behavior, you can also choose to identify users in a more controlled manual, using our [user identity context](../../enriching-events/identify-user/).
+If you _do not_ wish to use the default PII behavior, you can also choose to identify users in a more controlled manner, using our [user identity context](../../enriching-events/identify-user/).
 
 ### Confidential Information in Alerts
 
-It’s common that compliance within your company may mean that data can only be transmitted over SSL and stored in a secure manner. One common area this comes up is with email notifications. By default Sentry will send a large amount of data as part of the issue notification. In some cases this data may be source code or other user data.
+It’s common that compliance within your company may mean that data can only be transmitted over SSL and securely stored. One area where this often comes up is with email notifications. By default, Sentry will send a large amount of data as part of the issue notification. In some cases, this data may be source code or other user data.
 
-To work around this problem you can enable the **Enhanced Privacy** setting in your organization. This can be done by visiting the organization’s dashboard, clicking **Settings**, and then ticking the option there. Once done parts of the system, primarily email notifications, will immediately reflect this change and begin restricting data to only basic attributes such as the issue title and description.
+If you need to work around this, you can enable the **Enhanced Privacy** setting for your organization. To do so, visit your organization’s dashboard, click **Settings**, and then tick the option to enable enhanced privacy. Once you've enabled this setting, parts of the system, primarily email notifications, will immediately reflect the change and begin restricting data to only basic attributes, such as the issue title and description.
 
 ## Scrubbing Data
 
-SDKs provide a `before-send` hook, which is invoked before an event is sent and can be used to modify the event data and remove sensitive information. Using `before-send` in the SDKs to **scrub any data before it is sent** is the recommended scrubbing approach, as SD never leaves the local environment.
+SDKs provide a `before-send` hook, which is invoked before an event is sent and can be used to modify event data to remove sensitive information. Using `before-send` in the SDKs to **scrub any data before it is sent** is the recommended scrubbing approach, so sensitive data never leaves the local environment.
 
 <PlatformContent includePath="configuration/before-send" />
 
 <Note><markdown>
 
-Ensure that your team is aware of your company's policy around what can and cannot go into Sentry. We recommend determining this early on and communicating it as well as enforcing it via code review.
+Ensure that your team is aware of your company's policy around what can and cannot be sent to Sentry. We recommend determining this policy early in your implementation and communicating it as well as enforcing it via code review.
 
 </markdown></Note>
 
@@ -63,7 +63,7 @@ This will allow you to correlate it within internal systems if needed, but keep 
 
 **User details**
 
-Your organization may choose that emails are not considered confidential, but if they are, consider instead sending your internal identifier:
+Your organization may determine that emails are not considered confidential, but if they are, consider instead sending your internal identifier:
 
 ```javascript
 Sentry.setUser({ id: user.id });
@@ -79,9 +79,9 @@ Doing this will ensure you still benefit from user-impact related features.
 
 As a best practice you should always avoid logging confidential information. If you have legacy systems you need to work around, consider the following:
 
-- Anonymize the confidential information within the log statements (e.g. swap out email addresses -> for internal identifiers)
+- Anonymize the confidential information within the log statements (for example, swap out email addresses -> for internal identifiers)
 - Use `beforeBreadcrumb` to filter it out from breadcrumbs before it is attached
-- Disable logging breadcrumb integration (e.g. <https://docs.sentry.io/platforms/javascript/#breadcrumbs-1>)
+- Disable logging breadcrumb integration (for example, as described [here] /platforms/javascript/#breadcrumbs-10)
 
 ### Server-Side Controls
 
