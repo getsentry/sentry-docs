@@ -106,6 +106,7 @@ export const PlatformSidebar = ({
         exclude={
           guideName ? [`/platforms/${platformName}/guides/${guideName}/`] : []
         }
+        suppressMissing
         tree={tree}
       />
       <DynamicNav
