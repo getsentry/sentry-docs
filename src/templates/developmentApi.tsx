@@ -64,8 +64,8 @@ export default props => {
     ` -H 'Authorization: Bearer <auth_token>' `,
   ];
 
-  if (data.method.toLowerCase() === "put") {
-    apiExample.push(` -X PUT `);
+  if (["put", "options", "delete"].includes(data.method.toLowerCase())) {
+    apiExample.push(` -X ${data.method.toUpperCase()} `);
   }
 
   if (contentType) {
