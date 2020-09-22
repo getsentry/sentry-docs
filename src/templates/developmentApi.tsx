@@ -57,10 +57,20 @@ export default props => {
   const queryParameters = (data.parameters || []).filter(
     param => param.in === "query"
   );
+  const contentType = data.requestBody?.content?.content_type;
+
   const apiExample = [
-    `curl https://sentry.io${data.apiPath} `,
-    ` -H "Authorization: Bearer <auth_token>" `,
+    `curl https://sentry.io${data.apiPath}`,
+    ` -H 'Authorization: Bearer <auth_token>'`,
   ];
+
+  if (["put", "options", "delete"].includes(data.method.toLowerCase())) {
+    apiExample.push(` -X ${data.method.toUpperCase()}`);
+  }
+
+  if (contentType) {
+    apiExample.push(` -H 'Content-Type: ${contentType}'`);
+  }
 
   if (bodyParameters) {
     const body = {};
@@ -68,7 +78,14 @@ export default props => {
       ([key, { example }]) => (body[key] = example)
     );
 
-    apiExample.push(` -d '${JSON.stringify(body)}'`);
+    if (contentType === "multipart/form-data") {
+      Object.entries(body).map(
+        ([key, value]) =>
+          value !== undefined && apiExample.push(` -F ${key}=${value}`)
+      );
+    } else {
+      apiExample.push(` -d '${JSON.stringify(body)}'`);
+    }
   }
 
   const [selectedResponse, selectResponse] = useState(0);
@@ -161,7 +178,7 @@ export default props => {
               {data.apiPath}
             </div>
             <pre className="api-block-example request">
-              {apiExample.join("\\\n")}
+              {apiExample.join(" \\\n")}
             </pre>
           </div>
           <div className="api-block">
