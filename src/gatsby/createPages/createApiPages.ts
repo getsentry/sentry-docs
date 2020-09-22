@@ -17,6 +17,7 @@ export default async ({ actions, graphql, reporter }) => {
                 noindex
                 sidebar_order
                 redirect_from
+                keywords
               }
               fields {
                 slug
@@ -32,6 +33,7 @@ export default async ({ actions, graphql, reporter }) => {
                 noindex
                 sidebar_order
                 redirect_from
+                keywords
               }
               fields {
                 slug

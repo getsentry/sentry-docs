@@ -57,10 +57,20 @@ export default props => {
   const queryParameters = (data.parameters || []).filter(
     param => param.in === "query"
   );
+  const contentType = data.requestBody?.content?.content_type;
+
   const apiExample = [
-    `curl https://sentry.io${data.apiPath} `,
-    ` -H "Authorization: Bearer <auth_token>" `,
+    `curl https://sentry.io${data.apiPath}`,
+    ` -H 'Authorization: Bearer <auth_token>'`,
   ];
+
+  if (["put", "options", "delete"].includes(data.method.toLowerCase())) {
+    apiExample.push(` -X ${data.method.toUpperCase()}`);
+  }
+
+  if (contentType) {
+    apiExample.push(` -H 'Content-Type: ${contentType}'`);
+  }
 
   if (bodyParameters) {
     const body = {};
@@ -68,7 +78,14 @@ export default props => {
       ([key, { example }]) => (body[key] = example)
     );
 
-    apiExample.push(` -d '${JSON.stringify(body)}'`);
+    if (contentType === "multipart/form-data") {
+      Object.entries(body).map(
+        ([key, value]) =>
+          value !== undefined && apiExample.push(` -F ${key}=${value}`)
+      );
+    } else {
+      apiExample.push(` -d '${JSON.stringify(body)}'`);
+    }
   }
 
   const [selectedResponse, selectResponse] = useState(0);
@@ -96,14 +113,14 @@ export default props => {
 
           {!!pathParameters.length && (
             <div className="api-info-row">
-              <strong>Path Parameters:</strong>
+              <h3>Path Parameters</h3>
               <Params params={pathParameters} />
             </div>
           )}
 
           {!!queryParameters.length && (
             <div className="api-info-row">
-              <strong>Query Parameters:</strong>
+              <h3>Query Parameters:</h3>
 
               <Params params={queryParameters} />
             </div>
@@ -111,7 +128,7 @@ export default props => {
 
           {bodyParameters && (
             <div className="api-info-row">
-              <strong>Body Parameters:</strong>
+              <h3>Body Parameters</h3>
               <Params
                 params={Object.entries(bodyParameters.properties).map(
                   ([name, { type, description }]) => ({
@@ -130,12 +147,12 @@ export default props => {
 
           {data.security.length && (
             <div className="api-info-row">
-              <strong>Scopes:</strong>
+              <h3>Scopes</h3>
 
               <div>
                 <div>
                   {"You need to "}
-                  <SmartLink to={"/development-api/authentication"}>
+                  <SmartLink to={"/development-api/auth"}>
                     authenticate via bearer auth token.
                   </SmartLink>
                 </div>
@@ -161,7 +178,7 @@ export default props => {
               {data.apiPath}
             </div>
             <pre className="api-block-example request">
-              {apiExample.join("\\\n")}
+              {apiExample.join(" \\\n")}
             </pre>
           </div>
           <div className="api-block">

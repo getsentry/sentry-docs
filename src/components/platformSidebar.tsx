@@ -29,7 +29,7 @@ type Node = {
   path: string;
   context: {
     title: string;
-    siebar_order?: number;
+    sidebar_order?: number;
     platform: {
       name: string;
     };
@@ -72,24 +72,28 @@ export const PlatformSidebar = ({
         root={pathRoot}
         tree={tree}
         title={`Sentry for ${(guide || platform).title}`}
-        showDepth={1}
         prependLinks={[[`/${pathRoot}/`, "Getting Started"]]}
         exclude={[
-          `/${pathRoot}/enriching-error-data/`,
+          `/${pathRoot}/enriching-events/`,
           `/${pathRoot}/data-management/`,
+          `/${pathRoot}/performance/`,
           `/${pathRoot}/guides/`,
         ]}
       />
       <DynamicNav
-        root={`/${pathRoot}/enriching-error-data`}
-        title="Enriching Error Data"
-        showDepth={1}
+        root={`/${pathRoot}/performance`}
+        title="Performance Monitoring"
+        prependLinks={[[`/${pathRoot}/performance/`, "Enable Performance"]]}
+        tree={tree}
+      />
+      <DynamicNav
+        root={`/${pathRoot}/enriching-events`}
+        title="Enriching Events"
         tree={tree}
       />
       <DynamicNav
         root={`/${pathRoot}/data-management`}
         title="Data Management"
-        showDepth={1}
         tree={tree}
       />
       <DynamicNav

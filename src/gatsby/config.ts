@@ -184,7 +184,7 @@ const getPlugins = () => {
         name: "openapi",
         resolve: async () => {
           const response = await axios.get(
-            "https://raw.githubusercontent.com/getsentry/sentry-api-schema/7df643a694949f2151270545f095355e5eea498e/openapi-derefed.json"
+            "https://raw.githubusercontent.com/getsentry/sentry-api-schema/57538f520d7412c8436272f0455c37a2367e4d12/openapi-derefed.json"
           );
           return response.data;
         },
@@ -204,7 +204,7 @@ const getPlugins = () => {
         queries,
         chunkSize: 10000, // default: 1000
         enablePartialUpdates: true,
-        matchFields: ["text", "section", "title", "url", "legacy"],
+        matchFields: ["text", "section", "title", "url", "legacy", "keywords"],
       } as any,
     });
   }

@@ -24,7 +24,7 @@ const HIGHLIGHTED_PLATFORMS = new Set([
   "go",
   "php.laravel",
   "android",
-  "cocoa",
+  "apple",
 ]);
 
 const IndexPage = () => {
