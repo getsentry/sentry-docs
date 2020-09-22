@@ -98,7 +98,6 @@ export default props => {
     Prism.highlightAll();
   }, []);
 
-  console.log({ data });
   return (
     <BasePage sidebar={<DevelopmentApiSidebar />} {...props}>
       <div className="row">
