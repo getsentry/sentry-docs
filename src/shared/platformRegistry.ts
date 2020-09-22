@@ -9,6 +9,7 @@ const frontmatterConfig = new Set([
   "sdk",
   "fallbackPlatform",
   "categories",
+  "aliases",
 ]);
 
 const shareableConfig = new Set([
@@ -30,6 +31,7 @@ type Config = {
   sdk?: string;
   fallbackPlatform?: string;
   categories?: string[];
+  aliases?: string[];
 };
 
 export type Platform = Config & {
