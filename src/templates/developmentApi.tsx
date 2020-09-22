@@ -79,8 +79,9 @@ export default props => {
     );
 
     if (contentType === "multipart/form-data") {
-      Object.entries(body).map(([key, value]) =>
-        apiExample.push(` -F ${key}=${value}`)
+      Object.entries(body).map(
+        ([key, value]) =>
+          value !== undefined && apiExample.push(` -F ${key}=${value} `)
       );
     } else {
       apiExample.push(` -d '${JSON.stringify(body)}' `);
