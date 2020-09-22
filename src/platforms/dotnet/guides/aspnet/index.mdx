@@ -1,0 +1,109 @@
+---
+---
+
+Sentry provides an integration with _ASP.NET_ through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry).
+
+## Install
+
+Add the Sentry dependency:
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry -Version {{ packages.version('sentry.dotnet') }}
+```
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry -v {{ packages.version('sentry.dotnet') }}
+```
+
+You can combine this integration with a logging library like `log4net`, `NLog` or `Serilog` to include both request data
+as well as your logs as breadcrumbs. The logging ingrations also capture events when an error is logged.
+
+On top of that, I advise you update your app/server to run on a more current version of the .NET Framework. Specifically, the latest, .NET 4.7.2.
+
+### Configuring
+
+You configure the SDK in the `Global.asax.cs`:
+
+```csharp
+
+using Sentry;
+
+public class MvcApplication : System.Web.HttpApplication
+{
+    private IDisposable _sentry;
+
+    protected void Application_Start()
+    {
+        // Add this to Application_Start
+        _sentry = SentrySdk.Init(o =>
+        {
+            o.Dsn = new Dsn("___PUBLIC_DSN___");
+        });
+    }
+
+    protected void Application_Error()
+    {
+        var exception = Server.GetLastError();
+        SentrySdk.CaptureException(exception);
+    }
+
+    protected void Application_End()
+    {
+        _sentry?.Dispose();
+    }
+}
+
+```
+
+### Capturing the affected user
+
+When opting-in to [SendDefaultPii](#senddefaultpii), the SDK will automatically read the user from the request by inspecting `HttpContext.User`. Default claim values like `NameIdentifier` for the _Id_ will be used.
+
+If you wish to change the behavior of how to read the user from the request, you can register a new `IUserFactory` into the container:
+
+```csharp
+SentrySdk.Init(o =>
+{
+  UserFactory = new MyUserFactory();
+}
+```
+
+### SendDefaultPii
+
+Although this setting is part of the [Sentry](/platforms/dotnet/) package, in the context of ASP.NET Core, it means reporting the user by reading the frameworks `HttpContext.User`. The strategy to create the `SentryUser` can be customized.
+
+### IncludeRequestPayload
+
+It's helpful to troubleshoot a problem in the API when the payload that hit the endpoint is logged.
+Opt-in to send the request body to Sentry:
+
+```csharp
+SentrySdk.Init(o =>
+{
+  MaxRequestBodySize = RequestSize.Always;
+}
+```
+
+### Proxy server
+
+Often your server can only access the Internet through a proxy server.
+If that's the case, make sure your proxy server is listed in the `web.config` so the `HttpClient`
+used by Sentry's SDK can pick it up.
+
+```xml
+<system.net>
+    <defaultProxy>
+      <proxy proxyaddress="http://proxy.address.here" bypassonlocal="true" />
+    </defaultProxy>
+</system.net>
+```
+
+### TLS 1.2 Support and Windows Server
+
+If you're not able to capture events from ASP.NET to Sentry,
+on older versions of Windows Server, with older .NET Framework you must enable TLS 1.2.
+
+`ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12`
+
+- An [sample with ASP.NET and EF 6](https://github.com/getsentry/sentry-dotnet-samples/tree/master/AspNetMvc5Ef6).
+- For [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs
