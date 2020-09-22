@@ -25,7 +25,7 @@ export default async ({ actions, graphql, reporter }) => {
         component,
         context: {
           title: name,
-          tag: name,
+          tag: node.name,
         },
       });
     })
