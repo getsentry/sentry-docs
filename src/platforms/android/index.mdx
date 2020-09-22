@@ -702,11 +702,20 @@ Be aware that by removing those transitive dependencies, the automatic session t
 Due to current limitations in how `sentry-native` works, it cannot yet identify native libraries loaded directly from
 `.apk` files and instead needs to have access to the extracted libraries on the file-system.
 This functionality is [disabled by default](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs)
-when using a Android Gradle Plugin >= v3.6.0, and it needs to be enabled with the following configuration option (AndroidManifest.xml):
+when using a Android Gradle Plugin >= v3.6.0, and it needs to be enabled with the
+[`extractNativeLibs`](https://developer.android.com/guide/topics/manifest/application-element#extractNativeLibs) configuration option.
+
+Apart from this, `sentry-native` also uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
+internally, and will therefore not work out of the box on newer Android devices which have their own conflicting pointer tagging.
+To prevent this, disable the [`allowNativeHeapPointerTagging`](https://developer.android.com/guide/topics/manifest/application-element#allowNativeHeapPointerTagging) configuration option.
+
+**Example AndroidManifest.xml**:
 
 ```xml
 <application
-    android:extractNativeLibs="true">
+    android:allowNativeHeapPointerTagging="false"
+    android:extractNativeLibs="true"
+    >
 </application>
 ```
 
