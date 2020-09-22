@@ -180,13 +180,6 @@ const getPlugins = () => {
       },
     },
     {
-      resolve: `./src/gatsby/plugins/gatsby-plugin-sentry-wizard`,
-      options: {
-        source: "wizard",
-        output: `${root}/public/_platforms`,
-      },
-    },
-    {
       resolve: `./src/gatsby/plugins/gatsby-redirects`,
       options: {
         inputConfigFile: `${root}/nginx.conf`,
