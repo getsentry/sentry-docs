@@ -29,7 +29,7 @@ type Node = {
   path: string;
   context: {
     title: string;
-    siebar_order?: number;
+    sidebar_order?: number;
     platform: {
       name: string;
     };
