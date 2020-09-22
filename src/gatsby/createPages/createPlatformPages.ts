@@ -112,14 +112,11 @@ const canInclude = (
 ): boolean => {
   const canonical = guideName ? `${platformName}.${guideName}` : platformName;
   const { frontmatter } = getChild(node);
+  if (frontmatter.supported && frontmatter.supported.length) {
+    if (frontmatter.supported.indexOf(canonical) !== -1) return true;
+    if (frontmatter.supported.indexOf(platformName) === -1) return false;
+  }
   if (
-    frontmatter.supported &&
-    frontmatter.supported.length &&
-    frontmatter.supported.indexOf(canonical) === -1 &&
-    frontmatter.supported.indexOf(platformName) === -1
-  ) {
-    return false;
-  } else if (
     frontmatter.notSupported &&
     (frontmatter.notSupported.indexOf(canonical) !== -1 ||
       frontmatter.notSupported.indexOf(platformName) !== -1)
