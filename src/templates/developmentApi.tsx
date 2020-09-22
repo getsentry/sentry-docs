@@ -57,18 +57,32 @@ export default props => {
   const queryParameters = (data.parameters || []).filter(
     param => param.in === "query"
   );
+  const contentType = data.requestBody?.content?.content_type;
+
   const apiExample = [
     `curl https://sentry.io${data.apiPath} `,
-    ` -H "Authorization: Bearer <auth_token>" `,
+    ` -H 'Authorization: Bearer <auth_token>' `,
   ];
+
+  if (data.method.toLowerCase() === "put") {
+    apiExample.push(` -X PUT `);
+  }
+
+  if (contentType) {
+    apiExample.push(` -H 'Content-Type: ${contentType}' `);
+  }
 
   if (bodyParameters) {
     const body = {};
     Object.entries(bodyParameters.properties).map(
       ([key, { example }]) => (body[key] = example)
     );
+    if (contentType === "multipart/form-data" && body["file"]) {
+      apiExample.push(` -F ${body["file"]} `);
+      delete body["file"];
+    }
 
-    apiExample.push(` -d '${JSON.stringify(body)}'`);
+    apiExample.push(` -d '${JSON.stringify(body)}' `);
   }
 
   const [selectedResponse, selectResponse] = useState(0);
@@ -82,6 +96,7 @@ export default props => {
     Prism.highlightAll();
   }, []);
 
+  console.log({ data });
   return (
     <BasePage sidebar={<DevelopmentApiSidebar />} {...props}>
       <div className="row">
