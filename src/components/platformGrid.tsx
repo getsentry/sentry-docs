@@ -32,7 +32,7 @@ const PlatformCellIcon = styled.div`
 
 const PlatformCellContent = styled.div`
   flex: 1;
-  margin-left: 0.5rem;
+  margin-left: 1.5rem;
 
   h4 {
     margin: 0 0 0.5rem;
