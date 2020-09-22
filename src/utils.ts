@@ -65,8 +65,8 @@ export const sortPages = (
   return arr.sort((a, b) => {
     a = extractor(a);
     b = extractor(b);
-    const aso = a.context.sidebar_order ?? 10;
-    const bso = b.context.sidebar_order ?? 10;
+    const aso = a.context.sidebar_order >= 0 ? a.context.sidebar_order : 10;
+    const bso = b.context.sidebar_order >= 0 ? b.context.sidebar_order : 10;
     if (aso > bso) return 1;
     else if (bso > aso) return -1;
     return a.context.title.localeCompare(b.context.title);
