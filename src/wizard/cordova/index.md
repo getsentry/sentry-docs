@@ -1,6 +1,6 @@
 ---
 name: Cordova
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=cordova
+doc_link: https://docs.sentry.io/platforms/javascript/guides/cordova/
 support_level: production
 type: language
 ---
@@ -8,10 +8,10 @@ type: language
 Install our SDK using the cordova command:
 
 ```bash
-$ cordova plugin add sentry-cordova@0.12.3
+$ cordova plugin add sentry-cordova
 ```
 
-You should `init` the SDK in the `deviceReady` function, to make sure the native integrations runs. For more details about Cordova [click here](/platforms/javascript/cordova/)
+You should `init` the SDK in the `deviceReady` function, to make sure the native integrations runs. For more details about Cordova [click here](/platforms/javascript/guides/cordova/)
 
 ```javascript
 onDeviceReady: function() {
