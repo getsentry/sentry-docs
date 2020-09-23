@@ -57,6 +57,7 @@ export const SEO = ({
       file.childMdx.frontmatter.noindex);
 
   const metaDescription = description || data.site.siteMetadata.description;
+
   return (
     <Helmet
       htmlAttributes={{
@@ -80,6 +81,18 @@ export const SEO = ({
         {
           property: "og:type",
           content: "website",
+        },
+        {
+          property: "og:image",
+          content: "/meta.png",
+        },
+        {
+          property: "og:image:width",
+          content: 1200,
+        },
+        {
+          property: "og:image:height",
+          content: 630,
         },
         {
           name: "twitter:card",
