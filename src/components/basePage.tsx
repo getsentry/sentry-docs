@@ -46,6 +46,7 @@ type Props = {
   pageContext?: {
     title?: string;
     description?: string;
+    excerpt?: string;
   };
   seoTitle?: string;
   sidebar?: JSX.Element;
@@ -68,16 +69,18 @@ export default ({
     tx.setStatus("ok");
   }
 
-  const { title, excerpt } = pageContext;
+  const { title, excerpt, description } = pageContext;
   const child = file && (file.childMarkdownRemark || file.childMdx);
   const hasToc =
     child && !child.frontmatter.notoc && !!child.tableOfContents.items;
+
+  const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : "");
 
   return (
     <Layout {...{ sidebar, pageContext }}>
       <SEO
         title={seoTitle || title}
-        description={excerpt.slice(0, 160)}
+        description={pageDescription}
         file={file}
       />
 
