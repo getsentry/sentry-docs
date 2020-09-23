@@ -1,5 +1,6 @@
 import { Node } from "gatsby";
 import { createFilePath } from "gatsby-source-filesystem";
+import { resolve } from "url";
 
 import PlatformRegistry, {
   Platform,
@@ -126,6 +127,31 @@ const canInclude = (
   return true;
 };
 
+const createRedirects = ({
+  actions: { createRedirect },
+  reporter,
+  path,
+  context,
+  redirectFrom,
+}) => {
+  redirectFrom.forEach((fromPath: string) => {
+    const platformPath = `${context.platform.name}${
+      context.guide ? `/guides/${context.guide.name}` : ``
+    }`;
+    const realFromPath = resolve(
+      path,
+      fromPath.replace(/<platform>/, platformPath)
+    );
+    reporter.verbose(`Adding redirect from ${realFromPath} to ${path}`);
+    createRedirect({
+      fromPath: realFromPath,
+      toPath: path,
+      redirectInBrowser: true,
+      isPermanent: true,
+    });
+  });
+};
+
 export default async ({ actions, graphql, reporter, getNode }) => {
   const {
     allFile: { nodes },
@@ -192,14 +218,26 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     context: { [key: string]: any }
   ) => {
     const child = getChild(node);
+    if (child.frontmatter.redirect_from) {
+      createRedirects({
+        actions,
+        reporter,
+        path,
+        context,
+        redirectFrom: child.frontmatter.redirect_from,
+      });
+    }
     actions.createPage({
       path: path,
       component,
       context: {
         excerpt: child.excerpt,
+        // filter out empty values
+        // filter out redirectFrom (handled elsewhere)
         ...Object.fromEntries(
           Object.entries(child.frontmatter).filter(
-            ([, value]) => value !== undefined && value
+            ([key, value]) =>
+              value !== undefined && value && key !== "redirect_from"
           )
         ),
         ...Object.fromEntries(
@@ -326,7 +364,6 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         noindex: true,
         // TODO(dcramer): toc is broken for hidden sections
         notoc: true,
-        redirect_from: [],
       });
     });
 
@@ -345,7 +382,6 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         noindex: true,
         // TODO(dcramer): toc is broken for hidden sections
         notoc: true,
-        redirect_from: [],
       });
     });
 
