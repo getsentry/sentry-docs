@@ -140,7 +140,7 @@ After registering Relay with Sentry, it is ready to run:
  INFO  relay::setup >   relay id: f2119bc9-9a9b-4531-826b-24e9794902f2
  INFO  relay::setup >   public key: QPBITKKtKUuEZGGbPke8iufEXAcVrEv6nmWrkRtc3l8
  ...
- DEBUG relay::server::upstream > relay successfully registered with upstream
+ INFO  relay_server::actors::upstream > relay successfully registered with upstream
 ```
 
 If you moved your config folder (for example, for security reasons), use the `--config` option to specify the location:
@@ -159,16 +159,21 @@ directory in which it can find the configuration and credentials files
 (`config.yml` and `credentials.json`). Provide the configuration directory using the standard mechanisms offered by Docker, either by mounting
 [Docker volumes](https://docs.docker.com/storage/volumes/) or by building a new container and copying in the files.
 
-For example, you can start the latest version of `relay` as follows:
+For example, you can configure and start the latest version of `relay` via the following steps:
 
 ```shell
-❯ docker run -v $(pwd)/configs/:/work/.relay/ getsentry/relay run
+# Generate configuration
+❯ docker run -it -v $(pwd)/configs/:/work/.relay/ getsentry/relay config init
 ```
 
-This example command assumes that Relay's configuration files, `config.yml` and
-`credentials.json`, are stored in `./configs/` directory on the host machine.
+<br />
 
-## Logging and Healthcheck
+```shell
+# Start Relay
+❯ docker run -it -v $(pwd)/configs/:/work/.relay/ getsentry/relay run
+```
+
+## Logging
 
 Once Relay is running, you will receive `INFO` messages, such as:
 
@@ -180,6 +185,8 @@ INFO  relay::setup >   log level: INFO
 ```
 
 This example displays the default logging level, which you can modify so it displays either more or less information. For details about configuring logging please see [Logging](/product/relay/options/#logging) on the options page.
+
+## Health Checks
 
 Relay provides two URLs for checking system status:
 
