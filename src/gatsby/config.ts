@@ -225,7 +225,7 @@ export default {
     title: "Sentry Documentation",
     homeUrl: "https://docs.sentry.io",
     sitePath: "docs.sentry.io",
-    description: "",
+    description: "Product documentation for Sentry.io and its SDKs",
     author: "@getsentry",
   },
   plugins: getPlugins(),
