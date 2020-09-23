@@ -117,7 +117,7 @@ const writeJson = async (
 
   console.info(`Writing '_index.json'`);
   fs.mkdirSync(path, { recursive: true });
-  fs.writeFileSync(`${path}/_index.json`, JSON.stringify({ platforms }));
+  fs.writeFileSync(`${path}/_index.json`, JSON.stringify({ indexJson }));
 
   Promise.all(
     platforms.map(async data => {
