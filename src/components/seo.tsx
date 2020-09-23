@@ -88,11 +88,11 @@ export const SEO = ({
         },
         {
           property: "og:image:width",
-          content: 1200,
+          content: "1200",
         },
         {
           property: "og:image:height",
-          content: 630,
+          content: "630",
         },
         {
           name: "twitter:card",
