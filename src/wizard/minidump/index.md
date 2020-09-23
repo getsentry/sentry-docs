@@ -29,4 +29,4 @@ $ curl -X POST \
 
 To send additional information, add more form fields to this request. For a full
 description of fields accepted by Sentry, see [Passing Additional
-Data](#minidump-additional).
+Data](/platforms/native/minidump/).

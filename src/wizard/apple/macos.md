@@ -18,7 +18,7 @@ end
 
 Afterwards run `pod install`.
 
-For other installation methods, please see our [documentation](install/)
+For other installation methods, please see our [documentation](/platforms/apple/install/).
 
 ## Configuration
 

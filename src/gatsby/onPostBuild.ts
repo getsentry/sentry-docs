@@ -135,12 +135,19 @@ const writeJson = async (
 };
 
 const writeNode = (path: string, data) => {
-  const dom = new jsdom.JSDOM(data.node.html, {
-    url: "https://docs.sentry.io/",
-  });
+  const dom = new jsdom.JSDOM(data.node.html);
   // remove anchor svgs
   dom.window.document.querySelectorAll("a.anchor svg").forEach(node => {
     node.parentNode.parentNode.removeChild(node.parentNode);
+  });
+
+  // force all urls to be absolute
+  dom.window.document.querySelectorAll("a").forEach(node => {
+    if (node.href.indexOf("/") === 0) {
+      node.href = `https://docs.sentry.io${node.href}`;
+    } else if (node.href.indexOf("https://") !== 0) {
+      throw new Error(`Found invalid link in ${path}: ${node.href}`);
+    }
   });
 
   // add highlight class
