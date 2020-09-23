@@ -1,6 +1,7 @@
 import React from "react";
 import Helmet from "react-helmet";
 import { StaticQuery, graphql } from "gatsby";
+import { useLocation } from "@reach/router";
 
 const detailsQuery = graphql`
   query DefaultSEOQuery {
@@ -58,6 +59,8 @@ export const SEO = ({
 
   const metaDescription = description || data.site.siteMetadata.description;
 
+  const { origin } = useLocation();
+
   return (
     <Helmet
       htmlAttributes={{
@@ -84,7 +87,7 @@ export const SEO = ({
         },
         {
           property: "og:image",
-          content: "/meta.png",
+          content: `${origin}/meta.png`,
         },
         {
           property: "og:image:width",
@@ -108,7 +111,7 @@ export const SEO = ({
         },
         {
           name: "twitter:image",
-          content: "/meta-avatar.png",
+          content: `${origin}/meta-avatar.png`,
         },
         {
           name: "twitter:description",
