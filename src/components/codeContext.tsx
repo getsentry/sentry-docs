@@ -8,6 +8,7 @@ type ProjectCodeKeywords = {
   API_URL: string;
   PROJECT_ID: number;
   PROJECT_NAME: string;
+  PROJECT_SLUG: string;
   ORG_ID: number;
   ORG_NAME: string;
   ORG_SLUG: string;
@@ -113,6 +114,7 @@ export function fetchCodeKeywords() {
               SECRET_KEY: parsedDsn.secretKey,
               API_URL: formatApiUrl(parsedDsn),
               PROJECT_ID: project.id,
+              PROJECT_SLUG: project.slug,
               PROJECT_NAME: project.slug,
               ORG_ID: project.organizationId,
               ORG_NAME: project.organizationSlug,
