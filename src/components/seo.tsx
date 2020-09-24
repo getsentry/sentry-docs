@@ -1,7 +1,6 @@
 import React from "react";
 import Helmet from "react-helmet";
 import { StaticQuery, graphql } from "gatsby";
-import { useLocation } from "@reach/router";
 
 const detailsQuery = graphql`
   query DefaultSEOQuery {
@@ -10,6 +9,7 @@ const detailsQuery = graphql`
         title
         description
         author
+        sitePath
       }
     }
   }
@@ -33,6 +33,7 @@ type ChildProps = Props & {
         title: string;
         description?: string;
         author?: string;
+        sitePath: string;
       };
     };
   };
@@ -58,8 +59,6 @@ export const SEO = ({
       file.childMdx.frontmatter.noindex);
 
   const metaDescription = description || data.site.siteMetadata.description;
-
-  const { origin } = useLocation();
 
   return (
     <Helmet
@@ -87,7 +86,7 @@ export const SEO = ({
         },
         {
           property: "og:image",
-          content: `${origin}/meta.png`,
+          content: `https://${data.site.siteMetadata.sitePath}/meta.png`,
         },
         {
           property: "og:image:width",
@@ -111,7 +110,7 @@ export const SEO = ({
         },
         {
           name: "twitter:image",
-          content: `${origin}/meta-avatar.png`,
+          content: `https://${data.site.siteMetadata.sitePath}/meta-avatar.png`,
         },
         {
           name: "twitter:description",
