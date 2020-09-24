@@ -21,6 +21,33 @@ Sentry\init([
 ]);
 ```
 
+### Instrument http calls with GuzzleHttp
+
+You need to add a [handler](http://docs.guzzlephp.org/en/stable/handlers-and-middleware.html#handlers) to your Guzzle Client. We provide one within the SDK which can be used like this:
+
+```php
+use Sentry\Tracing\GuzzleHandler;
+...
+
+$stack = new HandlerStack();
+$stack->setHandler(new CurlHandler());
+
+// This is the important line
+$stack->push(GuzzleHandler::getHandler());
+// ----
+
+$client = new Client([
+    // Base URI is used with relative requests
+    'base_uri' => 'http://httpbin.org',
+    // You can set any number of default request options.
+    'timeout'  => 2.0,
+    'handler' => $stack
+]);
+$client->request('GET', '/get');
+```
+
+After adding this handler, you will receive spans for every request done with this client.
+
 ### Manual Instrumentation
 
 To manually instrument certain regions of your code, you can create a transaction to capture them.
