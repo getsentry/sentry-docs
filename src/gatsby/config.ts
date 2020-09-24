@@ -10,6 +10,11 @@ const activeEnv =
 
 const root = `${__dirname}/../..`;
 
+process.env.DISABLE_THUMBNAILS = process.env.DISABLE_THUMBNAILS || "0";
+if (process.env.DISABLE_THUMBNAILS === "1") {
+  console.log("🐇 Thumbnail generation is disabled.");
+}
+
 const getPlugins = () => {
   const remarkPlugins = [
     {
@@ -32,7 +37,7 @@ const getPlugins = () => {
         enableCustomId: true,
       },
     },
-    {
+    process.env.DISABLE_THUMBNAILS === "0" && {
       resolve: `gatsby-remark-images`,
       options: {
         maxWidth: 1200,
@@ -65,7 +70,7 @@ const getPlugins = () => {
     // {
     //   resolve: `gatsby-remark-check-links`
     // }
-  ];
+  ].filter(Boolean);
 
   const plugins = [
     {
@@ -202,9 +207,7 @@ const getPlugins = () => {
     // generate normal redirects so when you're running without nginx
     // you receive similar behavior
     `gatsby-plugin-meta-redirect`,
-  ];
-  if (process.env.ALGOLIA_INDEX === "1") {
-    plugins.push({
+    process.env.ALGOLIA_INDEX === "1" && {
       resolve: `gatsby-plugin-algolia`,
       options: {
         appId: process.env.GATSBY_ALGOLIA_APP_ID,
@@ -214,8 +217,9 @@ const getPlugins = () => {
         enablePartialUpdates: true,
         matchFields: ["text", "section", "title", "url", "legacy", "keywords"],
       } as any,
-    });
-  }
+    },
+  ].filter(Boolean);
+
   return plugins;
 };
 
