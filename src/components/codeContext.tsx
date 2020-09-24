@@ -52,6 +52,7 @@ const DEFAULTS: CodeKeywords = {
       API_URL: "https://sentry.io/api",
       PROJECT_ID: 0,
       PROJECT_NAME: "example-project",
+      PROJECT_SLUG: "example-project",
       ORG_ID: 0,
       ORG_NAME: "example-org",
       ORG_SLUG: "exmaple-org",
