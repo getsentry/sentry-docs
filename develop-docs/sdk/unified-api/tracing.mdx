@@ -70,6 +70,8 @@ tree as well as the unit of reporting to Sentry.
     - When a `Span` is created, set the `startTimestamp` to the current time
     - `SpanContext` is the attribute collection for a `Span` (Can be an implementation detail)
     - The relation between parent - child is captured in the property `parentSpanId`
+    - `Span` should have a method called `toTraceparent` which returns a string `sentry-trace` that could be sent as a header
+    - Similar `SpanContext` should have a static method called `fromTraceparent` which prefills a `SpanContext` with data received from a `sentry-trace` string
 - `Transaction` Interface
     - A `Transaction` internally holds a flat list of child Spans (not a tree structure)
     - `Transaction` has additionally a `setName` method the set the name of the transaction
@@ -85,6 +87,37 @@ tree as well as the unit of reporting to Sentry.
     - The `Transport` should use the same internal queue for `Transactions` / `Events`
     - The `Transport` should implement category-based rate limiting →
     - The `Transport` should deal with wrapping a `Transaction` in an `Envelope` internally
+
+## Header `sentry-trace`
+
+`sentry-trace = traceid-spanid-sampling`
+
+With sampling being optional. So at a minimum, it's expected:
+
+`sentry-trace = traceid-spanid`
+
+To offer a minimal compatibility with W3C `traceparent` (without the version prefix) and `b3`  (which considers valid both 64 and 128 bits for `traceId`) headers the propagation header should have a `traceId` of 128 bits encoded in 32 hex chars and a `spanId` of 64 bits encoded in 16 hex chars.
+To avoid confusion with W3C `traceparent` due to being similar but not the exactly an implementation of it, we call it simply `sentry-trace`.
+No version is being defined in the header.
+
+### Sampling
+
+The sampling section is optional. The format is not `flags` to simplify processing it. It's a single char. The possible values are:
+
+```
+  - No value means defer
+
+0 - Don't sample
+
+1 - Sampled
+```
+
+Differently than `b3` a simple sampling decision as a value to `sentry-trace` should not be implemented. [There are reasons to always include](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-send-trace-ids-with-a-reject-sampling-decision) the `trace-id` and `span-id` regardless of sampling having been decided by the caller. And also this will simplify the implementation.
+Besides the [usual reasons to use *defer](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-defer-a-sampling-decision),* in the case of Sentry, a reason would be if a downstream system captures an error event with Sentry. The decision could be done at that point to sample that trace in order to have tracing data available for the reported crash. 
+
+`sentry-trace = sampled`
+
+Which in reality is useful for proxies to set it to `0` and opt out of tracing.
 
 ## Static API Changes
 
