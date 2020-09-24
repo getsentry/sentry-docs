@@ -78,8 +78,21 @@ Sentry has also added a suite of factory helper methods that help you build data
 The factory methods in `sentry.testutils.factories` are available on all our test suite classes. Use these methods
 to build up the required organization, projects and other postgres based state.
 
-You should also use `store_event()` to store events in a similar way that the application does in
-production. Storing events requires your test to inherit from `SnubaTestCase`.
+You should also use `store_event()` to store events in a similar way that the
+application does in production. Storing events requires your test to inherit
+from `SnubaTestCase`.  When using `store_event()` take care to set a timestamp
+*in the past* on the event. When omitted, the timestamp is uses 'now' which can
+result in events not being picked due to timestamp boundaries.
+
+
+```python
+from sentry.testutils.helpers.datetime import before_now
+from sentry.utils.samples import load_data
+
+def test_query(self):
+    data = load_data("python", timestamp=before_now(minutes=1))
+    event = self.store_event(data, project_id=self.project.id)
+```
 
 ### Setting options and feature flags
 
