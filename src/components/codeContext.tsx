@@ -7,11 +7,10 @@ type ProjectCodeKeywords = {
   SECRET_KEY: string;
   API_URL: string;
   PROJECT_ID: number;
-  PROJECT_NAME: string;
   PROJECT_SLUG: string;
   ORG_ID: number;
-  ORG_NAME: string;
   ORG_SLUG: string;
+  ORG_INGEST_DOMAIN: string;
   MINIDUMP_URL: string;
   UNREAL_URL: string;
   title: string;
@@ -51,11 +50,10 @@ const DEFAULTS: CodeKeywords = {
       SECRET_KEY: "exampleSecretKey",
       API_URL: "https://sentry.io/api",
       PROJECT_ID: 0,
-      PROJECT_NAME: "example-project",
       PROJECT_SLUG: "example-project",
       ORG_ID: 0,
-      ORG_NAME: "example-org",
       ORG_SLUG: "exmaple-org",
+      ORG_INGEST_DOMAIN: "o0.ingest.sentry.io",
       MINIDUMP_URL: "https://examplePublicKey@o0.ingest.sentry.io/0",
       UNREAL_URL: "https://examplePublicKey@o0.ingest.sentry.io/0",
       title: `example-org / example-project`,
@@ -115,11 +113,10 @@ export function fetchCodeKeywords() {
               SECRET_KEY: parsedDsn.secretKey,
               API_URL: formatApiUrl(parsedDsn),
               PROJECT_ID: project.id,
-              PROJECT_NAME: project.projectSlug,
               PROJECT_SLUG: project.projectSlug,
               ORG_ID: project.organizationId,
-              ORG_NAME: project.organizationSlug,
               ORG_SLUG: project.organizationSlug,
+              ORG_INGEST_DOMAIN: `o${project.organizationId}.ingest.sentry.io`,
               MINIDUMP_URL: formatMinidumpURL(parsedDsn),
               UNREAL_URL: formatUnrealEngineURL(parsedDsn),
               title: `${project.organizationSlug} / ${project.projectSlug}`,
