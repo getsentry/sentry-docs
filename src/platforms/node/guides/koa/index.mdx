@@ -109,6 +109,10 @@ const tracingMiddleWare = async (ctx, next) => {
     traceId,
     sampled,
   });
+  
+  // put the transaction on the scope so that you can retrieve it with Sentry.getCurrentHub().getScope().getTransaction();
+  Sentry.getCurrentHub().configureScope(scope => scope.setSpan(transaction));
+  // put the transaction on the context to retrieve it from there (where possible)
   ctx.__sentry_transaction = transaction;
   await next();
 
