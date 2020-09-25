@@ -1,46 +1,48 @@
 import React from "react";
 import { graphql } from "gatsby";
 
-import ApiSidebar from "~src/components/apiSidebar";
 import BasePage from "~src/components/basePage";
-import Content from "~src/components/content";
+import SmartLink from "~src/components/smartLink";
+import ApiSidebar from "~src/components/apiSidebar";
 
 export default props => {
+  const {
+    data: { allOpenApi },
+  } = props;
+
   return (
     <BasePage sidebar={<ApiSidebar />} {...props}>
-      <Content file={props.data.file} />
+      <ul>
+        {allOpenApi.edges.map(({ node: { path } }) => (
+          <li
+            key={path.operationId}
+            style={{
+              marginBottom: "1rem",
+            }}
+          >
+            <h4>
+              <SmartLink to={path.readableUrl}>{path.operationId}</SmartLink>
+            </h4>
+          </li>
+        ))}
+      </ul>
     </BasePage>
   );
 };
 
 export const pageQuery = graphql`
-  query ApiDocQuery($id: String) {
-    file(id: { eq: $id }) {
-      id
-      relativePath
-      sourceInstanceName
-      childMarkdownRemark {
-        html
-        tableOfContents
-        internal {
-          type
-        }
-        frontmatter {
-          title
-          noindex
-          notoc
-        }
-      }
-      childMdx {
-        body
-        tableOfContents
-        internal {
-          type
-        }
-        frontmatter {
-          title
-          noindex
-          notoc
+  query OpenApiDocQuery($tag: [String]) {
+    allOpenApi(
+      filter: { path: { tags: { in: $tag } } }
+      sort: { fields: path___operationId }
+    ) {
+      edges {
+        node {
+          id
+          path {
+            operationId
+            readableUrl
+          }
         }
       }
     }

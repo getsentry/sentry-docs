@@ -52,7 +52,7 @@ export default async ({ actions, graphql, reporter }) => {
     const child = getChild(node);
     if (child && child.fields) {
       actions.createPage({
-        path: `development-api${child.fields.slug}`,
+        path: `api${child.fields.slug}`,
         component,
         context: {
           excerpt: child.excerpt,
