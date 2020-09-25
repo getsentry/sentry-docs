@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { graphql } from "gatsby";
 import Prism from "prismjs";
 
-import {parseBackticks} from "~src/utils";
+import { parseBackticks } from "~src/utils";
 import BasePage from "~src/components/basePage";
 import SmartLink from "~src/components/smartLink";
 import ApiSidebar from "~src/components/apiSidebar";
