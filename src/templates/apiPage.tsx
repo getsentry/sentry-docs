@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { graphql } from "gatsby";
 import Prism from "prismjs";
 
+import {parseBackticks} from "~src/utils";
 import BasePage from "~src/components/basePage";
 import SmartLink from "~src/components/smartLink";
 import ApiSidebar from "~src/components/apiSidebar";
@@ -12,37 +13,6 @@ import {
 } from "~src/gatsby/plugins/gatsby-plugin-openapi/types.ts";
 
 import "prismjs/components/prism-json";
-
-const parseBackticks = (str: string) => {
-  let arr = str.split("");
-  let i = 0;
-  let j = arr.length - 1;
-
-  const forward = () => {
-    for (i <= j; i++; ) {
-      if (arr[i] === "`") {
-        arr[i] = "<code>";
-        break;
-      }
-    }
-  };
-
-  const reverse = () => {
-    for (j >= i; j--; ) {
-      if (arr[j] === "`") {
-        arr[j] = "</code>";
-        break;
-      }
-    }
-  };
-
-  while (i <= j) {
-    forward();
-    reverse();
-  }
-
-  return arr.join("");
-};
 
 const Params = ({ params }) => (
   <dl className="api-params">

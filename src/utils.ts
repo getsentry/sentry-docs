@@ -72,3 +72,13 @@ export const sortPages = (
     return a.context.title.localeCompare(b.context.title);
   });
 };
+
+export const parseBackticks = (str: string) => {
+  let i = 0;
+  return str
+    .split("")
+    .map(c => {
+      return c === "`" ? (i++ % 2 ? "</code>" : "<code>") : c;
+    })
+    .join("");
+};
