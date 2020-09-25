@@ -13,6 +13,37 @@ import {
 
 import "prismjs/components/prism-json";
 
+const parseBackticks = (str: string) => {
+  let arr = str.split("");
+  let i = 0;
+  let j = arr.length - 1;
+
+  const forward = () => {
+    for (i <= j; i++; ) {
+      if (arr[i] === "`") {
+        arr[i] = "<code>";
+        break;
+      }
+    }
+  };
+
+  const reverse = () => {
+    for (j >= i; j--; ) {
+      if (arr[j] === "`") {
+        arr[j] = "</code>";
+        break;
+      }
+    }
+  };
+
+  while (i <= j) {
+    forward();
+    reverse();
+  }
+
+  return arr.join("");
+};
+
 const Params = ({ params }) => (
   <dl className="api-params">
     {params.map(param => (
@@ -25,7 +56,13 @@ const Params = ({ params }) => (
 
           {!!param.required && <div className="required">REQUIRED</div>}
         </dt>
-        <dd>{!!param.description && param.description}</dd>
+        {!!param.description && (
+          <dd
+            dangerouslySetInnerHTML={{
+              __html: parseBackticks(param.description),
+            }}
+          ></dd>
+        )}
       </React.Fragment>
     ))}
   </dl>
