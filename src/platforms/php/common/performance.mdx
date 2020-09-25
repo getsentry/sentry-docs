@@ -21,25 +21,28 @@ Sentry\init([
 ]);
 ```
 
+it can also be defined as a callable which receives a `Sentry\Tracing\SamplingContext $context` and should return a `float` (for the sample rate):
+
+```php
+'traces_sampler' => array('App\Helpers\General\TracesSampler', 'sample')
+```
+
 ### Instrument http calls with GuzzleHttp
 
 You need to add a [handler](http://docs.guzzlephp.org/en/stable/handlers-and-middleware.html#handlers) to your Guzzle Client. We provide one within the SDK which can be used like this:
 
 ```php
-use Sentry\Tracing\GuzzleHandler;
+use Sentry\Tracing\GuzzleTracingMiddleware;
 ...
 
-$stack = new HandlerStack();
-$stack->setHandler(new CurlHandler());
+$stack = HandlerStack::create();
 
 // This is the important line
-$stack->push(GuzzleHandler::getHandler());
+$stack->push(GuzzleTracingMiddleware::trace());
 // ----
 
 $client = new Client([
-    // Base URI is used with relative requests
     'base_uri' => 'http://httpbin.org',
-    // You can set any number of default request options.
     'timeout'  => 2.0,
     'handler' => $stack
 ]);
