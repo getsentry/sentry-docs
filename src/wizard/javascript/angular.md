@@ -35,6 +35,8 @@ Sentry.init({
       routingInstrumentation: Sentry.routingInstrumentation,
     }),
   ],
+
+  // Be sure to lower this in production, or use tracesSampler for finer control
   tracesSampleRate: 1.0,
 });
 

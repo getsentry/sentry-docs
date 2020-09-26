@@ -37,6 +37,8 @@ Sentry.init({
     // enable Express.js middleware tracing
     new Tracing.Integrations.Express({ app }),
   ],
+
+  // Be sure to lower this in production, or use tracesSampler for finer control
   tracesSampleRate: 1.0,
 });
 

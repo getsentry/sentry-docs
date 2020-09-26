@@ -44,7 +44,9 @@ Sentry.init({
     }),
     new Integrations.BrowserTracing(),
   ],
-  tracesSampleRate: 1,
+
+  // Be sure to lower this in production, or use tracesSampler for finer control
+  tracesSampleRate: 1.0,
 });
 ```
 
@@ -79,7 +81,9 @@ Sentry.init({
     }),
     new Sentry.Integrations.BrowserTracing(),
   ],
-  tracesSampleRate: 1,
+
+  // Be sure to lower this in production, or use tracesSampler for finer control
+  tracesSampleRate: 1.0,
 });
 ```
 
