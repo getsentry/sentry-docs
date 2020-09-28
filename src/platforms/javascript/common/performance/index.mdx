@@ -6,6 +6,39 @@ redirect_from:
   - /platforms/javascript/performance/apm-to-tracing/
 ---
 
+Sentry allows you to monitor the performance of your application, showing you how latency in one service may affect another service, and letting you pinpoint exactly which parts of a given operation may be responsible. To do this, it captures distributed traces consisting of transactions and spans, which measure individual services and individual operations within those services, respectively. You can learn more about this model in our [Distributed Tracing](/product/performance/distributed-tracing/) docs.
+
+Once tracing is enabled, certain types of operations will be measured automatically, and you can also choose to manually measure any operation you like. To learn more, see [Capturing Transactions Automatically](/platforms/javascript/performance/automatic/) and [Capturing Transactions Manually](/platforms/javascript/performance/manual/).
+
+## Enabling Tracing
+
+The first step is to install the tracing package, if you haven't done so already:
+
+```bash {tabTitle: ESM}
+# Using yarn
+$ yarn add @sentry/tracing
+
+# Using npm
+$ npm install @sentry/tracing
+```
+
+```html {tabTitle: CDN}
+<script
+  <!--
+    Note that `bundle.tracing.min.js` contains both `@sentry/browser` AND
+    `@sentry/tracing`, and should therefore be used in place of
+    `@sentry/browser`'s bundle rathern than in addition to it.
+  -->
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+Once you've installed the package, there are two ways to enable tracing in your app:
+
+- Set a uniform sample rate for all transactions, by setting the `tracesSampleRate` option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set `tracesSampleRate` to `0.2`.)
+- Control the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the `tracesSampler` config option.
 
 ```javascript {tabTitle: ESM}
 // Substitude `@sentry/browser` for the integration you're using (if applicable)
@@ -33,11 +66,17 @@ Sentry.init({
 });
 ```
 
+If either of these options is set, tracing will be enabled in your app. (They are meant to be mutually exclusive, but if you do set both, `tracesSampler` will take precedence.) You can learn more about how they work in [Sampling Transactions](/platforms/javascript/performance/sampling/).
 
+<Alert level="info" title="Note"><markdown>
 
+When you first enable tracing, the easiest thing to do to test it is to set `tracesSampleRate` to `1.0`, because that guarantees that every transaction will be sent to Sentry for you to see.
 
+Once you're done with testing, however, we recommend that you either **lower your `tracesSampleRate` value, or switch to using `tracesSampler` to dynamically sample and filter your transactions**.
 
+Without sampling, our atomatic instrumenation will send a transaction any time any user loads any page or navigates anywhere in your app. That's a lot of transactions! Sampling allows you to get representative data without overwhelming either your system or your Sentry transaction quota.
 
+</markdown></Alert>
 
 ### Connecting Backend and Frontend Transactions
 
