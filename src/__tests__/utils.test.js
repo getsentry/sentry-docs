@@ -41,4 +41,14 @@ describe("parseBackticks", () => {
       "The <code>quick</code> <code>brown</code> fox <code>jumps</code> over the lazy dog."
     );
   });
+
+  it("converts multiple backticks as code element", () => {
+    const result = parseBackticks(
+      'Possible values are: ``""`` (disable),``"24h"``, ``"14d"``'
+    );
+
+    expect(result).toBe(
+      'Possible values are: <code>""</code> (disable),<code>"24h"</code>, <code>"14d"</code>'
+    );
+  });
 });
