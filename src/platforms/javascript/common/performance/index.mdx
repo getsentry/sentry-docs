@@ -1,7 +1,7 @@
 ---
 title: Performance Monitoring
 sidebar_order: 20
-description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
+description: "Learn how to enable performance monitoring in your app."
 redirect_from:
   - /platforms/javascript/performance/apm-to-tracing/
 ---
@@ -41,28 +41,44 @@ Once you've installed the package, there are two ways to enable tracing in your 
 - Control the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the `tracesSampler` config option.
 
 ```javascript {tabTitle: ESM}
-// Substitude `@sentry/browser` for the integration you're using (if applicable)
+// If you're using one of our integration packages, like `@sentry/react` or
+// `@sentry/angular`, substitute its name for `@sentry/browser` here
 import * as Sentry from "@sentry/browser";
 
-// Pull in the additional tracing integration
+// If taking advantage of automatic instrumentation (highly recommended)
 import { Integrations as TracingIntegrations } from "@sentry/tracing";
+// Or, if only doing manual tracing
+// import * as _ from "@sentry/tracing"
+// Note: You MUST import the package in some way for tracing to work
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // This enables automatic instrumentation (highly recommeneded), but is not
+  // necessary for purely manual usage
   integrations: [new TracingIntegrations.BrowserTracing()],
 
-  // Be sure to lower this in production, or use tracesSampler for finer control
-  tracesSampleRate: 1.0,
+  // To set a uniform sample rate
+  tracesSampleRate: 0.2
+
+  // Alternatively, to control sampling dynamically
+  tracesSampler: samplingContext => { ... }
 });
 ```
 
 ```javascript {tabTitle: CDN}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // This enables automatic instrumentation (highly recommeneded), but is not
+  // necessary for purely manual usage
   integrations: [new Sentry.Integrations.BrowserTracing()],
 
-  // Be sure to lower this in production, or use tracesSampler for finer control
-  tracesSampleRate: 1.0,
+  // To set a uniform sample rate
+  tracesSampleRate: 0.2
+
+  // Alternatively, to control sampling dynamically
+  tracesSampler: samplingContext => { ... }
 });
 ```
 
