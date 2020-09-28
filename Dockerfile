@@ -29,7 +29,4 @@ RUN gatsby build
 
 FROM gatsbyjs/gatsby
 
-# https://github.com/gatsbyjs/gatsby-docker/blob/master/nginx-boot.sh
-
-COPY --from=build /app/nginx.out.conf /etc/nginx/server.conf
 COPY --from=build /app/public /pub

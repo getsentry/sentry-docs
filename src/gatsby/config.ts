@@ -1,9 +1,9 @@
 import axios from "axios";
 
 import queries from "./utils/algolia";
-import PackageRegistry from "./utils/packageRegistry";
+// import PackageRegistry from "./utils/packageRegistry";
 
-const packages = new PackageRegistry();
+// const packages = new PackageRegistry();
 
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
@@ -17,7 +17,7 @@ if (process.env.DISABLE_THUMBNAILS === "1") {
 
 const getPlugins = () => {
   const remarkPlugins = [
-    {
+   /* {
       resolve: require.resolve("./plugins/gatsby-remark-variables"),
       options: {
         scope: {
@@ -43,7 +43,7 @@ const getPlugins = () => {
         maxWidth: 1200,
         linkImagesToOriginal: true,
       },
-    },
+    },*/
     {
       resolve: "gatsby-remark-prismjs",
       options: {
@@ -185,13 +185,6 @@ const getPlugins = () => {
       },
     },
     {
-      resolve: `./src/gatsby/plugins/gatsby-redirects`,
-      options: {
-        inputConfigFile: `${root}/nginx.conf`,
-        outputConfigFile: `${root}/nginx.out.conf`,
-      },
-    },
-    {
       resolve: `./src/gatsby/plugins/gatsby-plugin-openapi`,
       options: {
         name: "openapi",
@@ -204,9 +197,6 @@ const getPlugins = () => {
         // required, function which returns a Promise resolving Swagger JSON
       },
     },
-    // generate normal redirects so when you're running without nginx
-    // you receive similar behavior
-    `gatsby-plugin-meta-redirect`,
     process.env.ALGOLIA_INDEX === "1" && {
       resolve: `gatsby-plugin-algolia`,
       options: {
