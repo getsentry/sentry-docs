@@ -152,3 +152,33 @@ Here we list a few relevant options that can help you to tune Relay to specific 
   How long a project configuration can still be used after having expired.
   Increasing this value might help when the upstream is unreachable (for example, in case of
   network issues).
+
+## Request Routing
+
+SDKs communicate with Sentry on a set of endpoints. Relay provides the same API to become a seamless drop-in replacement. This requires a set of endpoints to be accessible:
+
+- `/api/<project-id>/envelope/`
+- `/api/<project-id>/minidump/`
+- `/api/<project-id>/security/`
+- `/api/<project-id>/store/`
+- `/api/<project-id>/unreal/`
+
+Depending on the SDK or client, requests to these endpoints are performed with compressed content-encoding or chunked transfer-encoding. Depending on the infrastructure in front of Relay, please check the following HTTP headers are set correctly:
+
+- `Host`: to the public host name of this Relay
+- `X-Forwarded-For`: to the client IP address
+- `X-Sentry-Auth`: to the value provided by the client
+
+<Alert level="info">
+
+Proxies often set a default maximum body size for requests. Especially native crash reports and attachments can exceed these limits. We recommend to configure a maximum client body size of _100MB_.
+
+</Alert>
+
+Internally, Relay makes requests to the configured upstream to forward data and retrieve project configuration. Why highly advise not to constrain these requests. At present, Relay makes requests to the following endpoints for basic operation:
+
+- All of the above endpoints
+- `/api/0/relays/projectconfigs/`
+- `/api/0/relays/publickeys/`
+- `/api/0/relays/register/challenge/`
+- `/api/0/relays/register/response/`
