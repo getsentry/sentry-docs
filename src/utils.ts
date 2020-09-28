@@ -76,6 +76,7 @@ export const sortPages = (
 export const parseBackticks = (str: string) => {
   let i = 0;
   return str
+    .replace(/\`+/g, "`")
     .split("")
     .map(c => {
       return c === "`" ? (i++ % 2 ? "</code>" : "<code>") : c;
