@@ -27,7 +27,8 @@ Sentry.init({
     new Integrations.BrowserTracing(),
   ],
 
-  // Be sure to lower this in production, or use tracesSampler for finer control
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
   tracesSampleRate: 1.0,
 });
 ```
