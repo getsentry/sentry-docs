@@ -6,13 +6,13 @@ notoc: true
 supported:
   - native
   - javascript
-notSupported:
-  - native.breakpad
-  - native.crashpad
-  - native.minidumps
 ---
 
-Sentry can augment your crash reports by storing additional files alongside the event, such as log files, as attachments. Attachments allow the files within a crash to not only upload to Sentry, but also persist for further investigation. You can use a higher-level SDK for platforms with built-in support for native crashes, or generate and upload attachments using the API:
+Sentry can augment your crash reports by storing additional files alongside the event, such as log files, as attachments. Attachments allow the files within a crash to not only upload to Sentry, but also persist for further investigation.
+
+<PlatformSection supported={["native"]}>
+
+You can use a higher-level SDK for platforms with built-in support for native crashes, or generate and upload attachments using the API:
 
 - [Native C/C++](/platforms/native/)
 - [Electron](/platforms/javascript/guides/electron/)
@@ -20,19 +20,23 @@ Sentry can augment your crash reports by storing additional files alongside the 
 
 To receive symbolicated stack traces, you have to upload debug information to Sentry. Unless the option to store crash reports is enabled, Sentry will use the crash reports only to create the event, then will drop the files. For more information, see [Debug Information Files](/workflow/debug-files/).
 
-## Uploading Attachments
+</PlatformSection>
 
-To add an attachment, the path to the file has to be configured when initializing the SDK. It will monitor the file and upload it along with any event or crash that is sent to Sentry:
+## Uploading Attachments
 
 <PlatformContent includePath="add-attachment" />
 
-<Note><markdown>
+<Note>
 
 Sentry allows at most 100MB of attachments per event, including the crash report file (if applicable) Uploads exceeding this size are rejected with HTTP error `413 Payload Too Large` and the data is dropped immediately. To add larger or more files, consider secondary storage options.
 
+<PlatformSection supported={["native"]}>
+
 Usually, native crash reports range from a few kilobytes to a few megabytes. This leaves sufficient space to add custom attachments. In case your application generates particularly large crash reports, consider to limit or avoid adding additional attachments in the SDK.
 
-</markdown></Note>
+</PlatformSection>
+
+</Note>
 
 Attachments persist for 30 days; if your total storage included in your quota is exceeded, attachments will not be stored. You can delete attachments or their containing events at any time. Deleting an attachment does not affect your quota - Sentry counts an attachment toward your quota as soon as it is stored.
 
