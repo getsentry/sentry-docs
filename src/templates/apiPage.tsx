@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { graphql } from "gatsby";
 import Prism from "prismjs";
 
+import { parseBackticks } from "~src/utils";
 import BasePage from "~src/components/basePage";
 import SmartLink from "~src/components/smartLink";
 import ApiSidebar from "~src/components/apiSidebar";
@@ -25,7 +26,13 @@ const Params = ({ params }) => (
 
           {!!param.required && <div className="required">REQUIRED</div>}
         </dt>
-        <dd>{!!param.description && param.description}</dd>
+        {!!param.description && (
+          <dd
+            dangerouslySetInnerHTML={{
+              __html: parseBackticks(param.description),
+            }}
+          ></dd>
+        )}
       </React.Fragment>
     ))}
   </dl>
@@ -107,7 +114,7 @@ export default props => {
 
           {data.description && (
             <div className="pb-3 content-flush-bottom">
-              <p>{data.description}</p>
+              <p>{parseBackticks(data.description)}</p>
             </div>
           )}
 
