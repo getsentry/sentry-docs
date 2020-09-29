@@ -47,11 +47,16 @@ Create the Sentry configuration file (`config/sentry.php`) with this command:
 $ php artisan sentry:publish
 ```
 
-Add your DSN to `.env`:
+Add your DSN to `.env` and set a sample rate for capturing performance data (tracing):
 
 ```shell
 SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
+
+SENTRY_TRACES_SAMPLE_RATE=1
 ```
+
+The above configuration captures both error and performance data. To reduce the volume of performance data captured, or disable it entirely, change tracesSampleRate to a value between 0 and 1.
+
 
 You can easily verify that Sentry is capturing errors in your Laravel application by creating a debug route that will throw an exception:
 
@@ -62,17 +67,3 @@ Route::get('/debug-sentry', function () {
 ```
 
 Visiting this route will trigger an exception that will be captured by Sentry.
-
-**Monitor Performane**
-
-Set `traces_sample_rate` to a value greater than `0.0` (`config/sentry.php`) after that, Performance Monitoring will be enabled.
-
-```php
-'traces_sample_rate' => 1.0 # be sure to lower this in production to prevent quota issues
-```
-
-or in the `.env` file:
-
-```shell
-SENTRY_TRACES_SAMPLE_RATE=1
-```
