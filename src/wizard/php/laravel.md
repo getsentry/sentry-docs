@@ -55,7 +55,7 @@ SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
 SENTRY_TRACES_SAMPLE_RATE=1
 ```
 
-The above configuration captures both error and performance data. To reduce the volume of performance data captured, or disable it entirely, change tracesSampleRate to a value between 0 and 1.
+The above configuration captures both error and performance data. To reduce the volume of performance data captured, or disable it entirely, change `tracesSampleRate` to a value between 0 and 1.
 
 
 You can easily verify that Sentry is capturing errors in your Laravel application by creating a debug route that will throw an exception:
