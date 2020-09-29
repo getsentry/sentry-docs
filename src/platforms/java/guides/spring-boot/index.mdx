@@ -1,5 +1,5 @@
 ---
-title: Spring Boot Starter
+title: Spring Boot
 ---
 
 The `sentry-spring-boot-starter` library enhances [Sentry Spring](/platforms/java/guides/spring/) support with an auto-configuration for [Spring Boot](https://spring.io/projects/spring-boot) providing following features:
@@ -175,9 +175,6 @@ public class CustomBeforeBreadcrumbCallback implements SentryOptions.BeforeBread
   }
 }
 ```
-#### Registering Custom Integration
-
-TODO
 
 ## Using With Logging Framework Integration
 
@@ -185,28 +182,32 @@ For the best experience we recommend using Sentry Spring Boot integration togeth
 
 ### Logback
 
-To use Sentry Logback integration in Spring application you must opt-out from `application.properties` based Spring Boot logging configuration and configure `SentryAppender` in `logback-spring.xml` file:
+To use Sentry Logback integration in Spring Boot application you must include a dependency to `sentry-logback` module and Sentry Spring Boot Starter will auto-configure `SentryAppender`:
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-  <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
-
-  <appender name="SENTRY" class="io.sentry.logback.SentryAppender" />
-
-  <root level="info">
-    <appender-ref ref="CONSOLE" />
-    <appender-ref ref="SENTRY" />
-  </root>
-</configuration>
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-logback</artifactId>
+    <version>{{ packages.version('sentry.java', '3.0.0') }}</version>
+</dependency>
 ```
 
-<Alert level="info">
-Note that there is no need to configure <em>DSN</em> in Logback configuration file as Sentry gets configured via Spring Boot integration.
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '3.0.0') }}'
+```
 
-However, if potential errors that appear during the startup are meant to be sent to Sentry, the <em>DSN</em> must be provided to both Logback and Spring Boot configuration.
-</Alert>
+Minimum logging levels for `SentryAppender` can be configured in `application.properties` or `application.yml` file.
+
+```properties
+sentry.logging.minimum-event-level=info
+sentry.logging.minimum-breadcrumb-level=debug
+```
+
+When `SentryAppender` auto-configuration does not suit your needs it can be turned off by setting:
+
+```properties
+sentry.logging.enabled=false
+```
 
 ### Log4j2
 
