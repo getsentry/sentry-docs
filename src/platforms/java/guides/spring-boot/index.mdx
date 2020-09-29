@@ -209,6 +209,29 @@ When `SentryAppender` auto-configuration does not suit your needs it can be turn
 sentry.logging.enabled=false
 ```
 
+If used decides to opt-out from `application.properties` based Spring Boot logging configuration and configures logging in `logback-spring.xml` file, `SentryAppender` can be configured in the following way:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+  <appender name="SENTRY" class="io.sentry.logback.SentryAppender" />
+
+  <root level="info">
+    <appender-ref ref="CONSOLE" />
+    <appender-ref ref="SENTRY" />
+  </root>
+</configuration>
+```
+
+<Alert level="info">
+Note that there is no need to configure <em>DSN</em> in Logback configuration file as Sentry gets configured via Spring Boot integration.
+
+However, if potential errors that appear during the startup are meant to be sent to Sentry, the <em>DSN</em> must be provided to both Logback and Spring Boot configuration.
+</Alert>
+
 ### Log4j2
 
 To use Sentry Log4j2 integration in Spring application configure `SentryAppender` in `log4j2.xml` file:
