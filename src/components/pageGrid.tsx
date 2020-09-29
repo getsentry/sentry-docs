@@ -43,9 +43,10 @@ export default ({ nextPages = false, header }: Props): JSX.Element => {
   );
 
   if (nextPages) {
-    matches = matches.slice(
-      matches.indexOf(matches.find(n => n.path === currentPath))
-    );
+    const currentPage = matches.find(n => n.path === currentPath);
+    if (currentPage) {
+      matches = matches.slice(matches.indexOf(currentPage));
+    }
   } else {
     matches = matches.filter(n => n.path !== currentPath);
   }
