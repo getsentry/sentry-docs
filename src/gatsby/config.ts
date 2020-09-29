@@ -1,9 +1,9 @@
 import axios from "axios";
 
 import queries from "./utils/algolia";
-// import PackageRegistry from "./utils/packageRegistry";
+import PackageRegistry from "./utils/packageRegistry";
 
-// const packages = new PackageRegistry();
+const packages = new PackageRegistry();
 
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
@@ -17,7 +17,7 @@ if (process.env.DISABLE_THUMBNAILS === "1") {
 
 const getPlugins = () => {
   const remarkPlugins = [
-   /* {
+    {
       resolve: require.resolve("./plugins/gatsby-remark-variables"),
       options: {
         scope: {
@@ -43,7 +43,7 @@ const getPlugins = () => {
         maxWidth: 1200,
         linkImagesToOriginal: true,
       },
-    },*/
+    },
     {
       resolve: "gatsby-remark-prismjs",
       options: {
