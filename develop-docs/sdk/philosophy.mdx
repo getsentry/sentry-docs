@@ -1,0 +1,48 @@
+---
+title: Philosophy and Design Principles
+sidebar_order: 0
+---
+
+This document sets some general guidances for how to approach SDK development at Sentry. It should aid both internal and external developers to understand what motivations go into the design of the SDKs and why we're deciding in certain ways.
+
+## Dependencies Cost
+
+Dependencies come with a cost and that cost is high. Every dependency we use increases the surface area of the SDK and add more licensing, maintenance and security concerns. We understand that dependencies are necessary for supporting integrations, but dependencies must never be required for the base line functionality of an SDK. Obviously every rule also has exceptions and on some platforms we won't be able to work without a base level of dependencies. A good example is Python where we require an external library for HTTP requests to safely send HTTP requests.
+
+See also [Micropackages and Open Source Trust Scaling](http://lucumr.pocoo.org/2016/3/24/open-source-trust-scaling/)
+
+## Degrade Gracefully
+
+We never want our SDKs to be the cause of customer breakage. If our SDK breaks the customer then we failed even if the customer runs our SDK on an outdated platform. This means in particular if our SDK runs on an outdated browser we must be resilient enough to gracefully fall back to silently not doing anything.
+
+If this cannot be achieved we need to make sure that we inform the user ahead of time by alerting about such situations at installation time. If for instance an SDK requires a minimum version to even build, we need to ensure that the user is informed and that we do not cause confusing errors later.
+
+## Compatibility is King
+
+Even if a platform is losing relevance we still want to support it. It's not our responsibility to educate customers that they are running on outdated platforms, they are likely to know this anyways. We must not set the baseline for customer platforms. If a customer needs to support an older browser we at the very least must not only not break that browser, we should also reconsider supporting it. Old platforms are particularly important with enterprise customers which are more likely to have such old stacks to support.
+
+## Customer Value Matters
+
+Every change comes at a cost and change for the change's sake should be avoided. If the change benefits a customer it's good to go, if change only fulfills its own purpose it just adds more chances for us to break existing code or to cause user frustration. Nothing is worse than a customer noticing their reporting degraded because of a meaningless refactor.
+
+## Configuration comes at a Cost
+
+We optimize towards a great out of the box experience. Customization should just be that: customization. Defaults matter and those defaults should be sensible. Integrations should auto activate if they can as every integration not enabled just causes a worse customer experience.
+
+## Prioritize Customer Convenience over Correctness
+
+It's okay to do something slightly incorrect if that results in a better customer experience. It's okay for our SDK to ship outdated code if that increases support for more platforms. It's sensible for our SDKs to be doing "things that should not be done" if that results in a better customer experience. For instance we prefer monkeypatching over manual configuration even if those monkeypatches can be brittle in their implementation.
+
+## Assume Novice Developers
+
+Documentation, guides and marketing material should assume a novice developer unfamiliar with the language. Do not use potentially unfamiliar language features just to aim for shorter examples.
+
+## Write Down the Rules
+
+If decisions are made that are in violation or clarification of this document they should be written down. Is an SDK drawing a line of where a platform is supported? There should be a document that outlines what is supported. When support for an older platform is dropped that's something to be called out.
+
+At no point should a customer upgrade the library and find themselves in a situation where their stack is no longer supported and they only learn about this through writing customer support.
+
+## Enable Customers
+
+While we generally should try to keep the API surfaces of SDKs reasonable small. At the same time we also need to make sure that we enable customers to achieve their goals. Think about cases that the SDK maybe wouldn't be able to solve out of the box. If there are enough APIs that customers can use our SDKs in more creative ways, we generally see this as a added benefit.
