@@ -1,6 +1,7 @@
 ---
 title: Laravel
 sdk: sentry.php.laravel
+sidebar_order: 0
 redirect_from:
   - /clients/php/integrations/laravel/
   - /platforms/php/laravel/
@@ -8,7 +9,7 @@ redirect_from:
 
 Laravel is supported via a native package, [sentry-laravel](https://github.com/getsentry/sentry-laravel).
 
-Sentry supports Laravel 5+.
+This guide is for Laravel 7+. We also provide instructions for [other versions](configuration/other-versions/) as well as [Lumen-specific instructions](configuration/other-versions/lumen/).
 
 ## Install
 
@@ -18,38 +19,10 @@ Install the `sentry/sentry-laravel` package:
 $ composer require sentry/sentry-laravel
 ```
 
-If you're on Laravel 5.5 or later the package will be auto-discovered. Otherwise you will need to manually configure it in your `config/app.php`.
-
-```php {filename:config/app.php}
-'providers' => array(
-    // ...
-    Sentry\Laravel\ServiceProvider::class,
-),
-'aliases' => array(
-    // ...
-    'Sentry' => Sentry\Laravel\Facade::class,
-),
-```
-
 Add Sentry reporting to `App/Exceptions/Handler.php`.
-
-**For Laravel 7.x and later:**
 
 ```php {filename:App/Exceptions/Handler.php}
 public function report(Throwable $exception)
-{
-    if ($this->shouldReport($exception) && app()->bound('sentry')) {
-        app('sentry')->captureException($exception);
-    }
-
-    parent::report($exception);
-}
-```
-
-**For Laravel 5.x and 6.x:**
-
-```php {filename:App/Exceptions/Handler.php}
-public function report(Exception $exception)
 {
     if ($this->shouldReport($exception) && app()->bound('sentry')) {
         app('sentry')->captureException($exception);
@@ -118,3 +91,5 @@ Set `traces_sample_rate` to a value greater than `0.0` after that, Performance M
 Performance data is transmitted using a new event type called "transactions", which you can learn about in [Distributed Tracing](/performance-monitoring/distributed-tracing/#traces-transactions-and-spans). **To capture transactions, you must install and configure your SDK to set the `traces_sample_rate` option to a nonzero value.** The example configuration above will transmit 100% of captured traces. Be sure to lower this value in production otherwise you could burn through your quota quickly.
 
 Learn more about sampling in [Using Your SDK to Filter Events](configuration/filtering/).
+
+<PageGrid nextPages header="Next Steps" />
