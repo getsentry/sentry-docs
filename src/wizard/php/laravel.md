@@ -44,7 +44,7 @@ public function report(Exception $exception)
 Create the Sentry configuration file (`config/sentry.php`) with this command:
 
 ```shell
-$ php artisan vendor:publish --provider="Sentry\Laravel\ServiceProvider"
+$ php artisan sentry:publish
 ```
 
 Add your DSN to `.env`:
@@ -62,3 +62,17 @@ Route::get('/debug-sentry', function () {
 ```
 
 Visiting this route will trigger an exception that will be captured by Sentry.
+
+**Monitor Performane**
+
+Set `traces_sample_rate` to a value greater than `0.0` (`config/sentry.php`) after that, Performance Monitoring will be enabled.
+
+```php
+'traces_sample_rate' => 1.0 # be sure to lower this in production to prevent quota issues
+```
+
+or in the `.env` file:
+
+```shell
+SENTRY_TRACES_SAMPLE_RATE=1
+```

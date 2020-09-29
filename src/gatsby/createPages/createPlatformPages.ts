@@ -112,14 +112,11 @@ const canInclude = (
 ): boolean => {
   const canonical = guideName ? `${platformName}.${guideName}` : platformName;
   const { frontmatter } = getChild(node);
+  if (frontmatter.supported && frontmatter.supported.length) {
+    if (frontmatter.supported.indexOf(canonical) !== -1) return true;
+    if (frontmatter.supported.indexOf(platformName) === -1) return false;
+  }
   if (
-    frontmatter.supported &&
-    frontmatter.supported.length &&
-    frontmatter.supported.indexOf(canonical) === -1 &&
-    frontmatter.supported.indexOf(platformName) === -1
-  ) {
-    return false;
-  } else if (
     frontmatter.notSupported &&
     (frontmatter.notSupported.indexOf(canonical) !== -1 ||
       frontmatter.notSupported.indexOf(platformName) !== -1)
@@ -274,6 +271,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     });
 
     // create platform root
+    // TODO(dcramer): we'd like to create keywords based on aliases for the index page
     if (platformData.node) {
       reporter.verbose(`Creating root for ${platform.key}: ${pathRoot}`);
       createPlatformPage(platformData.node, pathRoot, {
@@ -361,6 +359,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     }
 
     // create guide root
+    // TODO(dcramer): we'd like to create keywords based on aliases for the index page
     if (guideData && guideData.node) {
       reporter.verbose(`Creating platform root for ${guide.key}: ${pathRoot}`);
       createPlatformPage(guideData.node, pathRoot, {

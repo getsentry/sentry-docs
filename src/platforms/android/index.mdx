@@ -413,7 +413,7 @@ Most SDKs generally support configuring tags by configuring the scope:
 Sentry.setTag("tagKey", "tagValue");
 ```
 
-For more information, see [Tagging Events](enriching-error-data/additional-data/#tags) in Context.
+For more information, see [Tagging Events](enriching-events/context/#tags) in Context.
 
 ### Setting the Level
 
@@ -430,7 +430,7 @@ Sentry uses a fingerprint to decide how to group errors into issues.
 
 For some very advanced use cases, you can override the Sentry default grouping using the `fingerprint` attribute. In supported SDKs, this attribute can be passed with the event information and should be a list of strings.
 
-For code samples, see [Grouping & Fingerprints](/data-management/event-grouping/#use-cases).
+For code samples, see [Grouping & Fingerprints](data-management/event-grouping/#use-cases).
 
 For more information, see [Aggregate Errors with Custom Fingerprints](https://blog.sentry.io/2018/01/18/setting-up-custom-fingerprints).
 
@@ -581,7 +581,7 @@ Sentry.addBreadcrumb(breadcrumb);
 
 For more information, see:
 
-- [Full documentation on Breadcrumbs](enriching-error-data/breadcrumbs/)
+- [Full documentation on Breadcrumbs](enriching-events/breadcrumbs/)
 - [Debug Issues Faster with Breadcrumbs](https://blog.sentry.io/2016/05/04/breadcrumbs).
 
 ### Configuration options
@@ -702,11 +702,20 @@ Be aware that by removing those transitive dependencies, the automatic session t
 Due to current limitations in how `sentry-native` works, it cannot yet identify native libraries loaded directly from
 `.apk` files and instead needs to have access to the extracted libraries on the file-system.
 This functionality is [disabled by default](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs)
-when using a Android Gradle Plugin >= v3.6.0, and it needs to be enabled with the following configuration option (AndroidManifest.xml):
+when using a Android Gradle Plugin >= v3.6.0, and it needs to be enabled with the
+[`extractNativeLibs`](https://developer.android.com/guide/topics/manifest/application-element#extractNativeLibs) configuration option.
+
+Apart from this, `sentry-native` also uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
+internally, and will therefore not work out of the box on newer Android devices which have their own conflicting pointer tagging.
+To prevent this, disable the [`allowNativeHeapPointerTagging`](https://developer.android.com/guide/topics/manifest/application-element#allowNativeHeapPointerTagging) configuration option.
+
+**Example AndroidManifest.xml**:
 
 ```xml
 <application
-    android:extractNativeLibs="true">
+    android:allowNativeHeapPointerTagging="false"
+    android:extractNativeLibs="true"
+    >
 </application>
 ```
 

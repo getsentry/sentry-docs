@@ -1,0 +1,134 @@
+---
+title: Performance
+description: "Configure our Performance Monitoring integration to suit the needs of your organization. You can use the Performance Monitoring homepage to search or browse for transaction data."
+---
+
+## Sample Specific Transactions
+
+`traces_sampler`
+
+: If you want to sample specific Transaction, use the `traces_sampler` option:
+
+```php
+Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+    'traces_sampler' => static function (Sentry\Tracing\SamplingContext $context): float {
+        if (false !== strpos($context->getTransactionContext()->getName(), 'health')) {
+            // Discard transactions that have 'health' in their name
+            return 0.0;
+        }
+        // Sample rate for all other transactions
+        return 1.0;
+    },
+]);
+```
+
+You can also define `traces_sampler` as a callable that receives a `Sentry\Tracing\SamplingContext $context` which should return a `float` (for the sample rate):
+
+```php
+'traces_sampler' => array('App\Helpers\General\TracesSampler', 'sample')
+```
+
+### Instrument HTTP Calls
+
+To instrument HTTP calls using GuzzleHttp, you'll need to add a [handler](http://docs.guzzlephp.org/en/stable/handlers-and-middleware.html#handlers) to your Guzzle Client, which we provide within our SDK. Here's an example of it use:
+
+```php
+use Sentry\Tracing\GuzzleTracingMiddleware;
+...
+
+$stack = HandlerStack::create();
+
+// This is the important line
+$stack->push(GuzzleTracingMiddleware::trace());
+// ----
+
+$client = new Client([
+    'base_uri' => 'http://httpbin.org',
+    'timeout'  => 2.0,
+    'handler' => $stack
+]);
+$client->request('GET', '/get');
+```
+
+After adding this handler, you will receive spans for every request from this client.
+
+### Manual Instrumentation
+
+To manually instrument certain regions of your code, you can create a transaction to capture them.
+
+```php
+$transactionContext = new TransactionContext();
+$transactionContext->setName('External Call');
+$transactionContext->setOp('http.caller');
+$transaction = \Sentry\startTransaction($transactionContext);
+
+$spanContext = new SpanContext();
+$spanContext->setOp('functionX');
+$span1 = $transaction->startChild($spanContext);
+
+// Calling functionX
+$this->functionX();
+$span1->finish();
+
+$transaction->finish();
+```
+
+### Retrieving a Transaction
+
+If you want to attach Spans to an already ongoing Transaction, you can use `SentrySdk::getCurrentHub()->getTransaction()`. This function will return a `Transaction` if there is a running Transaction on the scope, otherwise it returns `null`.
+
+```php
+$transaction = SentrySdk::getCurrentHub()->getTransaction();
+
+if ($transaction instanceof Transaction) {
+    $transaction->setName($routeName);
+    $transaction->setData([
+        'action' => $route->getActionName(),
+        'name' => $route->getName()
+    ]);
+}
+```
+
+You can also use this to filter for specific conditions when you don't want to send a `Transaction`. This example illustrates how:
+
+```php
+$transaction = SentrySdk::getCurrentHub()->getTransaction();
+            
+if ($transaction instanceof Transaction) {
+    // $transaction->setSampled(false); // __DONT__ SEND TRANSACTION
+    // $transaction->setSampled(true); // __DO__ SEND TRANSACTION  
+}
+```
+
+### Improve Response Time
+
+Using the performance capabilities of PHP has some impact on your response time (depending on the `traces_sample_rate` you configured).
+Because of the nature of PHP, requests in most cases are sent in the same process as you serve your users' response.
+In sum, this process affects the time it takes to send a request to Sentry, as it is added on top of your servers' response time. To mitigate this and reduce the addition close to zero, you can use a Relay running locally on the same machine or local network that acts as a proxy/agent. As a result, instead of your PHP process sending things to Sentry, the PHP process sends it to your local Relay, which then forwards it to Sentry.
+
+To begin using Relay, review our content for [Getting Started](/product/relay/getting-started/).
+
+Currently, we recommend using Relay in `managed` mode (which is the default). Then follow the instructions in the Relay docs to send a Test Event via Relay to Sentry.
+
+Don't forget to update your `DSN` to point to your running Relay instance.
+After you set up Relay, you should see a dramatic improvement to the impact on your server.
+
+<PlatformSection supported={["php.laravel"]}>
+
+### Connect Your Frontend
+
+If you are using Performance Monitoring also for [JavaScript](/platforms/javascript/#monitor-performance) you can use a helper function to continue the trace started from your backend.
+Add the following line to your blade template rendering the `<head/>` of your page.
+
+```php {filename:app.blade.php}
+<head>
+...
+{!! Sentry\Laravel\Integration::sentryTracingMeta() !!}
+...
+</head>
+```
+
+This helper function will render a meta tag similar to this `<meta name="sentry-trace" content="49879feb76c84743ba5034bd2d3f1ca3-7cb5535c930d4666-1"/>` which our JS SDK will pick up and continue the trace. Therefore your frontend and your backend are connected via the same trace.
+
+</PlatformSection>

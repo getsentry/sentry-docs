@@ -10,6 +10,11 @@ const activeEnv =
 
 const root = `${__dirname}/../..`;
 
+process.env.DISABLE_THUMBNAILS = process.env.DISABLE_THUMBNAILS || "0";
+if (process.env.DISABLE_THUMBNAILS === "1") {
+  console.log("🐇 Thumbnail generation is disabled.");
+}
+
 const getPlugins = () => {
   const remarkPlugins = [
     {
@@ -32,7 +37,7 @@ const getPlugins = () => {
         enableCustomId: true,
       },
     },
-    {
+    process.env.DISABLE_THUMBNAILS === "0" && {
       resolve: `gatsby-remark-images`,
       options: {
         maxWidth: 1200,
@@ -65,7 +70,7 @@ const getPlugins = () => {
     // {
     //   resolve: `gatsby-remark-check-links`
     // }
-  ];
+  ].filter(Boolean);
 
   const plugins = [
     {
@@ -79,6 +84,21 @@ const getPlugins = () => {
     "gatsby-plugin-sharp",
     "gatsby-plugin-sass",
     "gatsby-plugin-zeit-now",
+    {
+      resolve: "gatsby-plugin-google-gtag",
+      options: {
+        // You can add multiple tracking ids and a pageview event will be fired for all of them.
+        trackingIds: [
+          "UA-30327640-1", // Sentry
+        ],
+        // This object gets passed directly to the gtag config command
+        // This config will be shared across all trackingIds
+        gtagConfig: {
+          anonymize_ip: true,
+          cookie_expires: 0,
+        },
+      },
+    },
     {
       resolve: `gatsby-transformer-remark`,
       options: {
@@ -165,13 +185,6 @@ const getPlugins = () => {
       },
     },
     {
-      resolve: `./src/gatsby/plugins/gatsby-plugin-sentry-wizard`,
-      options: {
-        source: "wizard",
-        output: `${root}/public/_platforms`,
-      },
-    },
-    {
       resolve: `./src/gatsby/plugins/gatsby-redirects`,
       options: {
         inputConfigFile: `${root}/nginx.conf`,
@@ -184,7 +197,7 @@ const getPlugins = () => {
         name: "openapi",
         resolve: async () => {
           const response = await axios.get(
-            "https://raw.githubusercontent.com/getsentry/sentry-api-schema/ed893f820606386cebab5dcd73eb8e662711bae1/openapi-derefed.json"
+            "https://raw.githubusercontent.com/getsentry/sentry-api-schema/d7eb0bf0dba8c4725f4514c81bacea39dad6a503/openapi-derefed.json"
           );
           return response.data;
         },
@@ -194,9 +207,7 @@ const getPlugins = () => {
     // generate normal redirects so when you're running without nginx
     // you receive similar behavior
     `gatsby-plugin-meta-redirect`,
-  ];
-  if (process.env.ALGOLIA_INDEX === "1") {
-    plugins.push({
+    process.env.ALGOLIA_INDEX === "1" && {
       resolve: `gatsby-plugin-algolia`,
       options: {
         appId: process.env.GATSBY_ALGOLIA_APP_ID,
@@ -206,8 +217,9 @@ const getPlugins = () => {
         enablePartialUpdates: true,
         matchFields: ["text", "section", "title", "url", "legacy", "keywords"],
       } as any,
-    });
-  }
+    },
+  ].filter(Boolean);
+
   return plugins;
 };
 
@@ -217,7 +229,7 @@ export default {
     title: "Sentry Documentation",
     homeUrl: "https://docs.sentry.io",
     sitePath: "docs.sentry.io",
-    description: "",
+    description: "Product documentation for Sentry.io and its SDKs",
     author: "@getsentry",
   },
   plugins: getPlugins(),

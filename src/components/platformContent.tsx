@@ -112,7 +112,7 @@ export default ({
   );
 
   return (
-    <div className="platform-specific-content">
+    <section className="platform-specific-content">
       {hasDropdown && (
         <div className="nav pb-1 flex">
           <div className="dropdown mr-2 mb-1">
@@ -185,6 +185,6 @@ export default ({
           )}
         </div>
       </div>
-    </div>
+    </section>
   );
 };

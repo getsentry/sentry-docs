@@ -102,6 +102,7 @@ type Props = {
   collapse?: boolean;
   exclude?: string[];
   showDepth?: number;
+  suppressMissing?: boolean;
   prependLinks?: [string, string][];
   noHeadingLink?: boolean;
 };
@@ -114,17 +115,21 @@ export default ({
   exclude = [],
   showDepth = 0,
   prependLinks = [],
+  suppressMissing = false,
   noHeadingLink = false,
 }: Props): JSX.Element | null => {
   if (root.indexOf("/") === 0) root = root.substr(1);
 
   let entity: EntityTree;
   let currentTree = tree;
-  let rootBits = root.split("/");
+  const rootBits = root.split("/");
   rootBits.forEach(bit => {
     entity = currentTree.find(n => n.name === bit);
     if (!entity) {
-      console.warn(`Could not find entity at ${root} (specifically at ${bit})`);
+      if (!suppressMissing)
+        console.warn(
+          `Could not find entity at ${root} (specifically at ${bit})`
+        );
       return;
     }
     currentTree = entity.children;

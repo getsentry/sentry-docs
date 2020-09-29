@@ -41,7 +41,7 @@ export const sourceNodes = async (
             const methodPath = parsedContent.paths[apiPath][method];
 
             let readableUrl =
-              `/development-api/` +
+              `/api/` +
               `${methodPath["tags"][0]}/${methodPath["operationId"]}/`
                 .replace(/[^a-zA-Z0-9/ ]/g, "")
                 .trim()

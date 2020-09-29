@@ -65,10 +65,25 @@ export const sortPages = (
   return arr.sort((a, b) => {
     a = extractor(a);
     b = extractor(b);
-    const aso = a.context.sidebar_order ?? 10;
-    const bso = b.context.sidebar_order ?? 10;
+    const aso = a.context.sidebar_order >= 0 ? a.context.sidebar_order : 10;
+    const bso = b.context.sidebar_order >= 0 ? b.context.sidebar_order : 10;
     if (aso > bso) return 1;
     else if (bso > aso) return -1;
     return a.context.title.localeCompare(b.context.title);
   });
+};
+
+// Does not cover the following edge cases:
+// - a code block containing a single backtick
+// But I don't think this case will occur in the OpenAPI schema.
+// We assume that individuals will always close out their code blocks, as they have done in the markdown files.
+export const parseBackticks = (str: string) => {
+  let i = 0;
+  return str
+    .replace(/\`+/g, "`") // Squash backticks for code blocks with multiple backticks
+    .split("")
+    .map(c => {
+      return c === "`" ? (i++ % 2 ? "</code>" : "<code>") : c;
+    })
+    .join("");
 };

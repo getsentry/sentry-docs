@@ -1,4 +1,4 @@
-FROM node:12-buster as build
+FROM node:lts-alpine as build
 
 ARG BUILD_CONF={}
 ENV BUILD_CONF="$BUILD_CONF"
@@ -23,7 +23,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 RUN yarn global add gatsby-cli
-ADD . ./
+COPY package.json yarn.lock ./
 RUN yarn
 RUN gatsby build
 

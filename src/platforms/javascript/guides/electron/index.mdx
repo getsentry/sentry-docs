@@ -6,6 +6,7 @@ categories:
 redirect_from:
   - /clients/electron/
   - /platforms/javascript/electron/
+  - /platforms/electron/
 ---
 
 `@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the main process and renderers, as well as collect native crash reports (Minidumps).
@@ -26,7 +27,7 @@ Once this is done, all unhandled exceptions are automatically captured by Sentry
 
 If you are seeing an issue similar to `TypeError: mod.require is not a function`, it means that Webpack is bundling your browser and node code together. To fix this, change the import statement of Sentry's `init` method to:
 
-```JavaScript
+```javascript
 const { init } =
   process.type === "browser"
     ? require("@sentry/electron/dist/main")
@@ -35,7 +36,7 @@ const { init } =
 
 And use the Webpack's `DefinePlugin` plugin to specify the process type:
 
-```JavaScript
+```javascript
 plugins: [
   // main process
   new webpack.DefinePlugin({
@@ -51,7 +52,7 @@ plugins: [
 
 With these changes, when bundling the code for each of processes, Webpack will replace `process.type` with the constant and removes the inaccessible code:
 
-```JavaScript
+```javascript
 const { init } =
   "browser" === "browser"
     ? require("@sentry/electron/dist/main")
