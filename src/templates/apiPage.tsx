@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { graphql } from "gatsby";
 import Prism from "prismjs";
 
+import { parseBackticks } from "~src/utils";
 import BasePage from "~src/components/basePage";
 import SmartLink from "~src/components/smartLink";
-import DevelopmentApiSidebar from "~src/components/developmentApiSidebar";
+import ApiSidebar from "~src/components/apiSidebar";
 
 import {
   OpenAPI,
@@ -25,7 +26,13 @@ const Params = ({ params }) => (
 
           {!!param.required && <div className="required">REQUIRED</div>}
         </dt>
-        <dd>{!!param.description && param.description}</dd>
+        {!!param.description && (
+          <dd
+            dangerouslySetInnerHTML={{
+              __html: parseBackticks(param.description),
+            }}
+          ></dd>
+        )}
       </React.Fragment>
     ))}
   </dl>
@@ -100,14 +107,14 @@ export default props => {
   }, []);
 
   return (
-    <BasePage sidebar={<DevelopmentApiSidebar />} {...props}>
+    <BasePage sidebar={<ApiSidebar />} {...props}>
       <div className="row">
         <div className="col-6">
           {data.summary && <p>{data.summary}</p>}
 
           {data.description && (
             <div className="pb-3 content-flush-bottom">
-              <p>{data.description}</p>
+              <p>{parseBackticks(data.description)}</p>
             </div>
           )}
 
@@ -152,7 +159,7 @@ export default props => {
               <div>
                 <div>
                   {"You need to "}
-                  <SmartLink to={"/development-api/auth"}>
+                  <SmartLink to={"/api/auth"}>
                     authenticate via bearer auth token.
                   </SmartLink>
                 </div>
@@ -175,7 +182,7 @@ export default props => {
               <span className="api-request-block-verb">
                 {data.method.toUpperCase()}
               </span>{" "}
-              {data.apiPath}
+              <span>{data.apiPath}</span>
             </div>
             <pre className="api-block-example request">
               {apiExample.join(" \\\n")}

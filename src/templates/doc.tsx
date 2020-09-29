@@ -3,13 +3,13 @@ import { graphql } from "gatsby";
 
 import BasePage from "~src/components/basePage";
 import Content from "~src/components/content";
-import DevelopmentApiSidebar from "~src/components/developmentApiSidebar";
+import ApiSidebar from "~src/components/apiSidebar";
 import InternalDocsSidebar from "~src/components/internalDocsSidebar";
 
 export default (props: any) => {
   let sidebar = null;
-  if (props.path.startsWith("/development-api/")) {
-    sidebar = <DevelopmentApiSidebar />;
+  if (props.path.startsWith("/api/")) {
+    sidebar = <ApiSidebar />;
   } else if (props.path.startsWith("/contributing/")) {
     sidebar = <InternalDocsSidebar />;
   }

@@ -9,7 +9,6 @@ const PlatformCell = styled.div`
   display: flex;
   justify-content: space-between;
   width: 100%;
-  height: 116px;
 
   overflow: hidden;
 
@@ -42,8 +41,6 @@ const PlatformCellContent = styled.div`
 const GuideList = styled.div`
   font-size: 0.8em;
   width: 100%;
-  height: 54px;
-  overflow: hidden;
   text-overflow: ellipsis;
 
   a {

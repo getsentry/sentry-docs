@@ -16,12 +16,12 @@ export default async ({ actions, graphql, reporter }) => {
     reporter
   );
 
-  const component = require.resolve(`../../templates/developmentApiDoc.tsx`);
+  const component = require.resolve(`../../templates/apiDoc.tsx`);
   await Promise.all(
     data.openApi.tags.map(async (node: any) => {
       const name = node.x_sidebar_name || node.name;
       actions.createPage({
-        path: `/development-api/${node.name.toLowerCase()}/`,
+        path: `/api/${node.name.toLowerCase()}/`,
         component,
         context: {
           title: name,

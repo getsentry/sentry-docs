@@ -1,19 +1,17 @@
-import createApiPages from "./createApiPages";
 import createDocPages from "./createDocPages";
 import createPlatformPages from "./createPlatformPages";
 import createWizardDebugPages from "./createWizardDebugPages";
-import createDevelopmentApiPages from "./createDevelopmentApiPages";
-import createDevelopmentApiDocPages from "./createDevelopmentApiDocPages";
-import createDevelopmentApiReference from "./createDevelopmentApiReference";
+import createApiPages from "./createApiPages";
+import createApiDocPages from "./createApiDocPages";
+import createApiReference from "./createApiReference";
 
 export default async function(params) {
   const promises: Promise<void>[] = [
-    createApiPages(params),
     createDocPages(params),
     createPlatformPages(params),
-    createDevelopmentApiPages(params),
-    createDevelopmentApiDocPages(params),
-    createDevelopmentApiReference(params),
+    createApiPages(params),
+    createApiDocPages(params),
+    createApiReference(params),
   ];
   if (process.env.NODE_ENV !== "production") {
     promises.push(createWizardDebugPages(params));
