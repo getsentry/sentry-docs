@@ -118,7 +118,7 @@ Sentry.init({
 
 ### shouldCreateSpanForRequest
 
-This function can be used to filter our unwanted Spans like XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` is already filtering out what was defined in `tracingOrigins`.
+This function can be used to filter out unwanted spans such as XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` already filters out everything but what was defined in `tracingOrigins`.
 
 ```javascript
 import * as Sentry from "@sentry/browser";
@@ -128,11 +128,8 @@ Sentry.init({
   integrations: [
     new Integrations.BrowserTracing({
       shouldCreateSpanForRequest: url => {
-        // Example of filter out spans that contain `health`
-        if (url.match(/health/)) {
-          return false;
-        }
-        return true;
+        // Do not create spans for outgoing requests to a `/health/` endpoint
+        return !url.match(/\/health\/?$/);
       },
     }),
   ],

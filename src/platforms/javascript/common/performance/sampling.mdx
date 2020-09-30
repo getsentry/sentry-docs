@@ -4,13 +4,13 @@ sidebar_order: 20
 description: "Learn how to configure the volume of transactions sent to Sentry."
 ---
 
-There are two ways to control the volume of transactions sent to Sentry.
+You can control the volume of transactions sent to Sentry in two ways.
 
 ## Uniform Sample Rate
 
 Setting a uniform sample rate is a good option if you want an even cross-section of transactions, no matter where in your app or under what circumstances they occur, and are happy with the default inheritance and precedence behavior described below.
 
-To do this, set the `tracesSampleRate` option in your `Sentry.init()` to a number between 0 and 1, and every transaction created will have that percentage chance of being sent to Sentry. (So, for example, if you set `tracesSampleRate` to `0.2`, approximately 20% of your transactions will get recorded and sent.) That looks like this:
+To do this, set the `tracesSampleRate` option in your `Sentry.init()` to a number between 0 and 1. With this option set, every transaction created will have that percentage chance of being sent to Sentry. (So, for example, if you set `tracesSampleRate` to `0.2`, approximately 20% of your transactions will get recorded and sent.) That looks like this:
 
 ```javascript {tabTitle: ESM}
 // If you're using one of our integration packages, like `@sentry/react` or `@sentry/angular`,
@@ -50,13 +50,13 @@ Sentry.init({
 
 ## Dynamic Sampling Function
 
-Providing a sampling function is a good option if you
+Providing a sampling function is a good option if you:
 
 - want to sample different transactions at different rates
 - want to filer out some transactions entirely
 - want to modify the default precedence and inheritance behavior described below
 
-To sample dynamically, set the `tracesSampler` option in your `Sentry.init()` to a function which will accept a `samplingContext` object and return a sample rate between 0 and 1. For example:
+To sample dynamically, set the `tracesSampler` option in your `Sentry.init()` to a function that will accept a `samplingContext` object and return a sample rate between 0 and 1. For example:
 
 ```javascript
 tracesSampler: samplingContext => {
@@ -75,7 +75,7 @@ tracesSampler: samplingContext => {
 };
 ```
 
-For convenience, the function can also return a boolean. Returning `true` is equivalent to returning `1`, and will guarantee the transaction will be sent to Sentry. Returning `false` is equivalent to returning `0` and will guarantee the transaction witll **not** be sent to Sentry.
+For convenience, the function can also return a boolean. Returning `true` is equivalent to returning `1`, and will guarantee the transaction will be sent to Sentry. Returning `false` is equivalent to returning `0` and will guarantee the transaction will **not** be sent to Sentry.
 
 ### Default Sampling Context Data
 
@@ -132,9 +132,9 @@ There are multiple ways for a transaction to end up with a sampling decision.
 - If the transaction has a parent, inheriting its parent's sampling decision
 - Absolute decision passed to `startTransaction`
 
-When there's the potential for more than one of these to come into play, the decision is resolved according to the following precedence rules:
+When there's the potential for more than one of these to come into play, the following precedence rules apply:
 
 1. If a sampling decision is passed to `startTransaction` (`startTransaction({name: "my transaction", sampled: true})`), that decision will be used, regardlesss of anything else
 2. If `tracesSampleRate` is defined, its decision will be used. It can choose to keep or ignore any parent sampling decision, or use the sampling context data to make its own decision or choose a sample rate for the transaction.
-3. If `tracesSampler` is not defined, but there's a parent sampling decision, it will be used.
+3. If `tracesSampler` is not defined, but there's a parent sampling decision, the parent sampling decision will be used.
 4. If `tracesSampler` is not defined and there's no parent sampling decision, `tracesSampleRate` will be used.
