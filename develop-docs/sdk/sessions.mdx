@@ -18,10 +18,10 @@ SENTRY_EVENTSTREAM = 'sentry.eventstream.kafka.KafkaEventStream'
 
 - Sessions are entirely client driven. The client determines when a session
   starts, ends or transitions into an unhealthy state.
-  - Client can explicitly end a session to record time or exit condition (crash etc.)
+  - The client can explicitly end a session to record time or exit condition (crash etc.)
   - Clients should explicitly end sessions on restart if needed but it is acceptable
     for a session not to end.
-- Sessions are updated through session change events which hold the entire session state.
+- Sessions are updated through session change events that hold the entire session state.
 - Sessions are updated from events sent in. The most recent event holds the
   entire session state. The initial session event that is sent to the server is
   marked explicitly.
@@ -47,7 +47,7 @@ on its side.
 
 ## Session Update Payload
 
-A session update is an item in an envelope called `session`. It consists a JSON
+A session update is an item in an envelope called `session`. It consists of a JSON
 payload that looks roughly like this:
 
 ```json
@@ -85,20 +85,20 @@ The following fields exist:
 
 `did` (optional, distinct ID)
 
-> The distinct ID. Should be device or user ID. The system automatically hashes
-> this ID before storing.
+> The distinct ID. Should be a device or user ID. The system automatically hashes
+> this ID before storing it.
 
 `seq` (optional)
 
-> A logical clock. Defaults to the current UNIX time stamp in milliseconds
+> A logical clock. Defaults to the current UNIX timestamp in milliseconds
 > during ingestion. The value `0` is reserved in the sense that a session with
 > `init` set to `true` will automatically have `seq` forced to `0`.
 
 `timestamp` (optional)
 
 > The timestamp of when the session change event came in. Must be an ISO string
-> for now. If not sent the server can assume current UTC timestamp. In the data
-> model this is called `received`.
+> for now. If not sent, the server will assume the current UTC timestamp. In the data
+> model, this is called `received`.
 
 `started`
 
@@ -114,14 +114,13 @@ The following fields exist:
 `duration` (optional)
 
 > An optional field that can transmit the session duration when the event was
-> received. This can be client controlled so for instance inactive time can be
-> subtracted (seconds as float).
+> received. This can be client controlled so, for instance, inactive time can be subtracted (seconds as float).
 
 `status` (optional, default = `ok`)
 
 > The current status of the session. A session can only be in two states
 > effectively: `ok` which means the session is alive or one of the terminal
-> states. When a session is moved away from `ok` it must not be updated any more.
+> states. When a session is moved away from `ok` it must not be updated anymore.
 >
 > - `ok`: session is currently in progress but healthy. This can be the terminal state of a session
 > - `exited`: the session terminated normally
@@ -149,19 +148,19 @@ The following fields exist:
 ## Crashes vs Sessions
 
 Sessions and error events are two distinct systems within Sentry. Session
-updates can be done without error events to be sent and likewise errors can be
+updates can be done without error events to be sent and likewise, errors can be
 sent without session updates.
 
-This gives the client the full control over how session updates should be
+This gives the client full control over how session updates should be
 performed. The motivating factor is that the server is free to reject error
 events in some situations where it would still be interesting to record
-session information. For instance if a project has a rate limit applied on
+session information. For instance, if a project has a rate limit applied on
 error events they session data can still be routed to the project bypassing
 this rate limit.
 
-However it's strongly recommended to send session updates in the same envelope
+However, it's strongly recommended to send session updates in the same envelope
 as the crash event in case the session transitions to the crashed status. This
-will ensure that they events arrive at the same time in the system if the
+will ensure that the events arrive at the same time in the system if the
 network is unreliable.
 
 ## Important Client Behavior
@@ -172,8 +171,8 @@ These are important rules that the clients must follow:
 
 It's currently not allowed for a session to change any of the attributes
 in subsequent updates which includes the `did`, `started` or other attributes.
-The only attributes which are allowed to change is the session status, duration
-or error count. If a user is not known on the beginning then either the session
+The only attributes which are allowed to change are the session status, duration
+or error count. If a user is not known in the beginning then either the session
 start should be delayed or the session should be restarted once the user is
 known.
 
@@ -191,7 +190,7 @@ session must not receive further updates. `exited`, `crashed` and `abnormal`
 are all terminal states. When a session reaches this state the client must
 not report any more session updates or start a new session.
 
-SDKs are encouraged to distinct different end of session cases:
+SDKs are encouraged to distinguish between different ways of ending a session:
 
 - `exited`: this means the session ended cleanly. It's in no way different than
   the session staying in `ok` from the point of success reports. However only
@@ -202,10 +201,10 @@ SDKs are encouraged to distinct different end of session cases:
 
   - an unhandled error occurred and there is a natural session end (eg: end of HTTP request)
   - a complete crash of the application occurred (crash to desktop, termination)
-  - a user feedback dialog is surfaced to the user. After this the SDK must start a new session as if it fully crashed.;
+  - a user feedback dialog is surfaced to the user. After this, the SDK must start a new session as if it fully crashed.;
 
 - `abnormal`: SDKs are encouraged to always transition a session to `exited` or
-  `crashed` if they can do so. For SDKs that are capable of always ending sessions they should end a
+  `crashed` if they can do so. For SDKs that are capable of always ending sessions, they should end a
   session in `abnormal` if they could not detect the application shutting down
   correctly. Examples for abnormal sessions:
 
@@ -218,13 +217,11 @@ SDKs are encouraged to distinct different end of session cases:
 
 A session is supposed to transition to `crashed` when it encountered an unhandled
 error such as a full application crash. For applications that cannot fully
-crash such as a website it's acceptable to transition to the crashed state if
+crash such as a website, it's acceptable to transition to the crashed state if
 the user encountered an error dialog.
 
-Abnormal are sessions of which their fate is unknown. For desktop applications
-for instance it makes sense to transition a session to abnormal if it was stored
-but the exit of the application was not observed but also did not crash. For
-instance these are situations where the user forced the app to close via the
+Abnormal are sessions of which their fate is unknown. For desktop applications, for instance, it makes sense to transition a session to abnormal if it was stored
+but the exit of the application was not observed but also did not crash. These are situations where the user forced the app to close via the
 task manager, the machine lost power or other situations. A session can be
 _stored_ by persisting it to disk eagerly. This saved file can be detected on
 application restart to close the session as `abnormal`.
@@ -245,8 +242,8 @@ sessions over time.
 
 ## SDK Considerations
 
-Generally speaking there are two separate modes for health reporting that SDKs
-can use. One is very short lived sessions, the other are user attended sessions.
+Generally speaking, there are two separate modes for health reporting that SDKs
+can use. One is very short lived sessions, the other is user attended sessions.
 
 **Short lived sessions** _(server-mode / request-mode)_
 
@@ -276,10 +273,10 @@ recommendations apply for SDKs.
 
 While it is in theory possible to use both session modes in a single application,
 it is recommended that the SDK default to a single mode that is most
-appropriate to the main use case of the language ecosystem. This is similar to,
+appropriate to the main use case of the language ecosystem. This is similar to
 and can be used in the same way as a _global Hub mode_ that certain SDKs support.
 
-When the SDK is configured to use _user-mode_ sessions, or global Hub mode, a
+When the SDK is configured to use _user-mode_ sessions or global Hub mode, a
 single session should be started at the start of the application and should
 persist through the application's runtime. Depending on the SDK internals, this
 single session can be shared among all application threads and thread-local Hubs.
@@ -295,7 +292,7 @@ adhere to defines the concepts of `Hub`, `Scope` and `Client`.
 
 Conceptually speaking, the session is a concern of the `Hub`, and unlike scopes,
 sessions should not be nested. When any kind of event happens, there should be
-only one unambiguous session which keeps track of the error count.
+only one unambiguous session that keeps track of the error count.
 
 When considering the flow of events through the SDK, from the static
 `capture_event` function, through the thread local `Hub`, and into the
@@ -306,7 +303,7 @@ and a session update into a single envelope to be sent to Sentry.
 
 ### Session Updates and when to send Updates upstream
 
-For all SDKs the current session shall be automatically updated whenever data is
+For all SDKs, the current session shall be automatically updated whenever data is
 captured at a similar place where `apply_to_scope` is called to increase the
 `error` count, or update the session based on the distinct ID / user ID.
 
@@ -320,7 +317,7 @@ _user-mode_ SDKs may instead opt into sending session updates along with
 captured events in the same envelope. The final session update that closes the
 session may be batched similar to _server-mode_ sessions.
 
-In either case the `init` flag must be set correctly for the _first
+In either case, the `init` flag must be set correctly for the _first
 transmission_ of the session, and session metadata such as the distinct ID must
 be immutable after the initial transmission.
 
