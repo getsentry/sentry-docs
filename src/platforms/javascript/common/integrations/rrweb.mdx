@@ -48,3 +48,26 @@ For more information on configuration, see the [@sentry/rrweb project on GitHub]
 </markdown></Note>
 
 Once a replay is captured with an event, you'll find it visible within Issue Details under the Replay section of the event.
+
+## Sampling
+
+To suit your organization's needs, you may prefer to sample replays. The easiest way to do this is to make the sampling decision when you initialize the Sentry SDK. For example, here's how Sentry itself uses sampling to capture these for only employees:
+
+```javascript
+const hasReplays = getCurrentUser().isStaff;
+
+let integrations = [];
+if (hasReplays) {
+  console.log("[sentry] Instrumenting session with rrweb");
+  integrations.push(new SentryRRWeb());
+}
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations,
+});
+
+Sentry.setTag("rrweb.active", hasReplays ? "yes" : "no");
+```
+
+You'll note we also set the `rrweb.active` tag, which helps us identify events that have a replay attached, since otherwise we'd not be able to find them. Once configured, you'll be able simply use `rrweb.active:yes` in your search queries.
