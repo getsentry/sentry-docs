@@ -25,7 +25,7 @@ const HIGHLIGHTED_PLATFORMS = [
   "php.laravel",
   "android",
   "apple",
-  "java.spring",
+  "java.spring-boot",
   "ruby.rails",
 ];
 

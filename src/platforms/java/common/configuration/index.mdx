@@ -1,0 +1,165 @@
+---
+title: Configuration
+sidebar_order: 10
+description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the `init()` as an object."
+---
+
+## Setting the DSN (Data Source Name) {#setting-the-dsn}
+
+The DSN is the first and most important thing to configure because it tells the SDK where to send events. You can find your project’s DSN in the “Client Keys” section of your “Project Settings” in Sentry. It can be configured in multiple ways. Explanations of the [configuration methods are detailed below](#configuration-methods).
+
+In a properties file on your filesystem or classpath (defaults to `sentry.properties`):
+
+```text {tabTitle:Properties File} {filename:sentry.properties}
+dsn=___PUBLIC_DSN___
+```
+
+Via the Java System Properties _(not available on Android)_:
+
+```bash {tabTitle:Java System Properties}
+java -Dsentry.dsn=___PUBLIC_DSN___ -jar app.jar
+```
+
+Via a System Environment Variable _(not available on Android)_:
+
+```bash {tabTitle:System Environment Variable}
+SENTRY_DSN=___PUBLIC_DSN___ java -jar app.jar
+```
+
+In code:
+
+```java
+import io.sentry.Sentry;
+
+Sentry.init(options -> {
+    options.setDsn("___PUBLIC_DSN___");
+});
+```
+
+## Configuration methods {#configuration-methods}
+
+There are multiple ways to configure the Java SDK, but all of them take the same options. See below for how to use each configuration method and how the option names might differ between them.
+
+To enable loading configuration from the properties file, system properties or environment variables, `enableExternalConfiguration` has to be set to `true` on `SentryOptions`:
+
+```java
+import io.sentry.Sentry;
+
+Sentry.init(options -> {
+    options.setEnableExternalConfiguration(true);
+});
+```
+
+### Configuration via properties file
+
+The Java SDK can be configured via a [.properties file](https://en.wikipedia.org/wiki/.properties) that is located on the filesystem or in your application’s classpath. By default the SDK will look for a `sentry.properties` file in the application’s current working directory or in the root of your classpath. In most server side applications the default directory to add resources to your classpath is `src/main/resources/`, and on Android the default is `app/src/main/resources/`. You can override the location of the properties file by using either the `sentry.properties.file` Java System Property or the `SENTRY_PROPERTIES_FILE` System Environment Variable.
+
+Because this file is often bundled with your application, the values cannot be changed easily once your application has been packaged. For this reason, the properties file is useful for setting defaults or options that you don’t expect to change often. The properties file is the last place checked for each option value, so runtime configuration (described below) will override it if available.
+
+Option names in the property file exactly match the examples given below. For example, to configure the environment, in your properties file:
+
+```properties
+environment=production
+```
+
+### Configuration via the runtime environment
+
+This is the most flexible method for configuring the Sentry client because it can be easily changed based on the environment you run your application in. _Neither Java System Properties or System Environment Variables are available for Android applications. Please configure Sentry for Android via code or the properties file._
+
+Two methods are available for runtime configuration, checked in this order: Java System Properties and System Environment Variables.
+
+Java System Property option names are exactly like the examples given below except that they are prefixed with `sentry.`. For example, to enable sampling:
+
+```bash
+java -Dsentry.environment=production -jar app.jar
+```
+
+System Environment Variable option names require that you replace the `.` with `_`, capitalize them, and add a `SENTRY_` prefix. For example, to enable sampling:
+
+```bash
+SENTRY_ENVIRONMENT=production java -jar app.jar
+```
+
+### Configuration via code
+
+The DSN itself can also be configured directly in code:
+
+```java
+import io.sentry.Sentry;
+
+Sentry.init(options -> {
+    options.setDsn("___PUBLIC_DSN___");
+});
+```
+
+By passing a hardcoded DSN you are no longer able to override the DSN at runtime via Java System Properties or System Environment Variables.
+
+## Options
+
+The following options can all be configured as described above: via a `sentry.properties` file, via Java System Properties, via System Environment variables, or via the DSN.
+
+### Release
+
+To set the application version that will be sent with each event, use the `release` option:
+
+```
+release=1.0.0
+```
+
+#### Distribution
+
+To set the application distribution that will be sent with each event, use the `dist` option:
+
+```
+release=1.0.0
+dist=x86
+```
+
+The distribution is only useful (and used) if the `release` is also set.
+
+### Environment
+
+To set the application environment that will be sent with each event, use the `environment` option:
+
+```
+environment=staging
+```
+
+### Server Name
+
+To set the server name that will be sent with each event, use the `servername` option:
+
+```
+servername=host1
+```
+
+## Using a Proxy
+
+If your application needs to send outbound requests through an HTTP proxy, you can configure the proxy information via JVM networking properties or as a Sentry option.
+
+For example, using JVM networking properties (affects the entire JVM process),
+
+```bash
+java \
+  # if you are using the HTTP protocol \
+  -Dhttp.proxyHost=proxy.example.com \
+  -Dhttp.proxyPort=8080 \
+  \
+  # if you are using the HTTPS protocol \
+  -Dhttps.proxyHost=proxy.example.com \
+  -Dhttps.proxyPort=8080 \
+  \
+  # relevant to both HTTP and HTTPS
+  -Dhttp.nonProxyHosts=”localhost|host.example.com” \
+  \
+  MyApp
+```
+
+See [Java Networking and Proxies](http://docs.oracle.com/javase/8/docs/technotes/guides/net/proxies.html) for more information about the proxy properties.
+
+Alternatively, using Sentry options (only affects the Sentry HTTP client, useful inside shared application containers),
+
+```
+http.proxy.host=proxy.example.com
+http.proxy.port=8080
+```
