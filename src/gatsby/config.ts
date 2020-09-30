@@ -197,6 +197,9 @@ const getPlugins = () => {
         // required, function which returns a Promise resolving Swagger JSON
       },
     },
+    // generate normal redirects so when you're running without nginx
+    // you receive similar behavior
+    `gatsby-plugin-meta-redirect`,
     process.env.ALGOLIA_INDEX === "1" && {
       resolve: `gatsby-plugin-algolia`,
       options: {
