@@ -14,123 +14,197 @@ The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tre
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-log4j2</artifactId>
-    <version>{{ packages.version('sentry.java', '1.7.30') }}</version>
+    <version>{{ packages.version('sentry.java', '3.0.0') }}</version>
 </dependency>
 ```
 
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-log4j2:{{ packages.version('sentry.java', '1.7.30') }}'
+implementation 'io.sentry:sentry-log4j2:{{ packages.version('sentry.java', '3.0.0') }}'
 ```
 
 ```scala {tabTitle: SBT}
-libraryDependencies += "io.sentry" % "sentry-log4j2" % "{{ packages.version('sentry.java', '1.7.30') }}"
+libraryDependencies += "io.sentry" % "sentry-log4j2" % "{{ packages.version('sentry.java', '3.0.0') }}"
 ```
 
 For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-log4j2).
 
 ### Usage
 
-The following example configures a `ConsoleAppender` that logs to standard out at the `INFO` level and a `SentryAppender` that logs to the Sentry server at the `WARN` level. The `ConsoleAppender` is only provided as an example of a non-Sentry appender that is set to a different logging threshold, like one you may already have in your project.
+The following example configures a `ConsoleAppender` that logs to standard out at the `INFO` level and a `SentryAppender` that logs to the Sentry server at the `ERROR` level. The `ConsoleAppender` is only provided as an example of a non-Sentry appender that is set to a different logging threshold, like one you may already have in your project.
 
 Example configuration using the `log4j2.xml` format:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration status="warn" packages="org.apache.logging.log4j.core,io.sentry.log4j2">
-    <appenders>
+<Configuration status="warn" packages="org.apache.logging.log4j.core,io.sentry.log4j2">
+    <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
-
-        <Sentry name="Sentry" />
-    </appenders>
-
-    <loggers>
-        <root level="INFO">
-            <appender-ref ref="Console" />
-            <!-- Note that the Sentry logging threshold is overridden to the WARN level -->
-            <appender-ref ref="Sentry" level="WARN" />
-        </root>
-    </loggers>
-</configuration>
+        <Sentry name="Sentry"
+                dsn="___PUBLIC_DSN___" />
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Sentry"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](configuration/options/) for ways you can do this.
+### DSN Configuration
 
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
+Note that **you need to configure your DSN** (client key).
 
-### Additional Data
+```xml
+<Sentry name="Sentry"
+        dsn="___PUBLIC_DSN___" />
+```
 
-It’s possible to add extra data to events thanks to [the marker system](https://logging.apache.org/log4j/2.x/manual/markers.html) provided by Log4j 2.x.
+If the DSN is not present in the `log4j2.xml` configuration, Sentry will attempt to read it from the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
+
+### Minimum Log Level
+
+Two log levels are used to configure this integration (see options below). One will configure the lowest level required for a log message to become an event (`minimumEventLevel`) sent to Sentry. The other option (`minimumBreadcrumbLevel`) configures the lowest level a message has to be to become a breadcrumb. Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.info` or `logger.warn`, no event is sent to Sentry. If you then log with `logger.error`, an event is sent to Sentry which includes those 100 `info` or `warn` messages. For this to work, `SentryAppender` needs to receive **all** log entries in order to decide what to keep as breadcrumb or sent as event. Make sure to set the `SentryAppender` log level configuration to a value lower than what you set for the `minimumBreadcrumbLevel` and `minimumEventLevel` to make sure `SentryAppender` receives these log messages.
+
+```xml
+<!-- Setting minimumBreadcrumbLevel modifies the default minimum level to add breadcrumbs from INFO to DEBUG  -->
+<!-- Setting minimumEventLevel the default minimum level to capture an event from ERROR to WARN  -->
+<Sentry name="Sentry"
+        dsn="___PUBLIC_DSN___"
+        minimumBreadcrumbLevel="DEBUG"
+        minimumEventLevel="WARN"
+/>
+```
 
 #### Mapped Tags
 
-By default all MDC parameters are stored under the “Additional Data” tab in Sentry. By specifying the `mdctags` option in your configuration you can choose which MDC keys to send as tags instead, which allows them to be used as filters within the Sentry UI.
+By default all `ThreadContext` parameters are stored under the “Context Data” tab in Sentry.
 
-```java
+```java {tabTitle:Java}
 void logWithExtras() {
     // ThreadContext ("MDC") extras
     ThreadContext.put("Environment", "Development");
     ThreadContext.put("OS", "Linux");
 
-    // This sends an event where the Environment and OS MDC values are set as additional data
+    // This sends an event where the Environment and OS ThreadContext values are set as Context Data entries
+    logger.error("This is a test");
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+fun logWithExtras() {
+    // MDC extras
+    ThreadContext.put("Environment", "Development");
+    ThreadContext.put("OS", "Linux");
+
+    // This sends an event where the Environment and OS ThreadContext values are set as Context Data entries
     logger.error("This is a test");
 }
 ```
 
 ### In Practice
 
-```java
+```java {tabTitle:Java}
+import io.sentry.core.Sentry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
+import org.apache.logging.log4j.ThreadContext;
 
 public class MyClass {
-    private static final Logger logger = LogManager.getLogger(MyClass.class);
-    private static final Marker MARKER = MarkerManager.getMarker("myMarker");
+  private static final Logger logger = LogManager.getLogger(MyClass.class);
 
-    void logSimpleMessage() {
-        // This sends a simple event to Sentry
-        logger.error("This is a test");
+  void logSimpleMessage() {
+    // This sends a simple event to Sentry
+    logger.error("This is a test");
+  }
+
+  void logWithBreadcrumbs() {
+    // Record a breadcrumb that will be sent with the next event(s),
+    // by default the last 100 breadcrumbs are kept.
+    Sentry.addBreadcrumb("User made an action");
+
+    // Log entries below `minimumEventLevel` and above or equal to `minimumBreadcrumbLevel`
+    // are recorded as breadcrumbs
+    logger.info("User made another action");
+
+    // This sends a simple event to Sentry
+    logger.error("This is a test");
+  }
+
+  void logWithExtras() {
+    // MDC extras
+    ThreadContext.put("extra_key", "extra_value");
+    // NDC extras are sent under 'log4j2-NDC'
+    ThreadContext.push("Extra_details");
+    // This sends an event with extra data to Sentry
+    logger.error("This is a test");
+  }
+
+  void logException() {
+    try {
+      unsafeMethod();
+    } catch (Exception e) {
+      // This sends an exception event to Sentry
+      logger.error("Exception caught", e);
+    }
+  }
+
+  void unsafeMethod() {
+    throw new UnsupportedOperationException("You shouldn't call this!");
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.core.Sentry
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.ThreadContext
+
+class MyClass {
+    companion object {
+        private val logger = LogManager.getLogger(MyClass::class.java)
     }
 
-    void logWithBreadcrumbs() {
+    fun logSimpleMessage() {
+        // This sends a simple event to Sentry
+        logger.error("This is a test")
+    }
+
+    fun logWithBreadcrumbs() {
         // Record a breadcrumb that will be sent with the next event(s),
         // by default the last 100 breadcrumbs are kept.
-        Sentry.record(
-            new BreadcrumbBuilder().setMessage("User made an action").build()
-        );
+        Sentry.addBreadcrumb("User made an action")
+
+        // Log entries below `minimumEventLevel` and above or equal to `minimumBreadcrumbLevel`
+        // are recorded as breadcrumbs
+        logger.info("User made another action")
 
         // This sends a simple event to Sentry
-        logger.error("This is a test");
+        logger.error("This is a test")
     }
 
-    void logWithTag() {
-        // This sends an event with a tag named 'log4j2-Marker' to Sentry
-        logger.error(MARKER, "This is a test");
-    }
-
-    void logWithExtras() {
+    fun logWithExtras() {
         // MDC extras
-        ThreadContext.put("extra_key", "extra_value");
+        ThreadContext.put("extra_key", "extra_value")
         // NDC extras are sent under 'log4j2-NDC'
-        ThreadContext.push("Extra_details");
+        ThreadContext.push("Extra_details")
         // This sends an event with extra data to Sentry
-        logger.error("This is a test");
+        logger.error("This is a test")
     }
 
-    void logException() {
+    fun logException() {
         try {
-            unsafeMethod();
-        } catch (Exception e) {
+            unsafeMethod()
+        } catch (e: Exception) {
             // This sends an exception event to Sentry
-            logger.error("Exception caught", e);
+            logger.error("Exception caught", e)
         }
     }
 
-    void unsafeMethod() {
-        throw new UnsupportedOperationException("You shouldn't call this!");
+    fun unsafeMethod() {
+        throw UnsupportedOperationException("You shouldn't call this!")
     }
 }
 ```
