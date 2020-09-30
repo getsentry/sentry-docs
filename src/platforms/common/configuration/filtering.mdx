@@ -1,20 +1,24 @@
 ---
-title: Filtering Events
+title: Filtering and Sampling Events
 sidebar_order: 5
-description: "Learn more about how to filter events reported to Sentry, using either the SDK, product filtering options, or both."
+description: "Learn more about how to configure your SDK to filter and sample events reported to Sentry."
 notSupported:
   - perl
 ---
 
-While sending all application errors to Sentry ensures you’ll be notified in real-time when errors occur in your code, often applications generate many errors, thus many notifications. The Sentry SDKs have several configuration options you can use to filter unwanted errors from leaving your application’s runtime. In addition, sentry.io also [offers methods to filter events](/product/error-monitoring/filtering/).
+Adding Sentry to your app gives you a great deal of very valuable information about errors and performance you wouldn't otherwise get. And lots of information is good -- as long as it's the right information, at a reasonable volume.
 
-## Configure your SDK to Filter Events
+The Sentry SDKs have several configuration options to help you control this, allowing you to both filter out events you don't want and to take a representative sample of those you do.
 
-Configure your SDK to filter events by using the `beforeSend` callback method and configuring, enabling, or disabling integrations.
+**Note:**: The Sentry UI also offers methods to filter events, by using [Inbound Filters](/product/error-monitoring/filtering/). We recommend filtering at the client level though, because it removes the overhead of sending events you don't actually want.
 
-### Using `before-send`
+## Filtering Error Events
 
-All Sentry SDKs support the `beforeSend` callback method. `before-send` is called immediately before the event is sent to the server, so it’s the final place where you can edit its data. It receives the event object as a parameter, so you can use that to modify the event’s data or drop it completely (by returning `null`) based on custom logic and the data available on the event.
+Configure your SDK to filter error events by using the `beforeSend` callback method and configuring, enabling, or disabling integrations.
+
+### Using `beforeSend`
+
+All Sentry SDKs support the `beforeSend` callback method. `beforeSend` is called immediately before the event is sent to the server, so it’s the final place where you can edit its data. It receives the event object as a parameter, so you can use that to modify the event’s data or drop it completely (by returning `null`) based on custom logic and the data available on the event.
 
 <PlatformContent includePath="configuration/before-send" />
 
@@ -28,25 +32,7 @@ Typically a `hint` holds the original exception so that additional data can be e
 
 <PlatformContent includePath="configuration/before-send-hint" />
 
-When the SDK creates an event or breadcrumb for transmission, that transmission is typically created from some sort of source object. For instance, an error event is typically created from a log record or exception instance. For better customization, SDKs send these objects to certain callbacks (`before-send`, `before-breadcrumb` or the event processor system in the SDK).
-
-#### Sampling
-
-If a sample rate is defined for the SDK, the SDK evaluates whether this event should be sent as a representative fraction of events.
-
-<Note><markdown>
-
-The SDK sample rate is not dynamic; changing it requires re-deployment. In addition, setting an SDK sample rate limits visibility into the source of events. Setting a rate limit for your project may better suit your needs.
-
-</markdown></Note>
-
-When you enable sampling in your SDK, you choose a percentage of collected errors to send to Sentry. For example, to sample 25% of your events:
-
-<PlatformContent includePath="configuration/sample-rate" />
-
-For Sentry's Performance Monitoring, we recommend sampling your data for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, by enabling sampling you’ll more easily prevent yourself from exceeding your organization’s [event quota](/product/accounts/quotas/).
-
-When choosing a sampling rate, the goal is not to collect *too* much data, but to collect sufficient data so you can draw meaningful conclusions. If you’re not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume, until you’ve found a rate that balances performance and cost concerns with data accuracy.
+When the SDK creates an event or breadcrumb for transmission, that transmission is typically created from some sort of source object. For instance, an error event is typically created from a log record or exception instance. For better customization, SDKs send these objects to certain callbacks (`beforeSend`, `beforeBreadcrumb` or the event processor system in the SDK).
 
 ### Using Hints
 
@@ -98,3 +84,43 @@ In this example, the fingerprint is forced to a common value if an exception of 
 : For breadcrumbs created from HTTP requests done via the legacy `XMLHttpRequest` API. This holds the original xhr object.
 
 <PlatformContent includePath="configuration/decluttering" />
+
+## Sampling Error Events
+
+To send a representative sample of your errors to Sentry, set the `sampleRate` option in your SDK configuration to a number between `0` (0% of errors sent) and `1` (100% of errors sent). This is a static rate, which will apply equally to all errors. For example, to sample 25% of your errors:
+
+<PlatformContent includePath="configuration/sample-rate" />
+
+**Note:** The error sample rate is not dynamic; changing it requires re-deployment. In addition, setting an SDK sample rate limits visibility into the source of events. Setting a rate limit for your project (which only drops events when volume is high) may better suit your needs.
+
+<PlatformSection supported={["javascript", "node"]}><markdown>
+
+## Filtering Transaction Events
+
+To prevent certain transactions from being reported to Sentry, use the `tracesSampler` configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want. (It also allows you to sample different transactions at different rates.)
+
+**Note:** The `tracesSampler` and `tracesSampleRate` config options are mutually exclusive. If you define a `tracesSampler` to filter out certain transactions, you must also handle the case of non-filtered transactions by returning the rate at which you'd like them sampled.
+
+In its simplest form, used just for filtering, it looks like this:
+
+```javascript
+tracesSampler: samplingContext => {
+  if ("...") {
+    return 0; // Drop this transaction, by setting its sample rate to 0%
+  } else {
+    return 0.2; // Default sample rate for all others (replaces tracesSampleRate )
+  }
+};
+```
+
+To learn more about the `tracesSampler` option, please see [Sampling Transactions](/platforms/javascript/performance/sampling/).
+
+</markdown></PlatformSection>
+
+## Sampling Transaction Events
+
+For Sentry's Performance Monitoring, we recommend sampling your data for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, enabling sampling allows you to better manage the number of events sent to Sentry, so you can tailor it to your organization's needs.
+
+When choosing a sampling rate, the goal is not to collect *too* much data, but to collect sufficient data so you can draw meaningful conclusions. If you’re not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume, until you’ve found a rate that balances performance and volume concerns with data accuracy.
+
+To set a sample rate for your transactions, provide a number between `0` (0% of transactions sent) and `1` (100% of transactions sent) to the `tracesSampleRate` configuration option. For example, including `tracesSampleRate: 0.2` in your SDK config will cause the SDK to only send 20% of possible transaction events.

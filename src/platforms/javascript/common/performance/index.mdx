@@ -1,218 +1,188 @@
 ---
 title: Performance Monitoring
 sidebar_order: 20
-description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
+description: "Learn how to enable performance monitoring in your app."
 redirect_from:
   - /platforms/javascript/performance/apm-to-tracing/
 ---
 
-The `@sentry/tracing` package provides a `BrowserTracing` integration to add automatic instrumentation for monitoring the performance of browser applications.
+Sentry allows you to monitor the performance of your application, showing you how latency in one service may affect another service, and letting you pinpoint exactly which parts of a given operation may be responsible. To do this, it captures distributed traces consisting of transactions and spans, which measure individual services and individual operations within those services, respectively. You can learn more about this model in our [Distributed Tracing](/product/performance/distributed-tracing/) docs.
+
+Once tracing is enabled, certain types of operations will be measured automatically, and you can also choose to manually measure any operation you like. To learn more, see [Capturing Transactions Automatically](/platforms/javascript/performance/automatic/) and [Capturing Transactions Manually](/platforms/javascript/performance/manual/).
+
+## Enabling Tracing
+
+The first step is to install the tracing package, if you haven't done so already:
+
+```bash {tabTitle: ESM}
+# Using yarn
+$ yarn add @sentry/tracing
+
+# Using npm
+$ npm install @sentry/tracing
+```
+
+```html {tabTitle: CDN}
+<script
+  <!--
+    Note that `bundle.tracing.min.js` contains both `@sentry/browser` AND
+    `@sentry/tracing`, and should therefore be used in place of
+    `@sentry/browser`'s bundle rathern than in addition to it.
+  -->
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+```
+
+Once you've installed the package, there are two ways to enable tracing in your app:
+
+- Set a uniform sample rate for all transactions, by setting the `tracesSampleRate` option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set `tracesSampleRate` to `0.2`.)
+- Control the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the `tracesSampler` config option.
 
 ```javascript {tabTitle: ESM}
-// Substitude `@sentry/browser` for the integration you're using (if applicable)
+// If you're using one of our integration packages, like `@sentry/react` or
+// `@sentry/angular`, substitute its name for `@sentry/browser` here
 import * as Sentry from "@sentry/browser";
 
-// Pull in the additional tracing integration
+// If taking advantage of automatic instrumentation (highly recommended)
 import { Integrations as TracingIntegrations } from "@sentry/tracing";
+// Or, if only doing manual tracing
+// import * as _ from "@sentry/tracing"
+// Note: You MUST import the package in some way for tracing to work
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // This enables automatic instrumentation (highly recommeneded), but is not
+  // necessary for purely manual usage
   integrations: [new TracingIntegrations.BrowserTracing()],
-  tracesSampleRate: 1.0, // Be sure to lower this in production
+
+  // To set a uniform sample rate
+  tracesSampleRate: 0.2
+
+  // Alternatively, to control sampling dynamically
+  tracesSampler: samplingContext => { ... }
 });
 ```
 
 ```javascript {tabTitle: CDN}
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // This enables automatic instrumentation (highly recommeneded), but is not
+  // necessary for purely manual usage
   integrations: [new Sentry.Integrations.BrowserTracing()],
-  tracesSampleRate: 1.0, // Be sure to lower this in production
+
+  // To set a uniform sample rate
+  tracesSampleRate: 0.2
+
+  // Alternatively, to control sampling dynamically
+  tracesSampler: samplingContext => { ... }
 });
 ```
 
-After configuration, you should see both `pageload` and `navigation` transactions show up in your Sentry UI.
-
-You can pass many different options to the `BrowserTracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/tracing.browsertracingoptions.html).
-
-### tracingOrigins
-
-Usage:
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Integrations.BrowserTracing({
-      tracingOrigins: ["localhost", "my-site-url.com"],
-    }),
-  ],
-  tracesSampleRate: 1.0, // Be sure to lower this in production
-});
-```
-
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **One important thing to note is that the `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL can help make sure that requests do not unnecessarily have the `sentry-trace` header attached.**
-
-_Example:_
-
-- A frontend application is served from `example.com`
-- A backend service is served from `api.example.com`
-- The frontend application makes API calls to the backend
-- Therefore, the option needs to be configured like this: `new Integrations.BrowserTracing({tracingOrigins: ['api.example.com']})`
-- Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
-
-_NOTE:_ You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your set up. If you do not allow the `sentry-trace` header, the request might be blocked.
-
-### Connecting Backend and Frontend Transactions
-
-When instrumenting both frontend and backend with Sentry, you can connect the
-`pageload` transaction on the frontend with the request transaction that rendered the page on the backend.
-
-Once connected, the backend and frontend transactions will share the same `trace_id`, allowing you to navigate from one transaction to the other in Sentry.
-
-In your backend code, include a `<meta>` tag in the `<head>` of the rendered HTML document as in this example:
-
-```html
-<html>
-<head>
-  <meta name="sentry-trace" content="{{ span.toTraceparent() }}">
-  <!-- ... -->
-```
-
-The `name` attribute must be the string `"sentry-trace"` and the `content` attribute must be generated by your backend's Sentry SDK using `span.toTraceparent()` (or equivalent, depending on the backend platform).
-
-The `span` reference is either the transaction that rendered the page or any of its child spans. It defines the parent of the `pageload` transaction.
-
-For the correct association of transactions in a trace, make sure your backend will render a new and unique value for the `content` attribute for every request. Reusing the same value will cause unrelated traces to incorrectly share the same `trace_id`.
+If either of these options is set, tracing will be enabled in your app. (They are meant to be mutually exclusive, but if you do set both, `tracesSampler` will take precedence.) You can learn more about how they work in [Sampling Transactions](/platforms/javascript/performance/sampling/).
 
 <Alert level="info" title="Note"><markdown>
 
-JavaScript code running on a browser cannot read the response headers of the current page. Therefore, the `<meta>` tag is used to propagate tracing metadata from the backend instead of the `sentry-trace` HTTP header described earlier.
+When you first enable tracing, the easiest thing to do to test it is to set `tracesSampleRate` to `1.0`, because that guarantees that every transaction will be sent to Sentry for you to see.
+
+Once you're done with testing, however, we recommend that you either **lower your `tracesSampleRate` value, or switch to using `tracesSampler` to dynamically sample and filter your transactions**.
+
+Without sampling, our atomatic instrumenation will send a transaction any time any user loads any page or navigates anywhere in your app. That's a lot of transactions! Sampling allows you to get representative data without overwhelming either your system or your Sentry transaction quota.
 
 </markdown></Alert>
 
-### beforeNavigate
+## Connecting Backend and Frontend Transactions
 
-For `pageload` and `navigation` transactions, the `BrowserTracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigate` option to the `BrowserTracing` integration. This option allows you to pass in a function that takes in the location at the time of navigation and returns a new transaction name.
+To connect backend and frontend transactions into a single choherent trace, Sentry uses a `trace_id` value which is propagated between frontend and backend. Depending on the circumstance, this id is transmitted either in a request/response header or in an HTML `<meta>` tag. Linking transactions in this way makes it possible for you to navigate between them in the Sentry UI, so you can better understand how the different parts of your system are affecting each other.
 
-`beforeNavigate` is useful if you would like to leverage the routes from a custom routing library like `React Router` or if you want to reduce the cardinality of particular transactions.
+### Pageload
 
-```javascript
-import * as Sentry from "@sentry/browser";
-import { Integrations } from "@sentry/tracing";
+When enabling tracing in both frontend and backend and taking advantage of the automatic frontend instrumentation, you can connect the automatically-generated `pageload` transaction on the frontend with the request transaction that serves the page on the backend. Because JavaScript code running in a browser cannot read the response headers of the current page, the `trace_id` must be transmitted in the response itself, specifically in a `<meta>` tag in the `<head>` of the HTML sent from your backend.
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Integrations.BrowserTracing({
-      beforeNavigate: context => {
-        return {
-          ...context,
-          // You could use your UI's routing library to find the matching
-          // route template here. We don't have one right now, so do some basic
-          // parameter replacements.
-          name: location.pathname
-            .replace(/\d+/g, "<digits>")
-            .replace(/[a-f0-9]{32}/g, "<hash>"),
-        };
-      },
-    }),
-  ],
-  tracesSampleRate: 1.0, // Be sure to lower this in production
-});
+```html
+<html>
+  <head>
+    <meta name="sentry-trace" content="{{ span.toTraceparent() }}" />
+    <!-- ... -->
+  </head>
+</html>
 ```
 
-### shouldCreateSpanForRequest
+The `name` attribute must be the string `"sentry-trace"` and the `content` attribute must be generated by your backend's Sentry SDK using `span.toTraceparent()` (or equivalent, depending on the backend platform). This guarantees that a new and unique value will be generated for each request.
 
-This function can be used to filter our unwanted Spans like XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` is already filtering out what was defined in `tracingOrigins`.
+The `span` reference is either the transaction that serves the HTML, or any of its child spans. It defines the parent of the `pageload` transaction.
 
-```javascript
-import * as Sentry from "@sentry/browser";
-import { Integrations } from "@sentry/tracing";
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Integrations.BrowserTracing({
-      shouldCreateSpanForRequest: url => {
-        // Example of filter out spans that contain `health`
-        if (url.match(/health/)) {
-          return false;
-        }
-        return true;
-      },
-    }),
-  ],
-  tracesSampleRate: 1.0, // Be sure to lower this in production
-});
-```
+Once the data is included in the `<meta>` tag, our `BrowserTracing` integration will pick it up automatically and link it to the transaction generated on pageload. (Note that it will not get linked to automatically-generated `navigation` transactions, that is, those which don't require a full page reload. Each of those will be the result of a different request transaction on the backend, and therefore should have a unique `trace_id`.)
 
-### Manual Instrumentation
+### Navigation and Other XHR Requests
 
-To manually instrument certain regions of your code, you can create a transaction to capture them.
-This is valid for both JavaScript Browser and Node and works independently of the `BrowserTracing` integration.
+Once a page is loaded, any requests it makes and any responses your backend generates as a result are linked through a request/response header.
+
+As is the case with the `<meta>` tag discussed above, the header's name is `sentry-trace` and its value is obtained by calling `span.toTraceparent()` (or the equivalent), where `span` is either the relevant transaction or any of its children.
+
+All of Sentry's tracing-related integrations (`BrowserTracing`, `Http`, and `Express`) either generate or pick up and propagate this header automatically as appropriate, for all transactions and spans which they generate. You can also attach and read the header yourself, in any case in which you've manually created either a transaction or a span and it makes sense to do so.
+
+## Retrieving an Active Transaction
+
+In cases where you want to attach Spans to an already ongoing transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` object when there is a running transaction on the scope, otherwise it returns `undefined`. If you are using our BrowserTracing integration, by default we attach the transaction to the Scope, so you could do something like this:
 
 ```javascript
-const transaction = Sentry.startTransaction({ name: "test-transaction" });
-const span = transaction.startChild({ op: "functionX" }); // This function returns a Span
-// functionCallX
-span.finish(); // Remember that only finished spans will be sent with the transaction
-transaction.finish(); // Finishing the transaction will send it to Sentry
-```
-
-Here is a different example. If you want to create a transaction for a user interaction on your page, you need to do the following:
-
-```javascript
-// Let's say this function is invoked when a user clicks on the checkout button of your shop
-shopCheckout() {
-  // This will create a new Transaction for you
-  const transaction = Sentry.startTransaction('shopCheckout');
-  // set the transaction on the scope so it picks up any errors
-  hub.configureScope(scope => scope.setSpan(transaction));
-
-  // Assume this function makes an xhr/fetch call
-  const result = validateShoppingCartOnServer();
-
-  const span = transaction.startChild({
-    data: {
-      result
-    },
-    op: 'task',
-    description: `processing shopping cart result`,
-  });
-  processAndValidateShoppingCart(result);
-  span.finish();
-
-  transaction.finish();
-}
-```
-
-This example will send a transaction `shopCheckout` to Sentry. The transaction will contain a `task` span that measures how long `processAndValidateShoppingCart` took. Finally, the call to `transaction.finish()` will finish the transaction and send it to Sentry.
-
-#### Adding Additional Spans to the Transaction
-
-The next example contains the implementation of the hypothetical `processItem` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add to it all newly created spans as child operations. Keep in mind that each individual span needs to be manually finished; otherwise, that span will not show up in the transaction.
-
-```javascript
-function processItem(item, transaction) {
-  const span = transaction.startChild({
-    op: "http",
-    description: "GET /",
-  });
-
-  return new Promise((resolve, reject) => {
-    http.get(`/items/${item.id}`, response => {
-      response.on("data", () => {});
-      response.on("end", () => {
-        span.setTag("http.status_code", response.statusCode);
-        span.setData("http.foobarsessionid", getFoobarSessionid(response));
-        span.finish();
-        resolve(response);
-      });
+function myJsFunction() {
+  const transaction = Sentry.getCurrentHub()
+    .getScope()
+    .getTransaction();
+  if (transaction) {
+    let span = transaction.startChild({
+      op: "encode",
+      description: "parseAvatarImages",
     });
-  });
+    // Do something
+    span.finish();
+  }
 }
 ```
 
-### Grouping Transactions
+## Adding Query Information and Parameters to Spans
+
+Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
+
+For example, a 200+ character tagged request:
+
+`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=161803398874989484820458683436563811772030917980576`
+
+The 200+ character request above will become truncated to:
+
+`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
+
+Instead, using `span.set_tag` and `span.set_data` preserves the details of this query using structured metadata. This could be done over `baseUrl`, `endpoint`, and `parameters`:
+
+```javascript
+const baseUrl = "https://empowerplant.io";
+const endpoint = "/api/0/projects/ep/setup_form";
+const parameters = {
+  user_id: 314159265358979323846264338327,
+  tracking_id: "EasyAsABC123OrSimpleAsDoReMi",
+  product_name: PlantToHumanTranslator,
+  product_id: 161803398874989484820458683436563811772030917980576,
+};
+
+const span = transaction.startChild({
+  op: "request",
+  description: "setup form",
+});
+
+span.setTag("baseUrl", baseUrl);
+span.setTag("endpoint", endpoint);
+span.setData("parameters", parameters);
+// you may also find some parameters to be valuable as tags
+span.setData("user_id", parameters.user_id);
+http.get(`${base_url}/${endpoint}/`, (data = parameters));
+```
+
+## Grouping Transactions
 
 When Sentry captures transactions, they are assigned a transaction name. This name is generally auto-generated by the Sentry SDK based on the framework integrations you are using. If you can't leverage the automatic transaction generation (or want to customize how transaction names are generated) you can use a global event processor that is registered when you initialize the SDK with your configuration.
 
@@ -254,61 +224,4 @@ Sentry.init({
     }),
   ],
 });
-```
-
-### Retrieving a Transaction
-
-In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` in case there is a running Transaction on the scope, otherwise it returns `undefined`. If you are using our BrowserTracing integration by default we attach the Transaction to the Scope. So you could do something like this:
-
-```javascript
-function myJsFunction() {
-  const transaction = Sentry.getCurrentHub()
-    .getScope()
-    .getTransaction();
-  if (transaction) {
-    let span = transaction.startChild({
-      op: "encode",
-      description: "parseAvatarImages",
-    });
-    // Do something
-    span.finish();
-  }
-}
-```
-
-### Adding Query Information and Parameters to Spans
-
-Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
-
-For example, a 200+ character tagged request:
-
-`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=161803398874989484820458683436563811772030917980576`
-
-The 200+ character request above will become truncated to:
-
-`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
-
-Instead, using `span.set_tag` and `span.set_data` preserves the details of this query using structured metadata. This could be done over `baseUrl`, `endpoint`, and `parameters`:
-
-```javascript
-const baseUrl = "https://empowerplant.io";
-const endpoint = "/api/0/projects/ep/setup_form";
-const parameters = {
-  user_id: 314159265358979323846264338327,
-  tracking_id: "EasyAsABC123OrSimpleAsDoReMi",
-  product_name: PlantToHumanTranslator,
-  product_id: 161803398874989484820458683436563811772030917980576,
-};
-
-const span = transaction.startChild({
-  op: "request",
-  description: "setup form",
-});
-
-span.setTag("baseUrl", baseUrl);
-span.setTag("endpoint", endpoint);
-span.setData("parameters", parameters);
-// you may also find some parameters to be valuable as tags
-span.setData("user_id", parameters.user_id);
-http.get(`${base_url}/${endpoint}/`, (data = parameters));
 ```
