@@ -7,6 +7,8 @@ import Search from "./search";
 import SmartLink from "./smartLink";
 import usePlatform, { usePlatformList } from "./hooks/usePlatform";
 
+import NavbarProductDropdown from "./navbarProductDropdown";
+
 type Props = {
   platforms?: string[];
 };
@@ -21,11 +23,7 @@ export default ({ platforms }: Props): JSX.Element => {
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Search path={location.pathname} platforms={platforms} />
         <Nav className="justify-content-end" style={{ flex: 1 }}>
-          <Nav.Item>
-            <SmartLink className="nav-link" to="/product/">
-              Product
-            </SmartLink>
-          </Nav.Item>
+          <NavbarProductDropdown />
           <NavDropdown
             title={
               currentPlatform ? (
@@ -42,7 +40,7 @@ export default ({ platforms }: Props): JSX.Element => {
                 "Platforms"
               )
             }
-            id="platforms"
+            id="nd-platforms"
           >
             {platformList.map(platform => (
               <SmartLink

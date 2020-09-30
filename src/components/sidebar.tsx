@@ -44,16 +44,31 @@ export const Sidebar = ({ data }: ChildProps): JSX.Element => {
         root="product"
         title="Product"
         tree={tree}
-        exclude={["/product/integrations/"]}
+        exclude={[
+          "/product/integrations/",
+          "/product/cli/",
+          "/product/security/",
+          "/product/accounts/",
+          "/product/relay/",
+        ]}
+      />
+      <DynamicNav
+        root="product/accounts"
+        title="Account Management"
+        tree={tree}
+      />
+      <DynamicNav root="product/relay" title="Relay" tree={tree} />
+      <DynamicNav root="product/cli" title="sentry-cli" tree={tree} />
+      <DynamicNav
+        root="product/security"
+        title="Security and Legal"
+        tree={tree}
       />
       <DynamicNav
         root="product/integrations"
         title="Integrations"
         tree={tree}
       />
-      <DynamicNav root="accounts" title="Account Management" tree={tree} />
-      <DynamicNav root="cli" title="sentry-cli" tree={tree} />
-      <DynamicNav root="meta" title="Security and Legal" tree={tree} />
       <li className="mb-3" data-sidebar-branch>
         <div
           className="sidebar-title d-flex align-items-center mb-0"
