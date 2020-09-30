@@ -1,0 +1,71 @@
+---
+title: Capturing Transactions Manually
+sidebar_order: 20
+description: "Learn how to capture performance data on any action in your app."
+---
+
+### Manual Instrumentation
+
+To manually instrument certain regions of your code, you can create transactions to capture them. This is valid for all JavaScript SDKs (both backend and frontend) and works independently of the `Express`, `Http`, and `BrowserTracing` integrations.
+
+```javascript
+const transaction = Sentry.startTransaction({ name: "test-transaction" });
+const span = transaction.startChild({ op: "functionX" }); // This function returns a Span
+// functionCallX
+span.finish(); // Remember that only finished spans will be sent with the transaction
+transaction.finish(); // Finishing the transaction will send it to Sentry
+```
+
+For example, if you want to create a transaction for a user interaction on your page, you can do this:
+
+```javascript
+// Let's say this function is invoked when a user clicks on the checkout button of your shop
+shopCheckout() {
+  // This will create a new Transaction for you
+  const transaction = Sentry.startTransaction('shopCheckout');
+  // set the transaction on the scope so it picks up any errors
+  hub.configureScope(scope => scope.setSpan(transaction));
+
+  // Assume this function makes an xhr/fetch call
+  const result = validateShoppingCartOnServer();
+
+  const span = transaction.startChild({
+    data: {
+      result
+    },
+    op: 'task',
+    description: `processing shopping cart result`,
+  });
+  processAndValidateShoppingCart(result);
+  span.finish();
+
+  transaction.finish();
+}
+```
+
+This example will send a transaction `shopCheckout` to Sentry. The transaction will contain a `task` span that measures how long `processAndValidateShoppingCart` took. Finally, the call to `transaction.finish()` will finish the transaction and send it to Sentry.
+
+You can also take advantage of promises when creating spans for async operations. Keep in mind, though, that a span must finish before `transaction.finish()` is called in order to be included in the transaction.
+
+For example:
+
+```javascript
+function processItem(item, transaction) {
+  const span = transaction.startChild({
+    op: "http",
+    description: `GET /items/:item-id`,
+  });
+
+  return new Promise((resolve, reject) => {
+    http.get(`/items/${item.id}`, response => {
+      response.on("data", () => {});
+      response.on("end", () => {
+        span.setTag("http.status_code", response.statusCode);
+        span.setData("http.foobarsessionid", getFoobarSessionid(response));
+        span.finish();
+        resolve(response);
+      });
+    });
+  });
+}
+```

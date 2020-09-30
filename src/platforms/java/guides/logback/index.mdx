@@ -15,12 +15,12 @@ The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tre
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-logback</artifactId>
-    <version>{{ packages.version('sentry.java', '1.7.30') }}</version>
+    <version>{{ packages.version('sentry.java', '3.0.0') }}</version>
 </dependency>
 ```
 
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '1.7.30') }}'
+implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '3.0.0') }}'
 ```
 
 ```scala {tabTitle: SBT}
@@ -31,7 +31,7 @@ For other dependency managers see the [central Maven repository](https://search.
 
 ### Usage
 
-The following example configures a `ConsoleAppender` that logs to standard out at the `INFO` level and a `SentryAppender` that logs to the Sentry server at the `WARN` level. The `ConsoleAppender` is only provided as an example of a non-Sentry appender that is set to a different logging threshold, like one you may already have in your project.
+The following example configures a `ConsoleAppender` that logs to standard out at the `INFO` level and a `SentryAppender` that logs to the Sentry server at the `ERROR` level. The `ConsoleAppender` is only provided as an example of a non-Sentry appender that is set to a different logging threshold, like one you may already have in your project.
 
 Example configuration using the `logback.xml` format:
 
@@ -46,13 +46,10 @@ Example configuration using the `logback.xml` format:
 
     <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
     <appender name="Sentry" class="io.sentry.logback.SentryAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
-        </filter>
-        <!-- Optionally add an encoder -->
-        <encoder>
-           <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
+        <options>
+            <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
+            <dsn>___PUBLIC_DSN___</dsn>
+        </options>
     </appender>
 
     <!-- Enable the Console and Sentry appenders, Console is provided as an example
@@ -64,9 +61,63 @@ Example configuration using the `logback.xml` format:
 </configuration>
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](configuration/options/#setting-the-dsn) for ways you can do this.
+### DSN Configuration
 
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
+Note that **you need to configure your DSN** (client key).
+
+```xml
+<appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <options>
+        <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
+        <dsn>___PUBLIC_DSN___</dsn>
+    </options>
+</appender>
+```
+
+If the DSN is not present in the `logback.xml` configuration, Sentry will attempt to read it from the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
+
+### Advanced Configuration
+
+<!-- TODO: link to correct site with explanation of each configuration property -->
+Optionally you can configure other values such as `environment` and `release`. [See the configuration page](configuration/options/#setting-the-dsn) for the in-depth explanation of each property.
+
+```xml
+<appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <options>
+        <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
+        <dsn>___PUBLIC_DSN___</dsn>
+        <shutdownTimeout>2000</shutdownTimeout>
+        <flushTimeoutMillis>15000</flushTimeoutMillis>
+        <debug>false</debug>
+        <maxBreadcrumbs>100</maxBreadcrumbs>
+        <release>1.0.0</release>
+        <environment>production</environment>
+        <sampleRate>1.0</sampleRate>
+        <attachThreads>false</attachThreads>
+        <attachStacktrace>false</attachStacktrace>
+        <serverName>host-4</serverName>
+        <connectionTimeoutMillis>5000</connectionTimeoutMillis>
+        <readTimeoutMillis>5000</readTimeoutMillis>
+    </options>
+</appender>
+```
+
+### Minimum log level
+
+Two log levels are used to configure this integration (see options below). One will configure the lowest level required for a log message to become an event (`minimumEventLevel`) sent to Sentry. The other option (`minimumBreadcrumbLevel`) configures the lowest level a message has to be to become a breadcrumb. Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.info` or `logger.warn`, no event is sent to Sentry. If you then log with `logger.error`, an event is sent to Sentry which includes those 100 `info` or `warn` messages. For this to work, `SentryAppender` needs to receive **all** log entries in order to decide what to keep as breadcrumb or sent as event. Make sure to set the `SentryAppender` log level configuration to a value lower than what you set for the `minimumBreadcrumbLevel` and `minimumEventLevel` to make sure `SentryAppender` receives these log messages.
+
+```xml
+<appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <options>
+        <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
+        <dsn>___PUBLIC_DSN___</dsn>
+    </options>
+    <!-- Optionally change minimum Event level. Default for Events is ERROR -->
+    <minimumEventLevel>WARN</minimumEventLevel>
+    <!-- Optionally change minimum Breadcrumbs level. Default for Breadcrumbs is INFO -->
+    <minimumBreadcrumbLevel>DEBUG</minimumBreadcrumbLevel>
+</appender>
+```
 
 ### Additional Data
 
@@ -74,53 +125,39 @@ It’s possible to add extra data to events thanks to [the MDC system provided b
 
 #### Mapped Tags
 
-By default all MDC parameters are stored under the “Additional Data” tab in Sentry. By specifying the `mdctags` option in your configuration you can choose which MDC keys to send as tags instead, which allows them to be used as filters within the Sentry UI.
+By default all MDC parameters are stored under the “MDC” tab in Sentry.
 
-```java
+```java {tabTitle:Java}
 void logWithExtras() {
     // MDC extras
     MDC.put("Environment", "Development");
     MDC.put("OS", "Linux");
 
-    // This sends an event where the Environment and OS MDC values are set as additional data
+    // This sends an event where the Environment and OS MDC values are set as MDC entries
     logger.error("This is a test");
 }
 ```
 
-#### Global Tags
+```kotlin {tabTitle:Kotlin}
+fun logWithExtras() {
+    // MDC extras
+    MDC.put("Environment", "Development");
+    MDC.put("OS", "Linux");
 
-Sometimes it's useful to add tags and extra data to all log events.
-You can add tags and extras to logs globally (not thread-bound) by adding entries to the LoggerContext.
-Tags are distinguished by the existing mdcTags configuration property detailed above.
-
-```java
-  LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
-  context.putProperty("global", "value");
+    // This sends an event where the Environment and OS MDC values are set as MDC entries
+    logger.error("This is a test");
+}
 ```
-
-Global log entries can also be added via third-party encoders
-(_whether such entries can be distinguished as tags or entries, however, is encoder implementation-specific_).
-The `net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder` for example has a `customFields` option:
-
-```java
-  <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-    <customFields>{"appname":"myWebservice","roles":["customerorder","auth"]}</customFields>
-  </encoder>
-```
-
-In the event of naming clashes, the more specific MDC tags will take precedence.
 
 ### In Practice
 
-```java
+```java {tabTitle:Java}
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.slf4j.MarkerFactory;
 
 public class MyClass {
     private static final Logger logger = LoggerFactory.getLogger(MyClass.class);
-    private static final Marker MARKER = MarkerFactory.getMarker("myMarker");
 
     void logSimpleMessage() {
         // This sends a simple event to Sentry
@@ -130,17 +167,14 @@ public class MyClass {
     void logWithBreadcrumbs() {
         // Record a breadcrumb that will be sent with the next event(s),
         // by default the last 100 breadcrumbs are kept.
-        Sentry.record(
-            new BreadcrumbBuilder().setMessage("User made an action").build()
-        );
+        Sentry.addBreadcrumb("User made an action");
+
+        // Log entries below `minimumEventLevel` and above or equal to `minimumBreadcrumbLevel`
+        // are recorded as breadcrumbs
+        logger.info("User made another action");
 
         // This sends a simple event to Sentry
         logger.error("This is a test");
-    }
-
-    void logWithTag() {
-        // This sends an event with a tag named 'logback-Marker' to Sentry
-        logger.error(MARKER, "This is a test");
     }
 
     void logWithExtras() {
@@ -148,24 +182,6 @@ public class MyClass {
         MDC.put("extra_key", "extra_value");
         // This sends an event with extra data to Sentry
         logger.error("This is a test");
-    }
-
-    void logWithGlobalTag() {
-       LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
-       // This adds a tag named 'logback-Marker' to every subsequent Sentry event
-       context.putProperty(MARKER, "This is a test");
-
-        // This sends an event to Sentry, and a tag named 'logback-Marker' will be added.
-        logger.info("This is a test");
-    }
-
-    void addGlobalExtras() {
-       LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
-       // This adds extra data to every subsequent Sentry event
-       context.putProperty("extra_key", "extra_value");
-
-       // This sends an event to Sentry, and extra data ("extra_key", "extra_value") will be added.
-        logger.info("This is a test");
     }
 
     void logException() {
@@ -179,6 +195,56 @@ public class MyClass {
 
     void unsafeMethod() {
         throw new UnsupportedOperationException("You shouldn't call this!");
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.core.Sentry
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+
+class Main {
+    companion object {
+        private val logger = LoggerFactory.getLogger(Main::class.java)
+    }
+
+    fun logSimpleMessage() {
+        // This sends a simple event to Sentry
+        logger.error("This is a test")
+    }
+
+    fun logWithBreadcrumbs() {
+        // Record a breadcrumb that will be sent with the next event(s),
+        // by default the last 100 breadcrumbs are kept.
+        Sentry.addBreadcrumb("User made an action")
+
+        // Log entries below `minimumEventLevel` and above or equal to `minimumBreadcrumbLevel`
+        // are recorded as breadcrumbs
+        logger.info("User made another action")
+
+        // This sends a simple event to Sentry
+        logger.error("This is a test")
+    }
+
+    fun logWithExtras() {
+        // MDC extras
+        MDC.put("extra_key", "extra_value")
+        // This sends an event with extra data to Sentry
+        logger.error("This is a test")
+    }
+
+    fun logException() {
+        try {
+            unsafeMethod()
+        } catch (e: Exception) {
+            // This sends an exception event to Sentry
+            logger.error("Exception caught", e)
+        }
+    }
+
+    fun unsafeMethod() {
+        throw UnsupportedOperationException("You shouldn't call this!")
     }
 }
 ```
