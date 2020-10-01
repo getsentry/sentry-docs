@@ -11,7 +11,7 @@ initialized.
 
 ## Common Options
 
-The list of common options across SDKs. These work more or less the same in all SDKs, but some subtle differences will exist to better support the platform. Options that can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically. See [Working with Projects](/cli/configuration/#sentry-cli-working-with-projects) for more information.
+The list of common options across SDKs. These work more or less the same in all SDKs, but some subtle differences will exist to better support the platform. Options that can be read from an environment variable or your `~/.sentryclirc` file (`SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`) are read automatically. See [Working with Projects](/product/cli/configuration/#sentry-cli-working-with-projects) for more information.
 
 <ConfigKey name="dsn"><markdown>
 
@@ -53,7 +53,7 @@ By default all types of errors are be reported (equivalent to `E_ALL`).
 
 <ConfigKey name="sample-rate"><markdown>
 
-Configures the sample rate as a percentage of events to be sent in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of events are sent. If set to `0.1` only 10% of events will be sent. Events are picked randomly.
+Configures the sample rate for error events, in the range of `0.0` to `1.0`. The default is `1.0` which means that 100% of error events are sent. If set to `0.1` only 10% of error events will be sent. Events are picked randomly.
 
 </markdown></ConfigKey>
 
@@ -73,15 +73,15 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </markdown></ConfigKey>
 
-<ConfigKey name="send-default-pii" supported={["python"]}><markdown>
+<ConfigKey name="send-default-pii" supported={["python", "java"]}><markdown>
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
-If possible, we recommended turning on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_](/data-management/sensitive-data/).
+If possible, we recommended turning on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
 </markdown></ConfigKey>
 
-<ConfigKey name="server-name" supported={["python", "node", "ruby", "php"]}><markdown>
+<ConfigKey name="server-name" supported={["python", "node", "ruby", "php", "java"]}><markdown>
 
 This option can be used to supply a "server name." When provided, the name of the server is sent along and persisted in the event. For many integrations the server name actually corresponds to the device hostname, even in situations where the machine is not actually a server. Most SDKs
 will attempt to auto-discover this value.
@@ -101,13 +101,13 @@ will be sent. This is a "contains" match to the entire file URL. As a result, if
 
 </markdown></ConfigKey>
 
-<ConfigKey name="in-app-include" supported={["python", "rust", "csharp", "php"]}><markdown>
+<ConfigKey name="in-app-include" supported={["python", "rust", "csharp", "php", "java"]}><markdown>
 
-A list of string prefixes of module names that belong to the app. This option takes precedence over `in_app_exclude`.
+A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
 
 </markdown></ConfigKey>
 
-<ConfigKey name="in-app-exclude" supported={["python", "rust", "csharp", "php"]}><markdown>
+<ConfigKey name="in-app-exclude" supported={["python", "rust", "csharp", "php", "java"]}><markdown>
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
@@ -177,19 +177,19 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 </markdown></ConfigKey>
 
-<PlatformSection supported={["javascript", "python", "node", "php"]}><markdown>
+<PlatformSection supported={["javascript", "java", "python", "node", "php"]}><markdown>
 
 ## Transport Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<ConfigKey name="transport" supported={["javascript", "php", "python"]}><markdown>
+<ConfigKey name="transport" supported={["javascript", "php", "python", "java"]}><markdown>
 
 Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
 </markdown></ConfigKey>
 
-<ConfigKey name="http-proxy" supported={["node", "php", "python"]}><markdown>
+<ConfigKey name="http-proxy" supported={["node", "php", "python", "java"]}><markdown>
 
 When set, a proxy can be configured that should be used for outbound requests. This is also used for HTTPS requests unless a separate `https-proxy` is configured. However, not all SDKs support a separate HTTPS proxy. SDKs will attempt to default to the system-wide configured proxy, if possible. For instance, on Unix systems, the `http_proxy` environment variable will be picked up.
 
@@ -201,10 +201,22 @@ Configures a separate proxy for outgoing HTTPS requests. This value might not be
 
 </markdown></ConfigKey>
 
-<ConfigKey name="shutdown-timeout" supported={["python", "node"]}><markdown>
+<ConfigKey name="shutdown-timeout" supported={["python", "node", "java"]}><markdown>
 
 Controls how many seconds to wait before shutting down. Sentry SDKs send events from a background queue. This queue is given a certain amount to drain pending events. The default is SDK specific but typically around two seconds. Setting this value too low may cause problems for sending events from command line applications. Setting the value too high will cause the application to block for a long time for users experiencing network connectivity problems.
 
 </markdown></ConfigKey>
 
 </markdown></PlatformSection>
+
+## Tracing Options
+
+<ConfigKey name="tracesSampleRate" supported={["node", "javascript", "python", "php"]}><markdown>
+
+A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or `tracesSampler` must be defined to enable tracing.
+</markdown></ConfigKey>
+
+<ConfigKey name="tracesSampler" supported={["node", "javascript", "python", "php"]}><markdown>
+
+A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between 0 (0% chance of being sent) and 1 (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or `tracesSampleRate` must be defined to enable tracing.
+</markdown></ConfigKey>

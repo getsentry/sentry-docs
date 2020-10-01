@@ -2,7 +2,7 @@ import {
   standardSDKSlug,
   extrapolate,
   sentryAlgoliaIndexSettings,
-} from "sentry-global-search";
+} from "@sentry-internal/global-search";
 
 const pageQuery = `{
     pages: allSitePage {

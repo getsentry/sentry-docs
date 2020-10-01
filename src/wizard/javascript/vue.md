@@ -44,7 +44,10 @@ Sentry.init({
     }),
     new Integrations.BrowserTracing(),
   ],
-  tracesSampleRate: 1,
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
 });
 ```
 
@@ -79,7 +82,10 @@ Sentry.init({
     }),
     new Sentry.Integrations.BrowserTracing(),
   ],
-  tracesSampleRate: 1,
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
 });
 ```
 

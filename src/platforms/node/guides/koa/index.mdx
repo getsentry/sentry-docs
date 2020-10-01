@@ -51,18 +51,25 @@ $ npm install --save @sentry/node @sentry/tracing
 $ yarn add @sentry/node @sentry/tracing
 ```
 
-Creates and attaches a transaction to each context
+Create and attach a transaction to each request:
 
 ```javascript
 const Sentry = require("@sentry/node");
-const { Span } = require("@sentry/tracing");
+const {
+  extractTraceparentData,
+  Span,
+  stripUrlQueryAndFragment,
+} = require("@sentry/tracing");
 const Koa = require("koa");
 const app = new Koa();
 const domain = require("domain");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  tracesSampleRate: 1.0, // Be sure to lower this in production
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
 });
 
 // not mandatory, but adding domains does help a lot with breadcrumbs
@@ -89,33 +96,28 @@ const requestHandler = (ctx, next) => {
 
 // this tracing middleware creates a transaction per request
 const tracingMiddleWare = async (ctx, next) => {
-  // captures span of upstream app
-  const sentryTraceId = ctx.request.get("sentry-trace");
-  let traceId;
-  let parentSpanId;
-  let sampled;
-  if (sentryTraceId) {
-    const span = Span.fromTraceparent(sentryTraceId);
-    if (span) {
-      traceId = span.traceId;
-      parentSpanId = span.parentSpanId;
-      sampled = span.sampled;
-    }
+  const reqMethod = (ctx.method || "").toUpperCase();
+  const reqUrl = ctx.url && stripUrlQueryAndFragment(ctx.url);
+
+  // connect to trace of upstream app
+  let traceparentData;
+  if (ctx.request.get("sentry-trace")) {
+    traceparentData = extractTraceparentData(ctx.request.get("sentry-trace"));
   }
-  const transaction = Sentry.startTransaction({
-    name: `${ctx.method} ${ctx.url}`,
+
+  const transaction = startTransaction({
+    name: `${reqMethod} ${reqUrl}`,
     op: "http.server",
-    parentSpanId,
-    traceId,
-    sampled,
+    ...traceparentData,
   });
+
   ctx.__sentry_transaction = transaction;
   await next();
 
   // if using koa router, a nicer way to capture transaction using the matched route
   if (ctx._matchedRoute) {
     const mountPath = ctx.mountPath || "";
-    transaction.setName(`${ctx.method} ${mountPath}${ctx._matchedRoute}`);
+    transaction.setName(`${reqMethod} ${mountPath}${ctx._matchedRoute}`);
   }
   transaction.setHttpStatus(ctx.status);
   transaction.finish();

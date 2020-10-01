@@ -1,0 +1,295 @@
+---
+title: Advanced Usage
+sidebar_order: 2
+---
+
+## Requirements
+
+For the use of the SDK with the NDK, the minimal required API level is 16.
+
+If you want to use the SDK without the NDK, you can:
+
+- disable the NDK as described in the configuration section
+- or use sentry-android-core that doesn't contain the NDK and can be used separately. The minimal required API level for this SDK is 14.
+
+To add the sentry-android-core library, you need to provide the following dependency in your build.gradle file.
+
+```groovy {filename:app/build.gradle}
+// ADD COMPATIBILITY OPTIONS TO BE COMPATIBLE WITH JAVA 1.8
+compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+// ADD SENTRY ANDROID AS A DEPENDENCY
+dependencies {
+    // https://github.com/getsentry/sentry-android/releases
+    implementation 'io.sentry:sentry-android-core:{version}'
+}
+```
+
+If you want to use the SDK with the NDK, but you still want to support the devices on the API level lower than 16, you can update your manifest as follows:
+
+```xml {filename:AndroidManifest.xml}
+<manifest>
+    <!-- Merging strategy for the imported manifests -->
+    <uses-sdk
+        tools:overrideLibrary="io.sentry.android" />
+</manifest>
+```
+
+With these changes:
+
+- SDK will be enabled on all devices with API level ≥ 14
+- SDK with NDK will be enabled on all devices with API level ≥ 16
+
+## Configuration options
+
+### NDK Integration
+
+The NDK integration is packed with the SDK and enabled out by default with each start of the SDK.
+
+Alternatively, you can disable the NDK integration by adding the following line into your manifest.
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.ndk.enable" android:value="false" />
+</application>
+```
+
+### Application Not Responding (ANR)
+
+Whenever the main UI thread of the application is blocked for more than four seconds, the SDK will report the problem to the server. (Sentry does not report the ANR if the application is in debug mode.)
+
+If you do not want to monitor the ANR, please add the following line into your manifest.
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.anr.enable" android:value="false" />
+</application>
+```
+
+If you want to specify how long the thread should be blocked before the ANR is reported, provide the duration in the attribute `io.sentry.anr.timeout-interval-mills` in your manifest.
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.anr.timeout-interval-mills" android:value="2000" />
+</application>
+```
+
+### “In Application” Stack Frames
+
+Sentry differentiates stack frames that are directly related to your application (“in application”) from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as inApp. The difference is visible in the Sentry web interface, where only the “in application” frames are displayed by default.
+
+You can configure which package prefixes belong in your application and which don't.
+
+```java
+// This can be set only during the initialization of the SDK.
+SentryAndroid.init(this, options -> {
+        // set all sub packages of java. as packages that do not belong to your application
+        options.addInAppExclude("java.");
+
+        // set all sub packages of io.sentry as packages that belong to your application
+        options.addInAppInclude("io.sentry");
+
+    });
+```
+
+### Disable Automatic Breadcrumbs
+
+If you want to disable the automatic collection of breadcrumbs, please add the following items into your manifest.
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <!--    To disable the activity lifecycle breadcrumbs integration-->
+    <meta-data android:name="io.sentry.breadcrumbs.activity-lifecycle" android:value="false" />
+
+    <!--     To disable the app lifecycle breadcrumbs integration-->
+    <meta-data android:name="io.sentry.breadcrumbs.app-lifecycle" android:value="false" />
+
+    <!--    To disable the system events breadcrumbs integration-->
+    <meta-data android:name="io.sentry.breadcrumbs.system-events" android:value="false" />
+
+    <!--    To disable the app components breadcrumbs integration-->
+    <meta-data android:name="io.sentry.breadcrumbs.app-components" android:value="false" />
+</application>
+```
+
+### Multi-Dex Support
+
+If you're using Multi-Dex and our SDK, we would recommend updating your Multi-Dex configuration:
+
+```groovy {filename:app/build.gradle}
+release {
+    multiDexKeepProguard file('multidex-config.pro')
+}
+```
+
+And, add to `multidex-config.pro` the following lines:
+
+```
+-keep class io.sentry.android.core.SentryAndroidOptions
+-keep class io.sentry.android.ndk.SentryNdk
+```
+
+If you experience issues like `Could not find class` on devices running the `Dalvik VM`, you may expand the above rules to keep the necessary classes in the main dex file.
+
+### AndroidX Support
+
+Sentry uses the AndroidX libraries for detecting when the Application is either in the background or in the foreground. This is necessary for having an accurate result across all the Android OS versions.
+
+We check at runtime for availability, so if you're not using AndroidX libraries, you can remove them from Sentry's transitive dependencies.
+
+```groovy
+implementation ('io.sentry:sentry-android:{version}') {
+    exclude group: 'androidx.lifecycle', module: 'lifecycle-process'
+    exclude group: 'androidx.lifecycle', module: 'lifecycle-common-java8'
+}
+```
+
+Be aware that by removing those transitive dependencies, the automatic session tracking won't work, but you can still do it manually by calling the public APIs `startSession` and `endSession`.
+
+### Integrating the NDK
+
+Due to current limitations in how `sentry-native` works, it cannot yet identify native libraries loaded directly from
+`.apk` files and instead needs to have access to the extracted libraries on the file-system.
+This functionality is [disabled by default](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs)
+when using a Android Gradle Plugin >= v3.6.0, and it needs to be enabled with the
+[`extractNativeLibs`](https://developer.android.com/guide/topics/manifest/application-element#extractNativeLibs) configuration option.
+
+Apart from this, `sentry-native` also uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
+internally, and will therefore not work out of the box on newer Android devices which have their own conflicting pointer tagging.
+To prevent this, disable the [`allowNativeHeapPointerTagging`](https://developer.android.com/guide/topics/manifest/application-element#allowNativeHeapPointerTagging) configuration option.
+
+**Example AndroidManifest.xml**:
+
+```xml {filename:AndroidManifest.xml}
+<application
+    android:allowNativeHeapPointerTagging="false"
+    android:extractNativeLibs="true"
+    >
+</application>
+```
+
+To use the Android NDK in your native code, include the Sentry NDK libraries into your project so that the compiler can link the libraries during the build.
+
+To do so, use the AndroidNativeBundle Gradle plugin that copies the native libraries from the Sentry NDK into the location that can provide links via the CmakeLists.txt configuration file.
+
+First, we need to declare the dependency in the project build.gradle file:
+
+```groovy {filename:build.gradle}
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        // Add the line below, the plugin that copies the binaries
+        // https://github.com/howardpang/androidNativeBundle/releases
+        classpath 'com.ydq.android.gradle.build.tool:nativeBundle:{version}'
+    }
+}
+```
+
+Once the dependency is declared, we can use it in the application build.gradle:
+
+```groovy {filename:app/build.gradle}
+apply plugin: 'com.ydq.android.gradle.native-aar.import'
+```
+
+The last step is to update the CmakeLists.txt configuration to link the Sentry NDK libraries:
+
+```
+# include paths generated by androidNativeBundle
+include (${ANDROID_GRADLE_NATIVE_BUNDLE_PLUGIN_MK})
+# change native-lib to your native lib's name
+target_link_libraries(native-lib ${ANDROID_GRADLE_NATIVE_MODULES})
+```
+
+Now you can use the Sentry NDK API just by including the sentry.h in your code:
+
+```c
+#include <jni.h>
+#include <android/log.h>
+#include <sentry.h>
+
+#define TAG "sentry-android-demo"
+extern "C" JNIEXPORT jstring JNICALL
+
+Java_io_sentry_demo_NativeDemo_crash(JNIEnv *env, jclass cls) {
+    __android_log_print(ANDROID_LOG_WARN, "", "Capture a message.");
+    sentry_value_t event = sentry_value_new_message_event(
+            /*   level */ SENTRY_LEVEL_INFO,
+            /*  logger */ "custom",
+            /* message */ "Sample message!"
+    );
+    sentry_capture_event(event);
+}
+```
+
+To symbolicate the stack trace from native code, we need to have access to the debug symbols of your application. Please check the full documentation on [uploading files](/workflow/debug-files/#uploading-files) to learn more about the upload of the debug symbols.
+
+Example of uploading all your .so files:
+
+```bash
+sentry-cli login
+sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/merged_native_libs/{buildVariant}
+```
+
+The Sentry Gradle Plugin can be [configured](#gradle-configuration) to upload the debug symbols and sources automatically.
+
+## Manual Instrumentation
+
+Initialize the SDK manually when you need to provide additional configuration to the SDK that cannot be specified in the manifest.
+
+To initialize the SDK manually, disable the auto initialization. You can do so by adding the following line into your manifest:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.auto-init" android:value="false" />
+</application>
+```
+
+Or, to completely remove the merging of the `ContentProvider`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <provider
+        android:name="io.sentry.android.core.SentryInitProvider"
+        android:authorities="${applicationId}.SentryInitProvider"
+        tools:node="remove" />
+</application>
+```
+
+The next step is to initialize the SDK directly in your code.
+
+The SDK can catch errors and crashes only after you've initialized it. So, we recommend calling `SentryAndroid.init` in the instance of the Application class right after the application is created.
+
+Configuration options will be loaded from the manifest so that you don't need to have the static properties in your code. In the `init` method, you can provide a callback that will modify the configuration and also register new options.
+
+```java
+public class SentryApplication extends Application {
+    public void onCreate() {
+        super.onCreate();
+        /**
+            * Manual Initialization of the Sentry Android SDK
+            * @Context - Instance of the Android Context
+            * @Options - Call back function that you need to provide to be able to modify the options.
+            * The call back function is provided with the options loaded from the manifest.
+            *
+            */
+        SentryAndroid.init(this, options -> {
+            // Add a callback that will be used before the event is sent to Sentry.
+            // With this callback, you can modify the event or, when returning null, also discard the event.
+            options.setBeforeSend((event, hint) -> {
+                if (SentryLevel.DEBUG.equals(event.getLevel()))
+                    return null;
+                else
+                    return event;
+            });
+        });
+    }
+}
+```
+
+For more details about the available configurations, see [Configuration options](#configuration-options).

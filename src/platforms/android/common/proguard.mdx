@@ -1,0 +1,76 @@
+---
+title: ProGuard
+sidebar_order: 100
+---
+
+To use ProGuard with Sentry, upload the ProGuard mapping files by using our Gradle integration (**recommended**) or manually by using [sentry-cli](/product/cli/dif/#proguard-mapping-upload).
+
+## Gradle
+
+Using Gradle (Android Studio) in your `app/build.gradle` add:
+
+```groovy {filename:app/build.gradle}
+apply plugin: 'io.sentry.android.gradle'
+```
+
+And declare a dependency in your top-level `build.gradle`:
+
+```groovy {filename:build.gradle}
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        // https://github.com/getsentry/sentry-android-gradle-plugin/releases
+        classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
+    }
+}
+```
+
+The plugin will automatically generate appropriate ProGuard mapping files and upload them when you run `gradle assemble{BuildVariant}`. For example, `assembleRelease` — Release is the default, but the plugin works for others if you have enabled ProGuard/R8. The credentials for the upload step are loaded via environment variables or from a `sentry.properties` file in your project root.
+
+For more information, see the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
+
+At the very minimum you will need something like this:
+
+```bash
+defaults.project=your-project
+defaults.org=your-org
+auth.token=YOUR_AUTH_TOKEN
+```
+
+You can find your authentication token [on the Sentry API page](https://sentry.io/api/). For more information about the available configuration options, see the [full sentry-cli documentation](/product/cli/configuration/#configuration-values).
+
+### Gradle Configuration
+
+Additionally, we expose a few configuration values directly in Gradle:
+
+```groovy {filename:app/build.gradle}
+sentry {
+    // Disables or enables the automatic configuration of ProGuard
+    // for Sentry.  This injects a default config for ProGuard so
+    // you don't need to do it manually.
+    autoProguardConfig true
+
+    // Enables or disables the automatic upload of mapping files
+    // during a build.  If you disable this, you'll need to manually
+    // upload the mapping files with sentry-cli when you do a release.
+    autoUpload true
+
+    // Disables or enables the automatic configuration of Native Symbols
+    // for Sentry. This executes sentry-cli automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    uploadNativeSymbols false
+
+    // Does or doesn't include the source code of native code for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    includeNativeSources false
+}
+```
+
+And that's it! Now when you build your app, the plugin will upload the ProGuard/R8 mappings,
+source bundle, and native symbols, as you configured them to Sentry.
