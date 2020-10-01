@@ -1,15 +1,22 @@
-You should `init` the Sentry Browser SDK as soon as possible during your page load:
+This snippet:
+- Uses `process.env.npm_package_version` to configure the version of your application. Learn more about [releases](/product/releases/) and how they are used with [source maps](/platforms/javascript/sourcemaps/).
+- Instruments your SDK to [monitor the performance](/platforms/javascript/performance/) of browser applications.
 
-```javascript {tabTitle:ESM}
+<Note>
+<markdown>
+
+To reduce the volume of performance data captured, or disable it entirely, change `tracesSampleRate` to a value between 0 and 1 in production.
+
+</markdown>
+</Note>
+
+```javascript {tabTitle: ESM}
 import * as Sentry from "@sentry/browser";
-
+import { Integrations } from "@sentry/tracing";
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-});
-```
-
-```javascript {tabTitle:CDN}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  release: "my-project-name@" + process.env.npm_package_version, // To set your release version
+  integrations: [new Integrations.BrowserTracing()],
+  tracesSampleRate: 1.0, // We recommend adjusting this in production
 });
 ```

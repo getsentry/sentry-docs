@@ -10,6 +10,10 @@ type Props = {
 
 export default ({ platform }: Props): JSX.Element => {
   const currentPlatform = getPlatform(platform) as Platform;
+  // platform might actually not be a platform, so lets handle that case gracefully
+  if (!currentPlatform.guides) {
+    return null;
+  }
 
   return (
     <ul>
