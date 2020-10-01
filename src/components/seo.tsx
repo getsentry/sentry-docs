@@ -20,10 +20,8 @@ type Props = {
   lang?: string;
   description?: string;
   meta?: any[];
-  file?: {
-    [key: string]: any;
-  };
   keywords?: string[];
+  noindex?: boolean;
 };
 
 type ChildProps = Props & {
@@ -46,18 +44,8 @@ export const SEO = ({
   meta = [],
   keywords = [],
   title,
-  file,
+  noindex,
 }: ChildProps): JSX.Element => {
-  const noindex =
-    (file &&
-      file.childMarkdownRemark &&
-      file.childMarkdownRemark.frontmatter &&
-      file.childMarkdownRemark.frontmatter.noindex) ||
-    (file &&
-      file.childMdx &&
-      file.childMdx.frontmatter &&
-      file.childMdx.frontmatter.noindex);
-
   const metaDescription = description || data.site.siteMetadata.description;
 
   return (

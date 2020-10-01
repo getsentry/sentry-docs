@@ -32,22 +32,12 @@ export const pageQuery = graphql`
         internal {
           type
         }
-        frontmatter {
-          title
-          noindex
-          notoc
-        }
       }
       childMdx {
         body
         tableOfContents
         internal {
           type
-        }
-        frontmatter {
-          title
-          noindex
-          notoc
         }
       }
     }
