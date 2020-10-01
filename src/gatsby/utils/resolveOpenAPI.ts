@@ -5,7 +5,7 @@ const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
 
 export default async () => {
-  if (activeEnv && process.env.OPENAPI_LOCAL_PATH) {
+  if (activeEnv === "development" && process.env.OPENAPI_LOCAL_PATH) {
     try {
       console.log(`Fetching from ${process.env.OPENAPI_LOCAL_PATH}`);
       let data = await fs.readFile(process.env.OPENAPI_LOCAL_PATH, "utf8");
