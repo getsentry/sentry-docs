@@ -50,7 +50,6 @@ export const pageQuery = graphql`
           doc_link
           support_level
           type
-          noindex
         }
       }
     }

@@ -47,6 +47,8 @@ type Props = {
     title?: string;
     description?: string;
     excerpt?: string;
+    noindex?: boolean;
+    notoc?: boolean;
   };
   seoTitle?: string;
   sidebar?: JSX.Element;
@@ -71,8 +73,7 @@ export default ({
 
   const { title, excerpt, description } = pageContext;
   const child = file && (file.childMarkdownRemark || file.childMdx);
-  const hasToc =
-    child && !child.frontmatter.notoc && !!child.tableOfContents.items;
+  const hasToc = !pageContext.notoc && child && !!child.tableOfContents.items;
 
   const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : "");
 
@@ -81,7 +82,7 @@ export default ({
       <SEO
         title={seoTitle || title}
         description={pageDescription}
-        file={file}
+        noindex={pageContext.noindex}
       />
 
       <div className="row">

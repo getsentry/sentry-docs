@@ -65,20 +65,12 @@ export const pageQuery = graphql`
         internal {
           type
         }
-        frontmatter {
-          title
-          noindex
-        }
       }
       childMdx {
         body
         tableOfContents
         internal {
           type
-        }
-        frontmatter {
-          title
-          noindex
         }
       }
     }
