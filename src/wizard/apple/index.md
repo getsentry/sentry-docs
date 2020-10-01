@@ -35,7 +35,6 @@ func application(_ application: UIApplication,
     SentrySDK.start { options in
         options.dsn = "___PUBLIC_DSN___"
         options.debug = true // Enabled debug when first installing is always helpful
-        options.enableAutoSessionTracking = true // Enable session tracking
     }
 
     return true
