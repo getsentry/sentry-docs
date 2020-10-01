@@ -24,7 +24,8 @@ from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
-    integrations=[AwsLambdaIntegration()]
+    integrations=[AwsLambdaIntegration()],
+    traces_sample_rate=1.0, # adjust the sample rate in production as needed
 )
 
 def my_function(event, context):
@@ -32,6 +33,12 @@ def my_function(event, context):
 ```
 
 Check out Sentry's [AWS sample apps](https://github.com/getsentry/examples/tree/master/aws-lambda/python) for detailed examples.
+
+<Alert level="info" title="Note"><markdown>
+
+If you are using another web framework inside of AWS Lambda, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [_Integrations_](/platforms/python/#integrations) for more information.
+
+</markdown></Alert>
 
 ## Timeout Warning
 
@@ -52,20 +59,13 @@ sentry_sdk.init(
 
 The timeout warning is sent only if the timeout in the Lambda Function configuration is set to a value greater than one second.
 
-<Alert level="info" title="Note"><markdown>
-
-If you are using another web framework inside of AWS Lambda, the framework might catch those exceptions before we get to see them. Make sure to enable the framework specific integration as well, if one exists. See [_Integrations_](/platforms/python/#integrations) for more information.
-
-</markdown></Alert>
-
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
-
 ## Behavior
 
 With the AWS Lambda integration enabled, the Python SDK will:
 
-- Automatically report all exceptions from your Lambda Functions
-- Issues reports automatically include:
+- Automatically report all events from your Lambda Functions.
+- You can <PlatformLink to="/configuration/filtering/">modify the transaction sample rate</PlatformLink> using `traces_sample_rate`.
+- Event reports automatically include:
 
   - A link to CloudWatch Logs
   - Function details
