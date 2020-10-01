@@ -41,17 +41,13 @@ public function report(Exception $exception)
 }
 ```
 
-Create the Sentry configuration file (`config/sentry.php`) with this command:
+Setup Sentry with this command:
 
 ```shell
-$ php artisan sentry:publish
+php artisan sentry:publish --dsn=___PUBLIC_DSN___
 ```
 
-Add your DSN to `.env`:
-
-```shell
-SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
-```
+It creates (`config/sentry.php`) and adds the `DSN` to your `.env` file.
 
 You can easily verify that Sentry is capturing errors in your Laravel application by creating a debug route that will throw an exception:
 
