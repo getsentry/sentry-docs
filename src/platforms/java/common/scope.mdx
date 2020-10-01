@@ -1,0 +1,59 @@
+---
+title: Scope & Breadcrumbs
+sidebar_order: 3
+redirect_from:
+  - /clients/java/context/
+---
+
+The Java SDK implements the idea of a “scope” to support attaching additional information to events, such as breadcrumbs. A scope may refer to a single request to a web framework, to the entire lifetime of an Android application, or something else that better suits your application’s needs.
+
+## Usage
+
+Breadcrumbs can be used to describe actions that occurred in your application leading up to an event being sent. For example, whether external API requests were made, or whether a user clicked on something in an Android application. By default the last 100 breadcrumbs per scope will be stored and sent with future events.
+
+The user can be set per scope so that you know who was affected by each event.
+
+Once a `Sentry` instance has been initialized you can begin setting state in the current scope.
+
+```java
+import io.sentry.Sentry;
+import io.sentry.protocol.User;
+
+public class MyClass {
+
+  public void example() {
+    // Manually initialize the static client, you must also pass in a DSN and/or
+    // SentryClientFactory to use. Note that the client will attempt to automatically
+    // initialize on the first use of the static API, so this isn't strictly necessary.
+    Sentry.init(options -> {
+      options.setDsn("___PUBLIC_DSN___");
+    });
+
+    // Note that all fields set on the scope are optional. Scope data is copied onto
+    // all future events in the current scope (until the scope is cleared).
+
+    // Set the current user in the scope.
+    Sentry.configureScope(scope -> {
+      User user = new User();
+      user.setUsername("user1");
+      scope.setUser(user);
+    });
+
+    // Record a breadcrumb in the scope.
+    Sentry.addBreadcrumb("User did something specific again!");
+
+    // Add extra data to future events in this scope.
+    Sentry.configureScope(scope -> {
+      scope.setExtra("extra", "thing");
+    });
+
+    // Add an additional tag to future events in this scope.
+    Sentry.configureScope(scope -> {
+      scope.setTag("tagName", "tagValue");
+    });
+
+    // Send an event with the scope data attached.
+    Sentry.captureMessage("New event message");
+  }
+}
+```

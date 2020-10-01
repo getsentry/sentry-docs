@@ -6,7 +6,7 @@ redirect_from:
   - /meta/relay/getting-started/
 ---
 
-Getting started with Relay is as simple as using the default settings. You can also configure Relay to suit your organization's needs. Check the [Configuration Options](/product/relay/options/) page for a detailed discussion of operating scenarios.
+Getting started with Relay is as simple as using the default settings. You can also configure Relay to suit your organization's needs. Check the [Configuration Options](../options/) page for a detailed discussion of operating scenarios.
 
 <Note>
 <markdown>
@@ -21,7 +21,7 @@ Releases](https://github.com/getsentry/relay/releases). A Docker image is provid
 
 To create the initial configuration, use Relay's `relay config init` command,
 which puts configuration files in the `.relay` folder under the current working
-directory. 
+directory.
 
 <Note>
 
@@ -33,6 +33,14 @@ container and copying in the files.
 </Note>
 
 ```shell {tabTitle:Run in Docker}
+# Adjust permissions for the configuration directory
+docker run --rm -it                \
+  -v $(pwd)/config/:/work/.relay/  \
+  --entrypoint bash                \
+  getsentry/relay                  \
+  -c 'chown -R relay:relay /work/.relay'
+
+# Generate the configuration
 docker run --rm -it                \
   -v $(pwd)/config/:/work/.relay/  \
   getsentry/relay                  \
@@ -47,7 +55,7 @@ Select the default configuration to create a minimal configuration file.
 You can choose to override the default settings by selecting
 _"create custom config"_ and customizing these parameters:
 
-- The `mode` setting, which configures the major mode in which Relay operates. For more information on available Relay modes, refer to [Relay Modes](/product/relay/modes/).
+- The `mode` setting, which configures the major mode in which Relay operates. For more information on available Relay modes, refer to [Relay Modes](../modes/).
 
   <Alert level="warning">
 
@@ -61,12 +69,23 @@ _"create custom config"_ and customizing these parameters:
 - The `port` and `host` settings configure the TCP port at which Relay will
   listen. This is the address to which SDKs send events.
 
-- The `tls` settings configure TLS support (HTTPS support), used when  communication between the SDK and Relay needs to be secured.
+- The `tls` settings configure TLS support (HTTPS support), used when communication between the SDK and Relay needs to be secured.
 
 Settings are recorded in `.relay/config.yml`. Note that all configuration values
 are optional and default to these settings:
 
-```yaml
+```yaml {tabTitle:Run in Docker}
+relay:
+  mode: managed
+  upstream: "https://sentry.io/"
+  host: 0.0.0.0
+  port: 3000
+  tls_port: ~
+  tls_identity_path: ~
+  tls_identity_password: ~
+```
+
+```yaml {tabTitle:Run Executable}
 relay:
   mode: managed
   upstream: "https://sentry.io/"
@@ -77,7 +96,7 @@ relay:
   tls_identity_password: ~
 ```
 
-Configurations are fully documented in [Configuration Options](/product/relay/options/).
+Configurations are fully documented in [Configuration Options](../options/).
 
 ## Creating Credentials
 
@@ -96,7 +115,7 @@ A typical credentials file is similar to this example:
 ```json
 {
   "secret_key": "5gkTAfwOrJ0lMy9aOAOmHKO1k6gd8ApYkAInmg5VfWk",
-  "public_key": "fQzvlvqLM2pJwLDwM_sXD2Lk5swzx-Oml4WhsOquon4",
+  "public_key": "nDJI79SbEYH9-8NEJAI7ezrgYfoIPW3Bnkg00k1z0fA",
   "id": "cde0d72e-0c4e-4550-a934-c1867d8a177c"
 }
 ```
@@ -133,20 +152,16 @@ To register Relay with Sentry:
 
 2. Click on _Settings_ in the main navigation for Sentry, then select _Relays_.
 
-  ![](add-relay-key.png)
+![](add-relay-key.png)
 
 3. Click _New Relay Key_ to add the key and save it:
 
-  ![](edit-relay-key.png)
+![](edit-relay-key.png)
 
 This process registers Relay with Sentry so it is ready to send messages. See
-[Configuration Options](/product/relay/options/) to learn more about Relay configuration options.
+[Configuration Options](../options/) to learn more about Relay configuration options.
 
 ## Running Relay
-
-You can either run the Relay binary directly or using a Docker image.
-
-### Running Relay Directly
 
 After registering Relay with Sentry, it is ready to run:
 
@@ -167,17 +182,19 @@ Under default configuration, Relay emits log output similar to:
 ```
  INFO  relay::setup > launching relay from config folder .relay
  INFO  relay::setup >   relay mode: managed
- INFO  relay::setup >   relay id: f2119bc9-9a9b-4531-826b-24e9794902f2
- INFO  relay::setup >   public key: QPBITKKtKUuEZGGbPke8iufEXAcVrEv6nmWrkRtc3l8
+ INFO  relay::setup >   relay id: cde0d72e-0c4e-4550-a934-c1867d8a177c
+ INFO  relay::setup >   public key: nDJI79SbEYH9-8NEJAI7ezrgYfoIPW3Bnkg00k1z0fA
  ...
  INFO  relay_server::actors::upstream > relay successfully registered with upstream
 ```
+
+Refer to the [Logging](../monitoring/#logging) page for more information on how to configure Relay's logging.
 
 If you moved your config folder (for example, for security reasons), use the `--config` option to specify the location:
 
 ```shell {tabTitle:Run in Docker}
 docker run --rm -it                \
-  -v $(pwd)/config/:/work/.relay/  \
+  -v $(pwd)/config/:/etc/relay/    \
   -p 3000:3000                     \
   getsentry/relay                  \
   run --config /etc/relay/
@@ -187,66 +204,40 @@ docker run --rm -it                \
 ./relay run --config /etc/relay/
 ```
 
-## Logging
-
-Once Relay is running, you will receive `INFO` messages, such as:
-
-```
-INFO  relay::setup > launching relay from config folder .relay
-INFO  relay::setup >   relay mode: managed
-INFO  relay::setup >   relay id: f2119bc9-9a9b-4531-826b-24e9794902f2
-INFO  relay::setup >   log level: INFO
-```
-
-This example displays the default logging level, which you can modify so it displays either more or less information. For details about configuring logging please see [Logging](/product/relay/options/#logging) on the options page.
-
-## Health Checks
-
-Relay provides two URLs for checking system status:
-
-- `GET /api/relay/healthcheck/live/`: Tests if Relay is running and listening to
-  HTTP requests.
-- `GET /api/relay/healthcheck/ready/`: Tests if Relay is authenticated with the
-  upstream and operating normally.
-
-In case of success, both endpoints return a _200 OK_ response:
-
-```json
-{
-  "is_healthy": true
-}
-```
-
 ## Sending a Test Event
 
-Once Relay is running and authenticated with Sentry, send a test event.
+Once Relay is running and authenticated with Sentry, send a test event to one of the projects in your organization.
 
-Get the DSN of your project by navigating to _Project Settings > Client Keys
-(DSN)_, which looks similar to:
+Get the DSN of your project by navigating to your project settings at _Settings > Projects > {YOUR_PROJECT_NAME} > Client Keys (DSN)_, and select one of the existing DSNs, which looks similar to:
 
-```
-https://12345abcdb1e4c123490ecec89c1f199@o1.ingest.sentry.io/2244
-```
+`https://12345abcdef10111213141516171819@o1.ingest.sentry.io/2345`
 
 Next, replace parts of the DSN to match the address at which Relay is reachable.
 For instance, if Relay listens at `http://localhost:3000`, change the protocol
 and host of the DSN to:
 
-```
-http://12345abcdb1e4c123490ecec89c1f199@localhost:3000/2244
-```
+<p>
+  <code>
+    <strong><i>http</i></strong>
+    ://12345abcdef10111213141516171819@
+    <strong><i>localhost:3000</i></strong>
+    /2345
+  </code>
+</p>
 
 Use the new DSN in your SDK configuration. To test this, you can send a message
-with `sentry-cli`:
+with `sentry-cli` ([installation instructions](/product/cli/installation/)):
 
 ```shell
-export SENTRY_DSN='http://12345abcdb1e4c123490ecec89c1f199@127.0.0.1:3000/2244'
+export SENTRY_DSN='http://12345abcdef10111213141516171819@127.0.0.1:3000/2345'
 sentry-cli send-event -m 'A test event'
 ```
 
 In a few seconds, the event should appear in the issues stream in your
 project.
 
-## Advanced Configuration
+## Next Steps
 
-<PageGrid />
+- **[Learn more about our Operating Guidelines](../operating-guidelines/)**
+
+With a working Relay instance, you can both monitor and scale your Relay setup.

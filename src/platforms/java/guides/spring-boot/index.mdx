@@ -1,0 +1,261 @@
+---
+title: Spring Boot
+---
+
+The `sentry-spring-boot-starter` library enhances [Sentry Spring](/platforms/java/guides/spring/) support with an auto-configuration for [Spring Boot](https://spring.io/projects/spring-boot) providing following features:
+
+- fine-grained configuration via `application.properties`
+- automatically setting the release on `SentryEvent` when [Spring Boot Git integration is configured](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto-git-info)
+- automatically registering `BeforeSendCallback`, `BeforeBreadcrumbCallback`, `EventProcessor`, `Integration` beans
+
+For the best experience we recommend using Sentry Spring Boot integration together with one of the logging framework integrations as they seamlessly work together:
+
+- [Logback](/platforms/java/guides/logback/)
+- [Log4j2](/platforms/java/guides/log4j2/)
+
+Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](usage/), in order to do things like record breadcrumbs, set the current user, or manually send events.
+
+<Alert level="info">
+    To use Sentry <strong>without</strong> Spring Boot, we recommend using <a href={"/platforms/java/guides/spring"}>Sentry Spring</a> integration.
+</Alert>
+
+The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring).
+
+### Installation
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-spring-boot-starter</artifactId>
+    <version>{{ packages.version('sentry.java', '3.0.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java', '3.0.0') }}'
+```
+
+For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-spring).
+
+### Usage
+
+The `sentry-spring-boot-starter` must be provided with a `sentry.dsn` property via `application.properties` or `application.yml`:
+
+```properties {tabTitle:application.properties}
+# NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard
+sentry.dsn=___PUBLIC_DSN___
+```
+
+```yaml {tabTitle:application.yml}
+# NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard
+sentry:
+  dsn: ___PUBLIC_DSN___
+```
+
+#### Recording User Information From HTTP Request
+
+In order to record user's IP address and `Principal#name` as the username, sending personal information flag has to be set to `true`.
+
+```properties {tabTitle:application.properties}
+sentry.send-default-pii=true
+```
+
+```yaml {tabTitle:application.yml}
+sentry:
+  send-default-pii: true
+```
+
+#### Recording Custom User Information
+
+In order to record custom user information, you care register a bean that implements `SentryUserProvider` interface.
+
+```java {tabTitle:Java}
+import org.springframework.stereotype.Component;
+import io.sentry.core.protocol.User;
+import io.sentry.spring.SentryUserProvider;
+
+@Component
+class CustomSentryUserProvider implements SentryUserProvider {
+    public User provideUser() {
+        User user = User();
+        // ... set user information
+        return user
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.stereotype.Component
+import io.sentry.core.protocol.User
+import io.sentry.spring.SentryUserProvider
+
+@Component
+class CustomSentryUserProvider : SentryUserProvider {
+    override fun provideUser(): User? {
+        val user = User()
+        // ... set user information
+        return user
+    }
+}
+```
+
+#### Using Git Commit ID As The Release
+
+When Spring Boot is [configured to generate Git information](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto-git-info) every event triggered by Sentry will have a `release` field set to the current Git commit ID that will enable [Monitor Release Health](/product/releases/health/) Sentry feature.
+
+This feature can be disabled in `application.properties` file:
+
+```properties {tabTitle:application.properties}
+sentry.use-git-commit-id-as-release=false
+```
+
+```yaml {tabTitle:application.yml}
+sentry:
+  use-git-commit-id-as-release: false
+```
+
+#### Registering Custom Event Processor
+
+A Spring bean implementing `EventProcessor` will be automatically set on `SentryOptions` during Sentry SDK auto-configuration. There can be multiple event processors registered in single application.
+
+```java
+import io.sentry.SentryEvent;
+import io.sentry.EventProcessor;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomEventProcessor implements EventProcessor {
+  @Override
+  public SentryEvent process(SentryEvent event, Object hint) {
+    // modify the event or return null to drop it
+    return event;
+  }
+}
+```
+
+#### Registering Custom Before Send Callback
+
+A Spring bean implementing `BeforeSendCallback` will be automatically set on `SentryOptions` during Sentry SDK auto-configuration. Note that there can be only single bean like that.
+
+```java
+import io.sentry.SentryEvent;
+import io.sentry.SentryOptions;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeSendCallback implements SentryOptions.BeforeSendCallback {
+  @Override
+  public SentryEvent execute(SentryEvent event, Object hint) {
+    event.setServerName(null);
+    return event;
+  }
+}
+```
+
+#### Registering Custom Before Breadcrumb Callback
+
+A Spring bean implementing `BeforeBreadcrumbCallback` will be automatically set on `SentryOptions` during Sentry SDK auto-configuration. Note that there can be only single bean like that.
+
+```java
+import io.sentry.Breadcrumb;
+import io.sentry.SentryOptions;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeBreadcrumbCallback implements SentryOptions.BeforeBreadcrumbCallback {
+
+  @Override
+  public Breadcrumb execute(Breadcrumb breadcrumb, Object hint) {
+    // Don't add breadcrumbs with message containing:
+    if (breadcrumb.getMessage() != null
+      && breadcrumb.getMessage().contains("bad breadcrumb")) {
+      return null;
+    }
+    return breadcrumb;
+  }
+}
+```
+
+## Using With Logging Framework Integration
+
+For the best experience we recommend using Sentry Spring Boot integration together with one of the logging framework integrations as they seamlessly work together.
+
+### Logback
+
+To use Sentry Logback integration in Spring Boot application you must include a dependency to `sentry-logback` module and Sentry Spring Boot Starter will auto-configure `SentryAppender`:
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-logback</artifactId>
+    <version>{{ packages.version('sentry.java', '3.0.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '3.0.0') }}'
+```
+
+Minimum logging levels for `SentryAppender` can be configured in `application.properties` or `application.yml` file.
+
+```properties
+sentry.logging.minimum-event-level=info
+sentry.logging.minimum-breadcrumb-level=debug
+```
+
+When `SentryAppender` auto-configuration does not suit your needs it can be turned off by setting:
+
+```properties
+sentry.logging.enabled=false
+```
+
+If you decide to opt-out from `application.properties` based Spring Boot logging configuration and configure logging in `logback-spring.xml` file, `SentryAppender` can be configured in the following way:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+  <appender name="SENTRY" class="io.sentry.logback.SentryAppender" />
+
+  <root level="info">
+    <appender-ref ref="CONSOLE" />
+    <appender-ref ref="SENTRY" />
+  </root>
+</configuration>
+```
+
+<Alert level="info">
+Note that there is no need to configure <em>DSN</em> in Logback configuration file as Sentry gets configured via Spring Boot integration.
+
+However, if potential errors that appear during the startup are meant to be sent to Sentry, the <em>DSN</em> must be provided to both Logback and Spring Boot configuration.
+</Alert>
+
+### Log4j2
+
+To use Sentry Log4j2 integration in Spring Boot application, [follow the guide on configuring Log4j2 with Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto-configure-log4j-for-logging) and configure `SentryAppender` in `log4j2.xml` file:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn" packages="org.apache.logging.log4j.core,io.sentry.log4j2">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+        <Sentry name="Sentry" />
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Sentry"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
+```
+
+<Alert level="info">
+Note that there is no need to configure <em>DSN</em> in Log4j2 configuration file as Sentry gets configured via Spring Boot integration.
+
+However, if potential errors that appear during the startup are meant to be sent to Sentry, the <em>DSN</em> must be provided to both Log4j2 and Spring Boot configuration.
+</Alert>

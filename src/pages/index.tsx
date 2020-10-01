@@ -25,7 +25,7 @@ const HIGHLIGHTED_PLATFORMS = [
   "php.laravel",
   "android",
   "apple",
-  "java.spring",
+  "java.spring-boot",
   "ruby.rails",
 ];
 
@@ -174,7 +174,7 @@ const IndexPage = () => {
                 <a href="/product/discover-queries/">Discover Queries</a>
               </li>
               <li>
-                <a href="/accounts/quotas/">Quota Management</a>
+                <a href="/product/accounts/quotas/">Quota Management</a>
               </li>
             </ul>
           </div>
@@ -191,7 +191,7 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/accounts/membership/">
+                <a href="/product/accounts/membership/">
                   Organization and User Management
                 </a>
               </li>

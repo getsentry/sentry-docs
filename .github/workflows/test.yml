@@ -88,21 +88,5 @@ jobs:
       - name: yarn install
         if: steps.cache.outputs.cache-hit != 'true'
         run: yarn install
-      - name: Install httpserver
-        run: volta install http-server
-      - name: Install linkcheck
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |-
-          wget -nc https://github.com/filiph/linkcheck/releases/download/v2.0.12/linkcheck-linux-x64.exe -O ./linkcheck
-          chmod +x ./linkcheck
-      - name: Build
-        run: yarn build
-      - name: Run linkcheck (search for "HTTP 404" in logs to get to errors)
-        run: |-
-          http-server public/ > /dev/null &
-          printf "Waiting for server to be up"; timeout 60 bash -c 'until $(curl -Isf -o /dev/null "http://localhost:8080"); do printf '.'; sleep 0.5; done'
-
-          # exitcode=1 -- only warnings (about broken anchors)
-          # exitcode=2 -- hard 404s
-          # We only fail the build if there are hard 404s
-          ./linkcheck http://localhost:8080 || [ $? -eq 1 ]
+      - name: yarn linkcheck
+        run: yarn linkcheck
