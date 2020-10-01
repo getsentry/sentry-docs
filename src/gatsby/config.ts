@@ -184,6 +184,7 @@ const getPlugins = () => {
         path: `${root}/src/data`,
       },
     },
+    { resolve: `./src/gatsby/plugins/gatsby-redirects` },
     {
       resolve: `./src/gatsby/plugins/gatsby-plugin-openapi`,
       options: {
@@ -197,8 +198,7 @@ const getPlugins = () => {
         // required, function which returns a Promise resolving Swagger JSON
       },
     },
-    // generate normal redirects so when you're running without nginx
-    // you receive similar behavior
+    // used to generate clident-side redirects for markdown redirect_from
     `gatsby-plugin-meta-redirect`,
     process.env.ALGOLIA_INDEX === "1" && {
       resolve: `gatsby-plugin-algolia`,
