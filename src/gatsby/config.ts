@@ -121,7 +121,6 @@ const getPlugins = () => {
       },
     },
     "gatsby-plugin-react-helmet",
-    `gatsby-transformer-yaml`,
     {
       resolve: `gatsby-transformer-json`,
       options: {
