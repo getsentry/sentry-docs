@@ -5,12 +5,7 @@ support_level: production
 type: framework
 ---
 
-To use Sentry with your React application, you will need to use `@sentry/react` (Sentry’s Browser React SDK).
-
-<div class="alert alert-info" role="alert"><h5 class="no_toc">Note</h5><div class="alert-body content-flush-bottom">`@sentry/react` is a wrapper around the `@sentry/browser` package, with added functionality related to React. All methods available in the `@sentry/browser` package can also be imported from `@sentry/react`.</div>
-</div>
-
-Add the Sentry SDK as a dependency using yarn or npm:
+To instrument your React application with Sentry, first install the `@sentry/react` and `@sentry/tracing` packages:
 
 ```bash
 # Using yarn
@@ -20,9 +15,7 @@ $ yarn add @sentry/react @sentry/tracing
 $ npm install --save @sentry/react @sentry/tracing
 ```
 
-## Connecting the SDK to Sentry
-
-You should `init` the Sentry browser SDK as soon as possible during your application load up, before initializing React:
+Next, import and initialize the Sentry module as early as possible, before initializing React:
 
 ```jsx
 import React from "react";
@@ -50,10 +43,12 @@ ReactDOM.render(<App />, document.getElementById("root"));
 
 The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
 
-On its own, `@sentry/react` will report any uncaught exceptions triggered by your application.
+After this step, Sentry will report any uncaught exceptions triggered by your application.
 
-You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button:
+You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be rendering a button whose `onClick` handler attempts to invoke a method that does not exist:
 
 ```jsx
 return <button onClick={methodDoesNotExist}>Break the world</button>;
 ```
+
+Once you've verified the library is initialized properly and sent a test event, consider visiting our [complete React docs](https://docs.sentry.io/platforms/javascript/guides/react/). There you'll find additional instructions for surfacing valuable context from React error boundaries, React Router, Redux, and more.
