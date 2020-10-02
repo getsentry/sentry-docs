@@ -9,6 +9,7 @@ const detailsQuery = graphql`
         title
         description
         author
+        sitePath
       }
     }
   }
@@ -19,10 +20,8 @@ type Props = {
   lang?: string;
   description?: string;
   meta?: any[];
-  file?: {
-    [key: string]: any;
-  };
   keywords?: string[];
+  noindex?: boolean;
 };
 
 type ChildProps = Props & {
@@ -32,6 +31,7 @@ type ChildProps = Props & {
         title: string;
         description?: string;
         author?: string;
+        sitePath: string;
       };
     };
   };
@@ -44,19 +44,10 @@ export const SEO = ({
   meta = [],
   keywords = [],
   title,
-  file,
+  noindex,
 }: ChildProps): JSX.Element => {
-  const noindex =
-    (file &&
-      file.childMarkdownRemark &&
-      file.childMarkdownRemark.frontmatter &&
-      file.childMarkdownRemark.frontmatter.noindex) ||
-    (file &&
-      file.childMdx &&
-      file.childMdx.frontmatter &&
-      file.childMdx.frontmatter.noindex);
-
   const metaDescription = description || data.site.siteMetadata.description;
+
   return (
     <Helmet
       htmlAttributes={{
@@ -82,6 +73,18 @@ export const SEO = ({
           content: "website",
         },
         {
+          property: "og:image",
+          content: `https://${data.site.siteMetadata.sitePath}/meta.png`,
+        },
+        {
+          property: "og:image:width",
+          content: "1200",
+        },
+        {
+          property: "og:image:height",
+          content: "630",
+        },
+        {
           name: "twitter:card",
           content: "summary",
         },
@@ -92,6 +95,10 @@ export const SEO = ({
         {
           name: "twitter:title",
           content: title,
+        },
+        {
+          name: "twitter:image",
+          content: `https://${data.site.siteMetadata.sitePath}/meta-avatar.png`,
         },
         {
           name: "twitter:description",

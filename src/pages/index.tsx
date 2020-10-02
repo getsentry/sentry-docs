@@ -1,8 +1,8 @@
 import React from "react";
+import PlatformIcon from "platformicons";
 
 import "../css/screen.scss";
 
-import PlatformIcon from "../components/platformIcon";
 import SEO from "../components/seo";
 import Search from "../components/search";
 import SmartLink from "../components/smartLink";
@@ -10,7 +10,7 @@ import { usePlatformList } from "../components/hooks/usePlatform";
 
 import SentryWordmarkSVG from "../logos/sentry-wordmark-dark.svg";
 
-const HIGHLIGHTED_PLATFORMS = new Set([
+const HIGHLIGHTED_PLATFORMS = [
   "javascript",
   "node",
   "python",
@@ -24,27 +24,33 @@ const HIGHLIGHTED_PLATFORMS = new Set([
   "go",
   "php.laravel",
   "android",
-  "cocoa",
-]);
+  "apple",
+  "java.spring-boot",
+  "ruby.rails",
+];
 
 const IndexPage = () => {
   const platformList = usePlatformList();
 
   let totalPlatformCount = 0;
   const visiblePlatforms = [];
-  // TODO(dcramer): fix sorting so its the same as HIGHLIGHTED_PLATFORMS
   platformList.forEach(platform => {
     totalPlatformCount += 1;
-    if (HIGHLIGHTED_PLATFORMS.has(platform.key)) {
+    if (HIGHLIGHTED_PLATFORMS.indexOf(platform.key) !== -1) {
       visiblePlatforms.push(platform);
     }
     platform.guides.forEach(guide => {
       totalPlatformCount += 1;
-      if (HIGHLIGHTED_PLATFORMS.has(guide.key)) {
+      if (HIGHLIGHTED_PLATFORMS.indexOf(guide.key) !== -1) {
         visiblePlatforms.push(guide);
       }
     });
   });
+  visiblePlatforms.sort(
+    (a, b) =>
+      HIGHLIGHTED_PLATFORMS.indexOf(a.key) -
+      HIGHLIGHTED_PLATFORMS.indexOf(b.key)
+  );
 
   return (
     <div className="index-wrapper">
@@ -87,7 +93,7 @@ const IndexPage = () => {
                 key={platform.key}
               >
                 <div className="image-frame">
-                  <PlatformIcon platform={platform.key} />
+                  <PlatformIcon size={48} platform={platform.key} format="lg" />
                 </div>
                 {platform.title}
               </SmartLink>
@@ -168,7 +174,7 @@ const IndexPage = () => {
                 <a href="/product/discover-queries/">Discover Queries</a>
               </li>
               <li>
-                <a href="/accounts/quotas/">Quota Management</a>
+                <a href="/product/accounts/quotas/">Quota Management</a>
               </li>
             </ul>
           </div>
@@ -185,7 +191,7 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/accounts/membership/">
+                <a href="/product/accounts/membership/">
                   Organization and User Management
                 </a>
               </li>

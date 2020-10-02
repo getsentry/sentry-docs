@@ -46,6 +46,9 @@ type Props = {
   pageContext?: {
     title?: string;
     description?: string;
+    excerpt?: string;
+    noindex?: boolean;
+    notoc?: boolean;
   };
   seoTitle?: string;
   sidebar?: JSX.Element;
@@ -68,18 +71,27 @@ export default ({
     tx.setStatus("ok");
   }
 
-  const { title, description } = pageContext;
+  const { title, excerpt, description } = pageContext;
   const child = file && (file.childMarkdownRemark || file.childMdx);
-  const hasToc =
-    child && !child.frontmatter.notoc && !!child.tableOfContents.items;
+  const hasToc = !pageContext.notoc && child && !!child.tableOfContents.items;
+
+  const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : "");
 
   return (
     <Layout {...{ sidebar, pageContext }}>
-      <SEO title={seoTitle || title} description={description} file={file} />
+      <SEO
+        title={seoTitle || title}
+        description={pageDescription}
+        noindex={pageContext.noindex}
+      />
 
       <div className="row">
         <div
-          className={hasToc ? "col-sm-8 col-md-12 col-lg-8 col-xl-9" : "col-12"}
+          className={
+            hasToc || prependToc
+              ? "col-sm-8 col-md-12 col-lg-8 col-xl-9"
+              : "col-12"
+          }
         >
           <h1 className="mb-3">{title}</h1>
           <div id="main">

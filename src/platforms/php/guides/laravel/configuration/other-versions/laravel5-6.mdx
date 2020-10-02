@@ -1,0 +1,63 @@
+---
+title: Laravel 5.x and 6.x
+---
+
+## Install
+
+Install the `sentry/sentry-laravel` package:
+
+```bash
+$ composer require sentry/sentry-laravel
+```
+
+Add Sentry reporting to `App/Exceptions/Handler.php`.
+
+```php {filename:App/Exceptions/Handler.php}
+public function report(Exception $exception)
+{
+    if ($this->shouldReport($exception) && app()->bound('sentry')) {
+        app('sentry')->captureException($exception);
+    }
+
+    parent::report($exception);
+}
+```
+
+If you're on Laravel 5.5 or later the package will be auto-discovered. Otherwise you will need to manually configure it in your `config/app.php`.
+
+```php {filename:config/app.php}
+'providers' => array(
+    // ...
+    Sentry\Laravel\ServiceProvider::class,
+),
+'aliases' => array(
+    // ...
+    'Sentry' => Sentry\Laravel\Facade::class,
+),
+```
+
+## Configure
+
+Run:
+
+```shell
+$ php artisan sentry:publish
+```
+
+that creates the Sentry configuration file (`config/sentry.php`).
+
+Afterwards, add your DSN to `.env`:
+
+```shell {filename:.env}
+SENTRY_LARAVEL_DSN=___PUBLIC_DSN___
+```
+
+## Verify Setup
+
+You can easily verify that Sentry is capturing errors in your Laravel application by creating a debug route that will throw an exception:
+
+```php
+Route::get('/debug-sentry', function () {
+    throw new Exception('My first Sentry error!');
+});
+```

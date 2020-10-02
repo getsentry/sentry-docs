@@ -40,6 +40,30 @@ end
 
 If the async callback raises an exception, Raven will attempt to send synchronously.
 
+`backtrace_cleanup_callback`
+
+: If you want to clean up exceptions' backtrace before it's sent to Sentry, you can specify a callback with `backtrace_cleanup_callback` to do that. For example:
+
+```ruby
+config.backtrace_cleanup_callback = lambda do |backtrace|
+  Rails.backtrace_cleaner.clean(backtrace)
+end
+```
+
+`breadcrumbs_logger`
+
+: Sentry supports two breadcrumbs loggers in the Ruby SDK:
+- `SentryLogger` - A general breadcrumbs logger for all Ruby applications.
+- `ActiveSupportLogger` - Built on top of Rails ActiveSupport's instrumentation and provides many Rails-specific information.
+
+And you can enable them with the `breadcrumbs_logger` option:
+
+```ruby
+config.breadcrumbs_logger = :sentry_logger
+config.breadcrumbs_logger = :active_support_logger
+config.breadcrumbs_logger = [:sentry_logger, :active_support_logger]
+```
+
 `encoding`
 
 : While unlikely that you’ll need to change it, by default Raven compresses outgoing messages with gzip. This has a slight impact on performance, but due to the size of many Ruby stack trace it’s required for the serve to accept the content.
@@ -233,8 +257,8 @@ config.tags = { foo: :bar }
 : If the transport fails to send an event to Sentry for any reason (either the Sentry server has returned a 4XX or 5XX response), this Proc or lambda will be called.
 
 ```ruby
-config.transport_failure_callback = lambda { |event|
-  AdminMailer.email_admins("Oh god, it's on fire!").deliver_later
+config.transport_failure_callback = lambda { |event, error|
+  AdminMailer.email_admins("Oh god, it's on fire because #{error.message}!", event).deliver_later
 }
 ```
 

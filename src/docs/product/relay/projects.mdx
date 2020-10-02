@@ -1,13 +1,12 @@
 ---
 title: Project Configuration
+description: "Configure the project settings when running Relay in static or proxy mode."
 sidebar_order: 4
+redirect_from:
+  - /meta/relay/projects/
 ---
 
-In `static` and `proxy` mode, you can configure project settings on the file
-system.
-
-Static project configurations are found under the `projects` subdirectory of the
-Relay configuration directory, By default, this is located at `.relay/projects`.
+When running Relay in either `static` or `proxy` mode, you can configure project settings on the file system. Static project configurations are found under the `projects` subdirectory of the Relay configuration directory, By default, this is located at `.relay/projects`.
 
 To configure projects, add files named `<PROJECT_ID>.json` in that location:
 
@@ -19,7 +18,7 @@ To configure projects, add files named `<PROJECT_ID>.json` in that location:
     └── 42.json
 ```
 
-Project configurations are an extensible format, mostly consisting of optional
+Project configurations are an extensible format, primarily consisting of optional
 fields. The minimal configuration **must** contain the following fields:
 
 ```json
@@ -39,14 +38,16 @@ fields. The minimal configuration **must** contain the following fields:
 
 <Alert level="warning" title="Public Key">
 
-The public key (`<DSN_KEY>`) is the key of the project's DSN and has nothing to
-do with the Relay public key used for Relay registration.
+The public key (`<DSN_KEY>`) is the key of the project's DSN and is unrelated to the Relay public key used for Relay registration.
 
 </Alert>
 
 ## Basic Options
 
-### `slug`
+`slug`
+
+: The short name of the project, displayed in Sentry. This value is currently
+required for Relay to accept events.
 
 ```json
 {
@@ -54,10 +55,10 @@ do with the Relay public key used for Relay registration.
 }
 ```
 
-The short name of the project, displayed in Sentry. This value is currently
-required for Relay to accept events.
+`disabled`
 
-### `disabled`
+: Whether the project is disabled. If set to `true`, the Relay will drop all
+events sent to this project.
 
 ```json
 {
@@ -65,10 +66,10 @@ required for Relay to accept events.
 }
 ```
 
-Whether the project is disabled. If set to `true`, the Relay will drop all
-events sent to this project.
+`publicKeys`
 
-### `publicKeys`
+: A list of known public keys (the public key in a DSN) and whether events using
+that key should be accepted.
 
 ```json
 {
@@ -81,28 +82,20 @@ events sent to this project.
 }
 ```
 
-A list of known public keys (the public key in a DSN) and whether events using
-that key should be accepted.
+You can obtain the key by going into the _Sentry > Project Settings > Client Keys (DSN)_ . The public key can be extracted from the DSN. In this DSN, for example, `https://12345abcdb1e4c123490ecec89c1f199@o1.ingest.sentry.io/2244`, the key is `12345abcdb1e4c123490ecec89c1f199`.
 
-You can obtain the key by going into the _Sentry > Project Settings > Client
-Keys (DSN)_ . The public key can be extracted from the DSN. In the DSN example
-below:
+A project may contain multiple public keys, but only messages using enabled project keys will be processed. Likewise, keys can be disabled using the `isEnabled` flag.
 
-```
-https://12345abcdb1e4c123490ecec89c1f199@o1.ingest.sentry.io/2244
-```
+`config.allowedDomains`
 
-the key is:
+: Configure _Origin_ or _Referer_ URLs from which Sentry should accept events.
+This is corresponds to the _Allowed Domains_ setting in the Sentry UI.
 
-```
-12345abcdb1e4c123490ecec89c1f199
-```
+  <Alert level="warning" title="Warning">
 
-A project may contain multiple public keys, but only messages using enabled
-project keys will be processed. Likewise, keys can be disabled using the
-`isEnabled` flag.
+An empty list rejects all origins. Use the default `["*"]` to allow all origins.
 
-## `config.allowedDomains`
+  </Alert>
 
 ```json
 {
@@ -111,14 +104,3 @@ project keys will be processed. Likewise, keys can be disabled using the
   }
 }
 ```
-
-Configure _Origin_ or _Referer_ URLs which Sentry should accept events from.
-This is corresponds to the _Allowed Domains_ setting in the Sentry UI.
-
-<Alert level="warning" title="Warning">
-
-An empty list rejects all origins. Use the default `["*"]` to allow all origins.
-
-</Alert>
-
-[getting started]: /product/relay/

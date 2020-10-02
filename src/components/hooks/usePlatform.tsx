@@ -93,6 +93,8 @@ export const DEFAULT_PLATFORM = "javascript";
 
 const normalizeSlug = (name: string): string => {
   switch (name) {
+    case "cocoa":
+      return "apple";
     case "browser":
     case "browsernpm":
       return "javascript";

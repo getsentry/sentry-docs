@@ -88,17 +88,5 @@ jobs:
       - name: yarn install
         if: steps.cache.outputs.cache-hit != 'true'
         run: yarn install
-      - name: Install httpserver
-        run: volta install http-server
-      - name: Install linkcheck
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |-
-          wget -nc https://github.com/filiph/linkcheck/releases/download/v2.0.12/linkcheck-linux-x64.exe -O ./linkcheck
-          chmod +x ./linkcheck
-      - name: Build
-        run: yarn build
-      - name: Run linkcheck
-        run: |-
-          http-server public/ > /dev/null &
-          printf "Waiting for server to be up"; timeout 60 bash -c 'until $(curl -Isf -o /dev/null "http://localhost:8080"); do printf '.'; sleep 0.5; done'
-          ./linkcheck http://localhost:8080 || true
+      - name: yarn linkcheck
+        run: yarn linkcheck

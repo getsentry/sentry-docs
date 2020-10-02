@@ -3,14 +3,14 @@ import { graphql } from "gatsby";
 
 import BasePage from "~src/components/basePage";
 import Content from "~src/components/content";
-import DevelopmentApiSidebar from "~src/components/developmentApiSidebar";
+import ApiSidebar from "~src/components/apiSidebar";
 import InternalDocsSidebar from "~src/components/internalDocsSidebar";
 
 export default (props: any) => {
   let sidebar = null;
-  if (props.path.startsWith("/development-api/")) {
-    sidebar = <DevelopmentApiSidebar />;
-  } else if (props.path.startsWith("/internal/")) {
+  if (props.path.startsWith("/api/")) {
+    sidebar = <ApiSidebar />;
+  } else if (props.path.startsWith("/contributing/")) {
     sidebar = <InternalDocsSidebar />;
   }
   return (
@@ -32,22 +32,12 @@ export const pageQuery = graphql`
         internal {
           type
         }
-        frontmatter {
-          title
-          noindex
-          notoc
-        }
       }
       childMdx {
         body
         tableOfContents
         internal {
           type
-        }
-        frontmatter {
-          title
-          noindex
-          notoc
         }
       }
     }

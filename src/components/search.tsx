@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 
 import Logo from "./logo";
 
-import { SentryGlobalSearch, standardSDKSlug } from "sentry-global-search";
+import {
+  SentryGlobalSearch,
+  standardSDKSlug,
+  Result,
+} from "@sentry-internal/global-search";
 
 import DOMPurify from "dompurify";
 
@@ -18,11 +22,15 @@ const search = new SentryGlobalSearch([
   "blog",
 ]);
 
-const useClickOutside = (ref, handler, events?: string[]) => {
+const useClickOutside = (
+  ref: React.RefObject<HTMLElement>,
+  handler: () => void,
+  events?: string[]
+) => {
   if (!events) events = [`mousedown`, `touchstart`];
 
-  const detectClickOutside = event => {
-    return !ref.current.contains(event.target) && handler();
+  const detectClickOutside = (event: MouseEvent) => {
+    return !ref.current.contains(event.target as HTMLElement) && handler();
   };
 
   useEffect(() => {
@@ -38,30 +46,13 @@ const useClickOutside = (ref, handler, events?: string[]) => {
   });
 };
 
-type Hit = {
-  id: string;
-  url: string;
-  title?: string;
-  text?: string;
-  context?: {
-    context1?: string;
-    context2?: string;
-  };
-};
-
-type Result = {
-  site: string;
-  name: string;
-  hits: Hit[];
-};
-
 type Props = {
   path?: string;
   platforms?: string[];
 };
 
 export default ({ path, platforms = [] }: Props): JSX.Element => {
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(``);
   const [results, setResults] = useState([] as Result[]);
   const [focus, setFocus] = useState(false);
@@ -97,7 +88,7 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
             });
         }}
         value={query}
-        onFocus={e => setFocus(true)}
+        onFocus={() => setFocus(true)}
       />
 
       {query.length > 0 && focus && (

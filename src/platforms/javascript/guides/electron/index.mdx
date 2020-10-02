@@ -6,31 +6,18 @@ categories:
 redirect_from:
   - /clients/electron/
   - /platforms/javascript/electron/
+  - /platforms/electron/
 ---
 
 `@sentry/electron` is the official Sentry SDK for Electron applications. It can capture JavaScript exceptions in the main process and renderers, as well as collect native crash reports (Minidumps).
 
 ## Install
 
-Sentry captures data by using an SDK within your application’s runtime. Add the Sentry SDK as a dependency using `yarn` or `npm`:
-
-```bash {tabTitle:npm}
-npm install --save @sentry/electron
-```
-
-```bash {tabTitle:Yarn}
-yarn add @sentry/electron
-```
+<PlatformContent includePath="getting-started-install" />
 
 ## Configure
 
-`init` Sentry as soon as possible:
-
-```JavaScript
-import * as Sentry from "@sentry/electron";
-
-Sentry.init({ dsn: '___PUBLIC_DSN___' });
-```
+<PlatformContent includePath="getting-started-config" />
 
 Once this is done, all unhandled exceptions are automatically captured by Sentry.
 
@@ -40,7 +27,7 @@ Once this is done, all unhandled exceptions are automatically captured by Sentry
 
 If you are seeing an issue similar to `TypeError: mod.require is not a function`, it means that Webpack is bundling your browser and node code together. To fix this, change the import statement of Sentry's `init` method to:
 
-```JavaScript
+```javascript
 const { init } =
   process.type === "browser"
     ? require("@sentry/electron/dist/main")
@@ -49,7 +36,7 @@ const { init } =
 
 And use the Webpack's `DefinePlugin` plugin to specify the process type:
 
-```JavaScript
+```javascript
 plugins: [
   // main process
   new webpack.DefinePlugin({
@@ -65,7 +52,7 @@ plugins: [
 
 With these changes, when bundling the code for each of processes, Webpack will replace `process.type` with the constant and removes the inaccessible code:
 
-```JavaScript
+```javascript
 const { init } =
   "browser" === "browser"
     ? require("@sentry/electron/dist/main")
@@ -89,7 +76,7 @@ This will guide you through the installation and configuration process and sugge
 
 ## Configuring the Client
 
-Start by configuring the SDK as described in the [quickstart guide](/error-reporting/quickstart/?platform=electron#configure-the-sdk). This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the main process and all renderer processes to also catch errors during startup.
+Start by configuring the SDK as described in the above. This will enable the [Electron CrashReporter](https://electronjs.org/docs/api/crash-reporter) for native app crashes and capture any uncaught JavaScript exceptions using the JavaScript SDKs under the hood. Be sure to call this function as early as possible in the main process and all renderer processes to also catch errors during startup.
 
 ## Browser integration
 
@@ -196,7 +183,7 @@ If your application contains custom native extensions or you wish to symbolicate
 crashes from a spawned child process, upload their debug information manually
 during your build or release process. See [_Debug Information Files_](/workflow/debug-files/) for a detailed description of how to
 set up Sentry for native development. Additionally, see [_Uploading Debug
-Information_](/cli/dif/) for the upload process.
+Information_](/product/cli/dif/) for the upload process.
 
 ### Child Processes
 

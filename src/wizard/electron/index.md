@@ -1,6 +1,6 @@
 ---
 name: Electron
-doc_link: https://docs.sentry.io/error-reporting/quickstart/?platform=electron
+doc_link: https://docs.sentry.io/platforms/javascript/guides/electron/
 support_level: production
 type: language
 ---

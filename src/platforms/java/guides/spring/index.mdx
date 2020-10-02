@@ -4,7 +4,18 @@ redirect_from:
   - /platforms/java/guides/spring/config/
 ---
 
-The `sentry-spring` library provides [Spring](https://spring.io/) support for Sentry via a [HandlerExceptionResolver](https://docs.spring.io/spring/docs/4.3.9.RELEASE/javadoc-api/org/springframework/web/servlet/HandlerExceptionResolver.html) that sends exceptions to Sentry. Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](usage/), in order to do things like record breadcrumbs, set the current user, or manually send events.
+The `sentry-spring` library provides [Spring MVC](https://spring.io/) support for Sentry via:
+
+- a [HandlerExceptionResolver](https://docs.spring.io/spring/docs/4.3.9.RELEASE/javadoc-api/org/springframework/web/servlet/HandlerExceptionResolver.html) that sends unhandled exceptions to Sentry.
+- attaches HTTP request information to all `SentryEvent`s recorded within the scope of the request
+- adds option to attach user information retrieved from HTTP request to all `SentryEvent`s recorded within the scope of the request
+- adds a `SentryUserProvider` hook that can be used to provide additional user information
+
+Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](usage/), in order to do things like record breadcrumbs, set the current user, or manually send events.
+
+<Alert level="info">
+    To use Sentry with <strong>Spring Boot</strong>, we recommend using <a href={"/platforms/java/guides/spring-boot"}>Sentry Spring Boot</a> integration as it provides richer configuration capabilities.
+</Alert>
 
 The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/master/sentry-spring).
 
@@ -14,62 +25,96 @@ The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tre
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring</artifactId>
-    <version>{{ packages.version('sentry.java', '1.7.30') }}</version>
+    <version>{{ packages.version('sentry.java', '3.0.0') }}</version>
 </dependency>
 ```
 
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-spring:{{ packages.version('sentry.java', '1.7.30') }}'
+implementation 'io.sentry:sentry-spring:{{ packages.version('sentry.java', '3.0.0') }}'
 ```
 
 ```scala {tabTitle: SBT}
-libraryDependencies += "io.sentry" % "sentry-spring" % "{{ packages.version('sentry.java', '1.7.30') }}"
+libraryDependencies += "io.sentry" % "sentry-spring" % "{{ packages.version('sentry.java', '3.0.0') }}"
 ```
 
 For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-spring).
 
 ### Usage
 
-The `sentry-spring` library provides two classes that can be enabled by registering them as Beans in your Spring application.
+The `sentry-spring` library provides `@EnableSentry` annotation that registers all required Spring beans. `@EnableSentry` can be places on any class annotated with [@Configuration](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Configuration.html) including main entry class in Spring Boot applications annotated with [@SpringBootApplication](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/autoconfigure/SpringBootApplication.html).
 
-#### Recording Exceptions
-
-In order to record all exceptions thrown by your controllers, you can register `io.sentry.spring.SentryExceptionResolver` as a Bean in your application. Once registered, all exceptions will be sent to Sentry and then passed on to the default exception handlers.
-
-Configuration via `web.xml`:
-
-```xml
-<bean class="io.sentry.spring.SentryExceptionResolver"/>
-```
-
-Or via a configuration class:
-
-```java
-@Bean
-public HandlerExceptionResolver sentryExceptionResolver() {
-    return new io.sentry.spring.SentryExceptionResolver();
+```java {tabTitle:Java}
+import io.sentry.spring.EnableSentry;
+// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
+// project/dashboard
+@EnableSentry(dsn = "___PUBLIC_DSN___")
+@Configuration
+class SentryConfiguration {
 }
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](configuration/options/#setting-the-dsn) for ways you can do this.
-
-#### Spring Boot HTTP Data
-
-Spring Boot doesn’t automatically load any `javax.servlet.ServletContainerInitializer`, which means the Sentry SDK doesn’t have an opportunity to hook into the request cycle to collect information about the HTTP request. In order to add HTTP request data to your Sentry events in Spring Boot, you need to register the `io.sentry.spring.SentryServletContextInitializer` class as a Bean in your application.
-
-Configuration via `web.xml`:
-
-```xml
-<bean class="io.sentry.spring.SentryServletContextInitializer"/>
+```kotlin {tabTitle:Kotlin}
+import io.sentry.spring.EnableSentry
+// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
+// project/dashboard
+@EnableSentry(dsn = "___PUBLIC_DSN___")
+@Configuration
+class SentryConfiguration
 ```
 
-Or via a configuration class:
+The DSN can be also proided through the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
 
-```java
-@Bean
-public ServletContextInitializer sentryServletContextInitializer() {
-    return new io.sentry.spring.SentryServletContextInitializer();
+#### Recording User Information From HTTP Request
+
+In order to record user's IP address and `Principal#name` as the username, sending personal information flag has to be set to `true`.
+
+```Java {tabTitle:Java}
+import io.sentry.spring.EnableSentry;
+
+@EnableSentry(dsn = "___PUBLIC_DSN___", sendDefaultPii = true)
+@Configuration
+class SentryConfiguration {
 }
 ```
 
-After that, your Sentry events should contain information such as HTTP request headers.
+```kotlin {tabTitle:Kotlin}
+import io.sentry.spring.EnableSentry
+
+@EnableSentry(dsn = "...", sendDefaultPii = true)
+@Configuration
+class SentryConfiguration
+```
+
+#### Recording Custom User Information
+
+In order to record custom user information, you care register a bean that implements `SentryUserProvider` interface.
+
+```java {tabTitle:Java}
+import org.springframework.stereotype.Component;
+import io.sentry.core.protocol.User;
+import io.sentry.spring.SentryUserProvider;
+
+@Component
+class CustomSentryUserProvider implements SentryUserProvider {
+    public User provideUser() {
+        User user = User();
+        // ... set user information
+        return user
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.stereotype.Component
+import io.sentry.core.protocol.User
+import io.sentry.spring.SentryUserProvider
+
+@Component
+class CustomSentryUserProvider : SentryUserProvider {
+    override fun provideUser(): User? {
+        val user = User()
+        // ... set user information
+        return user
+    }
+}
+```

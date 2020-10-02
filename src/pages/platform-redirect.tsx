@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "@reach/router";
 import { parse } from "query-string";
+import PlatformIcon from "platformicons";
 
 import Layout from "../components/layout";
-import PlatformIcon from "../components/platformIcon";
 import SmartLink from "../components/smartLink";
 import { usePlatformList } from "../components/hooks/usePlatform";
 
@@ -31,6 +31,7 @@ const PlatformRedirect = ({ path = "/" }: Props) => {
                 size={16}
                 platform={platform.key}
                 style={{ marginRight: "0.5rem" }}
+                format="lg"
               />
               <h4 style={{ display: "inline-block" }}>{platform.title}</h4>
             </SmartLink>

@@ -1,0 +1,73 @@
+---
+title: Replays with rrweb
+sidebar_order: 100
+description: "Enable session replay attachments using rrweb."
+---
+
+<Alert><markdown>
+
+This integration is still experimental.
+
+</markdown></Alert>
+
+Sentry provides a proof-of-concept integration with [rrweb](https://www.rrweb.io/) - a toolkit for recording and replaying user sessions. This can be extremely helpful when diagnosing complex user behavior in a rich Single Page Application.
+
+<Note><markdown>
+
+Replays utilize [Attachments](../../enriching-events/attachments/), which are billed separately from errors.
+
+</markdown></Note>
+
+To get started you'll need to add the `@sentry/rrweb` and `rrweb` packages:
+
+```javascript
+npm install --save @sentry/rrweb rrweb
+```
+
+Next register the integration with the Sentry SDK. This will vary based on the framework you're using:
+
+```javascript
+import * as Sentry from "@sentry/browser";
+import SentryRRWeb from "@sentry/rrweb";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new SentryRRWeb({
+      // ...options
+    }),
+  ],
+  // ...
+});
+```
+
+<Note><markdown>
+
+For more information on configuration, see the [@sentry/rrweb project on GitHub](https://github.com/getsentry/sentry-rrweb).
+
+</markdown></Note>
+
+Once a replay is captured with an event, you'll find it visible within Issue Details under the Replay section of the event.
+
+## Sampling
+
+To suit your organization's needs, you may prefer to sample replays. The easiest way to do this is to make the sampling decision when you initialize the Sentry SDK. For example, here's how Sentry itself uses sampling to capture these for only employees:
+
+```javascript
+const hasReplays = getCurrentUser().isStaff;
+
+let integrations = [];
+if (hasReplays) {
+  console.log("[sentry] Instrumenting session with rrweb");
+  integrations.push(new SentryRRWeb());
+}
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations,
+});
+
+Sentry.setTag("rrweb.active", hasReplays ? "yes" : "no");
+```
+
+You'll note we also set the `rrweb.active` tag, which helps us identify events that have a replay attached, since otherwise we'd not be able to find them. Once configured, you'll be able simply use `rrweb.active:yes` in your search queries.

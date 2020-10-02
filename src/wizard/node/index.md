@@ -28,6 +28,9 @@ const Tracing = require("@sentry/tracing");
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
   tracesSampleRate: 1.0,
 });
 

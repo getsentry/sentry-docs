@@ -2,7 +2,7 @@ import {
   standardSDKSlug,
   extrapolate,
   sentryAlgoliaIndexSettings,
-} from "sentry-global-search";
+} from "@sentry-internal/global-search";
 
 const pageQuery = `{
     pages: allSitePage {
@@ -15,6 +15,7 @@ const pageQuery = `{
             title
             excerpt
             noindex
+            keywords
             platform {
               name
             }
@@ -48,6 +49,7 @@ const flatten = (arr: any[]) =>
         text: context.excerpt,
         platforms,
         pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
+        keywords: context.keywords || [],
         legacy: context.legacy || false,
       };
     });
@@ -67,9 +69,9 @@ export default [
 
       // Do not remove until the global lib is in sentry
       attributesToSnippet: [`content:15`, `text:15`],
-      searchableAttributes: ["content", "title", "text", "section"],
-      attributesToHighlight: ["content", "title", "section"],
-      attributesToRetrieve: ["content", "title", "url", "section", "text"],
+      searchableAttributes: ["section", "title", "content", "text"],
+      attributesToHighlight: ["section", "title", "content"],
+      attributesToRetrieve: ["section", "title", "content", "text", "url"],
     },
   },
 ];
