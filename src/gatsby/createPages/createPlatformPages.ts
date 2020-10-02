@@ -145,6 +145,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
               description
               draft
               noindex
+              notoc
               sidebar_order
               redirect_from
               supported
@@ -159,6 +160,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
               description
               draft
               noindex
+              notoc
               sidebar_order
               redirect_from
               supported
