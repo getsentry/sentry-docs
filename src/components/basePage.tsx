@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 
 import CodeContext, { useCodeContextState } from "./codeContext";
 import SEO from "./seo";
@@ -29,17 +29,15 @@ const GitHubCTA = ({
   </div>
 );
 
+const WrappedTOC = React.forwardRef(
+  (props, ref: React.RefObject<HTMLDivElement>) => {
+    return <TableOfContents {...props} contentRef={ref} />;
+  }
+);
+
 type Props = {
   data?: {
     file?: {
-      childMarkdownRemark?: {
-        tableOfContents?: any;
-        [key: string]: any;
-      };
-      childMdx?: {
-        tableOfContents?: any;
-        [key: string]: any;
-      };
       [key: string]: any;
     };
   };
@@ -72,8 +70,9 @@ export default ({
   }
 
   const { title, excerpt, description } = pageContext;
-  const child = file && (file.childMarkdownRemark || file.childMdx);
-  const hasToc = !pageContext.notoc && child && !!child.tableOfContents.items;
+  const hasToc = !pageContext.notoc;
+
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const pageDescription = description || (excerpt ? excerpt.slice(0, 160) : "");
 
@@ -94,7 +93,7 @@ export default ({
           }
         >
           <h1 className="mb-3">{title}</h1>
-          <div id="main">
+          <div id="main" ref={contentRef}>
             <CodeContext.Provider value={useCodeContextState()}>
               {children}
             </CodeContext.Provider>
@@ -111,14 +110,7 @@ export default ({
           <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
             <React.Fragment>
               {prependToc}
-              {hasToc && (
-                <div className="doc-toc">
-                  <div className="doc-toc-title">
-                    <h6>On this page</h6>
-                  </div>
-                  <TableOfContents toc={child.tableOfContents} />
-                </div>
-              )}
+              {hasToc && <WrappedTOC ref={contentRef} />}
             </React.Fragment>
           </div>
         )}
