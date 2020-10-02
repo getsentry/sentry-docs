@@ -1,8 +1,8 @@
 import queries from "./utils/algolia";
-import PackageRegistry from "./utils/packageRegistry";
+// import PackageRegistry from "./utils/packageRegistry";
 import resolveOpenAPI from "./utils/resolveOpenAPI";
 
-const packages = new PackageRegistry();
+// const packages = new PackageRegistry();
 
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
@@ -16,7 +16,7 @@ if (process.env.DISABLE_THUMBNAILS === "1") {
 
 const getPlugins = () => {
   const remarkPlugins = [
-    {
+    /*{
       resolve: require.resolve("./plugins/gatsby-remark-variables"),
       options: {
         scope: {
@@ -42,7 +42,7 @@ const getPlugins = () => {
         maxWidth: 1200,
         linkImagesToOriginal: true,
       },
-    },
+    },*/
     {
       resolve: "gatsby-remark-prismjs",
       options: {
@@ -190,6 +190,12 @@ const getPlugins = () => {
         name: "openapi",
         // resolve: required, function which returns a Promise resolving OpenAPI JSON
         resolve: resolveOpenAPI,
+      },
+    },
+    process.env.OPENAPI_LOCAL_PATH && {
+      resolve: `./src/gatsby/plugins/gatsby-plugin-autoreload`,
+      options: {
+        watch: [process.env.OPENAPI_LOCAL_PATH],
       },
     },
     // used to generate clident-side redirects for markdown redirect_from
