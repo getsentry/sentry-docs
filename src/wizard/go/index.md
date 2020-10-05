@@ -8,7 +8,7 @@ type: language
 Install our Go SDK using [`go get`](https://golang.org/cmd/go/#hdr-Module_aware_go_get):
 
 ```bash
-$ go get github.com/getsentry/sentry-go
+go get github.com/getsentry/sentry-go
 ```
 
 Import and initialize the Sentry SDK early in your application's setup:

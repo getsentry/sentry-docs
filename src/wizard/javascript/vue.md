@@ -21,10 +21,10 @@ Install the dependencies:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/browser @sentry/integrations @sentry/tracing
+yarn add @sentry/browser @sentry/integrations @sentry/tracing
 
 # Using npm
-$ npm install --save @sentry/browser @sentry/integrations @sentry/tracing
+npm install --save @sentry/browser @sentry/integrations @sentry/tracing
 ```
 
 Next, initialize Sentry in your app entry point before you initialize your root component.

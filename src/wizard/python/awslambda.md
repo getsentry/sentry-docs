@@ -11,7 +11,7 @@ For more information, see [AWS Lambda deployment package in Python](https://docs
 Install our Python SDK using `pip`:
 
 ```bash
-$ pip install --upgrade sentry-sdk
+pip install --upgrade sentry-sdk
 ```
 
 You can use the AWS Lambda integration for the Python SDK like this:

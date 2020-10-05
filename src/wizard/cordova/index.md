@@ -8,7 +8,7 @@ type: language
 Install our SDK using the cordova command:
 
 ```bash
-$ cordova plugin add sentry-cordova
+cordova plugin add sentry-cordova
 ```
 
 You should `init` the SDK in the `deviceReady` function, to make sure the native integrations runs. For more details about Cordova [click here](/platforms/javascript/guides/cordova/)

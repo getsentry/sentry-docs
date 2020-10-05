@@ -8,11 +8,11 @@ type: framework
 Add `@sentry/node` as a dependency:
 
 ```bash {tabTitle:npm}
-$ npm install --save @sentry/node
+npm install --save @sentry/node
 ```
 
 ```bash {tabTitle:Yarn}
-$ yarn add @sentry/node
+yarn add @sentry/node
 ```
 
 To set up Sentry error logging for a GCP Cloud Function:

@@ -11,10 +11,10 @@ Add the Sentry SDK as a dependency using `yarn` or `npm`:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/angular @sentry/tracing
+yarn add @sentry/angular @sentry/tracing
 
 # Using npm
-$ npm install --save @sentry/angular @sentry/tracing
+npm install --save @sentry/angular @sentry/tracing
 ```
 
 You should `init` the Sentry browser SDK as soon as possible during your application load up, before initializing Angular:
