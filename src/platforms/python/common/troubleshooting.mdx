@@ -112,61 +112,14 @@ is no right, _static_ answer as to which context library to use. Even then
 gevent's aggressive monkeypatching is likely to interfere in a way that cannot
 be fixed from within the SDK.
 
-This [issue has been fixed with gevent
-20.5](https://github.com/gevent/gevent/issues/1407) but continues to be one for
+This [issue has been fixed with event 20.5](https://github.com/gevent/gevent/issues/1407) but continues to be one for
 eventlet.
+
+<PlatformSection supported={["django"]}><markdown>
 
 ## Django Channels
 
 A Django application using Channels 2.0 will be correctly instrumented under Python 3.7. For older versions of Python, install `aiocontextvars` from PyPI or your application will not start.
 
 If you experience memory leaks in your channels' consumers while using the SDK, you need to wrap your entire application in [Sentry's ASGI middleware](/platforms/python/guides/asgi/).Unfortunately the SDK is not able to do so by itself, as [Channels is missing some hooks for instrumentation](https://github.com/django/channels/issues/1348).
-
-## Matching Behavior in the Django integration
-
-You can pass the following keyword arguments to `DjangoIntegration()`:
-
-- `transaction_style`:
-
-  ```python
-  def my_function(request):
-      return "ok"
-
-  urlpatterns = [
-      url(r"^myurl/(?P<myid>\d+)/$", my_function)
-  ]
-  ```
-
-  In the above code, you would set the transaction to:
-
-  - `/myurl/{myid}` if you set `transaction_style="url"`. This matches the behavior of the deprecated Raven SDK.
-  - `my_function` if you set `transaction_style="function_name"`
-
-  The default is `"url"`.
-
-## Writing Your Own Django View for Status Codes
-
-In some situations, you want to report `404 Not Found` and other errors besides uncaught exceptions (`500 Internal Server Error`) to Sentry. You can achieve this by writing your own Django view for those status codes. For example:
-
-```python
-
-# urls.py
-
-handler404 = 'mysite.views.my_custom_page_not_found_view'
-
-# views.py
-
-from django.http import HttpResponseNotFound
-from sentry_sdk import capture_message
-
-
-def my_custom_page_not_found_view(*args, **kwargs):
-    capture_message("Page not found!", level="error")
-
-    # return any response here, e.g.:
-    return HttpResponseNotFound("Not found")
-```
-
-The error message you send to Sentry will have the usual request data attached.
-
-Refer to [Customizing Error Views](https://docs.djangoproject.com/en/3.0/topics/http/views/#customizing-error-views) from the Django documentation for more information.
+</markdown></PlatformSection>
