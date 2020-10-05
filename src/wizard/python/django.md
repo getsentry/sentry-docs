@@ -11,7 +11,7 @@ from Version 1.6 upwards.
 Install `sentry-sdk`:
 
 ```bash
-$ pip install --upgrade sentry-sdk
+pip install --upgrade sentry-sdk
 ```
 
 To configure the SDK, initialize it with the Django integration in your `settings.py` file:

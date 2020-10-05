@@ -9,10 +9,10 @@ Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/node
+yarn add @sentry/node
 
 # Using npm
-$ npm install --save @sentry/node
+npm install --save @sentry/node
 ```
 
 ```javascript

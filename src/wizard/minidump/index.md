@@ -22,7 +22,7 @@ endpoint expects a `POST` request with the minidump in the
 `upload_file_minidump` field:
 
 ```bash
-$ curl -X POST \
+curl -X POST \
   '___MINIDUMP_URL___' \
   -F upload_file_minidump=@mini.dmp
 ```

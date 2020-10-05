@@ -9,10 +9,10 @@ Add the Sentry SDK as a dependency using yarn or npm:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/gatsby
+yarn add @sentry/gatsby
 
 # Using npm
-$ npm install --save @sentry/gatsby
+npm install --save @sentry/gatsby
 ```
 
 ## Connecting the SDK to Sentry

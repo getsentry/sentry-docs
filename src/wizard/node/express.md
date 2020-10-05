@@ -9,10 +9,10 @@ Add `@sentry/node` as a dependency:
 
 ```bash
 # Using yarn
-$ yarn add @sentry/node @sentry/tracing
+yarn add @sentry/node @sentry/tracing
 
 # Using npm
-$ npm install --save @sentry/node @sentry/tracing
+npm install --save @sentry/node @sentry/tracing
 ```
 
 Sentry should be initialized as early in your app as possible.

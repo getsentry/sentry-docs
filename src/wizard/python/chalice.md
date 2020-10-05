@@ -10,7 +10,7 @@ type: framework
 Install `sentry-sdk` from PyPI:
 
 ```bash
-$ pip install --upgrade sentry-sdk[chalice]
+pip install --upgrade sentry-sdk[chalice]
 ```
 
 ## Configure

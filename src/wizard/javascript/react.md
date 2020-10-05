@@ -9,10 +9,10 @@ To instrument your React application with Sentry, first install the `@sentry/rea
 
 ```bash
 # Using yarn
-$ yarn add @sentry/react @sentry/tracing
+yarn add @sentry/react @sentry/tracing
 
 # Using npm
-$ npm install --save @sentry/react @sentry/tracing
+npm install --save @sentry/react @sentry/tracing
 ```
 
 Next, import and initialize the Sentry module as early as possible, before initializing React:

@@ -8,7 +8,7 @@ type: framework
 Install our Python SDK using `pip`:
 
 ```bash
-$ pip install --upgrade sentry-sdk
+pip install --upgrade sentry-sdk
 ```
 
 You can use the GCP Functions integration for the Python SDK like this:

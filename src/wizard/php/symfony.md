@@ -8,7 +8,7 @@ type: framework
 Install the `sentry/sentry-symfony` package:
 
 ```bash
-$ composer require sentry/sentry-symfony
+composer require sentry/sentry-symfony
 ```
 
 Add your DSN to `app/config/config.yml`:

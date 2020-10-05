@@ -49,7 +49,7 @@ io.sentry.jul.SentryHandler.level=WARNING
 When starting your application, add the `java.util.logging.config.file` to the system properties, with the full path to the `logging.properties` as its value:
 
 ```bash
-$ java -Djava.util.logging.config.file=/path/to/app.properties MyClass
+java -Djava.util.logging.config.file=/path/to/app.properties MyClass
 ```
 
 Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration options page](/platforms/java/guides/logging/configuration/options/) for ways you can do this.
