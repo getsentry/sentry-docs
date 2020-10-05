@@ -7,31 +7,25 @@ type: framework
 
 ### Installation
 
-Using Maven:
-
-```xml
+```xml {tabTitle:Maven}
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-logback</artifactId>
-    <version>{{ packages.version('sentry.java', '1.7.30') }}</version>
+    <version>{{ packages.version('sentry.java', '3.0.0') }}</version>
 </dependency>
 ```
 
-Using Gradle:
-
-```groovy
-implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '1.7.30') }}'
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '3.0.0') }}'
 ```
 
-Using SBT:
-
-```scala
+```scala {tabTitle: SBT}
 libraryDependencies += "io.sentry" % "sentry-logback" % "{{ packages.version('sentry.java', '1.7.30') }}"
 ```
 
 ### Usage
 
-The following example configures a `ConsoleAppender` that logs to standard out at the `INFO` level and a `SentryAppender` that logs to the Sentry server at the `WARN` level. The `ConsoleAppender` is only provided as an example of a non-Sentry appender that is set to a different logging threshold, like one you may already have in your project.
+The following example configures a `ConsoleAppender` that logs to standard out at the `INFO` level and a `SentryAppender` that logs to the Sentry server at the `ERROR` level. The `ConsoleAppender` is only provided as an example of a non-Sentry appender that is set to a different logging threshold, like one you may already have in your project.
 
 Example configuration using the `logback.xml` format:
 
@@ -46,13 +40,9 @@ Example configuration using the `logback.xml` format:
 
     <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
     <appender name="Sentry" class="io.sentry.logback.SentryAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
-        </filter>
-        <!-- Optionally add an encoder -->
-        <encoder>
-           <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
+        <options>
+            <dsn>___PUBLIC_DSN___</dsn>
+        </options>
     </appender>
 
     <!-- Enable the Console and Sentry appenders, Console is provided as an example
@@ -64,6 +54,18 @@ Example configuration using the `logback.xml` format:
 </configuration>
 ```
 
-Next, **you’ll need to configure your DSN** (client key) and optionally other values such as `environment` and `release`. [See the configuration page](/platforms/java/guides/logback/configuration/options/#setting-the-dsn) for ways you can do this.
+### DSN Configuration
+
+Note that **you need to configure your DSN** (client key).
+
+```xml
+<appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <options>
+        <dsn>___PUBLIC_DSN___</dsn>
+    </options>
+</appender>
+```
+
+If the DSN is not present in the `logback.xml` configuration, Sentry will attempt to read it from the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
