@@ -23,6 +23,8 @@ final sentry = SentryClient(dsn: "___PUBLIC_DSN___");
 Run the whole app in a zone to capture all uncaught errors:
 
 ```dart
+import 'dart:async'; 
+
 // Wrap your 'runApp(MyApp())' as follows:
 
 void main() async {
