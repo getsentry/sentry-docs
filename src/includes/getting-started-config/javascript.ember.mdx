@@ -1,29 +1,7 @@
----
-title: Ember
-sidebar_order: 3000
-redirect_from:
-  - /platforms/javascript/ember/
-  - /clients/javascript/integrations/ember/
----
 
-On this page, we provide concise information to get you up and running with Sentry's Ember SDK, automatically reporting errors and exceptions in your application.
+This snippet includes automatic instrumentation to [monitor the performance](/platforms/javascript/performance/) of your application, which registers and configures the Tracing integration, including custom Ember instrumentation.
 
-**Note:** If you don't already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
-
-Our Ember SDK currently supports all lts versions of Ember 3.x.
-
-## Install
-
-Sentry captures data by using an SDK within your application’s runtime. Add the Ember addon using ember-cli:
-
-```bash {tabTitle:ember-cli}
-ember install @sentry/ember
-```
-
-## Configure
-
-You should initialize the Sentry Ember SDK as soon as possible during your application load up, before initializing the
-application in `app.js`:
+**Note:** To reduce the volume of performance data captured, or disable it entirely, change `tracesSampleRate` to a value between 0 and 1 in production.
 
 ```javascript
 import Application from '@ember/application';
@@ -48,7 +26,7 @@ Then add the following config to your `config/environment.js`:
 ENV['@sentry/ember'] = {
   sentry: {
     dsn: '___PUBLIC_DSN___',
-    tracesSampleRate: 1.0, // Be sure to lower this in production
+    tracesSampleRate: 1.0, // We recommend adjusting this in production
   }
 };
 ```
@@ -58,11 +36,22 @@ Once this is done, all unhandled exceptions are automatically captured by Sentry
 **Important:** Note your DSN. The _DSN_ (Data Source Name) tells the SDK where to send events. If you forget it, view _Settings -> Projects -> Client Keys (DSN)_ in the Sentry web UI.
 
 
-## Monitor Performance
+### Ember Specifics
 
-Performance Monitoring helps you see everything from macro-level metrics to micro-level spans, and you’ll be able to cross-reference transactions with related issues, customize queries based on your personal needs, and substantially more.
+The `@sentry/ember` addon comes with some options to manage the Ember specific instrumentation, these options are set on the addon config directly. All Sentry options that would be passed to `init` should be set in the `sentry` key inside your addon config instead.
 
-`@sentry/ember` comes with some performance monitoring enabled by default, sideloading `@sentry/tracing` as a chunk to instrument your application. If you would like to disable performance and no longer receive transactions you can set `disablePerformance` in your config.
+```javascript
+ENV['@sentry/ember'] = {
+  // Ember specific options
+  sentry: {
+    // Sentry options
+  }
+};
+```
+
+### Ember Performance
+
+The Sentry tracing integration is already setup via the Ember addon with custom Ember instrumentation for routing, components and the runloop. It sideloads `@sentry/tracing` as a chunk to instrument your application. If you would like to disable this automatic instrumentation and no longer receive the associated transactions you can set `disablePerformance` in your config.
 
 ```javascript
 ENV['@sentry/ember'] = {
@@ -85,11 +74,11 @@ class MyRoute extends Route {
   }
 }
 
-export default instrumentRoutePerformance(SlowLoadingRoute);
+export default instrumentRoutePerformance(MyRoute);
 ```
 
 ### Classic Components
-The render times of classic components are also enabled by default, with a setting to only capture render timings above a certain duration. If you would like to change this minimum you can modify `minimumComponentRenderDuration` in your config.
+The render times of classic components are also enabled by default, with a setting to only capture render timings only above a certain duration. To change this minimum, you can modify `minimumComponentRenderDuration` in your config.
 
 ```javascript
   ENV['@sentry/ember'] = {
@@ -97,7 +86,7 @@ The render times of classic components are also enabled by default, with a setti
   };
 ```
 
-If you would like to disable component instrumentation you can set `disableInstrumentComponents` in your config.
+To disable component instrumentation you can set `disableInstrumentComponents` in your config.
 ```javascript
 ENV['@sentry/ember'] = {
   disableInstrumentComponents: true
@@ -105,7 +94,7 @@ ENV['@sentry/ember'] = {
 ```
 
 ### Runloop
-The duration of each queue in your application's runloop is instrumented by default, as long as the duration of the queue is longer than a threshold defined by `minimumRunloopQueueDuration` in your config.
+The duration of each queue in your application's runloop is instrumented by default, as long as the duration of the queue is longer than a threshold defined in your config by `minimumRunloopQueueDuration`
 
 ```javascript
   ENV['@sentry/ember'] = {
