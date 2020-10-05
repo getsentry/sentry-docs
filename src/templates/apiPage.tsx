@@ -80,10 +80,9 @@ export default props => {
   }
 
   if (bodyParameters) {
-    // rn bodyParameters doesn't have the example data
     const requestBodyExample =
       (requestBodyContent?.example && JSON.parse(requestBodyContent.example)) ||
-      {}; // this is where I need to put the example
+      {};
 
     if (contentType === "multipart/form-data") {
       Object.entries(requestBodyExample).map(
