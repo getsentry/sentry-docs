@@ -11,6 +11,7 @@ type Node = {
   context: {
     title?: string | null;
     sidebar_order?: number | null;
+    sidebar_title?: string | null;
     [key: string]: any;
   };
   [key: string]: any;
@@ -70,7 +71,7 @@ export const renderChildren = (
       <SidebarLink
         to={node.path}
         key={node.path}
-        title={node.context.title}
+        title={node.context.sidebar_title || node.context.title}
         collapsed={depth >= showDepth}
       >
         {renderChildren(children, exclude, showDepth, depth + 1)}
@@ -135,7 +136,8 @@ export default ({
     currentTree = entity.children;
   });
   if (!entity) return null;
-  if (!title && entity.node) title = entity.node.context.title;
+  if (!title && entity.node)
+    title = entity.node.context.sidebar_title || entity.node.context.title;
   const parentNode = entity.children
     ? entity.children.find((n: EntityTree) => n.name === "")
     : null;

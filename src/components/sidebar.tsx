@@ -13,6 +13,7 @@ const navQuery = graphql`
           draft
           title
           sidebar_order
+          sidebar_title
         }
       }
     }
@@ -25,6 +26,7 @@ type NavNode = {
     draft: boolean;
     title: string;
     sidebar_order: number;
+    sidebar_title?: string;
   };
 };
 

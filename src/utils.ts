@@ -54,6 +54,7 @@ export const sortBy = (arr: any[], comp: (any) => any): any[] => {
 type Page = {
   context: {
     title?: string;
+    sidebar_title?: string;
     sidebar_order?: number;
   };
 };
@@ -69,7 +70,9 @@ export const sortPages = (
     const bso = b.context.sidebar_order >= 0 ? b.context.sidebar_order : 10;
     if (aso > bso) return 1;
     else if (bso > aso) return -1;
-    return a.context.title.localeCompare(b.context.title);
+    return (a.context.sidebar_title || a.context.title).localeCompare(
+      b.context.sidebar_title || b.context.title
+    );
   });
 };
 
