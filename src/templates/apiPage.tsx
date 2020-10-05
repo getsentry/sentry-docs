@@ -71,6 +71,9 @@ export default props => {
     ` -H 'Authorization: Bearer <auth_token>'`,
   ];
 
+  console.log("hi!");
+  console.log(data) // request example isn't in the data
+
   if (["put", "options", "delete"].includes(data.method.toLowerCase())) {
     apiExample.push(` -X ${data.method.toUpperCase()}`);
   }
@@ -79,8 +82,10 @@ export default props => {
     apiExample.push(` -H 'Content-Type: ${contentType}'`);
   }
 
-  if (bodyParameters) {
-    const body = {};
+  if (bodyParameters) { // rn bodyParameters doesn't have the example data
+    console.log("body params");
+    console.log(bodyParameters);
+    const body = {}; // this is where I need to put the example
     Object.entries(bodyParameters.properties).map(
       ([key, { example }]) => (body[key] = example)
     );
