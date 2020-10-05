@@ -32,4 +32,4 @@ sentry:
   dsn: ___PUBLIC_DSN___
 ```
 
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
+See the [provided examples in the `Java` SDK repository](https://github.com/getsentry/sentry-java/tree/main/sentry-samples) for examples to send your first event to Sentry.

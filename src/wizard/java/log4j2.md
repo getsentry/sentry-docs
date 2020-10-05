@@ -59,4 +59,4 @@ Note that **you need to configure your DSN** (client key).
 
 If the DSN is not present in the `log4j2.xml` configuration, Sentry will attempt to read it from the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
 
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
+See the [provided examples in the `Java` SDK repository](https://github.com/getsentry/sentry-java/tree/main/sentry-samples) for examples to send your first event to Sentry.
