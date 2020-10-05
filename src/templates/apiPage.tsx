@@ -54,9 +54,9 @@ const strFormat = str => {
 export default props => {
   const openApi: OpenAPI = props.data?.openApi || ({} as any);
   const data = openApi?.path;
+  const requestBodyContent = data.requestBody?.content;
   const bodyParameters: RequestBodySchema | null =
-    (data.requestBody?.content?.schema &&
-      JSON.parse(data.requestBody.content.schema)) ||
+    (requestBodyContent?.schema && JSON.parse(requestBodyContent.schema)) ||
     null;
   const pathParameters = (data.parameters || []).filter(
     param => param.in === "path"
@@ -64,15 +64,12 @@ export default props => {
   const queryParameters = (data.parameters || []).filter(
     param => param.in === "query"
   );
-  const contentType = data.requestBody?.content?.content_type;
+  const contentType = requestBodyContent?.content_type;
 
   const apiExample = [
     `curl https://sentry.io${data.apiPath}`,
     ` -H 'Authorization: Bearer <auth_token>'`,
   ];
-
-  console.log("hi!");
-  console.log(data) // request example isn't in the data
 
   if (["put", "options", "delete"].includes(data.method.toLowerCase())) {
     apiExample.push(` -X ${data.method.toUpperCase()}`);
@@ -82,21 +79,19 @@ export default props => {
     apiExample.push(` -H 'Content-Type: ${contentType}'`);
   }
 
-  if (bodyParameters) { // rn bodyParameters doesn't have the example data
-    console.log("body params");
-    console.log(bodyParameters);
-    const body = {}; // this is where I need to put the example
-    Object.entries(bodyParameters.properties).map(
-      ([key, { example }]) => (body[key] = example)
-    );
+  if (bodyParameters) {
+    // rn bodyParameters doesn't have the example data
+    const requestBodyExample =
+      (requestBodyContent?.example && JSON.parse(requestBodyContent.example)) ||
+      {}; // this is where I need to put the example
 
     if (contentType === "multipart/form-data") {
-      Object.entries(body).map(
+      Object.entries(requestBodyExample).map(
         ([key, value]) =>
           value !== undefined && apiExample.push(` -F ${key}=${value}`)
       );
     } else {
-      apiExample.push(` -d '${JSON.stringify(body)}'`);
+      apiExample.push(` -d '${JSON.stringify(requestBodyExample)}'`);
     }
   }
 
@@ -294,6 +289,7 @@ export const pageQuery = graphql`
         requestBody {
           content {
             content_type
+            example
             schema
           }
           required

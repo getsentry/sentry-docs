@@ -2,7 +2,7 @@ export type RequestBodySchema = {
   required: string[];
   type: string;
   properties: {
-    [key: string]: { type: string; description: string; example: string };
+    [key: string]: { type: string; description: string; };
   };
 };
 
