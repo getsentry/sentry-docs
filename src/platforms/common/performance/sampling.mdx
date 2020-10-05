@@ -15,41 +15,7 @@ Setting a uniform sample rate is a good option if you want an even cross-section
 
 To do this, set the `tracesSampleRate` option in your `Sentry.init()` to a number between 0 and 1. With this option set, every transaction created will have that percentage chance of being sent to Sentry. (So, for example, if you set `tracesSampleRate` to `0.2`, approximately 20% of your transactions will get recorded and sent.) That looks like this:
 
-```javascript {tabTitle: ESM}
-// If you're using one of our integration packages, like `@sentry/react` or `@sentry/angular`,
-// substitute its name for `@sentry/browser` here
-import * as Sentry from "@sentry/browser";
-
-// If taking advantage of automatic instrumentation (highly recommended)
-import { Integrations as TracingIntegrations } from "@sentry/tracing";
-// Or, if only doing manual tracing
-// import * as _ from "@sentry/tracing"
-// Note: You MUST import the package in some way for tracing to work
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // This enables automatic instrumentation (highly recommeneded), but is not
-  // necessary for purely manual usage
-  integrations: [new TracingIntegrations.BrowserTracing()],
-
-  // Each transaction has a 20% chance of being sent to Sentry
-  tracesSampleRate: 0.2,
-});
-```
-
-```javascript {tabTitle: CDN}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // This enables automatic instrumentation (highly recommeneded), but is not
-  // necessary for purely manual usage
-  integrations: [new Sentry.Integrations.BrowserTracing()],
-
-  // Each transaction has a 20% chance of being sent to Sentry
-  tracesSampleRate: 0.2,
-});
-```
+<PlatformContent includePath="performance/uniform-sample-rate" />
 
 ## Dynamic Sampling Function
 
@@ -61,22 +27,7 @@ Providing a sampling function is a good option if you:
 
 To sample dynamically, set the `tracesSampler` option in your `Sentry.init()` to a function that will accept a `samplingContext` object and return a sample rate between 0 and 1. For example:
 
-```javascript
-tracesSampler: samplingContext => {
-  // Examine provided context data (including parent decision, if any) along with anything
-  // in the global namespace to compute the sample rate or sampling decision for this transaction.
-
-  if ("...") {
-    return 0.5; // These are important - take a big sample
-  } else if ("...") {
-    return 0.01; // These are less important or happen much more frequently - only take 1% of them
-  } else if ("...") {
-    return 0; // These aren't something worth tracking - drop all transactions like this
-  } else {
-    return 0.1; // Default sample rate
-  }
-};
-```
+<PlatformContent includePath="performance/dynamic-sampling-function" />
 
 For convenience, the function can also return a boolean. Returning `true` is equivalent to returning `1`, and will guarantee the transaction will be sent to Sentry. Returning `false` is equivalent to returning `0` and will guarantee the transaction will **not** be sent to Sentry.
 
@@ -100,17 +51,7 @@ If the transaction currently being created is one of those subsequent transactio
 
 For convenience, the `tracesSampler` function can return a boolean, so that a parent's decision can be returned directly if that's the desired behavior.
 
-```javascript
-tracesSampler: samplingContext => {
-  // always inherit
-  if (samplingContext.parentSampled !== undefined) {
-    return samplingContext.parentSampled
-  }
-
-  ...
-  // rest of sampling logic here
-}
-```
+<PlatformContent includePath="performance/always-inherit-sampling-decision" />
 
 If you're using a `tracesSampleRate` rather than a `tracesSampler`, the decision will always be inherited.
 
@@ -118,12 +59,7 @@ If you're using a `tracesSampleRate` rather than a `tracesSampler`, the decision
 
 If you know at transaction creation time whether or not you want the transaction sent to Sentry, you also have the option of passing a sampling decision directly to the transaction in the `transactionContext` object (note, not the `customSamplingContext` object). If you do that, the transaction won't be subject to the `tracesSampleRate`, nor will `tracesSampler` be run, so you can count on the decision that's passed not to be overwritten.
 
-```javascript
-Sentry.startTransaction({
-  name: "Search from navbar",
-  sampled: true,
-});
-```
+<PlatformContent includePath="performance/force-sampling-decision" />
 
 ## Precedence
 
