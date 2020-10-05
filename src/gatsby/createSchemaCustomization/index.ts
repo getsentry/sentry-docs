@@ -10,6 +10,7 @@ export default ({ actions, schema }) => {
     type PageContext {
       title: String
       sidebar_order: Int
+      sidebar_title: String
       draft: Boolean
       redirect_from: [String!]
 
@@ -63,6 +64,9 @@ export default ({ actions, schema }) => {
         },
         noindex: {
           type: "Boolean",
+        },
+        sidebar_title: {
+          type: "String",
         },
         sidebar_order: {
           type: "Int",

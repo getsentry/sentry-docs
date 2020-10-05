@@ -15,6 +15,7 @@ const navQuery = graphql`
         path
         context {
           title
+          sidebar_title
           sidebar_order
           platform {
             name
@@ -30,6 +31,7 @@ type Node = {
   context: {
     title: string;
     sidebar_order?: number;
+    sidebar_title?: string;
     platform: {
       name: string;
     };
