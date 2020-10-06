@@ -18,6 +18,7 @@ const getHeadings = (element: HTMLElement): Item[] => {
   // XXX(dcramer): someone please rewrite this code to be less terrible, i hate trees
   // TODO(dcramer): this doesnt handle jumping heading levels properly (probably)
   htmlNodes.forEach((node, i) => {
+    if (!node.id) return;
     const item = {
       items: [],
       url: `#${node.id}`,
