@@ -212,7 +212,8 @@ type SetPlatformOptions = {
  * type `Platform`, and `setPlatform` takes the platform name as a string.
  *
  * The active platform is decided based on a few heuristics:
- * - if you're on a platform page, its _always_ pulled from the URL
+ * - if you're passing the value (first param), its _always_ this value
+ * - otherwise if you're on a platform page, its _always_ pulled from the URL
  * - otherwise its pulled from local storage (last platform selected)
  * - otherwise its pulled from `defaultValue` (or `DEFAULT_PLATFORM` if none)
  *
@@ -220,8 +221,9 @@ type SetPlatformOptions = {
  * want to pass `defaultValue` with the effective platform to avoid fallbacks.
  */
 export default (
-  defaultValue: string = DEFAULT_PLATFORM,
-  useStoredValue: boolean = true
+  value: string = null,
+  useStoredValue: boolean = true,
+  defaultValue: string = DEFAULT_PLATFORM
 ): UsePlatform => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -237,9 +239,8 @@ export default (
     pageContext,
     location
   );
-  let currentValue: string | null = valueFromLocation
-    ? valueFromLocation.join(".")
-    : null;
+  let currentValue: string | null =
+    value || valueFromLocation ? valueFromLocation.join(".") : null;
 
   if (!currentValue && !isFixed && useStoredValue) {
     currentValue = storedValue;
@@ -247,18 +248,18 @@ export default (
 
   const [stateValue, setStateValue] = useState(currentValue);
 
-  const setValue = (value: string, options: SetPlatformOptions = {}) => {
-    if (value == currentValue) return;
-    setStoredValue(value);
-    if (!value) value = defaultValue;
-    let path = rebuildPathForPlatform(value, location.pathname);
+  const setValue = (newValue: string, options: SetPlatformOptions = {}) => {
+    if (newValue == currentValue) return;
+    setStoredValue(newValue);
+    if (!newValue) newValue = defaultValue;
+    let path = rebuildPathForPlatform(newValue, location.pathname);
     if (!isFixed && !options.noQueryString) {
-      path += `?platform=${value}`;
+      path += `?platform=${newValue}`;
     }
     if (path !== location.pathname) {
       navigate(path);
     }
-    setStateValue(value);
+    setStateValue(newValue);
   };
 
   const activeValue: Platform | Guide =
