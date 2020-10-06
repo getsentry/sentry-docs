@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 type Item = {
   title?: string;
@@ -57,8 +57,14 @@ type Props = {
 };
 
 export default ({ contentRef }: Props) => {
-  if (!contentRef || !contentRef.current) return null;
-  const items = getHeadings(contentRef.current);
+  const [items, setItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    if (!items.length && contentRef.current) {
+      setItems(getHeadings(contentRef.current));
+    }
+  });
+
   if (!items.length) return null;
 
   const recurse = items =>
