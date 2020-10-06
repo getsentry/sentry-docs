@@ -14,9 +14,6 @@ const includeQuery = graphql`
         relativePath
         name
         childMdx {
-          internal {
-            type
-          }
           body
         }
       }
@@ -35,9 +32,6 @@ type FileNode = {
   relativePath: string;
   name: string;
   childMdx: {
-    internal: {
-      type: string;
-    };
     body: any;
   };
 };
@@ -89,7 +83,6 @@ const MissingContent = styled.div`
 export default ({
   includePath,
   platform,
-  fallbackPlatform,
   children,
   notateUnsupported = true,
 }: Props): JSX.Element => {
@@ -107,8 +100,7 @@ export default ({
   const contentMatch = getFileForPlatform(
     includePath,
     matches,
-    currentPlatform,
-    fallbackPlatform
+    currentPlatform
   );
 
   return (

@@ -5,15 +5,9 @@ import Markdown from "./markdown";
 type FileNode = {
   childMarkdownRemark?: {
     html: any;
-    internal: {
-      type: string;
-    };
   };
   childMdx?: {
     body: any;
-    internal: {
-      type: string;
-    };
   };
 };
 
