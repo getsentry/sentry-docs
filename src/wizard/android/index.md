@@ -56,4 +56,8 @@ public class MyActivity extends AppCompatActivity {
 }
 ```
 
-<PageGrid nextSteps header="Next Steps" />
+### Next steps
+
+Using ProGuard or R8 to obfuscate your app? Check out [our docs on how to set it up](https://docs.sentry.io/platforms/android/proguard/).
+
+[The documentation](https://docs.sentry.io/platforms/android/configuration/) has more information about the many configurations and API available in Sentry's SDK.
