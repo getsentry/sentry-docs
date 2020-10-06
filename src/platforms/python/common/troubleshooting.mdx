@@ -1,5 +1,6 @@
 ---
 title: Troubleshooting
+description: "While we don't expect most users of our SDK to run into these issues, we document edge cases here."
 sidebar_order: 950
 redirect_from:
   - /platforms/python/contextvars/
@@ -111,6 +112,15 @@ is no right, _static_ answer as to which context library to use. Even then
 gevent's aggressive monkeypatching is likely to interfere in a way that cannot
 be fixed from within the SDK.
 
-This [issue has been fixed with gevent
-20.5](https://github.com/gevent/gevent/issues/1407) but continues to be one for
+This [issue has been fixed with event 20.5](https://github.com/gevent/gevent/issues/1407) but continues to be one for
 eventlet.
+
+<PlatformSection supported={["python.django"]}><markdown>
+
+## Django Channels
+
+A Django application using Channels 2.0 will be correctly instrumented under Python 3.7. For older versions of Python, install `aiocontextvars` from PyPI or your application will not start.
+
+If you experience memory leaks in your channels' consumers while using the SDK, you need to wrap your entire application in [Sentry's ASGI middleware](/platforms/python/guides/asgi/). Unfortunately the SDK is not able to do so by itself, as [Channels is missing some hooks for instrumentation](https://github.com/django/channels/issues/1348).
+
+</markdown></PlatformSection>
