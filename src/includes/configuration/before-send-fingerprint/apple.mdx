@@ -1,0 +1,27 @@
+```swift
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.beforeSend = { event in
+        if (event.message.formatted == "database unavailable") {
+            event.fingerprint = ["database-connection-error"]
+        }
+        return event
+    }
+}
+```
+
+```objc
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.beforeSend = ^SentryEvent * _Nullable(SentryEvent * _Nonnull event) {
+        if ([event.message.formatted isEqualToString:@"database unavailable"]) {
+            event.fingerprint = @[@"database-connection-error"];
+        }
+        return event;
+    };
+}];
+```
