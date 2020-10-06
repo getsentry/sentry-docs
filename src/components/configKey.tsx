@@ -18,18 +18,19 @@ export default ({
   children,
   platform,
 }: Props): JSX.Element => {
+  // This is a literal copypaste of the HTML Gatsby outputs for regular
+  // Markdown headings because we can't figure out how to make Gatsby
+  // render component content like regular markdown/MDX content. We tried
+  // MDXRenderer but that one needs "compiled MDX" which we are unable to
+  // obtain. We might get one if we inserted a graphql node somewhere but
+  // who knows at this point.
+
   return (
     <PlatformSection
       supported={supported}
       notSupported={notSupported}
       platform={platform}
     >
-      // This is a literal copypaste of the HTML Gatsby outputs for regular
-      // Markdown headings because we can't figure out how to make Gatsby
-      // render component content like regular markdown/MDX content. We tried
-      // MDXRenderer but that one needs "compiled MDX" which we are unable to
-      // obtain. We might get one if we inserted a graphql node somewhere but
-      // who knows at this point.
       <h3 id={name}>
         <a href={`#${name}`} className="anchor before" aria-label="common options permalink">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
