@@ -18,7 +18,7 @@ export default async () => {
     }
   }
   const response = await axios.get(
-    "https://raw.githubusercontent.com/getsentry/sentry-api-schema/d7eb0bf0dba8c4725f4514c81bacea39dad6a503/openapi-derefed.json"
+    "https://raw.githubusercontent.com/getsentry/sentry-api-schema/03ccef5d80c6e636994e0594312778e1186ba41c/openapi-derefed.json"
   );
   return response.data;
 };

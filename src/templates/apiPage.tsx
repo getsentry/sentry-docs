@@ -54,9 +54,9 @@ const strFormat = str => {
 export default props => {
   const openApi: OpenAPI = props.data?.openApi || ({} as any);
   const data = openApi?.path;
+  const requestBodyContent = data.requestBody?.content;
   const bodyParameters: RequestBodySchema | null =
-    (data.requestBody?.content?.schema &&
-      JSON.parse(data.requestBody.content.schema)) ||
+    (requestBodyContent?.schema && JSON.parse(requestBodyContent.schema)) ||
     null;
   const pathParameters = (data.parameters || []).filter(
     param => param.in === "path"
@@ -64,7 +64,7 @@ export default props => {
   const queryParameters = (data.parameters || []).filter(
     param => param.in === "query"
   );
-  const contentType = data.requestBody?.content?.content_type;
+  const contentType = requestBodyContent?.content_type;
 
   const apiExample = [
     `curl https://sentry.io${data.apiPath}`,
@@ -80,18 +80,17 @@ export default props => {
   }
 
   if (bodyParameters) {
-    const body = {};
-    Object.entries(bodyParameters.properties).map(
-      ([key, { example }]) => (body[key] = example)
-    );
+    const requestBodyExample =
+      (requestBodyContent?.example && JSON.parse(requestBodyContent.example)) ||
+      {};
 
     if (contentType === "multipart/form-data") {
-      Object.entries(body).map(
+      Object.entries(requestBodyExample).map(
         ([key, value]) =>
           value !== undefined && apiExample.push(` -F ${key}=${value}`)
       );
     } else {
-      apiExample.push(` -d '${JSON.stringify(body)}'`);
+      apiExample.push(` -d '${JSON.stringify(requestBodyExample)}'`);
     }
   }
 
@@ -289,6 +288,7 @@ export const pageQuery = graphql`
         requestBody {
           content {
             content_type
+            example
             schema
           }
           required
