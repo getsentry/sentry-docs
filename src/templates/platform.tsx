@@ -61,14 +61,12 @@ export const pageQuery = graphql`
       sourceInstanceName
       childMarkdownRemark {
         html
-        tableOfContents
         internal {
           type
         }
       }
       childMdx {
         body
-        tableOfContents
         internal {
           type
         }
