@@ -1,5 +1,5 @@
 ---
-title: 'Guidelines for Tracing Support'
+title: "Guidelines for Tracing Support"
 ---
 
 This document covers how SDKs should add support for [Distributed
@@ -11,35 +11,26 @@ mandating internal implementation details.
 Reference implementations:
 
 - [`@sentry/tracing`
-(JavaScript)](https://github.com/getsentry/sentry-javascript/tree/master/packages/tracing)
+  (JavaScript)](https://github.com/getsentry/sentry-javascript/tree/master/packages/tracing)
 - [Python SDK](https://github.com/getsentry/sentry-python/blob/master/sentry_sdk/tracing.py)
 
 ## SDK Configuration
 
-A new option `tracesSampleRate` must be added to `sentry.init`.
+Tracing is enabled by setting either one of two new SDK config options, `tracesSampleRate` and `tracesSampler`. If not set, both default to `undefined`, making tracing opt-in.
 
-The type is a `float` and expected values are in the range `[0.0, 1.0]`.  
-The default value is `0.0`.
+### `tracesSampleRate`
 
-A `tracesSampleRate` of `0.0` means no transactions should be sent to Sentry.
-Conversely, `1.0` means all transactions should be sent.
-Anything in between means the fraction of uniformly random samples that should
-be sent. For example, `0.25` means send ~25% of all transactions.
+This should be a float/double between `0.0` and `1.0` (inclusive) and represents the percentage chance that any given transaction will be sent to Sentry. (`0.0` is a 0% chance, effectively disabling tracing, and `1.0` is a 100% chance, meaning all transactions will be sent.) This rate applies equally to all transactions; in other words, each transaction should have the same random chance of ending up with `sampled = true`, equal to the `tracesSampleRate`.
 
-The default value being `0.0` is such that tracing is an opt-in feature.
+See more about how sampling should be performed below.
 
-<Alert title="Note" level="info">
-<markdown>
+### `tracesSampler`
 
-Transactions should be sampled only by `tracesSampleRate`. The `sampleRate`
-configuration is used for error events and should not apply to transactions.
+This should be a callback, called when a transaction is started, which will be given a `samplingContext` object and which should return a sample rate between `0.0` and `1.0` _for the transaction in question_. This sample rate should behave the same way as the `tracesSampleRate` above, with the difference that it only applies to the newly-created transaction, such that different transactions can be sampled at different rates. Returning `0.0` should force the transaction to be dropped (set to `sampled = false`) and returning `1.0` should force the transaction to be sent (set `sampled = true`).
 
-Pay special attention only evaluate the sampling decision once for transaction
-events from their creation until their delivery to Sentry, and only based on
-`tracesSampleRate`.
+Optionally, the `tracesSampler` callback can also return a boolean to force a sampling decision (with `false` equivalent to `0.0` and `true` equivalent to `1.0`). If returning two different datatypes isn't an option in the implementing language, this possibility can safely be omitted.
 
-</markdown>
-</Alert>
+See more about how sampling should be performed below.
 
 ## `Event` Changes
 
@@ -67,42 +58,89 @@ detail. Semantically, transactions represent both the top-level span of a span
 tree as well as the unit of reporting to Sentry.
 
 - `Span` Interface
-    - When a `Span` is created, set the `startTimestamp` to the current time
-    - `SpanContext` is the attribute collection for a `Span` (Can be an implementation detail)
-    - The relation between parent - child is captured in the property `parentSpanId`
-    - `Span` should have a method called `toTraceparent` which returns a string `sentry-trace` that could be sent as a header
-    - Similar `SpanContext` should have a static method called `fromTraceparent` which prefills a `SpanContext` with data received from a `sentry-trace` string
+
+  - When a `Span` is created, set the `startTimestamp` to the current time
+  - `SpanContext` is the attribute collection for a `Span` (Can be an implementation detail)
+  - `Span` should have a method `startChild` which creates a new span with the current span's id as the new span's `parentSpanId` and the current span's `sampled` value copied over to the new span's `sampled` property
+  - `Span` should have a method called `toTraceparent` which returns a string `sentry-trace` that could be sent as a header
+  - Similar `SpanContext` should have a static method called `fromTraceparent` which prefills a `SpanContext` with data received from a `sentry-trace` string
+
 - `Transaction` Interface
-    - A `Transaction` internally holds a flat list of child Spans (not a tree structure)
-    - `Transaction` has additionally a `setName` method the set the name of the transaction
-    - `Transaction` receives a `TransactionContext` on creation (new property vs. `SpanContext` is `name`)
-    - Since a `Transaction` inherits a `Span` it has all functions available and can be interacted with like it was a `Span`
+
+  - A `Transaction` internally holds a flat list of child Spans (not a tree structure)
+  - `Transaction` has additionally a `setName` method the set the name of the transaction
+  - `Transaction` receives a `TransactionContext` on creation (new property vs. `SpanContext` is `name`)
+  - Since a `Transaction` inherits a `Span` it has all functions available and can be interacted with like it was a `Span`
+  - A transaction is either sampled (`sampled = true`) or unsampled (`sampled = false`), a decision which is either inherited or set once during the transaction's lifetime, and in either case is propagated to all children. Unsampled transactions should not be sent to Sentry.
 
 - `Span.finish()`
-    - Just set `endTimestamp` to the current time (in payload `timestamp`)
+
+  - Just set `endTimestamp` to the current time (in payload `timestamp`)
+
 - `Transaction.finish()`
-    - `super.finish()` (call finish on Span)
-    - Send it to Sentry only if `sampled == true`
-    - A `Transaction` needs to be wrapped in an `Envelope` and sent to the [Envelope Endpoint](/sdk/envelopes/)
-    - The `Transport` should use the same internal queue for `Transactions` / `Events`
-    - The `Transport` should implement category-based rate limiting →
-    - The `Transport` should deal with wrapping a `Transaction` in an `Envelope` internally
+  - `super.finish()` (call finish on Span)
+  - Send it to Sentry only if `sampled == true`
+  - A `Transaction` needs to be wrapped in an `Envelope` and sent to the [Envelope Endpoint](/sdk/envelopes/)
+  - The `Transport` should use the same internal queue for `Transactions` / `Events`
+  - The `Transport` should implement category-based rate limiting →
+  - The `Transport` should deal with wrapping a `Transaction` in an `Envelope` internally
+
+## Sampling
+
+Each transaction has a "sampling decision," that is, a boolean which dictates whether or not it should be sent to Sentry. This should be set exactly once during a transaction's lifetime, and should be stored in an internal `sampled` boolean.
+
+There are multiple ways a transaction can end up with a sampling decision:
+
+- Random sampling according to a static sample rate set in `tracesSampleRate`
+- Random sampling according to a dynamic sample rate returned by `tracesSampler`
+- Absolute decision (100% chance or 0% chance) returned by `tracesSampler`
+- If the transaction has a parent, inheriting its parent's sampling decision
+- Absolute decision passed to `startTransaction`
+
+When there's the potential for more than one of these to come into play, the following precedence rules should apply:
+
+1. If a sampling decision is passed to `startTransaction` (`startTransaction({name: "my transaction", sampled: true})`), that decision will be used, regardlesss of anything else
+2. If `tracesSampler` is defined, its decision will be used. It can choose to keep or ignore any parent sampling decision, or use the sampling context data to make its own decision or choose a sample rate for the transaction.
+3. If `tracesSampler` is not defined, but there's a parent sampling decision, the parent sampling decision will be used.
+4. If `tracesSampler` is not defined and there's no parent sampling decision, `tracesSampleRate` will be used.
+
+<Alert title="Note" level="info">
+<markdown>
+
+Transactions should be sampled only by `tracesSampleRate` or `tracesSampler`. The `sampleRate` configuration is used for error events and should not apply to transactions.
+
+</markdown>
+</Alert>
+
+### Sampling Context
+
+If defined, the `tracesSampler` callback should be passed a `samplingContext` object, which should include, at minimum:
+
+- The `transactionContext` with which the transaction was created
+- A boolean `parentSampled` which contains the sampling decision passed down from the parent, if any
+- Data from an optional `customSamplingContext` object passed to `startTransaction` when it is called manually
+
+Depending on the platform, other default data may be included. (For example, for server frameworks, it makes sense to include the `request` object corresponding to the request the transaction is measuring.)
+
+### Propagation
+
+A transaction's sampling decision should be passed to all of its children, including across service boundaries. This can be accomplished in the `startChild` method for same-service children and using the `senry-trace` header for children in a different service.
 
 ## Header `sentry-trace`
 
-`sentry-trace = traceid-spanid-sampling`
+`sentry-trace = traceid-spanid-sampled`
 
-With sampling being optional. So at a minimum, it's expected:
+`sampled` is optional. So at a minimum, it's expected:
 
 `sentry-trace = traceid-spanid`
 
-To offer a minimal compatibility with W3C `traceparent` (without the version prefix) and `b3`  (which considers valid both 64 and 128 bits for `traceId`) headers the propagation header should have a `traceId` of 128 bits encoded in 32 hex chars and a `spanId` of 64 bits encoded in 16 hex chars.
-To avoid confusion with W3C `traceparent` due to being similar but not the exactly an implementation of it, we call it simply `sentry-trace`.
+To offer a minimal compatibility with the [W3C `traceparent` header](https://www.w3.org/TR/trace-context/#traceparent-header) (without the version prefix) and [Zipkin's `b3` headers](https://zipkin.io/pages/instrumenting#communicating-trace-information) (which consider both 64 and 128 bits for `traceId` valid), the `sentry-trace` header should have a `traceId` of 128 bits encoded in 32 hex chars and a `spanId` of 64 bits encoded in 16 hex chars.
+To avoid confusion with the W3C `traceparent` header (to which our header is similar but not identical), we call it simply `sentry-trace`.
 No version is being defined in the header.
 
-### Sampling
+### The `sampled` Value
 
-The sampling section is optional. The format is not `flags` to simplify processing it. It's a single char. The possible values are:
+To simplify processing, the value consists of a single (optional) character. The possible values are:
 
 ```
   - No value means defer
@@ -112,8 +150,9 @@ The sampling section is optional. The format is not `flags` to simplify processi
 1 - Sampled
 ```
 
-Differently than `b3` a simple sampling decision as a value to `sentry-trace` should not be implemented. [There are reasons to always include](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-send-trace-ids-with-a-reject-sampling-decision) the `trace-id` and `span-id` regardless of sampling having been decided by the caller. And also this will simplify the implementation.
-Besides the [usual reasons to use *defer](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-defer-a-sampling-decision),* in the case of Sentry, a reason would be if a downstream system captures an error event with Sentry. The decision could be done at that point to sample that trace in order to have tracing data available for the reported crash. 
+Unlike with `b3` headers, a `sentry-trace` header should never consist solely of a sampling decision, with no `traceid` or `spanid` values. There are [good reasons](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-send-trace-ids-with-a-reject-sampling-decision) to always include the `traceid` and `spanid` regardless of the sampling decision, and doing so also simplifies implementation.
+
+Besides the [usual reasons to use \*defer](https://github.com/apache/incubator-zipkin-b3-propagation/blob/bc937b6854ea30e46b3e85fbf147d8f4de685dd5/README.md#why-defer-a-sampling-decision),\* in the case of Sentry, a reason would be if a downstream system captures an error event with Sentry. The decision could be done at that point to sample that trace in order to have tracing data available for the reported crash.
 
 `sentry-trace = sampled`
 
@@ -121,8 +160,7 @@ Which in reality is useful for proxies to set it to `0` and opt out of tracing.
 
 ## Static API Changes
 
-The `Sentry.startTransaction` function should take the same arguments as the
-`Transaction` constructor.
+The `Sentry.startTransaction` function should take two arguments - the `transactionContext` passed to the `Transaction` constructor and an optional `customSamplingContext` object containing data to be passed to `tracesSampler` (if defined).
 
 It creates a `Transaction` bound to the current hub and returns the instance.
 Users interact with the instance for creating child spans and, thus, have to
@@ -131,13 +169,14 @@ keep track of it themselves.
 ## `Hub` Changes
 
 - Introduce a method called `traceHeaders`
-    - This function returns a header (string) `sentry-trace`
-    - The value should be the trace header string of the `Span` that is currently on the `Scope`
+
+  - This function returns a header (string) `sentry-trace`
+  - The value should be the trace header string of the `Span` that is currently on the `Scope`
 
 - `Hub` → Introduce a method called `startTransaction`
-    - Creates a new `Transaction` instance
-    - This method deals with sampling, and therefore it should take the `tracesSampleRate` option into account:
-        - Depending on the outcome, the sample decision should be stored in the `Transaction`'s `sampled` property and again forwarded to its children
+  - Takes the same two arguments as `Sentrt.startTransaction`
+  - Creates a new `Transaction` instance
+  - Should implement sampling as described in more detail in the 'Sampling' section of this document
 
 <!--
 NOTE: we may omit this as a deprecated API replaced by `startTransaction` and
@@ -162,13 +201,13 @@ behavior applies to manual instrumentation as well.
 -->
 
 - `Scope` Introduce `setSpan`
-    - This can be used internally to pass a `Span` / `Transaction` around so
-      that integrations can attach children to it
-    - Setting the `transaction` property on the `Scope` (legacy) should
-      overwrite the name of the `Transaction` stored in the `Scope`, if there is
-      one. With that we give users the option to change the transaction name
-      even if they don't have access to the instance of the `Transaction`
-      directly.
+  - This can be used internally to pass a `Span` / `Transaction` around so
+    that integrations can attach children to it
+  - Setting the `transaction` property on the `Scope` (legacy) should
+    overwrite the name of the `Transaction` stored in the `Scope`, if there is
+    one. With that we give users the option to change the transaction name
+    even if they don't have access to the instance of the `Transaction`
+    directly.
 
 ## Interaction with `beforeSend` and Event Processors
 
