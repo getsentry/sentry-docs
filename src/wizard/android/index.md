@@ -12,12 +12,12 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 To install the Android SDK, please update your build.gradle file as follows:
 
 ```groovy
-// ADD JCENTER REPOSITORY
+// Make sure jcenter is there.
 repositories {
     jcenter()
 }
 
-// ADD COMPATIBILITY OPTIONS TO BE COMPATIBLE WITH JAVA 1.8
+// Enable Java 1.8 source compatibility if you haven't yet.
 android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -25,10 +25,9 @@ android {
     }
 }
 
-// ADD SENTRY ANDROID AS A DEPENDENCY
+// Add Sentry's SDK as a dependency.
 dependencies {
-    // https://github.com/getsentry/sentry-android/releases
-    implementation 'io.sentry:sentry-android:{version}'
+    implementation 'io.sentry:sentry-android:3.0.0'
 }
 ```
 
@@ -52,11 +51,13 @@ Great! Now that you’ve completed setting up the SDK, maybe you want to quickly
 public class MyActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        try {
-            throw new Exception("This is a test.");
-        } catch (Exception e) {
-            Sentry.captureException(e);
-        }
+        Sentry.captureMessage("testing SDK setup");
     }
 }
 ```
+
+### Next steps
+
+Using ProGuard or R8 to obfuscate your app? Check out [our docs on how to set it up](https://docs.sentry.io/platforms/android/proguard/).
+
+[The documentation](https://docs.sentry.io/platforms/android/configuration/) has more information about the many configurations and API available in Sentry's SDK.
