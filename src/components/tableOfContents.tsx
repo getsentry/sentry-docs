@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import * as Sentry from "@sentry/gatsby";
 
 type Item = {
   title?: string;
@@ -58,15 +59,20 @@ type Props = {
 };
 
 export default ({ contentRef }: Props) => {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<Item[]>(null);
 
   useEffect(() => {
-    if (!items.length && contentRef.current) {
-      setItems(getHeadings(contentRef.current));
+    if (!items && contentRef.current) {
+      try {
+        setItems(getHeadings(contentRef.current));
+      } catch (err) {
+        Sentry.captureException(err);
+        setItems([]);
+      }
     }
   });
 
-  if (!items.length) return null;
+  if (!items || !items.length) return null;
 
   const recurse = items =>
     items.map(i => {
