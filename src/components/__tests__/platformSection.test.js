@@ -2,7 +2,7 @@ import React from "react";
 import renderer from "react-test-renderer";
 
 import PlatformSection from "../platformSection";
-import usePlatform from "../hooks/usePlatform";
+import usePlatform, { getPlatformsWithFallback } from "../hooks/usePlatform";
 
 jest.mock("../hooks/usePlatform");
 
@@ -15,6 +15,8 @@ describe("PlatformSection", () => {
       jest.fn(),
       false,
     ]);
+    getPlatformsWithFallback.mockReturnValue(["ruby"]);
+
     const tree = renderer
       .create(<PlatformSection supported={["python"]}>Test</PlatformSection>)
       .toJSON();
@@ -30,6 +32,7 @@ describe("PlatformSection", () => {
       jest.fn(),
       false,
     ]);
+    getPlatformsWithFallback.mockReturnValue(["python"]);
     const tree = renderer
       .create(<PlatformSection supported={["python"]}>Test</PlatformSection>)
       .toJSON();
@@ -45,6 +48,7 @@ describe("PlatformSection", () => {
       jest.fn(),
       false,
     ]);
+    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "ruby"]);
     const tree = renderer
       .create(<PlatformSection supported={["ruby"]}>Test</PlatformSection>)
       .toJSON();
@@ -60,6 +64,7 @@ describe("PlatformSection", () => {
       jest.fn(),
       false,
     ]);
+    getPlatformsWithFallback.mockReturnValue(["ruby"]);
     const tree = renderer
       .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>)
       .toJSON();
@@ -75,6 +80,7 @@ describe("PlatformSection", () => {
       jest.fn(),
       false,
     ]);
+    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "ruby"]);
     const tree = renderer
       .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>)
       .toJSON();
@@ -90,6 +96,7 @@ describe("PlatformSection", () => {
       jest.fn(),
       false,
     ]);
+    getPlatformsWithFallback.mockReturnValue(["python"]);
     const tree = renderer
       .create(<PlatformSection notSupported={["ruby"]}>Test</PlatformSection>)
       .toJSON();
@@ -105,6 +112,7 @@ describe("PlatformSection", () => {
       jest.fn(),
       false,
     ]);
+    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "ruby"]);
     const tree = renderer
       .create(
         <PlatformSection supported={["ruby.rails"]} notSupported={["ruby"]}>
@@ -125,6 +133,7 @@ describe("PlatformSection", () => {
       jest.fn(),
       false,
     ]);
+    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "javascript"]);
     const tree = renderer
       .create(
         <PlatformSection notSupported={["javascript"]}>Test</PlatformSection>
@@ -143,6 +152,7 @@ describe("PlatformSection", () => {
       jest.fn(),
       false,
     ]);
+    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "javascript"]);
     const tree = renderer
       .create(
         <PlatformSection supported={["javascript"]}>Test</PlatformSection>

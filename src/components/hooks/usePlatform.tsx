@@ -201,6 +201,18 @@ type SetPlatformOptions = {
   noQueryString?: boolean;
 };
 
+export const getPlatformsWithFallback = (
+  platform: Platform | Guide
+): string[] => {
+  const result = [platform.key];
+  let curPlatform = platform;
+  while (curPlatform.fallbackPlatform) {
+    result.push(curPlatform.fallbackPlatform);
+    curPlatform = getPlatform(curPlatform.fallbackPlatform);
+  }
+  return result;
+};
+
 /**
  * The usePlatform() hook will allow you to reference the currently active platform.
  *
