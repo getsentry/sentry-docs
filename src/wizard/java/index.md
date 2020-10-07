@@ -33,7 +33,6 @@ Initialize Sentry class with an `init` method, configure the DSN and any other [
 import io.sentry.Sentry;
 
 public class MyClass {
-  private static IHub hub;
 
   public static void main(String... args) {
     Sentry.init(options -> {
