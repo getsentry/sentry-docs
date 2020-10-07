@@ -25,7 +25,7 @@ end
 
 ## Reporting Failures
 
-If you use Rails, Rake, Sidekiq, etc, you’re already done - no more configuration required! Check [_Integrations_](/platforms/ruby/integrations/) for more details on other gems Sentry integrates with automatically.
+If you use Rails, Rake, Sidekiq, etc, you’re already done - no more configuration required! Check [_Integrations_](/platforms/ruby/configuration/integrations/) for more details on other gems Sentry integrates with automatically.
 
 Rack requires a little more setup: [_Rack (Sinatra etc.)_](/platforms/ruby/guides/rack/)
 
