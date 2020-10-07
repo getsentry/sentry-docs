@@ -1,6 +1,9 @@
 import React from "react";
 
-import usePlatform, { Platform } from "./hooks/usePlatform";
+import usePlatform, {
+  Platform,
+  getPlatformsWithFallback,
+} from "./hooks/usePlatform";
 
 type Props = {
   supported?: string[];
@@ -35,11 +38,7 @@ export default ({
     return null;
   }
 
-  const platformsToSearch = [
-    currentPlatform.key,
-    currentPlatform.key.split(".", 2)[0],
-    currentPlatform.fallbackPlatform,
-  ];
+  const platformsToSearch = getPlatformsWithFallback(currentPlatform);
 
   let result: boolean | null = null;
   for (let platformKey, i = 0; (platformKey = platformsToSearch[i]); i++) {

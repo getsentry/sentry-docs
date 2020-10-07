@@ -2,7 +2,7 @@ import React from "react";
 import renderer from "react-test-renderer";
 
 import ConfigKey from "../configKey";
-import usePlatform from "../hooks/usePlatform";
+import usePlatform, { getPlatformsWithFallback } from "../hooks/usePlatform";
 
 jest.mock("../hooks/usePlatform");
 
@@ -16,6 +16,7 @@ describe("ConfigKey", () => {
       jest.fn(),
       false,
     ]);
+    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "ruby"]);
     const tree = renderer
       .create(<ConfigKey name="my-option-name" />, {
         path: "/",
