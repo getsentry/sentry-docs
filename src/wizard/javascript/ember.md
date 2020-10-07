@@ -5,60 +5,44 @@ support_level: production
 type: framework
 ---
 
-To use Sentry with your Ember application, you will need to use Sentry’s browser JavaScript SDK: `@sentry/browser`.
-
-On its own, `@sentry/browser` will report any uncaught exceptions triggered from your application.
-In order to use ESM imports without any additional configuration, you can use `ember-auto-import`
-by installing it with `ember install ember-auto-import`.
-
-Starting with version `5.x` our `Ember` integration lives in it's own package `@sentry/integrations`.
-You can install it with `npm` / `yarn` like:
+To use Sentry with your Ember application, you will need to use Sentry’s Ember addon: `@sentry/ember`.
 
 ```bash
-# Using yarn
-yarn add @sentry/browser @sentry/integrations
-
-# Using npm
-npm install --save @sentry/browser @sentry/integrations
+# Using ember-cli
+ember install @sentry/ember
 ```
 
-Then add this to your `app.js`:
+You should `init` the Sentry SDK as soon as possible during your application load up in `app.js`, before initializing Ember:
 
 ```javascript
-import * as Sentry from "@sentry/browser";
-import { Ember as EmberIntegration } from "@sentry/integrations";
+import Application from '@ember/application';
+import Resolver from 'ember-resolver';
+import loadInitializers from 'ember-load-initializers';
+import config from './config/environment';
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [new EmberIntegration()],
-});
+import { InitSentryForEmber } from '@sentry/ember';
+
+InitSentryForEmber();
+
+export default class App extends Application {
+  modulePrefix = config.modulePrefix;
+  podModulePrefix = config.podModulePrefix;
+  Resolver = Resolver;
+}
 ```
 
-In case you are using the CDN version or the Loader, we provide a standalone file for every integration, you can use it
-like this:
+Then add the following config to your `config/environment.js`:
 
-```html
-<!-- Note that we now also provide a es6 build only -->
-<!-- <script src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.es6.min.js" integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.es6.min.js', 'sha384-base64') }}" crossorigin="anonymous"></script> -->
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
+```javascript
+ENV['@sentry/ember'] = {
+  sentry: {
+    dsn: '___PUBLIC_DSN___',
 
-<!-- If you include the integration it will be available under Sentry.Integrations.Ember -->
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/ember.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'ember.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-
-<script>
-  Sentry.init({
-    dsn: "___PUBLIC_DSN___",
-    integrations: [new Sentry.Integrations.Ember()],
-  });
-</script>
+    // We recommend adjusting this value in production, or using tracesSampler
+    // for finer control
+    tracesSampleRate: 1.0,
+  }
+};
 ```
 
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
+The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.

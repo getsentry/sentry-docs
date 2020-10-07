@@ -1,11 +1,5 @@
 
-This snippet includes automatic instrumentation to [monitor the performance](/platforms/javascript/performance/) of your application, which registers and configures the Tracing integration, including custom Ember instrumentation.
-
-<Note>
-<markdown>
-To reduce the volume of performance data captured, or disable it entirely, change `tracesSampleRate` to a value between 0 and 1 in production.
-</markdown>
-</Note>
+This snippet includes automatic instrumentation to [monitor the performance](/./advanced-configuration/) of your application, which registers and configures the Tracing integration, including custom Ember instrumentation.
 
 ```javascript
 import Application from '@ember/application';
@@ -26,6 +20,14 @@ export default class App extends Application {
 
 Then add the following config to your `config/environment.js`:
 
+<Note>
+<markdown>
+
+To reduce the volume of performance data captured, or disable it entirely, change `tracesSampleRate` to a value between 0 and 1 in production.
+
+</markdown>
+</Note>
+
 ```javascript
 ENV['@sentry/ember'] = {
   sentry: {
@@ -35,75 +37,6 @@ ENV['@sentry/ember'] = {
 };
 ```
 
-Once this is done, all unhandled exceptions are automatically captured by Sentry.
+Once this is done, all transactions and unhandled exceptions are automatically captured by Sentry.
 
-### Ember Specifics
-
-The `@sentry/ember` addon includes options to manage Ember specific instrumentation; these options are set on the addon config directly. All Sentry SDK options that would be passed to `init` should instead be set in the `sentry` key inside your addon config as in this example:
-
-```javascript
-ENV['@sentry/ember'] = {
-  // Ember specific options
-  sentry: {
-    // Sentry options
-  }
-};
-```
-
-### Performance Monitoring Considerations
-
-The Sentry tracing integration is already set up via the Ember addon with custom Ember instrumentation for routing, components, and the runloop. It sideloads `@sentry/tracing` as a chunk to instrument your application. If you would like to disable this automatic instrumentation and no longer receive the associated transactions, you can set `disablePerformance` in your config as in this example:
-
-```javascript
-ENV['@sentry/ember'] = {
-  disablePerformance: true
-};
-```
-
-### Routes
-If you would like to capture timings for the `beforeModel`, `model`, `afterModel` hooks as well as `setupController` in one of your Routes, `@sentry/ember` exports a `instrumentRoutePerformance` function which can be used by replacing the default export with a wrapped Route.
-
-```javascript
-import Route from '@ember/routing/route';
-import { instrumentRoutePerformance } from '@sentry/ember';
-
-class MyRoute extends Route {
-  model() {
-    //...
-  }
-}
-
-export default instrumentRoutePerformance(MyRoute);
-```
-
-### Classic Components
-The render times of classic components are also enabled by default, with a setting to capture render timings only above a certain duration. To change this minimum, you can modify `minimumComponentRenderDuration` in your config.
-
-```javascript
-  ENV['@sentry/ember'] = {
-    minimumComponentRenderDuration: 0, // Setting this to zero will capture all classic components.
-  };
-```
-
-To disable component instrumentation you can set `disableInstrumentComponents` in your config.
-```javascript
-ENV['@sentry/ember'] = {
-  disableInstrumentComponents: true
-};
-```
-
-### Runloop
-The duration of each queue in your application's runloop is instrumented by default, as long as the duration of the queue is longer than a threshold defined in your config by `minimumRunloopQueueDuration`
-
-```javascript
-  ENV['@sentry/ember'] = {
-    minimumRunloopQueueDuration: 0, // Setting this to zero will capture all runloop queue durations
-  };
-```
-
-If you would like to disable runloop instrumentation you can set `disableRunloopPerformance` in your config.
-```javascript
-ENV['@sentry/ember'] = {
-  disableRunloopPerformance: true
-};
-```
+This SDK uses Ember configuration conventions to manage its automatic instrumentation and other Sentry options, to learn more [see the advanced configuration page](./advanced-configuration/)
