@@ -27,7 +27,7 @@ implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '1.7.30') }}
 
 ## Configuration
 
-Initialize Sentry class with an `init` method and configure the DSN, and any other [_settings_](/platforms/java/configuration/#options) you need:
+Initialize Sentry class with an `init` method, configure the DSN and any other [_settings_](/platforms/java/configuration/#options) you need:
 
 ```java
 import io.sentry.Sentry;
