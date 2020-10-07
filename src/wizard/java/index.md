@@ -9,7 +9,7 @@ type: language
     If you use <strong>Spring Boot</strong>, <strong>Logback</strong> or <strong>Log4j2</strong>, we recommend using a dedicated integration. Please visit <a href="https://docs.sentry.io/platforms/java/">Sentry Java</a> documentation for installation instructions.
 </Alert>
 
-## Installation
+## Install
 
 Install the SDK via Maven or Gradle:
 
@@ -25,7 +25,7 @@ Install the SDK via Maven or Gradle:
 implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '1.7.30') }}'
 ```
 
-## Configuration
+## Configure
 
 Initialize Sentry class with an `init` method, configure the DSN and any other [_settings_](/platforms/java/configuration/#options) you need:
 
@@ -42,7 +42,7 @@ public class MyClass {
 }
 ```
 
-### Sending First Event
+### Send First Event
 
 You can trigger your first event from your development environment by raising an exception somewhere within your application and sending it with `Sentry#captureException` method:
 

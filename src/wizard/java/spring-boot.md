@@ -7,7 +7,7 @@ type: framework
 
 In Spring Boot, all uncaught exceptions will be automatically reported.
 
-### Installation
+### Install
 
 Install the SDK via Maven or Gradle:
 
@@ -23,7 +23,7 @@ Install the SDK via Maven or Gradle:
 implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java', '3.0.0') }}'
 ```
 
-### Configuration
+### Configure
 
 Open up `src/main/application.properties` (or `src/main/application.yml`) and configure the DSN, and any other [_settings_](/platforms/java/configuration/#options) you need:
 
@@ -36,7 +36,7 @@ sentry:
   dsn: ___PUBLIC_DSN___
 ```
 
-### Logback Configuration
+### Configure Logback
 
 If you use Logback for logging you may also want to send error logs to Sentry.
 
@@ -54,7 +54,7 @@ Add a dependency to `sentry-logback` module and Sentry Spring Boot Starter will 
 implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '3.0.0') }}'
 ```
 
-### Sending First Event
+### Send First Event
 
 You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be a controller throwing an exception on HTTP request:
 
