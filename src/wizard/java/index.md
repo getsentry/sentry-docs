@@ -46,8 +46,6 @@ public class MyClass {
 
 You can trigger your first event from your development environment by raising an exception somewhere within your application and sending it with `Sentry#captureException` method:
 
-Raven supports two methods of capturing exceptions:
-
 ```java
 try {
   System.out.println(1/0);
