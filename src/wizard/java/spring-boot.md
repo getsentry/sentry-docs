@@ -28,12 +28,10 @@ implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry
 Open up `src/main/application.properties` (or `src/main/application.yml`) and configure the DSN, and any other [_settings_](/platforms/java/configuration/#options) you need:
 
 ```properties {tabTitle:application.properties}
-# NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard
 sentry.dsn=___PUBLIC_DSN___
 ```
 
 ```yaml {tabTitle:application.yml}
-# NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard
 sentry:
   dsn: ___PUBLIC_DSN___
 ```
