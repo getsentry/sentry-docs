@@ -1,0 +1,14 @@
+```java
+import io.sentry.android.core.SentryAndroid;
+import android.database.sqlite.SQLiteException;
+import java.util.Arrays;
+
+SentryAndroid.init(options -> {
+    options.setBeforeSend((event, hint) -> {
+        if (event.getThrowable() instanceof SQLiteException) {
+            event.setFingerprints(Arrays.asList("database-connection-error"));
+        }
+        return event;
+    });
+});
+```
