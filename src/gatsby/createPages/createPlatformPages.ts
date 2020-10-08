@@ -147,6 +147,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
               noindex
               notoc
               sidebar_order
+              sidebar_title
               redirect_from
               supported
               notSupported
@@ -162,6 +163,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
               noindex
               notoc
               sidebar_order
+              sidebar_title
               redirect_from
               supported
               notSupported
@@ -242,8 +244,6 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       createPlatformPage(node, path, {
         ...platformPageContext,
         title: path === pathRoot ? platform.title : undefined,
-        // TODO(dcramer): toc is broken for hidden sections
-        notoc: true,
       });
     });
 
@@ -260,8 +260,6 @@ export default async ({ actions, graphql, reporter, getNode }) => {
       createPlatformPage(node, path, {
         ...platformPageContext,
         title: path === pathRoot ? platform.title : undefined,
-        // TODO(dcramer): toc is broken for hidden sections
-        notoc: true,
       });
     });
 
@@ -326,8 +324,6 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         ...guidePageContext,
         title: path === pathRoot ? guide.title : undefined,
         noindex: true,
-        // TODO(dcramer): toc is broken for hidden sections
-        notoc: true,
         redirect_from: [],
       });
     });
@@ -345,8 +341,6 @@ export default async ({ actions, graphql, reporter, getNode }) => {
         ...guidePageContext,
         title: path === pathRoot ? guide.title : undefined,
         noindex: true,
-        // TODO(dcramer): toc is broken for hidden sections
-        notoc: true,
         redirect_from: [],
       });
     });

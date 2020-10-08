@@ -2,7 +2,7 @@ export type RequestBodySchema = {
   required: string[];
   type: string;
   properties: {
-    [key: string]: { type: string; description: string; example: string };
+    [key: string]: { type: string; description: string; };
   };
 };
 
@@ -29,6 +29,7 @@ export type DeRefedOpenAPI = {
           content: {
             "application/json": {
               schema: RequestBodySchema;
+              example: any;
             };
           };
           required: boolean;
@@ -65,6 +66,7 @@ export type RequestBody = {
   content: {
     content_type: string;
     schema: string;
+    example: string;
   };
   required: boolean;
 };

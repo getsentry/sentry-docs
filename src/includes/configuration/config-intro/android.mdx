@@ -1,0 +1,33 @@
+Options on Android can be set by setting the values on the `AndroidManifest.xml` file:
+
+```xml
+<meta-data android:name="io.sentry.dsn" android:value="___PUBLIC_DSN___" />
+```
+
+Or, if you are manually instrumenting Sentry, Options can be set by passing a callback to the `init()` method which will
+pass the option object along for modifications:
+
+```java
+import io.sentry.android.core.SentryAndroid;
+import android.app.Application;
+
+public class MyApplication extends Application {
+
+  @Override
+  public void onCreate() {
+    SentryAndroid.init(
+        options -> {
+          // your Sentry project/dashboard
+          options.setDsn("___PUBLIC_DSN___");
+          options.setBeforeSend(
+              (event, hint) -> {
+                // Drop an event altogether:
+                if (event.getTag("SomeTag") != null) {
+                  return null;
+                }
+                return event;
+              });
+        });
+  }
+}
+```

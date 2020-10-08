@@ -2,7 +2,11 @@ import React from "react";
 import styled from "@emotion/styled";
 import { graphql, useStaticQuery } from "gatsby";
 
-import usePlatform, { getPlatform, Platform } from "./hooks/usePlatform";
+import usePlatform, {
+  getPlatform,
+  getPlatformsWithFallback,
+  Platform,
+} from "./hooks/usePlatform";
 import Content from "./content";
 import SmartLink from "./smartLink";
 
@@ -14,9 +18,6 @@ const includeQuery = graphql`
         relativePath
         name
         childMdx {
-          internal {
-            type
-          }
           body
         }
       }
@@ -35,9 +36,6 @@ type FileNode = {
   relativePath: string;
   name: string;
   childMdx: {
-    internal: {
-      type: string;
-    };
     body: any;
   };
 };
@@ -53,15 +51,11 @@ type Props = {
 const getFileForPlatform = (
   includePath: string,
   fileList: FileNode[],
-  platform: Platform,
-  fallbackPlatform?: string
+  platform: Platform
 ): FileNode | null => {
-  const platformsToSearch = [
-    platform.key,
-    platform.fallbackPlatform,
-    fallbackPlatform,
-    "_default",
-  ];
+  const platformsToSearch = getPlatformsWithFallback(platform);
+  platformsToSearch.push("_default");
+
   const contentMatch = platformsToSearch
     .map(name => name && fileList.find(m => slugMatches(m.name, name)))
     .find(m => m);
@@ -89,7 +83,6 @@ const MissingContent = styled.div`
 export default ({
   includePath,
   platform,
-  fallbackPlatform,
   children,
   notateUnsupported = true,
 }: Props): JSX.Element => {
@@ -107,8 +100,7 @@ export default ({
   const contentMatch = getFileForPlatform(
     includePath,
     matches,
-    currentPlatform,
-    fallbackPlatform
+    currentPlatform
   );
 
   return (

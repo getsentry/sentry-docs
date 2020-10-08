@@ -1,0 +1,38 @@
+```java
+import io.sentry.Sentry;
+import java.util.Arrays;
+import java.lang.Exception;
+
+class MyRpcException extends Exception {
+    private final String function;
+    private final int httpStatusCode;
+
+    public MyRpcException(String function, int httpStatusCode) {
+        this.function = function;
+        this.httpStatusCode = httpStatusCode;
+    }
+
+    public String getFunction() {
+        return function;
+    }
+
+    public int getHttpStatusCode() {
+        return httpStatusCode;
+    }
+}
+
+Sentry.init(options -> {
+    options.setBeforeSend((event, hint) -> {
+        if (event.getThrowable() instanceof MyRpcException) {
+            MyRpcException exception = (MyRpcException) event.getThrowable();
+            event.setFingerprints(
+                    Arrays.asList(
+                            "{{ default }}",
+                            exception.getFunction(),
+                            String.valueOf(exception.getHttpStatusCode())
+                    ));
+        }
+        return event;
+    });
+});
+```

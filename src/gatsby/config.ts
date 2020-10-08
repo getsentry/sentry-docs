@@ -1,7 +1,6 @@
-import axios from "axios";
-
 import queries from "./utils/algolia";
 import PackageRegistry from "./utils/packageRegistry";
+import resolveOpenAPI from "./utils/resolveOpenAPI";
 
 const packages = new PackageRegistry();
 
@@ -188,13 +187,8 @@ const getPlugins = () => {
       resolve: `./src/gatsby/plugins/gatsby-plugin-openapi`,
       options: {
         name: "openapi",
-        resolve: async () => {
-          const response = await axios.get(
-            "https://raw.githubusercontent.com/getsentry/sentry-api-schema/d7eb0bf0dba8c4725f4514c81bacea39dad6a503/openapi-derefed.json"
-          );
-          return response.data;
-        },
-        // required, function which returns a Promise resolving Swagger JSON
+        // resolve: required, function which returns a Promise resolving OpenAPI JSON
+        resolve: resolveOpenAPI,
       },
     },
     // used to generate clident-side redirects for markdown redirect_from

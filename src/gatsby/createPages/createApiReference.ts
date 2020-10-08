@@ -14,6 +14,7 @@ export default async ({ actions, graphql, reporter }) => {
                     draft
                     noindex
                     sidebar_order
+                    sidebar_title
                     redirect_from
                     keywords
                   }
@@ -30,6 +31,7 @@ export default async ({ actions, graphql, reporter }) => {
                     draft
                     noindex
                     sidebar_order
+                    sidebar_title
                     redirect_from
                     keywords
                   }
