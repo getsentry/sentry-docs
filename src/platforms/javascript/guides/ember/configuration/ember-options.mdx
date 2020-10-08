@@ -1,6 +1,7 @@
 ---
-title: Advanced Configuration
-description: Additional configuration options for Ember
+title: Ember Options
+description: Additional configuration options for the Ember addon
+sidebar_order: 1
 ---
 
 The `@sentry/ember` addon includes options to manage Ember specific instrumentation; these options are set on the addon config directly. All Sentry SDK options that would be passed to `init` should instead be set in the `sentry` key inside your addon config as in this example:
@@ -24,6 +25,23 @@ The Sentry tracing integration is already set up via the Ember addon with custom
 ENV['@sentry/ember'] = {
   disablePerformance: true
 };
+```
+
+### Routes
+
+If you would like to capture timings for the `beforeModel`, `model`, `afterModel` hooks as well as `setupController` in one of your Routes, `@sentry/ember` exports a `instrumentRoutePerformance` function which can be used by replacing the default export with a wrapped Route.
+
+```javascript
+import Route from '@ember/routing/route';
+import { instrumentRoutePerformance } from '@sentry/ember';
+
+class MyRoute extends Route {
+  model() {
+    //...
+  }
+}
+
+export default instrumentRoutePerformance(MyRoute);
 ```
 
 ### Classic Components
