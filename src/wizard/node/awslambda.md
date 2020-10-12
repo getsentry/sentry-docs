@@ -19,7 +19,7 @@ yarn add @sentry/serverless
 
 You can use the AWS Lambda integration for the Node like this:
 ```javascript {tabTitle:async}
-import * as Sentry from '@sentry/serverless';
+const Sentry = require("@sentry/serverless");
 
 Sentry.AWSLambda.init({
   dsn: '___PUBLIC_DSN___',
@@ -32,7 +32,7 @@ exports.handler = Sentry.AWSLambda.wrapHandler(async (event, context) => {
 ```
 
 ```javascript {tabTitle:sync}
-import * as Sentry from '@sentry/serverless';
+const Sentry = require("@sentry/serverless");
 
 Sentry.AWSLambda.init({
   dsn: '___PUBLIC_DSN___',
