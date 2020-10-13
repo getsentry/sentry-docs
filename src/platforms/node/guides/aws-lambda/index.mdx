@@ -4,7 +4,7 @@ redirect_from:
   - /platforms/node/aws_lambda/
 ---
 
-_(New in version 5.23.0)_
+_(New in version 5.26.0)_
 
 Create a deployment package on your local machine and install the required dependencies in the deployment package. For more information, see [Building an AWS Lambda deployment package for Node.js](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-deployment-package-nodejs/).
 
@@ -23,29 +23,27 @@ You can use the AWS Lambda integration for the Node like this:
 ```javascript {tabTitle:async}
 const Sentry = require("@sentry/serverless");
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+Sentry.AWSLambda.init({
+  dsn: '___PUBLIC_DSN___',
+  tracesSampleRate: 1.0,
 });
 
-const yourHandler = async (event, context) => {
+exports.handler = Sentry.AWSLambda.wrapHandler(async (event, context) => {
   // Your handler code
-};
-
-exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler);
+});
 ```
 
 ```javascript {tabTitle:sync}
 const Sentry = require("@sentry/serverless");
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+Sentry.AWSLambda.init({
+  dsn: '___PUBLIC_DSN___',
+  tracesSampleRate: 1.0,
 });
 
-const yourHandler = (event, context, callback) => {
+exports.handler = Sentry.AWSLambda.wrapHandler((event, context, callback) => {
   // Your handler code
-};
-
-exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler);
+});
 ```
 
 <!-- TODO-ADD-VERIFICATION-EXAMPLE -->
@@ -70,7 +68,8 @@ exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler, {
 
 With the AWS Lambda integration enabled, the Node SDK will:
 
-- Automatically report all exceptions from your lambda functions
+- Automatically report all events from your Lambda Functions.
+- Allows you to <PlatformLink to="/configuration/filtering/#filtering-transaction-events">modify the transaction sample rate</PlatformLink> using `tracesSampleRate`.
 - Issue reports automatically include:
   - A link to the cloudwatch logs
   - Function details
