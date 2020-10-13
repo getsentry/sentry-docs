@@ -34,7 +34,7 @@ Initialize Sentry with the `init!` function. Remember to configure the DSN and a
  (:require
   [sentry-clj.core :as sentry]))
 
-(def dsn "https://abcdefg@localhost:9000/2")
+(def dsn "__PUBLIC_DSN__")
 (def config {:environment "production"}
 
 (def sentry-logger (sentry/init! dsn config))
