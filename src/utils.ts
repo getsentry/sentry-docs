@@ -80,9 +80,10 @@ export const sortPages = (
 // - a code block containing a single backtick
 // But I don't think this case will occur in the OpenAPI schema.
 // We assume that individuals will always close out their code blocks, as they have done in the markdown files.
-export const parseBackticks = (str: string) => {
+export const parseMarkdown = (str: string) => {
   let i = 0;
   return str
+    .replace(/\[([^\]]+)\]\(([^\)]+)\)/, '<a href="$2">$1</a>') // format markdown links into a hrefs
     .replace(/\`+/g, "`") // Squash backticks for code blocks with multiple backticks
     .split("")
     .map(c => {
