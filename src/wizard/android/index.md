@@ -27,7 +27,7 @@ android {
 
 // Add Sentry's SDK as a dependency.
 dependencies {
-    implementation 'io.sentry:sentry-android:3.0.0'
+    implementation 'io.sentry:sentry-android:3.1.0'
 }
 ```
 

@@ -22,7 +22,7 @@ Install the SDK via Maven or Gradle:
 ```
 
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '1.7.30') }}'
+implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '3.1.0') }}'
 ```
 
 ## Configure
