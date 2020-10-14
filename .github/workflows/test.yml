@@ -44,11 +44,13 @@ jobs:
         if: steps.cache-linkchecker.outputs.cache-hit != 'true'
         run: cargo install --git https://github.com/untitaker/hyperlink --rev 9dd5ed60fcdedcf021ded8103462aa0bbb90d647
 
-      - name: Add link checker problem matcher
-        run: echo "::add-matcher::.github/hyperlink.json"
-
       - name: Run link checker
-        run: hyperlink public/ --sources src/
+        id: hyperlink
+        if: always()
+        run: |
+          echo "::remove-matcher owner=hyperlink::"
+          echo "::add-matcher::.github/hyperlink.json"
+          hyperlink public/ --sources src/
 
   job_lint:
     name: Lint
