@@ -43,27 +43,31 @@ For the purpose of PII scrubbing, we currently represent the minidump as a flat 
   You can use the [value type](../advanced-datascrubbing/#value-types) selector `$stack_memory` to select these regions.
   Generally they will contain binary data so be careful with the [data types](../advanced-datascrubbing/#data-types) used to scrub these regions.
 
-We **do not recommend** scrubbing stack memory since it is used by the event processing pipeline to unwind the stack and build a readable stack trace for the event. Inadvertently modifying the stack in an undesired way will make this process impossible and the event far less useful.
+  We **do not recommend** scrubbing stack memory since it is used by the event processing pipeline to unwind the stack and build a readable stack trace for the event.
+  Inadvertently modifying the stack in an undesired way will make this process impossible and the event far less useful.
 
-In general, all [data types](../advanced-datascrubbing/#data-types) result in a textual regular expression match on some data. For the stack, this regular expression is matched as a binary UTF-8 regular expression so that any UTF-8 embedded in the binary data will be matched.
+  In general, all [data types](../advanced-datascrubbing/#data-types) result in a textual regular expression match on some data.
+  For the stack, this regular expression is matched as a binary UTF-8 regular expression so that any UTF-8 embedded in the binary data will be matched.
   Additionally the regular expression is applied to any valid UTF-16LE strings found within the binary data.
 
 - The **heap memory**: For the current implementation this is considered to be any memory region which is not used as stack memory.
   This means it could include other non-stack regions like `mmap`ed files.  All these memory regions can be selected using the `$heap_memory` [value type](../advanced-datascrubbing/#value-types) selector.
 
-Since the heap memory is not used in the event processing pipeline, it is much safer to modify these memory regions.
+  Since the heap memory is not used in the event processing pipeline, it is much safer to modify these memory regions.
 
-Similar to stack memory, all [data types](../advanced-datascrubbing/#data-types) are matched as a binary UTF-8 regular expression as well as in any valid UTF-16LE strings found within the binary memory region.
+  Similar to stack memory, all [data types](../advanced-datascrubbing/#data-types) are matched as a binary UTF-8 regular expression as well as in any valid UTF-16LE strings found within the binary memory region.
 
 - A minidump also contains a list of **code modules**,  which are loaded at the time the minidump is created.
-This module list contains information about each module, including two fields that may contain file paths: the path of the code file and the path of the associated debug file.
+  This module list contains information about each module, including two fields that may contain file paths: the path of the code file and the path of the associated debug file.
 
-Since these fields are pathnames, they have the potential to contain a user's home directory. As a result, it makes sense to apply the *Usernames in filepaths* [data type](../advanced-datascrubbing/#data-types) to these fields.  The fields can be selected individually by their respective field names:
+  Since these fields are pathnames, they have the potential to contain a user's home directory.
+  As a result, it makes sense to apply the *Usernames in filepaths* [data type](../advanced-datascrubbing/#data-types) to these fields.
+  The fields can be selected individually by their respective field names:
 
-  - `code_file`
-  - `debug_file`
+  * `code_file`
+  * `debug_file`
 
-Both fields have a [value type](../advanced-datascrubbing/#value-types) of `$string`. Any modification will exclude the basename of the pathnames to ensure the event processing pipeline can still operate correctly on the minidump.
+  Both fields have a [value type](../advanced-datascrubbing/#value-types) of `$string`. Any modification will exclude the basename of the pathnames to ensure the event processing pipeline can still operate correctly on the minidump.
 
   This example is how the UI displays a rule to scrub these fields:
 
@@ -73,7 +77,7 @@ Both fields have a [value type](../advanced-datascrubbing/#value-types) of `$str
 
 - Linux minidumps can contain both the **command line** and **environment variables**, which are included as copies of the files in `/proc/$pid/cmdline` and `/proc/$pid/environ`. Since these are direct copies of these files, they have this file format: NULL-separated records of `argv` arguments or `VAR=val` pairs respectively.
 
-To select these, you can currently use only their [value types](../advanced-datascrubbing/#value-types): `$binary`, which will be successful because these are currently the only fields in the minidump with a binary value type.
+  To select these, you can currently use only their [value types](../advanced-datascrubbing/#value-types): `$binary`, which will be successful because these are currently the only fields in the minidump with a binary value type.
 
   This example is how the UI displays a rule to scrub the home directory from the `$HOME` env var:
 
@@ -81,4 +85,4 @@ To select these, you can currently use only their [value types](../advanced-data
   [Remove] [HOME=[^\u0000+]\u0000] from [$minidump.$binary]
   ```
 
-Note the syntax to denote a string delimited by NULL in the regular expression: any sequence of characters not containing NULL, but ending in NULL. Here, NULL itself is represented by its unicode codepoint: `\u0000`.
+  Note the syntax to denote a string delimited by NULL in the regular expression: any sequence of characters not containing NULL, but ending in NULL. Here, NULL itself is represented by its unicode codepoint: `\u0000`.
