@@ -1,4 +1,4 @@
-import { sortPages, parseBackticks } from "../utils";
+import { sortPages, parseMarkdown } from "../utils";
 
 const PAGE_ONE = { context: { title: "Test", sidebar_order: 5 } };
 const PAGE_TWO = { context: { title: "Test Two", sidebar_order: 10 } };
@@ -23,9 +23,9 @@ describe("sortPages", () => {
   });
 });
 
-describe("parseBackticks", () => {
+describe("parseMarkdown", () => {
   it("converts a single code formatted string in a string", () => {
-    const result = parseBackticks(
+    const result = parseMarkdown(
       "The `quick` brown fox jumps over the lazy dog."
     );
     expect(result).toBe(
@@ -34,7 +34,7 @@ describe("parseBackticks", () => {
   });
 
   it("coverts multiple code formatted strings in a string", () => {
-    const result = parseBackticks(
+    const result = parseMarkdown(
       "The `quick` `brown` fox `jumps` over the lazy dog."
     );
     expect(result).toBe(
@@ -43,7 +43,7 @@ describe("parseBackticks", () => {
   });
 
   it("converts multiple backticks as code element", () => {
-    const result = parseBackticks(
+    const result = parseMarkdown(
       'Possible values are: ``""`` (disable),``"24h"``, ``"14d"``'
     );
 
