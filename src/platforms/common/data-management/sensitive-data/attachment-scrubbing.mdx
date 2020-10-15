@@ -9,8 +9,8 @@ Events can include attachments. In some cases, attachments may contain PII. [Min
 
 ## Data Scrubbing Methods in Attachments
 
-When scrubbing attachments, and especially minidumps, it is often important to be able to do this without destroying the original file format.
-This is done by understanding enough of the file format and using custom selectors which will try and only let you modify certain parts of the file, [see below](#source-selectors) for more information on the source selectors.
+When scurbbing attachments, and especially minidump, it is ofte important to do so without destroying the original file format.
+We do this by providing some built-in knowledge of some file formats and provide you with custom [source-selectors](#source-selectors) which help you write scrubbing rules without damage to the file if used carefully.
 
 When modifying data in the file, Sentry cannot modify the length of the file. This has implications for how the [Methods](../advanced-datascrubbing/#methods) behave:
 
@@ -41,7 +41,7 @@ For the purpose of PII scrubbing, we currently represent the minidump as a flat 
 
 - The **stack memory**: These are memory regions in the minidump that are used as stack memory by a thread.
   You can use the [value type](../advanced-datascrubbing/#value-types) selector `$stack_memory` to select these regions.
-  Generally they will contain binary data so be careful with the [data types](../advanced-datascrubbing/#data-types) used to scrub these regions.
+  Generally they will contain binary data, so be careful with the [data types](../advanced-datascrubbing/#data-types) used to scrub these regions.
 
   We **do not recommend** scrubbing stack memory since it is required by Sentry to build a readable stack trace for the event.
   Inadvertently modifying the stack in an undesired way will make this process impossible and the event far less useful.
@@ -51,7 +51,8 @@ For the purpose of PII scrubbing, we currently represent the minidump as a flat 
   Additionally the regular expression is applied to any valid UTF-16LE strings found within the binary data.
 
 - The **heap memory**: This is considered to be any memory region which is not used as stack memory.
-  This means it could include other non-stack regions like `mmap`ed files.  All these memory regions can be selected using the `$heap_memory` [value type](../advanced-datascrubbing/#value-types) selector.
+  This means these memory regions could include other non-stack regions, such as files that are mapped to the process' memory using  `mmap`.
+  All these memory regions can be selected using the `$heap_memory` [value type](../advanced-datascrubbing/#value-types) selector.
 
   Since Sentry does not require heap memory for extracting stack traces, it is much safer to modify these memory regions.
 
