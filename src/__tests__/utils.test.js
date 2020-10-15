@@ -51,4 +51,22 @@ describe("parseMarkdown", () => {
       'Possible values are: <code>""</code> (disable),<code>"24h"</code>, <code>"14d"</code>'
     );
   });
+  it("converts markdown link to html", () => {
+    const result = parseMarkdown(
+      "This can be retrieved from the [beforeSend callback](https://docs.sentry.io/platforms/javascript/configuration/filtering/#using-beforesend)."
+    );
+
+    expect(result).toBe(
+      'This can be retrieved from the <a href="https://docs.sentry.io/platforms/javascript/configuration/filtering/#using-beforesend">beforeSend callback</a>.'
+    );
+  });
+  it("converts markdown link and code formatted strings to html", () => {
+    const result = parseMarkdown(
+      "This `example` can be retrieved from the [beforeSend callback](https://docs.sentry.io/platforms/javascript/configuration/filtering/#using-beforesend)."
+    );
+
+    expect(result).toBe(
+      'This <code>example</code> can be retrieved from the <a href="https://docs.sentry.io/platforms/javascript/configuration/filtering/#using-beforesend">beforeSend callback</a>.'
+    );
+  });
 });
