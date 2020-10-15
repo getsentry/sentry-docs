@@ -113,7 +113,11 @@ export default props => {
 
           {data.description && (
             <div className="pb-3 content-flush-bottom">
-              <p>{parseBackticks(data.description)}</p>
+              <p
+                dangerouslySetInnerHTML={{
+                  __html: parseBackticks(data.description),
+                }}
+              ></p>
             </div>
           )}
 
