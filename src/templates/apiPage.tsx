@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { graphql } from "gatsby";
 import Prism from "prismjs";
 
-import { parseBackticks } from "~src/utils";
+import Markdown from "~src/components/markdown.tsx";
 import BasePage from "~src/components/basePage";
 import SmartLink from "~src/components/smartLink";
 import ApiSidebar from "~src/components/apiSidebar";
@@ -27,11 +27,9 @@ const Params = ({ params }) => (
           {!!param.required && <div className="required">REQUIRED</div>}
         </dt>
         {!!param.description && (
-          <dd
-            dangerouslySetInnerHTML={{
-              __html: parseBackticks(param.description),
-            }}
-          ></dd>
+          <dd>
+            <Markdown value={param.childMdx.body} />
+          </dd>
         )}
       </React.Fragment>
     ))}
@@ -58,10 +56,10 @@ export default props => {
   const bodyParameters: RequestBodySchema | null =
     (requestBodyContent?.schema && JSON.parse(requestBodyContent.schema)) ||
     null;
-  const pathParameters = (data.parameters || []).filter(
+  const pathParameters = (openApi.childrenOpenApiPathParameter || []).filter(
     param => param.in === "path"
   );
-  const queryParameters = (data.parameters || []).filter(
+  const queryParameters = (openApi.childrenOpenApiPathParameter || []).filter(
     param => param.in === "query"
   );
   const contentType = requestBodyContent?.content_type;
@@ -113,11 +111,9 @@ export default props => {
 
           {data.description && (
             <div className="pb-3 content-flush-bottom">
-              <p
-                dangerouslySetInnerHTML={{
-                  __html: parseBackticks(data.description),
-                }}
-              ></p>
+              <Markdown
+                value={openApi.childOpenApiPathDescription.childMdx.body}
+              />
             </div>
           )}
 
@@ -261,6 +257,26 @@ export const pageQuery = graphql`
   query OpenApiQuery($id: String) {
     openApi(id: { eq: $id }) {
       id
+      childOpenApiPathDescription {
+        childMdx {
+          body
+        }
+      }
+      childrenOpenApiPathParameter {
+        id
+        childMdx {
+          body
+        }
+        schema {
+          enum
+          format
+          type
+        }
+        name
+        in
+        description
+        required
+      }
       path {
         description
         method
