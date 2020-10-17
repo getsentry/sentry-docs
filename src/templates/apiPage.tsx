@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { graphql } from "gatsby";
 import Prism from "prismjs";
 
-import Markdown from "~src/components/markdown.tsx";
-import BasePage from "~src/components/basePage";
-import SmartLink from "~src/components/smartLink";
 import ApiSidebar from "~src/components/apiSidebar";
+import BasePage from "~src/components/basePage";
+import Markdown from "~src/components/markdown.tsx";
+import SmartLink from "~src/components/smartLink";
 
 import {
   OpenAPI,
