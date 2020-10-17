@@ -4,7 +4,7 @@ import Prism from "prismjs";
 
 import ApiSidebar from "~src/components/apiSidebar";
 import BasePage from "~src/components/basePage";
-import Markdown from "~src/components/markdown.tsx";
+import Content from "~src/components/content"
 import SmartLink from "~src/components/smartLink";
 
 import {
@@ -28,7 +28,7 @@ const Params = ({ params }) => (
         </dt>
         {!!param.description && (
           <dd>
-            <Markdown value={param.childMdx.body} />
+            <Content file={param} />
           </dd>
         )}
       </React.Fragment>
@@ -111,9 +111,7 @@ export default props => {
 
           {data.description && (
             <div className="pb-3 content-flush-bottom">
-              <Markdown
-                value={openApi.childOpenApiPathDescription.childMdx.body}
-              />
+              <Content file={openApi.childOpenApiPathDescription} />
             </div>
           )}
 
