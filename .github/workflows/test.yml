@@ -31,21 +31,9 @@ jobs:
       - name: yarn build
         run: yarn build
 
-      - uses: actions/cache@v2
-        id: cache-linkchecker
+      - uses: untitaker/hyperlink@0.1.0
         with:
-          path: ~/.cargo/bin/hyperlink
-          key: ${{ runner.os }}-linkchecker-bin3
-      - uses: actions-rs/toolchain@v1
-        if: steps.cache-linkchecker.outputs.cache-hit != 'true'
-        with:
-          toolchain: stable
-      - name: Install link checker
-        if: steps.cache-linkchecker.outputs.cache-hit != 'true'
-        run: cargo install --git https://github.com/untitaker/hyperlink --rev 2844ab4008c9eaa6537227f7f28e98eb922de2b8
-
-      - name: Run link checker
-        run: hyperlink public/ --sources src/ --github-actions
+          args: public/ --sources src/
 
   job_lint:
     name: Lint
