@@ -55,7 +55,7 @@ error.value:"could not connect (*)" -> connection-error
 
 ### `message`
 
-This matcher matches on a log message. It will also automatically check for the additional exception value as they can be hard to keep apart. The matching is case insensitive.
+Matches on a log message. It will also automatically check for the additional exception value as they can be hard to keep apart. The matching is case insensitive.
 
 ```discover {tabTitle:Fingerprinting Config}
 message:"system encountered a fatal problem: *" -> fatal-log
@@ -89,7 +89,7 @@ tags.server_name:"canary-*.mycompany.internal" -> canary-events
 
 alias: `path`
 
-This matcher is case insensitive matching on the path of an event. It uses path globbing semantics, which means that `*` does not match a slash, but `**` does. Note that this matcher matches on both `abs_path` and `filename` as SDKs can be quite inconsistent about how these values are supported. If the glob matches on either of these values, it's considered a match.
+Matches on the path of an event and is case insensitive. It uses path globbing semantics, which means that `*` does not match a slash, but `**` does. Note that this matcher matches on both `abs_path` and `filename` as SDKs can be quite inconsistent about how these values are supported. If the glob matches on either of these values, it's considered a match.
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.abs_path:"**/my-utils/*.js" -> my-utils, {{ error.type }}
@@ -99,7 +99,7 @@ stack.abs_path:"**/my-utils/*.js" -> my-utils, {{ error.type }}
 
 alias: `module`
 
-This matcher is similar to `stack.abs_path` but matches on the module name instead. The match is case sensitive and regular globbing rules apply (`*` also matches slashes).
+Similar to `stack.abs_path` but matches on the module name instead. The match is case sensitive and regular globbing rules apply (`*` also matches slashes).
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.module:"*/my-utils/*" -> my-utils, {{ error.type }}
@@ -109,7 +109,7 @@ stack.module:"*/my-utils/*" -> my-utils, {{ error.type }}
 
 alias: `function`
 
-This matcher checks if any of the functions in the stack trace match the glob. The match is case sensitive:
+Checks if any of the functions in the stack trace match the glob. The match is case sensitive:
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.function:"my_assertion_failed" -> my-assertion-failed
@@ -119,7 +119,7 @@ stack.function:"my_assertion_failed" -> my-assertion-failed
 
 alias: `package`
 
-This matcher matches on the "package" of a frame. This is typically the name of the debug symbol/object file that contains a frame. If any of the frames match this object file, then it matches.
+Matches on the "package" of a frame. This is typically the name of the debug symbol/object file that contains a frame. If any of the frames match this object file, then it matches.
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.package:"**/libcurl.dylib" -> libcurl
@@ -128,7 +128,7 @@ stack.package:"**/libcurl.so" -> libcurl
 
 ### `family`
 
-This matcher can be used to "scope" down the matcher. The following families exist: `javascript` for any type of JavaScript event, `native` for any type of Native event. Any other platform is called `other`.
+Used to "scope" down the matcher. The following families exist: `javascript` for any type of JavaScript event, `native` for any type of Native event. Any other platform is called `other`.
 
 ```discover {tabTitle:Fingerprinting Config}
 family:native !stack.module:"myproject::*" -> not-from-my-project
@@ -136,7 +136,7 @@ family:native !stack.module:"myproject::*" -> not-from-my-project
 
 ### `app`
 
-This matcher checks if the frame is in-app or not. It is particularly useful when combined with another matcher. Possible values are `yes` and `no`:
+Checks if the frame is in-app or not. It is particularly useful when combined with another matcher. Possible values are `yes` and `no`:
 
 ```discover {tabTitle:Fingerprinting Config}
 app:yes stack.function:"assert" -> assert
