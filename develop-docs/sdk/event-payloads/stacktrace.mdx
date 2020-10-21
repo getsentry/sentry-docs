@@ -7,29 +7,30 @@ A stack trace contains a list of frames, each with various bits (most optional)
 describing the context of that frame. Frames should be sorted from oldest to
 newest.
 
-<Alert title="Note" level="warning">
+<Note><markdown>
+
 Stack traces are always part of an exception or a thread. They cannot be
 declared as a top-level event property. When adding a stack trace to an event,
 follow this rule of thumb:
 
-- If the stack trace is part of an error, exception or crash, add it to the <Link to="/sdk/event-payloads/exception">Exception Interface</Link>.
-- Otherwise, add it as a thread in the <Link to="/sdk/event-payloads/threads">Threads Interface</Link>.
+- If the stack trace is part of an error, exception or crash, add it to the [Exception Interface](/sdk/event-payloads/exception/).
+- Otherwise, add it as a thread in the [Threads Interface](/sdk/event-payloads/threads/).
 
-</Alert>
+</markdown></Note>
 
 ## Attributes
 
 `frames`
 
 : **Required**. A non-empty list of stack frames (see below). The list is
-  ordered from caller to callee, or oldest to youngest. The last frame is the
-  one creating the exception.
+ordered from caller to callee, or oldest to youngest. The last frame is the
+one creating the exception.
 
 `registers`
 
 : _Optional_. A map of register names and their values. The values should
-  contain the actual register values of the thread, thus mapping to the last
-  frame in the list.
+contain the actual register values of the thread, thus mapping to the last
+frame in the list.
 
 ## Frame Attributes
 
@@ -40,24 +41,24 @@ Each object should contain **at least** a `filename`, `function` or
 
 : The path to the source file relative to the project root directory.
 
-  The value should not make file names indistinguishable and should only change
-  between releases for files that were actually renamed.
+The value should not make file names indistinguishable and should only change
+between releases for files that were actually renamed.
 
-  In some SDKs, this is implemented as the path relative to a certain entry
-  point relevant to the language/platform. For example, in Python the `filename`
-  is relative to `PYTHONPATH` or `site-packages`.
+In some SDKs, this is implemented as the path relative to a certain entry
+point relevant to the language/platform. For example, in Python the `filename`
+is relative to `PYTHONPATH` or `site-packages`.
 
 `function`
 
 : The name of the function being called.
 
-  This function name may be shortened or demangled. If not, Sentry will demangle
-  and shorten it. The original function name will be stored in `raw_function`.
+This function name may be shortened or demangled. If not, Sentry will demangle
+and shorten it. The original function name will be stored in `raw_function`.
 
 `raw_function`
 
 : The original function name, if the function name is shortened or demangled.
-  Sentry shows the raw function when clicking on the shortened one in the UI.
+Sentry shows the raw function when clicking on the shortened one in the UI.
 
 `module`
 
@@ -82,39 +83,39 @@ Each object should contain **at least** a `filename`, `function` or
 `pre_context`
 
 : A list of source code lines before `context_line` (in order) – usually
-  `[lineno - 5:lineno]`.
+`[lineno - 5:lineno]`.
 
 `post_context`
 
 : A list of source code lines after `context_line` (in order) – usually
-  `[lineno + 1:lineno + 5]`.
+`[lineno + 1:lineno + 5]`.
 
 `in_app`
 
 : Signals whether this frame is related to the execution of the relevant code
-  in this stack trace. For example, the frames that might power the framework’s
-  web server of your app are probably not relevant. However, calls to the
-  framework’s library once you start handling code likely are relevant.
+in this stack trace. For example, the frames that might power the framework’s
+web server of your app are probably not relevant. However, calls to the
+framework’s library once you start handling code likely are relevant.
 
 `vars`
 
 : A mapping of variables which were available within this frame (usually
-  context-locals).
+context-locals).
 
 The following attributes are primarily used for C-based languages:
 
 `instruction_addr`
 
 : An optional instruction address for symbolication. This should be a string
-  with a hexadecimal number that includes a `0x` prefix. If this is set and a
-  known image is defined in the <Link to="/sdk/event-payloads/debugmeta">Debug Meta Interface</Link>, then
-  symbolication can take place.
+with a hexadecimal number that includes a `0x` prefix. If this is set and a
+known image is defined in the [Debug Meta Interface](/sdk/event-payloads/debugmeta/), then
+symbolication can take place.
 
 `symbol_addr`
 
 : An optional address that points to a symbol. We use the instruction
-  address for symbolication, but this can be used to calculate an instruction
-  offset automatically.
+address for symbolication, but this can be used to calculate an instruction
+offset automatically.
 
 `image_addr`
 
@@ -123,14 +124,14 @@ The following attributes are primarily used for C-based languages:
 `package`
 
 : The "package" the frame was contained in. Depending on the platform, this can
-  be different things. For C#, it can be the name of the assembly. For native
-  code, it can be the path of the dynamic library, etc.
+be different things. For C#, it can be the name of the assembly. For native
+code, it can be the path of the dynamic library, etc.
 
 `platform`
 
 : This can override the platform for a single frame. Otherwise, the platform of
-  the event is assumed. This can be used for multi-platform stack traces, such
-  as in React Native.
+the event is assumed. This can be used for multi-platform stack traces, such
+as in React Native.
 
 ## Examples
 
@@ -149,10 +150,7 @@ A minimalistic stack trace for the above program in the correct order:
 
 ```json
 {
-  "frames": [
-    {"function": "main"},
-    {"function": "foo"}
-  ]
+  "frames": [{ "function": "main" }, { "function": "foo" }]
 }
 ```
 
@@ -160,25 +158,21 @@ The top frame fully populated with five lines of source context:
 
 ```json
 {
-  "frames": [{
-    "in_app": true,
-    "function": "myfunction",
-    "abs_path": "/real/file/name.py",
-    "filename": "file/name.py",
-    "lineno": 3,
-    "vars": {
-      "my_var": "'value'"
-    },
-    "pre_context": [
-      "def foo():",
-      "  my_var = 'foo'",
-    ],
-    "context_line": "  raise ValueError()",
-    "post_context": [
-      "",
-      "def main():"
-    ],
-  }]
+  "frames": [
+    {
+      "in_app": true,
+      "function": "myfunction",
+      "abs_path": "/real/file/name.py",
+      "filename": "file/name.py",
+      "lineno": 3,
+      "vars": {
+        "my_var": "'value'"
+      },
+      "pre_context": ["def foo():", "  my_var = 'foo'"],
+      "context_line": "  raise ValueError()",
+      "post_context": ["", "def main():"]
+    }
+  ]
 }
 ```
 
@@ -188,8 +182,8 @@ attribute must be `"native"` for these frames to be symbolicated.
 ```json
 {
   "frames": [
-    {"instruction_addr": "0x7fff5bf3456c"},
-    {"instruction_addr": "0x7fff5bf346c0"},
+    { "instruction_addr": "0x7fff5bf3456c" },
+    { "instruction_addr": "0x7fff5bf346c0" }
   ],
   "registers": {
     "rip": "0x00007ff6eef54be2",
