@@ -27,9 +27,10 @@ Many settings available in `config.yml` will also be able to be configured in th
   <dd>
   The environment name for this installation. This will also control defaults for things like `DEBUG`.
 
-  ```bash
-  SENTRY_ENVIRONMENT=production sentry ...
-  ```
+```bash
+SENTRY_ENVIRONMENT=production sentry ...
+```
+
   </dd>
 
   <dt><code>system.admin-email</code></dt>
@@ -39,9 +40,10 @@ Many settings available in `config.yml` will also be able to be configured in th
   <markdown>
   The technical contact address for this installation. This will be reported to upstream to the Sentry team (as part of the Beacon), and will be the point of contact for critical updates and security notifications.
 
-  ```yaml
-  system.admin-email: "admin@example.com"
-  ```
+```yaml
+system.admin-email: "admin@example.com"
+```
+
   </markdown>
   </dd>
 
@@ -52,9 +54,10 @@ Many settings available in `config.yml` will also be able to be configured in th
   <markdown>
   The URL prefix in which Sentry is accessible. This will be used both for referencing URLs in the UI, as well as in outbound notifications. This only works for scheme, hostname and port.
 
-  ```yaml
-  system.url-prefix: "https://sentry.example.com"
-  ```
+```yaml
+system.url-prefix: "https://sentry.example.com"
+```
+
   </markdown>
   </dd>
 
@@ -65,19 +68,19 @@ Many settings available in `config.yml` will also be able to be configured in th
   <markdown>
   A secret key used for session signing. If this becomes compromised it’s important to regenerate it as otherwise its much easier to hijack user sessions.
 
-  ```yaml
-  system.secret-key: "a-really-long-secret-value"
-  ```
+```yaml
+system.secret-key: "a-really-long-secret-value"
+```
 
-  To generate a new value, we’ve provided a helper:
+To generate a new value, we’ve provided a helper:
 
-  ```shell
-  $ sentry config generate-secret-key
-  ```
+```shell
+$ sentry config generate-secret-key
+```
+
   </markdown>
   </dd>
 </dl>
-
 
 ## Logging
 
@@ -98,10 +101,11 @@ Sentry logs to two major places — `stdout`, and its internal project. To disab
   Sentry can override logger levels by providing the CLI with the `-l/--loglevel` flag.
   The value of this can be one of the [standard Python logging level strings](https://docs.python.org/2/library/logging.html#levels).
 
-  ```shell
-  sentry --loglevel=WARNING
-  ```
-  </markdown></dd>
+```shell
+sentry --loglevel=WARNING
+```
+
+</markdown></dd>
 
   <dt><code>SENTRY_LOG_LEVEL</code></dt>
   Declared in system environment.
@@ -110,10 +114,11 @@ Sentry logs to two major places — `stdout`, and its internal project. To disab
   Sentry can override logger levels with the `SENTRY_LOG_LEVEL` environment variable.
   The value of this can be one of the [standard Python logging level strings](https://docs.python.org/2/library/logging.html#levels).
 
-  ```shell
-  SENTRY_LOG_LEVEL=WARNING sentry ...
-  ```
-  </markdown></dd>
+```shell
+SENTRY_LOG_LEVEL=WARNING sentry ...
+```
+
+</markdown></dd>
 
   <dt><code>LOGGING</code></dt>
   Declared in <code>sentry.conf.py</code>.
@@ -121,11 +126,11 @@ Sentry logs to two major places — `stdout`, and its internal project. To disab
   <dd><markdown>
   You can modify or override the full logging configuration with this setting. Be careful not to remove or override important defaults. You can check [the default configuration](https://git.io/fjjna) for reference.
 
-  ```python
-  LOGGING['default_level'] = 'WARNING'
-  ```
+```python
+LOGGING['default_level'] = 'WARNING'
+```
 
-  If logging in a particular module is not showing up when you expect it to, you should check the log level for that module in `src/sentry/conf/server.py` in the `LOGGING` variable.
+If logging in a particular module is not showing up when you expect it to, you should check the log level for that module in `src/sentry/conf/server.py` in the `LOGGING` variable.
 
   <Alert title="Corporate Users Only" level="warning">
   If you are a Sentry employee who is looking for logs in Kibana and they aren't showing up when you expect them to, one potential reason is that a field in the log message does not match Elasticsearch's schema. See the index patterns <a href="https://kibana.getsentry.net/app/kibana#/management/kibana/indices/0ba261d0-97ca-11e9-90db-dfacda4da93b?_g=()&_a=(tab:indexedFields)">here</a>.
@@ -142,46 +147,57 @@ Sentry logs to two major places — `stdout`, and its internal project. To disab
   <dd><markdown>
   Describes the Redis clusters available to the Sentry server. These clusters may then be referenced by name by other internal services such as the cache, digests, and TSDB backends, among others.
 
-  For example,
+For example,
 
-  ```yaml
-  redis.clusters:
-    default: # cluster name
-      hosts: # connection options, passed to `rb.Cluster`
-        0:
-          host: redis-1.example.com
-          port: 6379
-        1:
-          host: redis-2.example.com
-          port: 6379
-    other:
-      hosts:
-        0:
-          host: redis-3.example.com
-          port: 6379
-  ```
-  </markdown></dd>
+```yaml
+redis.clusters:
+  default: # cluster name
+    hosts: # connection options, passed to `rb.Cluster`
+      0:
+        host: redis-1.example.com
+        port: 6379
+      1:
+        host: redis-2.example.com
+        port: 6379
+  other:
+    hosts:
+      0:
+        host: redis-3.example.com
+        port: 6379
+```
+
+</markdown></dd>
+
 </dl>
 
 ## Authentication
 
 The following keys control the authentication support.
 
-`SENTRY_FEATURES['auth:register']`
-
-: Declared in `sentry.conf.py`.
+<dl>
+<dt><code>auth.allow-registration</code></dt>
+<dd><markdown>
+  
+Declared in `config.yml`
 
 Should Sentry allow users to create new accounts?
 
-Defaults to `True` (can register).
+Defaults to `False`.
 
-```python
-SENTRY_FEATURES['auth:register'] = True
+This setting only controls public registration. Users can still register new accounts via Single Sign-On and membership invites.
+
+```yaml
+auth.allow-registration: true
 ```
 
-`SENTRY_PUBLIC`
+Note: This setting is often configured via the UI.
 
-: Declared in `sentry.conf.py`.
+</markdown></dd>
+
+<dt><code>SENTRY_PUBLIC</code></dt>
+<dd><markdown>
+
+Declared in `sentry.conf.py`.
 
 Should Sentry make all data publicly accessible? This should **only** be used if you’re installing Sentry behind your company’s firewall.
 
@@ -193,9 +209,12 @@ Defaults to `False`.
 SENTRY_PUBLIC = True
 ```
 
-`SENTRY_ALLOW_ORIGIN`
+</markdown></dd>
 
-: Declared in `sentry.conf.py`.
+<dt><code>SENTRY_ALLOW_ORIGIN</code></dt>
+<dd><markdown>
+
+Declared in `sentry.conf.py`.
 
 If provided, Sentry will set the Access-Control-Allow-Origin header to this value on /api/store/ responses. In addition, the Access-Control-Allow-Headers header will be set to ‘X-Sentry-Auth’. This allows JavaScript clients to submit cross-domain error reports.
 
@@ -206,6 +225,10 @@ Defaults to `None` (don’t add the Access-Control headers)
 ```python
 SENTRY_ALLOW_ORIGIN = "http://foo.example"
 ```
+
+</markdown></dd>
+
+</dl>
 
 ## Web Server
 
