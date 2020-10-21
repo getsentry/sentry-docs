@@ -2,7 +2,7 @@ export type RequestBodySchema = {
   required: string[];
   type: string;
   properties: {
-    [key: string]: { type: string; description: string; };
+    [key: string]: { type: string; description: string };
   };
 };
 
@@ -16,6 +16,12 @@ export type Parameter = {
   in: string;
   description: string;
   required: boolean;
+};
+
+type Markdown = {
+  childMdx: {
+    body: string;
+  };
 };
 
 export type DeRefedOpenAPI = {
@@ -88,4 +94,6 @@ export type OpenApiPath = {
 export type OpenAPI = {
   id: string;
   path: OpenApiPath;
+  childOpenApiPathDescription: Markdown;
+  childrenOpenApiPathParameter: (Parameter & Markdown)[];
 };

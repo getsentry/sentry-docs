@@ -1,0 +1,52 @@
+---
+title: Data Source Name (DSN)
+sidebar_order: 0
+description: "Learn about Sentry's Data Source Name structure and use."
+---
+
+Sentry automatically assigns you a Data Source Name (DSN) when you create a project to start monitoring events in your app.
+
+### What the DSN Does
+
+The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
+
+<Note>
+<markdown>
+
+In runtimes without a process environment (such as the browser) that fallback does not apply.
+
+</markdown>
+</Note>
+
+### Where to Find Your DSN
+
+If you forget your DSN, view _Settings -> Projects -> Client Keys (DSN)_ in [sentry.io](https://sentry.io/).
+
+### The Parts of the DSN
+
+The DSN configures the protocol, public key, server address, and project identifier. It is composed of the following parts:
+
+`{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}{PATH}/{PROJECT_ID}`
+
+For example:
+
+```javascript
+Sentry.init({dsn: 'https://public@sentry.example.com/1'})
+```
+
+Has the following settings:
+
+- URI = https://sentry.example.com
+- Public Key = public
+- Secret Key = secret
+- Project ID = 1
+
+The resulting POST request for a plain JSON payload would then transmit to `https://sentry.example.com/api/1/store/`.
+
+<Note>
+<markdown>
+
+The secret part of the DSN is optional and effectively deprecated. While clients will still honor it, if supplied, future versions of Sentry will entirely ignore it.
+
+</markdown>
+</Note>
