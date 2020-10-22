@@ -5,9 +5,6 @@ on:
       sentry-api-schema-sha:
         description: 'The "sentry-api-schema" SHA to run against'
         required: false
-  push:
-    branches:
-      - master
 
 jobs:
   bump:
@@ -16,16 +13,17 @@ jobs:
     if: ${{ github.event.inputs.sentry-api-schema-sha != '' }}
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Bump latest SHA
-        sed -i "" 's|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = "${{ github.event.inputs.sentry-api-schema-sha }}"|g' src/gatsby/utils/resolveOpenAPI.ts
+      - name: Bump latest SHA
+        run: |
+          sed -i "" 's|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = "${{ github.event.inputs.sentry-api-schema-sha }}"|g' src/gatsby/utils/resolveOpenAPI.ts
 
-    - name: Git Commit & Push
-      uses: stefanzweifel/git-auto-commit-action@v4
-      with:
-        repository: sentry-docs
-        branch: master
-        commit_message: Latest SHA from getsentry/sentry-api-schema
-        commit_user_email: bot@getsentry.com
-        commit_user_name: openapi-getsentry-bot
+      - name: Git Commit & Push
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          repository: sentry-docs
+          branch: master
+          commit_message: Latest SHA from getsentry/sentry-api-schema
+          commit_user_email: bot@getsentry.com
+          commit_user_name: openapi-getsentry-bot
