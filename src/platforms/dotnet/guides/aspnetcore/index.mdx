@@ -43,6 +43,10 @@ Install-Package Sentry.AspNetCore -Version {{ packages.version('sentry.dotnet.as
 dotnet add package Sentry.AspNetCore -v {{ packages.version('sentry.dotnet.aspnetcore') }}
 ```
 
+```shell {tabTitle:Paket CLI}
+paket add Sentry --version {{ packages.version('sentry.dotnet.aspnetcore') }}
+```
+
 This package extends [Sentry.Extensions.Logging](/platforms/dotnet/guides/extensions-logging/). This means that besides the ASP.NET Core related features, through this package you'll also get access to all the framework's logging integration and also the features available in the main [Sentry](/platforms/dotnet/) SDK.
 
 ### Configure
@@ -98,6 +102,13 @@ public static IWebHost BuildWebHost(string[] args) =>
         .UseSentry()
 ```
 
+```fsharp
+let CreateHostBuilder args =
+    WebHost.CreateDefaultBuilder(args)
+        // Add the following line:
+        .UseSentry()
+```
+
 ASP.NET Core 3.0:
 
 ```csharp
@@ -108,6 +119,15 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
             // Add the following line:
             webBuilder.UseSentry();
         });
+```
+
+```fsharp
+let CreateHostBuilder args =
+    Host.CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(fun webBuilder ->
+            // Add the following line:
+            webBuilder.UseSentry() |> ignore
+        )
 ```
 
 Your DSN would be location if it was defined in `appsettings.json` or any other form of configuration.
@@ -124,6 +144,16 @@ Some of the settings require actual code. For those, like the `BeforeSend` callb
         return @event;
     };
 })
+```
+
+```fsharp
+.UseSentry (fun options ->
+    options.BeforeSend <- (fun event ->
+        // Never report server names
+        event.ServerName <- null
+        event
+        )
+    )
 ```
 
 > Example modifying all events before they are sent to avoid server names being reported.
@@ -149,6 +179,11 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
+```fsharp
+member this.ConfigureServices(services: IServiceCollection) =
+    services.AddSingleton<IUserFactory, MyUserFactory>() |> ignore
+```
+
 ### Adding event and exception processors
 
 Event processors and exception processors can be added via DI:
@@ -159,6 +194,12 @@ public void ConfigureServices(IServiceCollection services)
     services.AddTransient<ISentryEventProcessor, MyEventProcessor>();
     services.AddScoped<ISentryEventExceptionProcessor, MyExceptionProcessor>();
 }
+```
+
+```fsharp
+member this.ConfigureServices(services: IServiceCollection) =
+    services.AddTransient<ISentryEventProcessor, MyEventProcessor>() |> ignore
+    services.AddScoped<ISentryEventExceptionProcessor, MyExceptionProcessor>() |> ignore
 ```
 
 ## Options and Initialization
@@ -191,8 +232,9 @@ Opt-in to send the request body to Sentry. By enabling this flag, all requests w
 
 Opt-in to capture values from [System.Diagnostic.Activity](https://github.com/dotnet/runtime/blob/master/src/libraries/System.Diagnostics.DiagnosticSource/src/ActivityUserGuide.md) if one exists.
 
-### Samples
+## Samples
 
-- A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Basic) without MVC.
-- An [example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Mvc) using MVC and most of the SDK features.
-- For [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs
+- A [simple example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Basic) without MVC. (**C#**)
+- An [example](https://github.com/getsentry/sentry-dotnet/tree/main/samples/Sentry.Samples.AspNetCore.Mvc) using MVC and most of the SDK features. (**C#**)
+- An [example](https://github.com/sentry-demos/giraffe) using Giraffe on top of ASP.NET Core with a basic overview of available features. (**F#**)
+- For [more samples](https://github.com/getsentry/sentry-dotnet-samples) of the .NET SDKs.

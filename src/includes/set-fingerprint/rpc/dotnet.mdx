@@ -28,3 +28,26 @@ using (SentrySdk.Init(o =>
     };
 }
 ```
+
+```fsharp
+type MyRpcException() =
+    inherit Exception()
+
+    member val Function: string = "" with get, set
+
+    member val Code: HttpStatusCode = HttpStatusCode.OK with get, set
+
+use __ = SentrySdk.Init(fun o ->
+    o.BeforeSend <- (fun event ->
+        match event.Exception with
+        | :? MyRpcException as ex -> event.SetFingerprint([
+                    "{{ default }}"
+                    ex.Function
+                    ex.Code.ToString()
+                ])
+        | _ -> ()
+
+        event
+        )
+    )
+```

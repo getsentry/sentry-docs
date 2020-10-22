@@ -3,7 +3,7 @@ using (SentrySdk.Init(o =>
 {
     o.BeforeSend = @event =>
     {
-        if (@event.Exception is SqlConnection ex)
+        if (@event.Exception is SqlConnectionException ex)
         {
             @event.SetFingerprint(new [] { "database-connection-error" });
         }
@@ -11,4 +11,16 @@ using (SentrySdk.Init(o =>
         return @event;
     };
 }
+```
+
+```fsharp
+use __ = SentrySdk.Init(fun o ->
+    o.BeforeSend <- (fun event ->
+        match event.Exception with
+        | :? SqlConnectionException -> event.SetFingerprint(["database-connection-error"])
+        | _ -> ()
+
+        event
+        )
+    )
 ```
