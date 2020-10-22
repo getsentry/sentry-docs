@@ -17,12 +17,12 @@ Install the SDK via Maven or Gradle:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
-    <version>{{ packages.version('sentry.java', '3.1.0') }}</version>
+    <version>{{ packages.version('sentry.java', '3.1.1') }}</version>
 </dependency>
 ```
 
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '3.1.0') }}'
+implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '3.1.1') }}'
 ```
 
 ## Configure
