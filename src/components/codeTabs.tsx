@@ -12,6 +12,7 @@ const LANGUAGES = {
   json: "JSON",
   cpp: "C++",
   csharp: "C#",
+  fsharp: "F#",
   es6: "JavaScript (ES6)",
   yml: "YAML",
   yaml: "YAML",
