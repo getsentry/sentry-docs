@@ -124,6 +124,26 @@ describe("PlatformSection", () => {
     expect(tree).toBe("Test");
   });
 
+  it("hides content with supported parent platform, notSupported child", () => {
+    usePlatform.mockReturnValue([
+      {
+        key: "ruby.rails",
+      },
+      jest.fn(),
+      false,
+    ]);
+    getPlatformsWithFallback.mockReturnValue(["ruby.rails", "ruby"]);
+    const tree = renderer
+      .create(
+        <PlatformSection supported={["ruby"]} notSupported={["ruby.rails"]}>
+          Test
+        </PlatformSection>
+      )
+      .toJSON();
+
+    expect(tree).toBe(null);
+  });
+
   it("hides content with notSupported fallbackPlatform", () => {
     usePlatform.mockReturnValue([
       {
