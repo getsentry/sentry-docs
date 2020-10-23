@@ -192,7 +192,7 @@ export const getPlatform = (key: string): Platform | Guide | null => {
 };
 
 type UsePlatform = [
-  Platform | Guide,
+  Platform | Guide | null,
   (value: string, options?: SetPlatformOptions) => void,
   boolean
 ];
@@ -235,6 +235,7 @@ export const getPlatformsWithFallback = (
 export default (
   value: string = null,
   useStoredValue: boolean = true,
+  useDefault: boolean = true,
   defaultValue: string = DEFAULT_PLATFORM
 ): UsePlatform => {
   const location = useLocation();
@@ -274,8 +275,8 @@ export default (
     setStateValue(newValue);
   };
 
-  const activeValue: Platform | Guide =
-    getPlatform(stateValue) ?? getPlatform(defaultValue);
+  const activeValue: Platform | Guide | null =
+    getPlatform(stateValue) ?? (useDefault ? getPlatform(defaultValue) : null);
 
   return [activeValue, setValue, isFixed];
 };
