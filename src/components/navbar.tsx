@@ -1,13 +1,12 @@
 import React from "react";
 import { useLocation } from "@reach/router";
-import { Nav, NavDropdown } from "react-bootstrap";
-import PlatformIcon from "platformicons";
+import { Nav } from "react-bootstrap";
 
 import Search from "./search";
 import SmartLink from "./smartLink";
-import usePlatform, { usePlatformList } from "./hooks/usePlatform";
 
 import NavbarProductDropdown from "./navbarProductDropdown";
+import NavbarPlatformDropdown from "./navbarPlatformDropdown";
 
 type Props = {
   platforms?: string[];
@@ -15,8 +14,6 @@ type Props = {
 
 export default ({ platforms }: Props): JSX.Element => {
   const location = useLocation();
-  const platformList = usePlatformList();
-  const [currentPlatform] = usePlatform(null, false);
 
   return (
     <div className="navbar navbar-expand-md navbar-light global-header">
@@ -24,48 +21,7 @@ export default ({ platforms }: Props): JSX.Element => {
         <Search path={location.pathname} platforms={platforms} />
         <Nav className="justify-content-end" style={{ flex: 1 }}>
           <NavbarProductDropdown />
-          <NavDropdown
-            title={
-              currentPlatform ? (
-                <React.Fragment>
-                  <PlatformIcon
-                    platform={currentPlatform.key}
-                    size={16}
-                    style={{ marginRight: "0.5rem" }}
-                    format="lg"
-                  />
-                  {currentPlatform.title}
-                </React.Fragment>
-              ) : (
-                "Platforms"
-              )
-            }
-            id="nd-platforms"
-          >
-            {platformList.map(platform => (
-              <SmartLink
-                className={`dropdown-item ${
-                  currentPlatform && currentPlatform.key == platform.key
-                    ? "active"
-                    : ""
-                }`}
-                key={platform.key}
-                to={platform.url}
-              >
-                <PlatformIcon
-                  platform={platform.key}
-                  size={16}
-                  style={{ marginRight: "0.5rem" }}
-                  format="lg"
-                />
-                {platform.title}
-              </SmartLink>
-            ))}
-            <NavDropdown.Divider />
-            <SmartLink className="dropdown-item" to="/platforms/">
-              Show all platforms
-            </SmartLink>
-          </NavDropdown>
+          <NavbarPlatformDropdown />
           <Nav.Item>
             <SmartLink className="nav-link" to="/api/">
               API
