@@ -1,6 +1,7 @@
 ---
 title: "Security & Legal"
 sidebar_order: 4000
+description: "Learn about Sentry security and compliance processes."
 ---
 
 Sentry provides self-serve access to various documentation and tools to help you with your security and compliance processes.
