@@ -1,0 +1,30 @@
+name: bump-openapi
+# Deploys depend on the workflow file name: 'bump-openapi.yml'
+# You should not independently update it without updating the corresponding workflow in getsentry/sentry-api-schema
+on:
+  workflow_dispatch:
+    inputs:
+      sentry-api-schema-sha:
+        description: 'The "sentry-api-schema" SHA to run against'
+        required: false
+
+jobs:
+  bump:
+    name: Bump SHA referencing "sentry-api-schema" to ${{ github.event.inputs.sentry-api-schema-sha }}
+    runs-on: ubuntu-16.04
+    if: ${{ github.event.inputs.sentry-api-schema-sha != '' }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Bump latest SHA
+        run: |
+          sed -i "" 's|^const SENTRY_API_SCHEMA_SHA =.*$|const SENTRY_API_SCHEMA_SHA = "${{ github.event.inputs.sentry-api-schema-sha }}"|g' src/gatsby/utils/resolveOpenAPI.ts
+
+      - name: Git Commit & Push
+        run: |
+          git config user.name openapi-getsentry-bot
+          git config user.email bot@getsentry.com
+          git add src/gatsby/utils/resolveOpenAPI.ts
+          git commit -m "Latest SHA from getsentry/sentry-api-schema"
+          git push
