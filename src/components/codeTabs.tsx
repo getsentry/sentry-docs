@@ -3,19 +3,20 @@ import CodeContext from "./codeContext";
 
 // human readable versions of names
 const LANGUAGES = {
-  javascript: "JavaScript",
-  typescript: "TypeScript",
-  jsx: "JSX",
-  html: "HTML",
   coffee: "CoffeeScript",
-  powershell: "PowerShell",
-  json: "JSON",
   cpp: "C++",
   csharp: "C#",
-  fsharp: "F#",
   es6: "JavaScript (ES6)",
-  yml: "YAML",
+  fsharp: "F#",
+  html: "HTML",
+  javascript: "JavaScript",
+  json: "JSON",
+  jsx: "JSX",
+  php: "PHP",
+  powershell: "PowerShell",
+  typescript: "TypeScript",
   yaml: "YAML",
+  yml: "YAML",
 };
 
 type Props = {
