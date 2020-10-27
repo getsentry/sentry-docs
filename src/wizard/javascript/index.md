@@ -13,6 +13,7 @@ yarn add @sentry/browser @sentry/tracing
 # Using npm
 npm install --save @sentry/browser @sentry/tracing
 ```
+
 We also support alternate [installation methods](/platforms/javascript/install/).
 
 `init` the Sentry Browser SDK as soon as possible during your page load:
