@@ -87,7 +87,7 @@ In this example, the fingerprint is forced to a common value if an exception of 
 
 ## Sampling Error Events
 
-To send a representative sample of your errors to Sentry, set the `sampleRate` option in your SDK configuration to a number between `0` (0% of errors sent) and `1` (100% of errors sent). This is a static rate, which will apply equally to all errors. For example, to sample 25% of your errors:
+To send a representative sample of your errors to Sentry, set the <PlatformIdentifier name="sample-rate" /> option in your SDK configuration to a number between `0` (0% of errors sent) and `1` (100% of errors sent). This is a static rate, which will apply equally to all errors. For example, to sample 25% of your errors:
 
 <PlatformContent includePath="configuration/sample-rate" />
 
@@ -97,23 +97,15 @@ To send a representative sample of your errors to Sentry, set the `sampleRate` o
 
 ## Filtering Transaction Events
 
-To prevent certain transactions from being reported to Sentry, use the `tracesSampler` configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want. (It also allows you to sample different transactions at different rates.)
+To prevent certain transactions from being reported to Sentry, use the <PlatformIdentifier name="traces-sampler" /> configuration option, which allows you to provide a function to evaluate the current transaction and drop it if it's not one you want. (It also allows you to sample different transactions at different rates.)
 
-**Note:** The `tracesSampler` and `tracesSampleRate` config options are mutually exclusive. If you define a `tracesSampler` to filter out certain transactions, you must also handle the case of non-filtered transactions by returning the rate at which you'd like them sampled.
+**Note:** The <PlatformIdentifier name="traces-sampler" /> and <PlatformIdentifier name="traces-sample-rate" /> config options are mutually exclusive. If you define a <PlatformIdentifier name="traces-sampler" /> to filter out certain transactions, you must also handle the case of non-filtered transactions by returning the rate at which you'd like them sampled.
 
 In its simplest form, used just for filtering, it looks like this:
 
-```javascript
-tracesSampler: samplingContext => {
-  if ("...") {
-    return 0; // Drop this transaction, by setting its sample rate to 0%
-  } else {
-    return 0.2; // Default sample rate for all others (replaces tracesSampleRate )
-  }
-};
-```
+<PlatformContent includePath="performance/traces-sampler-as-filter" />
 
-To learn more about the `tracesSampler` option, please see <PlatformLink to="/performance/sampling/">Sampling Transactions</PlatformLink>.
+To learn more about the <PlatformIdentifier name="traces-sampler" /> option, please see your SDK's <PlatformLink to="/performance/">performance docs</PlatformLink>.
 
 </PlatformSection>
 
@@ -121,10 +113,20 @@ To learn more about the `tracesSampler` option, please see <PlatformLink to="/pe
 
 ## Sampling Transaction Events
 
-For Sentry's Performance Monitoring, we recommend sampling your data for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, enabling sampling allows you to better manage the number of events sent to Sentry, so you can tailor it to your organization's needs.
+For Sentry's Performance Monitoring, we recommend sampling your data for two reasons. First, though capturing a single trace involves minimal overhead, capturing traces for every single page load, or every single API request, has the potential to add an undesirable amount of load to your system. Second, enabling sampling allows you to better manage the number of events sent to Sentry, so you can tailor your volume to your organization's needs.
 
 When choosing a sampling rate, the goal is not to collect *too* much data, but to collect sufficient data so you can draw meaningful conclusions. If you’re not sure what rate to choose, start with a low value and gradually increase it as you learn more about your traffic patterns and volume, until you’ve found a rate that balances performance and volume concerns with data accuracy.
 
-To set a sample rate for your transactions, provide a number between `0` (0% of transactions sent) and `1` (100% of transactions sent) to the `tracesSampleRate` configuration option. For example, including `tracesSampleRate: 0.2` in your SDK config will cause the SDK to only send 20% of possible transaction events.
+To sample your transactions, either set the <PlatformIdentifier name="traces-sample-rate" /> configuration option to a number between `0` (0% of transactions sent) and `1` (100% of transactions sent), or set the <PlatformIdentifier name="traces-sampler" /> option to a function which will return such a number, varying by transaction.
+
+For example, setting the <PlatformIdentifier name="traces-sample-rate" /> option to `0.2` will cause the SDK to only send 20% of possible transaction events:
+
+<PlatformContent includePath="performance/traces-sample-rate" />
+
+Alternatively, you can provide a <PlatformIdentifier name="traces-sampler" /> function, to sample different transactions at different rates:
+
+<PlatformContent includePath="performance/traces-sampler-as-sampler" />
+
+To learn more about the <PlatformIdentifier name="traces-sampler" /> option, please see your SDK's <PlatformLink to="/performance/">performance docs</PlatformLink>.
 
 </PlatformSection>
