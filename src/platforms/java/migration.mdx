@@ -1,0 +1,110 @@
+---
+title: Migration Guide
+sidebar_order: 1000
+---
+
+## Migrating from `io.sentry:sentry` `1.x` to `io.sentrt:sentry` `3.x`
+
+
+We've updated the API to follow the [Unified API](https://develop.sentry.dev/sdk/unified-api/) more closely. It's a completely new code base, that was written to support a new Android SDK.
+
+### API Changes
+
+**Set tag**
+
+_Old_:
+
+```java
+Sentry.getContext().addTag("tagName", "tagValue");
+```
+
+_New_:
+
+```java
+Sentry.setTag("tagName", "tagValue");
+```
+
+**Capture custom exception**
+
+_Old_:
+
+```java
+try {
+    int x = 1 / 0;
+} catch (Exception e) {
+    Sentry.capture(e);
+}
+```
+
+_New_:
+
+```java
+try {
+    int x = 1 / 0;
+} catch (Exception e) {
+    Sentry.captureException(e);
+}
+```
+
+**Capture a message**
+
+_Old_:
+
+```java
+Sentry.capture("This is a test");
+```
+
+_New_:
+
+```java
+Sentry.captureMessage("This is a test"); // SentryLevel.INFO by default
+Sentry.captureMessage("This is a test", SentryLevel.WARNING); // or specific level
+```
+
+**Breadcrumbs**
+
+_Old_:
+
+```java
+Sentry.getContext().recordBreadcrumb(
+    new BreadcrumbBuilder().setMessage("User made an action").build()
+);
+```
+
+_New_:
+
+```java
+Sentry.addBreadcrumb("User made an action");
+```
+
+**User**
+
+_Old_:
+
+```java
+Sentry.getContext().setUser(
+    new UserBuilder().setEmail("hello@sentry.io").build()
+);
+```
+
+_New_:
+
+```java
+User user = new User();
+user.setEmail("hello@sentry.io");
+Sentry.setUser(user);
+```
+
+**Set extra**
+
+_Old_:
+
+```java
+Sentry.getContext().addExtra("extra", "thing");
+```
+
+_New_:
+
+```java
+Sentry.setExtra("extra", "thing");
+```
