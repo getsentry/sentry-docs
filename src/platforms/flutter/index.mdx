@@ -6,7 +6,7 @@ Get the SDK from from [pub.dev](https://pub.dev/packages/sentry) by adding the f
 
 ```yml
 dependencies:
-  sentry: ">=3.0.0 <4.0.0"
+  sentry: ">=4.0.0 <5.0.0"
 ```
 
 Import `SentryClient` and initialize it:
@@ -14,13 +14,13 @@ Import `SentryClient` and initialize it:
 ```dart
 import 'package:sentry/sentry.dart';
 
-final sentry = SentryClient(dsn: "___PUBLIC_DSN___");
+Sentry.init((options) => options.dsn = '___PUBLIC_DSN___');
 ```
 
 Run the whole app in a zone to capture all uncaught errors:
 
 ```dart
-import 'dart:async'; 
+import 'dart:async';
 
 // Wrap your 'runApp(MyApp())' as follows:
 
@@ -28,8 +28,8 @@ void main() async {
   runZonedGuarded(
     () => runApp(MyApp()),
     (error, stackTrace) {
-      await sentry.captureException(
-        exception: error,
+      await Sentry.captureException(
+        throwable: error,
         stackTrace: stackTrace,
       );
     },
@@ -41,8 +41,8 @@ Catch Flutter specific errors by subscribing to `FlutterError.onError`:
 
 ```dart
 FlutterError.onError = (details, {bool forceReport = false}) {
-  sentry.captureException(
-    exception: details.exception,
+  await Sentry.captureException(
+    throwable: details.exception,
     stackTrace: details.stack,
   );
 };
@@ -55,8 +55,8 @@ Capture a test exception:
 try {
   throw null;
 } catch (error, stackTrace) {
-  await sentry.captureException(
-    exception: error,
+  await Sentry.captureException(
+    throwable: error,
     stackTrace: stackTrace,
   );
 }
@@ -65,7 +65,7 @@ try {
 ### Resources
 
 Flutter has extensive documentation, which includes a
-[cookbook on how to integrate with Sentry](https://flutter.dev/docs/cookbook/maintenance/error-reporting).
+[cookbook on how to integrate with Sentry version earlier than 4.0.0](https://flutter.dev/docs/cookbook/maintenance/error-reporting).
 
 ### Source code
 
