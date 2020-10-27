@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 
 // SENTRY_API_SCHEMA_SHA is used in the bump-openapi GHA workflow.
 // DO NOT change variable name unless you change it in the bump-openapi GHA workflow.
-const SENTRY_API_SCHEMA_SHA = a0e1a4e1a14f84631582c4769a4ebe8f6eab416b
+const SENTRY_API_SCHEMA_SHA = "ffd87a4647176ad086c63cf2434c1aadd78fce25"
 
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
