@@ -6,7 +6,7 @@ type: language
 ---
 
 <Alert level="info">
-    Sentry for Java is a collection of modules provided by Sentry; it supports Java 1.8 and above. At its core, Sentry for Java provides a raw client for sending events to Sentry. If you use <strong>Spring Boot</strong>, <strong>Spring</strong><strong>, Logback</strong>, or <strong>Log4j2</strong>, we recommend using a dedicated integration. Please visit <a href="https://docs.sentry.io/platforms/java/">Sentry Java</a> documentation for installation instructions.
+    Sentry for Java is a collection of modules provided by Sentry; it supports Java 1.8 and above. At its core, Sentry for Java provides a raw client for sending events to Sentry. If you use <strong>Spring Boot</strong>, <strong>Spring</strong>,<strong> Logback</strong>, or <strong>Log4j2</strong>, we recommend visiting our <a href="https://docs.sentry.io/platforms/java/">Sentry Java</a> documentation for installation instructions.
 </Alert>
 
 ## Install
