@@ -3,7 +3,27 @@ title: Performance Monitoring
 description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
 ---
 
-Performance Monitoring helps you see everything from macro-level metrics to micro-level spans, and you’ll be able to cross-reference transactions with related issues, customize queries based on your personal needs, and substantially more and is avaliable for the Sentry Python SDK version ≥ 0.11.2.
+Sentry allows you to monitor the performance of your application, showing you how latency in one service may affect another service, and letting you pinpoint exactly which parts of a given operation may be responsible. To do this, it captures distributed traces consisting of transactions and spans, which measure individual services and individual operations within those services, respectively. You can learn more about this model in our [Distributed Tracing](/product/performance/distributed-tracing/) docs. Performance Monitoring is available for the Sentry Python SDK version ≥ 0.11.2.
+
+## Enabling Tracing
+
+To get started automatically sending traces you can:
+ - Set a uniform sample rate for all transactions, by setting the `traces_sample_rate` option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set `traces_sample_rate` to `0.2`.)
+ - Control the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the `traces_sampler` config option.
+
+<PlatformContent includePath="performance/enable-tracing" />
+
+Your application will now start automatically capturing transactions.
+
+<Note>
+
+When you first enable tracing, the easiest thing to do to test it is to set `traces_sample_rate` to `1.0`, because that guarantees that every transaction will be sent to Sentry for you to see.
+
+Once you're done with testing, however, we recommend that you either **lower your `traces_sample_rate` value, or switch to using `traces_sampler` to dynamically sample and filter your transactions**.
+
+Without sampling, our automatic instrumentation will send a transaction with every server request, celery task, etc (depending on which integrations you're using), which can add up quickly. Sampling allows you to send representative data without overwhelming either your system or your Sentry transaction quota.
+
+</Note>
 
 ## Manual Instrumentation
 
