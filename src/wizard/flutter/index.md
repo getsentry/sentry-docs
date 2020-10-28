@@ -37,6 +37,7 @@ void main() async {
 Catch Flutter specific errors by subscribing to `FlutterError.onError`:
 
 ```dart
+import 'package:flutter/foundation.dart';
 import 'package:sentry/sentry.dart';
 
 FlutterError.onError = (details, {bool forceReport = false}) {
