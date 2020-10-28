@@ -17,6 +17,7 @@ Run the whole app in a zone to capture all uncaught errors:
 
 ```dart
 import 'dart:async';
+import 'package:sentry/sentry.dart';
 
 // Wrap your 'runApp(MyApp())' as follows:
 
@@ -24,7 +25,7 @@ void main() async {
   runZonedGuarded(
     () => runApp(MyApp()),
     (error, stackTrace) {
-      await sentry.captureException(
+      Sentry.captureException(
         exception: error,
         stackTrace: stackTrace,
       );
@@ -36,8 +37,10 @@ void main() async {
 Catch Flutter specific errors by subscribing to `FlutterError.onError`:
 
 ```dart
+import 'package:sentry/sentry.dart';
+
 FlutterError.onError = (details, {bool forceReport = false}) {
-  sentry.captureException(
+  Sentry.captureException(
     exception: details.exception,
     stackTrace: details.stack,
   );
@@ -51,10 +54,8 @@ Capture a test exception:
 ### Resources
 
 Flutter has extensive documentation, which includes a
-[cookbook on how to integrate with Sentry](https://flutter.dev/docs/cookbook/maintenance/error-reporting).
+[cookbook on how to integrate with Sentry version earlier than 4.0.0](https://flutter.dev/docs/cookbook/maintenance/error-reporting).
 
 ### Source code
 
-The Sentry SDK is part of the [Flutter organization on GitHub](https://github.com/flutter/sentry).
-Sentry is working on improving the Flutter integration on top of the core Dart SDK
-through [`sentry-flutter`](https://github.com/getsentry/sentry-flutter/).
+The Sentry Dart/Flutter SDK can be found on GitHub [`sentry-dart`](https://github.com/getsentry/sentry-dart/).
