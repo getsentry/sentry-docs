@@ -1,3 +1,4 @@
+import path from "path";
 import { Node } from "gatsby";
 import { createFilePath } from "gatsby-source-filesystem";
 
@@ -7,46 +8,69 @@ import PlatformRegistry, {
 } from "../../shared/platformRegistry";
 import { getChild, getDataOrPanic } from "../helpers";
 
+type FileNode = Node & {
+  relativePath: string;
+};
+
 type PlatformPages = {
   platforms: {
     [key: string]: {
-      node: Node;
-      children: Node[];
+      node: FileNode;
+      children: FileNode[];
       guides: {
         [name: string]: {
-          node: Node;
-          children: Node[];
+          node: FileNode;
+          children: FileNode[];
         };
       };
-      common: Node[];
+      common: FileNode[];
     };
   };
-  common: Node[];
+  common: FileNode[];
 };
 
-const getPlatfromFromNode = (node: any): string | null => {
+type PageContext = {
+  [key: string]: any;
+};
+
+type PageData = [FileNode, string, PageContext];
+
+const getPlatfromFromNode = (node: FileNode): string | null => {
   const match = node.relativePath.match(/^([^\/]+)\//);
   return match ? match[1] : null;
 };
 
-const getGuideFromNode = (node: any): string | null => {
+const getGuideFromNode = (node: FileNode): string | null => {
   const match = node.relativePath.match(/^[^\/]+\/guides\/([^\/]+)\//);
   return match ? match[1] : null;
 };
 
-const isCommonNode = (node: any): boolean => {
+const isCommonNode = (node: FileNode): boolean => {
   return !!node.relativePath.match(/^[^\/]+\/common\//);
 };
 
-const isRootNode = (node: any): boolean => {
+const isRootNode = (node: FileNode): boolean => {
   return !!node.relativePath.match(/^([^\/]+)\/index\.mdx?$/);
 };
 
-const isGuideRoot = (node: any): boolean => {
+const isGuideRoot = (node: FileNode): boolean => {
   return !!node.relativePath.match(/^([^\/]+)\/guides\/([^\/]+)\/index\.mdx?$/);
 };
 
-const buildPlatformPages = (nodes: any[]) => {
+/**
+ * Used to test if a parent page exists for a child. This is used to avoid creation
+ * of children when a parent is hidden.
+ *
+ * e.g. /performance/ is notSupported, so theres no need to mark /performance/sampling/
+ * as notSupported.
+ */
+const hasIndex = (pathRoot: string, pages: PageData[], pagePath: string) => {
+  if (pathRoot === pagePath) return true;
+  const prefix = path.dirname(pagePath) + "/";
+  return prefix === pathRoot || !!pages.find(p => p[1] === prefix);
+};
+
+const buildPlatformPages = (nodes: FileNode[]) => {
   const data: PlatformPages = {
     platforms: {},
     common: nodes.filter(node => getPlatfromFromNode(node) === "common"),
@@ -54,7 +78,7 @@ const buildPlatformPages = (nodes: any[]) => {
   const platforms = data.platforms;
 
   // build up `platforms` data
-  nodes.forEach((node: any) => {
+  nodes.forEach((node: FileNode) => {
     const platformName = getPlatfromFromNode(node);
     if (platformName === "common") {
       return;
@@ -106,7 +130,7 @@ const buildPlatformPages = (nodes: any[]) => {
 };
 
 const canInclude = (
-  node: Node,
+  node: FileNode,
   platformName: string,
   guideName?: string
 ): boolean => {
@@ -129,6 +153,10 @@ const canInclude = (
 export default async ({ actions, graphql, reporter, getNode }) => {
   const {
     allFile: { nodes },
+  }: {
+    allFile: {
+      nodes: FileNode[];
+    };
   } = await getDataOrPanic(
     `
     query {
@@ -184,14 +212,14 @@ export default async ({ actions, graphql, reporter, getNode }) => {
 
   // filter out nodes with no markdown content
   const { common, platforms } = buildPlatformPages(
-    nodes.filter((n: any) => getChild(n))
+    nodes.filter((n: FileNode) => getChild(n))
   );
 
   // begin creating pages from `platforms`
   const component = require.resolve(`../../templates/platform.tsx`);
 
   const createPlatformPage = (
-    node: any,
+    node: FileNode,
     path: string,
     context: { [key: string]: any }
   ) => {
@@ -219,7 +247,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
   const createPlatformPages = (
     platform: Platform,
     platformData,
-    sharedCommon: Node[]
+    sharedCommon: FileNode[]
   ) => {
     if (!platformData) {
       throw new Error(`No data for ${platform.key}`);
@@ -233,52 +261,76 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     };
     const pathRoot = platform.url;
 
+    const pages: PageData[] = [];
+
     // duplicate global common
-    sharedCommon.forEach((node: Node) => {
+    sharedCommon.forEach(node => {
       if (!canInclude(node, platform.name)) return;
       const path = `/platforms${createFilePath({ node, getNode }).replace(
         /^\/common\//,
         `/${platform.name}/`
       )}`;
-      reporter.verbose(`Creating global common for ${platform.key}: ${path}`);
-      createPlatformPage(node, path, {
-        ...platformPageContext,
-        title: path === pathRoot ? platform.title : undefined,
-      });
+      reporter.verbose(`${platform.key}: Creating global common - ${path}`);
+      pages.push([
+        node,
+        path,
+        {
+          ...platformPageContext,
+          title: path === pathRoot ? platform.title : undefined,
+        },
+      ]);
     });
 
     // duplicate platform common
-    platformData.common.forEach((node: Node) => {
+    platformData.common.forEach(node => {
       if (!canInclude(node, platform.name)) return;
       const path = `/platforms${createFilePath({ node, getNode }).replace(
         /^\/[^\/]+\/common\//,
         `/${platform.name}/`
       )}`;
-      reporter.verbose(
-        `Creating platform common for ${platform.name}: ${path}`
-      );
-      createPlatformPage(node, path, {
-        ...platformPageContext,
-        title: path === pathRoot ? platform.title : undefined,
-      });
+      reporter.verbose(`${platform.key}: Creating platform common - ${path}`);
+      pages.push([
+        node,
+        path,
+        {
+          ...platformPageContext,
+          title: path === pathRoot ? platform.title : undefined,
+        },
+      ]);
     });
 
     // create all direct children
-    platformData.children.forEach((node: Node) => {
+    platformData.children.forEach(node => {
       const path = `/platforms${createFilePath({ node, getNode })}`;
-      reporter.verbose(`Creating child for ${platform.key}: ${path}`);
-      createPlatformPage(node, path, platformPageContext);
+      reporter.verbose(`${platform.key}: Creating child - ${path}`);
+      pages.push([node, path, platformPageContext]);
     });
 
     // create platform root
     // TODO(dcramer): we'd like to create keywords based on aliases for the index page
     if (platformData.node) {
-      reporter.verbose(`Creating root for ${platform.key}: ${pathRoot}`);
-      createPlatformPage(platformData.node, pathRoot, {
-        ...platformPageContext,
-        title: platform.title,
-      });
+      reporter.verbose(`${platform.key}: Creating root - ${pathRoot}`);
+      pages.push([
+        platformData.node,
+        pathRoot,
+        {
+          ...platformPageContext,
+          title: platform.title,
+        },
+      ]);
     }
+
+    pages.sort((a, b) => a[1].localeCompare(b[1]));
+
+    pages.forEach(([node, path, context]) => {
+      if (!hasIndex(pathRoot, pages, path)) {
+        reporter.verbose(
+          `${platform.key}: Hiding child due to missing parent - ${path}`
+        );
+        return;
+      }
+      createPlatformPage(node, path, context);
+    });
 
     // create guide roots
     platform.guides.forEach(guide => {
@@ -298,7 +350,7 @@ export default async ({ actions, graphql, reporter, getNode }) => {
     platformData,
     guide: Guide,
     guideData,
-    sharedCommon: Node[],
+    sharedCommon: FileNode[],
     sharedContext: { [key: string]: any }
   ) => {
     const guidePageContext = {
@@ -311,58 +363,84 @@ export default async ({ actions, graphql, reporter, getNode }) => {
 
     const pathRoot = guide.url;
 
+    const pages: PageData[] = [];
+
     // duplicate global common
-    sharedCommon.forEach((node: Node) => {
+    sharedCommon.forEach(node => {
       if (!canInclude(node, platform.name, guide.name)) return;
       const path = `${createFilePath({ node, getNode }).replace(
         /^\/common\//,
         pathRoot
       )}`;
-      reporter.verbose(`Creating global common for ${guide.key}: ${path}`);
+      reporter.verbose(`${guide.key}: Creating global common - ${path}`);
       // XXX: we dont index or add redirects for guide-common pages
-      createPlatformPage(node, path, {
-        ...guidePageContext,
-        title: path === pathRoot ? guide.title : undefined,
-        noindex: true,
-        redirect_from: [],
-      });
+      pages.push([
+        node,
+        path,
+        {
+          ...guidePageContext,
+          title: path === pathRoot ? guide.title : undefined,
+          noindex: true,
+          redirect_from: [],
+        },
+      ]);
     });
 
     // duplicate platform common
-    platformData.common.forEach((node: Node) => {
+    platformData.common.forEach(node => {
       if (!canInclude(node, platform.name, guide.name)) return;
       const path = `${createFilePath({ node, getNode }).replace(
         /^\/[^\/]+\/common\//,
         pathRoot
       )}`;
-      reporter.verbose(`Creating common for ${guide.key}: ${path}`);
+      reporter.verbose(`${guide.key}: Creating common - ${path}`);
       // XXX: we dont index or add redirects for guide-common pages
-      createPlatformPage(node, path, {
-        ...guidePageContext,
-        title: path === pathRoot ? guide.title : undefined,
-        noindex: true,
-        redirect_from: [],
-      });
+      pages.push([
+        node,
+        path,
+        {
+          ...guidePageContext,
+          title: path === pathRoot ? guide.title : undefined,
+          noindex: true,
+          redirect_from: [],
+        },
+      ]);
     });
 
     // create all direct children
     if (guideData) {
-      guideData.children.forEach((node: Node) => {
+      guideData.children.forEach(node => {
         const path = `/platforms${createFilePath({ node, getNode })}`;
-        reporter.verbose(`Creating child for ${guide.key}: ${path}`);
-        createPlatformPage(node, path, guidePageContext);
+        reporter.verbose(`${guide.key}: Creating child - ${path}`);
+        pages.push([node, path, guidePageContext]);
       });
     }
 
     // create guide root
     // TODO(dcramer): we'd like to create keywords based on aliases for the index page
     if (guideData && guideData.node) {
-      reporter.verbose(`Creating platform root for ${guide.key}: ${pathRoot}`);
-      createPlatformPage(guideData.node, pathRoot, {
-        ...guidePageContext,
-        title: guide.title,
-      });
+      reporter.verbose(`${guide.key}: Creating platform root - ${pathRoot}`);
+      pages.push([
+        guideData.node,
+        pathRoot,
+        {
+          ...guidePageContext,
+          title: guide.title,
+        },
+      ]);
     }
+
+    pages.sort((a, b) => a[1].localeCompare(b[1]));
+
+    pages.forEach(([node, path, context]) => {
+      if (!hasIndex(pathRoot, pages, path)) {
+        reporter.verbose(
+          `${guide.key}: Hiding child due to missing parent - ${path}`
+        );
+        return;
+      }
+      createPlatformPage(node, path, context);
+    });
   };
 
   platformRegistry.platforms.forEach(platform => {
