@@ -7,23 +7,16 @@ type: framework
 
 Get the SDK from from [pub.dev](https://pub.dev/packages/sentry) by adding the following to your `pubspec.yaml`:
 
-```yml
-dependencies:
-  sentry: ">=3.0.0 <4.0.0"
-```
+<PlatformContent includePath="getting-started-install" />
 
-Import `SentryClient` and initialize it:
+Import `Sentry` and initialize it:
 
-```dart
-import 'package:sentry/sentry.dart';
-
-final sentry = SentryClient(dsn: "___PUBLIC_DSN___");
-```
+<PlatformContent includePath="getting-started-config" />
 
 Run the whole app in a zone to capture all uncaught errors:
 
 ```dart
-import 'dart:async'; 
+import 'dart:async';
 
 // Wrap your 'runApp(MyApp())' as follows:
 
@@ -53,17 +46,7 @@ FlutterError.onError = (details, {bool forceReport = false}) {
 
 Capture a test exception:
 
-```dart
-// Throw an exception and capture it with the Sentry client:
-try {
-  throw null;
-} catch (error, stackTrace) {
-  await sentry.captureException(
-    exception: error,
-    stackTrace: stackTrace,
-  );
-}
-```
+<PlatformContent includePath="getting-started-verify" />
 
 ### Resources
 
