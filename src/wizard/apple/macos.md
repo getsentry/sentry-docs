@@ -24,7 +24,7 @@ For other installation methods, please see our [documentation](/platforms/apple/
 
 Make sure you initialize the SDK as soon as possible in your application lifecycle e.g. in your AppDelegate `application:didFinishLaunchingWithOptions` method:
 
-```swift
+```swift {tabTitle:Swift}
 import Sentry // Make sure you import Sentry
 
 // ....

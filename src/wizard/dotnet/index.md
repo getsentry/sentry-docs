@@ -13,6 +13,9 @@ Install-Package Sentry -Version {{ packages.version('sentry.dotnet') }}
 
 # Or using .NET Core CLI
 dotnet add package Sentry -v {{ packages.version('sentry.dotnet') }}
+
+# Or using Paket
+paket add Sentry --version {{ packages.version('sentry.dotnet') }}
 ```
 
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Using .NET Framework prior to 4.6.1?</h5>
@@ -30,11 +33,21 @@ using (SentrySdk.Init("___PUBLIC_DSN___"))
 }
 ```
 
-Verify Sentry is capturing unhandled exceptions by raising an exception. For example, you can use the following snippet to raise a `DivideByZeroException`:
+```fsharp
+use __ = SentrySdk.Init ("___PUBLIC_DSN___")
+// App code
+```
+
+Verify Sentry is capturing unhandled exceptions by raising an exception. For example, you can use the following snippet to raise a `NullReferenceException`:
 
 ```csharp
 using (SentrySdk.Init("___PUBLIC_DSN___"))
 {
-    Console.WriteLine(1 / 0);
+    throw null;
 }
+```
+
+```fsharp
+use __ = SentrySdk.Init ("___PUBLIC_DSN___")
+raise <| NullReferenceException ()
 ```

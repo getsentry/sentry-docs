@@ -3,31 +3,20 @@ title: "Server-side Fingerprinting"
 sidebar_order: 1
 ---
 
-Server-side fingerprinting is also configured with a config similar to
-[grouping enhancements](../grouping-enhancements/),
-but the syntax is slightly different. The matchers are the same
-but instead of flipping flags, a fingerprint is assigned that overrides the
-default grouping entirely.
+Server-side fingerprinting is also configured with a config similar to [grouping enhancements](../grouping-enhancements/), but the syntax is slightly different. The matchers are the same, but instead of flipping flags, a fingerprint is assigned and it overrides the default grouping entirely.
 
-These rules can be configured on a per-project basis under _Project Settings > General Settings > Grouping Settings_. You are presented with an input field where you can write custom
-fingerprinting rules. The syntax follows the syntax from Discover queries. If
-you want to negate the match, you can prefix the expression with an
-exclamation mark (`!`).
+These rules can be configured on a per-project basis under **Settings > Projects > [project] > General Settings > Grouping Settings**. Group Settings has input fields where you can write custom fingerprinting rules. The syntax follows the syntax from [Discover queries](/product/discover-queries/). If you want to negate the match, prefix the expression with an exclamation mark (`!`).
 
-All values are matched against, and in the case of stack traces, all frames are considered.
-If all matches in a line match, then the fingerprint is applied.
+All values are matched against, and in the case of stack traces, all frames are considered. If all matches in a line match, then the fingerprint is applied.
 
 ```discover {tabTitle:Fingerprinting Config}
 # You can use comments to explain the rules.  Rules themselves follow the
 # following syntax:
-matcher:expression -> list, of, values
+matcher:expression -> list of values
+# The list of values can be hardcoded or substituted values.
 ```
 
-This list of values can be hardcoded values or alternatively some variables
-whch are substituded.
-
-This is a practical example, which groups exceptions of a specific type
-together:
+Below is a practical example, which groups exceptions of a specific type together:
 
 ```discover {tabTitle:Fingerprinting Config}
 error.type:DatabaseUnavailable -> system-down
@@ -38,11 +27,6 @@ error.value:"connection error: *" -> connection-error, {{ transaction }}
 
 ## Matchers
 
-All values are matched against, and in the case of stack traces, all frames are considered.
-If all matches in a line match, then the fingerprint is applied. The syntax follows
-the syntax from Discover queries. If you want to negate the match, you can prefix
-the expression with an exclamation mark (`!`).
-
 Matchers generally use globbing syntax. The following matchers are available:
 
 <DefinitionList>
@@ -51,8 +35,7 @@ Matchers generally use globbing syntax. The following matchers are available:
 
 alias: `type`
 
-Matches on an exception type (exception name). The match is performed as a case
-sensitive glob.
+Matches on an exception type (exception name). The match is performed as a case sensitive glob.
 
 ```discover {tabTitle:Fingerprinting Config}
 error.type:ZeroDivisionError -> zero-division
@@ -63,9 +46,7 @@ error.type:ConnectionError -> connection-error
 
 alias: `value`
 
-Matches on the exception value. Errors or exceptions often have human readable
-descriptions (values) associated with them. This matcher allows a case
-insensitive match.
+Matches on the exception value. Errors or exceptions often have human-readable descriptions (values) associated with them. This matcher allows a case insensitive match.
 
 ```discover {tabTitle:Fingerprinting Config}
 error.value:"connection error (code: *)" -> connection-error
@@ -74,9 +55,7 @@ error.value:"could not connect (*)" -> connection-error
 
 ### `message`
 
-This matcher matches on a log message. It will also automatically check for
-the additional exception value as they can be hard to keep apart. The matching
-is done case insensitive.
+Matches on a log message. It will also automatically check for the additional exception value as they can be hard to keep apart. The matching is case insensitive.
 
 ```discover {tabTitle:Fingerprinting Config}
 message:"system encountered a fatal problem: *" -> fatal-log
@@ -84,8 +63,7 @@ message:"system encountered a fatal problem: *" -> fatal-log
 
 ### `logger`
 
-Matches on the name of the logger, which is useful to combine all messages of a
-logger together. This match is case sensitive.
+Matches on the name of the logger, which is useful to combine all messages of a logger together. This match is case sensitive.
 
 ```discover {tabTitle:Fingerprinting Config}
 logger:"com.myapp.mypackage.*" -> mypackage-logger
@@ -101,9 +79,7 @@ logger:"com.myapp.FooLogger" level:"error" -> mylogger-error
 
 ### `tags.tag_name`
 
-Matches on the value of the tag `tag_name`. This can be useful to filter down
-certain types of events. For instance, you can separate out events caused by a
-certain server:
+Matches on the value of the tag `tag_name`. This can be useful to filter down certain types of events. For instance, you can separate events caused by a specific server:
 
 ```discover {tabTitle:Fingerprinting Config}
 tags.server_name:"canary-*.mycompany.internal" -> canary-events
@@ -113,11 +89,7 @@ tags.server_name:"canary-*.mycompany.internal" -> canary-events
 
 alias: `path`
 
-This matcher is case insensitive matching on the path of an event. It uses path
-globbing semantics which means that `*` does not match a slash but `**` does.
-Note that this matcher actually matches on both `abs_path` and `filename` as
-SDKs can be quite inconsistent about how these values are supported. If the
-glob matches on either of these values it's considered a match.
+Matches on the path of an event and is case insensitive. It uses path globbing semantics, which means that `*` does not match a slash, but `**` does. Note that this matcher matches on both `abs_path` and `filename` as SDKs can be quite inconsistent about how these values are supported. If the glob matches on either of these values, it's considered a match.
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.abs_path:"**/my-utils/*.js" -> my-utils, {{ error.type }}
@@ -127,9 +99,7 @@ stack.abs_path:"**/my-utils/*.js" -> my-utils, {{ error.type }}
 
 alias: `module`
 
-This matcher is similar to `stack.abs_path` but matches on the module name
-instead. The match is case sensitive and regular globbing rules
-apply (`*` also matches slashes).
+Similar to `stack.abs_path` but matches on the module name instead. The match is case sensitive and regular globbing rules apply (`*` also matches slashes).
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.module:"*/my-utils/*" -> my-utils, {{ error.type }}
@@ -139,8 +109,7 @@ stack.module:"*/my-utils/*" -> my-utils, {{ error.type }}
 
 alias: `function`
 
-This matcher checks if any of the functions in the stack trace match the
-glob. The match is case sensitive:
+Checks if any of the functions in the stack trace match the glob. The match is case sensitive:
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.function:"my_assertion_failed" -> my-assertion-failed
@@ -150,9 +119,7 @@ stack.function:"my_assertion_failed" -> my-assertion-failed
 
 alias: `package`
 
-This matcher matches on the "package" of a frame. This is typically the name of
-the debug symbol / object file that contains a frame. If any of the frames match
-this object file then it matches.
+Matches on the "package" of a frame. This is typically the name of the debug symbol/object file that contains a frame. If any of the frames match this object file, then it matches.
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.package:"**/libcurl.dylib" -> libcurl
@@ -161,9 +128,7 @@ stack.package:"**/libcurl.so" -> libcurl
 
 ### `family`
 
-This matcher can be used to "scope" down the matcher. The following families
-exist: `javascript` for any type of javascript event, `native` for any type of
-native event. Any other platform is called `other`.
+Used to "scope" down the matcher. The following families exist: `javascript` for any type of JavaScript event, `native` for any type of Native event. Any other platform is called `other`.
 
 ```discover {tabTitle:Fingerprinting Config}
 family:native !stack.module:"myproject::*" -> not-from-my-project
@@ -171,8 +136,7 @@ family:native !stack.module:"myproject::*" -> not-from-my-project
 
 ### `app`
 
-This matcher checks if the frame is in app or not. This is particularly useful
-when combined with another matcher. Possible values are `yes` and `no`:
+Checks if the frame is in-app or not. It is particularly useful when combined with another matcher. Possible values are `yes` and `no`:
 
 ```discover {tabTitle:Fingerprinting Config}
 app:yes stack.function:"assert" -> assert
@@ -182,13 +146,9 @@ app:yes stack.function:"assert" -> assert
 
 ## Combining Matchers
 
-When multiple matchers are combined, they all need to match. Matchers that
-operate on frames must all apply to the same frame otherwise they are not
-considered to match. For instance, if you match on both function name and module
-name then a match only exists if a frame matches both the function
-name and the module name. It's not enough for a frame to match only with the function name, even if another frame would match the module name by itself.
-matching function name only even if there is another frame that would match
-the module name by itself.
+When multiple matchers are combined, they all need to match. Matchers that operate on frames must all apply to the same frame; otherwise, they are not considered a match.
+
+For instance, if you match on both the function name and module name, then a match only exists if a frame matches _both_ the function name and the module name. It's not enough for a frame to match only with the function name, even if another frame would match the module name by itself.
 
 ```discover {tabTitle:Fingerprinting Config}
 # this matches if a frame exists with a specific function and module name
@@ -198,9 +158,7 @@ error.type:ConnectionError stack.function:"connect" stack.module:"bot" -> bot-er
 
 ## Variables
 
-On the right hand side of the fingerprint constant values as well as variables
-can be used. Variables are substituded automatically. Variables have the same
-name as matchers but they might be filled in differently.
+On the right-hand side of the fingerprint, you can use constant values and variables. Variables are substituted automatically and have the same name as matchers, but they might be filled in differently.
 
 Variables are enclosed in double braces (`{{ variable_name }}`).
 
@@ -208,9 +166,7 @@ Variables are enclosed in double braces (`{{ variable_name }}`).
 
 ### `{{ default }}`
 
-This fills in the default fingerprint that would be produced by the normal
-grouping operation. This is useful if you want to subdivide an already
-existing group by something else:
+This fills in the default fingerprint that would be produced by the normal grouping operation. It is useful if you want to subdivide an already existing group by something else:
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.function:"query_database" -> {{ default }}, {{ transaction }}
@@ -218,8 +174,7 @@ stack.function:"query_database" -> {{ default }}, {{ transaction }}
 
 ### `{{ transaction }}`
 
-This fills in the name of the transaction into the fingerprint. This will
-force the creation of a group per transaction:
+This fills in the name of the transaction into the fingerprint. It will force the creation of a group per transaction:
 
 ```discover {tabTitle:Fingerprinting Config}
 error.type:"ApiError" -> api-error, {{ transaction }}
@@ -229,9 +184,7 @@ error.type:"ApiError" -> api-error, {{ transaction }}
 
 alias: `{{ type }}`
 
-This fills in the name of the error that ocurred. When chained exceptions are
-used this will be the most recently thrown error. This will force the
-creation of a group per transaction:
+This fills in the name of the error that occurred. When chained exceptions are used, it will be the most recently thrown error. This will force the creation of a group per transaction:
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.function:"evaluate_script" -> script-evaluation, {{ error.type }}
@@ -241,8 +194,7 @@ stack.function:"evaluate_script" -> script-evaluation, {{ error.type }}
 
 alias: `{{ function }}`
 
-This fills in the function name of the "crashing frame". That is the top most
-frame that was considered to be in the application code.
+This fills in the function name of the "crashing frame," also known as the application code's topmost frame.
 
 ```discover {tabTitle:Fingerprinting Config}
 error.type:"ScriptError" -> script-evaluation, {{ stack.function }}
@@ -252,8 +204,7 @@ error.type:"ScriptError" -> script-evaluation, {{ stack.function }}
 
 alias: `{{ module }}`
 
-This fills in the module name of the "crashing frame". That is the top most
-frame that was considered to be in the application code.
+This fills in the module name of the "crashing frame," also known as the application code's topmost frame.
 
 ```discover {tabTitle:Fingerprinting Config}
 error.type:"ScriptError" -> script-evaluation, {{ stack.module }}
@@ -263,8 +214,7 @@ error.type:"ScriptError" -> script-evaluation, {{ stack.module }}
 
 alias: `{{ package }}`
 
-This fills in the package name (object file) of the "crashing frame". That is
-the top most frame that was considered to be in the application code.
+This fills in the package name (object file) of the "crashing frame," also known as the application code's topmost frame.
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.function:"assert" -> assertion, {{ stack.package }}
@@ -288,8 +238,7 @@ message:"connection error*" -> connection-error, {{ logger }}, {{ level }}
 
 ### `{{ tags.tag_name }}`
 
-This fills in the value of a tag into the fingerprint, which can, for instance,
-be used to split events by server name or something similar.
+This fills in the value of a tag into the fingerprint, which can, for instance, be used to split events by server name or something similar.
 
 ```discover {tabTitle:Fingerprinting Config}
 message:"connection error*" -> connection-error, {{ tags.server_name }}

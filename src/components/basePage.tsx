@@ -108,10 +108,12 @@ export default ({
         </div>
         {(hasToc || prependToc) && (
           <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
-            <React.Fragment>
-              {prependToc}
-              {hasToc && <WrappedTOC ref={contentRef} />}
-            </React.Fragment>
+            <div className="page-nav">
+              <React.Fragment>
+                {prependToc}
+                {hasToc && <WrappedTOC ref={contentRef} />}
+              </React.Fragment>
+            </div>
           </div>
         )}
       </div>

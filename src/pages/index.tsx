@@ -1,5 +1,6 @@
 import React from "react";
 import PlatformIcon from "platformicons";
+import { Nav } from "react-bootstrap";
 
 import "../css/screen.scss";
 
@@ -7,6 +8,8 @@ import SEO from "../components/seo";
 import Search from "../components/search";
 import SmartLink from "../components/smartLink";
 import { usePlatformList } from "../components/hooks/usePlatform";
+import NavbarProductDropdown from "../components/navbarProductDropdown";
+import NavbarPlatformDropdown from "../components/navbarPlatformDropdown";
 
 import SentryWordmarkSVG from "../logos/sentry-wordmark-dark.svg";
 
@@ -61,9 +64,16 @@ const IndexPage = () => {
             <a href="/" title="Sentry error monitoring" className="index-logo">
               <img src={SentryWordmarkSVG} />
             </a>
-            <ul className="navbar-nav">
-              <li className="nav-item" data-hide-when-logged-in>
-                <a className="nav-link" href="https://sentry.io/">
+            <Nav className="justify-content-end" style={{ flex: 1 }}>
+              <NavbarProductDropdown />
+              <NavbarPlatformDropdown />
+              <Nav.Item>
+                <SmartLink className="nav-link" to="/api/">
+                  API
+                </SmartLink>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link href="https://sentry.io/">
                   Sign In
                   <svg
                     width="1em"
@@ -78,12 +88,16 @@ const IndexPage = () => {
                       d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
                     />
                   </svg>
-                </a>
-              </li>
-            </ul>
+                </Nav.Link>
+              </Nav.Item>
+            </Nav>
           </div>
 
           <h1>Sentry Documentation</h1>
+
+          <div className="index-search">
+            <Search />
+          </div>
 
           <div className="integrations-logo-row">
             {visiblePlatforms.map(platform => (
@@ -104,10 +118,6 @@ const IndexPage = () => {
             <a href="/platforms/" className="hover-card-link">
               See all {totalPlatformCount} supported platforms
             </a>
-          </div>
-
-          <div className="index-search">
-            <Search />
           </div>
         </div>
       </div>

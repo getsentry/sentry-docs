@@ -1,0 +1,134 @@
+---
+title: Advanced Usage
+sidebar_order: 6
+description: "Learn about ThreadContext parameters that display in sentry.io."
+---
+
+By default all `ThreadContext` parameters are stored under the “Context Data” tab in sentry.io.
+
+```java {tabTitle:Java}
+void logWithExtras() {
+    // ThreadContext ("MDC") extras
+    ThreadContext.put("Environment", "Development");
+    ThreadContext.put("OS", "Linux");
+
+    // This sends an event where the Environment and OS ThreadContext values are set as Context Data entries
+    logger.error("This is a test");
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+fun logWithExtras() {
+    // MDC extras
+    ThreadContext.put("Environment", "Development");
+    ThreadContext.put("OS", "Linux");
+
+    // This sends an event where the Environment and OS ThreadContext values are set as Context Data entries
+    logger.error("This is a test");
+}
+```
+
+### In Practice
+
+```java {tabTitle:Java}
+import io.sentry.core.Sentry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
+
+public class MyClass {
+  private static final Logger logger = LogManager.getLogger(MyClass.class);
+
+  void logSimpleMessage() {
+    // This sends a simple event to Sentry
+    logger.error("This is a test");
+  }
+
+  void logWithBreadcrumbs() {
+    // Record a breadcrumb that will be sent with the next event(s),
+    // by default the last 100 breadcrumbs are kept.
+    Sentry.addBreadcrumb("User made an action");
+
+    // Log entries below `minimumEventLevel` and above or equal to `minimumBreadcrumbLevel`
+    // are recorded as breadcrumbs
+    logger.info("User made another action");
+
+    // This sends a simple event to Sentry
+    logger.error("This is a test");
+  }
+
+  void logWithExtras() {
+    // MDC extras
+    ThreadContext.put("extra_key", "extra_value");
+    // NDC extras are sent under 'log4j2-NDC'
+    ThreadContext.push("Extra_details");
+    // This sends an event with extra data to Sentry
+    logger.error("This is a test");
+  }
+
+  void logException() {
+    try {
+      unsafeMethod();
+    } catch (Exception e) {
+      // This sends an exception event to Sentry
+      logger.error("Exception caught", e);
+    }
+  }
+
+  void unsafeMethod() {
+    throw new UnsupportedOperationException("You shouldn't call this!");
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.core.Sentry
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.ThreadContext
+
+class MyClass {
+    companion object {
+        private val logger = LogManager.getLogger(MyClass::class.java)
+    }
+
+    fun logSimpleMessage() {
+        // This sends a simple event to Sentry
+        logger.error("This is a test")
+    }
+
+    fun logWithBreadcrumbs() {
+        // Record a breadcrumb that will be sent with the next event(s),
+        // by default the last 100 breadcrumbs are kept.
+        Sentry.addBreadcrumb("User made an action")
+
+        // Log entries below `minimumEventLevel` and above or equal to `minimumBreadcrumbLevel`
+        // are recorded as breadcrumbs
+        logger.info("User made another action")
+
+        // This sends a simple event to Sentry
+        logger.error("This is a test")
+    }
+
+    fun logWithExtras() {
+        // MDC extras
+        ThreadContext.put("extra_key", "extra_value")
+        // NDC extras are sent under 'log4j2-NDC'
+        ThreadContext.push("Extra_details")
+        // This sends an event with extra data to Sentry
+        logger.error("This is a test")
+    }
+
+    fun logException() {
+        try {
+            unsafeMethod()
+        } catch (e: Exception) {
+            // This sends an exception event to Sentry
+            logger.error("Exception caught", e)
+        }
+    }
+
+    fun unsafeMethod() {
+        throw UnsupportedOperationException("You shouldn't call this!")
+    }
+}
+```

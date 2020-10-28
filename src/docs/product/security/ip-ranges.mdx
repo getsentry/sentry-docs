@@ -3,22 +3,44 @@ title: "IP Ranges"
 sidebar_order: 5
 redirect_from:
   - /ip-ranges/
+description: "Learn how Sentry's SaaS product uses IP Ranges for API usage, event ingestion, outbound requests, and more."
 ---
 
 <Alert title="Note" level="warning">
-<markdown>
 
 The contents of this page apply only to Sentry's SaaS product. It **does not**
 apply to Self-hosted or Single Tenant.
 
-</markdown>
 </Alert>
 
-Sentry is served from a single IP address for all web traffic and all event accepting. The IP address is:
+## Dashboard and API
+
+Sentry's dashboard and API are both served from a single IP address for all web traffic. The IP address is:
 
 ```python
 35.188.42.15/32
 ```
+
+## Event Ingestion
+
+Sentry's Event Ingestion respects two domains within a Data Source Name (DSN):
+
+1. The [organization subdomain](https://forum.sentry.io/t/organization-subdomains-in-dsns/9360)
+2. Sentry's apex domain
+
+Sentry's apex domain (`sentry.io`) accepts events from the same IP address as the Dashboard and API:
+
+```python
+35.188.42.15/32
+```
+
+Starting December 1st, 2020, Sentry's organization subdomains (`o<number>.ingest.sentry.io`) will migrate from the prior IP address to the following single address:
+
+```python
+34.120.195.249/32
+```
+
+## Outbound Requests
 
 In some circumstances the Hosted Sentry infrastructure might send HTTP requests your way. Primarily this is relevant to [_JavaScript Source Maps_](/platforms/javascript/sourcemaps/), but also affects things like webhooks and other integrations.
 
