@@ -70,10 +70,11 @@ If your answers are Yes, No and Yes, you're in business - make the API public.
 
 We use [Open API Spec 3](https://swagger.io/docs/specification/about/) to write our API documentation. You can find that content here: [https://github.com/getsentry/sentry/tree/master/api-docs.](https://github.com/getsentry/sentry/tree/master/api-docs) You can find the tests here: [https://github.com/getsentry/sentry/tree/master/tests/apidocs](https://github.com/getsentry/sentry/tree/master/tests/apidocs).
 
-Once you make changes to an endpoint and merge the change into Sentry, a Github Action will update the schema in [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) with a build version. To make your changes go live:
+Once you make changes to an endpoint and merge the change into Sentry, a series of Github Actions will be triggered to make your changes automatically go live:
 
-1. Get the latest SHA from [sentry-api-schema](https://github.com/getsentry/sentry-api-schema/commits/main).
-2. Go to sentry-docs and update the SHA ([https://github.com/getsentry/sentry-docs/blob/9e62a559fba15ecc0f08f3f10336df518eaf9ee0/src/gatsby/utils/resolveOpenAPI.ts#L21](https://github.com/getsentry/sentry-docs/blob/9e62a559fba15ecc0f08f3f10336df518eaf9ee0/src/gatsby/utils/resolveOpenAPI.ts#L21)).
+1. The `openapi / deref_json` Github Action in [sentry](https://github.com/getsentry/Sentry) will update the schema in [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) with the OpenAPI build artifact.
+2. In [sentry-api-schema](https://github.com/getsentry/sentry-api-schema), the `sentry-docs / bump` Github Action will be triggered and this will bump the SHA that references [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) in [sentry-docs](https://github.com/getsentry/sentry-docs) with the latest.
+3. Finally, a build is triggered in [sentry-docs](https://github.com/getsentry/sentry-docs).
 
 ### Requesting an API to be public
 
