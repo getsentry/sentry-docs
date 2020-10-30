@@ -14,20 +14,20 @@ Run the whole app in a zone to capture all uncaught errors:
 
 ```dart
 import 'dart:async';
+import 'package:flutter/widgets.dart';
 import 'package:sentry/sentry.dart';
 
 // Wrap your 'runApp(MyApp())' as follows:
 
-void main() async {
-  runZonedGuarded(
-    () => runApp(MyApp()),
-    (error, stackTrace) {
-      await Sentry.captureException(
-        exception: error,
-        stackTrace: stackTrace,
-      );
-    },
-  );
+void main() {
+  runZonedGuarded(() {
+    runApp(MyApp());
+  }, (exception, stackTrace) async {
+    await Sentry.captureException(
+      exception,
+      stackTrace: stackTrace,
+    );
+  });
 }
 ```
 
@@ -37,12 +37,14 @@ Catch Flutter specific errors by subscribing to `FlutterError.onError`:
 import 'package:flutter/foundation.dart';
 import 'package:sentry/sentry.dart';
 
-FlutterError.onError = (details, {bool forceReport = false}) {
-  Sentry.captureException(
-    exception: details.exception,
-    stackTrace: details.stack,
-  );
-};
+void main() {
+  FlutterError.onError = (FlutterErrorDetails details) async {
+    await Sentry.captureException(
+      details.exception,
+      stackTrace: details.stack,
+    );
+  };
+}
 ```
 
 Capture a test exception:
