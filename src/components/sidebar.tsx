@@ -52,7 +52,7 @@ export const Sidebar = ({ data }: ChildProps): JSX.Element => {
           "/product/security/",
           "/product/accounts/",
           "/product/relay/",
-          "product/data-management-settings",
+          "/product/data-management-settings/",
         ]}
       />
       <DynamicNav
