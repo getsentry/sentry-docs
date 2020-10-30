@@ -1,8 +1,58 @@
 ---
-title: Migrating from react-native-sentry
+title: Migration
+description: "Learn more about migrating from 1.x to 2.x to enable release health tracking and native stack traces by default."
 ---
 
-If you are upgrading from an earlier version of react-native-sentry you should unlink the package to ensure the generated code is updated to the latest version:
+## From 1.x to 2.x
+
+Sentry's most recent version of our React Native SDK enables release health tracking and native stack traces by default.
+
+This version of the SDK uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are using an on-premise installation, the SDK requires Sentry version 20.6.0 and above. If you are using our SaaS product (`sentry.io`), there is no change and no action is required.
+
+### iOS/MacOS
+
+While the migration does not introduce breaking changes for iOS/MacOS on the React Native side, we recommend that you run `pod install` after the upgrade.
+
+<Note>
+<markdown>
+
+If you are using our Cocoa SDK directly, follow that [migration guide for 5.x to 6.x](/platforms/apple/migration/#migrating-from-5x-to-6x).
+
+</markdown>
+</Note>
+
+On iOS/MacOS, we now cache events in envelopes on the disk. As a result, you might lose a few cached events during the migration. Due to the effort involved, the migration from 5.x to 6.x does not move these few cached events into envelopes.
+
+### Android
+
+If you are on React Native <0.60, you will need to update this line in your `MainApplication.java`:
+
+
+From (earlier version):
+
+```java
+import io.sentry.RNSentryPackage;
+```
+
+New:
+```java
+import io.sentry.react.RNSentryPackage;
+```
+
+Other than the one line change noted above, the migration should not cause breaking changes on the React Native side. 
+
+<Note>
+<markdown>
+
+If you use our Android SDK directly, you should follow its [migration guide for 2.x to 3.x](/platforms/android/migration/#migrating-from-sentry-android-2x-to-sentry-android-3x).
+
+</markdown>
+</Note>
+
+
+## From 0.x to 1.x
+
+If you are upgrading from an earlier version of Sentry's React Native SDK, you should unlink the package to ensure the generated code is updated to the latest version:
 
 ```bash
 react-native unlink react-native-sentry
