@@ -28,11 +28,10 @@ Sentry.init({
     new Integrations.BrowserTracing(),
   ],
 
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
   tracesSampleRate: 1.0,
 });
 ```
+We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/performance/sampling/).
 
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
 
@@ -40,4 +39,4 @@ This snippet includes an intentional error, so you can test that everything is w
 myUndefinedFunction();
 ```
 
-To view and resolve this intentional error, log into sentry.io and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
+Sentry will send an email alerting you to this intentional error; follow the instructions in the email to resolve the error.
