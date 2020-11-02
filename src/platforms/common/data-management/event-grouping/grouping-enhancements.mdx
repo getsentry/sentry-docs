@@ -10,24 +10,13 @@ Enhancements are straightforward rules. Each line is a single enhancement rule; 
 
 The syntax for grouping enhancements is similar to:
 
-```discover {tabTitle: Enhancement Rules}
-matcher-name:expression other-matcher:expression ... action1 action2 ...
-```
+<PlatformContent includePath="grouping/basic/" />
 
 The syntax follows the syntax from [Discover queries](/product/discover-queries/). If you want to negate the match, you can prefix the expression with an exclamation mark (`!`).
 
 The following is a practical example of how this looks:
 
-```discover {tabTitle: Enhancement Rules}
-# mark all functions in the std namespace to be outside the app
-family:native stack.function:std::*       -app
-
-# mark all code in node modules not to be in app
-stack.abs_path:**/node_modules/**         -app
-
-# remove all generated javascript code from all grouping
-stack.abs_path:**/generated/**.js         -group
-```
+<PlatformContent includePath="grouping/example/" />
 
 ## Matchers
 
@@ -39,9 +28,7 @@ Multiple matchers can be defined in a line. The following matchers are available
 
 Matches on the general platform family, which currently includes `javascript`, `native` and `other`. Comma separate rules to apply them to multiple platforms.
 
-```discover {tabTitle:Enhancement Rules}
-family:javascript,native stack.abs_path:**/generated/**  -group
-```
+<PlatformContent includePath="grouping/family/" />
 
 ### `stack.abs_path`
 
@@ -49,16 +36,7 @@ alias: `path`
 
 This matcher is case insensitive with Unix glob behavior on a path in a stack trace. The path separators are normalized to `/`. As a special rule, if the filename is relative, it still matches on `**/`.
 
-```discover {tabTitle:Enhancement Rules}
-# match on all files under `project` with a `.c` extension
-stack.abs_path:**/project/**.c` +app
-
-# matches on vendor/foo without sub folders
-stack.abs_path:**/vendor/foo/*.c` -app
-
-# matches on `foo.c` as well as `foo/bar.c`.
-stack.abs_path:**/*.gen.c` -group
-```
+<PlatformContent includePath="grouping/path/" />
 
 ### `stack.module`
 
@@ -72,10 +50,7 @@ alias: `function`
 
 Matches on a function in a stack trace, and is case sensitive with normal globbing.
 
-```discover {tabTitle:Enhancement Rules}
-stack.function:myproject_* +app
-stack.function:malloc      -group
-```
+<PlatformContent includePath="grouping/function" />
 
 ### `stack.package`
 
@@ -83,9 +58,7 @@ alias: `package`
 
 Matches on a package in a stack trace. The package is the container that contains a function or module. This is a `.jar`, a `.dylib` or similar. The same matching rules as for `path` apply. For example, this is typically an absolute path.
 
-```discover {tabTitle:Enhancement Rules}
-stack.package:**/libcurl.dylib -group
-```
+<PlatformContent includePath="grouping/package/" />
 
 ### `app`
 
@@ -97,30 +70,23 @@ Matches on the current state of the in-app flag of a stack trace frame. `yes` me
 
 There are two types of **actions**: flag and variables setting.
 
-- **flag**: Flags identify the action to be taken if all matchers match. A flag needs to be prefixed with `+` to set it or `-` to unset it. If this expression is prefixed with a `^`, it applies to frames above the matching frame (toward the crash). If prefixed with `v` it applies to frames below the matching frame (away from the crash). For instance, `-group ^-group` removes the matching frame and all frames above it from the grouping.
+1. A **flag** identifies the action to be taken if all matchers match and uses these prefixes:
+- `+` sets the flag
+- `-` unsets the flag
+- `^`applies to frames above the matching frame (toward the crash.
+- `v` applies to frames below the matching frame (away from the crash)
+
+As an example, `-group ^-group` removes the matching frame and all frames above it from the grouping.
+
   - `app`: marks or unmarks a frame in-app
   - `group`: adds or removes a frame from grouping
-- **variables**: Variables can be set (`variable=value`). Currently, there is just one:
-  - `max-frames`: sets the total number of frames to be considered for grouping.
-    The default is `0` which means "all frames." If set to `3`, only the top three frames are considereds.
+
+2. **variables**: Variables can be set (`variable=value`). Currently, there is just one:
+  - `max-frames`: sets the total number of frames to be considered for grouping. The default is `0`, which means "all frames." If set to `3`, only the top three frames are considered.
 
 If a line is prefixed with a hash (`#`), it's a comment and ignored.
 
-```discover {tabTitle:Enhancement Rules}
-stack.abs_path:**/node_modules/** -group
-stack.abs_path:**/app/utils/requestError.jsx -group
-stack.abs_path:**src/getsentry/src/getsentry/** +app
-
-family:native max-frames=3
-
-stack.function:fetchSavedSearches v-group
-stack.abs_path:**/app/views/**.jsx stack.function:fetchData ^-group
-
-family:native stack.function:SpawnThread v-app -app
-family:native stack.function:_NSRaiseError ^-group -app
-family:native stack.function:std::* -app
-family:native stack.function:core::* -app
-```
+<PlatformContent includePath="grouping/variable" />
 
 ## Recommendations
 
@@ -130,55 +96,24 @@ These recommendations will greatly improve your out-of-the-box grouping experien
 
 To proactively improve your experience, help Sentry determine which frames in your stack trace are "in-app" (part of your own application) and which are not. The SDK defines the default rules, but in many cases, this can be improved on the server as well. In particular, for languages where server-side processing is necessary (for example, Native C, C++, or JavaScript), it's better to override this on the server.
 
-For instance, the following marks all frames that are below a specific C++ namespace are in-app:
+<PlatformContent includePath="grouping/in-app" />
 
-```discover {tabTitle:Enhancement Rules}
-stack.function:myapplication::* +app
-```
-
-You can also achieve the same result by marking other frames "not in-app." However, if that's the case, you should ensure that first all frames are set to "in-app" to override the defaults:
-
-```discover {tabTitle:Enhancement Rules}
-app:no                   +app
-stack.function:std::*    -app
-stack.function:boost::*  -app
-```
-
-You need to force all frames to be in-app first because there might already have been some defaults set by the client SDK or earlier processing.
+<PlatformContent includePath="grouping/not-in-app" />
 
 ### Cut Stack Traces
 
-In many cases, you want to remove the top or bottom of the stack trace. For instance, many code bases use a common function to generate an error. In this case, the error machinery will appear as part of the stack trace. For example, if you use Rust, you likely want to remove some frames that are related to panic handling:
+In many cases, you want to remove the top or bottom of the stack trace. For instance, many code bases use a common function to generate an error. In this case, the error machinery will appear as part of the stack trace.
 
-```discover {tabTitle:Enhancement Rules}
-stack.function:std::panicking::begin_panic       ^-app -app ^-group
-stack.function:core::panicking::begin_panic      ^-app -app ^-group
-```
+<PlatformContent includePath="grouping/remove-frames" />
 
 Here we tell the system that all frames from `begin-panic` to the crash location are not part of the application (including the panic frame itself). All frames above are, in all cases, irrelevant for grouping.
 
 Likewise, you can also remove the base of a stack trace. This is particularly useful if you have different main loops that drive an application:
 
-```discover {tabTitle:Enhancement Rules}
-stack.function:myapp::LinuxMainLoop         v-group -group
-stack.function:myapp::MacMainLoop           v-group -group
-stack.function:myapp::WinMainLoop           v-group -group
-```
+<PlatformContent includePath="grouping/remove-frames" />
 
 ### Stack Trace Frame Limits
 
 This isn't useful for _all_ projects, but it can work well for large applications with many crashes. The default strategy is to consider most of the stack trace relevant for grouping. This means that every different stack trace that leads to a crashing function will cause a different group to be created. If you do not want that, you can force the groups to be much larger by limiting how many frames should be considered.
 
-For instance, if any of the frames in the stack trace refer to a common external library, you could tell the system only to consider the top N frames:
-
-```discover {tabTitle:Enhancement Rules}
-# always only consider the top 1 frame for all native events
-family:native max-frames=1
-
-# if the bug is in proprietarymodule.so, only consider top 2 frames
-family:native stack.package:**/proprietarymodule.so  max-frames=2
-
-# these are functions we want to consider much more of the stack trace for
-family:native stack.function:KnownBadFunction1  max-frames=5
-family:native stack.function:KnownBadFunction2  max-frames=5
-```
+<PlatformContent includePath="grouping/max-frames" />

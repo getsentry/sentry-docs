@@ -7,7 +7,7 @@ redirect_from:
 description: "Learn about filtering or scrubbing sensitive data within the SDK, so that data is not sent with the event. You can also configure server-side scrubbing to ensure the data is not stored."
 ---
 
-As with any third-party service it’s important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored. We recommend filtering or scrubbing sensitive data within the SDK, so that data is not sent with the event, and also configuring server-side scrubbing to ensure the data is not stored.
+As with any third-party service it’s important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored. We recommend filtering or scrubbing sensitive data within the SDK, so that data is not sent with the event, and also [configuring server-side scrubbing](/product/data-management-settings/server-side-scrubbing/) to ensure the data is not stored.
 
 There are two great examples for data scrubbing that every company should think about:
 
@@ -30,12 +30,6 @@ Turning this option on is required for certain features in Sentry to work, but a
 If you _do not_ wish to use the default PII behavior, you can also choose to identify users in a more controlled manner, using our [user identity context](../../enriching-events/identify-user/).
 
 </PlatformSection>
-
-### Confidential Information in Alerts
-
-It’s common that compliance within your company may mean that data can only be transmitted over SSL and securely stored. One area where this often comes up is with email notifications. By default, Sentry will send a large amount of data as part of the issue notification. In some cases, this data may be source code or other user data.
-
-If you need to work around this, you can enable the **Enhanced Privacy** setting for your organization. To do so, visit your organization’s dashboard, click **Settings**, and then tick the option to enable enhanced privacy. Once you've enabled this setting, parts of the system, primarily email notifications, will immediately reflect the change and begin restricting data to only basic attributes, such as the issue title and description.
 
 <PlatformSection notSupported={["perl", "native.ue4", "native.breakpad", "native.crashpad", "native.minidumps"]}>
 
@@ -87,52 +81,3 @@ As a best practice you should always avoid logging confidential information. If 
 - Disable logging breadcrumb integration (for example, as described [here] /platforms/javascript/#breadcrumbs-10)
 
 </PlatformSection>
-
-### Server-Side Controls
-
-If you cannot - or do not want to - scrub data within the SDK, Sentry provides a number of options to achieve this in the product itself. You'll find these settings under the **Data Scrubber** option within both your Organization and individual Project settings. By default this is enabled, and we highly recommend you keep it that way. With it enabled, Sentry will scrub the following:
-
-- Values that look like they contain credit cards (using a basic regular expression)
-- Values that themselves contain, or whose keynames contain, any of the following strings:
-  - password
-  - secret
-  - passwd
-  - api_key
-  - apikey
-  - access_token
-  - auth_token
-  - credentials
-  - mysql_pwd
-  - stripetoken
-  - card[number]
-- Any keys which match values that you’ve added to the list of additional fields in your Project Settings.
-
-Sentry will redact arrays and literal values, but not entire objects. For example:
-
-```bash
-credentials = {
-  username: 'jane',
-  cats: ['pancake', 'maple', 'hellboy']
-  password: 'p4ssw0rd!',
-  lastLogin: 'yesterday',
-  ...
-}
-```
-
-Using the default options would not cause the _object_ `credentials` to be redacted in its entirety; rather, all of its entries would be subject to scrubbing. So `password` would be redacted by default, and adding `cats`, `username`, and/or `lastLogin` to the list of additional fields would cause those values to be redacted as well.
-
-<Note>
-
-You can choose to expand the keys which are scrubbed by the server, as well as prevent IP addresses from being stored. The latter is particularly important if you’re concerned about PII and using our Browser JavaScript SDK.
-
-</Note>
-
-In addition, we provide an [_Advanced Data Scrubbing_](advanced-datascrubbing/) feature which allows more control over how filters are applied..
-
-## Removing Data
-
-If you’ve accidentally sent sensitive data to the server it’s likely you’re not going to want to leave it there. There are a few things to note in removal:
-
-- If you send it as a tagged value, removing the event is not enough. You can visit Project Settings and under Tags you’ll find a way to permanently remove any related data for a given tag.
-- While you cannot delete a single event, you can delete the issue the event is in by clicking the trash icon on the issue details page.
-- If you send sparse events to a project (potentially all of them), your only option is to remove the project and re-create it. Keep in mind this will revoke API credentials, so you likely want to do this in the reverse order.
