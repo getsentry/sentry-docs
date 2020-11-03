@@ -1,0 +1,73 @@
+---
+title: Issue Alerts
+sidebar_order: 2
+description: "Learn more about creating and managing Issue Alerts."
+---
+
+Create and manage Issue Alerts by navigating to Alerts and clicking the "Alert Rules" tab, where you'll see a list of all active rules and can add new rules or modify existing ones. Then, select your project and choose Issue Alert. Sentry users with admin permissions or higher can create alerts.
+
+## 1: Choose an Environment
+Specify which [environment(s)](/platforms/javascript/configuration/environments/) will use this particular alert rule. `Environment` is a Sentry supported tag that you can (and should) add to your SDK. Generally, the [tag](/platforms/javascript/enriching-events/tags/) accepts any value but is targeted to refer to your code deployments' naming convention such as _Development_, _Testing_, _Staging_, or _Production_. The environment drop-down list is populated with the environment tag values available in your [Event Stream](/product/accounts/quotas/manage-event-stream-guide/).
+
+Each environment typically necessitates different levels of urgency and workflow. The urgency and workflows you apply to Production alerts might differ from those you apply to alerts originating from your QA environment, for example.
+
+## 2: Give the Alert Rule a Name
+Manage your alert rule by giving it a descriptive name. A descriptive alert rule name specifies the team affected and the topic of the alert. For example, "Frontend Latency," "Backend Failure Rate," or "Billing Apdex."
+
+## 3: Set Conditions
+Conditions rely on event [tags](#event-tags), [attribute](#event-attributes) values, [event frequency](#event-frequency), and [issue state](/product/alerts-notifications/notifications/#issue-states) changes. Conditions are evaluated for an issue alert **each time** Sentry receives a new event, subject to [rate limits](/product/alerts-notifications/issue-alerts/#rate-limit). Customize your alerts by setting conditions for notifying the most relevant team members. Define who to notify about what error, when, and how, making sure errors are getting the proper audience's attention.
+
+Alert conditions have three parts:
+
+- ("When...") [Triggers](/product/alerts-notifications/issue-alerts/#triggers) specify what type of activity you'd like monitored.
+- ("If...") [Filters](/product/alerts-notifications/issue-alerts/#filters) help control noise by filtering down the triggered alerts to only those matching specific criteria.
+- ("Then...") [Actions](/product/alerts-notifications/issue-alerts/#actions) specify what should happen (where you'd like to channel this alert) when the alert is triggered and passes the filters.
+
+### Event Tags
+
+Tags are key-value pairs that Sentry assigns to each event. Some of the tags are added by default, depending on the platform and type of SDK. Developers can also add [Custom Tags through the SDK](/platforms/javascript/enriching-events/tags/). You can find the list of tags available in your project under **Settings > [organization] > [project] > Tags**. The list is an aggregation of all tag keys (default and custom) encountered in events in the specific project.
+
+Event tags are useful for various reasons. First, tags are indexed, which allows you to query your errors in the Sentry [Event Stream](/product/accounts/quotas/manage-event-stream-guide/) and [Issue Stream](/product/sentry-basics/guides/enrich-data/#filter-search--order-issues) based on explicit tag values. Also, adding precise [tags](/platforms/javascript/enriching-events/tags/) in your code will tell Sentry to notify you only when events with specific details occur.
+
+To create a rule based on a tag's value, select the condition: `An event's tags match {key} {match} {value}`.
+
+### Event Attributes
+
+The alert rule system in Sentry is capable of picking out attributes from an event's payload. There are 15 different kinds of attributes that a rule can target. Those include attributes like `Error Message`, `Error Type`, the `Platform`, `user.id`, `http.method`, `stacktrace.filename`, and others.
+
+To set an attribute-based condition in your rule, select the condition: `An event's {attribute} value {match} {value}`.
+
+### Event Frequency
+
+It’s often necessary to create a rule based on a frequency threshold to help determine the significance of an error’s impact and escalation priority. Among other use-cases, threshold conditions can be set in conjunction with tag and attribute based conditions to indicate a spike in errors in a certain environment, release, or page in your app or package in your code.
+
+Sentry provides two threshold conditions based either on the event occurrence or number of affected users:
+
+- `An issue is seen more than {value} times in {frequency}`
+- `An issue is seen by more than {value} users in {frequency}`
+
+### Issue State Changes
+
+Every Issue in Sentry has a defined state: _Unresolved_, _Resolved_, or _Ignored_. An issue changing states can trigger an alert. For example, if an alert is routed to Slack when an issue state changes from _Unresolved_ to _Resolved_, the relevant team members will receive a Slack alert. Read about [Issue States](/product/alerts-notifications/notifications/#issue-states) for more information.
+
+#### Unresolved Issue Reminder
+
+Sentry users can choose to ignore specific issues in their issue stream for a defined number of users, time thresholds, or occurrences. To set up a reminder that a previously _Ignored_ issue has become _Unresolved_ again, use the condition: `An issue changes state from ignored to unresolved`.
+
+#### Regression Alert
+
+When Sentry captures new event instances of an issue previously marked as _Resolved_, it will change the issue state back to _Unresolved_. By default, Sentry will apply the regression workflow and notify all project team members about the **Regression** through email. However, when it comes to regressions, you may want to put specific notifications in place. To set up a regression rule, use the condition: `An issue changes state from resolved to unresolved`.
+
+To handle regressions, set-up two regression alert rules to:
+
+- Notify your on-call team via [PagerDuty](/product/integrations/pagerduty/) when a regression is identified in your production environment.
+- Notify your engineering team via a [Slack](/product/integrations/slack/) channel when a regression is identified in any environment.
+
+## 4: Set a Rate Limit & Finalize
+1. The rate limit controls how often the alert rule can be triggered for a particular issue. The rate limit is set to perform the action according to one of these intervals:
+
+- minutes: 5, 10, 30, 60
+- hours: 3, 12, 24
+- one week or 30 days
+
+2. Click "Create Alert Rule".

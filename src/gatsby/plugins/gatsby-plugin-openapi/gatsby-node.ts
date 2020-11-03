@@ -126,3 +126,49 @@ export const sourceNodes = async (
     console.log(error);
   }
 };
+
+export const onCreateNode = async ({
+  node,
+  actions,
+  createNodeId,
+  createContentDigest,
+}) => {
+  if (node.internal.type === "openAPI") {
+    const descriptionNode = {
+      id: createNodeId(`openApiPathDescription-${node.id}`),
+      parent: node.id,
+      children: [],
+      internal: {
+        type: "openApiPathDescription",
+        content: node.path.description,
+        mediaType: "text/markdown",
+        contentDigest: createContentDigest(node.path.description),
+      },
+    };
+    actions.createNode(descriptionNode);
+    actions.createParentChildLink({
+      parent: node,
+      child: descriptionNode,
+    });
+
+    node.path.parameters.map((param, index) => {
+      const paramNode = {
+        id: createNodeId(`openApiPathParameter-${node.id}-${index}`),
+        parent: node.id,
+        children: [],
+        ...param,
+        internal: {
+          type: "openApiPathParameter",
+          content: param.description,
+          mediaType: "text/markdown",
+          contentDigest: createContentDigest(param),
+        },
+      };
+      actions.createNode(paramNode);
+      actions.createParentChildLink({
+        parent: node,
+        child: paramNode,
+      });
+    })
+  }
+};

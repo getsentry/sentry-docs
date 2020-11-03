@@ -18,29 +18,47 @@ yarn add @sentry/serverless
 ```
 
 You can use the AWS Lambda integration for the Node like this:
+
 ```javascript {tabTitle:async}
 const Sentry = require("@sentry/serverless");
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___"
+Sentry.AWSLambda.init({
+  dsn: '___PUBLIC_DSN___',
+  tracesSampleRate: 1.0,
 });
 
-const yourHandler = async (event, context) => {
+exports.handler = Sentry.AWSLambda.wrapHandler(async (event, context) => {
   // Your handler code
-};
-
-exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler);
+});
+```
 
 ```javascript {tabTitle:sync}
 const Sentry = require("@sentry/serverless");
 
-Sentry.init({
-  dsn: "___PUBLIC_DSN___"
+Sentry.AWSLambda.init({
+  dsn: '___PUBLIC_DSN___',
+  tracesSampleRate: 1.0,
 });
 
-const yourHandler = (event, context, callback) => {
+exports.handler = Sentry.AWSLambda.wrapHandler((event, context, callback) => {
   // Your handler code
-};
+});
+```
 
-exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler);
+<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
+
+## Enable Timeout Warning
+
+Sentry reports timeout warning when the function is within 500ms of it's execution time. You can turn off timeout warnings by setting `captureTimeoutWarning` to `false` in the handler options. To change timeout warning limit, assign a numeric value (in ms) to `timeoutWarningLimit`
+
+```javascript {tabTitle:captureTimeoutWarning}
+exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler, {
+  captureTimeoutWarning: false,
+});
+```
+
+```javascript {tabTitle:timeoutWarning}
+exports.handler = Sentry.AWSLambda.wrapHandler(yourHandler, {
+  timeoutWarningLimit: 50,
+});
 ```

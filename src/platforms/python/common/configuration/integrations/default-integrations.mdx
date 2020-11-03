@@ -1,6 +1,7 @@
 ---
 title: Default Integrations
 sidebar_order: 1
+description: "Learn about default integrations, what they do, and how they hook into the standard library or the interpreter itself."
 ---
 
 <!-- NOTE: Due to being in common, redirects are in vercel.json -->
@@ -95,12 +96,11 @@ Next are two code samples that demonstrate what boilerplate you would have to wr
 
 ```python
 import threading
-from sentry_sdk import Hub, init, configure_scope, capture_message
+from sentry_sdk import Hub, init, set_tag, capture_message
 
 init(...)
 
-with configure_scope() as scope:
-    scope.set_tag("mydata", 42)
+set_tag("mydata", 42)
 
 def run(thread_hub):
     with thread_hub:
@@ -121,13 +121,12 @@ tr.join()
 ```python
 import threading
 
-from sentry_sdk import Hub, init, configure_scope, capture_message
+from sentry_sdk import Hub, init, set_tag, capture_message
 from sentry_sdk.integrations.threading import ThreadingIntegration
 
 init(..., integrations=[ThreadingIntegration(propagate_hub=True)])
 
-with configure_scope() as scope:
-    scope.set_tag("mydata", 42)
+set_tag("mydata", 42)
 
 def run():
     capture_message("hi")  # event will have `mydata` tag attached

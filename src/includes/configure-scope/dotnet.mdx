@@ -12,6 +12,17 @@ SentrySdk.ConfigureScope(scope =>
 });
 ```
 
+```fsharp
+open Sentry
+
+SentrySdk.ConfigureScope (fun scope ->
+    scope.SetTag ("my-tag", "my value")
+    scope.User <- User (
+        Id = "42",
+        Email = "john.doe@example.com"
+    ()))
+```
+
 Or when an asynchronous call is required:
 
 ```csharp
@@ -19,4 +30,13 @@ await SentrySdk.ConfigureScopeAsync(async scope =>
 {
     scope.User = await _context.Users.FindAsync(id);
 });
+```
+
+```fsharp
+// Uses TaskBuilder.fs (https://www.nuget.org/packages/TaskBuilder.fs)
+SentrySdk.ConfigureScopeAsync (fun scope ->
+    task {
+        let! user = ctx.Users.FindAsync(id)
+        scope.User <- user
+    })
 ```

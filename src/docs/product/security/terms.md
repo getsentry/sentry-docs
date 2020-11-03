@@ -1,6 +1,7 @@
 ---
 title: "Terms of Service"
 sidebar_order: 1
+description: "Learn about Sentry's Terms of Service, Privacy Policy, Data Processing Addendum, and California Consumer Privacy Act Addendum. Sentry also provides a way to self-serve most legal and compliance documentation for your organization."
 ---
 
 Sentry provides a way to self-serve most legal and compliance documentation for your organization. You'll find these by navigating to _Your Organization's Settings_ > Legal & Compliance. When you are logged in to your Sentry account, you will be able to review and accept these agreements as an authorized individual on behalf of your organization.

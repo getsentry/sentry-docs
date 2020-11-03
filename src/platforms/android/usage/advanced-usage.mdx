@@ -23,8 +23,7 @@ compileOptions {
 
 // Add the Sentry Android SDK as a dependency
 dependencies {
-    // https://github.com/getsentry/sentry-java/releases
-    implementation 'io.sentry:sentry-android-core:{version}'
+    implementation 'io.sentry:sentry-android-core:3.1.0'
 }
 ```
 
@@ -163,7 +162,8 @@ when using a Android Gradle Plugin >= v3.6.0, and it needs to be enabled with th
 
 Apart from this, `sentry-native` also uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
 internally, and will therefore not work out of the box on newer Android devices which have their own conflicting pointer tagging.
-To prevent this, disable the [`allowNativeHeapPointerTagging`](https://developer.android.com/guide/topics/manifest/application-element#allowNativeHeapPointerTagging) configuration option.
+If you are using `sentry-android` version earlier than 3.1, you must manually disable the [`allowNativeHeapPointerTagging`](https://developer.android.com/guide/topics/manifest/application-element#allowNativeHeapPointerTagging) configuration option because `sentry-native` uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
+internally. As a result, this option will not work out of the box on newer Android devices that have their own conflicting pointer tagging. This is fixed in `sentry-android` versions 3.1 and above.
 
 **Example AndroidManifest.xml**:
 
@@ -240,9 +240,19 @@ sentry-cli login
 sentry-cli upload-dif -o {YOUR ORGANISATION} -p {PROJECT} build/intermediates/merged_native_libs/{buildVariant}
 ```
 
-The Sentry Gradle Plugin can be [configured](#gradle-configuration) to upload the debug symbols and sources automatically.
+The Sentry Gradle Plugin can be [configured](../../proguard/#gradle-configuration) to upload the debug symbols and sources automatically.
 
-## Manual Instrumentation
+#### Scope Synchronization
+
+If you want to set context data in the Java layer, then receive that context data when a native (C/C++) crash happens, you need to synchronize the Java `Scope` with the native `Scope`. This feature was introduced in version `3.0.0` of the Android SDK and requires an opt-in:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.ndk.scope-sync.enable" android:value="true" />
+</application>
+```
+
+## Manual Initialization
 
 Initialize the SDK manually when you need to provide additional configuration to the SDK that cannot be specified in the manifest.
 
