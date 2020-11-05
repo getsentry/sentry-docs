@@ -1,0 +1,130 @@
+---
+title: "Attachment Scrubbing"
+sidebar_order: 4
+keywords: ["pii", "gdpr", "personally identifiable data", "compliance", "minidump"]
+---
+
+
+Events can include attachments. In some cases, attachments may contain PII. [Minidumps](/platforms/native/guides/minidumps) are a common attachment type for native crash reports, and minidumps may contain PII in various sections of the file.
+
+
+## Data Scrubbing Methods in Attachments
+
+When scrubbing attachments, and especially minidump, it is often important to do so without destroying the original file format.
+We do this by providing some built-in knowledge of some file formats and provide you with custom [source-selectors](#attachment-source-selectors) which help you write scrubbing rules without damage to the file if used carefully.
+
+When modifying data in the file, Sentry cannot modify the length of the file. This has implications for how the [Methods](../advanced-datascrubbing/#methods) behave:
+
+- Any modification that results in replacement text **longer** than the original will be **truncated**.
+- Any modification that results in replacement text **shorter** than the original will be **padded** using `x` as the padding character.
+
+Here is how this works specifically for each method:
+
+- *Remove*: As the entire field is removed, it is essentially replaced with the padding character.
+- *Mask*: This behaves as normal, all data is replaced with `*` masking character.
+- *Hash*: Hashing happens as usual, however the **binary representation** of the match is hashed, regardless of the encoding in which the match was made.  The resulting hash is padded or truncated as described above.
+- *Replace*: This behaves like normal, with the replacement being padded or truncated as described above.
+
+
+## Attachment Source Selectors
+
+All attachments can be selected using the `$attachments` [Value Type](../advanced-datascrubbing/#value-types) selector at the root of the selector, followed by the specific filename.
+The filename must be in quotes to write a specific filename, but wildcards can also be used.
+
+For example, for the filename `minidump.dmp`, you can select all fields to be scrubbed using `$attachments.'minidump.dmp'.**`.
+To write the same using a wildcard to select all attachments, you would write `$attachments.*.**` or even simply `$attachments.**`.
+
+
+### Minidump Selectors
+
+A minidump is always an attachment, but it also has its own [value type](../advanced-datascrubbing/#value-types) of `$minidump`, which allows you to select all fields that can be scrubbed in a minidump using `$minidump.**`.
+This really is a shorthand for selecting the fields of all attachments that are minidumps: `$attachments.$minidump.**`.
+
+Our examples thus far have repeatedly referred to all fields in a minidump that can be scrubbed.
+For the purpose of PII scrubbing, we currently represent the minidump as a flat structure with the following fields:
+
+- The **stack memory**: These are memory regions in the minidump that are used as stack memory by a thread.
+  You can use the `stack_memory` path item to select these regions.
+  Generally they will contain binary data, so be careful with the [data types](../advanced-datascrubbing/#data-types) used to scrub these regions.
+
+  We **do not recommend** scrubbing stack memory since it is required by Sentry to build a readable stack trace for the event.
+  Inadvertently modifying the stack in an undesired way will make this process impossible and the event far less useful.
+  Because of this there is no way to select the stack memory by a more generic selector like a [value type](../advanced-datascrubbing/#value-types), you must select it explicitly e.g. using `stack_memory` or `$minidump.stack_memory` for it to be scrubbed.
+
+  In general, all [data types](../advanced-datascrubbing/#data-types) result in a textual regular expression match on some data.
+  For the stack, this regular expression is matched as a binary UTF-8 regular expression so that any UTF-8 embedded in the binary data will be matched.
+  Additionally the regular expression is applied to any valid UTF-16LE strings found within the binary data.
+
+- The **heap memory**: This is considered to be any memory region which is not used as stack memory.
+  This means these memory regions could include other non-stack regions, such as files that are mapped to the process' memory using  `mmap`.
+  All these memory regions can be selected using the `heap_memory` path item selector.
+  Additionally these regions also have `$binary` as a [value type](../advanced-datascrubbing/#value-types) selector, allowing you to write more generic rules.
+
+  Since Sentry does not require heap memory for extracting stack traces, it is much safer to modify these memory regions.
+
+  Similar to stack memory, all [data types](../advanced-datascrubbing/#data-types) are matched as a binary UTF-8 regular expression as well as in any valid UTF-16LE strings found within the binary memory region.
+
+- A minidump also contains a list of **code modules**,  which are loaded at the time the minidump is created.
+  This module list contains information about each module, including two fields that may contain file paths: the path of the code file and the path of the associated debug file.
+
+  Since these fields are pathnames, they have the potential to contain a user's home directory.
+  As a result, it makes sense to apply the *Usernames in filepaths* [data type](../advanced-datascrubbing/#data-types) to these fields.
+  The fields can be selected individually by their respective field names:
+
+  * `code_file`
+  * `debug_file`
+
+  Both fields have a [value type](../advanced-datascrubbing/#value-types) of `$string`. Any modification will exclude the basename of the pathnames to ensure the event processing pipeline can still operate correctly on the minidump.
+
+  This example is how the UI displays a rule to scrub these fields:
+
+  ```
+  [Remove] [Usernames in filepaths] from [$minidump.code_file || $minidump.debug_file]
+  ```
+
+  As this rule is more generic, it is also possible to apply it more generically using the [value type](../advanced-datascrubbing/#value-types):
+
+  ```
+  [Remove] [Usernames in filepaths] from [$string]
+  ```
+
+- Linux minidumps can contain both the **command line** and **environment variables**, which are included as copies of the files in `/proc/$pid/cmdline` and `/proc/$pid/environ`. Since these are direct copies of these files, they have this file format: NULL-separated records of `argv` arguments or `VAR=val` pairs respectively.
+
+  To select these, you can currently use only their [value types](../advanced-datascrubbing/#value-types): `$binary`, which will be successful because these are currently the only fields in the minidump with a binary value type.
+
+  This example is how the UI displays a rule to scrub the home directory from the `$HOME` env var:
+
+  ```
+  [Remove] [HOME=[^\u0000+]\u0000] from [$minidump.$binary]
+  ```
+
+  Note the syntax to denote a string delimited by NULL in the regular expression: any sequence of characters not containing NULL, but ending in NULL. Here, NULL itself is represented by its unicode codepoint: `\u0000`.
+
+
+## Malformed minidumps
+
+If a minidump fails to be parsed because it is malformed it could still contain PII.
+For this reason the minidump attachment is also scrubbed as one binary field if it can not be parsed.
+
+In this case the entire attachment can be selected as normal using a filename selector or a wildcard: `$attachments.'minidump.dmp'` or `$attachments.*`.
+Additionally since the entire attachment is now a single field it can be selected using the `$binary` [value type](../advanced-datascrubbing/#value-types).
+
+
+## Example
+
+A process usually contains a struct with it's environment variables early in the stack memory, in C semantics this can often be consumed by the process using the `char *envp[]` parameter to `main()`.
+The environment often contains `$HOME` which contains the username which could be PII.
+This block can occur in a number of places in a minidump:
+
+- Early on the stack, as passed via `**envp`.
+- In the `/proc/$pid/environ` block, which is an exact copy of the data on the stack.
+- As a raw attachment, if the minidump failed to parse.
+
+A rule could be written to scrub the `$HOME` environment variable in all these locations as:
+
+```
+[Remove] [HOME=[^\u0000+]\u0000] from [stack_memory || $binary]
+```
+
+Note that `stack_memory` needs to be explicitly used as it can not be addressed by a more general rule because scrubbing this field can easily break minidump processing.
+However the last two cases are covered together with `$binary` which will match both `$attachment.$minidump.$binary` (the `environ` file) and `$attachment.'minidump.dmp'`.
