@@ -5,7 +5,7 @@ support_level: production
 type: framework
 ---
 
-The Pyramid integration adds support for the [Pyramid Web
+The Pyramid integration adds support for the [Pyramid Web Framework](https://trypyramid.com/). It requires Pyramid 1.6 or later.
 Framework](https://trypyramid.com/).
 
 1. Install `sentry-sdk` from PyPI:
