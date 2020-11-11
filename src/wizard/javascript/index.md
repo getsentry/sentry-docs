@@ -5,17 +5,18 @@ support_level: production
 type: language
 ---
 
-The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
+Install our JavaScript browser SDK using either `yarn` or `npm`:
 
-```html
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
+```bash {tabTitle: ESM}
+# Using yarn
+yarn add @sentry/browser @sentry/tracing
+# Using npm
+npm install --save @sentry/browser @sentry/tracing
 ```
 
-You should `init` the Sentry Browser SDK as soon as possible during your page load:
+We also support alternate [installation methods](/platforms/javascript/install/).
+
+`init` the Sentry Browser SDK as soon as possible during your page load:
 
 ```javascript
 import * as Sentry from "@sentry/browser";
@@ -27,20 +28,15 @@ Sentry.init({
     new Integrations.BrowserTracing(),
   ],
 
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
   tracesSampleRate: 1.0,
 });
 ```
+We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/performance/sampling/).
 
-The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
-
-One way to verify your setup is by intentionally causing an error that breaks your application.
-
-Calling an undefined function will throw an exception:
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
 
 ```js
 myUndefinedFunction();
 ```
 
-You can verify the function caused an error by checking your browser console.
+Sentry will send an email alerting you to this intentional error; follow the instructions in the email to resolve the error.
