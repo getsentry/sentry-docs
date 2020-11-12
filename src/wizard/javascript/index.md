@@ -39,4 +39,6 @@ This snippet includes an intentional error, so you can test that everything is w
 myUndefinedFunction();
 ```
 
-Sentry will send an email alerting you to this intentional error; follow the instructions in the email to resolve the error.
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
+
+If you're an existing user and have disabled alerts, you won't receive this email.  
