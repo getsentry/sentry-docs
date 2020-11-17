@@ -62,8 +62,8 @@ tree as well as the unit of reporting to Sentry.
   - When a `Span` is created, set the `startTimestamp` to the current time
   - `SpanContext` is the attribute collection for a `Span` (Can be an implementation detail)
   - `Span` should have a method `startChild` which creates a new span with the current span's id as the new span's `parentSpanId` and the current span's `sampled` value copied over to the new span's `sampled` property
-  - `Span` should have a method called `toSentryTrace` which returns a string `sentry-trace` that could be sent as a header
-  - Similar `SpanContext` should have a static method called `fromSentryTrace` which prefills a `SpanContext` with data received from a `sentry-trace` string
+  - `Span` should have a method called `toSentryTrace` which returns a string that could be sent as a header called `sentry-trace`.
+  - `Span` should have a method called `iterHeaders` (adapt to platform's naming conventions) that returns an iterable or map of header names and values. This is a thin wrapper containing `return {"sentry-trace": toSentryTrace()}` right now. See `continueFromHeaders` as to why this exists and should be preferred when writing integrations.
 
 - `Transaction` Interface
 
@@ -72,6 +72,9 @@ tree as well as the unit of reporting to Sentry.
   - `Transaction` receives a `TransactionContext` on creation (new property vs. `SpanContext` is `name`)
   - Since a `Transaction` inherits a `Span` it has all functions available and can be interacted with like it was a `Span`
   - A transaction is either sampled (`sampled = true`) or unsampled (`sampled = false`), a decision which is either inherited or set once during the transaction's lifetime, and in either case is propagated to all children. Unsampled transactions should not be sent to Sentry.
+  - `TransactionContext` should have a static/ctor method called `fromSentryTrace` which prefills a `TransactionContext` with data received from a `sentry-trace` header value
+  - `TransactionContext` should have a static/ctor method called `continueFromHeaders(headerMap)` which is really just a thin wrapper around `fromSentryTrace(headerMap.get("sentry-trace"))` right now. This should be preferred by integration/framework-sdk authors over `fromSentryTrace` as it hides the exact header names used deeper in the core sdk, and leaves opportunity for using additional headers (from the W3C) in the future without changing all integrations.
+
 
 - `Span.finish()`
 
