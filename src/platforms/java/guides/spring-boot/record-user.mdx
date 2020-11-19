@@ -1,0 +1,54 @@
+---
+title: Record User Information
+sidebar_order: 6
+description: "Learn about how you can record or customize the capture of user information."
+---
+
+Record user information from an HTTP request or by registering a Spring bean for custom user information capture.
+
+## Recording User Information From HTTP Request
+
+To record the user's IP address and `Principal#name` as the username, set the personal information flag to `true`.
+
+```properties {tabTitle:application.properties}
+sentry.send-default-pii=true
+```
+
+```yaml {tabTitle:application.yml}
+sentry:
+  send-default-pii: true
+```
+
+## Recording Custom User Information
+
+To record custom user information, you can register a bean that implements `SentryUserProvider` interface.
+
+```java
+import org.springframework.stereotype.Component;
+import io.sentry.core.protocol.User;
+import io.sentry.spring.SentryUserProvider;
+
+@Component
+class CustomSentryUserProvider implements SentryUserProvider {
+    public User provideUser() {
+        User user = User();
+        // ... set user information
+        return user
+    }
+}
+```
+
+```kotlin
+import org.springframework.stereotype.Component
+import io.sentry.core.protocol.User
+import io.sentry.spring.SentryUserProvider
+
+@Component
+class CustomSentryUserProvider : SentryUserProvider {
+    override fun provideUser(): User? {
+        val user = User()
+        // ... set user information
+        return user
+    }
+}
+```
