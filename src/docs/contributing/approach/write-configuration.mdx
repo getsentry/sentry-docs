@@ -1,0 +1,95 @@
+---
+title: How to Write - Configuration
+noindex: true
+sidebar_order: 5
+---
+
+The Configuration section of the content covers, unsurprisingly, how customers can configure an SDK. In most cases, the SDK will adopt the common content, which is stored in `/platforms/common/configuration/` - feel free to peruse the files in that directory to help answer any questions.
+
+<Alert >
+
+DO NOT change the common content. That change will ripple across all SDKs that rely on the common content. Instead, open an issue on  GitHub with questions/suggestions.
+
+</Alert >
+
+Most of these pages are pretty self-evident, so only basic information is provided. But please ask questions if any questions arise by opening an issue on GitHub.
+
+## Start Here
+
+Determine if the page applies:
+
+- If the content *does not apply*, add the SDK to `notSupported` list in the frontmatter of the file. This will turn off the display of the content for this SDK.
+- If the content *does apply*, add the `include` file to the correct directory as noted for each page. If the code sample is not provided, the page will display a big gray box requesting that customers open an issue for the missing sample.
+
+### Basic Options
+
+This file is `options.mdx`. It explains all the configuration options. And by that, we do mean *all*. It is the trickiest file to manage, because it uses a variety of techniques to determine whether to display the content.
+
+To develop content for this file:
+
+1. Create the `configuration/config-intro/` statement, which covers how options can be set.
+2. For individual options that the SDK does NOT support, add the name of the SDK to the `ConfigKey` statement for that option. This will prevent that option from displaying for this SDK. For example:
+
+    `<ConfigKey name="debug" notSupported={["php"]}>`
+
+    Alternately, for individual options that the SDK DOES support, add the name of the SDK to `ConfigKey` statement for that option, which ensures the option displays. For example:
+
+    `<ConfigKey name="send-default-pii" supported={["dotnet", "javascript", "node", "react-native", "python", "java", "php", "rust"]}>`
+
+3. For a grouping of options that the SDK DOES support, add the name of the SDK to the `PlatformSection` statement for those options, which ensures the option displays. For example:
+
+    `<PlatformSection supported={["javascript", "python", "node"]}>`
+
+### Releases & Health
+
+This file is `releases.mdx`. It explains how to configure the SDK to tell Sentry about releases. Provide a code sample for this SDK to set a release, then add the code sample to this directory:
+
+- `/src/includes/set-release/`
+
+A few nuances:
+
+- If adding an SDK related to JavaScript, update the source maps-related paragraph, as appropriate, in the `PlatformSection supported` statement.
+- For SDKs that support Release Health, we control the display of content with a `PlatformSection supported` statement. For these SDKs, provide the following code samples:
+    - Session tracking, stored in `/src/includes/configuration/session-tracking-interval`
+    - Opt out of auto session tracking, stored in `/src/includes/configuration/auto-session-tracking`
+
+### Environments
+
+This file is `environments.mdx`. It explains how to configure the SDK to set an environment.
+
+Add the code sample to this directory:
+
+- `/src/includes/set-environment/`
+
+### Filtering and Sampling Events
+
+This file is `filtering.mdx`. It explains how to configure the SDK to filter and sample events sent to Sentry. Add code samples to these directories:
+
+- `/src/includes/configuration/before-send/`
+- `/src/includes/configuration/before-send-hint/`
+- `/src/includes/configuration/before-send-fingerprint/`
+- `/src/includes/configuration/decluttering/`
+- `/src/includes/configuration/sample-rate/`
+
+If the SDK supports filtering transaction events in performance monitoring, add it to the list of supported SDKs/platforms immediately above "Filtering Transaction Events", then add code samples to these directories:
+
+- `/src/includes/performance/traces-sampler-as-filter/`
+
+If the SDK supports sampling transaction events in performance monitoring, add it to the list of supported SDKs/platforms immediately above "Filtering Transaction Events", then add code samples to these directories:
+
+- `/src/includes/performance/traces-sample-rate/`
+- `/src/includes/performance/traces-sampler-as-sampler/`
+
+### Shutdown and Draining
+
+This file is `draining.mdx`. Add the drain example content to this directory:
+
+- `/src/includes/configuration/drain-example/`
+
+### Integrations
+
+This content is developed at the primary SDK/platform level. It resides in `/platforms/<SDK>/common/configuration/integrations/` and is typically composed of the following:
+
+1. Default Integrations - `default.mdx` - system integrations are enabled by default. We document them so customers can both be aware of what they do and disable them if they cause issues.
+2. Pluggable Integrations - `plugin.mdx` - pluggable integrations are snippets of code that augment functionality for specific applications and/or frameworks. We document them so customers can see what they do and that they can be enabled.
+3. Custom Integrations - `custom.mdx` - explains how to enable a custom integration.

@@ -1,9 +1,9 @@
 import axios from "axios";
 import { promises as fs } from "fs";
 
-// SENTRY_API_SCHEMA_SHA is used in the bump-openapi GHA workflow.
-// DO NOT change variable name unless you change it in the bump-openapi GHA workflow.
-const SENTRY_API_SCHEMA_SHA = "20c924b1bb3ead4c76b540c075f59733590c0c3a";
+// SENTRY_API_SCHEMA_SHA is used in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
+// DO NOT change variable name unless you change it in the sentry-docs GHA workflow in getsentry/sentry-api-schema.
+const SENTRY_API_SCHEMA_SHA = "d1f1df803df3c207bf267dd8fcb3e76226f53291"
 
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";

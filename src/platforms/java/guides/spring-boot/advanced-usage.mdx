@@ -1,0 +1,85 @@
+---
+title: Advanced Usage
+sidebar_order: 6
+description: "Learn about managing the release ID and customizing Spring Boot to your organization's needs."
+---
+
+Sentry's Spring Boot integration automatically includes the release and sets options as described in the following sections.
+
+## Using Git Commit ID As The Release
+
+When Spring Boot is [configured to generate Git information](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto-git-info) every event triggered by Sentry will have a `release` field set to the current Git commit ID that will enable [Monitor Release Health](/product/releases/health/) Sentry feature.
+
+This feature can be disabled in `application.properties` file:
+
+```properties {filename:application.properties}
+sentry.use-git-commit-id-as-release=false
+```
+
+```yaml {filename:application.yml}
+sentry:
+  use-git-commit-id-as-release: false
+```
+
+## Registering Custom Event Processor
+
+Any Spring bean implementing `EventProcessor` will be automatically set on `SentryOptions` during Sentry SDK auto-configuration. There can be multiple event processors registered in single application.
+
+```java
+import io.sentry.SentryEvent;
+import io.sentry.EventProcessor;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomEventProcessor implements EventProcessor {
+  @Override
+  public SentryEvent process(SentryEvent event, Object hint) {
+    // modify the event or return null to drop it
+    return event;
+  }
+}
+```
+
+## Registering Custom Before Send Callback
+
+Any Spring bean implementing the `BeforeSendCallback` will be automatically set on `SentryOptions` during the SDK's auto-configuration. Note that there can be only a single bean set this way.
+
+```java
+import io.sentry.SentryEvent;
+import io.sentry.SentryOptions;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeSendCallback implements SentryOptions.BeforeSendCallback {
+  @Override
+  public SentryEvent execute(SentryEvent event, Object hint) {
+    // Example: Never send server name in events
+    event.setServerName(null);
+    return event;
+  }
+}
+```
+
+## Registering Custom Before Breadcrumb Callback
+
+Any Spring bean implementing the `BeforeBreadcrumbCallback` will be automatically set on `SentryOptions` during the SDK's auto-configuration. Note that there can be only a single bean set this way.
+
+```java
+import io.sentry.Breadcrumb;
+import io.sentry.SentryOptions;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CustomBeforeBreadcrumbCallback implements SentryOptions.BeforeBreadcrumbCallback {
+
+  @Override
+  public Breadcrumb execute(Breadcrumb breadcrumb, Object hint) {
+    // Don't add breadcrumbs with message containing:
+    if (breadcrumb.getMessage() != null
+      && breadcrumb.getMessage().contains("bad breadcrumb")) {
+      return null;
+    }
+    return breadcrumb;
+  }
+}
+```
