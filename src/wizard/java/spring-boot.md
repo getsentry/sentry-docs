@@ -15,12 +15,12 @@ Install the SDK via Maven or Gradle:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring-boot-starter</artifactId>
-    <version>{{ packages.version('sentry.java', '3.1.1') }}</version>
+    <version>{{ packages.version('sentry.java', '3.2.0') }}</version>
 </dependency>
 ```
 
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java', '3.1.1') }}'
+implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java', '3.2.0') }}'
 ```
 
 ### Configure
@@ -46,12 +46,12 @@ Add a dependency to `sentry-logback` module and Sentry Spring Boot Starter will 
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-logback</artifactId>
-    <version>{{ packages.version('sentry.java', '3.1.1') }}</version>
+    <version>{{ packages.version('sentry.java', '3.2.0') }}</version>
 </dependency>
 ```
 
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '3.1.1') }}'
+implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '3.2.0') }}'
 ```
 
 ### Send First Event
