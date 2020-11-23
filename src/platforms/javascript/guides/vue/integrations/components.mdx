@@ -53,6 +53,9 @@ Or, you can choose more granularity:
 ```js
 Sentry.init({
   Vue,
+  integrations: [
+    new Integrations.BrowserTracing(),
+  ],
   tracingOptions: {
     trackComponents: [
       "App",
@@ -70,6 +73,9 @@ If you want to know if some components are, for example, removed during the init
 ```js
 Sentry.init({
   Vue,
+  integrations: [
+    new Integrations.BrowserTracing(),
+  ],
   tracingOptions: {
     trackComponents: [
       "App",
@@ -89,6 +95,9 @@ Every new rendering cycle is debouncing the timeout, and it starts counting from
 ```js
 Sentry.init({
   Vue,
+  integrations: [
+    new Integrations.BrowserTracing(),
+  ],
   tracingOptions: {
     trackComponents: true,
     timeout: 4000,
@@ -119,4 +128,58 @@ tracingOptions: {
    */
   hooks: string[];
 }
+```
+
+### Using Vue Router
+
+If you are using Vue Router, you can use our provided integration for better transaction names. Here is a full example how to use it:
+
+```js
+import Vue from 'vue'
+import App from './App'
+import * as Sentry from '@sentry/vue'
+import { Integrations } from '@sentry/tracing'
+import Router from 'vue-router'
+import HelloWorld from '@/components/HelloWorld'
+
+Vue.use(Router)
+
+const Foo = { template: '<div>foo</div>' }
+const Bar = { template: '<div>bar</div>' }
+
+const router = new Router({
+  routes: [
+    {
+      path: '/',
+      name: 'HelloWorld',
+      component: HelloWorld
+    },
+    { path: '/foo/:id', component: Foo },
+    { path: '/bar', component: Bar }
+  ]
+})
+
+Vue.config.productionTip = false
+
+Sentry.init({
+  Vue: Vue,
+  dsn: '___PUBLIC_DSN___',
+  tracesSampleRate: 1.0,
+  integrations: [
+    new Integrations.BrowserTracing({
+      routingInstrumentation: Sentry.vueRouterInstrumentation(router)
+    })
+  ],
+  tracingOptions: {
+    trackComponents: true
+  }
+})
+
+/* eslint-disable no-new */
+new Vue({
+  el: '#app',
+  router,
+  components: { App },
+  template: '<App/>'
+})
 ```
