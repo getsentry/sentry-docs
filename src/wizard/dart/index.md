@@ -1,11 +1,11 @@
 ---
-name: Flutter
-doc_link: https://docs.sentry.io/platforms/flutter/
+name: Dart
+doc_link: https://docs.sentry.io/platforms/dart/
 support_level: production
 type: framework
 ---
 
-Get the SDK from [pub.dev](https://pub.dev/packages/sentry_flutter) by adding the following to your `pubspec.yaml`:
+Get the SDK from [pub.dev](https://pub.dev/packages/sentry) by adding the following to your `pubspec.yaml`:
 
 <PlatformContent includePath="getting-started-install" />
 
