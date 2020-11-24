@@ -11,6 +11,17 @@ sentry:
   dsn: ___PUBLIC_DSN___
 ```
 
+By default, every unhandled exception is sent to Sentry, even those captured with `@ExceptionHandler` annotated methods. This behavior can be tuned through configuring `sentry.exception-resolver-order` property. For example, setting it to `2147483647` (the value of `org.springframework.core.Ordered#LOWEST_PRECEDENCE`) makes sure only exceptions that have not been handled by exception resolvers with higher order are sent to Sentry.
+
+```properties {filename:application.properties}
+sentry.exception-resolver-order=2147483647
+```
+
+```yaml {filename:application.yml}
+sentry:
+  exception-resolver-order: 2147483647
+```
+
 We recommend using Sentry's Spring Boot integration with one of the [logging framework integrations](logging-frameworks/) as they work together seamlessly. To use Sentry **without** Spring Boot, we recommend using the [Sentry Spring integration](/platforms/java/guides/spring/).
 
 Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](usage/), to record breadcrumbs, set the current user, or manually send events, for example.

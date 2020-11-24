@@ -22,3 +22,27 @@ class SentryConfiguration
 The DSN can be also provided through the system property `sentry.dsn`, environment variable `SENTRY_DSN` or the `dsn` property in `sentry.properties` file. [See the configuration page](/platforms/java/configuration/) for more details on external configuration.
 
 Once this integration is configured you can _also_ use Sentry’s static API, [as shown on the usage page](usage/), to record breadcrumbs, set the current user, or manually send events, for example.
+
+By default, every unhandled exception is sent to Sentry, even those captured with `@ExceptionHandler` annotated methods. This behavior can be tuned through configuring `exceptionResolverOrder` property on `@EnableSentry` annotation. For example, setting it to `Ordered.LOWEST_PRECEDENCE` makes sure only exceptions that have not been handled by exception resolvers with higher order are sent to Sentry.
+
+```java {tabTitle:Java}
+import io.sentry.spring.EnableSentry;
+import org.springframework.core.Ordered;
+// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
+// project/dashboard
+@EnableSentry(
+  dsn = "___PUBLIC_DSN___",
+  exceptionResolverOrder = Ordered.LOWEST_PRECEDENCE
+)
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.spring.EnableSentry
+import org.springframework.core.Ordered;
+// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
+// project/dashboard
+@EnableSentry(
+  dsn = "___PUBLIC_DSN___",
+  exceptionResolverOrder = Ordered.LOWEST_PRECEDENCE
+)
+```

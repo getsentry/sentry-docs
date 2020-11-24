@@ -36,6 +36,15 @@ Sentry.init(options -> {
 });
 ```
 
+When multiple configuration ways are used, options are resolved in the following order:
+
+- system properties
+- environment variables
+- `sentry.properties` file which location is resolved from the system property `sentry.properties.file`
+- `sentry.properties` file which location is resolved from the environment `SENTRY_PROPERTIES_FILE`
+- `sentry.properties` located in the root of the classpath
+- options provided in Java code
+
 ## Configuration methods {#configuration-methods}
 
 There are multiple ways to configure the Java SDK, but all of them take the same options. See below for how to use each configuration method and how the option names might differ between them.
@@ -79,20 +88,6 @@ System Environment Variable option names require that you replace the `.` with `
 ```bash
 SENTRY_ENVIRONMENT=production java -jar app.jar
 ```
-
-### Configuration via code
-
-The DSN itself can also be configured directly in code:
-
-```java
-import io.sentry.Sentry;
-
-Sentry.init(options -> {
-    options.setDsn("___PUBLIC_DSN___");
-});
-```
-
-By passing a hardcoded DSN you are no longer able to override the DSN at runtime via Java System Properties or System Environment Variables.
 
 ## Options
 
@@ -170,7 +165,10 @@ See [Java Networking and Proxies](http://docs.oracle.com/javase/8/docs/technotes
 
 Alternatively, using Sentry options (only affects the Sentry HTTP client, useful inside shared application containers),
 
-```
-http.proxy.host=proxy.example.com
-http.proxy.port=8080
+```properties
+http.host=proxy.example.com
+# optional
+http.port=8080 # default 80
+http.user=proxy-user
+http.pass=proxy-password
 ```
