@@ -17,7 +17,6 @@ Capture a test exception:
 
 <PlatformContent includePath="getting-started-verify" />
 
-### Resources
+### Next steps
 
-Flutter has extensive documentation, including a
-[cookbook on integrating with a Sentry version earlier than 4.0.0](https://flutter.dev/docs/cookbook/maintenance/error-reporting).
+Check out the [Dart documentation](http://docs.sentry.io/platforms/dart/) to learn about configuration options available.
