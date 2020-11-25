@@ -58,13 +58,13 @@ public class BadController
     [HttpGet]
     public string Get() => throw null;
 }
-``
+```
 
 And make a request to that lambda:
 
 ```sh
 curl -X GET -I https://url.of.server.aws/api/bad
-``
+```
 
 
 Check out the [Sentry ASP.NET Core](/platforms/dotnet/guides/aspnetcore/) documentation for the complete set of options.
