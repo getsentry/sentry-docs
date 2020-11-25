@@ -16,7 +16,3 @@ Import `Sentry` and initialize it:
 Capture a test exception:
 
 <PlatformContent includePath="getting-started-verify" />
-
-### Next steps
-
-Check out the [Flutter documentation](http://docs.sentry.io/platforms/flutter/) to learn about configuration options available.
