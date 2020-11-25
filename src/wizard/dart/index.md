@@ -19,4 +19,4 @@ Capture a test exception:
 
 ### Next steps
 
-Check out the [Dart documentation](http://docs.sentry.io/platforms/dart/) to learn about configuration options available.
+Check out the [Dart documentation](https://sentry-docs-git-ref-flutter-v4.sentry.dev/platforms/dart/) to learn about configuration options available.
