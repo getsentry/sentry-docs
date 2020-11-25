@@ -48,4 +48,24 @@ public class LambdaEntryPoint : Amazon.Lambda.AspNetCoreServer.APIGatewayProxyFu
 }
 ```
 
+### Verification
+
+You can verify your setup by throwing an exception from a function:
+
+```csharp
+[Route("api/[controller]")]
+public class BadController
+{
+    [HttpGet]
+    public string Get() => throw null;
+}
+``
+
+And make a request to that lambda:
+
+```sh
+curl -X GET -I https://url.of.server.aws/api/bad
+``
+
+
 Check out the [Sentry ASP.NET Core](/platforms/dotnet/guides/aspnetcore/) documentation for the complete set of options.
