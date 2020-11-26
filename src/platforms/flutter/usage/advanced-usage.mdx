@@ -1,0 +1,42 @@
+---
+title: Advanced Usage
+sidebar_order: 2
+---
+
+## Requirements
+
+For the usage of the Flutter SDK, the minimal required Dart SDK version is `2.8.0` and Flutter SDK version is `1.17.0`
+
+## Uploading Debug Symbols (Android and iOS)
+
+- [iOS dSYM files](/platforms/apple/dsym/)
+- [Android NDK](/product/cli/dif/#uploading-files), You've to do it manually, Do not use the `uploadNativeSymbols` flag from the [Sentry Gradle Plugin](/platforms/android/proguard/), it's not supported yet.
+- [Android Proguard/R8 mapping file](/platforms/android/proguard/)
+- [Source maps for Flutter Web](/product/cli/releases/#managing-release-artifacts)
+
+## Known limitations
+
+- Flutter `split-debug-info` flag isn't supported yet, if this feature is enabled, Dart stack traces are not useful
+- Flutter `obfuscate` flag isn't supported yet, if this feature is enabled, Dart stack traces are not useful
+
+## Tips for catching errors
+
+- Use a `try/catch` block
+- Use a `catchError` block for `Futures`
+- The SDK already runs your init `callback` on an error handler, e.g. using `runZonedGuarded`, are captured automatically
+- Flutter-specific errors (such as layout failures), e.g. using `FlutterError.onError`, are captured automatically
+- `Isolate` errors on the `current` Isolate which is the equivalent of a main/UI thread, e.g. using `Isolate.current.addErrorListener`, are captured automatically (Only for non-Web Apps).
+- For your own `Isolates`, add an `ErrorListener` and call `Sentry.captureException`
+
+## Caveat
+
+Always prefer the `SentryFlutter.init(...)` instead of `Sentry.init(...)` as it adds the Flutter integrations on top of the Dart SDK.
+
+## Advanced Usage (Android and iOS)
+
+- [iOS Advanced Usage](/platforms/apple/usage/)
+- [Android Advanced Usage](/platforms/android/usage/advanced-usage/)
+
+## Dart environment variables
+
+- You can configure the `SENTRY_DSN`, `SENTRY_RELEASE`, `SENTRY_DIST` and `SENTRY_ENVIRONMENT` via the Dart environment variables passing the `--dart-define` flag to the compiler.
