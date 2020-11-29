@@ -1,11 +1,18 @@
-Add `use Raven::Rack` to your `config.ru` or other rackup file:
+Add `use Sentry::Rack::CaptureException` to your `config.ru` or other rackup file:
 
 ```ruby {filename:config.ru}
-require 'raven'
+require 'sentry-ruby'
 
-Raven.configure do |config|
+Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
+  # if you want to activate performance monitoring, you also need to set either one of these options
+  #
+  # config.traces_sample_rate = 0.5
+  # config.traces_sampler = lambda do |context|
+  #   true
+  # end
 end
 
-use Raven::Rack
+use Sentry::Rack::Tracing # if you want to have performance monitoring
+use Sentry::Rack::CaptureException
 ```

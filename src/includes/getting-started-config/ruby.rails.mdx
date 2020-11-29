@@ -1,21 +1,21 @@
+Add `sentry-ruby` and `sentry-rails` to your `Gemfile`:
+
+```ruby
+gem "sentry-ruby"
+gem "sentry-rails"
+```
+
 Initialize the SDK within your `config/application.rb`:
 
 ```ruby {filename:config/application.rb}
-Raven.configure do |config|
+Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
-end
-```
-
-If you have added items to [Rails’ log filtering](https://guides.rubyonrails.org/action_controller_overview.html#parameters-filtering), you can also make sure that those items are not sent to Sentry:
-
-```ruby
-# in your application.rb:
-config.filter_parameters << :password
-
-# in an initializer, like sentry.rb
-Raven.configure do |config|
-  config.dsn = '___PUBLIC_DSN___'
-
-  config.sanitize_fields = Rails.application.config.filter_parameters.map(&:to_s)
+  config.breadcrumbs_logger = [:active_support_logger]
+  # if you want to activate performance monitoring, you also need to set either one of these options
+  #
+  # config.traces_sample_rate = 0.5
+  # config.traces_sampler = lambda do |context|
+  #   true
+  # end
 end
 ```
