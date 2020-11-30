@@ -1,0 +1,27 @@
+```java
+import io.sentry.Sentry;
+
+Sentry.init(
+  options -> {
+    options.setDsn("___PUBLIC_DSN___");
+    // To set a uniform sample rate
+    options.setTracesSampleRate(1.0);
+    // OR: Determine traces sample rate based on the sampling context
+    options.setTracesSampler(
+      context -> {
+        if ("/payment".equals(context.get("url"))) {
+          // These are important - take a big sample
+          return 0.5;
+        } else if ("/search".equals(context.get("url"))) {
+          // Search is less important and happen much more frequently - only take 1%
+          return 0.01;
+        } else if ("/health".equals(context.get("url"))) {
+          // The health check endpoint is just noise - drop all transactions
+          return 0;
+        } else {
+          // Default sample rate
+          return 0.1;
+        }
+      });
+  });
+```
