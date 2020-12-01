@@ -1,0 +1,144 @@
+---
+title: WebAssembly
+description: "Learn about how Sentry processes WASM crash reports."
+---
+
+WebAssembly is a technology that allows you to compile native code into a platform
+independent bytecode format.  This for instance permits you to run native C, C++ or
+Rust code in a web browser.
+
+**This feature is still rough around the edges for a range of different reasons.**
+
+Debugging support for WebAssembly is an ongoing effort by the WebAssembly community
+and support for it in Sentry is limited by what's possible in that ecosystem.
+
+<Note>
+
+Want to be an early adopter but you're running into issues?  Please reach out to
+Support or the Forums, we would love to talk.
+
+</Note>
+
+## Requirements
+
+As of now it's possible to get crash reports uploaded to Sentry if your compiler can
+output [WASM DWARF debug information](https://yurydelendik.github.io/webassembly-dwarf/)
+alongside the binary code.  In addition we require you to upload your WebAssembly
+debug information files to Sentry or use a symbol server the same way you
+would do that for our other platforms.
+
+For this process to work we require debug information files to be augmented by a
+`build_id` custom section.  We provide a tool called [wasm-split](https://github.com/getsentry/symbolicator/tree/master/wasm-split)
+which can be used to automatically add this section if missing and to split off
+the debug information so you don't need to ship this to customers.
+
+## Using wasm-split
+
+Once your compiler has produced a `.wasm` file you can use our [wasm-split](https://github.com/getsentry/symbolicator/tree/master/wasm-split)
+tool to add a `build_id` (if missing) and to split the file into a debug information
+file and a final stripped `.wasm` file without debug information:
+
+```shell
+wasm-split /path/to/file.wasm -d /path/to/file.debug.wasm --strip
+```
+
+This modifies the `file.wasm` in place to add the `build_id` and then removes all
+debug information, but puts that into a `file.debug.wasm` instead.  That latter file
+then needs to be uploaded to Sentry.  For more information, see [Debug Information Files](/workflow/debug-files/).
+
+## Crash Reporting
+
+WebAssembly currently does not have a runtime that can produce stack traces.  We
+do not yet provide a ready-to-use SDK but we have a small integration for the
+Sentry JavaScript SDK that can enhance error reports in the browser environment
+which include WASM frames.  [wasm-support.js](https://gist.github.com/mitsuhiko/c27fee8445d2a18a8c134e0169119058)
+It needs to be loaded _after_ the JavaScript SDK and before you start loading
+your WASM modules:
+
+```html {tabTitle: CDN}
+<script
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
+  crossorigin="anonymous"
+></script>
+<script src="wasm-support.js"></script>
+```
+
+If you then throw a JavaScript exception you can get the stack trace.  If you want
+to capture an error from within your WebAssembly application you can export a
+utility function like this:
+
+```javascript
+function captureError() {
+  try {
+    throw new Error();
+  } catch (e) {
+    Sentry.captureException(e);
+  }
+}
+
+async function loadWasm(url) {
+  const importObj = {
+    env: {
+      capture_error: captureError,
+    }
+  };
+  return await WebAssembly.instantiateStreaming(fetch(url), importObj);
+}
+```
+
+## Custom Crash Reports
+
+Chances are that when you're working with WebAssembly you might want to send up custom
+crash reports.  For instance because you execute WebAssembly not in a browser but your
+own runtime.  In that case you can follow the general protocol documentation which
+also covers how to describe WebAssembly frames: [stack trace interface](https://develop.sentry.dev/sdk/event-payloads/stacktrace/).
+
+Here is an example event for WebAssembly:
+
+```javascript
+{
+  "platform": "native",
+  "debug_meta": {
+    "images": [
+      {
+        // the URL where the wasm file lives
+        "code_file": "http://localhost:8002/demo.wasm",
+        // indicates a web assembly module
+        "type": "wasm",
+        // the contents of the build_id section in hex,
+        // truncated to 32 characters with a 0 appended
+        "debug_id": "9e5cbc5553b44e8b9c69d18cdd7bfd2e0"
+      }
+    ]
+  },
+  "exception": {
+    "values": [
+      {
+        "stacktrace": {
+          "frames": [
+            // wasm frame
+            {
+              "function": "wasm_func",
+              "abs_path": "http://localhost:8002/demo.wasm",
+              // the absolute offset in the wasm file for the instruction
+              "instruction_addr": "0x8c",
+              // indicates that the instruction_addr is relative to the 1st
+              // module in the debug_info images list.
+              "addr_mode": "rel:0"
+            },
+            // javascript frame
+            {
+              "function": "crash",
+              "abs_path": "http://localhost:8002/index.html",
+              "lineno": 24,
+              "platform": "javascript"
+            }
+          ]
+        },
+        "type": "Error"
+      }
+    ]
+  }
+}
+```
