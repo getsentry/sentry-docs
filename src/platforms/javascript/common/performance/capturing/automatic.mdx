@@ -1,12 +1,26 @@
 ---
-title: Automatic Capture
-sidebar_order: 20
-description: "Learn how to configure what performance data is automatically captured."
+title: Automatic Instrumentation
+sidebar_order: 10
+description: "Learn how to add automatic instrumentation to captured transactions."
 ---
 
-The `@sentry/tracing` package provides a `BrowserTracing` integration to add automatic instrumentation for monitoring the performance of browser applications. By default, this integration will create a new transaction for each page load and navigation event, and will create a child span for every `XMLHttpRequest` or `fetch` request which occurs while those transactions are open.
+<Note>
+
+To _automatically_ capture transactions, you must first <PlatformLink to="/performance/">enable tracing in your app.</PlatformLink>
+
+</Note>
+
+The `@sentry/tracing` package provides a `BrowserTracing` integration to add _automatic_ instrumentation for monitoring the performance of browser applications.
+
+## What Automatic Instrumentation Provides
+
+The `BrowserTracing` integration creates a new transaction for each page load and navigation event, and creates a child span for every `XMLHttpRequest` or `fetch` request that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/product/performance/distributed-tracing/).
+
+## Enable Automatic Instrumentation
 
 To enable this automatic tracing, include the `BrowserTracing` integration in your SDK configuration options. (Note that when using ESM modules, the main `@sentry/*` import must come before the `@sentry/tracing` import.)
+
+After configuration, you will see both `pageload` and `navigation` when viewing transactions in sentry.io.
 
 ```javascript {tabTitle: ESM}
 // If you're using one of our integration packages, like `@sentry/react` or `@sentry/angular`,
@@ -47,15 +61,21 @@ Sentry.init({
 });
 ```
 
-After configuration, you should see both `pageload` and `navigation` transactions show up in your Sentry UI.
-
-## Options
+## Configuration Options
 
 You can pass many different options to the `BrowserTracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/tracing.browsertracingoptions.html).
 
 ### tracingOrigins
 
-Usage:
+The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
+
+For example:
+
+- A frontend application is served from `example.com`
+- A backend service is served from `api.example.com`
+- The frontend application makes API calls to the backend
+- Therefore, the option needs to be configured like this: `new Integrations.BrowserTracing({tracingOrigins: ['api.example.com']})`
+- Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
 
 ```javascript
 Sentry.init({
@@ -72,17 +92,8 @@ Sentry.init({
 });
 ```
 
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **One important thing to note is that the `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL can help make sure that requests do not unnecessarily have the `sentry-trace` header attached.**
+You will need to configure your web server CORS to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your set up. If you do not allow the `sentry-trace` header, the request might be blocked.
 
-_Example:_
-
-- A frontend application is served from `example.com`
-- A backend service is served from `api.example.com`
-- The frontend application makes API calls to the backend
-- Therefore, the option needs to be configured like this: `new Integrations.BrowserTracing({tracingOrigins: ['api.example.com']})`
-- Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
-
-_NOTE:_ You need to make sure your web server CORS is configured to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your set up. If you do not allow the `sentry-trace` header, the request might be blocked.
 
 ### beforeNavigate
 
