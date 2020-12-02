@@ -14,11 +14,31 @@ libraries. If you are not sure which files are required, go to _Project
 Settings > Processing Issues_, which shows a list of all the necessary files and
 instructions to retrieve them.
 
+<PlatformSection notSupported={["native.wasm"]}>
+
 In addition to Debug Information Files, Sentry needs _Call Frame Information_
 (CFI) to extract accurate stack traces from minidumps of optimized release
 builds. CFI is usually part of the executables and not copied to debug symbols.
 Unless you are uploading Breakpad symbols, be sure to also include the binaries
 when uploading files to Sentry.
+</PlatformSection>
+
+<PlatformSection supported={["native.wasm"]}>
+
+For WASM, you need to provide both the debug information and the original code
+in the same debug information file. To do this, we provide a custom
+tool called [wasm-split](https://github.com/getsentry/symbolicator/tree/master/wasm-split)
+that can do the splitting for you:
+
+```shell
+wasm-split /path/to/file.wasm -d /path/to/file.debug.wasm --strip
+```
+
+This command modifies the `file.wasm` in place to add the `build_id`, then removes all
+debug information. The debug information is put in a `file.debug.wasm` which
+then needs to be uploaded to Sentry.
+
+</PlatformSection>
 
 For more information on uploading debug information and their supported formats,
-see [Debug Information Files](/workflow/debug-files/).
+see [Debug Information Files](../data-management/debug-files/).
