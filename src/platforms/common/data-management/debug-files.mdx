@@ -54,15 +54,6 @@ servers for automatic downloads.
 
 Sentry differentiates in four kinds of debug information:
 
-- **Unwind Information:** Enables Sentry to extract stack traces from Minidumps
-  and other binary crash formats of optimized builds. This process is referred
-  to as "stack unwinding" or "stack walking". Since this is also required when
-  throwing exceptions in C++, this information is often included in the
-  executable or library. If an uploaded file contains this information, it shows
-  the `unwind` tag.  Note that on some platforms no actual unwinding takes place.
-  For instance, WebAssembly currently does not have the equivalent of minidumps
-  which means we do not require that type of information in such cases.
-
 - **Debug Information:** Provides function names, paths to source files, line
   numbers and inline frames. The process of resolving this information from
   instruction addresses is called "symbolication". This information is
@@ -81,6 +72,15 @@ Sentry differentiates in four kinds of debug information:
   information files. Sentry CLI can bundle source code of your application and
   upload it to display source context in stack traces in Sentry. These bundles
   show up with the `sources` tag.
+
+- **Unwind Information:** Enables Sentry to extract stack traces from Minidumps
+  and other binary crash formats of optimized builds. This process is referred
+  to as "stack unwinding" or "stack walking". Since this is also required when
+  throwing exceptions in C++, this information is often included in the
+  executable or library. If an uploaded file contains this information, it shows
+  the `unwind` tag. Note that on some platforms no actual unwinding takes place.
+  For instance, WebAssembly currently does not have the equivalent of minidumps
+  which means we do not require that type of information in such cases.
 
 Compilers place the above debug information in different files passed on the
 target platform, architecture, build flags or optimization level. Consequently,
@@ -242,7 +242,7 @@ while removing all debug information from the release binary.
 
 <Note>
 
-  The recommended method for [Android users is to use the Gradle plugin](/platforms/android/proguard/).
+The recommended method for [Android users is to use the Gradle plugin](/platforms/android/proguard/).
 
 </Note>
 
@@ -263,7 +263,7 @@ correct files. Sentry distinguishes two kinds of identifiers:
 - **Code Identifier**: The unique identifier of the executable or dynamic
   library -- the code file. The contents of this identifier are
   platform-dependent: MachO files use a UUID, ELF files a SHA hash, PE files use
-  a concatenation of certain header attributes.  For WebAssembly we use an
+  a concatenation of certain header attributes. For WebAssembly we use an
   embedded UUID in the `build_id` section of the file.
 
 - **Debug Identifier**: The unique identifier of the debug companion file. In
@@ -338,12 +338,12 @@ for symbolication.
 
 ### WASM Build IDs
 
-WebAssembly does not yet support build IDs.  The option proposed to
-implement build IDs for WebAssembly ([Build ID Section for WASM](https://github.com/WebAssembly/tool-conventions/issues/133))has not yet found widespread adoption.  Instead, we use a custom
+WebAssembly does not yet support build IDs. The option proposed to
+implement build IDs for WebAssembly ([Build ID Section for WASM](https://github.com/WebAssembly/tool-conventions/issues/133))has not yet found widespread adoption. Instead, we use a custom
 extension to WebAssembly.
 
 Our recommendation is to embed a UUID in the `build_id` custom section as
-raw binary.  Our `wasm-split` tool can do this for you automatically.
+raw binary. Our `wasm-split` tool can do this for you automatically.
 
 <PlatformSection notSupported={["native.wasm"]}>
 
@@ -381,17 +381,7 @@ application:
 Files can be uploaded using the `upload-dif` command. This command will scan a
 given folder recursively for files and upload them to Sentry:
 
-```bash
-sentry-cli upload-dif -o <org> -p <project> /path/to/files
-
-> Found 2 debug information files
-> Prepared debug information files for upload
-> Uploaded 2 missing debug information files
-> File processing complete:
-
-  PENDING 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 executable)
-  PENDING 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 debug companion)
-```
+<PlatformContent includePath="upload-dif" />
 
 For all available options and more information refer to [_Uploading Debug
 Information_](/product/cli/dif/#uploading-files).
