@@ -1,0 +1,106 @@
+---
+title: Performance Monitoring
+description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
+---
+
+<Alert level="warning" title="Note">
+Performance Monitoring is available for the Sentry Java SDK version ≥ 4.0.
+</Alert>
+
+Sentry allows you to monitor the performance of your application, showing you how latency in one service may affect another service, and letting you pinpoint exactly which parts of a given operation may be responsible. To do this, it captures distributed traces consisting of transactions and spans, which measure individual services and individual operations within those services, respectively. You can learn more about this model in our [Distributed Tracing](/product/performance/distributed-tracing/) docs.
+
+## Enabling Tracing
+
+To get started automatically sending traces you can:
+
+- Set a uniform sample rate for all transactions, by setting the <PlatformIdentifier name="traces-sample-rate" /> option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set <PlatformIdentifier name="traces-sample-rate" /> to `0.2`.)
+- Control the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the <PlatformIdentifier name="traces-sampler" /> config option.
+
+Or alternatively:
+
+<PlatformContent includePath="performance/enable-tracing" />
+
+If either of these options is set, tracing will be enabled in your app, and transactions will start getting captured automatically. (The two options are meant to be mutually exclusive, but if you do set both, <PlatformIdentifier name="traces-sampler" /> will take precedence.)
+
+As you're getting tracing set up, we recommend setting <PlatformIdentifier name="traces-sample-rate" /> to `1`, so all created transactions are sent to Sentry. Once you're done with testing, though, you'll probably want to consider either **lowering your <PlatformIdentifier name="traces-sample-rate" /> value, or switching to <PlatformIdentifier name="traces-sampler" />**, which will allow you to set the sample rate individually for each transaction. Without sampling, automatically-captured transactions can add up quickly. (The Spring Boot integration, for example, will send a transaction for every request made to the server.) Sampling allows you to send representative data without overwhelming either your system or your Sentry transaction quota.
+
+You can learn more about the <PlatformIdentifier name="traces-sample-rate" /> and <PlatformIdentifier name="traces-sampler" /> options in <PlatformLink to="/performance/sampling/">Sampling Transactions</PlatformLink>.
+
+## Manual Instrumentation
+
+To manually instrument certain regions of your code, you can create a transaction to capture them.
+
+The following example creates a transaction for a scope that contains an expensive operation (for example, `processOrderBatch`), and sends the result to Sentry:
+
+```java
+import io.sentry.Sentry;
+import io.sentry.SentryTransaction;
+import io.sentry.SpanStatus;
+
+// A good name for the transaction is key, to help identify what this is about
+SentryTransaction transaction = Sentry.startTransaction("processOrderBatch()");
+transaction.setOperation("task");
+try {
+    procesOrderBatch();
+} catch (Exception e) {
+    transaction.setThrowable(e);
+    transaction.setSpanStatus(SpanStatus.INTERNAL_ERROR)
+} finally {
+    transaction.finish();
+}
+```
+
+### Adding More Spans to the Transaction
+
+The next example contains the implementation of the hypothetical `processItem` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add all newly created spans as child operations to that transaction. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction.
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry#getSpan`. This method will return a `SentryTransaction` in case there is a running Transaction or a `Span` in case there is already a running Span, otherwise it returns `null`.
+
+You can choose the value of `operation` and `description`.
+
+```java
+import io.sentry.ISpan;
+import io.sentry.Span;
+import io.sentry.SpanStatus;
+
+void processItem(Item item):
+    ISpan span = Sentry.getSpan();
+    Span innerSpan = span.startChild("task", item.getName());
+    try {
+        // omitted code
+    } catch (NotFoundException e) {
+        innerSpan.setThrowable(e);
+        innerSpan.setSpanStatus(SpanStatus.NOT_FOUND)
+    } finally {
+        innerSpan.finish();
+    }
+}
+```
+
+Spans are sent together with their parent transaction when the transaction is finished. Make sure to call `finish()` on transaction once all the child spans have finished.
+
+### Retrieving a Transaction
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry#getSpan`. This method will return a `SentryTransaction` in case there is a running Transaction or a `Span` in case there is already a running Span, otherwise it returns `null`.
+
+```java
+import io.sentry.ISpan;
+import io.sentry.Span;
+import io.sentry.SpanStatus;
+
+ISpan span = Sentry.getSpan();
+if (span == null) {
+    span = Sentry.startTransaction("task");
+} else {
+    span = span.startChild();
+}
+
+try {
+    // omitted code
+} catch (Exception e) {
+    span.setThrowable(e);
+    span.setSpanStatus(SpanStatus.INTERNAL_ERROR)
+} finally {
+    span.finish();
+}
+```

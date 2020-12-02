@@ -9,8 +9,7 @@ type: framework
 
 To begin collecting error and performance data from your Vue application, you'll need the following packages:
 
-* `@sentry/browser` (Sentry's core browser SDK)
-* `@sentry/integrations` (contains Sentry's Vue integration)
+* `@sentry/vue` (Sentry's Vue SDK)
 * `@sentry/tracing` (instruments performance data)
 
 Below are instructions for using your favorite package manager, or alternatively loaded directly from our CDN.
@@ -21,10 +20,10 @@ Install the dependencies:
 
 ```bash
 # Using yarn
-yarn add @sentry/browser @sentry/integrations @sentry/tracing
+yarn add @sentry/vue @sentry/tracing
 
 # Using npm
-npm install --save @sentry/browser @sentry/integrations @sentry/tracing
+npm install --save @sentry/vue @sentry/tracing
 ```
 
 Next, initialize Sentry in your app entry point before you initialize your root component.
@@ -32,16 +31,12 @@ Next, initialize Sentry in your app entry point before you initialize your root 
 ```javascript
 import Vue from "vue";
 import * as Sentry from "@sentry/browser";
-import { Vue as VueIntegration } from "@sentry/integrations";
 import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
+  Vue,
   dsn: "___PUBLIC_DSN___",
   integrations: [
-    new VueIntegration({
-      Vue,
-      tracing: true,
-    }),
     new Integrations.BrowserTracing(),
   ],
 
@@ -51,49 +46,9 @@ Sentry.init({
 });
 ```
 
-### Using our CDN
-
-Alternatively, you can load these packages directly from our CDN using two script tags:
-
-```html
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/vue.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'vue.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-```
-
-If you load the Sentry packages this way, they are available under the `Sentry` namespace on the global scope.
-
-Next, initialize Sentry in your `app.js`:
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Sentry.Integrations.Vue({
-      Vue,
-      tracing: true,
-    }),
-    new Sentry.Integrations.BrowserTracing(),
-  ],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
-```
-
-After this, Sentry will automatically catch and report any uncaught exceptions, and report on the performance of your application.
-
 ### Additional Options
 
-Additionally, `Integrations.Vue` accepts a few different configuration options that let you change its behavior:
+Additionally, the SDK accepts a few different configuration options that let you change its behavior:
 
 - Passing in `Vue` is optional, but if you do not pass it `window.Vue` must be present.
 - Passing in `attachProps` is optional and is `true` if it is not provided. If you set it to `false`, Sentry will suppress sending all Vue components' props for logging.

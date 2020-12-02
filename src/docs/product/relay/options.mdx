@@ -363,7 +363,7 @@ human-readable strings of a number and a human-readable unit, such as:
 
 `metrics.default_tags`
 
-: _Map of strings to strings, default empty_
+: _Map of strings to strings, default: empty_
 
   A set of default tags that should be attached to all outgoing StatsD metrics.
 
@@ -373,6 +373,24 @@ human-readable strings of a number and a human-readable unit, such as:
 
   If set, adds a tag of the given name and sets it to the hostname of the machine that
   is running Relay. This configuration is useful to distinguish multiple Relays.
+
+`metrics.buffering`
+
+: _boolean, default: `true`_
+
+  Whether the emitted metrics will be buffered before sending to StatsD server. This generally improves
+  performance, but comes with a caveat that with low traffic volume, metrics might take a few more seconds to
+  propagate.
+  
+`metrics.sample_rate`
+
+: _Float, default 1.0_
+
+  Global sample rate for all emitted metrics. Should be between 0.0 and 1.0. If outside that range,
+  the value will be normalized (negative values would become 0.0, positive larger than 1.0 become 1.0).
+  For instance, the value of 0.3 means that only 30% of the emitted metrics will be sent. 
+  Note that the implemented sampling approach is not aware of metrics types, and, for example, does not
+  rescale counter values when the sample rate is less than 1.0.
 
 ## Internal Error Reporting
 

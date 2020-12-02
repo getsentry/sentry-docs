@@ -1,0 +1,33 @@
+---
+title: Event Processors
+sidebar_order: 300
+redirect_from:
+  - /node/event-processors/
+  - /platforms/node/guides/connect/event-processors/
+description: "Learn more about how you can add your own `eventProcessor` on the current scope."
+---
+
+With `eventProcessors` you can hook into the process of enriching the event with additional data. You can add your own `eventProcessor` on the current scope. The difference between `beforeSend` and `eventProcessors` is that `eventProcessors` run on the scope level whereas `beforeSend` runs globally, no matter which scope you're in.
+Also, `eventProcessors` optionally receive the hint (see: <PlatformLink to="/configuration/filtering/#using-hints">hints</PlatformLink>).
+
+```javascript
+// This will be set globally for every succeeding event send
+Sentry.configureScope(function(scope) {
+  scope.addEventProcessor(function(event, hint) {
+    // Add anything to the event here
+    // returning null will drop the event
+    return event;
+  });
+});
+
+// Using withScope, will only call the event processor for all "sends"
+// that happen within withScope
+Sentry.withScope(function(scope) {
+  scope.addEventProcessor(function(event, hint) {
+    // Add anything to the event here
+    // returning null will drop the event
+    return event;
+  });
+  Sentry.captureMessage("Test");
+});
+```

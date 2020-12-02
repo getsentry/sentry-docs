@@ -5,28 +5,41 @@ support_level: production
 type: language
 ---
 
-The quickest way to get started is to use the CDN hosted version of the JavaScript browser SDK:
+Install our JavaScript browser SDK using either `yarn` or `npm`:
 
-```html
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
+```bash {tabTitle: ESM}
+# Using yarn
+yarn add @sentry/browser @sentry/tracing
+# Using npm
+npm install --save @sentry/browser @sentry/tracing
 ```
 
-You should `init` the Sentry Browser SDK as soon as possible during your page load:
+We also support alternate [installation methods](/platforms/javascript/install/).
+
+`init` the Sentry Browser SDK as soon as possible during your page load:
 
 ```javascript
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
+import * as Sentry from "@sentry/browser";
+import { Integrations } from "@sentry/tracing";
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  integrations: [
+    new Integrations.BrowserTracing(),
+  ],
+
+  tracesSampleRate: 1.0,
+});
 ```
 
-One way to verify your setup is by intentionally causing an error that breaks your application.
+We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/performance/sampling/).
 
-Calling an undefined function will throw an exception:
+Then create an intentional error, so you can test that everything is working:
 
 ```js
 myUndefinedFunction();
 ```
 
-You can verify the function caused an error by checking your browser console.
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
+
+If you're an existing user and have disabled alerts, you won't receive this email.  
