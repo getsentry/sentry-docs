@@ -96,12 +96,13 @@ selected layout and the file type, we try to download files at specific paths.
 The following table contains a mapping from the supported layouts to file path
 schemas applied for specific files:
 
-| Layout                          | MachO |   ELF   |    PE    |   PDB    | Breakpad |
-| ------------------------------- | :---: | :-----: | :------: | :------: | :------: |
-| Platform-Specific               | LLDB  | BuildID | SymStore | SymStore | Breakpad |
-| Microsoft SymStore              |   -   |    -    | SymStore | SymStore |    -     |
-| Microsoft SymStore (index2.txt) |   -   |    -    |  Index2  |  Index2  |    -     |
-| Microsoft SSQP                  | SSQP  |  SSQP   |   SSQP   |   SSQP   |    -     |
+| Layout                          | MachO   |   ELF   |    PE    |   PDB    | Breakpad | WASM    |
+| ------------------------------- | :-----: | :-----: | :------: | :------: | :------: | :-----: |
+| Platform-Specific               | LLDB    | BuildID | SymStore | SymStore | Breakpad | BuildID |
+| Microsoft SymStore              |   -     |    -    | SymStore | SymStore |    -     | -       |
+| Microsoft SymStore (index2.txt) |   -     |    -    |  Index2  |  Index2  |    -     | -       |
+| Microsoft SSQP                  | SSQP    |  SSQP   |   SSQP   |   SSQP   |    -     | -       |
+| Unified Symbol Server Layout    | Unified | Unified | Unified  | Unified  | Unified  | Unified |
 
 The path schemas in the table above are defined as follows:
 
@@ -172,6 +173,34 @@ Examples:
 
 - `b5/381a457906d279073822a5ceb24c4bfef94ddb` (executable or library)
 - `b5/381a457906d279073822a5ceb24c4bfef94ddb.debug` (stripped debug file)
+
+**Unified**
+
+: Path: `nn/nnnnnnnnnnnnnnnn.../type`
+
+The unified path layout is specific to Sentry and enables a consistent
+structure for all debug files independent of platform.  It can store breakpad files,
+PDBs, PEs, and everything else.  The [symsorter tool](https://github.com/getsentry/symbolicator/tree/master/symsorter)
+can automatically sort debug symbols into this format and also automatically
+create source bundles.
+
+The path is based on a `build_id` formatted to a hexadecimal using
+lower case.  The first two bytes of that ID are taken as a root folder.
+
+The `build_id` construction differs among file formats:
+
+- PE: `<Signature><Age>` (age in hex, not padded)
+- PDB: `<Signature><Age>` (age in hex, not padded)
+- ELF: the gnu-build-id code note byte sequence.
+- MachO: `LC_UUID` bytes
+- WASM: `build_id` section as bytes
+
+Examples:
+
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb/executable` (executable or library)
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb/debuginfo` (debug file)
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb/breakpad` (breakpad file)
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb/sourcebundle` (source bundle)
 
 ### SSQP
 
