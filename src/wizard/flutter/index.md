@@ -9,7 +9,7 @@ Get the SDK from [pub.dev](https://pub.dev/packages/sentry_flutter) by adding th
 
 ```yml {filename:pubspec.yaml}
 dependencies:
-  sentry_flutter: ^4.0.0
+  sentry_flutter: ^4.0.0-beta.1
 ```
 
 Import `sentry_flutter` and initialize it:
@@ -20,11 +20,10 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 Future<void> main() async {
   await SentryFlutter.init(
-    (options) => options.dsn = '___PUBLIC_DSN___',
-    () {
-      // Run your App
-      runApp(MyApp());
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
     },
+    appRunner: () => runApp(MyApp()),
   );
 }
 ```

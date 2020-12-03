@@ -7,6 +7,27 @@ sidebar_order: 2
 
 For the usage of the Flutter SDK, the minimal required Dart SDK version is `2.8.0` and Flutter SDK version is `1.17.0`
 
+## Automatic Breadcrumbs
+
+The Flutter SDK already captures breadcrumbs automatically via the Native SDKs.
+
+- [Automatic Breadcrumbs for Android](/platforms/android/enriching-events/breadcrumbs/#automatic-breadcrumbs)
+- [Automatic Breadcrumbs for iOS](/platforms/apple/usage/#sentryautobreadcrumbtrackingintegration)
+
+If you wish to add additional Navigation breadcrumbs for Flutter Apps, Add the `SentryNavigationObserver` to your `MaterialApp`, `WidgetsApp` or `CupertinoApp`
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+MaterialApp(
+  navigatorObservers: [
+    SentryNavigatorObserver(),
+  ],
+  // other parameters
+)
+```
+
 ## Uploading Debug Symbols (Android and iOS)
 
 - [iOS dSYM files](/platforms/apple/dsym/)
@@ -14,12 +35,13 @@ For the usage of the Flutter SDK, the minimal required Dart SDK version is `2.8.
 - [Android Proguard/R8 mapping file](/platforms/android/proguard/)
 - [Source maps for Flutter Web](/product/cli/releases/#managing-release-artifacts)
 
-## Known limitations
+## Known Limitations
 
-- Flutter `split-debug-info` flag isn't supported yet, if this feature is enabled, Dart stack traces are not useful
-- Flutter `obfuscate` flag isn't supported yet, if this feature is enabled, Dart stack traces are not useful
+- Flutter `split-debug-info` and `obfuscate` flags aren't yet supported on iOS; they are supported only on Android. If this feature is enabled, Dart stack traces are not human readable, this is a tooling limitation, See: [43612](https://github.com/dart-lang/sdk/issues/43612) and [43274](https://github.com/dart-lang/sdk/issues/43274).
+- If you enable the `split-debug-info` feature, you must upload the Debug Symbols manually.
+- Also, Issue's titles might be obfuscated as we rely on the `runtimeType`, but they may not be human-readable, See: [Obfuscate Caveat](https://flutter.dev/docs/deployment/obfuscate#caveat)
 
-## Tips for catching errors
+## Tips for Catching Errors
 
 - Use a `try/catch` block
 - Use a `catchError` block for `Futures`
