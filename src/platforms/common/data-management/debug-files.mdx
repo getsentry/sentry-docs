@@ -16,6 +16,8 @@ in debug files includes original function names, paths to source files and line
 numbers, source code context, or the placement of variables in memory. Sentry
 can use some of this information and display it on the issue details page.
 
+<PlatformSection notSupported={["native.wasm"]}>
+
 Each major platform uses different debug information files. We currently support
 the following formats:
 
@@ -26,8 +28,11 @@ the following formats:
 - [_PDB files_](#pe-and-pdb) for Windows
 - [_Breakpad symbols_](#breakpad-symbols) for all
   platforms
+- [_WASM files_](#wasm) for WebAssembly
 - [_ProGuard mappings_](#proguard-mappings) for
   Java and Android
+
+</PlatformSection>
 
 <Note>
 
@@ -49,13 +54,6 @@ servers for automatic downloads.
 
 Sentry differentiates in four kinds of debug information:
 
-- **Unwind Information:** Enables Sentry to extract stack traces from Minidumps
-  and other binary crash formats of optimized builds. This process is referred
-  to as "stack unwinding" or "stack walking". Since this is also required when
-  throwing exceptions in C++, this information is often included in the
-  executable or library. If an uploaded file contains this information, it shows
-  the `unwind` tag.
-
 - **Debug Information:** Provides function names, paths to source files, line
   numbers and inline frames. The process of resolving this information from
   instruction addresses is called "symbolication". This information is
@@ -75,6 +73,15 @@ Sentry differentiates in four kinds of debug information:
   upload it to display source context in stack traces in Sentry. These bundles
   show up with the `sources` tag.
 
+- **Unwind Information:** Enables Sentry to extract stack traces from Minidumps
+  and other binary crash formats of optimized builds. This process is referred
+  to as "stack unwinding" or "stack walking". Since this is also required when
+  throwing exceptions in C++, this information is often included in the
+  executable or library. If an uploaded file contains this information, it shows
+  the `unwind` tag. Note that on some platforms no actual unwinding takes place.
+  For instance, WebAssembly currently does not have the equivalent of minidumps
+  which means we do not require that type of information in such cases.
+
 Compilers place the above debug information in different files passed on the
 target platform, architecture, build flags or optimization level. Consequently,
 Sentry might not need all of the above information to process crash reports.
@@ -82,6 +89,8 @@ Still, it is always a good idea to provide all available debug information.
 
 `sentry-cli` can be used to list properties of supported debug files and
 validate their contents. See [_Debug Information Files in sentry-cli_](/product/cli/dif/) for more information.
+
+<PlatformSection notSupported={["native.wasm"]}>
 
 The remainder of this section describes the file formats in detail.
 
@@ -211,13 +220,29 @@ that is not required to process minidumps. Most notably, inline functions are
 not declared, such that Sentry is not able to display inline frames in stack
 traces.
 
+### WASM
+
+</PlatformSection>
+
+For WebAssembly, we support [DWARF in WASM containers](https://yurydelendik.github.io/webassembly-dwarf/).
+Note that we do not support source maps, which are also a format used for WASM
+debugging, but have shortcomings that make them impractical for a crash reporting
+tool like Sentry.
+
+Since WASM does not specify debug/build IDs yet, we provide a separate tool to
+add build IDs and split files called [wasm-split](https://github.com/getsentry/symbolicator/tree/master/wasm-split)
+to help you create a debug companion file ready for uploading to Sentry
+while removing all debug information from the release binary.
+
+<PlatformSection notSupported={["native.wasm"]}>
+
 ### ProGuard Mappings
 
 <PlatformSection supported={["android", "flutter", "react-native"]}>
 
 <Note>
 
-  The recommended method for [Android users is to use the Gradle plugin](/platforms/android/proguard/).
+The recommended method for [Android users is to use the Gradle plugin](/platforms/android/proguard/).
 
 </Note>
 
@@ -226,6 +251,8 @@ traces.
 ProGuard mapping files allow Sentry to resolve obfuscated Java classpaths and
 method names into their original form. In that sense, they act as debug
 information files for Java and Android applications.
+
+</PlatformSection>
 
 ## Debug Identifiers
 
@@ -236,7 +263,8 @@ correct files. Sentry distinguishes two kinds of identifiers:
 - **Code Identifier**: The unique identifier of the executable or dynamic
   library -- the code file. The contents of this identifier are
   platform-dependent: MachO files use a UUID, ELF files a SHA hash, PE files use
-  a concatenation of certain header attributes.
+  a concatenation of certain header attributes. For WebAssembly we use an
+  embedded UUID in the `build_id` section of the file.
 
 - **Debug Identifier**: The unique identifier of the debug companion file. In
   contrast to the code identifier, Sentry enforces the same structure on all
@@ -264,6 +292,8 @@ files that match it in the _Debug Files_ settings screen.
 
 `sentry-cli` can help to print properties of debug information files like their
 debug identifier. See [_Checking Debug Information Files_](/product/cli/dif/#checking-files) for more information.
+
+<PlatformSection notSupported={["native.wasm"]}>
 
 ### GNU Build Identifiers
 
@@ -304,6 +334,21 @@ files are uploaded in the same invocation of the upload command. Otherwise, the
 identifiers diverge and Sentry might not be able to resolve the correct file
 for symbolication.
 
+</PlatformSection>
+
+### WASM Build IDs
+
+WebAssembly does not yet support build IDs. The option proposed to
+implement build IDs for WebAssembly ([Build ID Section for WASM](https://github.com/WebAssembly/tool-conventions/issues/133))
+has not yet found widespread adoption. Instead, we use a custom
+extension to WebAssembly.
+
+Our recommendation is to embed a UUID in the `build_id` custom section as
+raw binary. Our [`wasm-split`](https://github.com/getsentry/symbolicator/tree/master/wasm-split)
+tool can do this for you automatically.
+
+<PlatformSection notSupported={["native.wasm"]}>
+
 ### ProGuard UUIDs
 
 Unlike other debug information files, ProGuard files do not have an intrinsic
@@ -324,6 +369,8 @@ def get_proguard_uuid(filename):
         return uuid.uuid5(NAMESPACE, f.read())
 ```
 
+</PlatformSection>
+
 ## Uploading Files
 
 The most straightforward way to provide Sentry with debug information file is
@@ -336,17 +383,7 @@ application:
 Files can be uploaded using the `upload-dif` command. This command will scan a
 given folder recursively for files and upload them to Sentry:
 
-```bash
-sentry-cli upload-dif -o <org> -p <project> /path/to/files
-
-> Found 2 debug information files
-> Prepared debug information files for upload
-> Uploaded 2 missing debug information files
-> File processing complete:
-
-  PENDING 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 executable)
-  PENDING 1ddb3423-950a-3646-b17b-d4360e6acfc9 (MyApp; x86_64 debug companion)
-```
+<PlatformContent includePath="upload-dif" />
 
 For all available options and more information refer to [_Uploading Debug
 Information_](/product/cli/dif/#uploading-files).

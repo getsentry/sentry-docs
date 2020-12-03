@@ -7,34 +7,33 @@ redirect_from:
 description: "Learn how to use Sentry with your Vue application."
 ---
 
-To use Sentry with your Vue application, you will need to use Sentry’s browser JavaScript SDK: `@sentry/browser`.
+To use Sentry with your Vue application, you will need to use Sentry’s Vue SDK: `@sentry/vue`.
 
 ```bash {tabTitle:npm}
-npm install --save  @sentry/browser @sentry/integrations
+npm install --save  @sentry/vue
 ```
 
 ```bash {tabTitle:Yarn}
-yarn add  @sentry/browser @sentry/integrations
+yarn add  @sentry/vue
 ```
 
-On its own, `@sentry/browser` will report any uncaught exceptions triggered by your application.
+On its own, `@sentry/vue` will report any uncaught exceptions triggered by your application.
 
-Additionally, the Vue _integration_ will capture the name and props state of the active component where the error was thrown. This is reported via Vue’s `config.errorHandler` hook.
+Additionally, the SDK will capture the name and props state of the active component where the error was thrown. This is reported via Vue’s `config.errorHandler` hook.
 
 Then add this to your `app.js`:
 
 ```javascript
 import Vue from "vue";
-import * as Sentry from "@sentry/browser";
-import { Vue as VueIntegration } from "@sentry/integrations";
+import * as Sentry from '@sentry/vue';
 
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [new VueIntegration({ Vue, attachProps: true })],
+  Vue: Vue,
+  dsn: '__PUBLIC_DSN__',
 });
 ```
 
-Additionally, `Integrations.Vue` accepts a few different configuration options that let you change its behavior:
+Additionally the SDK accepts a few different configuration options that let you change its behavior:
 
 - Passing in `Vue` is optional, if you do not pass it `window.Vue` must be present.
 - Passing in `attachProps` is optional and is `true` if it is not provided. If you set it to `false`, Sentry will suppress sending all Vue components' props for logging.
@@ -42,64 +41,50 @@ Additionally, `Integrations.Vue` accepts a few different configuration options t
 
 <Alert level="warning" title="Vue Error Handling">
 
-Please note that if you enable this integration, Vue will not call its `logError` internally. This means that errors occurring in the Vue renderer will not show up in the developer console.
+Please note that if you enable the SDK, Vue will not call its `logError` internally. This means that errors occurring in the Vue renderer will not show up in the developer console.
 If you want to preserve this functionality, make sure to pass the `logErrors: true` option.
 
 </Alert>
 
-In case you are using the CDN version or the Loader, we provide a standalone file for every integration, you can use it
-like this:
+In case you are using the CDN version or the Loader, we provide a standalone file for every integration, you can use it	
+like this:	
 
-```html
-<!-- Note that we now also provide a es6 build only -->
-<!-- <script src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.es6.min.js" integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.es6.min.js', 'sha384-base64') }}" crossorigin="anonymous"></script> -->
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
+```html	
+<script	
+  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/vue.min.js"	
+  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'vue.min.js', 'sha384-base64') }}"	
+  crossorigin="anonymous"	
+></script>	
 
-<!-- If you include the integration it will be available under Sentry.Integrations.Vue -->
-<script
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/vue.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'vue.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-
-<script>
-  Sentry.init({
-    dsn: "___PUBLIC_DSN___",
-    integrations: [new Sentry.Integrations.Vue({ Vue, attachProps: true })],
-  });
-</script>
-```
+<script>	
+  Sentry.init({	
+    Vue,
+    dsn: "___PUBLIC_DSN___",	
+  });	
+</script>	
+```	
 
 ## Monitor Performance
 
 ```bash {tabTitle:npm}
-npm install --save @sentry/browser @sentry/integrations @sentry/tracing
+npm install --save @sentry/vue @sentry/tracing
 ```
 
 ```bash {tabTitle:Yarn}
-yarn add @sentry/browser @sentry/integrations @sentry/tracing
+yarn add @sentry/vue @sentry/tracing
 ```
 
 The most basic configuration for tracing your Vue app, which would track only the top-level component, looks like this:
 
 ```js
-import * as Sentry from "@sentry/browser";
-import { Vue as VueIntegration } from "@sentry/integrations";
-import { Integrations } from "@sentry/tracing";
 import Vue from "vue";
+import * as Sentry from "@sentry/browser";
+import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
   // ...
   integrations: [
     new Integrations.BrowserTracing(),
-    new VueIntegration({
-      Vue,
-      tracing: true,
-    }),
   ],
 
   // We recommend adjusting this value in production, or using tracesSampler
@@ -111,9 +96,8 @@ Sentry.init({
 If you want to track child components, and see more details about the rendering process, configure the integration to track them all:
 
 ```js
-new VueIntegration({
+Sentry.init({
   Vue,
-  tracing: true,
   tracingOptions: {
     trackComponents: true,
   },

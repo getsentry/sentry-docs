@@ -7,12 +7,32 @@ type: framework
 
 Get the SDK from [pub.dev](https://pub.dev/packages/sentry) by adding the following to your `pubspec.yaml`:
 
-<PlatformContent includePath="getting-started-install" />
+```yml {filename:pubspec.yaml}
+dependencies:
+  sentry: ^4.0.0
+```
 
-Import `Sentry` and initialize it:
+Import `sentry` and initialize it:
 
-<PlatformContent includePath="getting-started-config" />
+```dart
+import 'package:sentry/sentry.dart';
+
+Future<void> main() async {
+  await Sentry.init((options) => options.dsn = '___PUBLIC_DSN___');
+}
+```
 
 Capture a test exception:
 
-<PlatformContent includePath="getting-started-verify" />
+```dart
+import 'package:sentry/sentry.dart';
+
+try {
+  aMethodThatMightFail();
+} catch (exception, stackTrace) {
+  await Sentry.captureException(
+    exception,
+    stackTrace: stackTrace,
+  );
+}
+```

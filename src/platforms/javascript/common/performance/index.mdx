@@ -1,18 +1,32 @@
 ---
-title: Performance Monitoring
+title: Getting Started
 sidebar_order: 20
-description: "Learn how to enable performance monitoring in your app."
+description: "Learn how to enable performance monitoring in your app if it is not already set up."
 redirect_from:
   - /platforms/javascript/performance/apm-to-tracing/
 ---
 
-Sentry allows you to monitor the performance of your application, showing you how latency in one service may affect another service, and letting you pinpoint exactly which parts of a given operation may be responsible. To do this, it captures distributed traces consisting of transactions and spans, which measure individual services and individual operations within those services, respectively. You can learn more about this model in our [Distributed Tracing](/product/performance/distributed-tracing/) docs.
+<Note>
 
-Once tracing is enabled, certain types of operations will be measured automatically, and you can also choose to manually measure any operation you like. To learn more, see <PlatformLink to="/performance/capturing/automatic/">Capturing Transactions Automatically</PlatformLink> and <PlatformLink to="/performance/capturing/manual/">Capturing Transactions Manually</PlatformLink>.
+If you haven't already installed the package to enable performance monitoring when you set up your SDK, you'll need to install the package separately as documented on this page.
 
-## Enabling Tracing
+</Note>
 
-The first step is to install the tracing package, if you haven't done so already:
+Performance monitoring augments your existing error data by capturing interactions among your software systems.
+
+<Alert>
+
+Customers on legacy plans must add transaction events to their subscription in order to access our performance monitoring features. For general questions about performance monitoring with Sentry and for information about how you can add transactions to your plan, please contact [support@sentry.io](mailto:support@sentry.io). To start a performance monitoring trial and for information on volume pricing, please contact [sales@sentry.io](mailto:sales@sentry.io).
+
+</Alert>
+
+With performance monitoring, Sentry tracks your software performance, measuring metrics like throughput and latency, and displaying the impact of errors across multiple systems. Once tracing is enabled, certain types of operations are measured automatically, and you can also choose to manually measure any operation you like. To learn more, see <PlatformLink to="/performance/capturing/automatic/">Add Automatic Instrumentation</PlatformLink> and <PlatformLink to="/performance/capturing/manual/">Add Manual Instrumentation</PlatformLink>.
+
+By monitoring the performance of your application, you can see how latency in one service may affect another service to pinpoint exactly which parts of a given operation may be responsible. To do this, Sentry captures distributed traces consisting of transactions and spans, which measure individual services and individual operations within those services, respectively. You can learn more about this model in our [Distributed Tracing](/product/performance/distributed-tracing/) docs.
+
+## Install
+
+Install the tracing package:
 
 ```bash {tabTitle: ESM}
 # Using yarn
@@ -27,7 +41,7 @@ npm install @sentry/tracing
   <!--
     Note that `bundle.tracing.min.js` contains both `@sentry/browser` AND
     `@sentry/tracing`, and should therefore be used in place of
-    `@sentry/browser`'s bundle rathern than in addition to it.
+    `@sentry/browser`'s bundle rather than in addition to it.
   -->
   src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
   integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
@@ -35,10 +49,12 @@ npm install @sentry/tracing
 ></script>
 ```
 
-Once you've installed the package, there are two ways to enable tracing in your app:
+## Configure
 
-- Set a uniform sample rate for all transactions, by setting the <PlatformIdentifier name="traces-sample-rate" /> option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set <PlatformIdentifier name="traces-sample-rate" /> to `0.2`.)
-- Control the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the <PlatformIdentifier name="traces-sampler" /> config option.
+Enable performance monitoring in your app by either:
+
+1. Setting a uniform sample rate for all transactions using the <PlatformIdentifier name="traces-sample-rate" /> option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set <PlatformIdentifier name="traces-sample-rate" /> to `0.2`.)
+2. Controlling the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the <PlatformIdentifier name="traces-sampler" /> config option.
 
 ```javascript {tabTitle: ESM}
 // If you're using one of our integration packages, like `@sentry/react` or
@@ -47,7 +63,7 @@ import * as Sentry from "@sentry/browser";
 
 // If taking advantage of automatic instrumentation (highly recommended)
 import { Integrations as TracingIntegrations } from "@sentry/tracing";
-// Or, if only doing manual tracing
+// Or, if only manually tracing
 // import * as _ from "@sentry/tracing"
 // Note: You MUST import the package in some way for tracing to work
 
@@ -82,146 +98,12 @@ Sentry.init({
 });
 ```
 
-If either of these options is set, tracing will be enabled in your app. (They are meant to be mutually exclusive, but if you do set both, <PlatformIdentifier name="traces-sampler" /> will take precedence.) You can learn more about how they work in <PlatformLink to="/performance/sampling/">Sampling Transactions</PlatformLink>.
+If either of these options is set, tracing will be enabled in your app. While these options are meant to be mutually exclusive, if you do set both, <PlatformIdentifier name="traces-sampler" /> will take precedence. You can learn more about how they work in <PlatformLink to="/performance/sampling/">Sampling Transactions</PlatformLink>.
 
-<Alert level="info" title="Note">
+## Verify
 
-When you first enable tracing, the easiest thing to do to test it is to set <PlatformIdentifier name="traces-sample-rate" /> to `1.0`, because that guarantees that every transaction will be sent to Sentry for you to see.
+When you first enable tracing, verify it is working correctly by setting <PlatformIdentifier name="traces-sample-rate" /> to `1.0` as that ensures that every transaction will be sent to Sentry.
 
-Once you're done with testing, however, we recommend that you either lower your <PlatformIdentifier name="traces-sample-rate" /> value, or switch to using <PlatformIdentifier name="traces-sampler" /> to dynamically sample and filter your transactions.
+Once testing is complete, **we recommend lowering this value in production** by either lowering your <PlatformIdentifier name="traces-sample-rate" /> value, or switching to using <PlatformIdentifier name="traces-sampler" /> to dynamically sample and filter your transactions.
 
-Without sampling, our atomatic instrumenation will send a transaction any time any user loads any page or navigates anywhere in your app. That's a lot of transactions! Sampling allows you to get representative data without overwhelming either your system or your Sentry transaction quota.
-
-</Alert>
-
-## Connecting Backend and Frontend Transactions
-
-To connect backend and frontend transactions into a single coherent trace, Sentry uses a `trace_id` value which is propagated between frontend and backend. Depending on the circumstance, this id is transmitted either in a request header or in an HTML `<meta>` tag. Linking transactions in this way makes it possible for you to navigate between them in the Sentry UI, so you can better understand how the different parts of your system are affecting each other.
-
-### Page load
-
-When enabling tracing in both frontend and backend and taking advantage of the automatic frontend instrumentation, you can connect the automatically-generated `pageload` transaction on the frontend with the request transaction that serves the page on the backend. Because JavaScript code running in a browser cannot read the response headers of the current page, the `trace_id` must be transmitted in the response itself, specifically in a `<meta>` tag in the `<head>` of the HTML sent from your backend.
-
-```html
-<html>
-  <head>
-    <meta name="sentry-trace" content="{{ span.toTraceparent() }}" />
-    <!-- ... -->
-  </head>
-</html>
-```
-
-The `name` attribute must be the string `"sentry-trace"` and the `content` attribute must be generated by your backend's Sentry SDK using `span.toTraceparent()` (or equivalent, depending on the backend platform). This guarantees that a new and unique value will be generated for each request.
-
-The `span` reference is either the transaction that serves the HTML, or any of its child spans. It defines the parent of the `pageload` transaction.
-
-Once the data is included in the `<meta>` tag, our `BrowserTracing` integration will pick it up automatically and link it to the transaction generated on pageload. (Note that it will not get linked to automatically-generated `navigation` transactions, that is, those which don't require a full page reload. Each of those will be the result of a different request transaction on the backend, and therefore should have a unique `trace_id`.)
-
-### Navigation and Other XHR Requests
-
-Once a page is loaded, any requests it makes (and any requests your backend makes as a result) are linked through a request header.
-
-As is the case with the `<meta>` tag discussed above, the header's name is `sentry-trace` and its value is obtained by calling `span.toTraceparent()` (or the equivalent), where `span` is either the relevant transaction or any of its children.
-
-All of Sentry's tracing-related integrations (`BrowserTracing`, `Http`, and `Express`) either generate or pick up and propagate this header automatically as appropriate, for all transactions and spans which they generate. You can also attach and read the header yourself, in any case in which you've manually created either a transaction or a span and it makes sense to do so.
-
-## Retrieving an Active Transaction
-
-In cases where you want to attach Spans to an already ongoing transaction you can use `Sentry.getCurrentHub().getScope().getTransaction()`. This function will return a `Transaction` object when there is a running transaction on the scope, otherwise it returns `undefined`. If you are using our BrowserTracing integration, by default we attach the transaction to the Scope, so you could do something like this:
-
-```javascript
-function myJsFunction() {
-  const transaction = Sentry.getCurrentHub()
-    .getScope()
-    .getTransaction();
-  if (transaction) {
-    let span = transaction.startChild({
-      op: "encode",
-      description: "parseAvatarImages",
-    });
-    // Do something
-    span.finish();
-  }
-}
-```
-
-## Adding Query Information and Parameters to Spans
-
-Currently, every tag has a maximum character limit of 200 characters. Tags over the 200 character limit will become truncated, losing potentially important information. To retain this data, you can split data over several tags instead.
-
-For example, a 200+ character tagged request:
-
-`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=161803398874989484820458683436563811772030917980576`
-
-The 200+ character request above will become truncated to:
-
-`https://empowerplant.io/api/0/projects/ep/setup_form/?user_id=314159265358979323846264338327&tracking_id=EasyAsABC123OrSimpleAsDoReMi&product_name=PlantToHumanTranslator&product_id=1618033988749894848`
-
-Instead, using `span.set_tag` and `span.set_data` preserves the details of this query using structured metadata. This could be done over `baseUrl`, `endpoint`, and `parameters`:
-
-```javascript
-const baseUrl = "https://empowerplant.io";
-const endpoint = "/api/0/projects/ep/setup_form";
-const parameters = {
-  user_id: 314159265358979323846264338327,
-  tracking_id: "EasyAsABC123OrSimpleAsDoReMi",
-  product_name: PlantToHumanTranslator,
-  product_id: 161803398874989484820458683436563811772030917980576,
-};
-
-const span = transaction.startChild({
-  op: "request",
-  description: "setup form",
-});
-
-span.setTag("baseUrl", baseUrl);
-span.setTag("endpoint", endpoint);
-span.setData("parameters", parameters);
-// you may also find some parameters to be valuable as tags
-span.setData("user_id", parameters.user_id);
-http.get(`${base_url}/${endpoint}/`, (data = parameters));
-```
-
-## Grouping Transactions
-
-When Sentry captures transactions, they are assigned a transaction name. This name is generally auto-generated by the Sentry SDK based on the framework integrations you are using. If you can't leverage the automatic transaction generation (or want to customize how transaction names are generated) you can use a global event processor that is registered when you initialize the SDK with your configuration.
-
-An example of doing this in a node.js application:
-
-```javascript
-import { addGlobalEventProcessor } from "@sentry/node";
-
-addGlobalEventProcessor(event => {
-  // if event is a transaction event
-  if (event.type === "transaction") {
-    event.transaction = sanitizeTransactionName(event.transaction);
-  }
-  return event;
-});
-```
-
-For browser JavaScript applications using the `BrowserTracing` integration, the `beforeNavigate` option can be used to better group `navigation`/`pageload` transactions together based on URL.
-
-```javascript
-import * as Sentry from "@sentry/browser";
-import { Integrations } from "@sentry/tracing";
-
-Sentry.init({
-  // ...
-  integrations: [
-    new Integrations.BrowserTracing({
-      beforeNavigate: context => {
-        return {
-          ...context,
-          // You could use your UI's routing library to find the matching
-          // route template here. We don't have one right now, so do some basic
-          // parameter replacements.
-          name: location.pathname
-            .replace(/\d+/g, "<digits>")
-            .replace(/[a-f0-9]{32}/g, "<hash>"),
-        };
-      },
-    }),
-  ],
-});
-```
+Without sampling, our automatic instrumenation will send a transaction any time any user loads any page or navigates anywhere in your app. That's a lot of transactions! Sampling enables representative data without overwhelming either your system or your Sentry transaction quota.
