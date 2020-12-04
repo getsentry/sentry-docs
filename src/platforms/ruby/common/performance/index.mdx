@@ -55,6 +55,7 @@ class OrdersController < ApplicationController
     transaction = Sentry.get_current_scope.get_transaction
     # start a span under the root transaction
     span = transaction.start_child(op: :process_items, description: "process order's items")
+    span.set_data(:key, "value")
 
     order.process_items(params)
 
@@ -66,20 +67,17 @@ class OrdersController < ApplicationController
 end
 ```
 
-The alternative to make a tree of spans:
+Alternatively, you can use the `with_child_span` method:
 
 ```ruby
 class OrdersController < ApplicationController
   def create
     order = Order.new
-    # get the scope's current span (may not be the root transaction)
-    span = Sentry.get_current_scope.get_span
-    # start a child span
-    child_span = span.start_child(op: :process_items, description: "process order's items")
-
-    order.process_items(params)
-
-    span.finish
+    transaction = Sentry.get_current_scope.get_transaction
+    transaction.with_child_span(op: :process_items, description: "process order's items") do |span|
+      span.set_data(:key, "value")
+      order.process_items(params)
+    end # the child span ends with the block
   end
 end
 ```
