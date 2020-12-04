@@ -1,0 +1,37 @@
+---
+title: Sidekiq
+description: "Learn about using Sentry with Sidekiq."
+---
+
+In Sidekiq, all uncaught exceptions will be automatically reported.
+
+We support Sidekiq 5 and newer.
+
+## Install
+
+<PlatformContent includePath="getting-started-install" />
+
+## Configure
+
+<PlatformContent includePath="getting-started-config" />
+
+## Additional Notes
+
+### Params and sessions
+
+```ruby
+class ApplicationController < ActionController::Base
+  before_action :set_sentry_context
+
+  private
+
+  def set_sentry_context
+    Sentry.set_user(id: session[:current_user_id])
+    Sentry.set_extras(params: params.to_unsafe_h, url: request.url)
+  end
+end
+```
+
+### Caveats
+
+Currently, custom exception applications (`config.exceptions_app`) are not supported. If you are using a custom exception app, you must manually integrate sentry yourself.
