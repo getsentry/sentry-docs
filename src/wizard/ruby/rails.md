@@ -26,12 +26,13 @@ Initialize the SDK within your `config/application.rb`:
 Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
   config.breadcrumbs_logger = [:active_support_logger]
-  # if you want to activate performance monitoring, you also need to set either one of these options
-  #
-  # config.traces_sample_rate = 0.5
-  # config.traces_sampler = lambda do |context|
-  #   true
-  # end
+
+  # to activate performance monitoring, you also need to set one of these options:
+  config.traces_sample_rate = 0.5
+  # or
+  config.traces_sampler = lambda do |context|
+    true
+  end
 end
 ```
 
