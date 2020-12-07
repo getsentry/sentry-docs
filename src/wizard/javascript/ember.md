@@ -37,7 +37,7 @@ Then add the following config to your `config/environment.js`:
 ENV['@sentry/ember'] = {
   sentry: {
     dsn: '___PUBLIC_DSN___',
-
+    autoSessionTracking: true,
     // Set tracesSampleRate to 1.0 to capture 100%
     // of transactions for performance monitoring.
     // We recommend adjusting this value in production, or using tracesSampler
