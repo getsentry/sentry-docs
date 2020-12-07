@@ -24,6 +24,7 @@ import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
   dsn: '___PUBLIC_DSN___',
+  autoSessionTracking: true,
   integrations: [
     new Integrations.BrowserTracing(),
   ],
