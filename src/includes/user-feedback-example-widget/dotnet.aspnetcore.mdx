@@ -8,21 +8,17 @@ Make sure you've got the JavaScript SDK available:
 ></script>
 ```
 
-With ASP.NET Core MVC, the `Error.cshtml` razor page:
+If you are rendering the page from the server, for example on ASP.NET Core MVC, the `Error.cshtml` razor page can be:
 
-```html
-@using Sentry @inject IOptions<SentryAspNetCoreOptions>
-  SentryOptions @if (SentrySdk.LastEventId != Guid.Empty) {
+```cshtml
+@using Sentry
+@using Sentry.AspNetCore
+@inject Microsoft.Extensions.Options.IOptions<SentryAspNetCoreOptions> SentryOptions
+
+@if (SentrySdk.LastEventId != Sentry.Protocol.SentryId.Empty) {
   <script>
     Sentry.init({ dsn: "@(SentryOptions.Value.Dsn)" });
     Sentry.showReportDialog({ eventId: "@SentrySdk.LastEventId" });
   </script>
-  }</SentryAspNetCoreOptions
->
-```
-
-If you configured Sentry without the Dependency Injection (for example, without `UseSentry()`) you can also configure the SDK using a hard-coded DSN in the template:
-
-```js
-Sentry.init({ dsn: "___PUBLIC_DSN___" });
+}
 ```
