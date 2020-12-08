@@ -5,7 +5,7 @@ support_level: production
 type: framework
 ---
 
-To use Sentry with your Angular application, you will need to use `@sentry/angular` (Sentry’s Browser Angular SDK).
+Install our Browser Angular SDK using either `yarn` or `npm`:
 
 Add the Sentry SDK as a dependency using `yarn` or `npm`:
 
@@ -17,7 +17,7 @@ yarn add @sentry/browser @sentry/integrations
 npm install --save @sentry/browser @sentry/integrations
 ```
 
-You should `init` the Sentry browser SDK as soon as possible during your application load up, before initializing Angular:
+`init` the Sentry Browser SDK as soon as possible during your page load, before initializing Angular:
 
 ```javascript
 import angular from "angular";
@@ -35,8 +35,6 @@ Sentry.init({
     }),
   ],
 
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
   tracesSampleRate: 1.0,
 });
 
