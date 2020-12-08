@@ -1,23 +1,32 @@
 ---
 title: "User Feedback"
 sidebar_order: 105
-redirect_from:
-  - /learn/user-feedback/
-description: "Learn more about the embeddable JavaScript widget, which requests and collects the user information when an event occurs. Sentry pairs the feedback with the original event, giving you additional insight into issues."
-notSupported:
-  - android
-  - apple
-  - native
-  - native.breakpad
-  - native.crashpad
-  - native.minidumps
-  - native.wasm
-  - native.ue4
-  - dart
-  - flutter
+description: "Learn more about the API which you can use to collect user information when an event occurs. Sentry pairs the feedback with the original event, giving you additional insight into issues."
 ---
 
-When a user experiences an error, Sentry provides the ability to collect additional feedback. This type of feedback is useful when you may typically render a plain error page (the classic `500.html`).
+## Use the .NET SDK
+
+When a user experiences an error, Sentry provides the ability to collect additional feedback. You can create a form to collect the user input in your prefered framework, and use the SDK's API to send the information to Sentry.
+
+```csharp {tabTitle:C#}
+using Sentry;
+
+var eventId = SentrySdk.CaptureMessage("An event that will receive user feedback.");
+
+SentrySdk.CaptureUserFeedback(eventId, "user@example.com", "It broke.", "The User");
+```
+
+```fsharp {tabTitle:F#}
+open Sentry
+
+let eventId = SentrySdk.CaptureMessage("An event that will receive user feedback.")
+
+SentrySdk.CaptureUserFeedback(eventId, "user@example.com", "It broke.", "The User")
+```
+
+## On the Web
+
+On a website, this type of feedback is useful when you may typically render a plain error page (the classic `500.html`).
 
 To collect feedback, use the embeddable JavaScript widget, which requests and collects the user's name, email address, and a description of what occurred. When feedback is provided, Sentry pairs the feedback with the original event, giving you additional insights into issues.
 
@@ -25,15 +34,15 @@ The screenshot below provides an example of the User Feedback widget, though you
 
 ![An example of a user feedback widget with text boxes for user name, email, and additional details about the break.](user_feedback_widget.png)
 
-## Collecting Feedback
+### Integration
 
 To integrate the widget, you'll need to be running version 2.1 or newer of our JavaScript SDK. The widget authenticates with your public DSN, then passes in the Event ID that was generated on your backend.
 
-**If you'd prefer an alternative to the widget or do not have a JavaScript frontend, you can use the [User Feedback API](https://docs.sentry.io/api/projects/post-project-user-reports/).**
+**If you'd prefer an alternative to the widget or do not have a JavaScript frontend, you can use the .NET API mentioned above, or a [Web API](https://docs.sentry.io/api/projects/post-project-user-reports/).**
 
 <PlatformContent includePath="user-feedback-example-widget" />
 
-## Customizing the Widget
+### Customizing the Widget
 
 You can customize the widget to your organization's needs, especially for localization purposes. All options can be passed through the `showReportDialog` call.
 
