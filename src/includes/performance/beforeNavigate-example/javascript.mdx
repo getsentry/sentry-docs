@@ -1,0 +1,27 @@
+```javascript
+import * as Sentry from "@sentry/browser";
+import { Integrations } from "@sentry/tracing";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Integrations.BrowserTracing({
+      beforeNavigate: context => {
+        return {
+          ...context,
+          // You could use your UI's routing library to find the matching
+          // route template here. We don't have one right now, so do some basic
+          // parameter replacements.
+          name: location.pathname
+            .replace(/\d+/g, "<digits>")
+            .replace(/[a-f0-9]{32}/g, "<hash>"),
+        };
+      },
+    }),
+  ],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+```
