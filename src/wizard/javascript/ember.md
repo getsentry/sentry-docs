@@ -38,13 +38,9 @@ ENV['@sentry/ember'] = {
   sentry: {
     dsn: '___PUBLIC_DSN___',
     autoSessionTracking: true,
-    // Set tracesSampleRate to 1.0 to capture 100%
-    // of transactions for performance monitoring.
-    // We recommend adjusting this value in production, or using tracesSampler
-    // for finer control
     tracesSampleRate: 1.0,
   }
 };
 ```
 
-The above configuration captures both error and performance data. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
+We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/performance/sampling/).
