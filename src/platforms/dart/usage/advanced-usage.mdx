@@ -7,6 +7,51 @@ sidebar_order: 2
 
 - For the usage of the Dart SDK, the minimal required Dart SDK version is `2.8.0` and Flutter SDK version is `1.17.0`
 
+## Automatic Breadcrumbs
+
+To track automatic [Breadcrumbs for HTTP requests](https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types), you can add a Sentry wrapper that does it automatically for you.
+
+This is only possible if you are using the [http.Client](https://pub.dev/documentation/http/latest/http/Client-class.html) class from the [http](https://pub.dev/packages/http) library.
+
+The `SentryHttpClient` can be used as a standalone client like this:
+
+```dart
+import 'package:http/http.dart' as http;
+import 'package:sentry/sentry.dart';
+
+final client = SentryHttpClient();
+try {
+  final url = 'https://example.com/whatsit/create';
+  final response = await client.post(url, body: {
+    'name': 'doodle',
+    'color': 'blue',
+  });
+  print('Response body: ${response.body}');
+} finally {
+  client.close();
+}
+```
+
+The `SentryHttpClient` can also be used as a wrapper for your own `HTTP Client`:
+
+```dart
+import 'package:http/http.dart' as http;
+import 'package:sentry/sentry.dart';
+
+final myClient = http.Client();
+final client = SentryHttpClient(client: myClient);
+try {
+  final url = 'https://example.com/whatsit/create';
+  final response = await client.post(url, body: {
+    'name': 'doodle',
+    'color': 'blue',
+  });
+  print('Response body: ${response.body}');
+} finally {
+  client.close();
+}
+```
+
 ## Tips for catching errors
 
 - Use a `try/catch` block
