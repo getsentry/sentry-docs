@@ -1,6 +1,8 @@
 ---
 title: Automatic Instrumentation
 sidebar_order: 10
+supported:
+  - javascript
 description: "Learn how to add automatic instrumentation to captured transactions."
 ---
 
@@ -20,46 +22,7 @@ The `BrowserTracing` integration creates a new transaction for each page load an
 
 To enable this automatic tracing, include the `BrowserTracing` integration in your SDK configuration options. (Note that when using ESM modules, the main `@sentry/*` import must come before the `@sentry/tracing` import.)
 
-After configuration, you will see both `pageload` and `navigation` when viewing transactions in sentry.io.
-
-```javascript {tabTitle: ESM}
-// If you're using one of our integration packages, like `@sentry/react` or `@sentry/angular`,
-// substitute its name for `@sentry/browser` here
-import * as Sentry from "@sentry/browser";
-import { Integrations as TracingIntegrations } from "@sentry/tracing"; // Must import second
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  integrations: [
-    new Integrations.BrowserTracing({
-      tracingOrigins: ["localhost", "my-site-url.com", /^\//],
-      // ... other options
-    }),
-  ],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
-```
-
-```javascript {tabTitle: CDN}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  integrations: [
-    new Sentry.Integrations.BrowserTracing({
-      tracingOrigins: ["localhost", "my-site-url.com", /^\//],
-      // ... other options
-    }),
-  ],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
-```
+<PlatformContent includePath="performance/enable-automatic-instrumentation" />
 
 ## Configuration Options
 
@@ -69,84 +32,18 @@ You can pass many different options to the `BrowserTracing` integration (as an o
 
 The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
 
-For example:
-
-- A frontend application is served from `example.com`
-- A backend service is served from `api.example.com`
-- The frontend application makes API calls to the backend
-- Therefore, the option needs to be configured like this: `new Integrations.BrowserTracing({tracingOrigins: ['api.example.com']})`
-- Now outgoing XHR/fetch requests to `api.example.com` will get the `sentry-trace` header attached
-
-```javascript
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Integrations.BrowserTracing({
-      tracingOrigins: ["localhost", "my-site-url.com"],
-    }),
-  ],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
-```
+<PlatformContent includePath="performance/tracingOrigins-example" />
 
 You will need to configure your web server CORS to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your set up. If you do not allow the `sentry-trace` header, the request might be blocked.
-
 
 ### beforeNavigate
 
 For `pageload` and `navigation` transactions, the `BrowserTracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigate` option to the `BrowserTracing` integration. This option allows you to modify the transaction name to make it more generic, so that, for example, transactions named `GET /users/12312012` and `GET /users/11212012` can both be renamed `GET /users/:userid`, so that they'll group together.
 
-```javascript
-import * as Sentry from "@sentry/browser";
-import { Integrations } from "@sentry/tracing";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Integrations.BrowserTracing({
-      beforeNavigate: context => {
-        return {
-          ...context,
-          // You could use your UI's routing library to find the matching
-          // route template here. We don't have one right now, so do some basic
-          // parameter replacements.
-          name: location.pathname
-            .replace(/\d+/g, "<digits>")
-            .replace(/[a-f0-9]{32}/g, "<hash>"),
-        };
-      },
-    }),
-  ],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
-```
+<PlatformContent includePath="performance/beforeNavigate-example" />
 
 ### shouldCreateSpanForRequest
 
 This function can be used to filter out unwanted spans such as XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` already filters out everything but what was defined in `tracingOrigins`.
 
-```javascript
-import * as Sentry from "@sentry/browser";
-import { Integrations } from "@sentry/tracing";
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [
-    new Integrations.BrowserTracing({
-      shouldCreateSpanForRequest: url => {
-        // Do not create spans for outgoing requests to a `/health/` endpoint
-        return !url.match(/\/health\/?$/);
-      },
-    }),
-  ],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
-```
+<PlatformContent includePath="performance/filter-span-example" />

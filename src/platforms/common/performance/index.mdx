@@ -1,6 +1,9 @@
 ---
 title: Getting Started
 sidebar_order: 20
+supported:
+  - javascript
+  - react-native
 description: "Learn how to enable performance monitoring in your app if it is not already set up."
 redirect_from:
   - /platforms/javascript/performance/apm-to-tracing/
@@ -20,7 +23,16 @@ Customers on legacy plans must add transaction events to their subscription in o
 
 </Alert>
 
-With performance monitoring, Sentry tracks your software performance, measuring metrics like throughput and latency, and displaying the impact of errors across multiple systems. Once tracing is enabled, certain types of operations are measured automatically, and you can also choose to manually measure any operation you like. To learn more, see <PlatformLink to="/performance/capturing/automatic/">Add Automatic Instrumentation</PlatformLink> and <PlatformLink to="/performance/capturing/manual/">Add Manual Instrumentation</PlatformLink>.
+With performance monitoring, Sentry tracks your software performance, measuring metrics like throughput and latency, and displaying the impact of errors across multiple systems.
+
+<PlatformSection supported={["javascript"]} notSupported={["react-native"]}>
+
+Once tracing is enabled, certain types of operations are measured automatically in suported SDKs. To learn more, see <PlatformLink to="/performance/capturing/automatic/">Automatic Instrumentation</PlatformLink>.
+
+</PlatformSection>
+
+You can choose to manually measure any operation. To learn more, see <PlatformLink to="/performance/capturing/manual/">Manual Instrumentation</PlatformLink>.
+
 
 By monitoring the performance of your application, you can see how latency in one service may affect another service to pinpoint exactly which parts of a given operation may be responsible. To do this, Sentry captures distributed traces consisting of transactions and spans, which measure individual services and individual operations within those services, respectively. You can learn more about this model in our [Distributed Tracing](/product/performance/distributed-tracing/) docs.
 
@@ -28,26 +40,7 @@ By monitoring the performance of your application, you can see how latency in on
 
 Install the tracing package:
 
-```bash {tabTitle: ESM}
-# Using yarn
-yarn add @sentry/tracing
-
-# Using npm
-npm install @sentry/tracing
-```
-
-```html {tabTitle: CDN}
-<script
-  <!--
-    Note that `bundle.tracing.min.js` contains both `@sentry/browser` AND
-    `@sentry/tracing`, and should therefore be used in place of
-    `@sentry/browser`'s bundle rather than in addition to it.
-  -->
-  src="https://browser.sentry-cdn.com/{{ packages.version('sentry.javascript.browser') }}/bundle.tracing.min.js"
-  integrity="sha384-{{ packages.checksum('sentry.javascript.browser', 'bundle.tracing.min.js', 'sha384-base64') }}"
-  crossorigin="anonymous"
-></script>
-```
+<PlatformContent includePath="performance/install-tracing-package" />
 
 ## Configure
 
@@ -56,47 +49,7 @@ Enable performance monitoring in your app by either:
 1. Setting a uniform sample rate for all transactions using the <PlatformIdentifier name="traces-sample-rate" /> option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set <PlatformIdentifier name="traces-sample-rate" /> to `0.2`.)
 2. Controlling the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the <PlatformIdentifier name="traces-sampler" /> config option.
 
-```javascript {tabTitle: ESM}
-// If you're using one of our integration packages, like `@sentry/react` or
-// `@sentry/angular`, substitute its name for `@sentry/browser` here
-import * as Sentry from "@sentry/browser";
-
-// If taking advantage of automatic instrumentation (highly recommended)
-import { Integrations as TracingIntegrations } from "@sentry/tracing";
-// Or, if only manually tracing
-// import * as _ from "@sentry/tracing"
-// Note: You MUST import the package in some way for tracing to work
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // This enables automatic instrumentation (highly recommended), but is not
-  // necessary for purely manual usage
-  integrations: [new TracingIntegrations.BrowserTracing()],
-
-  // To set a uniform sample rate
-  tracesSampleRate: 0.2
-
-  // Alternatively, to control sampling dynamically
-  tracesSampler: samplingContext => { ... }
-});
-```
-
-```javascript {tabTitle: CDN}
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-
-  // This enables automatic instrumentation (highly recommended), but is not
-  // necessary for purely manual usage
-  integrations: [new Sentry.Integrations.BrowserTracing()],
-
-  // To set a uniform sample rate
-  tracesSampleRate: 0.2
-
-  // Alternatively, to control sampling dynamically
-  tracesSampler: samplingContext => { ... }
-});
-```
+<PlatformContent includePath="performance/configure-tracing-package" />
 
 If either of these options is set, tracing will be enabled in your app. While these options are meant to be mutually exclusive, if you do set both, <PlatformIdentifier name="traces-sampler" /> will take precedence. You can learn more about how they work in <PlatformLink to="/performance/sampling/">Sampling Transactions</PlatformLink>.
 
