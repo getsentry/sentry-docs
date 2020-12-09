@@ -123,6 +123,31 @@ A `<SHORT-ID>` may look something like 'BACKEND-C' in the image below.
 
 ![Issue detail highlighting suspect commits](short-id.png)
 
+### Stack Trace Linking
+Stack trace linking takes you from a file in your Sentry stack trace to that same file in your source code. If you have commit tracking set up in Sentry, we can take you to the exact version (using the commit associated with the event) of the source code when the error occurred. Otherwise we'll link you to the current state of the source code (using the `default_branch`).
+
+1. Navigate to **Settings > Integrations > GitLab > Configurations**.
+
+1. Next to your GitLab Instance, click "Configure".
+
+1. Next click on the **Code Mappings** tab.
+
+1. To enable stack trace linking, you'll need to set up a code mapping for each project you want to enable stack trace linking for. To create a new code mapping, click **Add Mapping**.
+
+1. Fill out the form, and click **Save Changes**. For more information on each form field, see below:
+   * `project` (required): This is the Sentry project. 
+   * `repo` (required): This is the GitLab project that is associated with the Sentry project above. If you have more than one GitLab project being used per Sentry project, you'll need multiple code mappings.
+   * `default_branch` (required): This is the default branch of your code we fall back to if you do not have commit tracking set up. 
+   * `stack_root` and `source_root` (optional):
+      1. If the filename in your Sentry stack trace frame matches the path to your source code, you do not need to set these values. 
+         * ex. My filename is `code.py` and my source code path is `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py`. Everything after the branch (`main`) matches my filename so I don't need to set a `stack_root` and `source_root`.
+      
+      1. If the filename in your Sentry stack trace frame doesn't match the path to your source code, your `stack_root` will be the part of the filename you need to replace with your `source_root` in order to make the filename match the source code path.
+         * ex. My filename is `src/code.py` and my source code path is `https://gitlab.com/murdith-group/issa-project/-/blob/main/code.py`. In order to get `src/code.py` to match `code.py`, I'll need my `stack_root` to be set as `src/`, and my `source_root` can remain empty. 
+         
+         For the filename `src/code.py`, when I replace my `stack_root`, `src/`, with my `source_root`, `''`, I get `code.py`. This now matches my source code path.
+
+
 ## Troubleshooting
 
 - I'm using GitLab on-premise. Do I need to allow Sentry's IP addresses?
