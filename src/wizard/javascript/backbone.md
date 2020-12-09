@@ -1,29 +1,45 @@
 ---
 name: Backbone
-doc_link: https://docs.sentry.io/clients/javascript/integrations/#backbone
+doc_link: https://docs.sentry.io/platforms/javascript/
 support_level: production
 type: framework
 ---
 
-### Installation
+Install our JavaScript browser SDK using either `yarn` or `npm`:
 
-Start by adding the `raven.js` script tag to your page. It should be loaded as early as possible.
-
-```html
-<script
-  src="https://cdn.ravenjs.com/3.26.4/raven.min.js"
-  crossorigin="anonymous"
-></script>
+```bash {tabTitle: ESM}
+# Using yarn
+yarn add @sentry/browser @sentry/tracing
+# Using npm
+npm install --save @sentry/browser @sentry/tracing
 ```
 
-### Configuring the Client
+We also support alternate [installation methods](/platforms/javascript/install/).
 
-Next configure Raven.js to use your Sentry DSN:
+`init` the Sentry Browser SDK as soon as possible during your page load:
 
 ```javascript
-Raven.config("___PUBLIC_DSN___").install();
+import * as Sentry from "@sentry/browser";
+import { Integrations } from "@sentry/tracing";
+
+Sentry.init({
+  dsn: '___PUBLIC_DSN___',
+  autoSessionTracking: true,
+  integrations: [
+    new Integrations.BrowserTracing(),
+  ],
+  tracesSampleRate: 1.0,
+});
 ```
 
-At this point, Raven is ready to capture any uncaught exception.
+We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/performance/sampling/).
 
-<!-- TODO-ADD-VERIFICATION-EXAMPLE -->
+Then create an intentional error, so you can test that everything is working:
+
+```js
+myUndefinedFunction();
+```
+
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
+
+If you're an existing user and have disabled alerts, you won't receive this email.  

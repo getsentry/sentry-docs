@@ -26,6 +26,7 @@ import App from "./App";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  autoSessionTracking: true,
   integrations: [
     new Integrations.BrowserTracing(),
   ],
