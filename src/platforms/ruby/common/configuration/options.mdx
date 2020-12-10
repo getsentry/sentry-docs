@@ -1,16 +1,16 @@
 ---
-title: Configuration
-sidebar_order: 200
+title: Basic Options
+sidebar_order: 1
 redirect_from:
   - /clients/ruby/config/
   - /platforms/ruby/config/
-description: "Learn about configuring optional settings and environmental variables."
+description: "Learn more about how to configure the SDK."
 ---
 
 Configuration is passed as part of the client initialization:
 
 ```ruby
-Raven.configure do |config|
+Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
   config.attr = 'value'
 end
@@ -35,12 +35,12 @@ class SentryJob < ActiveJob::Base
   queue_as :default
 
   def perform(event)
-    Raven.send_event(event)
+    Sentry.send_event(event)
   end
 end
 ```
 
-If the async callback raises an exception, Raven will attempt to send synchronously.
+If the async callback raises an exception, Sentry will attempt to send synchronously.
 
 `backtrace_cleanup_callback`
 
@@ -51,6 +51,12 @@ config.backtrace_cleanup_callback = lambda do |backtrace|
   Rails.backtrace_cleaner.clean(backtrace)
 end
 ```
+
+`before_send`
+
+: Provide a lambda or proc. This will be `called` before sending an event to Sentry. Receives an `event` and `hint` as parameter. `hint` is a dict `{:exception => ex | nil, :message => message | nil}`. It is possible to mutate the event, also if this function returns `nil` the event will be dropped and not sent.
+
+<PlatformContent includePath="configuration/before-send" />
 
 `breadcrumbs_logger`
 
@@ -66,31 +72,21 @@ config.breadcrumbs_logger = :active_support_logger
 config.breadcrumbs_logger = [:sentry_logger, :active_support_logger]
 ```
 
-`encoding`
-
-: While unlikely that you’ll need to change it, by default Raven compresses outgoing messages with gzip. This has a slight impact on performance, but due to the size of many Ruby stack trace it’s required for the serve to accept the content.
-
-To disable gzip, set the encoding to ‘json’:
-
-```ruby
-config.encoding = 'json'
-```
-
-`environments`
+`enabled_environments`
 
 : As of v0.10.0, events will be sent to Sentry in all environments. If you do not wish to send events in an environment, we suggest you unset the SENTRY_DSN variable in that environment.
 
-Alternately, you can configure Raven to run only in certain environments by configuring the environments list. For example, to only run Sentry in production:
+Alternately, you can configure Sentry to run only in certain environments by configuring the `enabled_environments` list. For example, to only run Sentry in production:
 
 ```ruby
-config.environments = %w[ production ]
+config.enabled_environments = %w[production]
 ```
 
-Sentry automatically sets the current environment to RAILS_ENV, or if it is not present, RACK_ENV. If you are using Sentry outside of Rack or Rails, or wish to override environment detection, you’ll need to set the current environment by setting SENTRY_CURRENT_ENV or configuring the client yourself:
+`environment`
 
-```ruby
-config.current_environment = 'my_cool_environment'
-```
+: Sentry automatically sets the current environment to RAILS_ENV, or if it is not present, RACK_ENV. If you are using Sentry outside of Rack or Rails, or wish to override environment detection, you’ll need to set the current environment by setting SENTRY_CURRENT_ENV or configuring the client yourself:
+
+<PlatformContent includePath="set-environment" />
 
 `excluded_exceptions`
 
@@ -102,7 +98,7 @@ In the example below, the exceptions Rails uses to generate 404 responses will b
 config.excluded_exceptions += ['ActionController::RoutingError', 'ActiveRecord::RecordNotFound']
 ```
 
-You can find the list of exceptions that are excluded by default in `Raven::Configuration::IGNORE_DEFAULT`. It is suggested that you append to these defaults rather than overwrite them with `=`.
+You can find the list of exceptions that are excluded by default in `Sentry::Configuration::IGNORE_DEFAULT`. It is suggested that you append to these defaults rather than overwrite them with `=`.
 
 `inspect_exception_causes_for_exclusion`
 
@@ -114,86 +110,13 @@ config.inspect_exception_causes_for_exclusion = false
 
 `logger`
 
-: The logger used by Sentry. Default is an instance of Raven::Logger.
+: The logger used by Sentry. Default is an instance of Sentry::Logger.
 
 ```ruby
-config.logger = Raven::Logger.new(STDOUT)
+config.logger = Sentry::Logger.new(STDOUT)
 ```
 
-Raven respects logger levels.
-
-`processors`
-
-: If you need to sanitize or pre-process (before its sent to the server) data, you can do so using the Processors implementation. By default, a few processors are installed. The most important is `Raven::Processor::SanitizeData`, which will attempt to sanitize keys that match various patterns (e.g. password) and values that resemble credit card numbers.
-
-In your Sentry UI, data which has been sanitized will appear as “**\*\*\*\***” (or 0, if the value was an Integer).
-
-To specify your own (or to remove the defaults), simply pass them with your configuration:
-
-```ruby
-config.processors = [MyOwnProcessor]
-```
-
-Check out `Raven::Processor::SanitizeData` to see how a Processor is implemented.
-
-You can also specify values to be sanitized. Any strings matched will be replaced with the string mask (**\*\*\*\***), and integers that are matched will be replaced with 0. Only String and Integer values can be sanitized, though the client will recursively traverse Hashes and Arrays to look for sanitizable values. One good use for this is to copy Rails’ filter_parameters:
-
-```ruby
-config.sanitize_fields = Rails.application.config.filter_parameters.map(&:to_s)
-```
-
-The client scrubs the HTTP “Authorization” header of requests before sending them to Sentry, to prevent sensitive credentials from being sent. You can specify additional HTTP headers to ignore:
-
-You can also provide regex-like strings to the sanitizer:
-
-```ruby
-config.sanitize_fields = ["my_field", "foo(.*)?bar"]
-```
-
-It’s also possible to remove HTTP header values which match a list:
-
-```ruby
-config.sanitize_http_headers = ["Via", "Referer", "User-Agent", "Server", "From"]
-```
-
-For more information about HTTP headers which may contain sensitive information in your application, see [RFC 2616](https://www.w3.org/Protocols/rfc2616/rfc2616-sec15.html).
-
-By default, Sentry sends up a stack trace with an exception. This stack trace may contain data which you may consider to be sensitive, including lines of source code, line numbers, module names, and source paths. To wipe the stack trace from all error reports, require and add the RemoveStacktrace processor:
-
-```ruby
-require 'raven/processor/removestacktrace'
-
-Raven.configure do |config|
-  config.processors << Raven::Processor::RemoveStacktrace
-end
-```
-
-By default, Sentry does not send POST data or cookies if present. To re-enable, remove the respective processor from the chain:
-
-```ruby
-Raven.configure do |config|
-  config.processors -= [Raven::Processor::PostData] # Do this to send POST data
-  config.processors -= [Raven::Processor::Cookies] # Do this to send cookies by default
-end
-```
-
-`proxy`
-
-: A string with the URL of the HTTP proxy to be used.
-
-```ruby
-config.proxy = 'http://path.to.my.proxy.com'
-```
-
-`rails_report_rescued_exceptions`
-
-: Rails catches exceptions in the ActionDispatch::ShowExceptions or ActionDispatch::DebugExceptions middlewares, depending on the environment. When _rails_report_rescued_exceptions_ is true (it is by default), Raven will report exceptions even when they are rescued by these middlewares.
-
-If you are using a custom exceptions app, you may wish to disable this behavior:
-
-```ruby
-config.rails_report_rescued_exceptions = false
-```
+Sentry respects logger levels.
 
 `release`
 
@@ -205,9 +128,7 @@ We guess the release intelligently in the following order of preference:
 - Reading from the REVISION file in the app root
 - Heroku’s dyno metadata (must have enabled via Heroku Labs)
 
-```ruby
-config.release = '721e41770371db95eee98ca2707686226b993eda'
-```
+<PlatformContent includePath="set-release" />
 
 `sample_rate`
 
@@ -218,74 +139,60 @@ config.release = '721e41770371db95eee98ca2707686226b993eda'
 config.sample_rate = 0.5
 ```
 
-`should_capture`
+`send_default_pii`
 
-: By providing a proc or lambda, you can control what events are captured. A String (if you’ve captured a message) or the Exception (if you’ve captured an exception) will be passed to the Proc or lambda you provide - returning false will stop the event from sending to Sentry:
+: When its value is `false` (default), sensitive information like
+
+- user ip
+- user cookie
+- request body
+
+will not be sent to Sentry.
+
+You can re-enable it by setting:
 
 ```ruby
-config.should_capture = Proc.new { |e| true unless e.contains_sensitive_info? }
+config.send_default_pii = true
 ```
 
-`silence_ready`
+## Tracing Options
 
-: Upon start, Raven will write the following message to the log at the INFO level:
+`traces_sample_rate`
 
-`** [out :: hostname.example.com] I, [2014-07-22T15:32:57.498368 #30897] INFO – : ** [Raven] Raven 0.9.4 ready to catch errors”`
+: By providing a float between `0.0` and `1.0`, you can control the sampling factor of tracing events.
 
-You can turn off this message:
+- `nil` (default) or `0.0` means the tracing feature is disabled.
+- `1.0` means sending all the events.
 
-```ruby
-config.silence_ready = true
-```
+<PlatformContent includePath="performance/traces-sample-rate" />
 
-`ssl_verification`
+`traces_sampler`
 
-: By default SSL certificate verification is enabled in the client. It can be disabled.
+: You can gain more control on tracing event (transaction)'s sampling decision by providing a callable object (`Proc` or `Lambda`) as a `traces_sampler`:
 
-```ruby
-config.ssl_verification = false
-```
+<PlatformContent includePath="performance/dynamic-sampling-function-intro" />
 
-`tags`
+## Transport Options
 
-: Default tags to send with each event.
+`transport_class`
 
-```ruby
-config.tags = { foo: :bar }
-```
-
-`transport_failure_callback`
-
-: If the transport fails to send an event to Sentry for any reason (either the Sentry server has returned a 4XX or 5XX response), this Proc or lambda will be called.
+: By default, the SDK uses `Sentry::HTTPTransport` class for sending events to Sentry, which should work for the majority of users. But if you want to use your own Transport class, you can change it with this option:
 
 ```ruby
-config.transport_failure_callback = lambda { |event, error|
-  AdminMailer.email_admins("Oh god, it's on fire because #{error.message}!", event).deliver_later
-}
-```
-
-`before_send`
-
-: Provide a lambda or proc. This will be `called` before sending an event to Sentry. Receives an `event` and `hint` as parameter. `hint` is a dict `{:exception => ex | nil, :message => message | nil}`. It is possible to mutate the event, also if this function returns `nil` the event will be dropped and not sent.
-
-```ruby
-  config.before_send = lambda { |event, hint|
-    event.fingerprint = ['fingerprint']
-    event
-  }
+config.transport.transport_class = MyTransportClass
 ```
 
 ## Environment Variables
 
 `SENTRY_DSN`
 
-: After you complete setting up a project, you’ll be given a value which we call a DSN, or Data Source Name. It looks a lot like a standard URL, but it’s actually just a representation of the configuration required by Raven (the Sentry client). It consists of a few pieces, including the protocol, public and secret keys, the server address, and the project identifier.
+: After you complete setting up a project, you’ll be given a value which we call a DSN, or Data Source Name. It looks a lot like a standard URL, but it’s actually just a representation of the configuration required by Sentry (the Sentry client). It consists of a few pieces, including the protocol, public and secret keys, the server address, and the project identifier.
 
-With Raven, you may either set the SENTRY_DSN environment variable (recommended), or set your DSN manually in a config block:
+With Sentry, you may either set the SENTRY_DSN environment variable (recommended), or set your DSN manually in a config block:
 
 ```ruby
 # in Rails, this might be in config/initializers/sentry.rb
-Raven.configure do |config|
+Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
 end
 ```

@@ -1,0 +1,18 @@
+```ruby
+Sentry.init do |config|
+  config.traces_sampler = lambda do |sampling_context|
+    # transaction_context is the transaction object in hash form
+    # keep in mind that sampling happens right after the transaction is initialized
+    # e.g. at the beginning of the request
+    transaction = sampling_context[:transaction_context]
+
+    # if the transaction is important, set a higher rate
+    if transaction[:name].match?("orders")
+      0.5
+    # otherwise, give it a lower rate
+    else
+      0.1
+    end
+  end
+end
+```

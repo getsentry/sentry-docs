@@ -1,9 +1,10 @@
 ```ruby
-Raven.breadcrumbs.record do |crumb|
-  crumb.category = "auth"
-  crumb.message = "Authenticated user #{user.email}"
-  crumb.level = "info"
-end
+crumb = Sentry::Breadcrumb.new(
+  category: "auth",
+  message: "Authenticated user #{user.email}",
+  level: "info"
+)
+Sentry.add_breadcrumb(crumb)
 ```
 
 Appropriate places to inject Breadcrumbs may be places like your HTTP library:
@@ -11,16 +12,16 @@ Appropriate places to inject Breadcrumbs may be places like your HTTP library:
 ```ruby
 # Instrumenting Faraday with a middleware:
 
-class RavenFaradayMiddleware
+class SentryFaradayMiddleware
   def call
     # Add a breadcrumb every time we complete an HTTP request
     @app.call(request_env).on_complete do |response_env|
-      Raven.breadcrumbs.record do |crumb|
-        crumb.data = { response_env: response_env }
-        crumb.category = "faraday"
-        crumb.timestamp = Time.now.to_i
-        crumb.message = "Completed request to #{request_env[:url]}"
-      end
+      crumb = Sentry::Breadcrumb.new(
+        data: { response_env: response_env },
+        category: "faraday",
+        message: "Completed request to #{request_env[:url]}"
+      )
+      Sentry.add_breadcrumb(crumb)
     end
   end
 end

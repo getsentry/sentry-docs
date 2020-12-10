@@ -10,19 +10,28 @@ type: framework
 Install the SDK via Rubygems by adding it to your `Gemfile`:
 
 ```ruby
-gem "sentry-raven"
+gem "sentry-ruby"
 ```
 
 ### Configuration
 
-Add `use Raven::Rack` to your `config.ru` or other rackup file (this is automatically inserted in Rails):
+Add `use Sentry::Rack::CaptureException` and `use Sentry::Rack::Tracing` to your `config.ru` or other rackup file (this is automatically inserted in Rails):
 
 ```ruby
-require 'raven'
+require 'sentry-ruby'
 
-Raven.configure do |config|
+Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
+
+  # To activate performance monitoring, set one of these options.
+  # We recommend adjusting the value in production:
+  config.traces_sample_rate = 0.5
+  # or
+  config.traces_sampler = lambda do |context|
+    true
+  end
 end
 
-use Raven::Rack
+use Sentry::Rack::Tracing
+use Sentry::Rack::CaptureException
 ```
