@@ -1,7 +1,40 @@
+To simplify creating events, there are shorthand functions that construct prepopulated event objects. The most important one is `sentry_value_new_message_event`. The `logger` and `message` parameters are each optional.
+
 ```c
 #include <sentry.h>
 
-sentry_value_t event = sentry_value_new_event();
-sentry_value_set_by_key(event, "message", sentry_value_new_string("Hello!"));
+sentry_value_t event = sentry_value_new_message_event(
+  /*   level */ SENTRY_LEVEL_INFO,
+  /*  logger */ "custom",
+  /* message */ "It works!"
+);
+
 sentry_capture_event(event);
 ```
+
+## Manual Events
+
+To create and capture a manual event, follow these steps:
+
+1. Create an event value using `sentry_value_new_event`. This internally creates an object value and initializes it with common event attributes, like a `timestamp` and `event_id`.
+2. Add custom attributes to the event, like a `message` or an `exception`.
+3. Send the event to Sentry by invoking `sentry_capture_event`.
+
+In a more complex example, it looks like this:
+
+```c
+sentry_value_t event = sentry_value_new_event();
+sentry_value_set_by_key(event, "message", sentry_value_new_string("Hello!"));
+
+sentry_value_t screen = sentry_value_new_object();
+sentry_value_set_by_key(screen, "width", sentry_value_new_int32(1920));
+sentry_value_set_by_key(screen, "height", sentry_value_new_int32(1080));
+
+sentry_value_t contexts = sentry_value_new_object();
+sentry_value_set_by_key(contexts, "screen_size", screen);
+
+sentry_value_set_by_key(event, "contexts", contexts);
+sentry_capture_event(event);
+```
+
+For the full list of supported values, see [_Event Payloads_](https://develop.sentry.dev/sdk/event-payloads/) and linked documents.
