@@ -6,14 +6,6 @@ Sentry supports additional context with events. Often this context is shared
 among any issue captured in its lifecycle, and includes the following
 components:
 
-**Structured Contexts**
-
-: Structured contexts are typically set automatically.
-
-[**User**](#capturing-the-user)
-
-: Information about the current actor.
-
 [**Tags**](#tagging-events)
 
 : Key/value pairs which generate breakdown charts and search filters.
@@ -25,77 +17,6 @@ components:
 [**Fingerprint**](#setting-the-fingerprint)
 
 : A value used for grouping events into issues.
-
-[**Unstructured Extra Data**](#extra-context)
-
-: Arbitrary unstructured data which the Sentry SDK stores with an event sample.
-
-<Alert level="warning" title="Context Size Limits">
-
-Sentry will try its best to accommodate the data you send it, but large context
-payloads will be trimmed or may be truncated entirely. For more details see the
-[data handling SDK documentation](https://develop.sentry.dev/sdk/data-handling/)
-
-</Alert>
-
-Context information is attached to every event until explicitly removed or
-overwritten.
-
-## Extra Context
-
-In addition to the structured contexts that Sentry understands, you can send
-arbitrary key/value pairs of data which the Sentry SDK will store alongside the
-event. These are not indexed, and the Sentry SDK uses them to add additional
-information about what might be happening.
-
-`sentry_set_extra` takes the name of the extra value as first parameter, and the
-value as `sentry_value_t` as second parameter:
-
-```c
-sentry_value_t screen = sentry_value_new_object();
-sentry_value_set_by_key(screen, "width", sentry_value_new_int32(1920));
-sentry_value_set_by_key(screen, "height", sentry_value_new_int32(1080));
-sentry_set_extra("screen_size", screen);
-```
-
-## Capturing the User
-
-Sending users to Sentry will unlock many features, primarily the ability to
-drill down into the number of users affecting an issue, as well as to get a
-broader sense about the quality of the application.
-
-```c
-sentry_value_t user = sentry_value_new_object();
-sentry_value_set_by_key(user, "id", sentry_value_new_int32(42));
-sentry_value_set_by_key(user, "username", sentry_value_new_string("John Doe"));
-sentry_set_user(user);
-```
-
-Users consist of a few critical pieces of information which are used to
-construct a unique identity in Sentry. Each of these is optional, but
-one **must** be present for the Sentry SDK to capture the user:
-
-`id`
-
-: Your internal identifier for the user.
-
-`username`
-
-: The user's username. Generally used as a better label than the internal ID.
-
-`email`
-
-: An alternative, or addition, to a username. Sentry is aware of email addresses
-and can show things like Gravatars, unlock messaging capabilities, and more.
-
-`ip_address`
-
-: The IP address of the user. If the user is unauthenticated, providing the IP
-address will suggest that this is unique to that IP. If available, we will
-attempt to pull this from the HTTP request data.
-
-Additionally, you can provide arbitrary key/value pairs beyond the reserved
-names, and the Sentry SDK will store those with the user.
 
 ## Tagging Events
 
