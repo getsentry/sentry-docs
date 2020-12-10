@@ -9,7 +9,7 @@ Get the SDK from [pub.dev](https://pub.dev/packages/sentry_flutter) by adding th
 
 ```yml {filename:pubspec.yaml}
 dependencies:
-  sentry_flutter: ^4.0.0-beta.1
+  sentry_flutter: ^4.0.0
 ```
 
 Import `sentry_flutter` and initialize it:
