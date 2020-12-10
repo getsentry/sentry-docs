@@ -1,4 +1,32 @@
-Install the SDK by downloading the [latest
-release](https://github.com/getsentry/sentry-native/releases). Next, follow the
-instructions in the [_Native SDK Documentation_](/platforms/native/) to build and link the SDK
-library.
+The Native SDK currently supports **Windows**, **macOS**, **Linux**, and **Android**.
+
+To build the SDK, download the latest release of the SDK from the [Releases page](https://github.com/getsentry/sentry-native/releases). The SDK is managed as a [CMake] project, which additionally supports several configuration options, such as the backend to use.
+
+For example, `CMake` can be used like this (on macOS):
+
+```shell
+# configure the cmake build into the `build` directory, with crashpad (on macOS)
+cmake -B build -D SENTRY_BACKEND=crashpad
+# build the project
+cmake --build build --parallel
+# install the resulting artifacts into a specific prefix
+cmake --install build --prefix install
+# which will result in the following (on macOS):
+exa --tree install
+install
+├── bin
+│  └── crashpad_handler
+├── include
+│  └── sentry.h
+└── lib
+   ├── libsentry.dylib
+   └── libsentry.dylib.dSYM
+```
+
+[cmake]: https://cmake.org/cmake/help/latest/
+
+<Alert level="warning" title="Bundling crashpad_handler">
+
+When using the _Crashpad backend_, which is the default on Windows and macOS, the `crashpad_handler` binary has to be shipped alongside the application binary. See the [Crashpad documentation](configuration/backends/crashpad/) for more information.
+
+</Alert>
