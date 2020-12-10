@@ -8,9 +8,17 @@ sentry_value_t strip_sensitive_data(sentry_value_t event, void *hint) {
 
 int main(void) {
   sentry_options_t *options = sentry_options_new();
-  sentry_options_set_before_send(options, strip_sensitive_data);
+  sentry_options_set_before_send(options, strip_sensitive_data, NULL);
   sentry_init(options);
 
   /* ... */
 }
 ```
+
+The callback is executed in the same thread as the call to `sentry_capture_event`. Work performed by the function may thus block the executing thread. For this reason, consider avoiding heavy work in `before_send`.
+
+<Alert level="warning" title="Not Supported in Crashpad">
+
+The Crashpad Backend sends Minidumps with an additional event payload out-of-process. `before_send` hooks are not invoked when capturing crashes using Crashpad.
+
+</Alert>
