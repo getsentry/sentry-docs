@@ -10,35 +10,33 @@ notSupported:
 description: "Custom contexts allow you to attach arbitrary data (strings, lists, dictionaries) to an event."
 ---
 
-Custom contexts allow you to attach arbitrary data to an event. You cannot search these, but they are viewable on the issue page:
+Custom contexts allow you to attach arbitrary data to an event. Often, this context is shared among any issue captured in its lifecycle. You cannot search these, but they are viewable on the issue page:
 
 ![Custom contexts as viewed on the Additional Data section of an event](additional_data.png)
 
 <Note>
 
-If you need to be able to search on custom data, you will want to [use tags](../tags).
+If you need to be able to search on custom data, [use tags](../tags) instead.
 
 </Note>
 
-To configure additional context:
+## Structured Context
+
+The best practice to attach custom data is via structured contexts. A context must always be a dictionary or map, and its values can be arbitrary. Use <PlatformIdentifier name="set-context" /> and give the context a unique name:
 
 <PlatformContent includePath="set-context" />
 
-Note that the context's outer value has to be a dictionary/map/object, while the inner values can be arbitrary.
+There are no restrictions for naming contexts or their fields. However, there is a set of conventions for common contexts. For more information, refer to the [contexts interface developer documentation](https://develop.sentry.dev/sdk/event-payloads/contexts/).
 
-When sending context, _be aware of maximum payload size_, especially if you want to send the whole application state as extra data. Sentry does not recommend this approach since application state can be very large and easily exceed the 200kB maximum that Sentry has on individual event payloads. When this happens, you’ll receive an `HTTP Error 413 Payload Too Large` message as the server response or (when you set `keepalive: true` as a `fetch` parameter), the request will stay pending forever (for example, in Google Chrome).
+## Size Limitations
 
-Sentry will try its best to accommodate the data you send, but Sentry will trim large context payloads or truncate the payloads entirely.
+When sending context, _consider payload size limits_. Sentry does not recommend sending the entire application state and large data blobs in contexts. If you exceed the maximum payload size, Sentry will respond with HTTP error `413 Payload Too Large` and reject the event. <PlatformSection supported={["javascript", "node"]}>When `keepalive: true` is used, the request may additionally stay pending forever.</PlatformSection>
 
-For more details, see the [developer documentation on SDK data handling](https://develop.sentry.dev/sdk/data-handling/).
-
-### Extra Data, Additional Data
-
-If you come across any usages of "extra" (<PlatformIdentifier name="set-extra" /> in code) or "Additional Data" (in the UI), just mentally substitute it for context. Extra is deprecated in favor of context within most SDKs.
+The Sentry SDK will try its best to accommodate the data you send and trim large context payloads or truncate them entirely. For more details, see the [developer documentation on SDK data handling](https://develop.sentry.dev/sdk/data-handling/).
 
 <PlatformSection supported={["javascript", "node"]}>
 
-### Passing Context Directly
+## Passing Context Directly
 
 Starting in version 5.16.0 of our JavaScript SDKs, some of the contextual data can be provided directly to `captureException` and `captureMessage` calls. Provided data will be merged with the one that is already stored inside the current scope, unless explicitly cleared using a callback method.
 
@@ -50,7 +48,7 @@ This functionality works in three different variations:
 
 We allow the following context keys to be passed: `tags`, `extra`, `contexts`, `user`, `level`, `fingerprint`.
 
-#### Example Usages
+### Example Usages
 
 ```javascript
 Sentry.captureException(new Error("something went wrong"), {
@@ -86,7 +84,7 @@ scope.setTag("section", "articles");
 Sentry.captureException(new Error("something went wrong"), () => scope);
 ```
 
-### Clearing Context
+## Clearing Context
 
 Context is held in the current scope and thus is cleared out at the end of each operation — request and so forth. You can also push and pop your own scopes to apply context data to a specific code block or function.
 
@@ -119,3 +117,7 @@ Sentry.configureScope(scope => scope.clear());
 To learn more about setting the Scope, see our documentation on [Scopes and Hubs](../scopes/).
 
 </PlatformSection>
+
+## Additional Data
+
+In addition to structured contexts, Sentry supports adding unstructured "Additional Data" via <PlatformIdentifier name="set-extra" />. **Additional Data is deprecated** in favor of structured contexts and should be avoided when possible.
