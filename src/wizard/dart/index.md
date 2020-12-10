@@ -9,7 +9,7 @@ Get the SDK from [pub.dev](https://pub.dev/packages/sentry) by adding the follow
 
 ```yml {filename:pubspec.yaml}
 dependencies:
-  sentry: ^4.0.0-beta.1
+  sentry: ^4.0.0
 ```
 
 Import `sentry` and initialize it:
