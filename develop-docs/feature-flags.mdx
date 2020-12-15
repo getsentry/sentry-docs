@@ -18,6 +18,12 @@ SENTRY_FEATURES["organizations:onboarding"] = True
 
 You can modify the state of [feature flags in tests](/testing/#setting-options-and-feature-flags) using a context manager.
 
+Generally you want your feature names to be unique to help in their
+[removal](#after-launch-graduation).  For example a feature flag like `trends`
+may prove difficult to find because `trends` may appear throughout the codebase.
+But a name like `performance-trends-view` is more likely to be unique and easier
+to remove later
+
 # Creating a new Feature Flag
 
 ## Determine what scope the feature should have
@@ -190,7 +196,8 @@ allowed_features = set(
 Navigate to the [Flagr UI](https://flagr.getsentry.net/#/) and in the input box
 enter your feature name as the flag's *description*. Next, click the arrow on the
 right of the **Create New Flag** button and select **Create Simple Boolean
-Flag**
+Flag**. The flag's description is only used for easy finding of your flag on the 
+Flagr homepage, but it is the `Flag Key` that the API uses to find your flag.
 
 ![img/flagrNewFlag.png](img/flagrNewFlag.png)
 
@@ -223,6 +230,11 @@ Represents the distribution of variants in a segment, because we'll only have
 one variant this value should always be 100% for each segment.
 
 ## Creating a segment constraint
+When creating a segment, without the distribution set, Flagr will respond as if
+the segment doesn't exist yet. This means that if you're creating or modifying a
+segment do not set the Distribution until you're ready for your feature to be
+enabled.
+
 Here are the properties that are being sent to Flagr as well as the types of
 their values.
 
@@ -235,22 +247,22 @@ segments is that each segment is **OR**ed together, and each constraint is
 Properties are a preset dictionary that get sent to flagr by sentry, these depend
 on the organization or project being passed to `features.has`
 
-| Property                        | Value Types  | Notes                       |
-| :-----------------------------  | :----------- | :-------------------------- |
-| `organization_id`               | `int`        |                             |
-| `organization_slug`             | `string`     |                             |
-| `organization_is-early-adopter` | `bool`       | Users opt in from settings  |
-| `features`                      | `[string]`   | All active features for org |
-| `subscription_is-free`          | `bool`       |                             |
-| `subscription_is-trial-plan`    | `bool`       |                             |
-| `subscription_plan`             | `string`     |                             |
-| `project_slug`                  | `string`     | Only passed for projects    |
-| `project_id`                    | `int`        | Only passed for projects    |
-| `user_id`                       | `int`        |                             |
-| `user_domain`                   | `string`     |                             |
-| `user_is-superuser`             | `bool`       |                             |
-| `user_is-staff`                 | `bool`       |                             |
-| `internal_teams`                | `[string]`   | Only passed for Sentry      |
+| Property                        | Value Types  | Notes/Example config                                                                   |
+| :-----------------------------  | :----------- | :------------------------------------------------------------------------------------- |
+| `organization_id`               | `int`        |                                                                                        |
+| `organization_slug`             | `string`     | [Example](#releasing-a-feature-to-a-subset-of-organizations)                           |
+| `organization_is-early-adopter` | `bool`       | Users opt in from settings, [example](#releasing-a-feature-to-early-adopters)          |
+| `features`                      | `[string]`   | All active features for org                                                            |
+| `subscription_is-free`          | `bool`       |                                                                                        |
+| `subscription_is-trial-plan`    | `bool`       |                                                                                        |
+| `subscription_plan`             | `string`     | [Example](#releasing-a-feature-to-organizations-with-specific-plans)                   |
+| `project_slug`                  | `string`     | Only passed for projects                                                               |
+| `project_id`                    | `int`        | Only passed for projects                                                               |
+| `user_id`                       | `int`        |                                                                                        |
+| `user_domain`                   | `string`     |                                                                                        |
+| `user_is-superuser`             | `bool`       |                                                                                        |
+| `user_is-staff`                 | `bool`       |                                                                                        |
+| `team_slugs`                    | `[string]`   | Use with an organization condition, [example](#releasing-a-feature-to-a-specific-team) |
 
 More properties can be added by updating `FlagrFeatureHandler.get_context`
 but be considerate of the performance of additional context. Properties
@@ -298,11 +310,14 @@ double quotes `"` for each organization.
 
 ![img/flagrOrganizationSubset.png](img/flagrOrganizationSubset.png)
 
-### Releasing a feature to a specific team in sentry
+### Releasing a feature to a specific team
 
-You can enable a feature for only a specific team within the Sentry organization
-by setting the condition property to `internal_team`, the operator to
+You can enable a feature for only a specific team within an organization
+by setting the condition property to `team_slugs`, the operator to
 `CONTAINS`, and the value to the slug of the team wrapped in double quotes `"`.
+**Also include a condition in the same segment to match organization**, with either
+`organization_slug` or `organization_id`. If this isn't included, any org that has the same team name will get the
+feature.
 
 ![img/flagrTeamSubset.png](img/flagrTeamSubset.png)
 
