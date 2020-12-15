@@ -15,7 +15,7 @@ The user can be set per scope so that you know who was affected by each event.
 
 Once a `Sentry` instance has been initialized you can begin setting state in the current scope.
 
-```java
+```java {tabTitle:Java}
 import io.sentry.Sentry;
 import io.sentry.protocol.User;
 
@@ -24,7 +24,7 @@ public class MyClass {
   public void example() {
     // Note that all fields set on the scope are optional. Scope data is copied onto
     // all future events in the current scope.
-    
+
     // Set the current user in the scope.
     Sentry.configureScope(scope -> {
       User user = new User();
@@ -48,5 +48,36 @@ public class MyClass {
     // Send an event with the scope data attached.
     Sentry.captureMessage("New event message");
   }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.Sentry
+import io.sentry.protocol.User
+
+class MyClass {
+    fun example() {
+        // Note that all fields set on the scope are optional. Scope data is copied onto
+        // all future events in the current scope.
+
+        // Set the current user in the scope.
+        Sentry.configureScope {
+            val user = User()
+            user.username = "user1"
+            it.user = user
+        }
+
+        // Record a breadcrumb in the scope.
+        Sentry.addBreadcrumb("User did something specific again!")
+
+        // Add extra data to future events in this scope.
+        Sentry.configureScope { it.setExtra("extra", "thing") }
+
+        // Add an additional tag to future events in this scope.
+        Sentry.configureScope { it.setTag("tagName", "tagValue") }
+
+        // Send an event with the scope data attached.
+        Sentry.captureMessage("New event message")
+    }
 }
 ```
