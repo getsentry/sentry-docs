@@ -43,7 +43,7 @@ libraryDependencies += "io.sentry" % "sentry" % "3.1.0"
 
 Configure Sentry as soon as possible in your application's lifecycle:
 
-```java
+```java {tabTitle: Java}
 import io.sentry.Sentry;
 
 Sentry.init(options -> {
@@ -51,12 +51,20 @@ Sentry.init(options -> {
 });
 ```
 
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+
+Sentry.init {
+  it.dsn = "___PUBLIC_DSN___"
+}
+```
+
 ### Send First Event
 
 Trigger your first event from your development environment by intentionally creating an error with the `Sentry#captureException` method, to test that everything is working:
 
 
-```java
+```java {tabTitle: Java}
 import java.lang.Exception;
 import io.sentry.Sentry;
 
@@ -64,6 +72,17 @@ try {
     throw new Exception("This is a test.");
 } catch (Exception e) {
     Sentry.captureException(e);
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+import java.lang.Exception
+import io.sentry.Sentry
+
+try {
+    throw Exception("This is a test.")
+} catch (e: Exception) {
+    Sentry.captureException(e)
 }
 ```
 

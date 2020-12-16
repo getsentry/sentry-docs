@@ -1,4 +1,4 @@
-```java
+```java {tabTitle: Java}
 import io.sentry.Sentry;
 import java.util.Arrays;
 import java.lang.Exception;
@@ -35,4 +35,21 @@ Sentry.init(options -> {
         return event;
     });
 });
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import java.lang.Exception
+
+class MyRpcException(val function: String, val httpStatusCode: Int) : Exception()
+
+Sentry.init {
+    it.beforeSend = BeforeSendCallback { event, hint ->
+        if (event.throwable is MyRpcException) {
+            val exception = event.throwable as MyRpcException
+            event.fingerprints = listOf("{{ default }}", exception.function, exception.httpStatusCode.toString())
+        }
+        event
+    }
+}
 ```
