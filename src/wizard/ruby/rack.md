@@ -15,7 +15,7 @@ gem "sentry-ruby"
 
 ### Configuration
 
-Add `use Sentry::Rack::CaptureException` and `use Sentry::Rack::Tracing` to your `config.ru` or other rackup file (this is automatically inserted in Rails):
+Add `use Sentry::Rack::CaptureExceptions` to your `config.ru` or other rackup file (this is automatically inserted in Rails):
 
 ```ruby
 require 'sentry-ruby'
@@ -32,6 +32,5 @@ Sentry.init do |config|
   end
 end
 
-use Sentry::Rack::Tracing
-use Sentry::Rack::CaptureException
+use Sentry::Rack::CaptureExceptions
 ```
