@@ -1,0 +1,74 @@
+---
+title: Associate Commits with the API
+sidebar_order: 2
+description: "Learn how to provide information to Sentry if you don’t want Sentry to connect to your repository."
+---
+
+In your release process, add a step to create a release object in Sentry and associate it with commits from your linked repository.
+
+<Note>
+
+Confirm you’re using [Auth Tokens](/api/auth/#auth-tokens), **not** [API Keys](/api/auth/#api-keys), which are deprecated.
+
+</Note>
+
+```bash
+# Create a new release
+curl https://sentry.io/api/0/organizations/:organization_slug/releases/ \
+  -X POST \
+  -H 'Authorization: Bearer {TOKEN}' \
+  -H 'Content-Type: application/json' \
+  -d '
+ {
+ "version": "2da95dfb052f477380608d59d32b4ab9",
+ "refs": [{
+ "repository":"owner-name/repo-name",
+ "commit":"2da95dfb052f477380608d59d32b4ab9",
+ "previousCommit":"1e6223108647a7bfc040ef0ca5c92f68ff0dd993"
+ }],
+ "projects":["my-project","my-other-project"]
+}
+'
+```
+
+If you’d like to have more control over what order the commits appear in, you can send us a list of all commits. That might look like this:
+
+```python
+import subprocess
+import requests
+
+SENTRY_API_TOKEN = <my_api_token>
+sha_of_previous_release = <previous_sha>
+
+log = subprocess.Popen([
+    'git',
+    '--no-pager',
+    'log',
+    '--no-merges',
+    '--no-color',
+    '--pretty=%H',
+    '%s..HEAD' % (sha_of_previous_release,),
+], stdout=subprocess.PIPE)
+
+commits = log.stdout.read().strip().split('\n')
+
+data = {
+    'commits': [{'id': c, 'repository': 'my-repo-name'} for c in commits],
+    'version': commits[0],
+    'projects': ['my-project', 'my-other-project'],
+}
+
+res = requests.post(
+    'https://sentry.io/api/0/organizations/my-org/releases/',
+    json=data,
+    headers={'Authorization': 'Bearer {}'.format(SENTRY_API_TOKEN)},
+)
+```
+
+For more information, see the [API reference](/api/releases/create-a-new-release-for-an-organization/).
+
+<Note>
+
+If you receive an "Unable to Fetch Commits" email, take a look at our [Help Center Article](https://help.sentry.io/hc/en-us/articles/360019866834-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits-).
+
+</Note>
