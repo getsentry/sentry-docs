@@ -236,6 +236,43 @@ import "./properties/tags.mdx"
 For information about overriding grouping see [Customize Grouping with
 Fingerprints](https://docs.sentry.io/data-management/event-grouping/).
 
+`errors`
+
+: A list of errors in capturing or handling this event. This provides meta data
+  about event capturing and processing itself, not about the error or
+  transaction that the event represents.
+
+  This list is primarily populated by Sentry when receiving and processing the
+  event. SDKs are only encouraged to add entries here if there are severe
+  conditions that Sentry cannot detect by inspecting the remaining payload.
+
+  Errors must contain a required `type` field, which can be one of the types
+  declared in the Sentry [EventError] model. If there is no applicable type
+  variant, consider [opening an issue] to suggest the addition.
+
+  Apart from types, any attribute is valid. There are conventions for the
+  semantics of common error attributes, if they are included:
+
+- `name`: A string declaring the path to the payload field that causes or
+  exhibits the error. For example `modules[0].name`.
+- `value`: The original value of a field that causes or exhibits the error.
+
+
+```json
+{
+  "errors": [
+    {
+      "type": "unknown_error",
+      "path": "/var/logs/errors.log.1",
+      "details": "Failed to read attachment"
+    }
+  ]
+}
+```
+
+[eventerror]: https://github.com/getsentry/sentry/blob/master/src/sentry/models/eventerror.py
+[opening an issue]: https://github.com/getsentry/sentry/issues/new/choose
+
 ## Core Interfaces
 
 All values in the event payload that are not basic attributes are data
