@@ -49,7 +49,7 @@ public partial class App : Application
 
 ### Documentation
 
-Once you've verified the package is initialized properly and sent a test event, consider visiting our [complete ASP.NET Core docs](https://docs.sentry.io/platforms/dotnet/).
+Once you've verified the package is initialized properly and sent a test event, consider visiting our [complete WPF docs](https://docs.sentry.io/platforms/dotnet/).
 
 ### Samples
 
