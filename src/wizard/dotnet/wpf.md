@@ -44,11 +44,6 @@ public partial class App : Application
         // If you want to avoid the application from crashing:
         e.Handled = true;
     }
-
-    protected override void OnExit(ExitEventArgs e)
-    {
-        SentrySdk.Close();
-    }
 }
 ```
 
