@@ -53,6 +53,8 @@ Once you've verified the package is initialized properly and sent a test event, 
 
 ### Samples
 
+You can find an example WPF app with Sentry integrated [on this GitHub repository.](https://github.com/getsentry/examples/tree/master/dotnet/WpfDotNetCoreCSharp)
+
 See the following examples that demonstrate how to integrate Sentry with various frameworks.
 
 - [Multiple samples in the `dotnet` SDK repository](https://github.com/getsentry/sentry-dotnet/tree/main/samples) (**C#**)
