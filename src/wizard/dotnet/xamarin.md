@@ -9,10 +9,10 @@ type: library
 
 ```shell
 # Using Package Manager
-Install-Package Sentry.Xamarin.Forms -Version 1.0.0-alpha.1
+Install-Package Sentry.Xamarin.Forms -Version 1.0.0-alpha.2
 
 # Or using .NET Core CLI
-dotnet add package Sentry.Xamarin.Forms -v 1.0.0-alpha.1
+dotnet add package Sentry.Xamarin.Forms -v 1.0.0-alpha.2
 ```
 
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Using .NET Framework prior to 4.6.1?</h5>
