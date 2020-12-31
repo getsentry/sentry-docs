@@ -14,10 +14,10 @@ The Flutter SDK already captures breadcrumbs automatically via the Native SDKs.
 - [Automatic Breadcrumbs for Android](/platforms/android/enriching-events/breadcrumbs/#automatic-breadcrumbs)
 - [Automatic Breadcrumbs for iOS](/platforms/apple/usage/#sentryautobreadcrumbtrackingintegration)
 
-If you wish to add additional Navigation breadcrumbs for Flutter Apps, Add the `SentryNavigationObserver` to your `MaterialApp`, `WidgetsApp` or `CupertinoApp`
+If you wish to add additional Navigation breadcrumbs for Flutter Apps, Add the `SentryNavigatorObserver` to your `MaterialApp`, `WidgetsApp` or `CupertinoApp`
 
 ```dart
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 MaterialApp(
@@ -42,13 +42,14 @@ To track automatic Breadcrumbs for `HTTP` requests, Check out the [SentryHttpCli
 - Flutter `split-debug-info` and `obfuscate` flags aren't yet supported on iOS; they are supported only on Android. If this feature is enabled, Dart stack traces are not human readable, this is a tooling limitation, See: [43612](https://github.com/dart-lang/sdk/issues/43612) and [43274](https://github.com/dart-lang/sdk/issues/43274).
 - If you enable the `split-debug-info` feature, you must upload the Debug Symbols manually.
 - Also, Issue's titles might be obfuscated as we rely on the `runtimeType`, but they may not be human-readable, See: [Obfuscate Caveat](https://flutter.dev/docs/deployment/obfuscate#caveat)
+- Layout related errors are only caught by [FlutterError.onError](https://api.flutter.dev/flutter/foundation/FlutterError/onError.html) in debug mode. In release mode, they are removed by the Flutter framework. See [Flutter build modes](https://flutter.dev/docs/testing/build-modes). 
 
 ## Tips for Catching Errors
 
 - Use a `try/catch` block
 - Use a `catchError` block for `Futures`
 - The SDK already runs your init `callback` on an error handler, e.g. using `runZonedGuarded`, are captured automatically
-- Flutter-specific errors (such as layout failures), e.g. using `FlutterError.onError`, are captured automatically
+- Flutter-specific errors, e.g. using `FlutterError.onError`, are captured automatically
 - `Isolate` errors on the `current` Isolate which is the equivalent of a main/UI thread, e.g. using `Isolate.current.addErrorListener`, are captured automatically (Only for non-Web Apps).
 - For your own `Isolates`, add an `ErrorListener` and call `Sentry.captureException`
 
