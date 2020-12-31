@@ -166,3 +166,50 @@ if (span != null) {
     }
 }
 ```
+
+### Connecting Errors with Spans
+
+Sentry errors can be linked with transactions and spans.
+
+Errors reported to Sentry while transaction or span is running are linked automatically:
+
+```java
+ISpan span = Sentry.startTransaction("task");
+try {
+    processItem();
+} catch (Exception e) {
+    Sentry.captureException(e);
+} finally {
+    span.finish();
+}
+```
+
+In cases where the decision if thrown exception should be reported to Sentry happens later in the future after span is already finished, to connect error with a span you must:
+
+1. Link exception with a Span by calling `setThrowable` method:
+
+```java
+ISpan span = Sentry.getSpan();
+try {
+    processItem();
+} catch (Exception e) {
+    span.setThrowable(e);
+    throw e;
+} finally {
+    span.finish();
+}
+
+```
+
+2. Retrieve span context associated with exception when reporting an error with `IHub#getSpan`:
+
+```java
+SentryEvent event = new SentryEvent(throwable);
+SpanContext spanContext = HubAdapter.getInstance().getSpan(ex);
+if (spanContext != null) {
+  event.getContexts().setTrace(spanContext);
+}
+hub.captureEvent(event);
+```
+
+Please note, that in Spring Boot integration, errors are linked with spans automatically and there is no need to follow these steps.
