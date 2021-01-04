@@ -41,6 +41,7 @@ static class Program
         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
 
         // Any other configuration you might have goes here...
+        
         Application.Run(new Form1());
     }
 }
@@ -54,7 +55,7 @@ Once you've verified the package is initialized properly and sent a test event, 
 
 You can find an example WinForms app with Sentry integrated [on this GitHub repository.](https://github.com/getsentry/examples/tree/master/dotnet/WindowsFormsCSharp)
 
-See the following examples that demonstrate how to integrate Sentry with various frameworks.
+See the following examples that demonstrate how to integrate Sentry with various frameworks:
 
 - [Multiple samples in the `dotnet` SDK repository](https://github.com/getsentry/sentry-dotnet/tree/main/samples) (**C#**)
 - [Basic F# sample](https://github.com/sentry-demos/fsharp) (**F#**)
