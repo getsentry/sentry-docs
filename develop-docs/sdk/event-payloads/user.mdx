@@ -3,33 +3,44 @@ title: User Interface
 sidebar_order: 7
 ---
 
-An interface which describes the authenticated User for a request.
+An interface describing the authenticated User for a request.
 
 You should provide at least one of `id`, `email`, `ip_address`,
 `username` for Sentry to be able to tell you how many users are
-affected by one issue (for example). Sending a user that has none
-of these attributes (and only custom attributes) is valid, but not as useful.
+affected by one issue, for example. Sending a user that has none
+of these attributes and only custom attributes is valid, but not as useful.
 
 ## Attributes
 
 `id`
 
-: The unique ID of the user.
-
-`email`
-
-: The email address of the user.
-
-`ip_address`
-
-: The IP of the user.
+: The application-specific internal identifier for the user.
 
 `username`
 
-: The username of the user.
+: The username. Typically used as a better label than the internal id.
+
+`email`
+
+: An alternative, or addition, to the username. Sentry is aware of email addresses and can display things such as Gravatars and unlock messaging capabilities.
+
+`ip_address`
+
+: The user's IP address. If the user is unauthenticated, Sentry uses the IP address as a unique identifier for the user. Set to `"{{auto}}"` to let Sentry infer the IP address from the connection.
 
 All other keys are stored as extra information but not specifically processed by
 Sentry.
+
+## Automatic IP addresses
+
+SDKs running on client platforms, such as browsers and mobile applications,
+should set `ip_address = "{{auto}}"` by default. Server-side SDKs should
+populate the [Request Interface](/sdk/event-payloads/request/), instead. Sentry
+employs several fallbacks to backfill the IP address:
+
+1. Use `user.ip_address`, if set directly.
+2. Fall back to `http.env.REMOTE_ADDR`, if available.
+3. The connection's IP address as seen by Sentry, if `{{auto}}` was used.
 
 ## Examples
 
