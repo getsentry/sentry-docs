@@ -27,7 +27,7 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompa
     {
 		SentryXamarin.Init(options =>
 		{
-			options.Dsn = "__YOUR__DSN__";
+			options.Dsn = "___PUBLIC_DSN___";
 		});
         ...
 ```
