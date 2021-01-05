@@ -57,11 +57,10 @@ NOTE: It's recommended to not setup the CacheDirectory for UWP.
     {
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-			SentryXamarin.Init(options =>
-			{
-				options.Dsn = "__YOUR__DSN__";
-			});
-			...   
+            SentryXamarin.Init(options =>
+            {
+                options.Dsn = "___PUBLIC_DSN___";
+            });
 ```
 
 ### Documentation
