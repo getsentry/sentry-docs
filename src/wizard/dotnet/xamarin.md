@@ -40,11 +40,10 @@ public partial class AppDelegate : global::Xamarin.Forms.Platform.iOS.FormsAppli
 {
     public override bool FinishedLaunching(UIApplication app, NSDictionary options)
     {
-		SentryXamarin.Init(options =>
-		{
-			options.Dsn = "__YOUR__DSN__";
-		});
-        ...
+        SentryXamarin.Init(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+        });
 ```
 
 ### UWP
