@@ -25,11 +25,10 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompa
 {
     protected override void OnCreate(Bundle savedInstanceState)
     {
-		SentryXamarin.Init(options =>
-		{
-			options.Dsn = "___PUBLIC_DSN___";
-		});
-        ...
+        SentryXamarin.Init(options =>
+        {
+            options.Dsn = "___PUBLIC_DSN___";
+        });
 ```
 
 ### iOS
