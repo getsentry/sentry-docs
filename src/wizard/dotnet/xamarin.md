@@ -10,9 +10,6 @@ type: library
 ```shell
 # Using Package Manager
 Install-Package Sentry.Xamarin.Forms -Version 1.0.0-alpha.3
-
-# Or using .NET Core CLI
-dotnet add package Sentry.Xamarin.Forms -v 1.0.0-alpha.3
 ```
 
 ## Initialize the SDK
