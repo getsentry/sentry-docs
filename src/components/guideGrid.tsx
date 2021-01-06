@@ -24,7 +24,7 @@ export default ({ platform, className }: Props): JSX.Element => {
             <PlatformIcon
               size={16}
               platform={guide.key}
-              style={{ marginRight: "0.5rem", border: 0, boxShadow: "none" }}
+              style={{ marginRight: "0.5rem" }}
               format="lg"
             />
             <h4 style={{ display: "inline-block" }}>{guide.title}</h4>
