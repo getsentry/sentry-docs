@@ -80,7 +80,7 @@ export default ({ noGuides = false }: Props): JSX.Element => {
                       size={82}
                       platform={platform.key}
                       format="lg"
-                      style={{ maxWidth: "none", border: 0, boxShadow: "none" }}
+                      style={{ maxWidth: "none" }}
                     />
                   </SmartLink>
                 </PlatformCellIcon>
