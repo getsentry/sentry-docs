@@ -104,25 +104,27 @@ The SDK can also be configured via `NLog.config` XML file:
     <target xsi:type="Sentry" name="sentry"
             dsn="___PUBLIC_DSN___"
             layout="${message}"
-            debug="true"
+            environment="Development"
             breadcrumbLayout="${message}"
             minimumBreadcrumbLevel="Debug"
             minimumEventLevel="Error">
 
       <!-- Advanced options can be configured here-->
       <options
-          environment="Development"
-          attachStacktrace="true"
           sendDefaultPii="true"
+          attachStacktrace="false"
           shutdownTimeoutSeconds="5"
+          debug="false"
         >
         <!--Advanced options can be specified as attributes or elements-->
         <includeEventDataOnBreadcrumbs>true</includeEventDataOnBreadcrumbs>
       </options>
 
-      <!--Add any desired additional tags that will be sent with every message -->
-      <tag name="logger" layout="${logger}" />
-      <tag name="example" layout="sentry-nlog" />
+      <!--Optionally add any desired additional Tags that will be sent with every message -->
+      <tag name="exception" layout="${exception:format=shorttype}" includeEmptyValue="false" />
+
+      <!--Optionally add any desired additional Data that will be sent with every message -->
+      <contextproperty name="threadid" layout="${threadid}" includeEmptyValue="true" />
     </target>
   </targets>
 
