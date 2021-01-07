@@ -41,6 +41,32 @@ To receive symbolicated stack traces, you have to upload debug information to Se
 
 </PlatformSection>
 
+<PlatformSection supported={["android", "apple", "java"]}>
+
+## Creating Attachments
+
+The simplest way to create an attachment is to use a `path`. The SDK will read the contents of the file each time it prepares an event or transaction, then adds the attachment to the same [envelope](https://develop.sentry.dev/sdk/envelopes/). If the SDK can't read the file, the SDK logs an error message and drops the attachment.
+
+<PlatformContent includePath="attachment-init-with-path" />
+
+Alternately, use `bytes` to initialize an attachment. When doing so, you also need to specify a filename.
+
+<PlatformContent includePath="attachment-init-with-bytes" />
+
+If your SDK supports offline caching, which is typical for mobile, each attachment is stored to disk for each event or transaction you capture when the device is offline. When using large attachments, this storage can consume the disk space if the device is offline for a longer time period. You can specify [maximum attachment size](#maximum-attachment-size) to drop large attachments and avoid this issue.
+
+In addition, you can set these parameters:
+
+`filename`
+
+: The filename is the name of the file to display in Sentry. When using bytes you have to specify a filename, whereas with a path you don't as the SKD is going to use the last path component.
+
+`contentType`
+
+: The type of content stored in this attachment. The default is `application/octet-stream`.
+
+</PlatformSection>
+
 ## Uploading Attachments
 
 <PlatformSection supported={["native", "javascript"]}>
@@ -51,11 +77,7 @@ To receive symbolicated stack traces, you have to upload debug information to Se
 
 <PlatformSection supported={["android", "apple", "java"]}>
 
-You can either pass bytes or use a path to a file to create an attachment.
-
-<PlatformContent includePath="attachment-init" />
-
-The attachments live on the <PlatformLink to="/enriching-events/scopes/">Scope</PlatformLink>. You can either add an attachment on the global scope to be sent with every event or add it on the <PlatformLink to="/enriching-events/scopes/#local-scopes">local Scope</PlatformLink> to just send the attachment with one specific event.
+Attachments live on the <PlatformLink to="/enriching-events/scopes/">Scope</PlatformLink>. You can either add an attachment on the global scope to be sent with every event or add it on the <PlatformLink to="/enriching-events/scopes/#local-scopes">local Scope</PlatformLink> to just send the attachment with one specific event.
 
 <PlatformContent includePath="attachment-upload" />
 
