@@ -19,7 +19,7 @@ Install-Package Sentry -Version {{ packages.version('sentry.dotnet') }}
     </div>
 </div>
 
-Add Sentry to `Global.asax.cs`:
+You should `init` the Sentry SDK as soon as possible during your application load by adding Sentry to `Global.asax.cs`:
 
 ```csharp
 using System.Web;
