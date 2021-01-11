@@ -173,7 +173,7 @@ Sentry errors can be linked with transactions and spans.
 
 Errors reported to Sentry while transaction or span is running are linked automatically:
 
-```java
+```java {tabTitle: Java}
 ISpan span = Sentry.startTransaction("task");
 try {
     processItem();
@@ -184,9 +184,20 @@ try {
 }
 ```
 
+```kotlin {tabTitle: Kotlin}
+val span = Sentry.startTransaction("task")
+try {
+    processItem()
+} catch (e: Exception) {
+    Sentry.captureException(e)
+} finally {
+    span.finish()
+}
+```
+
 In cases where the decision if thrown exception should be reported to Sentry happens later in the future after span is already finished, to connect error with a span you must link the exception with a Span by calling `setThrowable` method:
 
-```java
+```java {tabTitle: Java}
 ISpan span = Sentry.getSpan();
 try {
     processItem();
@@ -195,6 +206,18 @@ try {
     throw e;
 } finally {
     span.finish();
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+val span = Sentry.getSpan()
+try {
+    processItem()
+} catch (e: Exception) {
+    span.setThrowable(e)
+    throw e
+} finally {
+    span.finish()
 }
 ```
 
