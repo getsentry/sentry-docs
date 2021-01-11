@@ -32,7 +32,7 @@ To manually instrument certain regions of your code, you can create a transactio
 
 The following example creates a transaction for a scope that contains an expensive operation (for example, `processOrderBatch`), and sends the result to Sentry:
 
-```java
+```java {tabTitle:Java}
 import io.sentry.Sentry;
 import io.sentry.SentryTransaction;
 import io.sentry.SpanStatus;
@@ -44,9 +44,29 @@ try {
     procesOrderBatch();
 } catch (Exception e) {
     transaction.setThrowable(e);
-    transaction.setSpanStatus(SpanStatus.INTERNAL_ERROR)
+    transaction.setStatus(SpanStatus.INTERNAL_ERROR)
 } finally {
     transaction.finish();
+}
+```
+
+```java {tabTitle:Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryTransaction
+import io.sentry.SpanStatus
+
+// A good name for the transaction is key, to help identify what this is about
+val transaction = Sentry.startTransaction("processOrderBatch()")
+if (transaction != null) {
+    transaction.setOperation("task")
+    try {
+        procesOrderBatch()
+    } catch (e: Exception) {
+        transaction.throwable = e
+        transaction.status = SpanStatus.INTERNAL_ERROR
+    } finally {
+        transaction.finish();
+    }
 }
 ```
 
@@ -58,21 +78,41 @@ In cases where you want to attach Spans to an already ongoing Transaction you ca
 
 You can choose the value of `operation` and `description`.
 
-```java
+```java {tabTitle:Java}
 import io.sentry.ISpan;
 import io.sentry.Span;
 import io.sentry.SpanStatus;
 
-void processItem(Item item):
+void processItem(Item item) {
     ISpan span = Sentry.getSpan();
     Span innerSpan = span.startChild("task", item.getName());
     try {
         // omitted code
     } catch (NotFoundException e) {
         innerSpan.setThrowable(e);
-        innerSpan.setSpanStatus(SpanStatus.NOT_FOUND)
+        innerSpan.setStatus(SpanStatus.NOT_FOUND)
     } finally {
         innerSpan.finish();
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.SpanStatus
+
+fun processItem(item: Item) {
+    val span = Sentry.getSpan()
+    if (span != null) {
+        val innerSpan = span.startChild("task", item.getName());
+
+        try {
+            // omitted code
+        } catch (e: NotFoundException) {
+            innerSpan.throwable = e;
+            innerSpan.status = SpanStatus.NOT_FOUND
+        } finally {
+            innerSpan.finish();
+        }
     }
 }
 ```
@@ -83,7 +123,7 @@ Spans are sent together with their parent transaction when the transaction is fi
 
 In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry#getSpan`. This method will return a `SentryTransaction` in case there is a running Transaction or a `Span` in case there is already a running Span, otherwise it returns `null`.
 
-```java
+```java {tabTitle: Java}
 import io.sentry.ISpan;
 import io.sentry.Span;
 import io.sentry.SpanStatus;
@@ -102,5 +142,27 @@ try {
     span.setSpanStatus(SpanStatus.INTERNAL_ERROR)
 } finally {
     span.finish();
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.SpanStatus
+
+var span = Sentry.getSpan();
+if (span == null) {
+    span = Sentry.startTransaction("task")
+} else {
+    span = span.startChild();
+}
+
+if (span != null) {
+    try {
+        // omitted code
+    } catch (e: Exception) {
+        span.throwable = e
+        span.setStatus(SpanStatus.INTERNAL_ERROR)
+    } finally {
+        span.finish();
+    }
 }
 ```

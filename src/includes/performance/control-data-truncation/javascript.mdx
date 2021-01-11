@@ -1,0 +1,24 @@
+Instead, using `span.set_tag` and `span.set_data` preserves the details of this query using structured metadata. This could be done over `baseUrl`, `endpoint`, and `parameters`:
+
+```javascript
+const baseUrl = "https://empowerplant.io";
+const endpoint = "/api/0/projects/ep/setup_form";
+const parameters = {
+  user_id: 314159265358979323846264338327,
+  tracking_id: "EasyAsABC123OrSimpleAsDoReMi",
+  product_name: PlantToHumanTranslator,
+  product_id: 161803398874989484820458683436563811772030917980576,
+};
+
+const span = transaction.startChild({
+  op: "request",
+  description: "setup form",
+});
+
+span.setTag("baseUrl", baseUrl);
+span.setTag("endpoint", endpoint);
+span.setData("parameters", parameters);
+// you may also find some parameters to be valuable as tags
+span.setData("user_id", parameters.user_id);
+http.get(`${base_url}/${endpoint}/`, (data = parameters));
+```

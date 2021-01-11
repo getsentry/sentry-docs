@@ -1,7 +1,7 @@
 ---
 title: Configuration
 sidebar_order: 10
-description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the `init()` as an object."
+description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init method as an object."
 ---
 
 ## Setting the DSN (Data Source Name) {#setting-the-dsn}
@@ -28,12 +28,20 @@ SENTRY_DSN=___PUBLIC_DSN___ java -jar app.jar
 
 In code:
 
-```java
+```java {tabTitle:Java}
 import io.sentry.Sentry;
 
 Sentry.init(options -> {
     options.setDsn("___PUBLIC_DSN___");
 });
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.Sentry.Sentry
+
+Sentry.init {
+    it.dsn = "___PUBLIC_DSN___"
+}
 ```
 
 When multiple configuration ways are used, options are resolved in the following order:
@@ -51,12 +59,20 @@ There are multiple ways to configure the Java SDK, but all of them take the same
 
 To enable loading configuration from the properties file, system properties or environment variables, `enableExternalConfiguration` has to be set to `true` on `SentryOptions`:
 
-```java
+```java {tabTitle:Java}
 import io.sentry.Sentry;
 
 Sentry.init(options -> {
     options.setEnableExternalConfiguration(true);
 });
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.Sentry
+
+Sentry.init {
+    it.setEnableExternalConfiguration(true)
+}
 ```
 
 ### Configuration via properties file
@@ -86,7 +102,7 @@ java -Dsentry.environment=production -jar app.jar
 System Environment Variable option names require that you replace the `.` with `_`, capitalize them, and add a `SENTRY_` prefix. For example, to enable sampling:
 
 ```bash
-SENTRY_ENVIRONMENT=production java -jar app.jar
+SENTRY_ENVIRONMENT=production
 ```
 
 ## Options
@@ -181,15 +197,54 @@ sentry.tags.first_tag=first-tag-value
 sentry.tags.second_tag=second-tag-value
 ```
 
+### In App Includes
+
+To set the in-app-includes that will be sent with each event, use the `in-app-includes` option:
+
+```properties {tabTitle:sentry.properties}
+in-app-includes=host1
+```
+
+```properties {tabTitle:environment variable}
+SENTRY_IN_APP_INCLUDES=host1
+```
+
+```properties {tabTitle:system property}
+sentry.in-app-includes=host1
+```
+
+### In App Excludes
+
+To set the in-app-excludes that will be sent with each event, use the `in-app-excludes` option:
+
+```properties {tabTitle:sentry.properties}
+in-app-excludes=host1
+```
+
+```properties {tabTitle:environment variable}
+SENTRY_IN_APP_EXCLUDES=host1
+```
+
+```properties {tabTitle:system property}
+sentry.in-app-excludes=host1
+```
+
 ## Configuring Timeouts
 
 It’s possible to manually set the connection timeouts length with `connectionTimeoutMillis` and `readTimeoutMillis`:
 
-```java
+```java {tabTitle:Java}
 Sentry.init(options -> {
     options.setConnectionTimeoutMillis(10000);
     options.setReadTimeoutMillis(10000);
 });
+```
+
+```kotlin {tabTitle:Kotlin}
+Sentry.init {
+    it.connectionTimeoutMillis = 2000
+    it.readTimeoutMillis = 1000
+}
 ```
 
 ## Using a Proxy

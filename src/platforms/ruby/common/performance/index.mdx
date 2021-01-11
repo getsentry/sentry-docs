@@ -1,0 +1,102 @@
+---
+title: Performance Monitoring
+description: "Learn more about how to configure our Performance integrations to get the best experience out of it."
+---
+
+Sentry allows you to monitor the performance of your application, showing you how latency in one service may affect another service, and letting you pinpoint exactly which parts of a given operation may be responsible. To do this, it captures distributed traces consisting of transactions and spans, which measure individual services and individual operations within those services, respectively. You can learn more about this model in our [Distributed Tracing](/product/performance/distributed-tracing/) docs. Performance Monitoring is available for our updated Ruby SDK (`sentry-ruby`, not `sentry-raven`).
+
+## Enabling Tracing
+
+To get started automatically sending traces you can:
+
+- Set a uniform sample rate for all transactions, by setting the <PlatformIdentifier name="traces-sample-rate" /> option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set <PlatformIdentifier name="traces-sample-rate" /> to `0.2`.)
+- Control the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the <PlatformIdentifier name="traces-sampler" /> config option.
+
+<PlatformContent includePath="performance/enable-tracing" />
+
+If either of these options is set, tracing will be enabled in your app, and transactions will start getting captured automatically. (The two options are meant to be mutually exclusive, but if you do set both, <PlatformIdentifier name="traces-sampler" /> will take precedence.)
+
+As you're getting tracing set up, we recommend setting <PlatformIdentifier name="traces-sample-rate" /> to `1`, so all created transactions are sent to Sentry. Once you're done with testing, though, you'll probably want to consider either **lowering your <PlatformIdentifier name="traces-sample-rate" /> value, or switching to <PlatformIdentifier name="traces-sampler" />**, which will allow you to set the sample rate individually for each transaction. Without sampling, automatically-captured transactions can add up quickly. (The Flask integration, for example, will send a transaction for every request made to the server.) Sampling allows you to send representative data without overwhelming either your system or your Sentry transaction quota.
+
+You can learn more about the <PlatformIdentifier name="traces-sample-rate" /> and <PlatformIdentifier name="traces-sampler" /> options in <PlatformLink to="/performance/sampling/">Sampling Transactions</PlatformLink>.
+
+## Manual Instrumentation
+
+To manually instrument certain regions of your code, you can create a transaction to capture them.
+
+The following example creates a transaction for a scope that contains an expensive operation (for example, `process_item`), and sends the result to Sentry:
+
+```ruby
+# start a transaction
+transacton = Sentry.start_transaction(op: "process_item")
+
+# perform the operation
+process_item(args)
+
+# finish the transaction, which will send it to Sentry automatically
+transaction.finish
+```
+
+### Adding More Spans to the Transaction
+
+The next example contains the implementation of the hypothetical `process_item` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add all newly created spans as child operations to that transaction. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction. When using spans and transactions as context managers, they are automatically finished at the end of the `with` block.
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.get_current_scope.get_transaction`. This property will return a `Transaction` in case there is a running Transaction otherwise it returns `None`.
+
+Alternatively, instead of adding to the top-level transaction, you can make a child span of the current span, if there is one. Use `Sentry.get_current_scope.get_span` in that case.
+
+You can choose the value of `op` and `description`.
+
+```ruby
+class OrdersController < ApplicationController
+  def create
+    order = Order.new
+    # get the root transaction, which is usually the request's transaction
+    transaction = Sentry.get_current_scope.get_transaction
+    # start a span under the root transaction
+    span = transaction.start_child(op: :process_items, description: "process order's items")
+    span.set_data(:key, "value")
+
+    order.process_items(params)
+
+    # finish the span to record its finished time
+    # keep in mind that finishing span doesn't send it to Sentry
+    # it will be sent with the root transaction when it's finished
+    span.finish
+  end
+end
+```
+
+Alternatively, you can use the `with_child_span` method:
+
+```ruby
+class OrdersController < ApplicationController
+  def create
+    order = Order.new
+    transaction = Sentry.get_current_scope.get_transaction
+    transaction.with_child_span(op: :process_items, description: "process order's items") do |span|
+      span.set_data(:key, "value")
+      order.process_items(params)
+    end # the child span ends with the block
+  end
+end
+```
+
+### Retrieving a Transaction
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry.get_current_scope.get_transaction`. This property will return a `Transaction` in case there is a running Transaction otherwise it returns `None`.
+
+```ruby
+transaction = Sentry.get_current_scope.get_transaction || Sentry.start_transaction(name: "task")
+
+span = transaction.start_child(op: "operation")
+# perform the operation
+```
+
+### Retrieving the Current Span
+
+Started spans are stored in the scope, and can be fetched off the scope:
+
+```ruby
+span = Sentry.get_current_scope.get_span
+```

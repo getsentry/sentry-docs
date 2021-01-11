@@ -6,6 +6,7 @@ Import and initialize the Sentry SDK early in your application setup:
 int main(void) {
   sentry_options_t *options = sentry_options_new();
   sentry_options_set_dsn(options, "___PUBLIC_DSN___");
+  sentry_options_set_release(options, "my-project-name@2.3.12");
   sentry_init(options);
 
   /* ... */
@@ -15,5 +16,12 @@ int main(void) {
 }
 ```
 
-Alternatively, the DSN can be passed as `SENTRY_DSN` environment variable during
-runtime. This can be especially useful for server applications.
+Alternatively, the DSN can be passed as `SENTRY_DSN` environment variable during runtime. This can be especially useful for server applications.
+
+<Alert level="warning" title="Warning">
+
+Calling `sentry_shutdown()` before exiting the application is critical. It
+ensures that events can be sent to Sentry before execution stops. Otherwise,
+event data may be lost.
+
+</Alert>

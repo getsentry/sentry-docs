@@ -1,4 +1,4 @@
-```java
+```java {tabTitle: Java}
 import io.sentry.Sentry;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -11,4 +11,18 @@ Sentry.init(options -> {
         return event;
     });
 });
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.Sentry
+import io.sentry.SentryOptions.BeforeSendCallback
+
+Sentry.init {
+    it.beforeSend = BeforeSendCallback { event, hint ->
+        if (event.throwable is SQLException) {
+            event.fingerprints = listOf("database-connection-error")
+        }
+        event
+    }
+}
 ```
