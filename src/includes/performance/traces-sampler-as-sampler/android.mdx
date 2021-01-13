@@ -11,13 +11,13 @@ SentryAndroid.init(this,
       context -> {
         CustomSamplingContext ctx = context.getCustomSamplingContext();
         if (ctx != null) {
-          if ("/payment".equals(ctx.get("url"))) {
+          if ("LoginActivity".equals(ctx.get("ActivityName"))) {
             // These are important - take a big sample
             return 0.5;
-          } else if ("/search".equals(ctx.get("url"))) {
+          } else if ("SearchActivity".equals(ctx.get("ActivityName"))) {
             // Search is less important and happen much more frequently - only take 1%
             return 0.01;
-          } else if ("/health".equals(ctx.get("url"))) {
+          } else if ("HealthCheckActivity".equals(ctx.get("ActivityName"))) {
             // The health check endpoint is just noise - drop all transactions
             return 0.0;
           } else {
@@ -32,21 +32,19 @@ SentryAndroid.init(this,
 ```
 
 ```kotlin {tabTitle:Kotlin}
-// TODO: https://github.com/getsentry/sentry-docs/issues/2850
-
 val tracesSampler = TracesSamplerCallback {
     val ctx = it.customSamplingContext
     if (ctx != null) {
         when {
-            "/payment" == ctx.get("url") -> {
+            "LoginActivity" == ctx.get("ActivityName") -> {
                 // These are important - take a big sample
                 0.5
             }
-            "/search" == ctx.get("url") -> {
+            "SearchActivity" == ctx.get("ActivityName") -> {
                 // Search is less important and happen much more frequently - only take 1%
                 0.01
             }
-            "/health" == ctx.get("url") -> {
+            "HealthCheckActivity" == ctx.get("ActivityName") -> {
                 // The health check endpoint is just noise - drop all transactions
                 0.0
             }
