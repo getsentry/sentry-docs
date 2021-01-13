@@ -1,0 +1,251 @@
+---
+title: Symbol Servers
+sidebar_order: 4
+description: "Learn about symbol servers and how to configure them with your Sentry projects."
+---
+
+Sentry can download debug information files from external repositories. This
+allows you to stop uploading debug files and instead configure a public symbol
+server or run your own. It is also possible to configure external repositories
+and upload debug files at the same time.
+
+To configure external repositories, go to **Project Settings > Debug Files**.
+Above the list of uploaded files, there are two settings to configure external
+repositories:
+
+1. **Custom Repositories:** Configures custom repositories containing debug
+   files. You can choose from configuring an HTTP symbol server, Amazon S3
+   bucket or Google Cloud Storage bucket. This requires a _Business_ or
+   _Enterprise_ plan.
+
+2. **Built-In Repositories:** Allows to select from a list of pre-configured
+   symbol servers. By default, _iOS_ and _Microsoft_ are enabled.
+
+Sentry queries external repositories for debug information files in the order
+they are configured. If custom repositories are configured, those are probed
+first. Only debug information files that are not found on one of the custom
+repositories are queried from the built-in ones.
+
+## Built-In Repositories
+
+To enable a built-in repository, select it from the dropdown list. This
+immediately adds the repository and uses its debug information files to
+symbolicate new crash reports. Likewise, any built-in repository can be disabled
+by clicking on the X next to the name.
+
+Adding or removing external repositories applies immediately. As a result,
+events may group differently with the new information and create new issues.
+Beware that these cause notifications to your team members.
+
+## Custom Repositories
+
+<Alert title="Note" level="info">
+
+Custom repositories are available for organizations on the _Business_ and
+_Enterprise_ plans.
+
+</Alert>
+
+Independent of the internal format, Sentry supports three kinds of custom
+repositories:
+
+- **HTTP Symbol Server**: An HTTP server that serves debug files at a
+  configurable path. Lookups in the server should generally be case-insensitive,
+  although an explicit casing can be configured in the settings.
+
+- **Amazon S3 Bucket**: Either an entire S3 bucket or a subdirectory. This
+  requires `s3:GetObject`, and optionally `s3:ListBucket` permissions for the
+  configured Access Key. Lookups in the bucket are case sensitive, which is why
+  we recommend storing all files lower-cased.
+
+- **Google Cloud Storage Bucket**: Either an entire GCS bucket or a
+  subdirectory. This requires `storage.objects.get` and `storage.objects.list`
+  permissions for the configured service account. Lookups in the bucket are case
+  sensitive, which is why we recommend storing all files lower-cased.
+
+Apart from authentication configuration, all types have common config
+parameters:
+
+1. **Name**: A name to identify the repository.
+
+2. **Path Casing**: Overrides which casing Sentry uses to query for debug
+   information files. The default is a mixed case, which will use the case
+   described in the next section. When overridden, all access is either
+   lowercased or uppercased. Defaults to _"mixed case"_.
+
+3. **Directory Layout**: The internal structure of the bucket, or the protocol
+   of the symbol server. There are three layouts to choose from which are
+   discussed in the next section. Defaults to _"Platform Specific"_.
+
+## Compression of Debug Files
+
+Sentry supports the following compression methods when downloading debug
+information files from external sources: Gzip, zlib (both with and
+without header), Zstandard, and Cabinet (CAB).
+
+The convention on Microsoft's Symbol Server protocol is to store such files with
+the last character of the file extension replaced with `_`. A full example would
+be: `KERNEL32.dll/590285E9e0000/KERNEL32.dl_`. This is not required on your own
+repositories, as Sentry detects compression on all paths.
+
+## Directory Layouts
+
+Sentry supports multiple layouts for external repositories. Based on the
+selected layout and the file type, we try to download files at specific paths.
+
+The following table contains a mapping from the supported layouts to file path
+schemas applied for specific files:
+
+| Layout                          | MachO |   ELF   |    PE    |   PDB    | Breakpad |
+| ------------------------------- | :---: | :-----: | :------: | :------: | :------: |
+| Platform-Specific               | LLDB  | BuildID | SymStore | SymStore | Breakpad |
+| Microsoft SymStore              |   -   |    -    | SymStore | SymStore |    -     |
+| Microsoft SymStore (index2.txt) |   -   |    -    |  Index2  |  Index2  |    -     |
+| Microsoft SSQP                  | SSQP  |  SSQP   |   SSQP   |   SSQP   |    -     |
+
+The path schemas in the table above are defined as follows:
+
+### Breakpad
+
+Path: `<DebugName>/<BREAKPADid>/<SymName>`
+
+Breakpad always uses a _Breakpad ID_ to store symbols. These identifiers can
+be computed from _Debug Identifiers_ by removing dashes and applying the
+following casing rules:
+
+- The signature part of the id (first 32 characters) are **uppercase**.
+- The age part of the id (remaining characters) are **lowercase**.
+
+The name of the symbol file is platform dependent. On Windows, the file
+extension (Either `.exe`, `.dll` or `.pdb`) is replaced with `.sym`. On all
+other platforms, the `.sym` extension is **appended** to the full file name
+including potential extensions.
+
+Examples:
+
+- `wkernel32.pdb/FF9F9F7841DB88F0CDEDA9E1E9BFF3B51/wkernel32.sym`
+- `MyFramework.dylib/5E012A646CC536F19B4DA0564049169B/MyFramework.dylib.sym`
+
+### LLDB
+
+Path: `XXXX/XXXX/XXXX/XXXX/XXXX/XXXXXXXXXXXX[.app]`
+
+The LLDB debugger on macOS can read debug symbols from [File Mapped UUID
+Directories](https://lldb.llvm.org/use/symbols.html#file-mapped-uuid-directories).
+The UUID is broken up by splitting the first 20 hex digits into 4 character
+chunks, and a directory is created for each chunk. In the final directory,
+LLDB usually expects a symlink named by the last 12 hex digits, which it
+follows to the actual dSYM file.
+
+This is not actually an LLVM feature. This is in fact a feature of
+`CoreFoundation` and exclusively implemented on macOS on top of spotlight.
+Spotlight indexes these paths and the private `DBGCopyFullDSYMURLForUUID` API
+is used by lldb to locate the symbols. macOS uses the symlinks of those
+locations.
+
+Since the executable or library shares the same UUID as the dSYM file, the
+former are distinguished with a `.app` suffix.
+
+The hex digits are **uppercase**, the app suffix is **lowercase**.
+
+Examples:
+
+- `5E01/2A64/6CC5/36F1/9B4D/A0564049169B` (debug companion)
+- `5E01/2A64/6CC5/36F1/9B4D/A0564049169B.app` (executable or library)
+
+### BuildID
+
+Path: `nn/nnnnnnnnnnnnnnnn...[.debug]`
+
+GDB supports multiple lookup methods, depending on the way the debug info file
+is specified. Sentry uses the [Build ID Method]: Assuming that a GNU build ID
+note or section has been written to the ELF file, this specifies a unique
+identifier for the executable which is also retained in the debug file.
+
+The GNU build ID is a variable-length binary string, usually consisting of a
+20-byte SHA1 hash of the code section (`.text`). The lookup path is
+_pp/nnnnnnnn.debug_, where _pp_ are the first 2 hex characters of the build ID
+bit string, and _nnnnnnnn_ are the rest of the hex string. To look up
+executables, the `.debug` suffix is omitted.
+
+Examples:
+
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb` (executable or library)
+- `b5/381a457906d279073822a5ceb24c4bfef94ddb.debug` (stripped debug file)
+
+### SSQP
+
+Path: `<file_name>/<prefix>-<identifier>/<file_name>`
+
+[SSQP Key Conventions] are an extension to the original Microsoft Symbol
+Server protocol for .NET. It specifies lookup paths for PE, PDB, MachO and ELF
+files. The case of all lookup paths is generally **lowercase** except for the
+age field of PDB identifiers which should be **uppercase**.
+
+For MachO files and ELF files, SSQP specifies to use the same identifiers as
+used in the LLDB and GNU build id method, respectively. See the sections above
+for more information. This results in the following paths for all possible
+file types:
+
+- `<code_name>/<timestamp><size_of_image>/<code_name>`
+  (PE file)
+- `<debug_name>/<signature><AGE>/<debug_name>` (PDB
+  file)
+- `<code_name>/elf-buildid-<buildid>/<code_name>` (ELF
+  binary)
+- `_.debug/elf-buildid-sym-<buildid>/_.debug` (ELF debug file)
+- `<code_name>/mach-uuid-<uuid>/<code_name>` (MachO binary)
+- `_.dwarf/mach-uuid-sym-<uuid>/_.dwarf` (MachO binary)
+
+SSQP specifies an additional lookup method by SHA1 checksum over the
+file contents, commonly used for source file lookups. _Sentry does not support
+this lookup method._
+
+Examples:
+
+- `wkernel32.pdb/ff9f9f7841db88f0cdeda9e1e9bff3b5A/wkernel32.pdb`
+- `kernel32.dll/590285e9e0000/kernel32.dll`
+- `libc-2.23.so/elf-buildid-b5381a457906d279073822a5ceb24c4bfef94ddb/libc-2.23.so`
+- `_.debug/elf-buildid-sym-b5381a457906d279073822a5ceb24c4bfef94ddb/_.debug`
+- `CoreFoundation/mach-uuid-36385a3a60d332dbbf55c6d8931a7aa6/CoreFoundation`
+- `_.dwarf/mach-uuid-sym-36385a3a60d332dbbf55c6d8931a7aa6/_.dwarf`
+
+### SymStore
+
+Path: `<FileName>/<SIGNATURE><AGE>/<FileName>`
+
+The public symbol server provided by Microsoft used to only host PDBs for the
+Windows platform. These use a _signature-age_ debug identifier in addition to
+the file name to locate symbols. File paths are identical to SSQP, except for
+the default casing rules:
+
+- Filenames are **as given**
+- The signature and age of a PDB identifier are **uppercase**.
+- The timestamp of a PE identifier is **uppercase**, but the size is
+  **lowercase**.
+
+Since the original Microsoft Symbol Server did not serve ELF or MachO files,
+we do not recommend using this convention for these types. However, Sentry
+will support the SSQP conventions with adapted casing rules when this layout
+is selected.
+
+Examples:
+
+- `wkernel32.pdb/FF9F9F7841DB88F0CDEDA9E1E9BFF3B5A/wkernel32.pdb`
+- `KERNEL32.dll/590285E9e0000/KERNEL32.dll`
+
+### Index2
+
+Path: `<Fi>/<FileName>/<SIGNATURE><AGE>/<FileName>`
+
+This layout is identical to _SymStore_, except that the first two characters
+of the file name are prepended to the path as an additional folder.
+
+Examples:
+
+- `wk/wkernel32.pdb/FF9F9F7841DB88F0CDEDA9E1E9BFF3B5A/wkernel32.pdb`
+- `KE/KERNEL32.dll/590285E9e0000/KERNEL32.dll`
+
+[ssqp key conventions]: https://github.com/dotnet/symstore/blob/master/docs/specs/SSQP_Key_Conventions.md
+[file mapped uuid directories]: https://lldb.llvm.org/use/symbols.html#file-mapped-uuid-directories
+[build id method]: https://sourceware.org/gdb/onlinedocs/gdb/Separate-Debug-Files.html
