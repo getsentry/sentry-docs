@@ -21,7 +21,7 @@ To add Sentry to your Rust project, just add a new dependency to your `Cargo.tom
 
 ```toml {filename:Cargo.toml}
 [dependencies]
-sentry = "*"
+sentry = "{{ packages.version('sentry.rust') }}"
 ```
 
 ## Configure
@@ -31,7 +31,10 @@ The most convenient way to use this library is the `sentry::init` function, whic
 The `sentry::init` function returns a guard that, when dropped, will flush Events that were not yet sent to the Sentry service. It has a two second deadline for this, so shutdown of applications might slightly delay as a result. Keeping the guard around or sending events will not work.
 
 ```rust {filename:main.rs}
-let _guard = sentry::init("___PUBLIC_DSN___");
+let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+    release: sentry::release_name!(),
+    ..Default::default()
+}));
 ```
 
 **Important:** Note your DSN. The DSN (Data Source Name) tells the SDK where to send events. If you forget it, view Settings -> Projects -> Client Keys (DSN) in sentry.io.
@@ -42,10 +45,13 @@ The quickest way to verify Sentry in your Rust application is to cause a panic:
 
 ```rust {filename:main.rs}
 fn main() {
-  let _guard = sentry::init("___PUBLIC_DSN___");
+    let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+        release: sentry::release_name!(),
+        ..Default::default()
+    }));
 
-  // Sentry will capture this
-  panic!("Everything is on fire!");
+    // Sentry will capture this
+    panic!("Everything is on fire!");
 }
 ```
 
