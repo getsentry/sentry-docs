@@ -7,13 +7,25 @@ redirect_from:
 description: "Learn about filtering or scrubbing sensitive data within the SDK, so that data is not sent with the event. You can also configure server-side scrubbing to ensure the data is not stored."
 ---
 
-As with any third-party service it’s important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored. We recommend filtering or scrubbing sensitive data within the SDK, so that data is not sent with the event, and also [configuring server-side scrubbing](/product/data-management-settings/server-side-scrubbing/) to ensure the data is not stored.
+As with any third-party service it’s important to understand what data is being sent to Sentry, and where relevant ensure sensitive data either never reaches the Sentry servers, or at the very least it doesn’t get stored.
 
-There are two great examples for data scrubbing that every company should think about:
+These are some great examples for data scrubbing that every company should think about:
 
 - PII (Personally Identifiable Information) such as a user's name or email address, which post-GDPR should be on every company's mind.
 - Authentication credentials, like your AWS password or key.
 - Confidential IP (Intellectual Property), such as your favorite color, or your upcoming plans for world domination.
+
+We offer the following options depending on your legal and operational needs:
+
+- filtering or scrubbing sensitive data within the SDK, so that data is *not sent to* Sentry. Different SDKs have different capabilities, and configuration changes require a redeployment of your application.
+- [configuring server-side scrubbing](/product/data-management-settings/server-side-scrubbing/) to ensure Sentry does *not store* data. Configuration changes are done in the Sentry UI and apply immediately for new events.
+- [running a local Relay](/product/relay/) on your own server between the SDK and Sentry, so that data is *not sent to* Sentry while configuration can still be applied without deploying.
+
+<Note>
+
+Ensure that your team is aware of your company's policy around what can and cannot be sent to Sentry. We recommend determining this policy early in your implementation and communicating it as well as enforcing it via code review.
+
+</Note>
 
 <PlatformSection notSupported={["apple", "perl", "native.breakpad", "native.crashpad", "native.minidumps", "native.wasm", "native.ue4", "go", "ruby", "native", "elixir", "dart", "flutter"]}>
 
@@ -38,12 +50,6 @@ If you _do not_ wish to use the default PII behavior, you can also choose to ide
 SDKs provide a `before-send` hook, which is invoked before an event is sent and can be used to modify event data to remove sensitive information. Using `before-send` in the SDKs to **scrub any data before it is sent** is the recommended scrubbing approach, so sensitive data never leaves the local environment.
 
 <PlatformContent includePath="configuration/before-send" />
-
-<Note>
-
-Ensure that your team is aware of your company's policy around what can and cannot be sent to Sentry. We recommend determining this policy early in your implementation and communicating it as well as enforcing it via code review.
-
-</Note>
 
 There's a few areas you should consider that sensitive data may appear:
 
