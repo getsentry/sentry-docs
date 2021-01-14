@@ -1,6 +1,6 @@
 import React from "react";
 import { NavDropdown } from "react-bootstrap";
-import PlatformIcon from "platformicons";
+import { PlatformIcon } from "platformicons";
 
 import usePlatform, { usePlatformList } from "./hooks/usePlatform";
 import SmartLink from "./smartLink";

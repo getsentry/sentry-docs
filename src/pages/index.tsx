@@ -1,5 +1,5 @@
 import React from "react";
-import PlatformIcon from "platformicons";
+import { PlatformIcon } from "platformicons";
 import { Nav } from "react-bootstrap";
 
 import "../css/screen.scss";
