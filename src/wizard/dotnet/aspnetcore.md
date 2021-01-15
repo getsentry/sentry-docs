@@ -44,7 +44,7 @@ let BuildWebHost args =
         .UseSentry("___PUBLIC_DSN___")
 ```
 
-ASP.NET Core 3.0:
+ASP.NET Core 3 or 5:
 
 **C#**
 ```csharp
