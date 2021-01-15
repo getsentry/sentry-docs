@@ -13,11 +13,13 @@ Package Manager:
 Install-Package Sentry.AspNetCore -Version 2.1.5
 ```
 
-.NET Core CLI:
+Or .NET Core CLI:
 
 ```shell
 dotnet add package Sentry.AspNetCore -v 2.1.5
 ```
+
+Or Paket
 
 ```Paket
 paket add Sentry.AspNetCore --version 2.1.5
@@ -27,13 +29,14 @@ Add Sentry to `Program.cs` through the `WebHostBuilder`:
 
 ASP.NET Core 2.x:
 
+**C#**
 ```csharp
 public static IWebHost BuildWebHost(string[] args) =>
     WebHost.CreateDefaultBuilder(args)
         // Add the following line:
         .UseSentry("___PUBLIC_DSN___");
 ```
-
+**F#**
 ```fsharp
 let BuildWebHost args =
     WebHost.CreateDefaultBuilder(args)
@@ -43,6 +46,7 @@ let BuildWebHost args =
 
 ASP.NET Core 3.0:
 
+**C#**
 ```csharp
 public static IHostBuilder CreateHostBuilder(string[] args) =>
     Host.CreateDefaultBuilder(args)
@@ -53,6 +57,7 @@ public static IHostBuilder CreateHostBuilder(string[] args) =>
         });
 ```
 
+**F#**
 ```fsharp
 let CreateHostBuilder args =
     Host.CreateDefaultBuilder(args)
