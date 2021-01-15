@@ -10,19 +10,13 @@ Install the **NuGet** package:
 Package Manager:
 
 ```shell
-Install-Package Sentry.AspNetCore -Version 2.1.5
+Install-Package Sentry.AspNetCore -Version {{ packages.version('sentry.dotnet.aspnetcore') }}
 ```
 
 Or .NET Core CLI:
 
 ```shell
-dotnet add package Sentry.AspNetCore -v 2.1.5
-```
-
-Or Paket
-
-```Paket
-paket add Sentry.AspNetCore --version 2.1.5
+dotnet add package Sentry.AspNetCore -v {{ packages.version('sentry.dotnet.aspnetcore') }}
 ```
 
 Add Sentry to `Program.cs` through the `WebHostBuilder`:
@@ -44,7 +38,7 @@ let BuildWebHost args =
         .UseSentry("___PUBLIC_DSN___")
 ```
 
-ASP.NET Core 3 or 5:
+ASP.NET Core 3 or later:
 
 **C#**
 ```csharp

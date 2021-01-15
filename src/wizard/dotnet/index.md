@@ -13,9 +13,6 @@ Install-Package Sentry -Version {{ packages.version('sentry.dotnet') }}
 
 # Or using .NET Core CLI
 dotnet add package Sentry -v {{ packages.version('sentry.dotnet') }}
-
-# Or using Paket
-paket add Sentry --version {{ packages.version('sentry.dotnet') }}
 ```
 
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Using .NET Framework prior to 4.6.1?</h5>
@@ -26,6 +23,7 @@ paket add Sentry --version {{ packages.version('sentry.dotnet') }}
 
 Initialize the SDK as early as possible, like in the `Main` method in `Program.cs`:
 
+**C#**
 ```csharp
 using (SentrySdk.Init("___PUBLIC_DSN___"))
 {
@@ -33,6 +31,7 @@ using (SentrySdk.Init("___PUBLIC_DSN___"))
 }
 ```
 
+**F#**
 ```fsharp
 use __ = SentrySdk.Init ("___PUBLIC_DSN___")
 // App code
@@ -40,6 +39,7 @@ use __ = SentrySdk.Init ("___PUBLIC_DSN___")
 
 Verify Sentry is capturing unhandled exceptions by raising an exception. For example, you can use the following snippet to raise a `NullReferenceException`:
 
+**C#**
 ```csharp
 using (SentrySdk.Init("___PUBLIC_DSN___"))
 {
@@ -47,6 +47,7 @@ using (SentrySdk.Init("___PUBLIC_DSN___"))
 }
 ```
 
+**F#**
 ```fsharp
 use __ = SentrySdk.Init ("___PUBLIC_DSN___")
 raise <| NullReferenceException ()
