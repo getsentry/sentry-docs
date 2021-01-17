@@ -9,12 +9,17 @@ type: library
 
 ```shell
 # Using Package Manager
-Install-Package Sentry.Xamarin.Forms -Version 1.0.0-alpha.3
+# For Xamarin.Forms
+Install-Package Sentry.Xamarin.Forms -Version 1.0.0-alpha.4
+
+# If you are not using Xamarin.Forms, but only Xamarin:
+Install-Package Sentry.Xamarin -Version 1.0.0-alpha.4
+
 ```
 
 ## Initialize the SDK
 
-Initialize the SDK as early as possible, like in the constructor of the `App`, and Add `SentryXamarinFormsIntegration` as a new Integration to `SentryOptions`:
+Initialize the SDK as early as possible, like in the constructor of the `App`, and Add `SentryXamarinFormsIntegration` as a new Integration to `SentryXamarinOptions` if you are going to run your app with Xamarin Forms:
 
 
 ### Android
@@ -28,6 +33,7 @@ public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompa
         SentryXamarin.Init(options =>
         {
             options.Dsn = "___PUBLIC_DSN___";
+            options.AddXamarinFormsIntegration();
         });
 ```
 
@@ -42,6 +48,7 @@ public partial class AppDelegate : global::Xamarin.Forms.Platform.iOS.FormsAppli
         SentryXamarin.Init(options =>
         {
             options.Dsn = "___PUBLIC_DSN___";
+            options.AddXamarinFormsIntegration();
         });
 ```
 
@@ -58,6 +65,7 @@ NOTE: It's recommended to not setup the CacheDirectory for UWP.
             SentryXamarin.Init(options =>
             {
                 options.Dsn = "___PUBLIC_DSN___";
+                options.AddXamarinFormsIntegration();
             });
 ```
 
