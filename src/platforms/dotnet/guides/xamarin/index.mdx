@@ -9,32 +9,24 @@ Sentry's .NET SDK works with Xamarin applications through the [Sentry Xamarin Nu
 
 ## Configuration
 
-In addition to [initializing the SDK with `SentryXamarin.Init`](/platforms/dotnet/), you must configure the WPF specific error handler.
+All you need to do is to [initialize the SDK with `SentryXamarin.Init`](/platforms/dotnet/), you will not need any additional changes to get the SDK ready to go.
 
-<Note>
+The SDK automatically handles `AppDomain.UnhandledException` and `Application.UnhandledException`, so you'll not need no worry about trying to Catch Unhandled Exceptions.
 
-The SDK should be initialized in the constructor of your application class (usually `App.xaml.cs`). Do not initialize the SDK in the `OnStartup()` event of the application or the `Hub` will not be initialized correctly.
+### Xamarin Options
 
-</Note>
+The following options are only going to be valid during the SDK initialization.
 
-The SDK automatically handles `AppDomain.UnhandledException`. On WPF, for production apps (when no debugger is attached), WPF catches exception to show the dialog to the user. You can also configure your app to capture those exceptions before the dialog shows up:
+### DisableNativeIntegration
 
-```csharp
-using System.Windows;
+Disable the native event processor for Android,iOS,UWP
 
-public partial class App : Application
-{
-    public App()
-    {
-        DispatcherUnhandledException += App_DispatcherUnhandledException;
-    }
+### DisableXamarinFormsCache
 
-    void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
-    {
-        SentrySdk.CaptureException(e.Exception);
+By calling it, the SDK will not automatically Cache your events and they might be lost if a hard crash happen or no connectivity is available during the transport of the event.
 
-        // If you want to avoid the application from crashing:
-        e.Handled = true;
-    }
-}
-```
+### Xamarin Forms Options
+
+#### DisableXamarinWarningsBreadcrumbs
+
+Disables the automatic Logging of internal Warnings that comes from Xamarin Forms.
