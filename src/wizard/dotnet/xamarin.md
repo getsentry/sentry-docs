@@ -8,7 +8,6 @@ type: library
 ## Install the NuGet package
 
 ```shell
-# Using Package Manager
 # For Xamarin.Forms
 Install-Package Sentry.Xamarin.Forms -Version 1.0.0-alpha.4
 
