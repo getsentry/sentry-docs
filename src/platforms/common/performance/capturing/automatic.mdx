@@ -30,7 +30,7 @@ Sentry.init({
   dsn: "___PUBLIC_DSN___",
 
   integrations: [
-    new Sentry.Tracing.ReactNativeTracing({
+    new Sentry.ReactNativeTracing({
       tracingOrigins: ["localhost", "my-site-url.com", /^\//],
       // ... other options
     }),
@@ -72,12 +72,12 @@ Note that this routing instrumentation will create a transaction on every route 
 import * as Sentry from "@sentry/react-native";
 
 // Construct a new instrumentation instance. This is needed to communicate between the integration and React
-const reactNavigationV5Instrumentation = new Sentry.Tracing.ReactNavigationV5Instrumentation();
+const reactNavigationV5Instrumentation = new Sentry.ReactNavigationV5Instrumentation();
 
 Sentry.init({
   ...
   integrations: [
-    new Sentry.Tracing.ReactNativeTracing({
+    new Sentry.ReactNativeTracing({
       // Pass instrumentation to be used as `routingInstrumentation`
       routingInstrumentation: reactNavigationV5Instrumentation,
       // ...
@@ -110,24 +110,25 @@ You can configure this instrumentation by passing an object as the first argumen
 `shouldSendTransaction` (route, previousRoute) => boolean
 
 ```js
+const reactNavigationV5Instrumentation = new Sentry.ReactNavigationV5Instrumentation(
+  {
+    shouldSendTransaction: (route, previousRoute) => {
+      if (route.name === "Ignore-Route") {
+        return false;
+      }
 
-const reactNavigationV5Instrumentation = new Sentry.Tracing.ReactNavigationV5Instrumentation({
-  shouldSendTransaction: (route, previousRoute) => {
-    if (route.name === 'Ignore-Route') {
-      return false;
-    }
-    
-    if (route.params.containsSensitiveInfo) {
-      return false;
-    }
-    
-    if (previousRoute.name === 'ShouldIgnoreAfter') {
-      return false;
-    }
-    
-    return true;
+      if (route.params.containsSensitiveInfo) {
+        return false;
+      }
+
+      if (previousRoute.name === "ShouldIgnoreAfter") {
+        return false;
+      }
+
+      return true;
+    },
   }
-});
+);
 
 // ...
 ```
@@ -138,12 +139,12 @@ Note that this routing instrumentation will create a transaction on every route 
 
 ```js
 // Construct a new instrumentation instance. This is needed to communicate between the integration and React
-const reactNavigationV4Instrumentation = new Sentry.Tracing.ReactNavigationV4Instrumentation();
+const reactNavigationV4Instrumentation = new Sentry.ReactNavigationV4Instrumentation();
 
 Sentry.init({
   ...
   integrations: [
-    new Sentry.Tracing.ReactNativeTracing({
+    new Sentry.ReactNativeTracing({
       // Pass instrumentation to be used as `routingInstrumentation`
       routingInstrumentation: reactNavigationV4Instrumentation,
       ...
@@ -174,25 +175,26 @@ You can configure this instrumentation by passing an object as the first argumen
 `shouldSendTransaction` (route, previousRoute) => boolean
 
 ```js
+const reactNavigationV4Instrumentation = new Sentry.ReactNavigationV4Instrumentation(
+  {
+    shouldSendTransaction: (route, previousRoute) => {
+      // Note that it is route.routeName here and NOT route.name like in V5, this is directly from React-Navigation
+      if (route.routeName === "Ignore-Route") {
+        return false;
+      }
 
-const reactNavigationV4Instrumentation = new Sentry.Tracing.ReactNavigationV4Instrumentation({
-  shouldSendTransaction: (route, previousRoute) => {
-    // Note that it is route.routeName here and NOT route.name like in V5, this is directly from React-Navigation
-    if (route.routeName === 'Ignore-Route') {
-      return false;
-    }
-    
-    if (route.params.containsSensitiveInfo) {
-      return false;
-    }
-    
-    if (previousRoute.name === 'ShouldIgnoreAfter') {
-      return false;
-    }
-    
-    return true;
+      if (route.params.containsSensitiveInfo) {
+        return false;
+      }
+
+      if (previousRoute.name === "ShouldIgnoreAfter") {
+        return false;
+      }
+
+      return true;
+    },
   }
-});
+);
 
 // ...
 ```
@@ -211,12 +213,12 @@ You need to ensure that this method is called **before** the route change occurs
 
 ```js
 // Construct a new instrumentation instance. This is needed to communicate between the integration and React
-const routingInstrumentation = new Sentry.Tracing.RoutingInstrumentation();
+const routingInstrumentation = new Sentry.RoutingInstrumentation();
 
 Sentry.init({
   ...
   integrations: [
-    new Sentry.Tracing.ReactNativeTracing({
+    new Sentry.ReactNativeTracing({
       // Pass instrumentation to be used as `routingInstrumentation`
       routingInstrumentation,
       ...
@@ -237,24 +239,21 @@ const App = () => {
 };
 ```
 
-
 #### Extending
-
 
 ```js
 class CustomInstrumentation extends RoutingInstrumentation {
-  
   constructor(navigator) {
     super();
-    
+
     this.navigator.registerRouteChangeListener(this.routeListener.bind(this));
   }
-  
+
   routeListener(newRoute) {
     // Again, ensure this is called BEFORE the route changes and BEFORE the route is mounted.
     this.onRouteWillChange({
       name: newRoute.name,
-      op: 'navigation'
+      op: "navigation",
     });
   }
 }
