@@ -24,40 +24,37 @@ export default ({
   pageContext = {},
 }: Props): JSX.Element => {
   return (
-    <div className="document-wrapper">
-      <div className="sidebar">
-        <Header />
-
-        <div
-          className="d-md-flex flex-column align-items-stretch collapse navbar-collapse"
-          id="sidebar"
-        >
-          <div className="toc">
-            <div className="text-white p-3">
-              {sidebar ? sidebar : <Sidebar />}
+    <>
+      <Header
+        {...(pageContext.platform && {
+          platforms: [pageContext.platform.name],
+        })}
+      />
+      <div className="document-wrapper">
+        <div className="sidebar">
+          <div
+            className="d-md-flex flex-column align-items-stretch collapse navbar-collapse"
+            id="sidebar"
+          >
+            <div className="toc">
+              <div className="text-white p-3">
+                {sidebar ? sidebar : <Sidebar />}
+              </div>
             </div>
           </div>
         </div>
+
+        <main role="main" className="px-0">
+          <div className="flex-grow-1">
+            <section className="pt-3 px-3 content-max prose">
+              <div className="pb-3">
+                <Breadcrumbs />
+              </div>
+              {children}
+            </section>
+          </div>
+        </main>
       </div>
-
-      <main role="main" className="px-0">
-        <div className="flex-grow-1">
-          <div className="d-none d-md-block navbar-right-half">
-            <Navbar
-              {...(pageContext.platform && {
-                platforms: [pageContext.platform.name],
-              })}
-            />
-          </div>
-
-          <section className="pt-3 px-3 content-max prose">
-            <div className="pb-3">
-              <Breadcrumbs />
-            </div>
-            {children}
-          </section>
-        </div>
-      </main>
-    </div>
+    </>
   );
 };
