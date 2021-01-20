@@ -3,7 +3,6 @@ import React from "react";
 import Breadcrumbs from "./breadcrumbs";
 import Header from "./header";
 import Sidebar from "./sidebar";
-import Navbar from "./navbar";
 
 import "~src/css/screen.scss";
 
