@@ -33,31 +33,34 @@ Sentry.init(
 ```
 
 ```kotlin {tabTitle:Kotlin}
+import io.sentry.Sentry
 import io.sentry.SentryOptions.TracesSamplerCallback
 
-val tracesSampler = TracesSamplerCallback {
-    val ctx = it.customSamplingContext
-    if (ctx != null) {
-        when {
-            "/payment" == ctx.get("url") -> {
-                // These are important - take a big sample
-                0.5
+Sentry.init {
+    it.tracesSampler = TracesSamplerCallback {
+        val ctx = it.customSamplingContext
+        if (ctx != null) {
+            when {
+                "/payment" == ctx.get("url") -> {
+                    // These are important - take a big sample
+                    0.5
+                }
+                "/search" == ctx.get("url") -> {
+                    // Search is less important and happen much more frequently - only take 1%
+                    0.01
+                }
+                "/health" == ctx.get("url") -> {
+                    // The health check endpoint is just noise - drop all transactions
+                    0.0
+                }
+                else -> {
+                    // Default sample rate
+                    0.1
+                }
             }
-            "/search" == ctx.get("url") -> {
-                // Search is less important and happen much more frequently - only take 1%
-                0.01
-            }
-            "/health" == ctx.get("url") -> {
-                // The health check endpoint is just noise - drop all transactions
-                0.0
-            }
-            else -> {
-                // Default sample rate
-                0.1
-            }
+        } else {
+            0.1
         }
-    } else {
-        0.1
     }
 }
 ```
