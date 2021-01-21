@@ -13,6 +13,8 @@ import NavbarPlatformDropdown from "../components/navbarPlatformDropdown";
 
 import SentryWordmarkSVG from "../logos/sentry-wordmark-dark.svg";
 
+import Banner from "../components/banner";
+
 const HIGHLIGHTED_PLATFORMS = [
   "javascript",
   "node",
@@ -120,6 +122,7 @@ const IndexPage = () => {
             </a>
           </div>
         </div>
+        <Banner />
       </div>
       <div className="index-container">
         <div className="flex-row card-row">

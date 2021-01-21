@@ -4,6 +4,7 @@ import Breadcrumbs from "./breadcrumbs";
 import Header from "./header";
 import Sidebar from "./sidebar";
 import Navbar from "./navbar";
+import Banner from "./banner";
 
 import "~src/css/screen.scss";
 
@@ -38,6 +39,7 @@ export default ({
             </div>
           </div>
         </div>
+        <Banner />
       </div>
 
       <main role="main" className="px-0">
@@ -54,6 +56,7 @@ export default ({
             <div className="pb-3">
               <Breadcrumbs />
             </div>
+
             {children}
           </section>
         </div>
