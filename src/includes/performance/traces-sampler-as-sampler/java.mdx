@@ -1,4 +1,5 @@
 ```java
+import io.sentry.CustomSamplingContext;
 import io.sentry.Sentry;
 
 Sentry.init(
@@ -19,7 +20,7 @@ Sentry.init(
             return 0.01;
           } else if ("/health".equals(ctx.get("url"))) {
             // The health check endpoint is just noise - drop all transactions
-            return 0;
+            return 0.0;
           } else {
             // Default sample rate
             return 0.1;
@@ -32,6 +33,8 @@ Sentry.init(
 ```
 
 ```kotlin {tabTitle:Kotlin}
+import io.sentry.SentryOptions.TracesSamplerCallback
+
 val tracesSampler = TracesSamplerCallback {
     val ctx = it.customSamplingContext
     if (ctx != null) {

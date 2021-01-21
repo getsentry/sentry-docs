@@ -1,0 +1,203 @@
+---
+title: "Debug File Formats"
+sidebar_order: 1
+description: "Learn about platform-specific file formats and the debug information they contain."
+---
+
+Sentry differentiates four kinds of debug information:
+
+- **Debug Information:** Provides function names, paths to source files, line
+  numbers, and inline frames. The process of resolving this information from
+  instruction addresses is called "symbolication". This information is
+  relatively large compared to the executable and usually put into a separate
+  file. In Sentry, these files are designated as _debug companions_ and show the
+  `debug` tag.
+
+- **Symbol Tables:** If debug information is not available for a certain
+  library, Sentry can use symbol tables as a fallback to retrieve function
+  names. Symbol tables are usually included in both the executable and debug
+  companion files. However, they do not contain sufficient information to
+  resolve inline functions or file names and line numbers. The `symtab` tag
+  indicates symbol tables.
+
+- **Source Code:** Conventionally, source code is not part of regular debug
+  information files. Sentry CLI can bundle source code of your application and
+  upload it to display source context in stack traces in Sentry. These bundles
+  show up with the `sources` tag.
+
+- **Unwind Information:** Enables Sentry to extract stack traces from Minidumps
+  and other binary crash formats of optimized builds. This process is referred
+  to as "stack unwinding" or "stack walking". Since this is also required when
+  throwing exceptions in C++, this information is often included in the
+  executable or library. If an uploaded file contains this information, it shows
+  the `unwind` tag. Note that on some platforms no actual unwinding takes place.
+  For instance, WebAssembly currently does not have the equivalent of minidumps
+  which means we do not require that type of information in such cases.
+
+Compilers place the above debug information in different files passed on the
+target platform, architecture, build flags or optimization level. Consequently,
+Sentry might not need all of the above information to process crash reports.
+Still, it is always a good idea to provide all available debug information.
+
+`sentry-cli` can be used to list properties of supported debug files and
+validate their contents. See [_Debug Information Files in sentry-cli_](/product/cli/dif/) for more information.
+
+<PlatformSection notSupported={["native.wasm"]}>
+
+## MachO and dSYM
+
+Executables, dynamic libraries and debug companions on all Apple platforms use
+the _Mach Object_, or short _MachO_, container format. This applies to iOS,
+iPadOS, tvOS, watchOS, and macOS.
+
+- **Executables** do not carry a file extension. For desktop applications, they
+  are often placed in app bundle structures with the `.app` suffix. Unless
+  stripped manually, executables contain unwind information and a symbol table.
+  Debug information is never stored in executables.
+
+- **Dynamic Libraries** use the `.dylib` extension, and otherwise behave exactly
+  the same as executables.
+
+- **Debug Companions** are placed in a folder structure with the `.dSYM`
+  extension, and are located at `<name>.dSYM/Contents/Resources/DWARF/<name>`.
+  They usually contain a symbol table and debug information, but rarely unwind
+  information.
+
+When building an application with Xcode or with the `clang` compiler, debug
+information is automatically placed in a dSYM file. When linking manually,
+however, the dSYM file must be created using the following command:
+
+```bash
+dsymutil /path/to/output[.dylib]
+```
+
+## Executable and Linkable Format (ELF)
+
+On Linux distributions, executables and debug information are stored in _ELF_
+containers. Unlike other platforms, there is no dedicated container or specifier
+for debug companion files.
+
+Debug information is part of the binary (executable or library) and stripped
+when generating release builds due to their size. However, there is a way to
+retain them in a separate file (either in a different location or with `.debug`
+extension):
+
+```bash
+# There is an executable called "binary" in the CWD
+objcopy --only-keep-debug binary binary.debug
+objcopy --strip-debug --strip-unneeded binary
+objcopy --add-gnu-debuglink=binary.debug binary
+```
+
+This results in the following structure:
+
+- **Executables** do not carry a file extension. If stripped like above,
+  executables contain a symbol table, but no debug information. If the build
+  run omits frame pointers, unwind information will also be retained. Both can
+  be further stripped using flags like `--strip-all`.
+
+- **Shared Libraries** use the `.so` extension, and otherwise behave exactly
+  the same as executables.
+
+- **Debug Companions** do not carry a standard file extension, but are often
+  named `.debug`. If stripped like above, these files contain unwind
+  information, debug information and a symbol table.
+
+Shared libraries installed via package managers usually provide their debugging
+information in separate `*-dev` packages and put it in locations like
+`/usr/local/debug/...`. To receive symbolicated stack traces from those
+libraries, make sure to also upload their symbols in addition to your app’s
+symbols.
+
+ELF supports the compression of debug information which can significantly reduce
+the time required to upload debug information files to Sentry and thus improve
+build times. `gcc` (version 5 or newer) and `clang` (version 5 or newer) support
+this by passing the `-gz` flag to both the compiler and linker. The common way
+to compress debug information, however, is when stripping the executable:
+
+```bash
+# Note the --compress-debug-sections option
+objcopy --only-keep-debug --compress-debug-sections=zlib binary binary.debug
+```
+
+This can be verified by checking for the `C` flag in `readelf`, corresponding to
+`SHF_COMPRESSED`:
+
+```bash
+readelf -S path/to/file
+  ...
+  [21] .debug_info       PROGBITS         0000000000000000  00000370
+       000000000000e133  0000000000000000   C       0     0     1
+```
+
+## PE and PDB
+
+On Microsoft Windows, executables and dynamic libraries use the _Portable
+Executable_ container, in short _PE_. Debug information is stored in _Program
+Database_ files, commonly referred to as _PDB_.
+
+- **Executables** use an `.exe` file extension. Only when compiled for 64-bit
+  architectures, they contain unwind information. Otherwise, they do not contain
+  any usable information and will be omitted for the upload to Sentry.
+
+- **Dynamic Libraries** use the `.dll` file extension, and otherwise behave
+  exactly the same as executables.
+
+- **Debug Companions** are stored in `.pdb` files. They usually contain debug
+  information and in most cases symbol tables. For 32-bit programs, they also
+  contain unwind information. In rare cases, they might have different file
+  names than their corresponding executable.
+
+<Note>
+
+Currently, Sentry supports only Native PDBs. PDBs for the .NET platform are not supported.
+
+</Note>
+
+## Breakpad Symbols
+
+The Google Breakpad library has established a platform-independent ASCII format
+to store debug information. Such files are usually generated for applications
+using Breakpad, Crashpad, or the Electron Framework.
+
+The Breakpad repository includes `dump_syms` tools for each platform that can
+convert from native debug files to Breakpad symbols. These converters bundle all
+available information into one file, such that only one file needs to be
+uploaded.
+
+In contrast to native debug files, Breakpad symbols discard a lot of information
+that is not required to process minidumps. Most notably, inline functions are
+not declared, such that Sentry is not able to display inline frames in stack
+traces.
+
+## WASM
+
+</PlatformSection>
+
+For WebAssembly, we support [DWARF in WASM containers](https://yurydelendik.github.io/webassembly-dwarf/).
+Note that we do not support source maps, which are also a format used for WASM
+debugging, but have shortcomings that make them impractical for a crash reporting
+tool like Sentry.
+
+Since WASM does not specify debug/build IDs yet, we provide a separate tool to
+add build IDs and split files called [wasm-split](https://github.com/getsentry/symbolicator/tree/master/wasm-split)
+to help you create a debug companion file ready for uploading to Sentry
+while removing all debug information from the release binary.
+
+<PlatformSection notSupported={["native.wasm"]}>
+
+## ProGuard Mappings
+
+<PlatformSection supported={["android", "flutter", "react-native"]}>
+<Note>
+
+The recommended method for [Android users is to use the Gradle plugin](/platforms/android/proguard/).
+
+</Note>
+</PlatformSection>
+
+ProGuard mapping files allow Sentry to resolve obfuscated Java classpaths and
+method names into their original form. In that sense, they act as debug
+information files for Java and Android applications.
+
+</PlatformSection>

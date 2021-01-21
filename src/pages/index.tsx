@@ -1,5 +1,5 @@
 import React from "react";
-import PlatformIcon from "platformicons";
+import { PlatformIcon } from "platformicons";
 import { Nav } from "react-bootstrap";
 
 import "../css/screen.scss";
@@ -155,17 +155,13 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/product/alerts-notifications/">
-                  Alerts & Notifications
-                </a>
+                <a href="/product/releases/health/">Release Health</a>
               </li>
               <li>
                 <a href="/product/releases/">Releases</a>
               </li>
               <li>
-                <a href="/product/sentry-basics/search/">
-                  Sentry Basics: Search
-                </a>
+                <a href="/product/cli/">Sentry-CLI</a>
               </li>
             </ul>
           </div>
@@ -206,10 +202,9 @@ const IndexPage = () => {
                 </a>
               </li>
               <li>
-                <a href="/product/performance/metrics/">Performance Metrics</a>
-              </li>
-              <li>
-                <a href="/product/releases/health/">Monitor Release Health</a>
+                <a href="/product/alerts-notifications/">
+                  Alerts & Notifications
+                </a>
               </li>
             </ul>
           </div>

@@ -187,10 +187,20 @@ error.type:"ApiError" -> api-error, {{ transaction }}
 
 alias: `{{ type }}`
 
-This fills in the name of the error that occurred. When chained exceptions are used, it will be the most recently thrown error. This will force the creation of a group per transaction:
+This fills in the name of the error that occurred. When chained exceptions are used, it will be the most recently thrown error. This will force the creation of a group per error type:
 
 ```discover {tabTitle:Fingerprinting Config}
 stack.function:"evaluate_script" -> script-evaluation, {{ error.type }}
+```
+
+### `{{ error.value }}`
+
+alias: `{{ value }}`
+
+This fills in the stringified value of the error that occurred. When chained exceptions are used, it will be the most recently thrown error. Note that this can produce really bad groups when error values are frequently changing.
+
+```discover {tabTitle:Fingerprinting Config}
+error.type:"ScriptError" -> script-evaluation, {{ error.value }}
 ```
 
 ### `{{ stack.function }}`
@@ -201,6 +211,24 @@ This fills in the function name of the "crashing frame," also known as the appli
 
 ```discover {tabTitle:Fingerprinting Config}
 error.type:"ScriptError" -> script-evaluation, {{ stack.function }}
+```
+
+### `{{ stack.abs_path }}`
+
+alias: `{{ path }}`
+
+This fills in the path of the "crashing frame," also known as the application code's topmost frame.
+
+```discover {tabTitle:Fingerprinting Config}
+error.type:"ScriptError" -> script-evaluation, {{ stack.abs_path }}
+```
+
+### `{{ stack.filename }}`
+
+This is like `stack.abs_path` but will only fill in the relative file name:
+
+```discover {tabTitle:Fingerprinting Config}
+error.type:"ScriptError" -> script-evaluation, {{ stack.filename }}
 ```
 
 ### `{{ stack.module }}`
@@ -245,6 +273,16 @@ This fills in the value of a tag into the fingerprint, which can, for instance, 
 
 ```discover {tabTitle:Fingerprinting Config}
 message:"connection error*" -> connection-error, {{ tags.server_name }}
+```
+
+### `{{ message }}`
+
+This fills in the message of the event (similar to `error.value` but for
+captured messages). Note that this can produce groups with poor data quality if
+messages are changing frequently:
+
+```discover {tabTitle:Fingerprinting Config}
+logger:"com.foo.auditlogger.*" -> audit-log, {{ message }}
 ```
 
 </DefinitionList>

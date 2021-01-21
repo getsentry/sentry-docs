@@ -15,62 +15,44 @@ In your `Cargo.toml`:
 
 ```toml {filename:Cargo.toml}
 [dependencies]
-sentry = "0.19.0"
-sentry-actix = "0.19.0"
+sentry = "{{ packages.version('sentry.rust') }}"
+sentry-actix = "{{ packages.version('sentry.rust') }}"
 ```
 
 And your Rust code:
 
 ```rust {filename:main.rs}
-extern crate actix_web;
-extern crate sentry;
-extern crate sentry_actix;
-
-use std::env;
 use std::io;
 
-use actix_web::{server, App, Error, HttpRequest};
-use sentry_actix::SentryMiddleware;
+use actix_web::{get, App, Error, HttpRequest, HttpServer};
 
-fn failing(_req: &HttpRequest) -> Result<String, Error> {
+#[get("/")]
+async fn failing(_req: HttpRequest) -> Result<String, Error> {
     Err(io::Error::new(io::ErrorKind::Other, "An error happens here").into())
 }
 
-fn main() {
-    let _guard = sentry::init("___PUBLIC_DSN___");
-    env::set_var("RUST_BACKTRACE", "1");
+#[actix_web::main]
+async fn main() -> io::Result<()> {
+    let _guard = sentry::init(("___PUBLIC_DSN___", sentry::ClientOptions {
+        release: sentry::release_name!(),
+        ..Default::default()
+    }));
+    std::env::set_var("RUST_BACKTRACE", "1");
 
-    server::new(|| {
+    HttpServer::new(|| {
         App::new()
-            .middleware(SentryMiddleware::new())
-            .resource("/", |r| r.f(failing))
-    }).bind("127.0.0.1:3001")
-        .unwrap()
-        .run();
+            .wrap(sentry_actix::Sentry::new())
+            .service(failing)
+    })
+    .bind("127.0.0.1:3001")?
+    .run()
+    .await?;
+
+    Ok(())
 }
 ```
 
 ## Reusing the Hub
 
-If you use this integration the `Hub::current()` returned hub is typically the wrong one.
-To get the request specific one you need to use the `ActixWebHubExt` trait:
-
-```rust
-use sentry::{Hub, Level};
-use sentry_actix::ActixWebHubExt;
-
-let hub = Hub::from_request(req);
-hub.capture_message("Something is not well", Level::Warning);
-```
-
-The hub can also be made current:
-
-```rust
-use sentry::{Hub, Level};
-use sentry_actix::ActixWebHubExt;
-
-let hub = Hub::from_request(req);
-Hub::run(hub, || {
-    sentry::capture_message("Something is not well", Level::Warning);
-});
-```
+When using the actix integration, a new per-request Hub will be created from the main Hub, and will be set automatically as the current Hub (`Hub::current()`).
+No manual intervention in needed.

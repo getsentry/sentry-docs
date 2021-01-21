@@ -1,0 +1,38 @@
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.traces.sample-rate" android:value="1.0" />
+</application>
+```
+
+Or, if you are manually instrumenting Sentry:
+
+```java {tabTitle:Java}
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this,
+  options -> {
+    options.setDsn("___PUBLIC_DSN___");
+    // To set a uniform sample rate
+    options.setTracesSampleRate(1.0);
+    // OR if you prefer, determine traces sample rate based on the sampling context
+    options.setTracesSampler(
+        context -> {
+          // return a number between 0 and 1
+        });
+  });
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.TracesSamplerCallback
+
+SentryAndroid.init(this) {
+    it.dsn = "___PUBLIC_DSN___"
+    // To set a uniform sample rate
+    it.tracesSampleRate = 1.0
+    // OR if you prefer, determine traces sample rate based on the sampling context
+    it.tracesSampler = TracesSamplerCallback {
+        // return a number between 0 and 1
+    }
+}
+```
