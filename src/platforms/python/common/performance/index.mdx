@@ -48,12 +48,12 @@ Alternatively, instead of adding to the top-level transaction, you can make a ch
 You can choose the value of `op` and `description`.
 
 ```python
-from sentry_sdk import Hub
+import sentry_sdk
 
 def process_item(item):
     transaction = Hub.current.scope.transaction
     # omitted code...
-    with transaction.start_child(op="http", description="GET /") as span:
+    with sentry_sdk.start_span(op="http", description="GET /") as span:
         response = my_custom_http_library.request("GET", "/")
         span.set_tag("http.status_code", response.status_code)
         span.set_data("http.foobarsessionid", get_foobar_sessionid())
@@ -62,12 +62,11 @@ def process_item(item):
 The alternative to make a tree of spans:
 
 ```python
-from sentry_sdk import Hub
+import sentry_sdk
 
 def process_item(item):
-    parent_span = Hub.current.scope.span
     # omitted code...
-    with parent_span.start_child(op="http", description="GET /") as span:
+    with sentry_sdk.start_span(op="http", description="GET /") as span:
         response = my_custom_http_library.request("GET", "/")
         span.set_tag("http.status_code", response.status_code)
         span.set_data("http.foobarsessionid", get_foobar_sessionid())
@@ -83,11 +82,11 @@ from sentry_sdk import Hub
 transaction = Hub.current.scope.transaction
 
 if transaction is None:
-    with start_transaction(name="task"):
+    with sentry_sdk.start_transaction(name="task"):
         do_task()
 else:
     transaction.name = "new name"
-    with transaction.start_child(op="task"):
+    with transaction.start_child(op="task"):  # equivalent to `sentry_sdk.start_span`
         do_task()
 ```
 

@@ -179,7 +179,7 @@ internally. As a result, this option will not work out of the box on newer Andro
 
 **Example gradle.properties**:
 
-``` {filename:gradle.properties}
+```{filename:gradle.properties}
 android.bundle.enableUncompressedNativeLibs=false
 ```
 
@@ -239,7 +239,7 @@ Java_io_sentry_demo_NativeDemo_crash(JNIEnv *env, jclass cls) {
 }
 ```
 
-To symbolicate the stack trace from native code, we need to have access to the debug symbols of your application. Please check the full documentation on [uploading files](../../data-management/debug-files/#uploading-files) to learn more about the upload of the debug symbols.
+To symbolicate the stack trace from native code, we need to have access to the debug symbols of your application. Please check the full documentation on [uploading files](../../data-management/debug-files/upload/) to learn more about the upload of the debug symbols.
 
 Example of uploading all your .so files:
 
@@ -259,6 +259,21 @@ If you want to set context data in the Java layer, then receive that context dat
     <meta-data android:name="io.sentry.ndk.scope-sync.enable" android:value="true" />
 </application>
 ```
+
+#### Multi-Process Apps
+
+The Sentry Android SDK will not automatically initialize in non-main processes because of `ContentProvider`. If you'd like to automatically `auto-init` the Sentry Android SDK in other processes, add the following to your manifest: 
+
+```xml {filename:AndroidManifest.xml}
+<provider
+  android:name="io.sentry.android.core.SentryInitProvider"
+  android:authorities="${applicationId}.SentryInitProvider"
+  android:exported="false"
+  android:process="YOUR_PROCESS_HERE"
+  tools:node="merge"/>
+```
+
+Alternatively, you can call `SentryAndroid.init(...)`.
 
 ## Manual Initialization
 

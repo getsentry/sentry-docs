@@ -1,5 +1,5 @@
 import React from "react";
-import PlatformIcon from "platformicons";
+import { PlatformIcon } from "platformicons";
 
 import SmartLink from "./smartLink";
 import usePlatform, { Platform } from "./hooks/usePlatform";
