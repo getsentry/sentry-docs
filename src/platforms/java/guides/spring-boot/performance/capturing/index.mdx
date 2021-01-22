@@ -8,12 +8,31 @@ description: "Learn how to capture transactions both automatically and manually.
 
 Sentry Spring Boot integration, once enabled, captures each incoming Spring MVC HTTP request and turns it into a transaction with `SentryTracingFilter`. Transaction names follow pattern `<HTTP method> <Spring MVC route>`, for example for a request to a following controller:
 
-```java
+```java {tabTitle:Java}
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
 @RestController
 class HelloController {
 
     @GetMapping("/person/{id}")
     Person person(@PathVariable Long id) {
+        ...
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+
+@RestController
+class HelloController {
+
+    @GetMapping("/person/{id}")
+    fun person(@PathVariable id: Long) {
         ...
     }
 }
@@ -25,13 +44,21 @@ Each sampled request executed by this controller method will be turned into a tr
 
 Sentry Spring Boot integration provides `SentrySpanRestTemplateCustomizer` that creates a span for each outgoing HTTP request executed with a `RestTemplate`. To use instrumented `RestTemplate` make sure to create `RestTemplate` beans using `RestTemplateBuilder`:
 
-```java
+```java {tabTitle:Java}
 @Configuration
 class AppConfig {
     @Bean
     RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder.build();
     }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+@Configuration
+class AppConfig {
+    @Bean
+    fun restTemplate(builder: RestTemplateBuilder) = builder.build()
 }
 ```
 
@@ -50,7 +77,11 @@ Every Spring bean method execution can be turned into a transaction or a span. T
 
 Methods executed outside of Spring MVC request processing can be turned into transactions by annotating them with `@SentryTransaction` annotation:
 
-```java
+```java {tabTitle:Java}
+import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Scheduled;
+import io.sentry.spring.tracing.SentryTransaction;
+
 @Component
 class ScheduledJob {
 
@@ -61,6 +92,23 @@ class ScheduledJob {
     }
 }
 ```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.stereotype.Component
+import org.springframework.scheduling.annotation.Scheduled
+import io.sentry.spring.tracing.SentryTransaction
+
+@Component
+class ScheduledJob {
+
+    @Scheduled(...)
+    @SentryTransaction
+    fun execute() {
+        ...
+    }
+}
+```
+
 `@SentryTransaction` can be configured with custom `name` and `op` properties. If not defined, `name` will be resolved from the class, and the method name.
 
 Advanced Spring AOP users can redefine transaction pointcut by providing a custom `org.springframework.aop.Pointcut` bean with name `sentryTransactionPointcut`.
@@ -69,12 +117,29 @@ Advanced Spring AOP users can redefine transaction pointcut by providing a custo
 
 To create a span around a method execution, annotate method with `@SentrySpan` annotation:
 
-```java
+```java {tabTitle:Java}
+import org.springframework.stereotype.Component;
+import io.sentry.spring.tracing.SentrySpan;
+
 @Component
 class PersonService {
 
     @SentrySpan
     Person findById(Long id) {
+        ...
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.stereotype.Component
+import io.sentry.spring.tracing.SentrySpan
+
+@Component
+class PersonService {
+
+    @SentrySpan
+    fun findById(id: Long): Person {
         ...
     }
 }
