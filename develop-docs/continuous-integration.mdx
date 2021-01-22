@@ -5,54 +5,9 @@ title: "Continuous Integration"
 Sentry uses a variety of continuous integration services to help ensure we don't
 accidentally break the application.
 
-## Travis CI
-
-Travis CI is our primary CI system and runs our tests on every pull request and
-on merges to master. It is required that tests pass before changes can be
-merged.
-
-### Clearing Travis Cache
-
-Build caches can be cleared in the [Travis cache page](https://travis-ci.org/getsentry/sentry/caches).
-
-However, there are multiple issues with that:
-
-- The "Delete all repository caches" button does not work when a large amount of caches has to be deleted. Instead, type the following into your browser devtools console on that page:
-
-  ```javascript
-  Travis.__registry__._resolveCache[
-    "config:environment"
-  ].skipConfirmations = true;
-  btns = document.getElementsByClassName("delete-cache-icon");
-  i = 0;
-  while (i < btns.length) {
-    btns[i].click();
-    i++;
-  }
-  ```
-
-  Or this works too and is prettier:
-
-  ```javascript
-  window.confirm = (m) => true;
-  Array.from(document.getElementsByClassName("delete-cache-icon")).map((e) =>
-    e.click()
-  );
-  ```
-
-- Cache deletion is asynchronous. After telling Travis to delete caches, it takes a while for that deletion to actually apply.
-
-  After retrying your build, it may fail again. Most of the time this is because your issue has nothing to do with caches. But sometimes it's Travis's fault. Inspect the build logs to see if Travis possibly fetched the "deleted" cache (ctrl-f for "cache"). If so you can try clearing caches again and waiting a bit before retrying your job yet another time.
-
 ## GitHub Actions
 
-We use GitHub Actions to supplement front-end builds and apply automatic style
-fixes. We're also trialing it as a way to run acceptance tests.
-
-## Percy
-
-Percy checks the outputs of acceptance tests and reports on changes in rendered
-results. See the [testing chapter for more information](/testing/#percy)
+GitHub actions is our primary CI system and runs our tests on every pull request and on merges to master. It is required that tests pass before changes can be merged.
 
 ## Freight
 
@@ -78,19 +33,14 @@ We use Google Cloud Build to build our Docker containers. Every single commit (i
 * `getsentry/sentry:<sha>`, `getsentry/sentry:<short_sha>`, or `getsentry/sentry:latest` to pull from a commit in [getsentry/sentry](https://github.com/getsentry/sentry) `master`
 * `us.gcr.io/sentryio/sentry:<sha>` to pull from a commit in any other branch or PR
 
+
+## CI workflow for testing changes with getsentry
+
+See [Workflow](/workflow/).
+
 ## Troubleshooting CI
 
 You might also be interested in <Link to="/environment/#troubleshooting">troubleshooting the dev environment</Link>.
-
----
-
-**Problem:**
-
-`ContextualVersionConflict` while installing stuff in Travis CI.
-
-**Solution:**
-
-Purge the Travis cache. How? See above.
 
 ---
 
@@ -101,3 +51,7 @@ When pushing your build to staging and you it fails the `Ensure test image` step
 **Solution:**
 
 You probably forgot to push your branch on Sentry to GitHub.
+
+## Old Systems
+
+For historical reference, we used to use Travis and Percy which have been replaced by GitHub actions and [a GitHub action](https://github.com/getsentry/action-visual-snapshot) respectively.
