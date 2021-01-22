@@ -23,10 +23,6 @@ Install Sentry's integration with Spring via Maven, Gradle, or SBT:
 implementation 'io.sentry:sentry-spring:{{ packages.version('sentry.java', '3.2.0') }}'
 ```
 
-```scala {tabTitle: SBT}
-libraryDependencies += "io.sentry" % "sentry-spring" % "{{ packages.version('sentry.java', '3.2.0') }}"
-```
-
 For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-spring).
 
 Configure Sentry as soon as possible in your application's lifecycle:
