@@ -1,0 +1,79 @@
+---
+title: AWS Lambda (Node)
+sidebar_order: 1
+description: "Learn more about Sentry's AWS Lambda integration and how you can automatically instrument your Node Lambda functions with Sentry without changing your code."
+---
+
+<Alert title="Note" level="info">
+
+Looking for instructions to set up the Node serverless SDK manually? [Check out these docs instead.](/platforms/node/guides/aws-lambda/)
+
+</Alert>
+
+Connect Sentry to your AWS account to automatically add Sentry error monitoring and transactions to your Node Lambda functions.
+
+
+## Install
+
+1. Navigate to **Settings > Integrations > AWS Lambda**.
+
+  ADD SCREENSHOT
+
+1. Press "Add Installation"
+
+  ADD SCREENSHOT
+
+1. Select a project to use for your Lambda functions. Note that this project cannot be changed later. If you only have a single project, this step is skipped.
+
+  ADD SCREENSHOT
+
+1. Click on the link that says **Go to AWS**.
+
+  ADD SCREENSHOT
+  
+1. Scroll to the bottom of the create stack page, mark the checkbox at the bottom and press the **Create Stack** button. This will create a CloudFormation stack in the region you are currently in. This stack gives Sentry write access to your Lambda functions so we can automatically instrument them.
+
+   ![](cloudformation.png)
+
+1. Wait a minute or two for the stack to be created. When you see the status change to **Create Complete**, copy the stack ID back into the installation modal, insert it into the input field that says **ARN**, and finally press **Next**.
+
+   ![](stack_created.png)
+   
+1. Review the Lambda functions you want instrumented with Sentry. Lambda functions which are selected will get the Sentry layer and necessary environment variables automatically added when you press **Finish Setup**. Note that you can enable/disable Sentry on Lambda functions after installation as well.
+
+   ![](select_lambdas.png)
+
+1. Depending on how many Lambda functions you enable, you might need to wait a few minutes for this step to complete. If Sentry is able to update all you functions successfully, installation is considered finished. If there are errors, you will see a list of which Lambda functions failed along with a description on why they failed. 
+
+
+## Configure
+
+The integration configuration view allows you to do the following with your Lambda functions:
+
+* Enable Sentry
+* Disable Sentry
+* Update the Sentry Lambda Layer to the latest version
+
+In the table view, you will also see the version of the Lambda layer below the name.
+
+   ![](configure.png)
+   
+   
+## Uninstallation
+
+Note that when the integration is uninstalled, your Lambda functions will still be instrumented with Sentry and you will continue to receive errors. If you want to disable Sentry for all your Lambda functions, you should disable Sentry for each function before uninstalling.
+
+
+## How it Works
+
+When Sentry is added to a Lambda function, the following modifications are made to your Lambda functions:
+* The layer for Sentry is added to your Lambdas. Any existing layers are honored and the Sentry layer is appended to the end.
+
+   ![](layer.png)
+   
+* Sentry adds the following environment variables
+  * `NODE_OPTIONS`: This is to preload the `awslambda-auto` module which will automatically initialize Sentry
+  * `SENTRY_DSN`: This is set to the DSN of your project
+  * `SENTRY_TRACES_SAMPLE_RATE`: This sets the sampling rate for transactions
+
+  ![](env_variables.png)
