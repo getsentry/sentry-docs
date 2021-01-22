@@ -56,18 +56,18 @@ This function can be used to filter out unwanted spans such as XHR's running hea
 <PlatformSection supported={["react-native"]} notSupported={["javascript"]}>
 
 <Alert level="warning" title="Note">
-  Automatic Instrumentation is current in beta and available on the Sentry React Native SDK version ≥ 2.2.0-beta.0. As this feature is currently in beta, the API could change at any time.
+  Automatic instrumentation is currently in beta, available on the Sentry React Native SDK version ≥ 2.2.0-beta.0. As a result, the API may change without warning.
 </Alert>
 
 `@sentry/react-native` provides a `ReactNativeTracing` integration to add _automatic_ instrumentation for monitoring the performance of React Native applications.
 
 ## What Automatic Instrumentation Provides
 
-The `ReactNativeTracing` creates a child span for every `XMLHttpRequest` or `fetch` request on the Javascript layer that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/product/performance/distributed-tracing/).
+The `ReactNativeTracing` integration creates a child span for every `XMLHttpRequest` or `fetch` request on the Javascript layer that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/product/performance/distributed-tracing/).
 
 ## Enable Automatic Instrumentation
 
-To enable this automatic tracing, include the `ReactNativeTracing` integration in your SDK configuration options.
+To enable automatic tracing, include the `ReactNativeTracing` integration in your SDK configuration options.
 
 ```javascript
 import * as Sentry from "@sentry/react-native";
@@ -88,7 +88,7 @@ Sentry.init({
 });
 ```
 
-Next, you should look to instrument your app with [routing instrumentation](#enable-routing-instrumentation).
+Next, instrument your app with [routing instrumentation](#enable-routing-instrumentation).
 
 ## Configuration Options
 
@@ -96,21 +96,21 @@ You can pass many different options to the `ReactNativeTracing` integration (as 
 
 ### tracingOrigins
 
-The default value of `tracingOrigins` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
+The default value of `tracingOrigins` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
 
 <PlatformContent includePath="performance/tracingOrigins-example" />
 
-You will need to configure your web server CORS to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your set up. If you do not allow the `sentry-trace` header, the request might be blocked.
+You will need to configure your web server CORS to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
 
 ### shouldCreateSpanForRequest
 
-This function can be used to filter out unwanted spans such as XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` already filters out everything but what was defined in `tracingOrigins`.
+This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracingOrigins`.
 
 <PlatformContent includePath="performance/filter-span-example" />
 
 ## Enable Routing Instrumentation
 
-We currently provide two routing instrumentations out of the box to instrumentation route changes for React Navigation V5 and V4. We are looking to add support for other libraries such as [react-native-navigation](https://github.com/wix/react-native-navigation). Otherwise, if you have a custom routing instrumentation or use a routing library we don't support yet, you can use the bare bones routing instrumentation or create your own by extending it.
+We currently provide two routing instrumentations out of the box to instrument route changes for React Navigation V5 and V4. In the future, we will add support for other libraries such as [react-native-navigation](https://github.com/wix/react-native-navigation). Otherwise, if you have a custom routing instrumentation, or use a routing library we don't yet support, you can use the bare bones routing instrumentation or create your own by extending it.
 
 ### React Navigation V5
 
@@ -188,7 +188,7 @@ const App = () => {
 
 ### Other Routing Libraries or Custom Routing Implementations
 
-If you use another routing library that we don't support yet, or have a custom routing solution, you can use the basic `RoutingInstrumentation` we provide, or extend it to create your own instrumentation.
+If you use another routing library that we don't yet support, or have a custom routing solution, you can use the basic `RoutingInstrumentation` we provide, or extend it to create your own instrumentation.
 
 Every routing instrumentation revoles around one method:
 
@@ -248,7 +248,7 @@ class CustomInstrumentation extends RoutingInstrumentation {
 
 ## Recipes
 
-At this moment, by default the React Native SDK will only create child spans for Fetch/XHR transactions out of the box. This means once you are done setting up your routing instrumentation, you will either see just a couple Fetch/XHR child spans or no children at all. To find out how to manually instrument your app, you can read up on <PlatformLink to="/performance/capturing/manual/">Manual Instrumentation</PlatformLink>.
+Currently, by default, the React Native SDK will only create child spans for fetch/XHR transactions out of the box. This means once you are done setting up your routing instrumentation, you will either see just a few fetch/XHR child spans or no children at all. To find out how to manually instrument your app, review our <PlatformLink to="/performance/capturing/manual/">Manual Instrumentation</PlatformLink>.
 
 ### React Profiler
 
