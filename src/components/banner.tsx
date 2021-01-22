@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Upcoming technical workshop: How to use Sentry`s Performance Monitoring + Web Vitals.";
+  "Upcoming Technical Workshop: 3 Ways to Group Similar Issues";
 const BANNER_LINK_URL =
-  "https://zoom.us/webinar/register/6916061722454/WN_oBi-VGTeQye5qd2Cri-A6g";
+  "https://zoom.us/webinar/register/6916061722454/WN_l5OpxMmVR5OPsNq6NUxmeQ";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
