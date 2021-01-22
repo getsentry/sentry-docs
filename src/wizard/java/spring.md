@@ -9,7 +9,7 @@ type: framework
     Sentry's integration with Spring supports Spring Framework 5.1.2 and above to report unhandled exceptions and optional user information. If you're on an older version, use <a href=https://docs.sentry.io/platforms/java/guides/spring/legacy/>our legacy integration</a>.
 </Alert>
 
-Install Sentry's integration with Spring via Maven, Gradle, or SBT:
+Install Sentry's integration with Spring:
 
 ```xml {tabTitle:Maven}
 <dependency>
