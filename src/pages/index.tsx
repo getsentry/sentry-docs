@@ -122,8 +122,8 @@ const IndexPage = () => {
             </a>
           </div>
         </div>
-        <Banner />
       </div>
+      <Banner />
       <div className="index-container">
         <div className="flex-row card-row">
           <a className="hover-card-link" href="/product/">
