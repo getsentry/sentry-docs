@@ -9,9 +9,11 @@ type: framework
     Sentry's integration with Spring supports Spring Framework 5.1.2 and above to report unhandled exceptions and optional user information. If you're on an older version, use <a href=https://docs.sentry.io/platforms/java/guides/spring/legacy/>our legacy integration</a>.
 </Alert>
 
-Install Sentry's integration with Spring:
+Install Sentry's integration with Spring using either Maven or Gradle:
 
-```xml {tabTitle:Maven}
+### Maven:
+
+```
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring</artifactId>
@@ -19,7 +21,9 @@ Install Sentry's integration with Spring:
 </dependency>
 ```
 
-```groovy {tabTitle:Gradle}
+### Gradle:
+
+```
 implementation 'io.sentry:sentry-spring:{{ packages.version('sentry.java', '3.2.0') }}'
 ```
 
@@ -33,7 +37,9 @@ The `sentry-spring` library provides `@EnableSentry` annotation that registers a
 
 </Note>
 
-```java {tabTitle:Java}
+### Java
+
+```
 import io.sentry.spring.EnableSentry;
 // NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
 // project/dashboard
@@ -43,16 +49,22 @@ class SentryConfiguration {
 }
 ```
 
-```kotlin {tabTitle:Kotlin}
+### Kotlin
+
+```
 import io.sentry.spring.EnableSentry
+import org.springframework.core.Ordered
 // NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
 // project/dashboard
-@EnableSentry(dsn = "___PUBLIC_DSN___")
-@Configuration
-class SentryConfiguration
+@EnableSentry(
+  dsn = "___PUBLIC_DSN___",
+  exceptionResolverOrder = Ordered.LOWEST_PRECEDENCE
+)
 ```
 
-Then create an intentional error, so you can test that everything is working:
+Last, create an intentional error, so you can test that everything is working:
+
+### Java
 
 ```java {tabTitle: Java}
 import java.lang.Exception;
@@ -65,7 +77,9 @@ try {
 }
 ```
 
-```kotlin {tabTitle: Kotlin}
+### Kotlin
+
+```
 import java.lang.Exception
 import io.sentry.Sentry
 
