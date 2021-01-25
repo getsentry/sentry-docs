@@ -6,6 +6,7 @@ import Layout from "./layout";
 import SmartLink from "./smartLink";
 import TableOfContents from "./tableOfContents";
 import * as Sentry from "@sentry/gatsby";
+import Banner from "./banner";
 
 type GitHubCTAProps = {
   sourceInstanceName: string;
@@ -109,6 +110,7 @@ export default ({
         {(hasToc || prependToc) && (
           <div className="col-sm-4 col-md-12 col-lg-4 col-xl-3">
             <div className="page-nav">
+              <Banner isModule={true} />
               <React.Fragment>
                 {prependToc}
                 {hasToc && <WrappedTOC ref={contentRef} />}
