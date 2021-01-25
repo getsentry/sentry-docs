@@ -27,7 +27,6 @@ Register the plugin in your Gatsby configuration file (typically `gatsby-config.
       resolve: "@sentry/gatsby",
       options: {
         dsn: "___PUBLIC_DSN___",
-        autoSessionTracking: true,
         sampleRate: 0.7,
       },
     },

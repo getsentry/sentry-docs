@@ -5,13 +5,15 @@ support_level: production
 type: framework
 ---
 
-In Spring Boot, all uncaught exceptions will be automatically reported.
+<Alert level="info">
+Sentry's integration with <a href=https://spring.io/projects/spring-boot>Spring Boot</a> supports Spring Boot 2.1.0 and above to report unhandled exceptions as well as release and registration of beans. If you're on an older version, use <a href=https://docs.sentry.io/platforms/java/legacy/spring>our legacy integration</a>.
+</Alert>
 
-### Install
+Install using either Maven or Gradle:
 
-Install the SDK via Maven or Gradle:
+### Maven
 
-```xml {tabTitle:Maven}
+```xml
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring-boot-starter</artifactId>
@@ -19,30 +21,32 @@ Install the SDK via Maven or Gradle:
 </dependency>
 ```
 
-```groovy {tabTitle:Gradle}
+### Groovy
+
+```groovy
 implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java', '3.2.0') }}'
 ```
 
-### Configure
-
 Open up `src/main/application.properties` (or `src/main/application.yml`) and configure the DSN, and any other [_settings_](/platforms/java/configuration/#options) you need:
 
-```properties {tabTitle:application.properties}
+Modify `src/main/application.properties`:
+
+```
 sentry.dsn=___PUBLIC_DSN___
 ```
 
-```yaml {tabTitle:application.yml}
+Or, modify `src/main/application.yml`:
+
+```yaml
 sentry:
   dsn: ___PUBLIC_DSN___
 ```
 
-### Configure Logback
+If you use Logback for logging you may also want to send error logs to Sentry. Add a dependency to the `sentry-logback` module using either Maven or Gradle. Sentry Spring Boot Starter will auto-configure `SentryAppender`.
 
-If you use Logback for logging you may also want to send error logs to Sentry.
+### Maven
 
-Add a dependency to `sentry-logback` module and Sentry Spring Boot Starter will auto-configure `SentryAppender`:
-
-```xml {tabTitle:Maven}
+```xml
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-logback</artifactId>
@@ -50,30 +54,39 @@ Add a dependency to `sentry-logback` module and Sentry Spring Boot Starter will 
 </dependency>
 ```
 
-```groovy {tabTitle:Gradle}
+### Gradle
+
+```groovy
 implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '3.2.0') }}'
 ```
 
-### Send First Event
+Then create an intentional error, so you can test that everything is working using either Java or Kotlin:
 
-You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be a controller throwing an exception on HTTP request:
+### Java
 
 ```java
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import java.lang.Exception;
+import io.sentry.Sentry;
 
-@RestController
-public class HelloController {
-  private static final Logger LOGGER = LoggerFactory.getLogger(HelloController.class);
+try {
+    throw new Exception("This is a test.");
+} catch (Exception e) {
+    Sentry.captureException(e);
+}
+```
+### Kotlin
 
-  @GetMapping("/")
-  void hello() {
-    LOGGER.error("Event triggered by Logback integration");
-    throw new IllegalArgumentException("Event triggered by Spring integration");
-  }
+```kotlin
+import java.lang.Exception
+import io.sentry.Sentry
+
+try {
+    throw Exception("This is a test.")
+} catch (e: Exception) {
+    Sentry.captureException(e)
 }
 ```
 
-Once you've verified the library is initialized properly and sent a test event, consider visiting our [complete Spring Boot docs](https://docs.sentry.io/platforms/java/guides/spring-boot/).
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
+
+If you're an existing user and have disabled alerts, you won't receive this email.

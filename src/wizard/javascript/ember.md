@@ -37,7 +37,6 @@ Then add the following config to your `config/environment.js`:
 ENV['@sentry/ember'] = {
   sentry: {
     dsn: '___PUBLIC_DSN___',
-    autoSessionTracking: true,
     tracesSampleRate: 1.0,
   }
 };
