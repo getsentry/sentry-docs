@@ -41,8 +41,7 @@ The `sentry-spring` library provides `@EnableSentry` annotation that registers a
 
 ```
 import io.sentry.spring.EnableSentry;
-// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
-// project/dashboard
+
 @EnableSentry(dsn = "___PUBLIC_DSN___")
 @Configuration
 class SentryConfiguration {
@@ -54,8 +53,7 @@ class SentryConfiguration {
 ```
 import io.sentry.spring.EnableSentry
 import org.springframework.core.Ordered
-// NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry
-// project/dashboard
+
 @EnableSentry(
   dsn = "___PUBLIC_DSN___",
   exceptionResolverOrder = Ordered.LOWEST_PRECEDENCE
