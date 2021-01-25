@@ -36,7 +36,6 @@ import { Integrations } from "@sentry/tracing";
 Sentry.init({
   Vue,
   dsn: "___PUBLIC_DSN___",
-  autoSessionTracking: true,
   integrations: [
     new Integrations.BrowserTracing(),
   ],
