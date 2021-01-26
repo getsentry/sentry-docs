@@ -1,0 +1,87 @@
+---
+title: Dynamic Sampling
+sidebar_order: 6
+redirect_from:
+  - /product/error-monitoring/filtering/
+description: "Learn about the different methods for filtering data in your project."
+---
+
+
+TODO -  Should we use Dynamic Sampling or something like: "Centralized Sampling" or "Server Side Sampling" (I think
+that, from a user's perspective, "Dynamic Sampling" doesn't convey much information).
+
+
+
+# Why Dynamic Sampling
+
+Sentry SDKs are able to sample events by setting `traces_sample_rate` or `traces_sampler` during SDK initialisation
+(TODO add link to .../PerformanceMonitoring/SamplingTransactions).
+While this mechanism is very simple and works well in certain scenarios it has the downside of being difficult to
+change for scenarios where the application is distributed and redeployment is either not an option or very
+difficult (e.g. mobile applications).
+
+Dynamic Sampling addresses the need to easily change and manage what is sampled after an application is deployed,
+as an additional benefit Dynamic Sampling enables making more sophisticated sampling decisions that span multiple
+transactions.
+
+# Dynamic Sampling types
+
+Dynamic sampling operates on two types of events: errors and transactions.
+
+## Errors
+
+Error sampling decisions are taken based on the event data.
+
+A sampling rule is selected from the available sampling rules by going through the list of dynamic sampling rules for
+errors and picking up the first matching rule that matches the event data. Rule matching is described in more details
+below.
+
+## Transactions
+
+Transactions can be considered either as independent events or in the context of all other transactions belonging to a
+trace (see TODO tracing link for more info on traces).
+
+Sentry offers the possibility to sample transactions either independently or as part of a trace; there are different
+benefits for each case.
+
+Sampling transactions using transaction traces is advantageous when trying to understand transactions in the context
+of the global system. In this case we are not interested in seeing a particular transaction, but the whole group of
+transactions in a trace so sampling should occur at the trace level.
+
+When sampling transaction traces the rules sampling rules are based on the transaction context, this means that the
+sampling decisions are based on the information extracted from the system that initiated the transaction. A
+transaction trace sample will rules are based on the following attributes (all attributes belong to the initial
+transaction, the transaction that started the trace):
+
+* project id
+* release
+* environment
+* user segment
+
+While sampling transaction traces gives a very good view of how transactions flow through the system, sometimes we are
+interested in analysing transactions from a particular service that happens not to be the initiator of transaction
+(e.g. a backend server). If we are interested in creating rules based on attributes specific to our service, for
+example we have a suspicion that a particular release might have some performance problems, we can sample based on
+transaction event.
+
+Individual transaction rules are based on the transaction attributes and not on the trace context attributes and
+therefore can target individual services that are not initiating traces.
+
+(TODO In the future we can say that these rules can use more attributes).
+
+# Relation with inbound filters
+
+(TODO Decide if we should keep this since we'll probably remove inbound filters in the future.)
+
+Inbound filters are a related but different concept. At a high level inbound filters may be viewed as a coarse sampling
+technique where only 0% and 100% sampling rates are available. The main difference between how filters and sampling
+rules operate is that filters compose while sampling rules do not, the example below will clarify how they operate.
+
+If we have two filters defined, one that removes all requests coming from Internet Explorer 9 or lower and one that
+filter requests coming from an application with release 1.* the resulting effect will be that all events that are
+coming either from Explorer 9 or that are coming from a client with release 1.* will be filtered out.
+
+If we have two sampling rules defined, first sampling on release 1.* at 10%, and the second sampling on "prod1"
+environment at 20% the rules will not compose in any meaningful way. A request coming for release 1.1 and prod1 will
+match the first rule and will be sampled at 10% , A request for release 1.1 & prod2 will still match the first rule and
+will be sampled at 10% while a request for release 2.1 and prod1 will match the second rule and will be sampled at 20%
