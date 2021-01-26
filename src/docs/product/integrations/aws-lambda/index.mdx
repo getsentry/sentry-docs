@@ -17,34 +17,54 @@ Connect Sentry to your AWS account to automatically add Sentry error monitoring 
 
 1. Navigate to **Settings > Integrations > AWS Lambda**.
 
-  ADD SCREENSHOT
+   ![](directory.png)
 
-1. Press "Add Installation"
+1. Press **Add Installation** which will open the installation modal.
 
-  ADD SCREENSHOT
+   ![](integration_detail.png)
 
 1. Select a project to use for your Lambda functions. Note that this project cannot be changed later. If you only have a single project, this step is skipped.
 
-  ADD SCREENSHOT
+   ![](project.png)
 
-1. Click on the link that says **Go to AWS**.
+1. Click on the link that says **Configure AWS**.
 
-  ADD SCREENSHOT
+   ![](aws_account.png)
   
 1. Scroll to the bottom of the create stack page, mark the checkbox at the bottom and press the **Create Stack** button. This will create a CloudFormation stack in the region you are currently in. This stack gives Sentry write access to your Lambda functions so we can automatically instrument them.
 
    ![](cloudformation.png)
 
-1. Wait a minute or two for the stack to be created. When you see the status change to **Create Complete**, copy the stack ID back into the installation modal, insert it into the input field that says **ARN**, and finally press **Next**.
+1. Wait a minute or two for the stack to be created. When you see the status change to **Create Complete**, copy your AWS account number, select the region you want to use, and finally press **Next**.
 
    ![](stack_created.png)
+   
+<Alert title="Note" level="info">
+
+You only need to create the CloudFormation stack once per account even when installing the integration on multiple regions. If you are setting up the integration on a second region, verify that the externalId in the form matches the one for the existing CloudFormation stack on the "Parameters" tab.
+
+</Alert>
+
    
 1. Review the Lambda functions you want instrumented with Sentry. Lambda functions which are selected will get the Sentry layer and necessary environment variables automatically added when you press **Finish Setup**. Note that you can enable/disable Sentry on Lambda functions after installation as well.
 
    ![](select_lambdas.png)
 
 1. Depending on how many Lambda functions you enable, you might need to wait a few minutes for this step to complete. If Sentry is able to update all you functions successfully, installation is considered finished. If there are errors, you will see a list of which Lambda functions failed along with a description on why they failed. 
+   
+### Troubleshooting
 
+#### Error `SentryRole already exists`
+
+The stack already exists on your account so you can go to the next step of adding your AWS account information.
+
+#### Error `Invalid existing layer`
+
+Your Lambda function has a layer that no longer exists. Please remove the problematic layer and then enable Sentry on the Lambda in the configuration view for the integration.
+
+#### Error `Please validate the CloudFormation stack was created successfully` 
+
+Sentry is unable to access your AWS account through your CloudFormation stack. This means either the stack has not been created or the external ID used doesn't match the one in your installation. You can go to the Parameters tab of the CloudFormation stack to get the value of the external ID and paste it into the form field.
 
 ## Configure
 
