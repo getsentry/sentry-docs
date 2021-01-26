@@ -24,7 +24,7 @@ Install Sentry's integration with Logback using either Maven or Gradle:
 ### Gradle
 
 ```groovy
-implementation 'io.sentry:sentry-logback:3.2.0'
+implementation 'io.sentry:sentry-logback:3.2.1'
 ```
 
 For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-logback).
@@ -49,7 +49,6 @@ The following example configures a ConsoleAppender that logs to standard out at 
     <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
     <appender name="Sentry" class="io.sentry.logback.SentryAppender">
         <options>
-            <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
             <dsn>___PUBLIC_DSN___</dsn>
         </options>
     </appender>
@@ -70,7 +69,6 @@ Next, you'll need to set your log levels, as illustrated here. You can learn mor
 ```xml
 <appender name="Sentry" class="io.sentry.logback.SentryAppender">
     <options>
-        <!-- NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in your Sentry project/dashboard -->
         <dsn>___PUBLIC_DSN___</dsn>
     </options>
     <!-- Optionally change minimum Event level. Default for Events is ERROR -->
