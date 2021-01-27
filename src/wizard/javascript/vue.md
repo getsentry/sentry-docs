@@ -30,7 +30,7 @@ Next, initialize Sentry in your app entry point before you initialize your root 
 
 ```javascript
 import Vue from "vue";
-import * as Sentry from "@sentry/browser";
+import * as Sentry from "@sentry/vue";
 import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
