@@ -11,9 +11,9 @@ description: "Configure our Performance Monitoring integration to suit the needs
 : If you want to sample specific Transaction, use the `traces_sampler` option:
 
 ```php
-Sentry\init([
+\Sentry\init([
     'dsn' => '___PUBLIC_DSN___',
-    'traces_sampler' => static function (Sentry\Tracing\SamplingContext $context): float {
+    'traces_sampler' => static function (\Sentry\Tracing\SamplingContext $context): float {
         if (false !== strpos($context->getTransactionContext()->getName(), 'health')) {
             // Discard transactions that have 'health' in their name
             return 0.0;
@@ -24,7 +24,7 @@ Sentry\init([
 ]);
 ```
 
-You can also define `traces_sampler` as a callable that receives a `Sentry\Tracing\SamplingContext $context` which should return a `float` (for the sample rate):
+You can also define `traces_sampler` as a callable that receives a `\Sentry\Tracing\SamplingContext $context` which should return a `float` (for the sample rate):
 
 ```php
 'traces_sampler' => array('App\Helpers\General\TracesSampler', 'sample')
@@ -32,22 +32,19 @@ You can also define `traces_sampler` as a callable that receives a `Sentry\Traci
 
 ### Instrument HTTP Calls
 
-To instrument HTTP calls using GuzzleHttp, you'll need to add a [handler](http://docs.guzzlephp.org/en/stable/handlers-and-middleware.html#handlers) to your Guzzle Client, which we provide within our SDK. Here's an example of it use:
+To instrument HTTP calls using GuzzleHttp, you'll need to add a [handler](https://docs.guzzlephp.org/en/stable/handlers-and-middleware.html#handlers) to your Guzzle Client, which we provide within our SDK. Here's an example of it use:
 
 ```php
-use Sentry\Tracing\GuzzleTracingMiddleware;
-...
-
-$stack = HandlerStack::create();
+$stack = \GuzzleHttp\HandlerStack::create();
 
 // This is the important line
-$stack->push(GuzzleTracingMiddleware::trace());
+$stack->push(\Sentry\Tracing\GuzzleTracingMiddleware::trace());
 // ----
 
-$client = new Client([
+$client = new \GuzzleHttp\Client([
     'base_uri' => 'http://httpbin.org',
     'timeout'  => 2.0,
-    'handler' => $stack
+    'handler'  => $stack
 ]);
 $client->request('GET', '/get');
 ```
@@ -59,12 +56,12 @@ After adding this handler, you will receive spans for every request from this cl
 To manually instrument certain regions of your code, you can create a transaction to capture them.
 
 ```php
-$transactionContext = new TransactionContext();
+$transactionContext = new \Sentry\Tracing\TransactionContext();
 $transactionContext->setName('External Call');
 $transactionContext->setOp('http.caller');
 $transaction = \Sentry\startTransaction($transactionContext);
 
-$spanContext = new SpanContext();
+$spanContext = new \Sentry\Tracing\SpanContext();
 $spanContext->setOp('functionX');
 $span1 = $transaction->startChild($spanContext);
 
@@ -77,10 +74,10 @@ $transaction->finish();
 
 ### Retrieving a Transaction
 
-If you want to attach Spans to an already ongoing Transaction, you can use `SentrySdk::getCurrentHub()->getTransaction()`. This function will return a `Transaction` if there is a running Transaction on the scope, otherwise it returns `null`.
+If you want to attach Spans to an already ongoing Transaction, you can use `\Sentry\SentrySdk::getCurrentHub()->getTransaction()`. This function will return a `\Sentry\Tracing\Transaction` if there is a running Transaction on the scope, otherwise it returns `null`.
 
 ```php
-$transaction = SentrySdk::getCurrentHub()->getTransaction();
+$transaction = \Sentry\SentrySdk::getCurrentHub()->getTransaction();
 
 if ($transaction instanceof Transaction) {
     $transaction->setName($routeName);
@@ -91,12 +88,12 @@ if ($transaction instanceof Transaction) {
 }
 ```
 
-You can also use this to filter for specific conditions when you don't want to send a `Transaction`. This example illustrates how:
+You can also use this to filter for specific conditions when you don't want to send a `\Sentry\Tracing\Transaction`. This example illustrates how:
 
 ```php
-$transaction = SentrySdk::getCurrentHub()->getTransaction();
+$transaction = \Sentry\SentrySdk::getCurrentHub()->getTransaction();
 
-if ($transaction instanceof Transaction) {
+if ($transaction instanceof \Sentry\Tracing\Transaction) {
     // $transaction->setSampled(false); // __DONT__ SEND TRANSACTION
     // $transaction->setSampled(true); // __DO__ SEND TRANSACTION
 }
@@ -125,7 +122,7 @@ Add the following line to your blade template rendering the `<head/>` of your pa
 ```php {filename:app.blade.php}
 <head>
 ...
-{!! Sentry\Laravel\Integration::sentryTracingMeta() !!}
+{!! \Sentry\Laravel\Integration::sentryTracingMeta() !!}
 ...
 </head>
 ```
