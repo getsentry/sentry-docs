@@ -9,9 +9,9 @@ type: language
 
 Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
 
-<div class="alert alert-warning" role="alert"><h5 class="no_toc">Note</h5><div class="alert-body content-flush-bottom">If you are using `expo-cli` you need to use another SDK see: [https://docs.expo.io/versions/latest/guides/using-sentry/](https://docs.expo.io/versions/latest/guides/using-sentry/)
-This SDK only works for ejected projects or projects that directly use React Native.</div>
-</div>
+> If you are using `expo-cli` you need to use another SDK see: [https://docs.expo.io/versions/latest/guides/using-sentry/](https://docs.expo.io/versions/latest/guides/using-sentry/)
+> This SDK only works for ejected projects or projects that directly use React Native.
+
 
 To install the React Native SDK, add the dependency to your project by either using `npm` or `yarn`.
 
