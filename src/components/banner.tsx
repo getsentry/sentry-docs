@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = true;
+const SHOW_BANNER = false;
 const BANNER_TEXT =
   "Upcoming Technical Workshop: 3 Ways to Group Similar Issues";
 const BANNER_LINK_URL =
