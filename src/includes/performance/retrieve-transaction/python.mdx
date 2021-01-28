@@ -1,0 +1,34 @@
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Hub.current.scope.transaction`. This property will return a `Transaction` in case there is a running Transaction otherwise it returns `None`.
+
+```python
+from sentry_sdk import Hub
+
+transaction = Hub.current.scope.transaction
+
+if transaction is None:
+    with sentry_sdk.start_transaction(name="task"):
+        do_task()
+else:
+    transaction.name = "new name"
+    with transaction.start_child(op="task"):  # equivalent to `sentry_sdk.start_span`
+        do_task()
+```
+
+### Retrieving the Current Span
+
+Started spans are stored in the scope, and can be fetched off the scope:
+
+```python
+from sentry_sdk import Hub
+
+span = Hub.current.scope.span
+
+if span is None:
+    # no span in progress, create new transaction
+    with start_transaction(name="task"):
+        do_task()
+else:
+    # new task span as child of current span
+    with span.start_child(op="task"):
+        do_task()
+```
