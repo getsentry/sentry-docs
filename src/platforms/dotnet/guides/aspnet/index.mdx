@@ -3,18 +3,18 @@ title: ASP.NET
 description: "Learn about Sentry's .NET integration with ASP.NET."
 ---
 
-Sentry provides an integration with _ASP.NET_ through the [Sentry NuGet package](https://www.nuget.org/packages/Sentry).
+Sentry provides an integration with _ASP.NET_ through the [Sentry.AspNet NuGet package](https://www.nuget.org/packages/Sentry.AspNet).
 
 ## Install
 
 Add the Sentry dependency:
 
 ```powershell {tabTitle:Package Manager}
-Install-Package Sentry -Version {{ packages.version('sentry.dotnet') }}
+Install-Package Sentry.AspNet -Version {{ packages.version('sentry.dotnet.aspnet') }}
 ```
 
 ```shell {tabTitle:.NET Core CLI}
-dotnet add package Sentry -v {{ packages.version('sentry.dotnet') }}
+dotnet add package Sentry.AspNet -v {{ packages.version('sentry.dotnet.aspnet') }}
 ```
 
 You can combine this integration with a logging library like `log4net`, `NLog` or `Serilog` to include both request data
@@ -39,6 +39,7 @@ public class MvcApplication : System.Web.HttpApplication
         // Add this to Application_Start
         _sentry = SentrySdk.Init(o =>
         {
+            o.AddAspNet();
             o.Dsn = new Dsn("___PUBLIC_DSN___");
         });
     }
@@ -66,7 +67,8 @@ If you wish to change the behavior of how to read the user from the request, you
 ```csharp
 SentrySdk.Init(o =>
 {
-  UserFactory = new MyUserFactory();
+  o.AddAspNet();
+  o.UserFactory = new MyUserFactory();
 }
 ```
 
@@ -82,7 +84,8 @@ Opt-in to send the request body to Sentry:
 ```csharp
 SentrySdk.Init(o =>
 {
-  MaxRequestBodySize = RequestSize.Always;
+  o.AddAspNet(RequestSize.Always);
+  o.MaxRequestBodySize = RequestSize.Always;
 }
 ```
 
