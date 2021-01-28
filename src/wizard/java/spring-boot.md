@@ -21,7 +21,7 @@ Install using either Maven or Gradle:
 </dependency>
 ```
 
-### Groovy
+### Gradle
 
 ```groovy {tabTitle:Gradle}
 implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java', '4.0.0') }}'
