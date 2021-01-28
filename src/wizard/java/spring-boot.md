@@ -17,14 +17,14 @@ Install using either Maven or Gradle:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring-boot-starter</artifactId>
-    <version>{{ packages.version('sentry.java', '4.0.0') }}</version>
+    <version>{{ packages.version('sentry.java.spring-boot', '4.0.0') }}</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java', '4.0.0') }}'
+implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java.spring-boot', '4.0.0') }}'
 ```
 
 Open up `src/main/application.properties` (or `src/main/application.yml`) and configure the DSN, and any other [_settings_](/platforms/java/configuration/#options) you need:
@@ -50,14 +50,14 @@ If you use Logback for logging you may also want to send error logs to Sentry. A
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-logback</artifactId>
-    <version>{{ packages.version('sentry.java', '4.0.0') }}</version>
+    <version>{{ packages.version('sentry.java.logback', '4.0.0') }}</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '4.0.0') }}'
+implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java.logback', '4.0.0') }}'
 ```
 
 Then create an intentional error, so you can test that everything is working using either Java or Kotlin:
