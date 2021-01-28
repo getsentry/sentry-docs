@@ -32,7 +32,11 @@ public class MvcApplication : HttpApplication
     protected void Application_Start()
     {
         // Initialize Sentry to capture AppDomain unhandled exceptions and more.
-        _sentry = SentrySdk.Init("___PUBLIC_DSN___");
+        _sentry = SentrySdk.Init(o =>
+        {
+            o.AddAspNet();
+            o.Dsn = "___PUBLIC_DSN___";
+        });
     }
 
     protected void Application_Error()
