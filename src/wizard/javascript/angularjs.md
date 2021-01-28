@@ -27,7 +27,6 @@ import { Angular as AngularIntegration } from "@sentry/integrations";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
-  autoSessionTracking: true,
   integrations: [
     new AngularIntegration(),
     new Integrations.BrowserTracing({
