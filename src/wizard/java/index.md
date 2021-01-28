@@ -23,7 +23,7 @@ repositories {
 
 // Add Sentry's SDK as a dependency.
 dependencies {
-    implementation 'io.sentry:sentry:4.0.0'
+    implementation 'io.sentry:sentry:{{ packages.version('sentry.java', '4.0.0') }}'
 }
 ```
 
@@ -31,12 +31,12 @@ dependencies {
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
-    <version>4.0.0</version>
+    <version>{{ packages.version('sentry.java', '4.0.0') }}</version>
 </dependency>
 ```
 
 ```scala {tabTitle:SBT}
-libraryDependencies += "io.sentry" % "sentry" % "4.0.0"
+libraryDependencies += "io.sentry" % "sentry" % "{{ packages.version('sentry.java', '4.0.0') }}"
 ```
 
 ## Configure
