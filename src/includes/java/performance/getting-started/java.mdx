@@ -51,12 +51,12 @@ import io.sentry.SpanStatus
 
 // A good name for the transaction is key, to help identify what this is about
 val transaction = Sentry.startTransaction("processOrderBatch()")
-transaction.setOperation("task")
+transaction.operation = "task"
 try {
     procesOrderBatch()
 } catch (e: Exception) {
     transaction.throwable = e
-    transaction.setStatus(SpanStatus.INTERNAL_ERROR)
+    transaction.status = SpanStatus.INTERNAL_ERROR
 } finally {
     transaction.finish();
 }
@@ -81,7 +81,7 @@ import io.sentry.SpanStatus;
 void processItem(Item item) {
     ISpan span = Sentry.getSpan();
     if (span != null) {
-        Span innerSpan = span.startChild("task", item.getName());
+        ISpan innerSpan = span.startChild("task", item.getName());
         try {
             // omitted code
         } catch (FileNotFoundException e) {
@@ -132,7 +132,7 @@ ISpan span = Sentry.getSpan();
 if (span == null) {
     span = Sentry.startTransaction("task");
 } else {
-    span = span.startChild();
+    span = span.startChild("task");
 }
 
 try {
@@ -149,20 +149,77 @@ try {
 import io.sentry.Sentry
 import io.sentry.SpanStatus
 
-var span = Sentry.getSpan()
-
-span = if (span == null) {
-    Sentry.startTransaction("task")
-} else {
-    span.startChild()
-}
+val span = Sentry.getSpan()?.startChild("task") ?: Sentry.startTransaction("task")
 
 try {
     // omitted code
 } catch (e: Exception) {
     span.throwable = e
-    span.setStatus(SpanStatus.INTERNAL_ERROR)
+    span.status = SpanStatus.INTERNAL_ERROR
 } finally {
     span.finish()
 }
 ```
+
+### Connecting Errors with Spans
+
+Sentry errors can be linked with transactions and spans.
+
+Errors reported to Sentry while transaction or span is running are linked automatically:
+
+```java {tabTitle: Java}
+ISpan span = Sentry.startTransaction("task");
+try {
+    processItem();
+} catch (Exception e) {
+    Sentry.captureException(e);
+} finally {
+    span.finish();
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+val span = Sentry.startTransaction("task")
+try {
+    processItem()
+} catch (e: Exception) {
+    Sentry.captureException(e)
+} finally {
+    span.finish()
+}
+```
+
+Exceptions may be thrown within spans that can finish before exception gets reported to Sentry. To attach span information to this exception, you must link it by calling `setThrowable` method:
+
+```java {tabTitle: Java}
+ISpan span = Sentry.getSpan();
+if (span == null) {
+    span = Sentry.startTransaction("task");
+}
+try {
+    processItem();
+} catch (Exception e) {
+    span.setThrowable(e);
+    throw e;
+} finally {
+    span.finish();
+}
+```
+
+```kotlin {tabTitle: Kotlin}
+val span = Sentry.getSpan()?: Sentry.startTransaction("task")
+try {
+    processItem()
+} catch (e: Exception) {
+    span.throwable = e
+    throw e
+} finally {
+    span.finish()
+}
+```
+
+<Note>
+
+In our Spring and Spring Boot integrations, errors are linked with spans automatically.
+
+</Note>
