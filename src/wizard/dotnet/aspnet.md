@@ -10,7 +10,7 @@ Install the **NuGet** package:
 Package Manager:
 
 ```shell
-Install-Package Sentry -Version {{ packages.version('sentry.dotnet') }}
+Install-Package Sentry.AspNet -Version {{ packages.version('sentry.dotnet.aspnet') }}
 ```
 
 <div class="alert alert-info" role="alert"><h5 class="no_toc">Using .NET Framework prior to 4.6.1?</h5>
