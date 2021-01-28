@@ -17,14 +17,14 @@ Install Sentry's integration with Logback using either Maven or Gradle:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-logback</artifactId>
-    <version>3.2.0</version>
+    <version>{{ packages.version('sentry.java.logback', '4.0.0') }}</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```groovy
-implementation 'io.sentry:sentry-logback:3.2.1'
+implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java.logback', '4.0.0') }}'
 ```
 
 For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-logback).
