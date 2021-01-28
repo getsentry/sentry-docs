@@ -1,0 +1,85 @@
+---
+title: AWS Lambda (Node)
+sidebar_order: 1
+description: "Learn more about Sentry's AWS Lambda integration and how you can automatically instrument your Node Lambda functions with Sentry without changing your code."
+---
+
+<Alert title="Note" level="info">
+
+Looking for instructions to set up the Node serverless SDK manually? [Check out these docs instead](/platforms/node/guides/aws-lambda/).
+
+</Alert>
+
+Connect Sentry to your AWS account to automatically add Sentry error and performance monitoring to your Node Lambda functions.
+
+## Install
+
+1. Navigate to **Settings > Integrations > AWS Lambda**.
+
+   ![](directory.png)
+
+1. Press **Add Installation** to open the installation modal.
+
+   ![](integration_detail.png)
+
+1. Select the project for your Lambda integration. **Note:** This project cannot be changed after installation is complete. If you only have a single project, you'll skip this step.
+
+   ![](project.png)
+
+1. Click on **Configure AWS**.
+
+   ![](aws_account.png)
+
+1. Scroll to the bottom of the Create Stack page, check the box, then press **Create Stack** to create a CloudFormation stack in your current region. This stack allows Sentry to automatically instrument your Lambda functions.
+
+   ![](cloudformation.png)
+
+1. Wait for the stack to be created, which is confirmed by seeing the status change to **Create Complete**, then copy your AWS account number, select the region you want to use, and press **Next**.
+
+   ![](stack_created.png)
+
+<Alert title="Note" level="info">
+
+You need to create the CloudFormation stack only once per account, even when installing the integration in multiple regions. If you are setting up the integration in a second region, verify that the externalId in the form matches the one for the existing CloudFormation stack on the "Parameters" tab.
+
+</Alert>
+
+1. Select the Lambda functions to automatically add the Sentry layer and necessary environment variables when you **Finish Setup**. **Note:** You can enable or disable Sentry on Lambda functions after installation.
+
+   ![](select_lambdas.png)
+
+Wait a few minutes as the Lambda functions are enabled. If any functions failed to instrument, follow the suggestions in Troubleshooting.
+
+### Troubleshooting
+
+If you need help solving issues with your Sentry AWS Lamba integration integration, you can read the edge cases documented here. If you need additional help, you can view our forums, and customers on a paid plan may also contact support.
+
+#### Error `SentryRole already exists`
+
+The stack already exists on your account; you can proceed to the next step of adding your AWS account information.
+
+#### Error `Invalid existing layer`
+
+Your Lambda function has a layer that no longer exists. Please remove the problematic layer, then enable Sentry on the Lambda in the configuration view for the integration.
+
+#### Error `Please validate the CloudFormation stack was created successfully`
+
+Sentry is unable to access your AWS account through your CloudFormation stack. This means either the stack has not been created or the external ID used doesn't match the one in your installation. You can go to the Parameters tab of the CloudFormation stack to copy the value of the external ID and paste it into the form field.
+
+## Configure
+
+The integration configuration view allows you to do the following with your Lambda functions:
+
+- Enable Sentry
+- Disable Sentry
+- Update the Sentry Lambda Layer to the latest version
+
+In the table view, you will also see the version of the Lambda layer below the name.
+
+![](configure.png)
+
+## Remove Installation
+
+Note that when the integration is uninstalled, your Lambda functions will still be instrumented with Sentry and you will continue to receive errors. If you want to disable Sentry for all your Lambda functions, you should disable Sentry for each function before uninstalling. Note, you can also uninstall and then reinstall if you would like to change the Sentry project for your Lambdas.
+
+Learn more about [how this integration works](/product/integrations/aws-lambda/how-it-works/).
