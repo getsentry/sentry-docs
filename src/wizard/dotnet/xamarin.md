@@ -9,10 +9,10 @@ type: library
 
 ```shell
 # For Xamarin.Forms
-Install-Package Sentry.Xamarin.Forms -Version 1.0.0-alpha.4
+Install-Package Sentry.Xamarin.Forms -Version 1.0.0
 
 # If you are not using Xamarin.Forms, but only Xamarin:
-Install-Package Sentry.Xamarin -Version 1.0.0-alpha.4
+Install-Package Sentry.Xamarin -Version 1.0.0
 
 ```
 
