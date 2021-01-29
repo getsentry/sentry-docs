@@ -1,70 +1,8 @@
----
-title: Capturing Transactions
-sidebar_order: 20
-description: "Learn how to capture transactions both automatically and manually."
----
-
-## Spring MVC Integration
-
-Sentry Spring Boot integration, once enabled, captures each incoming Spring MVC HTTP request and turns it into a transaction with `SentryTracingFilter`. Transaction names follow pattern `<HTTP method> <Spring MVC route>`, for example for a request to a following controller:
-
-```java {tabTitle:Java}
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-@RestController
-class HelloController {
-
-    @GetMapping("/person/{id}")
-    Person person(@PathVariable Long id) {
-        ...
-    }
-}
-```
-
-```kotlin {tabTitle:Kotlin}
-import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-
-@RestController
-class HelloController {
-
-    @GetMapping("/person/{id}")
-    fun person(@PathVariable id: Long) {
-        ...
-    }
-}
-```
-
-Each sampled request executed by this controller method will be turned into a transaction `GET /person/{id}`.
-
-## RestTemplate Instrumentation
-
-Sentry Spring Boot integration provides `SentrySpanRestTemplateCustomizer` that creates a span for each outgoing HTTP request executed with a `RestTemplate`. To use instrumented `RestTemplate` make sure to create `RestTemplate` beans using `RestTemplateBuilder`:
-
-```java {tabTitle:Java}
-@Configuration
-class AppConfig {
-    @Bean
-    RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder.build();
-    }
-}
-```
-
-```kotlin {tabTitle:Kotlin}
-@Configuration
-class AppConfig {
-    @Bean
-    fun restTemplate(builder: RestTemplateBuilder) = builder.build()
-}
-```
-
 ## Capturing Bean Method Execution
 
-### Capturing Transaction
+Every Spring bean method execution can be turned into a transaction or a span.
+
+### Capturing a Transaction
 
 Every Spring bean method execution can be turned into a transaction or a span. To enable this feature, you must include `spring-boot-starter-aop` in your application:
 
@@ -75,7 +13,7 @@ Every Spring bean method execution can be turned into a transaction or a span. T
 </dependency>
 ```
 
-Methods executed outside of Spring MVC request processing can be turned into transactions by annotating them with `@SentryTransaction` annotation:
+Methods executed outside of [Spring MVC request processing](/platforms/java/guides/spring-boot/automatic/#spring-mvc-integration) can be turned into transactions by annotating them with `@SentryTransaction` annotation:
 
 ```java {tabTitle:Java}
 import org.springframework.stereotype.Component;
@@ -113,7 +51,7 @@ class ScheduledJob {
 
 Advanced Spring AOP users can redefine transaction pointcut by providing a custom `org.springframework.aop.Pointcut` bean with name `sentryTransactionPointcut`.
 
-### Capturing Span
+### Capturing a Span
 
 To create a span around a method execution, annotate method with `@SentrySpan` annotation:
 
