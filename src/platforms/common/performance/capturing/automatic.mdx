@@ -4,10 +4,11 @@ sidebar_order: 10
 supported:
   - javascript
   - react-native
+  - dotnet
 description: "Learn how to add automatic instrumentation to captured transactions."
 ---
 
-<PlatformSection supported={["javascript"]} notSupported={["react-native"]}>
+<PlatformSection supported={["javascript", "dotnet"]} notSupported={["react-native"]}>
 
 <Note>
 
@@ -15,15 +16,66 @@ To _automatically_ capture transactions, you must first <PlatformLink to="/perfo
 
 </Note>
 
+<PlatformSection supported={["javascript", "react-native"]}>
 The `@sentry/tracing` package provides a `BrowserTracing` integration to add _automatic_ instrumentation for monitoring the performance of browser applications.
+</PlatformSection>
+
+<PlatformSection supported={["dotnet"]}>
+Automatic transaction instrumentation is currently only supported in `Sentry.AspNetCore` package, starting with version 3.0.0. We will continue adding supprot for other platforms in the future. If you are not using ASP.NET Core, you can still benefit from Sentry's Performance Monitoring using <PlatformLink to="/performance/capturing/manual/">Manual Instrumentation</PlatformLink> instead.
+</PlatformSection>
 
 ## What Automatic Instrumentation Provides
 
+<PlatformSection supported={["javascript", "react-native"]}>
 The `BrowserTracing` integration creates a new transaction for each page load and navigation event, and creates a child span for every `XMLHttpRequest` or `fetch` request that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/product/performance/distributed-tracing/).
+</PlatformSection>
+
+<PlatformSection supported={["dotnet"]}>
+The ASP.NET Core integration creates a new transtion for each incoming HTTP request to your web application. Each transaction is identified by the route that handled the request. The integration currently does not automatically create spans for outgoing HTTP requests.
+
+Learn more about [traces, transactions, and spans](/product/performance/distributed-tracing/).
+</PlatformSection>
 
 ## Enable Automatic Instrumentation
 
+<PlatformSection supported={["javascript", "react-native"]}>
 To enable this automatic tracing, include the `BrowserTracing` integration in your SDK configuration options. (Note that when using ESM modules, the main `@sentry/*` import must come before the `@sentry/tracing` import.)
+</PlatformSection>
+
+<PlatformSection supported={["dotnet"]}>
+To enable automatic tracing for ASP.NET Core, install the `Sentry.AspNetCore` NuGet package and include Sentry's tracing middleware in your request pipeline:
+
+```csharp
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // ...
+    }
+
+    public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+    {
+        // If you use the static files middleware, place it before
+        // the tracing middleware to avoid capturing requests to static
+        // files.
+        app.UseStaticFiles();
+
+        // Routing middleware needs to be inserted before the tracing middleware
+        app.UseRouting();
+
+        // Enable the tracing integration
+        app.UseSentryTracing();
+
+        // Endpoints middleware needs to be inserted after the tracing middleware
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+        });
+    }
+}
+```
+
+</PlatformSection>
 
 <PlatformContent includePath="performance/enable-automatic-instrumentation" />
 
