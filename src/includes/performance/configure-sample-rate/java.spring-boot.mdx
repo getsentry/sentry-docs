@@ -1,14 +1,3 @@
-To get started automatically sending traces you must enable tracing in `application.properties`:
-
-```properties
-sentry.enable-tracing=true
-```
-
-Next, you must choose one of two options to configure sampling:
-
-- Set a uniform sample rate for all transactions, by setting the <PlatformIdentifier name="traces-sample-rate" /> option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set <PlatformIdentifier name="traces-sample-rate" /> to `0.2`.)
-- Control the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the <PlatformIdentifier name="traces-sampler" /> config option.
-
 Or alternatively:
 
 Configure sample rate in `application.properties` or `application.yml` file:
@@ -31,4 +20,26 @@ class CustomTracesSamplerCallback implements TracesSamplerCallback {
         // return a number between 0 and 1
     }
 }
+```
+
+Without sampling, automatically-captured transactions can add up quickly. The Spring Boot integration, for example, will send a transaction for every request made to the server.
+
+### High-Throughput Transport
+
+For high traffic applications, we recommend using high-throughput HTTP transport based on [Apache HTTP Client 5](https://hc.apache.org/httpcomponents-client-5.0.x/index.html). Once the dependency to `sentry-apache-http-client-5` is on the class path, Sentry Spring Boot autoconfiguration configures it without any further steps.
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-apache-http-client-5</artifactId>
+    <version>{{ packages.version('sentry.java.apache-http-client-5', '4.0.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-apache-http-client-5:{{ packages.version('sentry.java.apache-http-client-5', '4.0.0') }}'
+```
+
+```scala {tabTitle:SBT}
+libraryDependencies += "io.sentry" % "sentry-apache-http-client-5" % "{{ packages.version('sentry.java.apache-http-client-5', '4.0.0') }}"
 ```
