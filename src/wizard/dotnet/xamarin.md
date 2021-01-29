@@ -68,6 +68,17 @@ NOTE: It's recommended to not setup the CacheDirectory for UWP.
             });
 ```
 
+### Verifying Your Setup
+
+You can Verify Sentry by raising an unhandled exception. For example, you can use the following snippet to raise a NullReferenceException:
+
+```csharp
+    throw null;
+}
+```
+
+You might need to open the app again for the crash report to be sent to the server.
+
 ### Documentation
 
 Once you've verified the package is initialized properly and sent a test event, consider visiting our [complete Xamarin Forms docs](https://docs.sentry.io/platforms/dotnet/guides/xamarin/).
