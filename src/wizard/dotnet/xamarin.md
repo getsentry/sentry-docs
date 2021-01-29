@@ -73,13 +73,11 @@ NOTE: It's recommended to not setup the CacheDirectory for UWP.
 You can Verify Sentry by raising an unhandled exception. For example, you can use the following snippet to raise a NullReferenceException:
 
 ```csharp
-    SentryXamarin.Init(options =>
-	{
-		options.Dsn = "___PUBLIC_DSN___";
-	});
     throw null;
 }
 ```
+
+You might need to open the app again for the crash report to be sent to the server.
 
 ### Documentation
 
