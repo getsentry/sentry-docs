@@ -74,9 +74,9 @@ You can Verify Sentry by raising an unhandled exception. For example, you can us
 
 ```csharp
     SentryXamarin.Init(options =>
-            {
-                options.Dsn = "___PUBLIC_DSN___";
-            });
+	{
+		options.Dsn = "___PUBLIC_DSN___";
+	});
     throw null;
 }
 ```
