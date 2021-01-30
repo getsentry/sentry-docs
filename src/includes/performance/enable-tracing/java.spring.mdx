@@ -1,6 +1,6 @@
-To automatically sending traces you must configure `SentryTracingFilter` in `web.xml` for Servlet applications configured with XML, or `WebApplicationInitializer` for Servlet applications configured with Java code:
+To automatically send traces, you must configure `SentryTracingFilter` in `web.xml` for Servlet applications configured with XML, or `WebApplicationInitializer` for Servlet applications configured with Java code:
 
-```java {tabTitle:Java}
+```java
 import io.sentry.spring.tracing.SentryTracingFilter;
 import javax.servlet.Filter;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
@@ -14,54 +14,12 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
 }
 ```
 
-```kotlin {tabTitle:Kotlin}
+```kotlin
 import io.sentry.spring.tracing.SentryTracingFilter
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer
 
 class AppInitializer : AbstractAnnotationConfigDispatcherServletInitializer() {
   // ...
   override fun getServletFilters() = arrayOf(SentryTracingFilter())
-}
-```
-
-Next, you must choose one of two options to configure sampling:
-
-- Set a uniform sample rate for all transactions, by setting the <PlatformIdentifier name="traces-sample-rate" /> option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set <PlatformIdentifier name="traces-sample-rate" /> to `0.2`.)
-- Control the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the <PlatformIdentifier name="traces-sampler" /> config option.
-
-Or alternatively:
-
-Configure sample rate in `sentry.properties`:
-
-```properties
-traces-sample-rate=0.3
-```
-
-Or through providing a bean of type `SentryOptions#TracesSamplerCallback`:
-
-```java {tabTitle:Java}
-import io.sentry.SentryOptions.TracesSamplerCallback;
-import io.sentry.SamplingContext;
-import org.springframework.stereotype.Component;
-
-@Component
-class CustomTracesSamplerCallback implements TracesSamplerCallback {
-    @Override
-    public Double sample(SamplingContext samplingContext) {
-        // return a number between 0 and 1
-    }
-}
-```
-
-```kotlin {tabTitle:Kotlin}
-import io.sentry.SentryOptions.TracesSamplerCallback
-import io.sentry.SamplingContext
-import org.springframework.stereotype.Component
-
-@Component
-class CustomTracesSamplerCallback : TracesSamplerCallback {
-    override fun sample(context: SamplingContext): Double {
-        // return a number between 0 and 1
-    }
 }
 ```
