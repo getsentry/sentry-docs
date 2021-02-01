@@ -22,7 +22,7 @@ Sentry.GCPFunction.init({
 });
 
 exports.helloHttp = Sentry.GCPFunction.wrapHttpFunction((req, res) => {
-  throw new Error('oh, hello there!');
+  throw new Error("oh, hello there!");
 });
 ```
 
@@ -34,9 +34,11 @@ Sentry.GCPFunction.init({
   tracesSampleRate: 1.0,
 });
 
-exports.helloEvents = Sentry.GCPFunction.wrapEventFunction((data, context, callback) => {
-  throw new Error('oh, hello there!');
-});
+exports.helloEvents = Sentry.GCPFunction.wrapEventFunction(
+  (data, context, callback) => {
+    throw new Error("oh, hello there!");
+  }
+);
 ```
 
 ```javascript {tabTitle:cloudEvents}
@@ -47,7 +49,9 @@ Sentry.GCPFunction.init({
   tracesSampleRate: 1.0,
 });
 
-exports.helloEvents = Sentry.GCPFunction.wrapCloudEventFunction((context, callback) => {
-  throw new Error('oh, hello there!');
-});
+exports.helloEvents = Sentry.GCPFunction.wrapCloudEventFunction(
+  (context, callback) => {
+    throw new Error("oh, hello there!");
+  }
+);
 ```
