@@ -23,13 +23,12 @@ import * as Sentry from "@sentry/browser";
 import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [
-    new Integrations.BrowserTracing(),
-  ],
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0,
 });
 ```
+
 We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/performance/sampling/).
 
 This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
@@ -40,4 +39,4 @@ myUndefinedFunction();
 
 If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
-If you're an existing user and have disabled alerts, you won't receive this email.  
+If you're an existing user and have disabled alerts, you won't receive this email.
