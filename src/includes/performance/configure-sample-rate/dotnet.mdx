@@ -1,0 +1,25 @@
+To get started automatically sending traces you can:
+
+- Set a uniform sample rate for all transactions, by setting the <PlatformIdentifier name="traces-sample-rate" /> option in your SDK config to a number between `0` and `1`. (For example, to send 20% of transactions, set <PlatformIdentifier name="traces-sample-rate" /> to `0.2`.)
+- Control the sample rate dynamically, based on the transaction itself and the context in which it's captured, by providing a function to the <PlatformIdentifier name="traces-sampler" /> config option.
+
+Or alternatively:
+
+```csharp
+using Sentry;
+
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+
+    // To set a uniform sample rate
+    options.TracesSampleRate = 1.0;
+
+    // OR if you prefer, determine traces sample rate based on the sampling context
+    options.TracesSampler = context =>
+    {
+        // Return a number between 0 and 1, or null (to fallback to configured value)
+        return 1.0;
+    };
+});
+```
