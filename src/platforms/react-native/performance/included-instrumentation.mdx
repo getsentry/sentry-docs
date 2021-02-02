@@ -1,0 +1,191 @@
+---
+title: Included Instrumentation
+sidebar_order: 10
+description: "Learn what transactions are captured after tracing is enabled."
+---
+
+<Alert level="Info" title="Beta Support">
+Automatic instrumentation is currently in beta, available on the Sentry React Native SDK version ≥ 2.2.0-beta.0. As a result, the API may change without warning.
+</Alert>
+
+`@sentry/react-native` provides a `ReactNativeTracing` integration to add instrumentation for monitoring the performance of React Native applications.
+
+## What Instrumentation Provides
+
+The `ReactNativeTracing` integration creates a child span for every `XMLHttpRequest` or `fetch` request on the Javascript layer that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/product/performance/distributed-tracing/).
+
+## Configuration Options
+
+You can pass many different options to the `ReactNativeTracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/tracing.browsertracingoptions.html).
+
+### tracingOrigins
+
+The default value of `tracingOrigins` is `['localhost', /^\//]`. The React Native SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add the domain there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the entire request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
+
+<PlatformContent includePath="performance/tracingOrigins-example" />
+
+You will need to configure your web server CORS to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your setup. If you do not allow the `sentry-trace` header, the request might be blocked.
+
+### shouldCreateSpanForRequest
+
+This function can be used to filter out unwanted spans, such as XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` already filters out everything except what was defined in `tracingOrigins`.
+
+<PlatformContent includePath="performance/filter-span-example" />
+
+## Enable Routing Instrumentation
+
+We currently provide two routing instrumentations out of the box to instrument route changes for React Navigation V5 and V4. In the future, we will add support for other libraries such as [react-native-navigation](https://github.com/wix/react-native-navigation). Otherwise, if you have a custom routing instrumentation, or use a routing library we don't yet support, you can use the bare bones routing instrumentation or create your own by extending it.
+
+### React Navigation V5
+
+Note that this routing instrumentation will create a transaction on every route change including `goBack` navigations.
+
+```js
+import * as Sentry from "@sentry/react-native";
+
+// Construct a new instrumentation instance. This is needed to communicate between the integration and React
+const routingInstrumentation = new Sentry.ReactNavigationV5Instrumentation();
+
+Sentry.init({
+  ...
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      // Pass instrumentation to be used as `routingInstrumentation`
+      routingInstrumentation,
+      // ...
+    }),
+  ],
+})
+
+const App = () => {
+  // Create a ref for the navigation container
+  const navigation = React.createRef<NavigationContainerRef>();
+
+  // Register the navigation container with the instrumentation
+  React.useEffect(() => {
+    routingInstrumentation.registerNavigationContainer(navigation);
+  }, []);
+
+  return (
+    // Connect the ref to the navigation container
+    <NavigationContainer ref={navigation}>
+      ...
+    </NavigationContainer>
+  );
+};
+```
+
+### React Navigation V4
+
+Note that this routing instrumentation will create a transaction on every route change including `goBack` navigations.
+
+```js
+// Construct a new instrumentation instance. This is needed to communicate between the integration and React
+const routingInstrumentation = new Sentry.ReactNavigationV4Instrumentation();
+
+Sentry.init({
+  ...
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      // Pass instrumentation to be used as `routingInstrumentation`
+      routingInstrumentation,
+      ...
+    }),
+  ],
+})
+
+const App = () => {
+  // Create a ref for the navigation container
+  const appContainer = React.createRef();
+
+  // Register the navigation container with the instrumentation
+  React.useEffect(() => {
+    routingInstrumentation.registerAppContainer(appContainer);
+  }, []);
+
+  return (
+    // Connect the ref to the navigation container
+    <AppContainer ref={appContainer} />
+  );
+};
+```
+
+### Other Routing Libraries or Custom Routing Implementations
+
+If you use another routing library that we don't yet support, or have a custom routing solution, you can use the basic `RoutingInstrumentation` we provide, or extend it to create your own instrumentation.
+
+Every routing instrumentation revoles around one method:
+
+`onRouteWillChange` (context: TransactionContext): Transaction | undefined
+
+You need to ensure that this method is called **before** the route change occurs, and an `IdleTransaction` is created and set on the scope.
+
+#### Bare Bones
+
+```js
+// Construct a new instrumentation instance. This is needed to communicate between the integration and React
+const routingInstrumentation = new Sentry.RoutingInstrumentation();
+
+Sentry.init({
+  ...
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      // Pass instrumentation to be used as `routingInstrumentation`
+      routingInstrumentation,
+      ...
+    }),
+  ],
+})
+
+const App = () => {
+  <SomeNavigationLibrary
+    onRouteWillChange={(newRoute) => {
+        // Call this before the route changes
+      routingInstrumentation.onRouteWillChange({
+        name: newRoute.name,
+        op: 'navigation'
+      })
+    }}
+  />
+};
+```
+
+#### Custom Instrumentation
+
+```js
+class CustomInstrumentation extends RoutingInstrumentation {
+  constructor(navigator) {
+    super();
+
+    this.navigator.registerRouteChangeListener(this.routeListener.bind(this));
+  }
+
+  routeListener(newRoute) {
+    // Again, ensure this is called BEFORE the route changes and BEFORE the route is mounted.
+    this.onRouteWillChange({
+      name: newRoute.name,
+      op: "navigation",
+    });
+  }
+}
+```
+
+## Recipes
+
+Currently, by default, the React Native SDK will only create child spans for fetch/XHR transactions out of the box. This means once you are done setting up your routing instrumentation, you will either see just a few fetch/XHR child spans or no children at all. To find out how to customize instrumentation your app, review our <PlatformLink to="/performance/custom-instrumentation/">Custom Instrumentation</PlatformLink>.
+
+### React Profiler
+
+We export the React Profiler from our React Native SDK as well, you can read more at [React Profiler](/platforms/javascript/guides/react/components/profiler/).
+
+After you instrument your app's routing, if you wrap a component that renders on one of the routes with `withProfiler`, you will be able to track the component's lifecycle as a child span of the route transaction.
+
+```js
+import * as Sentry from "@sentry/react-native";
+
+const SomeComponent = () => {
+  // ...
+};
+
+export default Sentry.withProfiler(SomeComponent);
+```

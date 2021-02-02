@@ -1,0 +1,18 @@
+## Add More Spans to the Transaction
+
+The next example contains the implementation of the hypothetical `doWork` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction in the current context and add all newly created spans as child operations to that transaction. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction.
+
+You can choose the value of `operation` and `description`.
+
+```go
+func doWork(ctx context.Context, item Item) {
+	span := sentry.StartSpan(ctx, "suboperation1")
+	// omitted code ...
+	span.Finish()
+	span := sentry.StartSpan(ctx, "suboperation2")
+	// omitted code ...
+	span.Finish()
+}
+```
+
+All finished spans are sent together as a transaction when the root span is finished. Make sure to call `Finish()` appropriately. Often times `defer span.Finish()` is handy.
