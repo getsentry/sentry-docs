@@ -1,0 +1,92 @@
+---
+title: Reprocessing
+sidebar_order: 10
+description: Learn about reprocessing errors with new debug files and source maps.
+---
+
+Sentry uses [debug information
+files](/platforms/native/data-management/debug-files/) or
+[source maps](/platforms/javascript/sourcemaps/) only after they have been uploaded. _Reprocessing_ allows you to apply source maps and debug information files to error events that have already occurred.
+
+<Note>
+
+This feature is available only if you're in the Early Adopter program. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony.
+If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily.
+
+</Note>
+
+After becoming an Early Adopter, you will find a new button when viewing an issue:
+
+!["Reprocess this issue" button next to Resolve, Ignore, Share, Delete actions in issue details page](reprocessing-btn.png)
+
+The dialog requires two answers:
+
+* _How many events to reprocess_ -- When left empty, all events are reprocessed
+  and potentially move to other (new or existing) issues if the stack trace
+  changed significantly. If you provide a number, for example, 20, then the 20 most recent events are
+  reprocessed, and any remaining issue are left intact.
+
+* _What to do with remaining events_ -- If you choose to reprocess, for example, only 20
+  events out of 100, you can choose what happens to the remaining 80 events.
+  The default is to keep them where they are (the issue you're viewing).
+  Alternately, you may choose to delete them.
+
+After pressing _Reprocess Events_, **the issue will be locked and hidden from
+your issue stream while reprocessing is ongoing**. As data is migrated between
+issues we allow no actions, such as resolving or assigning the issue, to ensure
+data consistency and avoid data loss.
+
+Note that you can still get to the issue manually by searching for
+`is:reprocessing` (removing all other search terms) to get around those
+restrictions if you have to.
+
+## Caveats
+
+The dialog to start reprocessing notes a few caveats that you
+should be aware of and understand prior to kicking off reprocessing.
+
+* **Data glitches.** During reprocessing you may observe temporary data
+  inconsistencies across the entire product. You may observe an event belong to
+  two issues at once, and appear in Discover queries twice.
+
+  Those inconsistencies disappear the moment reprocessing is complete. However,
+  depending on your platform and the amount of events involved, reprocessing may take a
+  while.
+
+* **Attachment storage needs to be enabled.** If your events come from
+  minidumps or unreal crash reports, you must have [attachment
+  storage](/platforms/native/enriching-events/attachments/#crash-reports-and-privacy)
+  enabled. **If the original minidump no longer exists in Sentry, sending an
+  event through reprocessing will cause it to have no stack trace at all.**
+
+* **Quota applies.** Every event you choose to reprocess will count against
+  your plan's quota a second time. Rate limits and spike protection do not
+  apply.
+
+* **Debug files don't apply immediately.** When uploading debug information
+  files, regardless of whether you upload to your own symbol server or to Sentry, the debug information files are
+  applied only one hour after internal caches have expired. Please wait
+  at least an hour after uploading DIFs before reprocessing.
+
+* **Alerts do not apply, with caveats.** Issue alerts do not trigger for
+  reprocessed events, and the new events are not subject to data forwarding.
+
+  Metric alerts generally do not trigger either; however, they are subject to the
+  aforementioned data inconsistencies. If you have created a metric alert with
+  a 24-hour measurement window, and an event you reprocess happened in the last
+  24 hours, it will temporarily be counted twice while events are reprocessing.
+  This may trigger a metric alert.
+
+## Legacy Reprocessing
+
+Sentry can suspend incoming crash reports until all required debug information
+files have been uploaded. **This feature is also called Reprocessing.** It can
+be configured in _Project Settings > Processing Issues_. By default, this
+feature is disabled.
+
+If enabled, crash reports with missing debug files will not be displayed in the
+issues stream. Instead, you will receive a warning that events cannot be
+processed until all debug files have been uploaded.
+
+We do not recommend enabling this project setting as it does not work properly with minidumps or
+Unreal crash reports. Reprocessing existing issues as shown above replaces this functionality.

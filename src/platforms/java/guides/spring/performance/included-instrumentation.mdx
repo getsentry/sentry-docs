@@ -1,0 +1,100 @@
+---
+title: Included Instrumentation
+sidebar_order: 20
+description: "Learn what transactions we capture after tracing is enabled."
+---
+
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+
+</Note>
+
+### Spring MVC Integration
+
+Sentry Spring integration, once enabled, captures each incoming Spring MVC HTTP request and turns it into a transaction with `SentryTracingFilter`. Transaction names follow pattern `<HTTP method> <Spring MVC route>`, for example for a request to a following controller:
+
+```java {tabTitle:Java}
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+@RestController
+class HelloController {
+
+    @GetMapping("/person/{id}")
+    Person person(@PathVariable Long id) {
+        ...
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+
+@RestController
+class HelloController {
+
+    @GetMapping("/person/{id}")
+    fun person(@PathVariable id: Long) {
+        ...
+    }
+}
+```
+
+Each sampled request executed by this controller method will be turned into a transaction `GET /person/{id}`.
+
+### RestTemplate Instrumentation
+
+Sentry Spring integration provides `SentrySpanClientHttpRequestInterceptor` that creates a span for each outgoing HTTP request executed with a `RestTemplate`. To use instrumented `RestTemplate` make sure to set interceptor on the `RestTemplate` bean:
+
+```java {tabTitle:Java}
+import io.sentry.IHub;
+import io.sentry.spring.tracing.SentrySpanClientHttpRequestInterceptor;
+import java.util.Collections;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriTemplateHandler;
+
+@Configuration
+class AppConfig {
+
+  @Bean
+  RestTemplate restTemplate(IHub hub) {
+    RestTemplate restTemplate = new RestTemplate();
+    SentrySpanClientHttpRequestInterceptor sentryRestTemplateInterceptor =
+        new SentrySpanClientHttpRequestInterceptor(hub);
+    UriTemplateHandler templateHandler = restTemplate.getUriTemplateHandler();
+    restTemplate.setUriTemplateHandler(
+        sentryRestTemplateInterceptor.createUriTemplateHandler(templateHandler));
+    restTemplate.setInterceptors(Collections.singletonList(sentryRestTemplateInterceptor));
+    return restTemplate;
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.IHub
+import io.sentry.spring.tracing.SentrySpanClientHttpRequestInterceptor
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.web.client.RestTemplate
+import org.springframework.web.util.UriTemplateHandler
+
+@Configuration
+class AppConfig {
+
+  @Bean
+  fun restTemplate(hub: IHub): RestTemplate {
+      val restTemplate = RestTemplate()
+      val sentryRestTemplateInterceptor = SentrySpanClientHttpRequestInterceptor(hub)
+      val templateHandler = restTemplate.uriTemplateHandler
+      restTemplate.uriTemplateHandler = sentryRestTemplateInterceptor.createUriTemplateHandler(templateHandler)
+      restTemplate.interceptors = listOf(sentryRestTemplateInterceptor)
+      return restTemplate
+  }
+}
+```

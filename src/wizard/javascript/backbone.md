@@ -23,10 +23,8 @@ import * as Sentry from "@sentry/browser";
 import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
-  dsn: '___PUBLIC_DSN___',
-  integrations: [
-    new Integrations.BrowserTracing(),
-  ],
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0,
 });
 ```
@@ -41,4 +39,4 @@ myUndefinedFunction();
 
 If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
-If you're an existing user and have disabled alerts, you won't receive this email.  
+If you're an existing user and have disabled alerts, you won't receive this email.

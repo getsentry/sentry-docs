@@ -17,14 +17,14 @@ Install Sentry's integration with Spring using either Maven or Gradle:
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring</artifactId>
-    <version>{{ packages.version('sentry.java', '3.2.0') }}</version>
+    <version>{{ packages.version('sentry.java', '4.0.0') }}</version>
 </dependency>
 ```
 
 ### Gradle:
 
 ```
-implementation 'io.sentry:sentry-spring:{{ packages.version('sentry.java', '3.2.0') }}'
+implementation 'io.sentry:sentry-spring:{{ packages.version('sentry.java', '4.0.0') }}'
 ```
 
 For other dependency managers see the [central Maven repository](https://search.maven.org/artifact/io.sentry/sentry-spring).
