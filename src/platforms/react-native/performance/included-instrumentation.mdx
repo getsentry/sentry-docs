@@ -4,8 +4,8 @@ sidebar_order: 10
 description: "Learn what transactions are captured after tracing is enabled."
 ---
 
-<Alert level="Info" title="Beta Support">
-Automatic instrumentation is currently in beta, available on the Sentry React Native SDK version ≥ 2.2.0-beta.0. As a result, the API may change without warning.
+<Alert level="Info" title="Minimum Version">
+To use Automatic instrumentation, you will need at least version 2.2.0 of the Sentry React Native SDK.
 </Alert>
 
 `@sentry/react-native` provides a `ReactNativeTracing` integration to add instrumentation for monitoring the performance of React Native applications.
@@ -16,7 +16,65 @@ The `ReactNativeTracing` integration creates a child span for every `XMLHttpRequ
 
 ## Configuration Options
 
-You can pass many different options to the `ReactNativeTracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/tracing.browsertracingoptions.html).
+You can pass many different options to the `ReactNativeTracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. For all possible options, see [ReactNativeTracingOptions](https://github.com/getsentry/sentry-react-native/blob/211ec081b6bf8d7d29541afe9d800040f61e3c4e/src/js/tracing/reactnativetracing.ts#L23).
+
+### beforeNavigate
+
+You can use `beforeNavigate` to modify the transaction from routing instrumentation before the transaction is created. If you chose to not send the transaction, you can set `sampled = false`.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    new Sentry.ReactNativeTracing({
+      routingInstrumentation,
+      beforeNavigate: context => {
+        // Decide to not send a transaction by setting sampled = false
+        if (context.data.route.name === "Do Not Send") {
+          context.sampled = false;
+        }
+
+        // Modify the transaction context
+        context.name = context.name.toUpperCase();
+        context.tags = {
+          ...context.tags,
+          customTag: "value",
+        };
+
+        return context;
+      },
+    }),
+  ],
+});
+```
+
+If you use our routing instrumentation for **React Navigation**, the route data is set on the transaction context passed to `beforeNavigate`. This has the type:
+
+```typescript
+type ReactNavigationTransactionContext = {
+  // ...
+  data: {
+    route: {
+      name: string;
+      key: string;
+      params: {
+        [key: string]: any;
+      };
+      /** Will be true if this is not the first time this screen with this key has been seen before. */
+      hasBeenSeen: boolean;
+    };
+    previousRoute: {
+      name: string;
+      key: string;
+      params: {
+        [key: string]: any;
+      };
+    } | null;
+  };
+};
+```
+
+If you use **Typescript**, you can type your `beforeNavigate` function with `Sentry.ReactNavigationTransactionContext`.
 
 ### tracingOrigins
 
