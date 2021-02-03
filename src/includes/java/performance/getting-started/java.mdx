@@ -25,12 +25,12 @@ import io.sentry.SpanStatus;
 ITransaction transaction = Sentry.startTransaction("processOrderBatch()");
 transaction.setOperation("task");
 try {
-    procesOrderBatch();
+  procesOrderBatch();
 } catch (Exception e) {
-    transaction.setThrowable(e);
-    transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+  transaction.setThrowable(e);
+  transaction.setStatus(SpanStatus.INTERNAL_ERROR);
 } finally {
-    transaction.finish();
+  transaction.finish();
 }
 ```
 
@@ -42,12 +42,12 @@ import io.sentry.SpanStatus
 val transaction = Sentry.startTransaction("processOrderBatch()")
 transaction.operation = "task"
 try {
-    procesOrderBatch()
+  procesOrderBatch()
 } catch (e: Exception) {
-    transaction.throwable = e
-    transaction.status = SpanStatus.INTERNAL_ERROR
+  transaction.throwable = e
+  transaction.status = SpanStatus.INTERNAL_ERROR
 } finally {
-    transaction.finish();
+  transaction.finish();
 }
 ```
 
@@ -68,18 +68,18 @@ import io.sentry.Span;
 import io.sentry.SpanStatus;
 
 void processItem(Item item) {
-    ISpan span = Sentry.getSpan();
-    if (span != null) {
-        ISpan innerSpan = span.startChild("task", item.getName());
-        try {
-            // omitted code
-        } catch (FileNotFoundException e) {
-            innerSpan.setThrowable(e);
-            innerSpan.setStatus(SpanStatus.NOT_FOUND);
-        } finally {
-            innerSpan.finish();
-        }
+  ISpan span = Sentry.getSpan();
+  if (span != null) {
+    ISpan innerSpan = span.startChild("task", item.getName());
+    try {
+      // omitted code
+    } catch (FileNotFoundException e) {
+      innerSpan.setThrowable(e);
+      innerSpan.setStatus(SpanStatus.NOT_FOUND);
+    } finally {
+      innerSpan.finish();
     }
+  }
 }
 ```
 
@@ -90,19 +90,19 @@ import io.sentry.Sentry
 import io.sentry.SpanStatus
 
 fun processItem(item: Item) {
-    val span = Sentry.getSpan()
-    if (span != null) {
-        val innerSpan = span.startChild("task", item.name)
+  val span = Sentry.getSpan()
+  span?.let {
+    val innerSpan = it.startChild("task", item.name)
 
-        try {
-            // omitted code
-        } catch (e: FileNotFoundException) {
-            innerSpan.throwable = e
-            innerSpan.status = SpanStatus.NOT_FOUND
-        } finally {
-            innerSpan.finish()
-        }
+    try {
+      // omitted code
+    } catch (e: FileNotFoundException) {
+      innerSpan.throwable = e
+      innerSpan.status = SpanStatus.NOT_FOUND
+    } finally {
+      innerSpan.finish()
     }
+  }
 }
 ```
 
@@ -119,18 +119,18 @@ import io.sentry.SpanStatus;
 
 ISpan span = Sentry.getSpan();
 if (span == null) {
-    span = Sentry.startTransaction("task");
+  span = Sentry.startTransaction("task");
 } else {
-    span = span.startChild("task");
+  span = span.startChild("task");
 }
 
 try {
-    // omitted code
+  // omitted code
 } catch (Exception e) {
-    span.setThrowable(e);
-    span.setStatus(SpanStatus.INTERNAL_ERROR);
+  span.setThrowable(e);
+  span.setStatus(SpanStatus.INTERNAL_ERROR);
 } finally {
-    span.finish();
+  span.finish();
 }
 ```
 
@@ -141,12 +141,12 @@ import io.sentry.SpanStatus
 val span = Sentry.getSpan()?.startChild("task") ?: Sentry.startTransaction("task")
 
 try {
-    // omitted code
+  // omitted code
 } catch (e: Exception) {
-    span.throwable = e
-    span.status = SpanStatus.INTERNAL_ERROR
+  span.throwable = e
+  span.status = SpanStatus.INTERNAL_ERROR
 } finally {
-    span.finish()
+  span.finish()
 }
 ```
 
@@ -159,22 +159,22 @@ Errors reported to Sentry while transaction or span is running are linked automa
 ```java {tabTitle: Java}
 ISpan span = Sentry.startTransaction("task");
 try {
-    processItem();
+  processItem();
 } catch (Exception e) {
-    Sentry.captureException(e);
+  Sentry.captureException(e);
 } finally {
-    span.finish();
+  span.finish();
 }
 ```
 
 ```kotlin {tabTitle: Kotlin}
 val span = Sentry.startTransaction("task")
 try {
-    processItem()
+  processItem()
 } catch (e: Exception) {
-    Sentry.captureException(e)
+  Sentry.captureException(e)
 } finally {
-    span.finish()
+  span.finish()
 }
 ```
 
@@ -183,26 +183,26 @@ Exceptions may be thrown within spans that can finish before exception gets repo
 ```java {tabTitle: Java}
 ISpan span = Sentry.getSpan();
 if (span == null) {
-    span = Sentry.startTransaction("task");
+  span = Sentry.startTransaction("task");
 }
 try {
-    processItem();
+  processItem();
 } catch (Exception e) {
-    span.setThrowable(e);
-    throw e;
+  span.setThrowable(e);
+  throw e;
 } finally {
-    span.finish();
+  span.finish();
 }
 ```
 
 ```kotlin {tabTitle: Kotlin}
-val span = Sentry.getSpan()?: Sentry.startTransaction("task")
+val span = Sentry.getSpan() ?: Sentry.startTransaction("task")
 try {
-    processItem()
+  processItem()
 } catch (e: Exception) {
-    span.throwable = e
-    throw e
+  span.throwable = e
+  throw e
 } finally {
-    span.finish()
+  span.finish()
 }
 ```

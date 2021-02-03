@@ -7,6 +7,7 @@ import io.sentry.Sentry;
 CustomSamplingContext context = new CustomSamplingContext();
 context.set("user_id", 12312012);
 context.set("search_results", searchResults);
+
 ITransaction transaction = Sentry.startTransaction("GET /search", context);
 // transaction context - will be recorded on transaction
 transaction.setOperation("http");
@@ -17,11 +18,15 @@ transaction.setDescription("search results");
 import io.sentry.CustomSamplingContext
 import io.sentry.Sentry
 
-val context = CustomSamplingContext()
-context["user_id"] = 12312012
-context["search_results"] = searchResults
-val transaction = Sentry.startTransaction("GET /search", context)
-// transaction context - will be recorded on transaction
-transaction.operation = "http"
-transaction.description = "search results"
+// sampling context - won't be recorded
+val context = CustomSamplingContext().apply {
+  this["user_id"] = 12312012
+  this["search_results"] = searchResults
+}
+
+val transaction = Sentry.startTransaction("GET /search", context).apply {
+  // transaction context - will be recorded on transaction
+  operation = "http"
+  description = "search results"
+}
 ```

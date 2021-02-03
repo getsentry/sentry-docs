@@ -23,17 +23,37 @@ The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tre
 
 3. Initialize and add the `SentryTimberIntegration`
 
-   ```kotlin
-   SentryAndroid.init(context) { options ->
-       if (!BuildConfig.DEBUG) {
+   ```java
+   SentryAndroid.init(this, options -> {
+     if (!BuildConfig.DEBUG) {
 
-           // default values:
-           // minEventLevel = ERROR
-           // minBreadcrumbLevel = INFO
-           options.addIntegration(SentryTimberIntegration(
-               minEventLevel = SentryLevel.ERROR,
-               minBreadcrumbLevel = SentryLevel.INFO))
-       }
+       // default values:
+       // minEventLevel = ERROR
+       // minBreadcrumbLevel = INFO
+       options.addIntegration(
+           new SentryTimberIntegration(
+               SentryLevel.ERROR,
+               SentryLevel.INFO
+           )
+       );
+     }
+   });
+   ```
+
+   ```kotlin
+   SentryAndroid.init(this) { options ->
+     if (!BuildConfig.DEBUG) {
+
+       // default values:
+       // minEventLevel = ERROR
+       // minBreadcrumbLevel = INFO
+       options.addIntegration(
+         SentryTimberIntegration(
+           minEventLevel = SentryLevel.ERROR,
+           minBreadcrumbLevel = SentryLevel.INFO
+         )
+       )
+     }
    }
    ```
 
@@ -41,15 +61,28 @@ The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tre
 
 The following example adds a breadcrumb and captures an error using the Timber’s static API; this breadcrumb and error will be forwarded to Sentry.
 
+```java
+int division(int x, int y) {
+  Timber.i("x = " + x + ", y = " + y)
+
+  try {
+    return x / y
+  } catch (ArithmeticException e) {
+    Timber.e(e, "Division error")
+  }
+  return 0
+}
+```
+
 ```kotlin
 fun division(x: Int = 5, y: Int = 0): Int {
-    Timber.i("x = $x, y = $y")
+  Timber.i("x = $x, y = $y")
 
-    try {
-        return x / y
-    } catch (e: ArithmeticException) {
-        Timber.e(e, "Division error")
-    }
-    return 0
+  try {
+    return x / y
+  } catch (e: ArithmeticException) {
+    Timber.e(e, "Division error")
+  }
+  return 0
 }
 ```

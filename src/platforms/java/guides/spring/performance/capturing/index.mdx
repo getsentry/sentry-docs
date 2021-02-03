@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 @RestController
 class HelloController {
 
-    @GetMapping("/person/{id}")
-    Person person(@PathVariable Long id) {
-        ...
-    }
+  @GetMapping("/person/{id}")
+  Person person(@PathVariable Long id) {
+    ...
+  }
 }
 ```
 
@@ -31,10 +31,10 @@ import org.springframework.web.bind.annotation.PathVariable
 @RestController
 class HelloController {
 
-    @GetMapping("/person/{id}")
-    fun person(@PathVariable id: Long) {
-        ...
-    }
+  @GetMapping("/person/{id}")
+  fun person(@PathVariable id: Long) {
+    ...
+  }
 }
 ```
 
@@ -83,12 +83,12 @@ class AppConfig {
 
   @Bean
   fun restTemplate(hub: IHub): RestTemplate {
-      val restTemplate = RestTemplate()
+    return RestTemplate().apply {
       val sentryRestTemplateInterceptor = SentrySpanClientHttpRequestInterceptor(hub)
-      val templateHandler = restTemplate.uriTemplateHandler
-      restTemplate.uriTemplateHandler = sentryRestTemplateInterceptor.createUriTemplateHandler(templateHandler)
-      restTemplate.interceptors = listOf(sentryRestTemplateInterceptor)
-      return restTemplate
+      val templateHandler = uriTemplateHandler
+      uriTemplateHandler = sentryRestTemplateInterceptor.createUriTemplateHandler(templateHandler)
+      interceptors = listOf(sentryRestTemplateInterceptor)
+    }
   }
 }
 ```
@@ -143,11 +143,11 @@ import io.sentry.spring.tracing.SentryTransaction;
 @Component
 class ScheduledJob {
 
-    @Scheduled(...)
-    @SentryTransaction
-    void execute() {
-        ...
-    }
+  @Scheduled(...)
+  @SentryTransaction
+  void execute() {
+    ...
+  }
 }
 ```
 
@@ -159,11 +159,11 @@ import io.sentry.spring.tracing.SentryTransaction
 @Component
 class ScheduledJob {
 
-    @Scheduled(...)
-    @SentryTransaction
-    fun execute() {
-        ...
-    }
+  @Scheduled(...)
+  @SentryTransaction
+  fun execute() {
+    ...
+  }
 }
 ```
 
@@ -182,10 +182,10 @@ import io.sentry.spring.tracing.SentrySpan;
 @Component
 class PersonService {
 
-    @SentrySpan
-    Person findById(Long id) {
-        ...
-    }
+  @SentrySpan
+  Person findById(Long id) {
+    ...
+  }
 }
 ```
 
@@ -196,10 +196,10 @@ import io.sentry.spring.tracing.SentrySpan
 @Component
 class PersonService {
 
-    @SentrySpan
-    fun findById(id: Long): Person {
-        ...
-    }
+  @SentrySpan
+  fun findById(id: Long): Person {
+    ...
+  }
 }
 ```
 
