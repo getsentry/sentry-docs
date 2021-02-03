@@ -1,0 +1,56 @@
+## Add More Spans to the Transaction
+
+The next example contains the implementation of the hypothetical `processItem` function called from the code snippet in the previous section. Our SDK can determine if there is currently an open transaction and add all newly created spans as child operations to that transaction. Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction.
+
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry#getSpan`. This method will return a `SentryTransaction` in case there is a running Transaction or a `Span` in case there is already a running Span, otherwise it returns `null`.
+
+You can choose the value of `operation` and `description`.
+
+```java {tabTitle:Java}
+import java.io.FileNotFoundException;
+
+import io.sentry.ISpan;
+import io.sentry.Sentry;
+import io.sentry.Span;
+import io.sentry.SpanStatus;
+
+void processItem(Item item) {
+    ISpan span = Sentry.getSpan();
+    if (span != null) {
+        Span innerSpan = span.startChild("task", item.getName());
+        try {
+            // omitted code
+        } catch (FileNotFoundException e) {
+            innerSpan.setThrowable(e);
+            innerSpan.setStatus(SpanStatus.NOT_FOUND);
+        } finally {
+            innerSpan.finish();
+        }
+    }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import java.io.FileNotFoundException
+
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+
+fun processItem(item: Item) {
+    val span = Sentry.getSpan()
+    if (span != null) {
+        val innerSpan = span.startChild("task", item.name)
+
+        try {
+            // omitted code
+        } catch (e: FileNotFoundException) {
+            innerSpan.throwable = e
+            innerSpan.status = SpanStatus.NOT_FOUND
+        } finally {
+            innerSpan.finish()
+        }
+    }
+}
+```
+
+Spans are sent together with their parent transaction when the transaction is finished. Make sure to call `finish()` on transaction once all the child spans have finished.

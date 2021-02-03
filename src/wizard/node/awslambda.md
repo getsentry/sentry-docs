@@ -23,7 +23,7 @@ You can use the AWS Lambda integration for the Node like this:
 const Sentry = require("@sentry/serverless");
 
 Sentry.AWSLambda.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
 });
 
@@ -36,7 +36,7 @@ exports.handler = Sentry.AWSLambda.wrapHandler(async (event, context) => {
 const Sentry = require("@sentry/serverless");
 
 Sentry.AWSLambda.init({
-  dsn: '___PUBLIC_DSN___',
+  dsn: "___PUBLIC_DSN___",
   tracesSampleRate: 1.0,
 });
 

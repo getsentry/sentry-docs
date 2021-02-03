@@ -1,0 +1,37 @@
+For example, if you want to create a transaction for a user interaction in your application:
+
+```csharp
+// Let's say this method is invoked when a user clicks on the checkout button of your shop
+public async Task PerformCheckoutAsync()
+{
+  // This will create a new Transaction for you
+  var transaction = SentrySdk.StartTransaction(
+      "checkout", // name
+      "perform-checkout" // operation
+  );
+
+  // Validate the cart
+  var validationSpan = transaction.StartChild(
+      "validation", // operation
+      "validating shopping cart" // description
+  );
+
+  await ValidateShoppingCartAsync();
+
+  validationSpan.Finish();
+
+  // Process the oder
+  var processSpan = transaction.StartChild(
+      "process", // operation
+      "processing shopping cart" // description
+  )
+
+  await ProcessShoppingCartAsync();
+
+  processSpan.Finish();
+
+  transaction.Finish();
+}
+```
+
+This example will send a transaction `checkout` to Sentry. The transaction will contain a `validation` span that measures how long `ValidateShoppingCartAsync` took and a `process` span that measures `ProcessShoppingCartAsync`. Finally, the call to `transaction.Finish()` will finish the transaction and send it to Sentry.
