@@ -1,0 +1,35 @@
+```csharp
+using Sentry;
+
+SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+
+    // To set a uniform sample rate
+    options.TracesSampleRate = 1.0;
+
+    // OR: Determine traces sample rate based on the sampling context
+    options.TracesSampler = context =>
+    {
+        var ctx = context.CustomSamplingContext;
+
+        return ctx switch
+        {
+            // These are important - take a big sample
+            "/payment" => 0.5,
+
+            // Search is less important and happen much more frequently - only take 1%
+            "/search" => 0.01,
+
+            // The health check endpoint is just noise - drop all transactions
+            "/health" => 0.0,
+
+            // Default sample rate
+            _ => 0.1
+
+            // Or return null to fallback to options.TracesSampleRate
+            // _ => null
+        };
+    };
+});
+```
