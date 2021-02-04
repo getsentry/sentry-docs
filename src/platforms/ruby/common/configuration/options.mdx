@@ -25,18 +25,26 @@ end
 We recommend creating a background job, using your background job processor, that will send Sentry notifications. The client will pass a JSON-compatible Hash representation of the Event into the callback.
 
 ```ruby
-config.async = lambda { |event|
-  SentryJob.perform_later(event)
-}
+config.async = lambda do |event, hint|
+  SentryJob.perform_later(event, hint)
+end
 ```
 
 ```ruby
 class SentryJob < ActiveJob::Base
   queue_as :default
 
-  def perform(event)
-    Sentry.send_event(event)
+  def perform(event, hint)
+    Sentry.send_event(event, hint)
   end
+end
+```
+
+Or if you also use `sentry-rails`, you can directly use the job we defined for you:
+
+```ruby
+config.async = lambda do |event, hint|
+  Sentry::SendEventJob.perform_later(event, hint)
 end
 ```
 
@@ -116,7 +124,7 @@ You can find the list of exceptions that are excluded by default in `Sentry::Con
 
 `inspect_exception_causes_for_exclusion`
 
-: Inspect an incoming exception's causes when determining whether or not that exception should be excluded. This option works together with `excluded_exceptions`. Default value is `false`.
+: Inspect an incoming exception's causes when determining whether or not that exception should be excluded. This option works together with `excluded_exceptions`. Default value is `true`.
 
 ```ruby
 config.inspect_exception_causes_for_exclusion = false
@@ -167,6 +175,22 @@ You can re-enable it by setting:
 
 ```ruby
 config.send_default_pii = true
+```
+
+`send_modules`
+
+: A boolean to decide whether to send modules (dependencies) information to Sentry (default is `true`).
+
+```ruby
+config.send_modules = false # if you don't want to send all the dependency info
+```
+
+`trusted_proxies`
+
+: These trusted proxies will be skipped when the SDK computing the user's ip address. `sentry-rails` will automatically inject the value of `Rails.application.config.action_dispatch.trusted_proxie` to this option.
+
+```ruby
+config.trusted_proxies = ["2.2.2.2"]
 ```
 
 ## Tracing Options
