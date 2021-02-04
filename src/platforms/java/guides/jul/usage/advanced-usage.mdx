@@ -1,0 +1,141 @@
+---
+title: Advanced Usage
+sidebar_order: 20
+description: "Learn about adding extra data using the MDC system provided by SLF4j."
+---
+
+When any SLF4J implementation supporting MDC is on the classpath (for example Logback, Log4j2), it’s possible to add extra data to events thanks to [the MDC system](https://logback.qos.ch/manual/mdc.html).
+
+#### Mapped Tags
+
+By default all MDC parameters are stored under the “MDC” tab in Sentry.
+
+```java {tabTitle:Java}
+import java.util.logging.Level;
+import org.slf4j.MDC;
+
+void logWithExtras() {
+    // MDC extras
+    MDC.put("Environment", "Development");
+    MDC.put("OS", "Linux");
+
+    // This sends an event where the Environment and OS MDC values are set as MDC entries
+    logger.log(Level.SEVERE, "This is a test");
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import java.util.logging.Level
+import org.slf4j.MDC
+
+fun logWithExtras() {
+    // MDC extras
+    MDC.put("Environment", "Development")
+    MDC.put("OS", "Linux")
+
+    // This sends an event where the Environment and OS MDC values are set as MDC entries
+    logger.log(Level.SEVERE, "This is a test")
+}
+```
+
+Note that MDC manages data on a per-thread basis, and that a child thread does not automatically inherit MDC properties from its parent.
+
+### In Practice
+
+```java {tabTitle:Java}
+import io.sentry.Sentry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.slf4j.MDC;
+
+public class MyClass {
+  private final Logger logger = Logger.getLogger(MyClass.class.getName());
+
+  void logSimpleMessage() {
+    // This sends a simple event to Sentry
+    logger.severe("This is a test");
+  }
+
+  void logWithBreadcrumbs() {
+    // Record a breadcrumb that will be sent with the next event(s),
+    // by default the last 100 breadcrumbs are kept.
+    Sentry.addBreadcrumb("User made an action");
+
+    // Log entries below `minimumEventLevel` and above or equal to `minimumBreadcrumbLevel`
+    // are recorded as breadcrumbs
+    logger.info("User made another action");
+
+    // This sends a simple event to Sentry
+    logger.severe("This is a test");
+  }
+
+  void logWithExtras() {
+    // MDC extras
+    MDC.put("extra_key", "extra_value");
+    // This sends an event with extra data to Sentry
+    logger.severe("This is a test");
+  }
+
+  void logException() {
+    try {
+      unsafeMethod();
+    } catch (Exception e) {
+      // This sends an exception event to Sentry
+      logger.log(Level.SEVERE, "Exception caught", e);
+    }
+  }
+
+  void unsafeMethod() {
+    throw new UnsupportedOperationException("You shouldn't call this!");
+  }
+}
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.Sentry
+import java.util.logging.Level
+import java.util.logging.Logger
+import org.slf4j.MDC
+
+class MyClass {
+    private val logger = Logger.getLogger(Main::class.java.name)
+
+    fun logSimpleMessage() {
+        // This sends a simple event to Sentry
+        logger.severe("This is a test")
+    }
+
+    fun logWithBreadcrumbs() {
+        // Record a breadcrumb that will be sent with the next event(s),
+        // by default the last 100 breadcrumbs are kept.
+        Sentry.addBreadcrumb("User made an action")
+
+        // Log entries below `minimumEventLevel` and above or equal to `minimumBreadcrumbLevel`
+        // are recorded as breadcrumbs
+        logger.info("User made another action")
+
+        // This sends a simple event to Sentry
+        logger.severe("This is a test")
+    }
+
+    fun logWithExtras() {
+        // MDC extras
+        MDC.put("extra_key", "extra_value")
+        // This sends an event with extra data to Sentry
+        logger.severe("This is a test")
+    }
+
+    fun logException() {
+        try {
+            unsafeMethod()
+        } catch (e: Exception) {
+            // This sends an exception event to Sentry
+            logger.log(Level.SEVERE, "Exception caught", e)
+        }
+    }
+
+    fun unsafeMethod() {
+        throw UnsupportedOperationException("You shouldn't call this!")
+    }
+}
+```
