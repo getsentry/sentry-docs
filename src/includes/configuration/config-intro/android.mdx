@@ -31,3 +31,27 @@ public class MyApplication extends Application {
   }
 }
 ```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+import android.app.Application
+
+class MyApplication : Application {
+
+    override fun onCreate() {
+        SentryAndroid.init {
+            // your Sentry project/dashboard
+            it.dsn = "___PUBLIC_DSN___"
+            it.beforeSend = BeforeSendCallback { event: SentryEvent, hint: Any? ->
+                // Drop an event altogether:
+                if (event.getTag("SomeTag") != null) {
+                    null
+                } else {
+                    event
+                }
+            }
+        }
+    }
+}
+```

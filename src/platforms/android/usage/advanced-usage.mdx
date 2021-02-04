@@ -83,6 +83,8 @@ Sentry differentiates stack frames that are directly related to your application
 You can configure which package prefixes belong in your application and which don't.
 
 ```java
+import io.sentry.android.core.SentryAndroid;
+
 // This can be set only during the initialization of the SDK.
 SentryAndroid.init(this, options -> {
         // set all sub packages of java. as packages that do not belong to your application
@@ -92,6 +94,19 @@ SentryAndroid.init(this, options -> {
         options.addInAppInclude("io.sentry");
 
     });
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+// This can be set only during the initialization of the SDK.
+SentryAndroid.init(this) {
+    // set all sub packages of java. as packages that do not belong to your application
+    it.addInAppExclude("java.")
+
+    // set all sub packages of io.sentry as packages that belong to your application
+    it.addInAppInclude("io.sentry")
+}
 ```
 
 ### Disable Automatic Breadcrumbs
@@ -305,6 +320,8 @@ The SDK can catch errors and crashes only after you've initialized it. So, we re
 Configuration options will be loaded from the manifest so that you don't need to have the static properties in your code. In the `init` method, you can provide a callback that will modify the configuration and also register new options.
 
 ```java
+import io.sentry.android.core.SentryAndroid;
+
 public class SentryApplication extends Application {
     public void onCreate() {
         super.onCreate();
@@ -325,6 +342,37 @@ public class SentryApplication extends Application {
                     return event;
             });
         });
+    }
+}
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+import android.app.Application
+
+class MyApplication : Application {
+
+    override fun onCreate() {
+        super.onCreate()
+
+        /**
+        * Manual Initialization of the Sentry Android SDK
+        * @Context - Instance of the Android Context
+        * @Options - Call back function that you need to provide to be able to modify the options.
+        * The call back function is provided with the options loaded from the manifest.
+        *
+        */
+        SentryAndroid.init(this) {
+            it.beforeSend = BeforeSendCallback { event: SentryEvent, hint: Any? ->
+                // Drop an event altogether:
+                if (event.level == SentryLevel.DEBUG) {
+                    null
+                } else {
+                    event
+                }
+            }
+        }
     }
 }
 ```

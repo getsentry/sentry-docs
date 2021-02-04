@@ -36,3 +36,20 @@ SentryAndroid.init(options -> {
     });
 });
 ```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+
+class MyRpcException(val function: String, val httpStatusCode: Int) : Exception()
+
+SentryAndroid.init {
+    it.beforeSend = BeforeSendCallback { event, hint ->
+        if (event.throwable is MyRpcException) {
+            val exception = event.throwable as MyRpcException
+            event.fingerprints = listOf("{{ default }}", exception.function, exception.httpStatusCode.toString())
+        }
+        event
+    }
+}
+```
