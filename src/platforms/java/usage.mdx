@@ -166,11 +166,9 @@ public class MyClass {
       options.setDsn("https://f7f320d5c3a54709be7b28e0f2ca7081@sentry.io/1808954");
     });
 
-    /*
-     It is possible to go around the static Sentry API, which means
-     you are responsible for making the IHub instance available
-     to your code.
-     */
+    // It is possible to go around the static Sentry API, which means
+    // you are responsible for making the IHub instance available
+    // to your code.
     hub = HubAdapter.getInstance();
 
     MyClass myClass = new MyClass();
@@ -212,10 +210,8 @@ public class MyClass {
       scope.setTag("tagName", "tagValue");
     });
 
-    /*
-     This sends a simple event to Sentry using the statically stored instance
-     that was created in the ``main`` method.
-     */
+    // This sends a simple event to Sentry using the statically stored instance
+    // that was created in the ``main`` method.
     Sentry.captureMessage("This is a test");
 
     try {
@@ -252,6 +248,101 @@ public class MyClass {
       hub.captureException(e);
     }
   }
+}
+```
+
+```kotlin
+import io.sentry.HubAdapter
+import io.sentry.IHub
+import io.sentry.Scope
+import io.sentry.Sentry
+import io.sentry.SentryOptions
+import io.sentry.protocol.User
+
+class MyClass {
+    companion object {
+        private lateinit var hub: IHub
+    }
+
+    fun main(args: Array<String>) {
+        // NOTE: Replace the test DSN below with YOUR OWN DSN
+        Sentry.init { options: SentryOptions -> options.dsn = "https://f7f320d5c3a54709be7b28e0f2ca7081@sentry.io/1808954" }
+
+        // It is possible to go around the static Sentry API, which means
+        // you are responsible for making the IHub instance available
+        // to your code.
+        hub = HubAdapter.getInstance()
+        val myClass = MyClass()
+        myClass.logWithStaticAPI()
+        myClass.logWithInstanceAPI()
+    }
+
+    /**
+     * An example method that throws an exception.
+     */
+    fun unsafeMethod() {
+        throw UnsupportedOperationException("You shouldn't call this!")
+    }
+
+    /**
+     * Examples using the (recommended) static API.
+     */
+    fun logWithStaticAPI() {
+        // Note that all fields set on the scope are optional. Scope data is copied onto
+        // all future events in the current scope (until the scope is cleared).
+
+        // Record a breadcrumb in the current scope. By default the last 100 breadcrumbs are kept.
+        Sentry.addBreadcrumb("User made an action")
+
+        // Set the user in the current scope.
+        Sentry.configureScope {
+            val user = User()
+            user.email = "hello@sentry.io"
+            it.user = user
+        }
+
+        // Add extra data to future events in this scope.
+        Sentry.configureScope { it.setExtra("extra", "thing") }
+
+        // Add an additional tag to future events in this scope.
+        Sentry.configureScope { it.setTag("tagName", "tagValue") }
+
+        // This sends a simple event to Sentry using the statically stored instance
+        // that was created in the ``main`` method.
+        Sentry.captureMessage("This is a test")
+        try {
+            unsafeMethod()
+        } catch (e: Exception) {
+            // This sends an exception event to Sentry using the statically stored instance
+            // that was created in the ``main`` method.
+            Sentry.captureException(e)
+        }
+    }
+
+    /**
+     * Examples that use the SentryClient instance directly.
+     */
+    fun logWithInstanceAPI() {
+
+        // Record a breadcrumb in the current scope. By default the last 100 breadcrumbs are kept.
+        hub.addBreadcrumb("User made an action")
+
+        // Set the user in the current scope.
+        hub.configureScope { scope: Scope ->
+            val user = User()
+            user.email = "hello@sentry.io"
+            scope.user = user
+        }
+
+        // This sends a simple event to Sentry.
+        hub.captureMessage("This is a test")
+        try {
+            unsafeMethod()
+        } catch (e: Exception) {
+            // This sends an exception event to Sentry.
+            hub.captureException(e)
+        }
+    }
 }
 ```
 
@@ -308,13 +399,59 @@ public class MyClass {
 }
 ```
 
+```kotlin
+import io.sentry.Sentry
+import io.sentry.SentryEvent
+import io.sentry.SentryLevel
+import io.sentry.protocol.Message
+
+
+class MyClass {
+
+    fun main(args: Array<String>) {
+        // NOTE: Replace the test DSN below with YOUR OWN DSN
+        Sentry.init { it.dsn = "https://f7f320d5c3a54709be7b28e0f2ca7081@sentry.io/1808954" }
+    }
+
+    fun unsafeMethod() {
+        throw UnsupportedOperationException("You shouldn't call this!")
+    }
+
+    fun logSimpleMessage() {
+        // This sends an event to Sentry.
+        val event = SentryEvent()
+        val message = Message()
+        message.message = "This is a test"
+        event.message = message
+        event.level = SentryLevel.INFO
+        event.logger = MyClass::class.java.name
+        Sentry.captureEvent(event)
+    }
+
+    fun logException() {
+        try {
+            unsafeMethod()
+        } catch (e: Exception) {
+            // This sends an exception event to Sentry.
+            val event = SentryEvent()
+            val message = Message()
+            message.message = "Exception caught"
+            event.message = message
+            event.level = SentryLevel.INFO
+            event.logger = MyClass::class.java.name
+            event.throwable = e
+            Sentry.captureEvent(event)
+        }
+    }
+}
+```
+
 ### Automatically Enhancing Events
 
 You can also implement an `EventProcesor` that is able to automatically enhance outgoing events.
 
 ```java
 import io.sentry.EventProcessor;
-import io.sentry.HubAdapter;
 import io.sentry.IHub;
 import io.sentry.Sentry;
 import io.sentry.SentryEvent;
@@ -322,11 +459,9 @@ import io.sentry.protocol.Message;
 
 public class MyClass {
   public void myMethod() {
-    IHub hub = HubAdapter.getInstance();
-
     // Add an `EventProcessor` to the current scope. Note that
     // this helper will process *all* future events in this scope.
-    hub.configureScope(scope -> {
+    Sentry.configureScope(scope -> {
       scope.addEventProcessor(new EventProcessor() {
         @Override
         public SentryEvent process(SentryEvent event, Object hint) {
@@ -339,8 +474,33 @@ public class MyClass {
     });
 
     // Send an event to Sentry. During construction of the event the message
-    // body will be overwritten by `myEventBuilderHelper`.
-    hub.captureMessage("Hello, world!");
+    // body will be overwritten by the event processor.
+    Sentry.captureMessage("Hello, world!");
   }
+}
+```
+
+```kotlin
+import io.sentry.Scope
+import io.sentry.Sentry
+import io.sentry.protocol.Message
+
+class MyClass {
+    fun myMethod() {
+        // Add an `EventProcessor` to the current scope. Note that
+        // this helper will process *all* future events in this scope.
+        Sentry.configureScope { scope: Scope ->
+            scope.addEventProcessor { event, hint ->
+                val message = Message()
+                message.message = "Overwritten by myEventBuilderHelper!"
+                event.message = message
+                return@addEventProcessor event
+            }
+        }
+
+        // Send an event to Sentry. During construction of the event the message
+        // body will be overwritten by the event processor.
+        Sentry.captureMessage("Hello, world!")
+    }
 }
 ```
