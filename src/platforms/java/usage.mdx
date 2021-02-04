@@ -411,12 +411,13 @@ class MyClass {
 
     fun logSimpleMessage() {
         // This sends an event to Sentry.
-        val event = SentryEvent()
-        val message = Message()
-        message.message = "This is a test"
-        event.message = message
-        event.level = SentryLevel.INFO
-        event.logger = MyClass::class.java.name
+        val event = SentryEvent().apply {
+            message = Message().apply {
+                message = "This is a test"
+            }
+            level = SentryLevel.INFO
+            logger = MyClass::class.java.name
+        }
         Sentry.captureEvent(event)
     }
 
@@ -425,13 +426,14 @@ class MyClass {
             unsafeMethod()
         } catch (e: Exception) {
             // This sends an exception event to Sentry.
-            val event = SentryEvent()
-            val message = Message()
-            message.message = "Exception caught"
-            event.message = message
-            event.level = SentryLevel.INFO
-            event.logger = MyClass::class.java.name
-            event.throwable = e
+            val event = SentryEvent().apply {
+                message = Message().apply {
+                    message = "Exception caught"
+                }
+                level = SentryLevel.INFO
+                logger = MyClass::class.java.name
+                throwable = e
+            }
             Sentry.captureEvent(event)
         }
     }
@@ -483,8 +485,9 @@ class MyClass {
         // this helper will process *all* future events in this scope.
         Sentry.configureScope { scope: Scope ->
             scope.addEventProcessor { event, hint ->
-                val message = Message()
-                message.message = "Overwritten by myEventBuilderHelper!"
+                val message = Message().apply {
+                    message = "Overwritten by myEventBuilderHelper!"
+                }
                 event.message = message
                 return@addEventProcessor event
             }
