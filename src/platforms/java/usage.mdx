@@ -152,8 +152,8 @@ Find more configuration options in the [Configuration](/platforms/java/configura
 To report an event manually you need to initialize a `Sentry` class. It is recommended that you use the static API via the `Sentry` class, but you can also construct and manage your own `IHub` instance. An example of each style is shown below:
 
 ```java
-import io.sentry.HubAdapter;
 import io.sentry.IHub;
+import io.sentry.Hub;
 import io.sentry.Sentry;
 import io.sentry.protocol.User;
 
@@ -169,7 +169,9 @@ public class MyClass {
     // It is possible to go around the static Sentry API, which means
     // you are responsible for making the IHub instance available
     // to your code.
-    hub = HubAdapter.getInstance();
+    SentryOptions options = new SentryOptions();
+    options.setDsn("___PUBLIS_DSN___");
+    hub = new Hub(options);
 
     MyClass myClass = new MyClass();
     myClass.logWithStaticAPI();
@@ -226,11 +228,9 @@ public class MyClass {
     hub.addBreadcrumb("User made an action");
 
     // Set the user in the current scope.
-    hub.configureScope(scope -> {
-      User user = new User();
-      user.setEmail("hello@sentry.io");
-      scope.setUser(user);
-    });
+    User user = new User();
+    user.setEmail("hello@sentry.io");
+    hub.setUser(user);
 
     // This sends a simple event to Sentry.
     hub.captureMessage("This is a test");
@@ -246,8 +246,8 @@ public class MyClass {
 ```
 
 ```kotlin
-import io.sentry.HubAdapter
 import io.sentry.IHub
+import io.sentry.Hub
 import io.sentry.Scope
 import io.sentry.Sentry
 import io.sentry.SentryOptions
@@ -265,7 +265,9 @@ class MyClass {
         // It is possible to go around the static Sentry API, which means
         // you are responsible for making the IHub instance available
         // to your code.
-        hub = HubAdapter.getInstance()
+        val options = SentryOptions()
+        options.dsn = "___PUBLIC_DSN___"
+        hub = Hub(dsn)
         val myClass = MyClass()
         myClass.logWithStaticAPI()
         myClass.logWithInstanceAPI()
@@ -320,11 +322,9 @@ class MyClass {
         hub.addBreadcrumb("User made an action")
 
         // Set the user in the current scope.
-        hub.configureScope { scope: Scope ->
-            val user = User()
-            user.email = "hello@sentry.io"
-            scope.user = user
-        }
+        val user = User()
+        user.email = "hello@sentry.io"
+        hub.setUser(user)
 
         // This sends a simple event to Sentry.
         hub.captureMessage("This is a test")
