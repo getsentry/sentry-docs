@@ -9,10 +9,10 @@ type: library
 
 ```shell
 # For Xamarin.Forms
-Install-Package Sentry.Xamarin.Forms -Version 1.0.0-alpha.4
+Install-Package Sentry.Xamarin.Forms -Version 1.0.0
 
 # If you are not using Xamarin.Forms, but only Xamarin:
-Install-Package Sentry.Xamarin -Version 1.0.0-alpha.4
+Install-Package Sentry.Xamarin -Version 1.0.0
 
 ```
 
@@ -67,6 +67,17 @@ NOTE: It's recommended to not setup the CacheDirectory for UWP.
                 options.AddXamarinFormsIntegration();
             });
 ```
+
+### Verifying Your Setup
+
+You can Verify Sentry by raising an unhandled exception. For example, you can use the following snippet to raise a NullReferenceException:
+
+```csharp
+    throw null;
+}
+```
+
+You might need to open the app again for the crash report to be sent to the server.
 
 ### Documentation
 

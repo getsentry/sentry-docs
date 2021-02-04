@@ -1,0 +1,45 @@
+Or alternatively:
+
+Configure sample rate in `application.properties` or `application.yml` file:
+
+```properties
+sentry.traces-sample-rate=0.3
+```
+
+Or through providing a bean of type `SentryOptions#TracesSamplerCallback`:
+
+```java
+import io.sentry.SentryOptions.TracesSamplerCallback;
+import io.sentry.SamplingContext;
+import org.springframework.stereotype.Component;
+
+@Component
+class CustomTracesSamplerCallback implements TracesSamplerCallback {
+    @Override
+    public Double sample(SamplingContext samplingContext) {
+        // return a number between 0 and 1
+    }
+}
+```
+
+Without sampling, automatically-captured transactions can add up quickly. The Spring Boot integration, for example, will send a transaction for every request made to the server.
+
+### High-Throughput Transport
+
+For high traffic applications, we recommend using high-throughput HTTP transport based on [Apache HTTP Client 5](https://hc.apache.org/httpcomponents-client-5.0.x/index.html). Once the dependency to `sentry-apache-http-client-5` is on the class path, Sentry Spring Boot autoconfiguration configures it without any further steps.
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-apache-http-client-5</artifactId>
+    <version>{{ packages.version('sentry.java.apache-http-client-5', '4.0.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-apache-http-client-5:{{ packages.version('sentry.java.apache-http-client-5', '4.0.0') }}'
+```
+
+```scala {tabTitle:SBT}
+libraryDependencies += "io.sentry" % "sentry-apache-http-client-5" % "{{ packages.version('sentry.java.apache-http-client-5', '4.0.0') }}"
+```
