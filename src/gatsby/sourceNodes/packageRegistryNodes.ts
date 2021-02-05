@@ -20,8 +20,7 @@ export const sourcePackageRegistryNodes = async ({
       repoUrl: sdkData.repo_url,
       files: sdkData.files
         ? Object.entries(sdkData.files).map(
-          ([fileName, fileData]: [string, any]) => (
-            fileData.checksums ? {
+            ([fileName, fileData]: [string, any]) => ({
               name: fileName,
               checksums: Object.entries(fileData.checksums).map(
                 ([key, value]) => ({
@@ -29,7 +28,7 @@ export const sourcePackageRegistryNodes = async ({
                   value: value,
                 })
               ),
-            } : {} )
+            })
           )
         : [],
     };

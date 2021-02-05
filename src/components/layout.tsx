@@ -54,7 +54,6 @@ export default ({
             <div className="pb-3">
               <Breadcrumbs />
             </div>
-
             {children}
           </section>
         </div>

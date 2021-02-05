@@ -27,6 +27,7 @@ import { Angular as AngularIntegration } from "@sentry/integrations";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  autoSessionTracking: true,
   integrations: [
     new AngularIntegration(),
     new Integrations.BrowserTracing({
@@ -41,3 +42,4 @@ angular.module("yourApplicationModule", ["ngSentry"]);
 ```
 
 We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/performance/sampling/).
+

@@ -29,6 +29,7 @@ import { AppModule } from "./app/app.module";
 
 Sentry.init({
   dsn: "___PUBLIC_DSN___",
+  autoSessionTracking: true,
   integrations: [
     new Integrations.BrowserTracing({
       tracingOrigins: ["localhost", "https://yourserver.io/api"],

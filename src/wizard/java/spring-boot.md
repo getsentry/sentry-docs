@@ -5,88 +5,75 @@ support_level: production
 type: framework
 ---
 
-<Alert level="info">
-Sentry's integration with <a href=https://spring.io/projects/spring-boot>Spring Boot</a> supports Spring Boot 2.1.0 and above to report unhandled exceptions as well as release and registration of beans. If you're on an older version, use <a href=https://docs.sentry.io/platforms/java/legacy/spring>our legacy integration</a>.
-</Alert>
+In Spring Boot, all uncaught exceptions will be automatically reported.
 
-Install using either Maven or Gradle:
+### Install
 
-### Maven
+Install the SDK via Maven or Gradle:
 
-```xml
+```xml {tabTitle:Maven}
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-spring-boot-starter</artifactId>
-    <version>{{ packages.version('sentry.java.spring-boot', '4.0.0') }}</version>
+    <version>{{ packages.version('sentry.java', '3.2.0') }}</version>
 </dependency>
 ```
 
-### Gradle
-
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java.spring-boot', '4.0.0') }}'
+implementation 'io.sentry:sentry-spring-boot-starter:{{ packages.version('sentry.java', '3.2.0') }}'
 ```
+
+### Configure
 
 Open up `src/main/application.properties` (or `src/main/application.yml`) and configure the DSN, and any other [_settings_](/platforms/java/configuration/#options) you need:
 
-Modify `src/main/application.properties`:
-
-```
+```properties {tabTitle:application.properties}
 sentry.dsn=___PUBLIC_DSN___
 ```
 
-Or, modify `src/main/application.yml`:
-
-```yaml
+```yaml {tabTitle:application.yml}
 sentry:
   dsn: ___PUBLIC_DSN___
 ```
 
-If you use Logback for logging you may also want to send error logs to Sentry. Add a dependency to the `sentry-logback` module using either Maven or Gradle. Sentry Spring Boot Starter will auto-configure `SentryAppender`.
+### Configure Logback
 
-### Maven
+If you use Logback for logging you may also want to send error logs to Sentry.
 
-```xml
+Add a dependency to `sentry-logback` module and Sentry Spring Boot Starter will auto-configure `SentryAppender`:
+
+```xml {tabTitle:Maven}
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry-logback</artifactId>
-    <version>{{ packages.version('sentry.java.logback', '4.0.0') }}</version>
+    <version>{{ packages.version('sentry.java', '3.2.0') }}</version>
 </dependency>
 ```
 
-### Gradle
-
 ```groovy {tabTitle:Gradle}
-implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java.logback', '4.0.0') }}'
+implementation 'io.sentry:sentry-logback:{{ packages.version('sentry.java', '3.2.0') }}'
 ```
 
-Then create an intentional error, so you can test that everything is working using either Java or Kotlin:
+### Send First Event
 
-### Java
+You can trigger your first event from your development environment by raising an exception somewhere within your application. An example of this would be a controller throwing an exception on HTTP request:
 
 ```java
-import java.lang.Exception;
-import io.sentry.Sentry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-try {
-    throw new Exception("This is a test.");
-} catch (Exception e) {
-    Sentry.captureException(e);
-}
-```
-### Kotlin
+@RestController
+public class HelloController {
+  private static final Logger LOGGER = LoggerFactory.getLogger(HelloController.class);
 
-```kotlin
-import java.lang.Exception
-import io.sentry.Sentry
-
-try {
-    throw Exception("This is a test.")
-} catch (e: Exception) {
-    Sentry.captureException(e)
+  @GetMapping("/")
+  void hello() {
+    LOGGER.error("Event triggered by Logback integration");
+    throw new IllegalArgumentException("Event triggered by Spring integration");
+  }
 }
 ```
 
-If you're new to Sentry, use the email alert to access your account and complete a product tour.
-
-If you're an existing user and have disabled alerts, you won't receive this email.
+Once you've verified the library is initialized properly and sent a test event, consider visiting our [complete Spring Boot docs](https://docs.sentry.io/platforms/java/guides/spring-boot/).

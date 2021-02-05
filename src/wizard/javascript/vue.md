@@ -9,8 +9,8 @@ type: framework
 
 To begin collecting error and performance data from your Vue application, you'll need the following packages:
 
-- `@sentry/vue` (Sentry's Vue SDK)
-- `@sentry/tracing` (instruments performance data)
+* `@sentry/vue` (Sentry's Vue SDK)
+* `@sentry/tracing` (instruments performance data)
 
 Below are instructions for using your favorite package manager, or alternatively loaded directly from our CDN.
 
@@ -30,13 +30,16 @@ Next, initialize Sentry in your app entry point before you initialize your root 
 
 ```javascript
 import Vue from "vue";
-import * as Sentry from "@sentry/vue";
+import * as Sentry from "@sentry/browser";
 import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
   Vue,
   dsn: "___PUBLIC_DSN___",
-  integrations: [new Integrations.BrowserTracing()],
+  autoSessionTracking: true,
+  integrations: [
+    new Integrations.BrowserTracing(),
+  ],
 
   // We recommend adjusting this value in production, or using tracesSampler
   // for finer control
