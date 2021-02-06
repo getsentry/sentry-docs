@@ -15,8 +15,7 @@ public class MyApplication extends Application {
 
   @Override
   public void onCreate() {
-    SentryAndroid.init(
-        options -> {
+    SentryAndroid.init(this, options -> {
           // your Sentry project/dashboard
           options.setDsn("___PUBLIC_DSN___");
           options.setBeforeSend(
@@ -29,5 +28,29 @@ public class MyApplication extends Application {
               });
         });
   }
+}
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+import android.app.Application
+
+class MyApplication : Application {
+
+    override fun onCreate() {
+        SentryAndroid.init(this) {
+            // your Sentry project/dashboard
+            it.dsn = "___PUBLIC_DSN___"
+            it.beforeSend = BeforeSendCallback { event: SentryEvent, hint: Any? ->
+                // Drop an event altogether:
+                if (event.getTag("SomeTag") != null) {
+                    null
+                } else {
+                    event
+                }
+            }
+        }
+    }
 }
 ```

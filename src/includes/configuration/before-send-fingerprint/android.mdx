@@ -3,7 +3,7 @@ import io.sentry.android.core.SentryAndroid;
 import android.database.sqlite.SQLiteException;
 import java.util.Arrays;
 
-SentryAndroid.init(options -> {
+SentryAndroid.init(this, options -> {
     options.setBeforeSend((event, hint) -> {
         if (event.getThrowable() instanceof SQLiteException) {
             event.setFingerprints(Arrays.asList("database-connection-error"));
@@ -11,4 +11,18 @@ SentryAndroid.init(options -> {
         return event;
     });
 });
+```
+
+```kotlin {tabTitle: Kotlin}
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+
+SentryAndroid.init(this) {
+    it.beforeSend = BeforeSendCallback { event, hint ->
+        if (event.throwable is SQLException) {
+            event.fingerprints = listOf("database-connection-error")
+        }
+        event
+    }
+}
 ```

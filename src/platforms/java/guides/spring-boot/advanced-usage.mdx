@@ -40,6 +40,21 @@ public class CustomEventProcessor implements EventProcessor {
 }
 ```
 
+```kotlin
+import io.sentry.SentryEvent
+import io.sentry.EventProcessor
+import org.springframework.stereotype.Component
+
+@Component
+class CustomEventProcessor : EventProcessor {
+
+  override fun process(event: SentryEvent?, hint: Any?): SentryEvent? {
+    // modify the event or return null to drop it
+    return event;
+  }
+}
+```
+
 ## Registering Custom Before Send Callback
 
 Any Spring bean implementing the `BeforeSendCallback` will be automatically set on `SentryOptions` during the SDK's auto-configuration. Note that there can be only a single bean set this way.
@@ -53,6 +68,22 @@ import org.springframework.stereotype.Component;
 public class CustomBeforeSendCallback implements SentryOptions.BeforeSendCallback {
   @Override
   public SentryEvent execute(SentryEvent event, Object hint) {
+    // Example: Never send server name in events
+    event.setServerName(null);
+    return event;
+  }
+}
+```
+
+```kotlin
+import io.sentry.SentryEvent
+import io.sentry.SentryOptions
+import org.springframework.stereotype.Component
+
+@Component
+class CustomBeforeSendCallback : SentryOptions.BeforeSendCallback {
+
+  override fun execute(event: SentryEvent, hint: Any?): SentryEvent? {
     // Example: Never send server name in events
     event.setServerName(null);
     return event;
@@ -80,6 +111,24 @@ public class CustomBeforeBreadcrumbCallback implements SentryOptions.BeforeBread
       return null;
     }
     return breadcrumb;
+  }
+}
+```
+
+```kotlin
+import io.sentry.Breadcrumb
+import io.sentry.SentryOptions
+import org.springframework.stereotype.Component
+
+@Component
+class CustomBeforeBreadcrumbCallback : SentryOptions.BeforeBreadcrumbCallback {
+
+  override fun execute(breadcrumb: Breadcrumb, hint: Any?): Breadcrumb? {
+    return if (breadcrumb.message?.contains("bad breadcrumb") == true) {
+      null
+    } else {
+      breadcrumb
+    }
   }
 }
 ```

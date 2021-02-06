@@ -7,7 +7,7 @@ The Android SDK automatically collects and converts the following events into br
 ```java
 import io.sentry.android.core.SentryAndroid;
 
-SentryAndroid.init(options -> {
+SentryAndroid.init(this, options -> {
     options.setBeforeBreadcrumb((breadcrumb, hint) -> {
         if ("a.spammy.Logger".equals(breadcrumb.getCategory())) {
             return null;
@@ -16,6 +16,21 @@ SentryAndroid.init(options -> {
         }
     });
 });
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeBreadcrumbCallback
+
+SentryAndroid.init(this) { options ->
+    options.beforeBreadcrumb = BeforeBreadcrumbCallback { breadcrumb, hint ->
+        return@BeforeBreadcrumbCallback if ("a.spammy.Logger" == breadcrumb.category) {
+            null
+        } else {
+            breadcrumb
+        }
+    }
+}
 ```
 
 If you want to disable the automatic collection of breadcrumbs, please add the following items into your manifest.

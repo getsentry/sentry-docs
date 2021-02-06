@@ -3,8 +3,7 @@ A `BiFunction<SentryEvent, Object, SentryEvent>` can be used to mutate, discard 
 ```java
 import io.sentry.android.core.SentryAndroid;
 
-SentryAndroid.init(
-  options -> {
+SentryAndroid.init(this, options -> {
     options.setBeforeSend(
       (event, hint) -> {
         if (hint instanceof MyHint) {
@@ -14,4 +13,19 @@ SentryAndroid.init(
         }
       });
   });
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+
+SentryAndroid.init(this) {
+    it.beforeSend = BeforeSendCallback { event, hint ->
+        if (hint is MyHint) {
+            null
+        } else {
+            event
+        }
+    }
+}
 ```
