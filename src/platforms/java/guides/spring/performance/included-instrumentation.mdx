@@ -22,10 +22,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 @RestController
 class HelloController {
 
-    @GetMapping("/person/{id}")
-    Person person(@PathVariable Long id) {
-        ...
-    }
+  @GetMapping("/person/{id}")
+  Person person(@PathVariable Long id) {
+    ...
+  }
 }
 ```
 
@@ -37,10 +37,10 @@ import org.springframework.web.bind.annotation.PathVariable
 @RestController
 class HelloController {
 
-    @GetMapping("/person/{id}")
-    fun person(@PathVariable id: Long) {
-        ...
-    }
+  @GetMapping("/person/{id}")
+  fun person(@PathVariable id: Long) {
+    ...
+  }
 }
 ```
 
@@ -89,12 +89,12 @@ class AppConfig {
 
   @Bean
   fun restTemplate(hub: IHub): RestTemplate {
-      val restTemplate = RestTemplate()
-      val sentryRestTemplateInterceptor = SentrySpanClientHttpRequestInterceptor(hub)
-      val templateHandler = restTemplate.uriTemplateHandler
-      restTemplate.uriTemplateHandler = sentryRestTemplateInterceptor.createUriTemplateHandler(templateHandler)
-      restTemplate.interceptors = listOf(sentryRestTemplateInterceptor)
-      return restTemplate
+    val sentryRestTemplateInterceptor = SentrySpanClientHttpRequestInterceptor(hub)
+
+    return RestTemplate().apply {
+      uriTemplateHandler = sentryRestTemplateInterceptor.createUriTemplateHandler(uriTemplateHandler)
+      interceptors = listOf(sentryRestTemplateInterceptor)
+    }
   }
 }
 ```
