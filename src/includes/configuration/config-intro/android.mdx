@@ -34,16 +34,18 @@ public class MyApplication extends Application {
 
 ```kotlin
 import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
 import android.app.Application
 
 class MyApplication : Application() {
+
   override fun onCreate() {
     super.onCreate()
 
     SentryAndroid.init(this) { options ->
       // your Sentry project/dashboard
       options.dsn = "___PUBLIC_DSN___"
-      options.setBeforeSend { event, hint ->
+      options.beforeSend = BeforeSendCallback { event: SentryEvent, hint: Any? ->
         // Drop an event altogether:
         if (event.getTag("SomeTag") != null) {
           null

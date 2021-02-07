@@ -41,13 +41,13 @@ public class CustomEventProcessor implements EventProcessor {
 ```
 
 ```kotlin
-import io.sentry.EventProcessor
 import io.sentry.SentryEvent
+import io.sentry.EventProcessor
 import org.springframework.stereotype.Component
 
 @Component
 class CustomEventProcessor : EventProcessor {
-  override fun process(event: SentryEvent, hint: Any?): SentryEvent? {
+  override fun process(event: SentryEvent?, hint: Any?): SentryEvent? {
     // modify the event or return null to drop it
     return event
   }
@@ -76,11 +76,11 @@ public class CustomBeforeSendCallback implements SentryOptions.BeforeSendCallbac
 
 ```kotlin
 import io.sentry.SentryEvent
-import io.sentry.SentryOptions.BeforeSendCallback
+import io.sentry.SentryOptions
 import org.springframework.stereotype.Component
 
 @Component
-class CustomBeforeSendCallback : BeforeSendCallback {
+class CustomBeforeSendCallback : SentryOptions.BeforeSendCallback {
   override fun execute(event: SentryEvent, hint: Any?): SentryEvent? {
     // Example: Never send server name in events
     event.serverName = null
@@ -115,11 +115,11 @@ public class CustomBeforeBreadcrumbCallback implements SentryOptions.BeforeBread
 
 ```kotlin
 import io.sentry.Breadcrumb
-import io.sentry.SentryOptions.BeforeBreadcrumbCallback
+import io.sentry.SentryOptions
 import org.springframework.stereotype.Component
 
 @Component
-class CustomBeforeBreadcrumbCallback : BeforeBreadcrumbCallback {
+class CustomBeforeBreadcrumbCallback : SentryOptions.BeforeBreadcrumbCallback {
   override fun execute(breadcrumb: Breadcrumb, hint: Any?): Breadcrumb? {
     // Don't add breadcrumbs with message containing:
     return if (breadcrumb.message?.contains("bad breadcrumb") == true) {
