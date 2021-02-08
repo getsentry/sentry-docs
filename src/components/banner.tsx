@@ -5,11 +5,11 @@ import React, { useState, useEffect } from "react";
 // This is a lazy way of doing things but will work until
 // we put a more robust solution in place.
 //
-const SHOW_BANNER = false;
+const SHOW_BANNER = true;
 const BANNER_TEXT =
-  "Upcoming Technical Workshop: 3 Ways to Group Similar Issues";
+  "Upcoming Technical Workshop: Release Health with JavaScript";
 const BANNER_LINK_URL =
-  "https://zoom.us/webinar/register/2716112804384/WN_l5OpxMmVR5OPsNq6NUxmeQ";
+  "https://zoom.us/webinar/register/3516118715448/WN_bqXxJmHtSqKFVpYYqo-2sg";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 
