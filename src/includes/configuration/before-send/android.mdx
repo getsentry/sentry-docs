@@ -2,15 +2,16 @@
 import io.sentry.android.core.SentryAndroid;
 
 SentryAndroid.init(this, options -> {
-    // Add a callback that will be used before the event is sent to Sentry.
-    // With this callback, you can modify the event or, when returning null, also discard the event.
-    options.setBeforeSend((event, hint) -> {
-        String environment = event.getEnvironment();
-        if (environment == null || environment.equals("TEST"))
-            return null;
-        else
-            return event;
-    });
+  // Add a callback that will be used before the event is sent to Sentry.
+  // With this callback, you can modify the event or, when returning null, also discard the event.
+  options.setBeforeSend((event, hint) -> {
+    String environment = event.getEnvironment();
+    if (environment == null || environment.equals("TEST")) {
+      return null;
+    } else {
+      return event;
+    }
+  });
 });
 ```
 
@@ -18,12 +19,16 @@ SentryAndroid.init(this, options -> {
 import io.sentry.android.core.SentryAndroid
 import io.sentry.SentryOptions.BeforeSendCallback
 
-SentryAndroid.init(this) {
-    // Add a callback that will be used before the event is sent to Sentry.
-    // With this callback, you can modify the event or, when returning null, also discard the event.
-    it.setBeforeSend { event, hint ->
-        val environment = event.environment
-        return@setBeforeSend if (environment == null || environment == "TEST") null else event
+SentryAndroid.init(this) { options ->
+  // Add a callback that will be used before the event is sent to Sentry.
+  // With this callback, you can modify the event or, when returning null, also discard the event.
+  options.beforeSend = BeforeSendCallback { event, hint ->
+    val environment = event.environment
+    if (environment == null || environment == "TEST") {
+      null
+    } else {
+      event
     }
+  }
 }
 ```

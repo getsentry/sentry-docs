@@ -39,54 +39,52 @@ import io.sentry.Sentry;
 
 public class MyClass {
   public static void main(String... args) {
-    Sentry.init(
-        options -> {
-          // NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in
-          // your Sentry project/dashboard
-          options.setDsn("___PUBLIC_DSN___");
+    Sentry.init(options -> {
+      // NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in
+      // your Sentry project/dashboard
+      options.setDsn("___PUBLIC_DSN___");
 
-          // All events get assigned to the release. See more at
-          // https://docs.sentry.io/workflow/releases/
-          options.setRelease("io.sentry.samples.console@4.0.0+1");
+      // All events get assigned to the release. See more at
+      // https://docs.sentry.io/workflow/releases/
+      options.setRelease("io.sentry.samples.console@4.0.0+1");
 
-          // Modifications to event before it goes out. Could replace the event altogether
-          options.setBeforeSend(
-              (event, hint) -> {
-                // Drop an event altogether:
-                if (event.getTag("SomeTag") != null) {
-                  return null;
-                }
-                return event;
-              });
+      // Modifications to event before it goes out. Could replace the event altogether
+      options.setBeforeSend((event, hint) -> {
+        // Drop an event altogether:
+        if (event.getTag("SomeTag") != null) {
+          return null;
+        }
+        return event;
+      });
 
-          // Allows inspecting and modifying, returning a new or simply rejecting (returning null)
-          options.setBeforeBreadcrumb(
-              (breadcrumb, hint) -> {
-                // Don't add breadcrumbs with message containing:
-                if (breadcrumb.getMessage() != null
-                    && breadcrumb.getMessage().contains("bad breadcrumb")) {
-                  return null;
-                }
-                return breadcrumb;
-              });
+      // Allows inspecting and modifying, returning a new or simply rejecting (returning null)
+      options.setBeforeBreadcrumb((breadcrumb, hint) -> {
+        // Don't add breadcrumbs with message containing:
+        if (breadcrumb.getMessage() != null
+            && breadcrumb.getMessage().contains("bad breadcrumb")) {
+          return null;
+        }
+        return breadcrumb;
+      });
 
-          // Configure the background worker which sends events to sentry:
-          // Wait up to 5 seconds before shutdown while there are events to send.
-          options.setShutdownTimeout(5000);
+      // Configure the background worker which sends events to sentry:
+      // Wait up to 5 seconds before shutdown while there are events to send.
+      options.setShutdownTimeout(5000);
 
-          // Enable SDK logging with Debug level
-          options.setDebug(true);
-          // To change the verbosity, use:
+      // Enable SDK logging with Debug level
+      options.setDebug(true);
+      // To change the verbosity, use:
+      options.setDiagnosticLevel(
           // By default it's DEBUG.
-          options.setDiagnosticLevel(
-              SentryLevel
-                  .ERROR); //  A good option to have SDK debug log in prod is to use only level
+          // A good option to have SDK debug log in prod is to use only level
           // ERROR here.
+          SentryLevel.ERROR
+      );
 
-          // Exclude frames from some packages from being "inApp" so are hidden by default in Sentry
-          // UI:
-          options.addInAppExclude("org.jboss");
-        });
+      // Exclude frames from some packages from being "inApp" so are hidden by default in Sentry
+      // UI:
+      options.addInAppExclude("org.jboss");
+    });
   }
 }
 ```
@@ -96,52 +94,53 @@ import io.sentry.SentryOptions.BeforeBreadcrumbCallback
 import io.sentry.SentryOptions.BeforeSendCallback
 
 fun main() {
-    Sentry.init {
-        // NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in
-        // your Sentry project/dashboard
-        it.dsn = "___PUBLIC_DSN___"
+  Sentry.init { options ->
+    // NOTE: Replace the test DSN below with YOUR OWN DSN to see the events from this app in
+    // your Sentry project/dashboard
+    options.dsn = "___PUBLIC_DSN___"
 
-        // All events get assigned to the release. See more at
-        // https://docs.sentry.io/workflow/releases/
-        it.release = "io.sentry.samples.console@4.0.0+1"
+    // All events get assigned to the release. See more at
+    // https://docs.sentry.io/workflow/releases/
+    options.release = "io.sentry.samples.console@4.0.0+1"
 
-        // Modifications to event before it goes out. Could replace the event altogether
-        it.beforeSend = BeforeSendCallback { event: SentryEvent, hint: Any? ->
-            // Drop an event altogether:
-            if (event.getTag("SomeTag") != null) {
-                null
-            } else {
-                event
-            }
-        }
-
-        // Allows inspecting and modifying, returning a new or simply rejecting (returning null)
-        it.beforeBreadcrumb = BeforeBreadcrumbCallback { breadcrumb: Breadcrumb, hint: Any? ->
-            // Don't add breadcrumbs with message containing:
-            val message = breadcrumb.message
-            if (message != null && message.contains("bad breadcrumb")) {
-                null
-            } else {
-                breadcrumb
-            }
-        }
-
-        // Configure the background worker which sends events to sentry:
-        // Wait up to 5 seconds before shutdown while there are events to send.
-        it.shutdownTimeout = 5000
-
-        // Enable SDK logging with Debug level
-        it.isDebug = true
-        // To change the verbosity, use:
-        // By default it's DEBUG.
-        it.setDiagnosticLevel(
-            SentryLevel.ERROR) //  A good option to have SDK debug log in prod is to use only level
-        // ERROR here.
-
-        // Exclude frames from some packages from being "inApp" so are hidden by default in Sentry
-        // UI:
-        it.addInAppExclude("org.jboss")
+    // Modifications to event before it goes out. Could replace the event altogether
+    options.beforeSend = BeforeSendCallback { event: SentryEvent, hint: Any? ->
+      // Drop an event altogether:
+      if (event.getTag("SomeTag") != null) {
+        null
+      } else {
+        event
+      }
     }
+
+    // Allows inspecting and modifying, returning a new or simply rejecting (returning null)
+    options.beforeBreadcrumb = BeforeBreadcrumbCallback { breadcrumb: Breadcrumb, hint: Any? ->
+      // Don't add breadcrumbs with message containing:
+      val message = breadcrumb.message
+      if (message?.contains("bad breadcrumb") == true) {
+        null
+      } else {
+        breadcrumb
+      }
+    }
+
+    // Configure the background worker which sends events to sentry:
+    // Wait up to 5 seconds before shutdown while there are events to send.
+    options.shutdownTimeout = 5000
+
+    // Enable SDK logging with Debug level
+    options.isDebug = true
+    // To change the verbosity, use:
+    options.setDiagnosticLevel(
+      // By default it's DEBUG.
+      // A good option to have SDK debug log in prod is to use only level ERROR here.
+      SentryLevel.ERROR
+    )
+
+    // Exclude frames from some packages from being "inApp" so are hidden by default in Sentry
+    // UI:
+    options.addInAppExclude("org.jboss")
+  }
 }
 ```
 
@@ -170,7 +169,7 @@ public class MyClass {
     // you are responsible for making the IHub instance available
     // to your code.
     SentryOptions options = new SentryOptions();
-    options.setDsn("___PUBLIS_DSN___");
+    options.setDsn("___PUBLIC_DSN___");
     hub = new Hub(options);
 
     MyClass myClass = new MyClass();
@@ -248,93 +247,96 @@ public class MyClass {
 ```kotlin
 import io.sentry.IHub
 import io.sentry.Hub
-import io.sentry.Scope
 import io.sentry.Sentry
 import io.sentry.SentryOptions
 import io.sentry.protocol.User
 
 class MyClass {
-    companion object {
-        private lateinit var hub: IHub
+  companion object {
+    private lateinit var hub: IHub
+  }
+
+  fun main(args: Array<String>) {
+    // NOTE: Replace the test DSN below with YOUR OWN DSN
+    Sentry.init { options ->
+      options.dsn = "___PUBLIC_DSN___"
     }
 
-    fun main(args: Array<String>) {
-        // NOTE: Replace the test DSN below with YOUR OWN DSN
-        Sentry.init { options: SentryOptions -> options.dsn = "___PUBLIC_DSN___" }
+    // It is possible to go around the static Sentry API, which means
+    // you are responsible for making the IHub instance available
+    // to your code.
+    val options = SentryOptions()
+    options.dsn = "___PUBLIC_DSN___"
+    hub = Hub(options)
+    val myClass = MyClass()
+    myClass.logWithStaticAPI()
+    myClass.logWithInstanceAPI()
+  }
 
-        // It is possible to go around the static Sentry API, which means
-        // you are responsible for making the IHub instance available
-        // to your code.
-        val options = SentryOptions()
-        options.dsn = "___PUBLIC_DSN___"
-        hub = Hub(dsn)
-        val myClass = MyClass()
-        myClass.logWithStaticAPI()
-        myClass.logWithInstanceAPI()
+  /**
+   * An example method that throws an exception.
+   */
+  fun unsafeMethod() {
+    throw UnsupportedOperationException("You shouldn't call this!")
+  }
+
+  /**
+   * Examples using the (recommended) static API.
+   */
+  fun logWithStaticAPI() {
+    // Note that all fields set on the scope are optional. Scope data is copied onto
+    // all future events in the current scope (until the scope is cleared).
+
+    // Record a breadcrumb in the current scope. By default the last 100 breadcrumbs are kept.
+    Sentry.addBreadcrumb("User made an action")
+
+    // Set the user in the current scope.
+    val user = User().apply {
+      email = "hello@sentry.io"
     }
+    Sentry.setUser(user)
 
-    /**
-     * An example method that throws an exception.
-     */
-    fun unsafeMethod() {
-        throw UnsupportedOperationException("You shouldn't call this!")
+    // Add extra data to future events in this scope.
+    Sentry.setExtra("extra", "thing")
+
+    // Add an additional tag to future events in this scope.
+    Sentry.setTag("tagName", "tagValue")
+
+    // This sends a simple event to Sentry using the statically stored instance
+    // that was created in the ``main`` method.
+    Sentry.captureMessage("This is a test")
+    try {
+      unsafeMethod()
+    } catch (e: Exception) {
+      // This sends an exception event to Sentry using the statically stored instance
+      // that was created in the ``main`` method.
+      Sentry.captureException(e)
     }
+  }
 
-    /**
-     * Examples using the (recommended) static API.
-     */
-    fun logWithStaticAPI() {
-        // Note that all fields set on the scope are optional. Scope data is copied onto
-        // all future events in the current scope (until the scope is cleared).
+  /**
+   * Examples that use the SentryClient instance directly.
+   */
+  fun logWithInstanceAPI() {
 
-        // Record a breadcrumb in the current scope. By default the last 100 breadcrumbs are kept.
-        Sentry.addBreadcrumb("User made an action")
+    // Record a breadcrumb in the current scope. By default the last 100 breadcrumbs are kept.
+    hub.addBreadcrumb("User made an action")
 
-        // Set the user in the current scope.
-        val user = User()
-        user.email = "hello@sentry.io"
-        Sentry.setUser(user)
-
-        // Add extra data to future events in this scope.
-        Sentry.setExtra("extra", "thing")
-
-        // Add an additional tag to future events in this scope.
-        Sentry.setTag("tagName", "tagValue")
-
-        // This sends a simple event to Sentry using the statically stored instance
-        // that was created in the ``main`` method.
-        Sentry.captureMessage("This is a test")
-        try {
-            unsafeMethod()
-        } catch (e: Exception) {
-            // This sends an exception event to Sentry using the statically stored instance
-            // that was created in the ``main`` method.
-            Sentry.captureException(e)
-        }
+    // Set the user in the current scope.
+    val user = User().apply {
+      email = "hello@sentry.io"
     }
+    hub.setUser(user)
 
-    /**
-     * Examples that use the SentryClient instance directly.
-     */
-    fun logWithInstanceAPI() {
-
-        // Record a breadcrumb in the current scope. By default the last 100 breadcrumbs are kept.
-        hub.addBreadcrumb("User made an action")
-
-        // Set the user in the current scope.
-        val user = User()
-        user.email = "hello@sentry.io"
-        hub.setUser(user)
-
-        // This sends a simple event to Sentry.
-        hub.captureMessage("This is a test")
-        try {
-            unsafeMethod()
-        } catch (e: Exception) {
-            // This sends an exception event to Sentry.
-            hub.captureException(e)
-        }
+    // This sends a simple event to Sentry.
+    hub.captureMessage("This is a test")
+    try {
+      unsafeMethod()
+    } catch (e: Exception) {
+      // This sends an exception event to Sentry.
+      hub.captureException(e)
     }
+  }
 }
 ```
 
@@ -397,52 +399,53 @@ import io.sentry.SentryEvent
 import io.sentry.SentryLevel
 import io.sentry.protocol.Message
 
-
 class MyClass {
 
-    fun main(args: Array<String>) {
-        // NOTE: Replace the test DSN below with YOUR OWN DSN
-        Sentry.init { it.dsn = "___PUBLIC_DSN___" }
+  fun main(args: Array<String>) {
+    // NOTE: Replace the test DSN below with YOUR OWN DSN
+    Sentry.init { options ->
+      options.dsn = "___PUBLIC_DSN___"
     }
+  }
 
-    fun unsafeMethod() {
-        throw UnsupportedOperationException("You shouldn't call this!")
+  fun unsafeMethod() {
+    throw UnsupportedOperationException("You shouldn't call this!")
+  }
+
+  fun logSimpleMessage() {
+    // This sends an event to Sentry.
+    val event = SentryEvent().apply {
+      message = Message().apply {
+        message = "This is a test"
+      }
+      level = SentryLevel.INFO
+      logger = MyClass::class.java.name
     }
+    Sentry.captureEvent(event)
+  }
 
-    fun logSimpleMessage() {
-        // This sends an event to Sentry.
-        val event = SentryEvent().apply {
-            message = Message().apply {
-                message = "This is a test"
-            }
-            level = SentryLevel.INFO
-            logger = MyClass::class.java.name
+  fun logException() {
+    try {
+      unsafeMethod()
+    } catch (e: Exception) {
+      // This sends an exception event to Sentry.
+      val event = SentryEvent().apply {
+        message = Message().apply {
+          message = "Exception caught"
         }
-        Sentry.captureEvent(event)
+        level = SentryLevel.INFO
+        logger = MyClass::class.java.name
+        throwable = e
+      }
+      Sentry.captureEvent(event)
     }
-
-    fun logException() {
-        try {
-            unsafeMethod()
-        } catch (e: Exception) {
-            // This sends an exception event to Sentry.
-            val event = SentryEvent().apply {
-                message = Message().apply {
-                    message = "Exception caught"
-                }
-                level = SentryLevel.INFO
-                logger = MyClass::class.java.name
-                throwable = e
-            }
-            Sentry.captureEvent(event)
-        }
-    }
+  }
 }
 ```
 
 ### Automatically Enhancing Events
 
-You can also implement an `EventProcesor` that is able to automatically enhance outgoing events.
+You can also implement an `EventProcessor` that is able to automatically enhance outgoing events.
 
 ```java
 import io.sentry.EventProcessor;
@@ -475,27 +478,25 @@ public class MyClass {
 ```
 
 ```kotlin
-import io.sentry.Scope
 import io.sentry.Sentry
 import io.sentry.protocol.Message
 
 class MyClass {
-    fun myMethod() {
-        // Add an `EventProcessor` to the current scope. Note that
-        // this helper will process *all* future events in this scope.
-        Sentry.configureScope { scope: Scope ->
-            scope.addEventProcessor { event, hint ->
-                val message = Message().apply {
-                    message = "Overwritten by myEventBuilderHelper!"
-                }
-                event.message = message
-                return@addEventProcessor event
-            }
+  fun myMethod() {
+    // Add an `EventProcessor` to the current scope. Note that
+    // this helper will process *all* future events in this scope.
+    Sentry.configureScope { scope ->
+      scope.addEventProcessor { event, hint ->
+        event.message = Message().apply {
+          message = "Overwritten by myEventBuilderHelper!"
         }
-
-        // Send an event to Sentry. During construction of the event the message
-        // body will be overwritten by the event processor.
-        Sentry.captureMessage("Hello, world!")
+        event
+      }
     }
+
+    // Send an event to Sentry. During construction of the event the message
+    // body will be overwritten by the event processor.
+    Sentry.captureMessage("Hello, world!")
+  }
 }
 ```

@@ -4,36 +4,36 @@ import java.util.Arrays;
 import java.lang.Exception;
 
 class MyRpcException extends Exception {
-    private final String function;
-    private final int httpStatusCode;
+  private final String function;
+  private final int httpStatusCode;
 
-    public MyRpcException(String function, int httpStatusCode) {
-        this.function = function;
-        this.httpStatusCode = httpStatusCode;
-    }
+  public MyRpcException(String function, int httpStatusCode) {
+    this.function = function;
+    this.httpStatusCode = httpStatusCode;
+  }
 
-    public String getFunction() {
-        return function;
-    }
+  public String getFunction() {
+    return function;
+  }
 
-    public int getHttpStatusCode() {
-        return httpStatusCode;
-    }
+  public int getHttpStatusCode() {
+    return httpStatusCode;
+  }
 }
 
 SentryAndroid.init(this, options -> {
-    options.setBeforeSend((event, hint) -> {
-        if (event.getThrowable() instanceof MyRpcException) {
-            MyRpcException exception = (MyRpcException) event.getThrowable();
-            event.setFingerprints(
-                    Arrays.asList(
-                            "{{ default }}",
-                            exception.getFunction(),
-                            String.valueOf(exception.getHttpStatusCode())
-                    ));
-        }
-        return event;
-    });
+  options.setBeforeSend((event, hint) -> {
+    if (event.getThrowable() instanceof MyRpcException) {
+      MyRpcException exception = (MyRpcException) event.getThrowable();
+      event.setFingerprints(
+          Arrays.asList(
+              "{{ default }}",
+              exception.getFunction(),
+              String.valueOf(exception.getHttpStatusCode())
+          ));
+    }
+    return event;
+  });
 });
 ```
 
@@ -41,15 +41,22 @@ SentryAndroid.init(this, options -> {
 import io.sentry.android.core.SentryAndroid
 import io.sentry.SentryOptions.BeforeSendCallback
 
-class MyRpcException(val function: String, val httpStatusCode: Int) : Exception()
+class MyRpcException(
+  val function: String,
+  val httpStatusCode: Int
+) : Exception()
 
-SentryAndroid.init(this) {
-    it.beforeSend = BeforeSendCallback { event, hint ->
-        if (event.throwable is MyRpcException) {
-            val exception = event.throwable as MyRpcException
-            event.fingerprints = listOf("{{ default }}", exception.function, exception.httpStatusCode.toString())
-        }
-        event
+SentryAndroid.init(this) { options ->
+  options.beforeSend = BeforeSendCallback { event, hint ->
+    if (event.throwable is MyRpcException) {
+      val exception = event.throwable as MyRpcException
+      event.fingerprints = listOf(
+        "{{ default }}",
+        exception.function,
+        exception.httpStatusCode.toString()
+      )
     }
+    event
+  }
 }
 ```

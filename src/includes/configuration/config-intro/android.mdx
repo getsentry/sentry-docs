@@ -15,18 +15,19 @@ public class MyApplication extends Application {
 
   @Override
   public void onCreate() {
+    super.onCreate();
+
     SentryAndroid.init(this, options -> {
-          // your Sentry project/dashboard
-          options.setDsn("___PUBLIC_DSN___");
-          options.setBeforeSend(
-              (event, hint) -> {
-                // Drop an event altogether:
-                if (event.getTag("SomeTag") != null) {
-                  return null;
-                }
-                return event;
-              });
-        });
+      // your Sentry project/dashboard
+      options.setDsn("___PUBLIC_DSN___");
+      options.setBeforeSend((event, hint) -> {
+        // Drop an event altogether:
+        if (event.getTag("SomeTag") != null) {
+          return null;
+        }
+        return event;
+      });
+    });
   }
 }
 ```
@@ -36,21 +37,23 @@ import io.sentry.android.core.SentryAndroid
 import io.sentry.SentryOptions.BeforeSendCallback
 import android.app.Application
 
-class MyApplication : Application {
+class MyApplication : Application() {
 
-    override fun onCreate() {
-        SentryAndroid.init(this) {
-            // your Sentry project/dashboard
-            it.dsn = "___PUBLIC_DSN___"
-            it.beforeSend = BeforeSendCallback { event: SentryEvent, hint: Any? ->
-                // Drop an event altogether:
-                if (event.getTag("SomeTag") != null) {
-                    null
-                } else {
-                    event
-                }
-            }
+  override fun onCreate() {
+    super.onCreate()
+
+    SentryAndroid.init(this) { options ->
+      // your Sentry project/dashboard
+      options.dsn = "___PUBLIC_DSN___"
+      options.beforeSend = BeforeSendCallback { event: SentryEvent, hint: Any? ->
+        // Drop an event altogether:
+        if (event.getTag("SomeTag") != null) {
+          null
+        } else {
+          event
         }
+      }
     }
+  }
 }
 ```

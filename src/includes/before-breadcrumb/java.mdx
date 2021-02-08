@@ -2,26 +2,27 @@
 import io.sentry.Sentry;
 
 Sentry.init(options -> {
-    options.setBeforeBreadcrumb((breadcrumb, hint) -> {
-        if ("a.spammy.Logger".equals(breadcrumb.getCategory())) {
-            return null;
-        } else {
-            return breadcrumb;
-        }
-    });
+  options.setBeforeBreadcrumb((breadcrumb, hint) -> {
+    if ("a.spammy.Logger".equals(breadcrumb.getCategory())) {
+      return null;
+    } else {
+      return breadcrumb;
+    }
+  });
 });
 ```
 
 ```kotlin
 import io.sentry.Sentry
+import io.sentry.SentryOptions.BeforeBreadcrumbCallback
 
-Sentry.init { options: SentryOptions ->
-    options.beforeBreadcrumb = BeforeBreadcrumbCallback { breadcrumb: Breadcrumb, hint: Any? ->
-        if ("a.spammy.Logger" == breadcrumb.category) {
-            return@BeforeBreadcrumbCallback null
-        } else {
-            return@BeforeBreadcrumbCallback breadcrumb
-        }
+Sentry.init { options ->
+  options.beforeBreadcrumb = BeforeBreadcrumbCallback { breadcrumb, hint ->
+    if ("a.spammy.Logger" == breadcrumb.category) {
+      null
+    } else {
+      breadcrumb
     }
+  }
 }
 ```

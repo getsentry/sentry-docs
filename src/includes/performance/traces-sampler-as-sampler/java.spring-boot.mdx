@@ -29,32 +29,32 @@ class CustomTracesSamplerCallback implements TracesSamplerCallback {
 
 ```kotlin {tabTitle:Kotlin}
 import io.sentry.SamplingContext
-import io.sentry.SentryOptions.TracesSamplerCallback
+import io.sentry.SentryOptions
 import org.springframework.stereotype.Component
 import javax.servlet.http.HttpServletRequest
 
 @Component
-class CustomTracesSamplerCallback : TracesSamplerCallback {
-    override fun sample(context: SamplingContext): Double {
-        val request = context.customSamplingContext!!["request"] as HttpServletRequest
-        return when (request.requestURI) {
-            "/payment" -> {
-                // These are important - take a big sample
-                0.5
-            }
-            "/search" -> {
-                // Search is less important and happen much more frequently - only take 1%
-                0.01
-            }
-            "/health" -> {
-                // The health check endpoint is just noise - drop all transactions
-                0.0
-            }
-            else -> {
-                // Default sample rate
-                0.1
-            }
-        }
+class CustomTracesSamplerCallback : SentryOptions.TracesSamplerCallback {
+  override fun sample(context: SamplingContext): Double {
+    val request = context.customSamplingContext!!["request"] as HttpServletRequest
+    return when (request.requestURI) {
+      "/payment" -> {
+        // These are important - take a big sample
+        0.5
+      }
+      "/search" -> {
+        // Search is less important and happen much more frequently - only take 1%
+        0.01
+      }
+      "/health" -> {
+        // The health check endpoint is just noise - drop all transactions
+        0.0
+      }
+      else -> {
+        // Default sample rate
+        0.1
+      }
     }
+  }
 }
 ```

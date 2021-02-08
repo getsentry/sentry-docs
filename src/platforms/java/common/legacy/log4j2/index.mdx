@@ -75,12 +75,23 @@ By default all MDC parameters are stored under the “Additional Data” tab in 
 
 ```java
 void logWithExtras() {
-    // ThreadContext ("MDC") extras
-    ThreadContext.put("Environment", "Development");
-    ThreadContext.put("OS", "Linux");
+  // ThreadContext ("MDC") extras
+  ThreadContext.put("Environment", "Development");
+  ThreadContext.put("OS", "Linux");
 
-    // This sends an event where the Environment and OS MDC values are set as additional data
-    logger.error("This is a test");
+  // This sends an event where the Environment and OS MDC values are set as additional data
+  logger.error("This is a test");
+}
+```
+
+```kotlin
+fun logWithExtras() {
+  // ThreadContext ("MDC") extras
+  ThreadContext.put("Environment", "Development")
+  ThreadContext.put("OS", "Linux")
+
+  // This sends an event where the Environment and OS MDC values are set as additional data
+  logger.error("This is a test")
 }
 ```
 
@@ -93,50 +104,107 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
 public class MyClass {
-    private static final Logger logger = LogManager.getLogger(MyClass.class);
-    private static final Marker MARKER = MarkerManager.getMarker("myMarker");
+  private static final Logger logger = LogManager.getLogger(MyClass.class);
+  private static final Marker MARKER = MarkerManager.getMarker("myMarker");
 
-    void logSimpleMessage() {
-        // This sends a simple event to Sentry
-        logger.error("This is a test");
+  void logSimpleMessage() {
+    // This sends a simple event to Sentry
+    logger.error("This is a test");
+  }
+
+  void logWithBreadcrumbs() {
+    // Record a breadcrumb that will be sent with the next event(s),
+    // by default the last 100 breadcrumbs are kept.
+    Sentry.record(
+        new BreadcrumbBuilder().setMessage("User made an action").build()
+    );
+
+    // This sends a simple event to Sentry
+    logger.error("This is a test");
+  }
+
+  void logWithTag() {
+    // This sends an event with a tag named 'log4j2-Marker' to Sentry
+    logger.error(MARKER, "This is a test");
+  }
+
+  void logWithExtras() {
+    // MDC extras
+    ThreadContext.put("extra_key", "extra_value");
+    // NDC extras are sent under 'log4j2-NDC'
+    ThreadContext.push("Extra_details");
+    // This sends an event with extra data to Sentry
+    logger.error("This is a test");
+  }
+
+  void logException() {
+    try {
+      unsafeMethod();
+    } catch (Exception e) {
+      // This sends an exception event to Sentry
+      logger.error("Exception caught", e);
     }
+  }
 
-    void logWithBreadcrumbs() {
-        // Record a breadcrumb that will be sent with the next event(s),
-        // by default the last 100 breadcrumbs are kept.
-        Sentry.record(
-            new BreadcrumbBuilder().setMessage("User made an action").build()
-        );
+  void unsafeMethod() {
+    throw new UnsupportedOperationException("You shouldn't call this!");
+  }
+}
+```
 
-        // This sends a simple event to Sentry
-        logger.error("This is a test");
+```kotlin
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
+import org.apache.logging.log4j.Marker
+import org.apache.logging.log4j.MarkerManager
+
+class MyClass {
+  fun logSimpleMessage() {
+    // This sends a simple event to Sentry
+    logger.error("This is a test")
+  }
+
+  fun logWithBreadcrumbs() {
+    // Record a breadcrumb that will be sent with the next event(s),
+    // by default the last 100 breadcrumbs are kept.
+    Sentry.record(
+      BreadcrumbBuilder().setMessage("User made an action").build()
+    )
+
+    // This sends a simple event to Sentry
+    logger.error("This is a test")
+  }
+
+  fun logWithTag() {
+    // This sends an event with a tag named 'log4j2-Marker' to Sentry
+    logger.error(MARKER, "This is a test")
+  }
+
+  fun logWithExtras() {
+    // MDC extras
+    ThreadContext.put("extra_key", "extra_value")
+    // NDC extras are sent under 'log4j2-NDC'
+    ThreadContext.push("Extra_details")
+    // This sends an event with extra data to Sentry
+    logger.error("This is a test")
+  }
+
+  fun logException() {
+    try {
+      unsafeMethod()
+    } catch (e: java.lang.Exception) {
+      // This sends an exception event to Sentry
+      logger.error("Exception caught", e)
     }
+  }
 
-    void logWithTag() {
-        // This sends an event with a tag named 'log4j2-Marker' to Sentry
-        logger.error(MARKER, "This is a test");
-    }
+  fun unsafeMethod() {
+    throw UnsupportedOperationException("You shouldn't call this!")
+  }
 
-    void logWithExtras() {
-        // MDC extras
-        ThreadContext.put("extra_key", "extra_value");
-        // NDC extras are sent under 'log4j2-NDC'
-        ThreadContext.push("Extra_details");
-        // This sends an event with extra data to Sentry
-        logger.error("This is a test");
-    }
-
-    void logException() {
-        try {
-            unsafeMethod();
-        } catch (Exception e) {
-            // This sends an exception event to Sentry
-            logger.error("Exception caught", e);
-        }
-    }
-
-    void unsafeMethod() {
-        throw new UnsupportedOperationException("You shouldn't call this!");
-    }
+  companion object {
+    private val logger: Logger = LogManager.getLogger(MyClass::class.java)
+    private val MARKER: Marker = MarkerManager.getMarker("myMarker")
+  }
 }
 ```

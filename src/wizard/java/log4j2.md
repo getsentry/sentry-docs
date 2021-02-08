@@ -76,10 +76,11 @@ Last, create an intentional error, so you can test that everything is working:
 ```java
 import java.lang.Exception;
 import io.sentry.Sentry;
+
 try {
-    throw new Exception("This is a test.");
+  throw new Exception("This is a test.");
 } catch (Exception e) {
-    Sentry.captureException(e);
+  Sentry.captureException(e);
 }
 ```
 
@@ -88,10 +89,11 @@ try {
 ```kotlin
 import java.lang.Exception
 import io.sentry.Sentry
+
 try {
-    throw Exception("This is a test.")
+  throw Exception("This is a test.")
 } catch (e: Exception) {
-    Sentry.captureException(e)
+  Sentry.captureException(e)
 }
 ```
 
