@@ -49,10 +49,19 @@ Great! Now that you’ve completed setting up the SDK, maybe you want to quickly
 
 ```java
 public class MyActivity extends AppCompatActivity {
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Sentry.captureMessage("testing SDK setup");
-    }
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    Sentry.captureMessage("testing SDK setup");
+  }
+}
+```
+
+```kotlin
+class MyActivity : AppCompatActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    Sentry.captureMessage("testing SDK setup")
+  }
 }
 ```
 

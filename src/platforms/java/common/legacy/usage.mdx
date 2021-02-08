@@ -35,106 +35,215 @@ import io.sentry.event.BreadcrumbBuilder;
 import io.sentry.event.UserBuilder;
 
 public class MyClass {
-    private static SentryClient sentry;
+  private static SentryClient sentry;
 
-    public static void main(String... args) {
-        /*
-         It is recommended that you use the DSN detection system, which
-         will check the environment variable "SENTRY_DSN", the Java
-         System Property "sentry.dsn", or the "sentry.properties" file
-         in your classpath. This makes it easier to provide and adjust
-         your DSN without needing to change your code. See the configuration
-         page for more information.
+  public static void main(String... args) {
+    /*
+     It is recommended that you use the DSN detection system, which
+     will check the environment variable "SENTRY_DSN", the Java
+     System Property "sentry.dsn", or the "sentry.properties" file
+     in your classpath. This makes it easier to provide and adjust
+     your DSN without needing to change your code. See the configuration
+     page for more information.
 
-         For example, using an environment variable
+     For example, using an environment variable
 
-         export SENTRY_DSN="___PUBLIC_DSN___"
-         */
-        Sentry.init();
+     export SENTRY_DSN="___PUBLIC_DSN___"
+     */
+    Sentry.init();
 
-        // You can also manually provide the DSN to the ``init`` method.
-        // Sentry.init("___PUBLIC_DSN___");
+    // You can also manually provide the DSN to the ``init`` method.
+    // Sentry.init("___PUBLIC_DSN___");
 
-        /*
-         It is possible to go around the static ``Sentry`` API, which means
-         you are responsible for making the SentryClient instance available
-         to your code.
-         */
-        sentry = SentryClientFactory.sentryClient();
+    /*
+     It is possible to go around the static ``Sentry`` API, which means
+     you are responsible for making the SentryClient instance available
+     to your code.
+     */
+    sentry = SentryClientFactory.sentryClient();
 
-        MyClass myClass = new MyClass();
-        myClass.logWithStaticAPI();
-        myClass.logWithInstanceAPI();
+    MyClass myClass = new MyClass();
+    myClass.logWithStaticAPI();
+    myClass.logWithInstanceAPI();
+  }
+
+  /**
+   * An example method that throws an exception.
+   */
+  void unsafeMethod() {
+    throw new UnsupportedOperationException("You shouldn't call this!");
+  }
+
+  /**
+   * Examples using the (recommended) static API.
+   */
+  void logWithStaticAPI() {
+    // Note that all fields set on the context are optional. Context data is copied onto
+    // all future events in the current context (until the context is cleared).
+
+    // Record a breadcrumb in the current context. By default the last 100 breadcrumbs are kept.
+    Sentry.getContext().recordBreadcrumb(
+        new BreadcrumbBuilder().setMessage("User made an action").build()
+    );
+
+    // Set the user in the current context.
+    Sentry.getContext().setUser(
+        new UserBuilder().setEmail("hello@sentry.io").build()
+    );
+
+    // Add extra data to future events in this context.
+    Sentry.getContext().addExtra("extra", "thing");
+
+    // Add an additional tag to future events in this context.
+    Sentry.getContext().addTag("tagName", "tagValue");
+
+    /*
+     This sends a simple event to Sentry using the statically stored instance
+     that was created in the ``main`` method.
+     */
+    Sentry.capture("This is a test");
+
+    try {
+      unsafeMethod();
+    } catch (Exception e) {
+      // This sends an exception event to Sentry using the statically stored instance
+      // that was created in the ``main`` method.
+      Sentry.capture(e);
     }
+  }
 
-    /**
-      * An example method that throws an exception.
+  /**
+   * Examples that use the SentryClient instance directly.
+   */
+  void logWithInstanceAPI() {
+    // Retrieve the current context.
+    Context context = sentry.getContext();
+
+    // Record a breadcrumb in the current context. By default the last 100 breadcrumbs are kept.
+    context.recordBreadcrumb(new BreadcrumbBuilder().setMessage("User made an action").build());
+
+    // Set the user in the current context.
+    context.setUser(new UserBuilder().setEmail("hello@sentry.io").build());
+
+    // This sends a simple event to Sentry.
+    sentry.sendMessage("This is a test");
+
+    try {
+      unsafeMethod();
+    } catch (Exception e) {
+      // This sends an exception event to Sentry.
+      sentry.sendException(e);
+    }
+  }
+}
+```
+
+```kotlin
+import io.sentry.context.Context
+import io.sentry.event.BreadcrumbBuilder
+import io.sentry.event.UserBuilder
+
+class MyClass {
+  /**
+   * An example method that throws an exception.
+   */
+  fun unsafeMethod() {
+    throw UnsupportedOperationException("You shouldn't call this!")
+  }
+
+  /**
+   * Examples using the (recommended) static API.
+   */
+  fun logWithStaticAPI() {
+    // Note that all fields set on the context are optional. Context data is copied onto
+    // all future events in the current context (until the context is cleared).
+
+    // Record a breadcrumb in the current context. By default the last 100 breadcrumbs are kept.
+    Sentry.getContext().recordBreadcrumb(
+      BreadcrumbBuilder().setMessage("User made an action").build()
+    )
+
+    // Set the user in the current context.
+    Sentry.getContext().setUser(
+      UserBuilder().setEmail("hello@sentry.io").build()
+    )
+
+    // Add extra data to future events in this context.
+    Sentry.getContext().addExtra("extra", "thing")
+
+    // Add an additional tag to future events in this context.
+    Sentry.getContext().addTag("tagName", "tagValue")
+
+    /*
+     This sends a simple event to Sentry using the statically stored instance
+     that was created in the ``main`` method.
+     */
+    Sentry.capture("This is a test")
+    try {
+      unsafeMethod()
+    } catch (e: Exception) {
+      // This sends an exception event to Sentry using the statically stored instance
+      // that was created in the ``main`` method.
+      Sentry.capture(e)
+    }
+  }
+
+  /**
+   * Examples that use the SentryClient instance directly.
+   */
+  fun logWithInstanceAPI() {
+    // Retrieve the current context.
+    val context: Context = sentry.getContext()
+
+    // Record a breadcrumb in the current context. By default the last 100 breadcrumbs are kept.
+    context.recordBreadcrumb(BreadcrumbBuilder().setMessage("User made an action").build())
+
+    // Set the user in the current context.
+    context.setUser(UserBuilder().setEmail("hello@sentry.io").build())
+
+    // This sends a simple event to Sentry.
+    sentry.sendMessage("This is a test")
+    try {
+      unsafeMethod()
+    } catch (e: Exception) {
+      // This sends an exception event to Sentry.
+      sentry.sendException(e)
+    }
+  }
+
+  companion object {
+    private var sentry: SentryClient? = null
+
+    @JvmStatic
+    fun main(args: Array<String>) {
+      /*
+       It is recommended that you use the DSN detection system, which
+       will check the environment variable "SENTRY_DSN", the Java
+       System Property "sentry.dsn", or the "sentry.properties" file
+       in your classpath. This makes it easier to provide and adjust
+       your DSN without needing to change your code. See the configuration
+       page for more information.
+
+       For example, using an environment variable
+
+      export SENTRY_DSN="___PUBLIC_DSN___"
       */
-    void unsafeMethod() {
-        throw new UnsupportedOperationException("You shouldn't call this!");
-    }
+      Sentry.init()
 
-    /**
-      * Examples using the (recommended) static API.
+      // You can also manually provide the DSN to the ``init`` method.
+      // Sentry.init("___PUBLIC_DSN___");
+
+      /*
+       It is possible to go around the static ``Sentry`` API, which means
+       you are responsible for making the SentryClient instance available
+       to your code.
       */
-    void logWithStaticAPI() {
-        // Note that all fields set on the context are optional. Context data is copied onto
-        // all future events in the current context (until the context is cleared).
-
-        // Record a breadcrumb in the current context. By default the last 100 breadcrumbs are kept.
-        Sentry.getContext().recordBreadcrumb(
-            new BreadcrumbBuilder().setMessage("User made an action").build()
-        );
-
-        // Set the user in the current context.
-        Sentry.getContext().setUser(
-            new UserBuilder().setEmail("hello@sentry.io").build()
-        );
-
-        // Add extra data to future events in this context.
-        Sentry.getContext().addExtra("extra", "thing");
-
-        // Add an additional tag to future events in this context.
-        Sentry.getContext().addTag("tagName", "tagValue");
-
-        /*
-         This sends a simple event to Sentry using the statically stored instance
-         that was created in the ``main`` method.
-         */
-        Sentry.capture("This is a test");
-
-        try {
-            unsafeMethod();
-        } catch (Exception e) {
-            // This sends an exception event to Sentry using the statically stored instance
-            // that was created in the ``main`` method.
-            Sentry.capture(e);
-        }
+      sentry = SentryClientFactory.sentryClient()
+      val myClass = MyClass()
+      myClass.logWithStaticAPI()
+      myClass.logWithInstanceAPI()
     }
-
-    /**
-      * Examples that use the SentryClient instance directly.
-      */
-    void logWithInstanceAPI() {
-        // Retrieve the current context.
-        Context context = sentry.getContext();
-
-        // Record a breadcrumb in the current context. By default the last 100 breadcrumbs are kept.
-        context.recordBreadcrumb(new BreadcrumbBuilder().setMessage("User made an action").build());
-
-        // Set the user in the current context.
-        context.setUser(new UserBuilder().setEmail("hello@sentry.io").build());
-
-        // This sends a simple event to Sentry.
-        sentry.sendMessage("This is a test");
-
-        try {
-            unsafeMethod();
-        } catch (Exception e) {
-            // This sends an exception event to Sentry.
-            sentry.sendException(e);
-        }
-    }
+  }
 }
 ```
 
@@ -144,47 +253,96 @@ For more complex messages, you’ll need to build an `Event` with the `EventBuil
 
 ```java
 import io.sentry.Sentry;
-   import io.sentry.event.Event;
-   import io.sentry.event.EventBuilder;
-   import io.sentry.event.interfaces.ExceptionInterface;
+import io.sentry.event.Event;
+import io.sentry.event.EventBuilder;
+import io.sentry.event.interfaces.ExceptionInterface;
 
-   public class MyClass {
-       public static void main(String... args) {
-           Sentry.init();
-       }
+public class MyClass {
+  public static void main(String... args) {
+    Sentry.init();
+  }
 
-       void unsafeMethod() {
-           throw new UnsupportedOperationException("You shouldn't call this!");
-       }
+  void unsafeMethod() {
+    throw new UnsupportedOperationException("You shouldn't call this!");
+  }
 
-       void logSimpleMessage() {
-           // This sends an event to Sentry.
-           EventBuilder eventBuilder = new EventBuilder()
-                           .withMessage("This is a test")
-                           .withLevel(Event.Level.INFO)
-                           .withLogger(MyClass.class.getName());
+  void logSimpleMessage() {
+    // This sends an event to Sentry.
+    EventBuilder eventBuilder = new EventBuilder()
+        .withMessage("This is a test")
+        .withLevel(Event.Level.INFO)
+        .withLogger(MyClass.class.getName());
 
-           // Note that the *unbuilt* EventBuilder instance is passed in so that
-           // EventBuilderHelpers are run to add extra information to your event.
-           Sentry.capture(eventBuilder);
-       }
+    // Note that the *unbuilt* EventBuilder instance is passed in so that
+    // EventBuilderHelpers are run to add extra information to your event.
+    Sentry.capture(eventBuilder);
+  }
 
-       void logException() {
-           try {
-               unsafeMethod();
-           } catch (Exception e) {
-               // This sends an exception event to Sentry.
-               EventBuilder eventBuilder = new EventBuilder()
-                               .withMessage("Exception caught")
-                               .withLevel(Event.Level.ERROR)
-                               .withLogger(MyClass.class.getName())
-                               .withSentryInterface(new ExceptionInterface(e));
+  void logException() {
+    try {
+      unsafeMethod();
+    } catch (Exception e) {
+      // This sends an exception event to Sentry.
+      EventBuilder eventBuilder = new EventBuilder()
+          .withMessage("Exception caught")
+          .withLevel(Event.Level.ERROR)
+          .withLogger(MyClass.class.getName())
+          .withSentryInterface(new ExceptionInterface(e));
 
-               // Note that the *unbuilt* EventBuilder instance is passed in so that
-               // EventBuilderHelpers are run to add extra information to your event.
-               Sentry.capture(eventBuilder);
-           }
-       }
+      // Note that the *unbuilt* EventBuilder instance is passed in so that
+      // EventBuilderHelpers are run to add extra information to your event.
+      Sentry.capture(eventBuilder);
+    }
+  }
+}
+```
+
+```kotlin
+import io.sentry.Sentry
+import io.sentry.event.Event
+import io.sentry.event.EventBuilder
+import io.sentry.event.interfaces.ExceptionInterface
+
+class MyClass {
+  fun unsafeMethod() {
+    throw UnsupportedOperationException("You shouldn't call this!")
+  }
+
+  fun logSimpleMessage() {
+    // This sends an event to Sentry.
+    val eventBuilder: EventBuilder = EventBuilder()
+      .withMessage("This is a test")
+      .withLevel(Event.Level.INFO)
+      .withLogger(MyClass::class.java.name)
+
+    // Note that the *unbuilt* EventBuilder instance is passed in so that
+    // EventBuilderHelpers are run to add extra information to your event.
+    Sentry.capture(eventBuilder)
+  }
+
+  fun logException() {
+    try {
+      unsafeMethod()
+    } catch (e: Exception) {
+      // This sends an exception event to Sentry.
+      val eventBuilder: EventBuilder = EventBuilder()
+        .withMessage("Exception caught")
+        .withLevel(Event.Level.ERROR)
+        .withLogger(MyClass::class.java.name)
+        .withSentryInterface(ExceptionInterface(e))
+
+      // Note that the *unbuilt* EventBuilder instance is passed in so that
+      // EventBuilderHelpers are run to add extra information to your event.
+      Sentry.capture(eventBuilder)
+    }
+  }
+
+  companion object {
+    @JvmStatic
+    fun main(args: Array<String>) {
+      Sentry.init()
+    }
+  }
 }
 ```
 
@@ -199,23 +357,49 @@ import io.sentry.event.EventBuilder;
 import io.sentry.event.helper.EventBuilderHelper;
 
 public class MyClass {
-    public void myMethod() {
-        SentryClient client = Sentry.getStoredClient();
+  public void myMethod() {
+    SentryClient client = Sentry.getStoredClient();
 
-        EventBuilderHelper myEventBuilderHelper = new EventBuilderHelper() {
-            @Override
-            public void helpBuildingEvent(EventBuilder eventBuilder) {
-                eventBuilder.withMessage("Overwritten by myEventBuilderHelper!");
-            }
-        };
+    EventBuilderHelper myEventBuilderHelper = new EventBuilderHelper() {
+      @Override
+      public void helpBuildingEvent(EventBuilder eventBuilder) {
+        eventBuilder.withMessage("Overwritten by myEventBuilderHelper!");
+      }
+    };
 
-        // Add an ``EventBuilderHelper`` to the current client instance. Note that
-        // this helper will process *all* future events.
-        client.addBuilderHelper(myEventBuilderHelper);
+    // Add an ``EventBuilderHelper`` to the current client instance. Note that
+    // this helper will process *all* future events.
+    client.addBuilderHelper(myEventBuilderHelper);
 
-        // Send an event to Sentry. During construction of the event the message
-        // body will be overwritten by ``myEventBuilderHelper``.
-        Sentry.capture("Hello, world!");
+    // Send an event to Sentry. During construction of the event the message
+    // body will be overwritten by ``myEventBuilderHelper``.
+    Sentry.capture("Hello, world!");
+  }
+}
+```
+
+```kotlin
+import io.sentry.Sentry
+import io.sentry.SentryClient
+import io.sentry.event.EventBuilder
+import io.sentry.event.helper.EventBuilderHelper
+
+class MyClass {
+  fun myMethod() {
+    val client: SentryClient = Sentry.getStoredClient()
+    val myEventBuilderHelper: EventBuilderHelper = object : EventBuilderHelper() {
+      fun helpBuildingEvent(eventBuilder: EventBuilder) {
+        eventBuilder.withMessage("Overwritten by myEventBuilderHelper!")
+      }
     }
+
+    // Add an ``EventBuilderHelper`` to the current client instance. Note that
+    // this helper will process *all* future events.
+    client.addBuilderHelper(myEventBuilderHelper)
+
+    // Send an event to Sentry. During construction of the event the message
+    // body will be overwritten by ``myEventBuilderHelper``.
+    Sentry.capture("Hello, world!")
+  }
 }
 ```

@@ -15,18 +15,18 @@ import io.sentry.Span;
 import io.sentry.SpanStatus;
 
 void processItem(Item item) {
-    ISpan span = Sentry.getSpan();
-    if (span != null) {
-        Span innerSpan = span.startChild("task", item.getName());
-        try {
-            // omitted code
-        } catch (FileNotFoundException e) {
-            innerSpan.setThrowable(e);
-            innerSpan.setStatus(SpanStatus.NOT_FOUND);
-        } finally {
-            innerSpan.finish();
-        }
+  ISpan span = Sentry.getSpan();
+  if (span != null) {
+    Span innerSpan = span.startChild("task", item.getName());
+    try {
+      // omitted code
+    } catch (FileNotFoundException e) {
+      innerSpan.setThrowable(e);
+      innerSpan.setStatus(SpanStatus.NOT_FOUND);
+    } finally {
+      innerSpan.finish();
     }
+  }
 }
 ```
 
@@ -37,19 +37,19 @@ import io.sentry.Sentry
 import io.sentry.SpanStatus
 
 fun processItem(item: Item) {
-    val span = Sentry.getSpan()
-    if (span != null) {
-        val innerSpan = span.startChild("task", item.name)
+  val span = Sentry.getSpan()
+  span?.let {
+    val innerSpan = it.startChild("task", item.name)
 
-        try {
-            // omitted code
-        } catch (e: FileNotFoundException) {
-            innerSpan.throwable = e
-            innerSpan.status = SpanStatus.NOT_FOUND
-        } finally {
-            innerSpan.finish()
-        }
+    try {
+      // omitted code
+    } catch (e: FileNotFoundException) {
+      innerSpan.throwable = e
+      innerSpan.status = SpanStatus.NOT_FOUND
+    } finally {
+      innerSpan.finish()
     }
+  }
 }
 ```
 
