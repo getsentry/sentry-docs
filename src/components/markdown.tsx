@@ -12,6 +12,7 @@ import CodeTabs from "./codeTabs";
 import ConfigKey from "./configKey";
 import GuideGrid from "./guideGrid";
 import JsCdnTag from "./jsCdnTag";
+import LambdaLayerDetail from "./lambdaLayerDetail";
 import Note from "./note";
 import PageGrid from "./pageGrid";
 import ParamTable from "./paramTable";
@@ -41,6 +42,7 @@ const mdxComponents = {
   PlatformSection,
   PlatformIdentifier,
   RelayMetrics,
+  LambdaLayerDetail,
 };
 
 export default ({ value }) => {
