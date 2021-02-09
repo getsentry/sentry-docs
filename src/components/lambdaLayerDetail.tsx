@@ -82,9 +82,9 @@ export default ({ canonical }: { canonical: string }): JSX.Element => {
   );
 };
 
-//need at least 150 for the menu dropdown
+//need a min-height so we don't get cropped at the bottom of the page
 const Wrapper = styled("div")`
-  min-height: 150px;
+  min-height: 200px;
 `;
 
 const StyledSelect = styled(Select)`
