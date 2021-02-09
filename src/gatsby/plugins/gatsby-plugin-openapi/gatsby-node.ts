@@ -11,7 +11,7 @@ export const sourceNodes = async (
   pluginOptions
 ) => {
   const { createNode } = actions;
-  console.log('start sourceNodes')
+  console.log('sourceNodes START')
   let content = null;
   try {
     content = await pluginOptions.resolve();
@@ -125,7 +125,7 @@ export const sourceNodes = async (
   } catch (error) {
     console.log(error);
   }
-  console.log('end sourceNodes')
+  console.log('sourceNodes END')
 };
 
 export const onCreateNode = async ({

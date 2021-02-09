@@ -5,6 +5,7 @@ export const sourcePackageRegistryNodes = async ({
   createContentDigest,
 }) => {
   const { createNode } = actions;
+  console.log('sourcePackageRegistryNodes START')
 
   const registry = new PackageRegistry();
   const allSdks = await registry.getList();
@@ -52,4 +53,5 @@ export const sourcePackageRegistryNodes = async ({
       ...nodeMeta,
     });
   });
+  console.log('sourcePackageRegistryNodes END')
 };
