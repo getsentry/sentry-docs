@@ -23,7 +23,15 @@ const getPlugins = () => {
       options: {
         scope: {
           packages,
-          lambdaLayers,
+        },
+        excludeExpr: ["default"],
+      },
+    },
+    {
+      resolve: require.resolve("./plugins/gatsby-remark-variables"),
+      options: {
+        scope: {
+          packages: lambdaLayers,
         },
         excludeExpr: ["default"],
       },
