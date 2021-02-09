@@ -54,6 +54,7 @@ export default ({ canonical }: { canonical: string }): JSX.Element => {
     label: string;
   }>();
 
+  // generate the ARN using the selected region
   let arn: string = "";
   if (regionOption) {
     const regionData = regions.find(
