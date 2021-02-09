@@ -9,7 +9,7 @@ export const sourceAwsLambdaLayerRegistryNodes = async ({
   const registry = new AwsLambdaLayerRegistry();
   const layerMap = await registry.getLayerMap();
 
-  Object.keys(layerMap).forEach(async cannonicalName => {
+  Object.keys(layerMap).forEach(cannonicalName => {
     const layerData = layerMap[cannonicalName];
 
     const data = {
