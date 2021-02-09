@@ -39,6 +39,12 @@ import io.sentry.Sentry;
 Sentry.init("___PUBLIC_DSN___");
 ```
 
+```kotlin
+import io.sentry.Sentry
+
+Sentry.init("___PUBLIC_DSN___")
+```
+
 ## Configuration methods {#configuration-methods}
 
 There are multiple ways to configure the Java SDK, but all of them take the same options. See below for how to use each configuration method and how the option names might differ between them.
@@ -81,6 +87,12 @@ The DSN itself can also be configured directly in code:
 import io.sentry.Sentry;
 
 Sentry.init("___PUBLIC_DSN___");
+```
+
+```kotlin
+import io.sentry.Sentry
+
+Sentry.init("___PUBLIC_DSN___")
 ```
 
 Sentry **will not** be able to do anything with events until this line is run, so this method of configuration is not recommended if you might have errors occur during startup. In addition, by passing a hardcoded DSN you are no longer able to override the DSN at runtime via Java System Properties or System Environment Variables.
@@ -160,6 +172,16 @@ MDC.put("bar", "value2");
 
 // This sends an event where the 'foo' and 'bar' MDC values are set as additional tags
 logger.error("This is a test");
+```
+
+```kotlin
+import org.slf4j.MDC
+
+MDC.put("foo", "value1")
+MDC.put("bar", "value2")
+
+// This sends an event where the 'foo' and 'bar' MDC values are set as additional tags
+logger.error("This is a test")
 ```
 
 ### Extra Data
@@ -413,20 +435,37 @@ At times, you may require custom functionality that is not included in the Java 
 
 ```java
 public class MySentryClientFactory extends DefaultSentryClientFactory {
-    @Override
-    public SentryClient createSentryClient(Dsn dsn) {
-        SentryClient sentryClient = new SentryClient(createConnection(dsn), getContextManager(dsn));
+  @Override
+  public SentryClient createSentryClient(Dsn dsn) {
+    SentryClient sentryClient = new SentryClient(createConnection(dsn), getContextManager(dsn));
 
-        /*
-         Create and use the ForwardedAddressResolver, which will use the
-         X-FORWARDED-FOR header for the remote address if it exists.
-          */
-        ForwardedAddressResolver forwardedAddressResolver = new ForwardedAddressResolver();
-        sentryClient.addBuilderHelper(new HttpEventBuilderHelper(forwardedAddressResolver));
+    /*
+     Create and use the ForwardedAddressResolver, which will use the
+     X-FORWARDED-FOR header for the remote address if it exists.
+     */
+    ForwardedAddressResolver forwardedAddressResolver = new ForwardedAddressResolver();
+    sentryClient.addBuilderHelper(new HttpEventBuilderHelper(forwardedAddressResolver));
 
-        sentryClient.addBuilderHelper(new ContextBuilderHelper(sentryClient));
-        return configureSentryClient(sentryClient, dsn);
-    }
+    sentryClient.addBuilderHelper(new ContextBuilderHelper(sentryClient));
+    return configureSentryClient(sentryClient, dsn);
+  }
+}
+```
+
+```kotlin
+class MySentryClientFactory : DefaultSentryClientFactory() {
+  override fun createSentryClient(dsn: Dsn): SentryClient {
+    val sentryClient = SentryClient(createConnection(dsn), getContextManager(dsn))
+
+    /*
+     Create and use the ForwardedAddressResolver, which will use the
+     X-FORWARDED-FOR header for the remote address if it exists.
+     */
+    val forwardedAddressResolver = ForwardedAddressResolver()
+    sentryClient.addBuilderHelper(HttpEventBuilderHelper(forwardedAddressResolver))
+    sentryClient.addBuilderHelper(ContextBuilderHelper(sentryClient))
+    return configureSentryClient(sentryClient, dsn)
+  }
 }
 ```
 

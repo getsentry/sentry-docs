@@ -81,12 +81,23 @@ By default all MDC parameters are stored under the “Additional Data” tab in 
 
 ```java
 void logWithExtras() {
-    // MDC extras
-    MDC.put("Environment", "Development");
-    MDC.put("OS", "Linux");
+  // MDC extras
+  MDC.put("Environment", "Development");
+  MDC.put("OS", "Linux");
 
-    // This sends an event where the Environment and OS MDC values are set as additional data
-    logger.error("This is a test");
+  // This sends an event where the Environment and OS MDC values are set as additional data
+  logger.error("This is a test");
+}
+```
+
+```kotlin
+fun logWithExtras() {
+  // MDC extras
+  MDC.put("Environment", "Development")
+  MDC.put("OS", "Linux")
+
+  // This sends an event where the Environment and OS MDC values are set as additional data
+  logger.error("This is a test")
 }
 ```
 
@@ -99,6 +110,11 @@ Tags are distinguished by the existing mdcTags configuration property detailed a
 ```java
   LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
   context.putProperty("global", "value");
+```
+
+```kotlin
+  val context: LoggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+  context.putProperty("global", "value")
 ```
 
 Global log entries can also be added via third-party encoders
@@ -122,66 +138,139 @@ import org.slf4j.MDC;
 import org.slf4j.MarkerFactory;
 
 public class MyClass {
-    private static final Logger logger = LoggerFactory.getLogger(MyClass.class);
-    private static final Marker MARKER = MarkerFactory.getMarker("myMarker");
+  private static final Logger logger = LoggerFactory.getLogger(MyClass.class);
+  private static final Marker MARKER = MarkerFactory.getMarker("myMarker");
 
-    void logSimpleMessage() {
-        // This sends a simple event to Sentry
-        logger.error("This is a test");
+  void logSimpleMessage() {
+    // This sends a simple event to Sentry
+    logger.error("This is a test");
+  }
+
+  void logWithBreadcrumbs() {
+    // Record a breadcrumb that will be sent with the next event(s),
+    // by default the last 100 breadcrumbs are kept.
+    Sentry.record(
+        new BreadcrumbBuilder().setMessage("User made an action").build()
+    );
+
+    // This sends a simple event to Sentry
+    logger.error("This is a test");
+  }
+
+  void logWithTag() {
+    // This sends an event with a tag named 'logback-Marker' to Sentry
+    logger.error(MARKER, "This is a test");
+  }
+
+  void logWithExtras() {
+    // MDC extras
+    MDC.put("extra_key", "extra_value");
+    // This sends an event with extra data to Sentry
+    logger.error("This is a test");
+  }
+
+  void logWithGlobalTag() {
+    LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
+    // This adds a tag named 'logback-Marker' to every subsequent Sentry event
+    context.putProperty(MARKER, "This is a test");
+
+    // This sends an event to Sentry, and a tag named 'logback-Marker' will be added.
+    logger.info("This is a test");
+  }
+
+  void addGlobalExtras() {
+    LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
+    // This adds extra data to every subsequent Sentry event
+    context.putProperty("extra_key", "extra_value");
+
+    // This sends an event to Sentry, and extra data ("extra_key", "extra_value") will be added.
+    logger.info("This is a test");
+  }
+
+  void logException() {
+    try {
+      unsafeMethod();
+    } catch (Exception e) {
+      // This sends an exception event to Sentry
+      logger.error("Exception caught", e);
     }
+  }
 
-    void logWithBreadcrumbs() {
-        // Record a breadcrumb that will be sent with the next event(s),
-        // by default the last 100 breadcrumbs are kept.
-        Sentry.record(
-            new BreadcrumbBuilder().setMessage("User made an action").build()
-        );
+  void unsafeMethod() {
+    throw new UnsupportedOperationException("You shouldn't call this!");
+  }
+}
+```
 
-        // This sends a simple event to Sentry
-        logger.error("This is a test");
+```kotlin
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.slf4j.MarkerFactory
+
+class MyClass {
+  fun logSimpleMessage() {
+    // This sends a simple event to Sentry
+    logger.error("This is a test")
+  }
+
+  fun logWithBreadcrumbs() {
+    // Record a breadcrumb that will be sent with the next event(s),
+    // by default the last 100 breadcrumbs are kept.
+    Sentry.record(
+      BreadcrumbBuilder().setMessage("User made an action").build()
+    )
+
+    // This sends a simple event to Sentry
+    logger.error("This is a test")
+  }
+
+  fun logWithTag() {
+    // This sends an event with a tag named 'logback-Marker' to Sentry
+    logger.error(MARKER, "This is a test")
+  }
+
+  fun logWithExtras() {
+    // MDC extras
+    MDC.put("extra_key", "extra_value")
+    // This sends an event with extra data to Sentry
+    logger.error("This is a test")
+  }
+
+  fun logWithGlobalTag() {
+    val context: LoggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+    // This adds a tag named 'logback-Marker' to every subsequent Sentry event
+    context.putProperty(MARKER, "This is a test")
+
+    // This sends an event to Sentry, and a tag named 'logback-Marker' will be added.
+    logger.info("This is a test")
+  }
+
+  fun addGlobalExtras() {
+    val context: LoggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+    // This adds extra data to every subsequent Sentry event
+    context.putProperty("extra_key", "extra_value")
+
+    // This sends an event to Sentry, and extra data ("extra_key", "extra_value") will be added.
+    logger.info("This is a test")
+  }
+
+  fun logException() {
+    try {
+      unsafeMethod()
+    } catch (e: Exception) {
+      // This sends an exception event to Sentry
+      logger.error("Exception caught", e)
     }
+  }
 
-    void logWithTag() {
-        // This sends an event with a tag named 'logback-Marker' to Sentry
-        logger.error(MARKER, "This is a test");
-    }
+  fun unsafeMethod() {
+    throw UnsupportedOperationException("You shouldn't call this!")
+  }
 
-    void logWithExtras() {
-        // MDC extras
-        MDC.put("extra_key", "extra_value");
-        // This sends an event with extra data to Sentry
-        logger.error("This is a test");
-    }
-
-    void logWithGlobalTag() {
-       LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
-       // This adds a tag named 'logback-Marker' to every subsequent Sentry event
-       context.putProperty(MARKER, "This is a test");
-
-        // This sends an event to Sentry, and a tag named 'logback-Marker' will be added.
-        logger.info("This is a test");
-    }
-
-    void addGlobalExtras() {
-       LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
-       // This adds extra data to every subsequent Sentry event
-       context.putProperty("extra_key", "extra_value");
-
-       // This sends an event to Sentry, and extra data ("extra_key", "extra_value") will be added.
-        logger.info("This is a test");
-    }
-
-    void logException() {
-        try {
-            unsafeMethod();
-        } catch (Exception e) {
-            // This sends an exception event to Sentry
-            logger.error("Exception caught", e);
-        }
-    }
-
-    void unsafeMethod() {
-        throw new UnsupportedOperationException("You shouldn't call this!");
-    }
+  companion object {
+    private val logger: Logger = LoggerFactory.getLogger(MyClass::class.java)
+    private val MARKER: Marker = MarkerFactory.getMarker("myMarker")
+  }
 }
 ```

@@ -69,9 +69,9 @@ import java.lang.Exception;
 import io.sentry.Sentry;
 
 try {
-    throw new Exception("This is a test.");
+  throw new Exception("This is a test.");
 } catch (Exception e) {
-    Sentry.captureException(e);
+  Sentry.captureException(e);
 }
 ```
 ### Kotlin
@@ -81,9 +81,9 @@ import java.lang.Exception
 import io.sentry.Sentry
 
 try {
-    throw Exception("This is a test.")
+  throw Exception("This is a test.")
 } catch (e: Exception) {
-    Sentry.captureException(e)
+  Sentry.captureException(e)
 }
 ```
 

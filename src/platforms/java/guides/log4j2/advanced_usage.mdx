@@ -7,24 +7,28 @@ description: "Learn about ThreadContext parameters that display in sentry.io."
 By default all `ThreadContext` parameters are stored under the “Context Data” tab in sentry.io.
 
 ```java {tabTitle:Java}
-void logWithExtras() {
-    // ThreadContext ("MDC") extras
-    ThreadContext.put("Environment", "Development");
-    ThreadContext.put("OS", "Linux");
+import org.apache.logging.log4j.ThreadContext;
 
-    // This sends an event where the Environment and OS ThreadContext values are set as Context Data entries
-    logger.error("This is a test");
+void logWithExtras() {
+  // ThreadContext ("MDC") extras
+  ThreadContext.put("Environment", "Development");
+  ThreadContext.put("OS", "Linux");
+
+  // This sends an event where the Environment and OS ThreadContext values are set as Context Data entries
+  logger.error("This is a test");
 }
 ```
 
 ```kotlin {tabTitle:Kotlin}
-fun logWithExtras() {
-    // ThreadContext ("MDC") extras
-    ThreadContext.put("Environment", "Development");
-    ThreadContext.put("OS", "Linux");
+import org.apache.logging.log4j.ThreadContext
 
-    // This sends an event where the Environment and OS ThreadContext values are set as Context Data entries
-    logger.error("This is a test");
+fun logWithExtras() {
+  // ThreadContext ("MDC") extras
+  ThreadContext.put("Environment", "Development")
+  ThreadContext.put("OS", "Linux")
+
+  // This sends an event where the Environment and OS ThreadContext values are set as Context Data entries
+  logger.error("This is a test")
 }
 ```
 
@@ -89,48 +93,48 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.ThreadContext
 
 class MyClass {
-    companion object {
-        private val logger = LogManager.getLogger(MyClass::class.java)
+  companion object {
+    private val logger = LogManager.getLogger(MyClass::class.java)
+  }
+
+  fun logSimpleMessage() {
+    // This sends a simple event to Sentry
+    logger.error("This is a test")
+  }
+
+  fun logWithBreadcrumbs() {
+    // Record a breadcrumb that will be sent with the next event(s),
+    // by default the last 100 breadcrumbs are kept.
+    Sentry.addBreadcrumb("User made an action")
+
+    // Log entries below `minimumEventLevel` and above or equal to `minimumBreadcrumbLevel`
+    // are recorded as breadcrumbs
+    logger.info("User made another action")
+
+    // This sends a simple event to Sentry
+    logger.error("This is a test")
+  }
+
+  fun logWithExtras() {
+    // MDC extras
+    ThreadContext.put("extra_key", "extra_value")
+    // NDC extras are sent under 'log4j2-NDC'
+    ThreadContext.push("Extra_details")
+    // This sends an event with extra data to Sentry
+    logger.error("This is a test")
+  }
+
+  fun logException() {
+    try {
+      unsafeMethod()
+    } catch (e: Exception) {
+      // This sends an exception event to Sentry
+      logger.error("Exception caught", e)
     }
+  }
 
-    fun logSimpleMessage() {
-        // This sends a simple event to Sentry
-        logger.error("This is a test")
-    }
-
-    fun logWithBreadcrumbs() {
-        // Record a breadcrumb that will be sent with the next event(s),
-        // by default the last 100 breadcrumbs are kept.
-        Sentry.addBreadcrumb("User made an action")
-
-        // Log entries below `minimumEventLevel` and above or equal to `minimumBreadcrumbLevel`
-        // are recorded as breadcrumbs
-        logger.info("User made another action")
-
-        // This sends a simple event to Sentry
-        logger.error("This is a test")
-    }
-
-    fun logWithExtras() {
-        // MDC extras
-        ThreadContext.put("extra_key", "extra_value")
-        // NDC extras are sent under 'log4j2-NDC'
-        ThreadContext.push("Extra_details")
-        // This sends an event with extra data to Sentry
-        logger.error("This is a test")
-    }
-
-    fun logException() {
-        try {
-            unsafeMethod()
-        } catch (e: Exception) {
-            // This sends an exception event to Sentry
-            logger.error("Exception caught", e)
-        }
-    }
-
-    fun unsafeMethod() {
-        throw UnsupportedOperationException("You shouldn't call this!")
-    }
+  fun unsafeMethod() {
+    throw UnsupportedOperationException("You shouldn't call this!")
+  }
 }
 ```
