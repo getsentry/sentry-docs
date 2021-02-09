@@ -1,10 +1,8 @@
 import queries from "./utils/algolia";
-import AwsLambdaLayerRegistry from "./utils/awsLambdaLayerRegistry";
 import PackageRegistry from "./utils/packageRegistry";
 import resolveOpenAPI from "./utils/resolveOpenAPI";
 
 const packages = new PackageRegistry();
-const lambdaLayers = new AwsLambdaLayerRegistry();
 
 const activeEnv =
   process.env.GATSBY_ENV || process.env.NODE_ENV || "development";
@@ -23,15 +21,6 @@ const getPlugins = () => {
       options: {
         scope: {
           packages,
-        },
-        excludeExpr: ["default"],
-      },
-    },
-    {
-      resolve: require.resolve("./plugins/gatsby-remark-variables"),
-      options: {
-        scope: {
-          packages: lambdaLayers,
         },
         excludeExpr: ["default"],
       },
