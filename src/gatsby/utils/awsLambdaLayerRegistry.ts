@@ -29,7 +29,7 @@ export default class AwsLambdaLayerRegistry {
         this.indexCache = result.data;
       } catch (err) {
         console.error(
-          `Unable to fetch index for package registry: ${err.message}`
+          `Unable to fetch index for aws lambda layers: ${err.message}`
         );
         this.indexCache = {};
       }
