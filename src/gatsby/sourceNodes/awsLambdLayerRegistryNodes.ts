@@ -5,7 +5,6 @@ export const sourceAwsLambdaLayerRegistryNodes = async ({
   createContentDigest,
 }) => {
   const { createNode } = actions;
-  console.log('sourceAwsLambdaLayerRegistryNodes START')
 
   const registry = new AwsLambdaLayerRegistry();
   const layerMap = await registry.getLayerMap();
@@ -38,5 +37,4 @@ export const sourceAwsLambdaLayerRegistryNodes = async ({
       ...nodeMeta,
     });
   });
-  console.log('sourceAwsLambdaLayerRegistryNodes END')
 };
