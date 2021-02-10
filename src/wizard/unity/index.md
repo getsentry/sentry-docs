@@ -9,7 +9,7 @@ type: framework
 
 Get the SDK via the [Unity Package Manager using a Git URL](https://docs.unity3d.com/Manual/upm-ui-giturl.html) to Sentry's SDK repository:
 
-> Make sure not empty space is appended to the end of the URL, otherwise Unity fails to find the package.
+> Confirm there's no empty space at the end of the line. The Unity Package Manager will fail to find the package if an empty space is appended to the end of the URL.
 
 ```
 https://github.com/getsentry/sentry-unity-lite.git#1.0.2
