@@ -61,7 +61,7 @@ const isGuideRoot = (node: FileNode): boolean => {
  * Used to test if a parent page exists for a child. This is used to avoid creation
  * of children when a parent is hidden.
  *
- * e.g. /performance/ is notSupported, so theres no need to mark /performance/sampling/
+ * for example, if /performance/ is notSupported, there's no need to mark /performance/custom-instrumentation/
  * as notSupported.
  */
 const hasIndex = (pathRoot: string, pages: PageData[], pagePath: string) => {

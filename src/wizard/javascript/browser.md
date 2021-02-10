@@ -29,7 +29,7 @@ Sentry.init({
 });
 ```
 
-We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/performance/sampling/).
+We recommend adjusting the value of `tracesSampleRate` in production. Learn more about configuring sampling in our [full documentation](https://docs.sentry.io/platforms/javascript/configuration/sampling/).
 
 Then create an intentional error, so you can test that everything is working:
 
