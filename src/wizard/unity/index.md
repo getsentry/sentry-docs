@@ -10,7 +10,7 @@ type: framework
 Get the SDK via the [Unity Package Manager using a Git URL](https://docs.unity3d.com/Manual/upm-ui-giturl.html) to Sentry's SDK repository:
 
 ```
-https://github.com/getsentry/sentry-unity-lite.git#1.0.2
+https://github.com/getsentry/sentry-unity-lite.git#1.0.3
 ```
 
 ## Configuration
