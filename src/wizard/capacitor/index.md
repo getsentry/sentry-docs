@@ -7,18 +7,12 @@ type: framework
 
 ## Integrating the SDK
 
-Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your app works.
+The Capacitor SDK is currently available for Android devices. To install the Capacitor SDK, use either `npm` or `yarn`:
 
-The Capacitor SDK is currently available for Android devices.
-To install the Capacitor SDK, use npm or yarn:
-
-```bash {tabTitle:npm}
+# Using npm
 npm install --save @sentry/capacitor
-```
-
-```bash {tabTitle:Yarn}
+# Using yarn
 yarn add @sentry/capacitor
-```
 
 Add the plugin declaration to your `MainActivity.java` file
 
@@ -61,8 +55,6 @@ class MainActivity : BridgeActivity() {
 
 ### Connecting the SDK to Sentry
 
-After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
-
 You should `init` the SDK as soon as possible during your app's creation stage.
 
 ```javascript
@@ -76,12 +68,16 @@ Sentry.init({
 });
 ```
 
-### Verifying Your Setup
+### Send Your First Event
 
-Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
+This snippet includes an intentional error, so you can test that everything is working as soon as you set it up:
 
 ```javascript
 import * as Sentry from "@sentry/capacitor";
 
 Sentry.captureException("my test exception");
 ```
+
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
+
+If you're an existing user and have disabled alerts, you won't receive this email.
