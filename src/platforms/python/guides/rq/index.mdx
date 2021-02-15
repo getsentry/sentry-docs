@@ -31,7 +31,7 @@ The integration will automatically report errors from all RQ jobs.
 
 Generally, make sure that the **call to `init` is loaded on worker startup**, and not only in the module where your jobs are defined. Otherwise, the initialization happens too late and events might end up not being reported.
 
-In addition, make sure that **`init` is called once** in your app and imported from there in the different places it is needed. In a Flask app, for example, Sentry and `RqIntegration` can be initalized as 
+In addition, make sure that **`init` is called only once** in your app. For example, if you have a Flask app and a worker that depends on the app, we recommend initializing Sentry with a single configuration that is suitable for Flask and RQ, as in:
 
 ```python {filename:app.py}
 import sentry_sdk
@@ -43,10 +43,10 @@ sentry_sdk.init(
     integrations=[FlaskIntegration(), RqIntegration()])
 ```
 
-`mysettings.py` then becomes
+The worker configuration `mysettings.py` then becomes:
 
 ```python {filename:mysettings.py}
-# import initialised Sentry SDK from app.py
+# This import causes the Sentry SDK to be initialized
 import app
 ```
 
