@@ -1,0 +1,82 @@
+---
+title: "Self-Hosted Troubleshooting"
+---
+
+Please keep in mind that the [onpremise repository](https://github.com/getsentry/onpremise) is geared towards low to medium loads with simplicity in mind. Folks needing larger setups or having event spikes can expand from here based on their specific needs and environments. If this is not your cup of tea, you are always welcome to [try out hosted Sentry](https://sentry.io/signup/).
+
+## General
+
+You can see the logs of each service by running `docker-compose logs <service_name>`. You can use the `-f` flag to "follow" the logs as they come in, and use the `-t` flag for timestamps. If you don't pass any service names, you will get the logs for all running services. See the [reference for the logs command](https://docs.docker.com/compose/reference/logs/) for more info.
+
+## Kafka
+
+One of the most likely things to cause issues is Kafka. The most commonly reported error is
+
+```log
+Exception: KafkaError{code=OFFSET_OUT_OF_RANGE,val=1,str="Broker: Offset out of range"}
+```
+
+This happens where Kafka and the consumers get out of sync. Possible reasons are:
+
+1. Running out of disk space or memory
+2. Having a sustained event spike that causes very long processing times, causing Kafka to drop messages as they go past the retention time
+3. Date/time out of sync issues due to a restart or suspend/resume cycle
+
+### Recovery
+
+The "nuclear option" here is removing all Kafka-related volumes and recreating them which _will_ cause data loss. Any data that was pending there will be gone upon deleting these volumes.
+
+The _proper_ solution is as follows ([reported](https://github.com/getsentry/onpremise/issues/478#issuecomment-666254392) by [@rmisyurev](https://github.com/rmisyurev)):
+
+1. Receive consumers list:
+   ```shell
+   docker-compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --list
+   ```
+2. Get group info:
+   ```shell
+   docker-compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers -describe
+   ```
+3. Watching what is going to happen with offset by using dry-run (optional):
+   ```shell
+   docker-compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --dry-run
+   ```
+4. Set offset to latest and execute:
+   ```shell
+   docker-compose run --rm kafka kafka-consumer-groups --bootstrap-server kafka:9092 --group snuba-consumers --topic events --reset-offsets --to-latest --execute
+   ```
+
+<Alert title="Tip" level="info">
+You can replace <code>snuba-consumers</code> with other consumer groups or <code>events</code> with other topics when needed.
+</Alert>
+
+### Reducing disk usage
+
+If you want to reduce the disk space used by Kafka, you'll need to carefully calculate how much data you are ingesting, how much data loss you can tolerate and then follow the recommendations on [this awesome StackOverflow post](https://stackoverflow.com/a/52970982/90297) or [this post on our community forum](https://forum.sentry.io/t/sentry-disk-cleanup-kafka/11337/2?u=byk).
+
+## Redis
+
+Redis is used both as a transactional data store and a work queue of Celery in the self-hosted setup. For this reason, it may get overwhelmed during event spikes. We have made some significant improvements regarding this starting from version `20.10.1`. If you are still having issues, you may look into scaling out Redis itself or switching to a different Celery broker, such as [RabbitMQ](https://www.rabbitmq.com/).
+
+## Workers
+
+If you are seeing an error such as
+
+```
+Background workers haven’t checked in recently. It seems that you have a backlog of 200 tasks. Either your workers aren’t running or you need more capacity.
+```
+
+you may benefit from using additional, dedicated workers. This is achieved by creating new `worker` services in `docker-compose.override.yml` and tying them to specific queues using the `-Q queue_name` argument. An example would be:
+
+```yaml
+worker1:
+    << : *sentry_defaults
+    command: run worker -Q events.process_event
+```
+
+To see a more complete example, please see [a sample solution on our community forum](https://forum.sentry.io/t/how-to-clear-backlog-and-monitor-it/10715/14?u=byk).
+
+## Other
+
+If you are still stuck, you can always visit our [community forum](https://forum.sentry.io/) to search for existing topics or create a new topic and ask for help. Please keep in mind that we expect the community to help itself, but Sentry employees also try to monitor and answer forum questions when they have time.
+
+Sharing your install logs, service logs, and your Sentry version when [reporting an issue](https://github.com/getsentry/onpremise/issues/new/choose) or asking a question on the forums would save time and effort for both you and people trying to help you.
