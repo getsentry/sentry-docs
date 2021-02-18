@@ -1,5 +1,5 @@
 ---
-title: 'Data Handling'
+title: "Data Handling"
 sidebar_order: 5
 ---
 
@@ -21,16 +21,20 @@ In older SDKs you might sometimes see elaborate constructs to allow the user to 
 
 ## Variable Size
 
-Most arbitrary values in Sentry have their size restricted. This means any values that are sent as metadata (such as variables in a stack trace) as well as things like extra data, or tags.
+Fields in the event payload that allow user-specified or dynamic values are restricted in size. This applies to most meta data fields, such as variables in a stack trace, as well as contexts, tags and extra data:
 
--   Mappings of values (such as HTTP data, extra data, etc) are limited to 50 item pairs.
--   Event IDs are limited to 32 characters.
--   Tag keys are limited to 32 characters.
--   Tag values are limited to 200 characters.
--   Culprits are limited to 200 characters.
--   Most contextual variables are limited to 512 characters.
--   Extra contextual data is limited to 4096 characters.
--   Messages are limited to ~10kb.
--   HTTP data (the body) is limited to 2048 characters.
--   Stack traces are limited to 50 frames. If more are sent, data will be
-    removed from the middle of the stack.
+- Mappings of values (such as HTTP data, extra data, etc) are limited to 50 item pairs.
+- Event IDs are limited to 36 characters and must be valid UUIDs.
+- Tag keys are limited to 32 characters.
+- Tag values are limited to 200 characters.
+- Culprits are limited to 200 characters.
+- Context objects are limited to 8kB.
+- Extra data is limited to 16kB.
+- Messages are limited to 8192 characters.
+- HTTP data (the body) is limited to 8kB. Always trim HTTP data before attaching it to the event.
+- Stack traces are limited to 50 frames. If more are sent, data will be removed from the middle of the stack.
+
+Additionally, size limits apply to all store requests for the total size of the request, event payload, and attachments. Sentry rejects all requests exceeding these limits. Please refer the following resources for the exact size limits:
+
+- <Link to="/sdk/envelopes/#size-limits">Envelope Endpoint Size Limits</Link>
+- <Link to="/sdk/store/#size-limits">Store Endpoint Size Limits</Link>
