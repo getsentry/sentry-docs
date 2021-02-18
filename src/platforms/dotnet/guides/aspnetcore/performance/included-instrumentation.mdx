@@ -1,0 +1,147 @@
+---
+title: Included Instrumentation
+sidebar_order: 20
+description: "Learn what transactions are captured after tracing is enabled."
+---
+
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+
+</Note>
+
+<Note>
+
+This guide assumes you have already enabled the <PlatformLink to="/">base Sentry integration for ASP.NET Core</PlatformLink>.
+
+</Note>
+
+### Server integration
+
+ASP.NET Core integration, once enabled, captures each incoming HTTP request and turns it into a transaction with the help of a custom middleware. In order to enable tracing on ASP.NET Core, you need to update your pipeline configuration to include a call to `UseSentryTracing()`, like so:
+
+```csharp
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Sentry.AspNetCore;
+
+public class Startup
+{
+    /* ... */
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Home/Error");
+            app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
+        // Enable automatic tracing integration.
+        // Make sure to put this middleware right after `UseRouting()`.
+        app.UseSentryTracing();
+
+        app.UseAuthorization();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}");
+        });
+    }
+}
+```
+
+Transaction names follow the pattern `<HTTP method> <Route>`, for example for a request to the following action will create a transaction named `GET /person/{id}`:
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+
+public class HomeController : Controller
+{
+    [HttpGet("/person/{id}")]
+    public IActionResult Person(string id) { /* ... */ }
+}
+```
+
+Transactions created by this integration are automatically added to the current scope. If you want to start your own spans from the automatically created transaction, you use the following approach:
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Sentry;
+
+public class HomeController : Controller
+{
+    private readonly IHub _sentryHub;
+
+    public HomeController(IHub sentryHub) => _sentryHub = sentryHub;
+
+    [HttpGet("/person/{id}")]
+    public IActionResult Person(string id)
+    {
+        // Get the last non-finished span (or transaction).
+        // This can generally be null, but since the root transaction
+        // is set automatically by the middleware, we can expect it
+        // to always be defined.
+        var currentSpan = hub.GetSpan();
+
+        // We can then start our own spans which will be attached to
+        // the automatically created transaction.
+        var childSpan = currentSpan?.StartChild("additional-work");
+
+        // ...
+
+        childSpan.Finish();
+
+        // Note: don't call `currentSpan.Finish()` here as it may prematurely
+        // finish the root transaction and send it to Sentry before the
+        // request has fully completed.
+    }
+}
+```
+
+### HTTP client integration
+
+Sentry also provides a custom filter for HTTP client factory commonly used in ASP.NET Core applications. This filter adds an additional message handler that automatically injects Sentry's trace header and tracks outgoing HTTP requests in separate spans attached to the current transaction.
+
+In order to enable this integration, you need to have HTTP client factory enabled within your application:
+
+```csharp
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        /* ... */
+
+        services.AddRouting();
+
+        // This is required for HTTP client integration
+        services.AddHttpClient();
+    }
+}
+```
+
+If you already have `AddHttpClient()` in your service collection (which is likely the case), then no action is required.
