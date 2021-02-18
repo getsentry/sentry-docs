@@ -218,11 +218,18 @@ What this means is that if you experience a spike, we will temporarily protect y
 
 Because Sentry bills on monthly event volume, spikes can consume your Sentry capacity for the rest of the month. If it really is a spike, spike protection drops error events during the spike to try and conserve your capacity. We also send teammates with the "owner" organization permission level a [notification](/product/alerts-notifications/notifications/#quota) email.
 
-## Attribute Limits
+## Size Limits
 
-Sentry imposes hard limits on various components within an event. While the limits may change over time and vary among attributes, most individual attributes are capped at 512 characters. Additionally, certain attributes also limit the maximum number of items. Commonly-trimmed values might include, for example:
+Sentry imposes limits on various fields within an event, as well as the size of full events and the requests they are sent in:
 
-- Stack frame details. Stack traces with large frame counts will be trimmed (the middle frames are dropped). We limit to a maximum of 250 frames. Only 50 are retained unaltered, with the remaining 200 removing `vars`, `pre_context` and `post_context`.
-- `extra` data is limited to approximately 256k characters, and each item is capped at approximately 16k characters.
-- Breadcrumbs and their values
-- Error messages and message parameters are limited to 1024 characters.
+- Events, attachments and requests exceeding payload size limits are immediately dropped with a `413 Payload Too Large` error. Sentry allows compressed content encoding, and applies separate limits before and after decompression.
+- Fields exceeding the individual size limits are afterwards trimmed and truncated at a best effort.
+
+To avoid unintentional data loss, consider limiting the size of values passed into Sentry's APIs. For example, if your application attaches application state or request bodies to Sentry events, truncate them first.
+
+The precise limits may change over time. For more information, please refer to the following resources:
+
+- [Envelope Size Limits](https://develop.sentry.dev/sdk/store/#size-limits)
+- [Store Endpoint Size Limits](https://develop.sentry.dev/sdk/store/#size-limits)
+- [Minidump Size Limits](/platforms/native/guides/minidumps/#size-limits)
+- [Variable Size Limits](https://develop.sentry.dev/sdk/data-handling/#variable-size)
