@@ -1,20 +1,24 @@
 import React, { useState, useRef, useContext } from "react";
+import styled from "@emotion/styled";
 import copy from "copy-to-clipboard";
 import { MDXProvider } from "@mdx-js/react";
-import { Clipboard } from "react-feather";
-import { useOnClickOutside, useRefWithCallback } from "../utils";
+import { Clipboard, ArrowDown } from "react-feather";
+import { AnimatePresence, motion } from "framer-motion";
+import { usePopper } from "react-popper";
+import memoize from "lodash/memoize";
+
+import { useOnClickOutside } from "../utils";
 import CodeContext from "./codeContext";
+import ReactDOM from "react-dom";
 
 const KEYWORDS_REGEX = /\b___(?:([A-Z_][A-Z0-9_]*)\.)?([A-Z_][A-Z0-9_]*)___\b/g;
 
-function makeKeywordsClickable(children) {
-  if (!Array.isArray(children)) {
-    children = [children];
-  }
+function makeKeywordsClickable(children: React.ReactChildren) {
+  const items = React.Children.toArray(children);
 
   KEYWORDS_REGEX.lastIndex = 0;
 
-  return children.reduce((arr: any[], child) => {
+  return items.reduce((arr: any[], child) => {
     if (typeof child !== "string") {
       arr.push(child);
       return arr;
@@ -29,11 +33,11 @@ function makeKeywordsClickable(children) {
         arr.push(before);
       }
       arr.push(
-        Selector({
-          group: match[1] || "PROJECT",
-          keyword: match[2],
-          key: lastIndex,
-        })
+        <KeywordSelector
+          group={match[1] || "PROJECT"}
+          keyword={match[2]}
+          index={lastIndex}
+        />
       );
       lastIndex = KEYWORDS_REGEX.lastIndex;
     }
@@ -47,101 +51,276 @@ function makeKeywordsClickable(children) {
   }, []);
 }
 
-function Selector({ keyword, group, ...props }) {
-  const [isOpen, setIsOpen] = useState(false);
+const getPortal = memoize(
+  (): HTMLElement => {
+    if (typeof document === "undefined") {
+      return null;
+    }
+
+    let portal = document.getElementById("selector-portal");
+    if (!portal) {
+      portal = document.createElement("div");
+      portal.setAttribute("id", "selector-portal");
+      document.body.appendChild(portal);
+    }
+    return portal;
+  }
+);
+
+type KeywordSelectorProps = {
+  group: string;
+  keyword: string;
+  index: number;
+};
+
+function KeywordSelector({ keyword, group, index }: KeywordSelectorProps) {
   const codeContext = useContext(CodeContext);
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [referenceEl, setReferenceEl] = useState(null);
+  const [dropdownEl, setDropdownEl] = useState(null);
+
+  const { styles, state, attributes } = usePopper(referenceEl, dropdownEl, {
+    placement: "bottom",
+    modifiers: [
+      {
+        name: "offset",
+        options: { offset: [0, 10] },
+      },
+      { name: "arrow" },
+    ],
+  });
+
+  useOnClickOutside({ current: dropdownEl }, () => isOpen && setIsOpen(false));
+
   const [
     sharedSelection,
     setSharedSelection,
   ] = codeContext.sharedKeywordSelection;
-  const spanRef = useRef<HTMLSpanElement>();
-  const [menuRef, setMenuRef] = useRefWithCallback<HTMLSpanElement>(
-    menuNode => {
-      if (menuNode) {
-        for (const node of menuNode.childNodes as any) {
-          if (node.getAttribute("data-active") === "1") {
-            node.parentNode.scrollTop =
-              node.offsetTop -
-              node.parentNode.getBoundingClientRect().height / 2 +
-              node.getBoundingClientRect().height / 2;
-            break;
-          }
-        }
-      }
-    }
-  );
-
-  useOnClickOutside(menuRef, () => {
-    if (isOpen) {
-      setIsOpen(false);
-    }
-  });
 
   const { codeKeywords } = useContext(CodeContext);
-  const choices = (codeKeywords && codeKeywords[group]) || [];
-  const currentSelectionIdx = sharedSelection[group] || 0;
+  const choices = codeKeywords?.[group] ?? [];
+  const currentSelectionIdx = sharedSelection[group] ?? 0;
   const currentSelection = choices[currentSelectionIdx];
 
   if (!currentSelection) {
-    return keyword;
+    return <React.Fragment>keyword</React.Fragment>;
   }
 
-  // this is not super clean but since we can depend on the span
-  // rendering before the menu this works.
-  const style: {
-    [key: string]: any;
-  } = {};
-  if (spanRef.current) {
-    const rect = spanRef.current.getBoundingClientRect();
-    style.left = spanRef.current.offsetLeft - 10 + "px";
-    style.top = spanRef.current.offsetTop + 20 + "px";
-    style.minWidth = rect.width + 20 + "px";
-  }
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  return (
-    <span className="keyword-selector-wrapper" {...props}>
-      <span
-        ref={spanRef}
-        role="button"
-        tabIndex={0}
-        className={`keyword-selector ${isOpen ? " open" : ""}`}
-        title={currentSelection && currentSelection.title}
-        onClick={() => {
-          setIsOpen(!isOpen);
-        }}
-        onKeyDown={e => {
-          if (e.key === "Enter") {
-            setIsOpen(!isOpen);
-          }
-        }}
-      >
-        {currentSelection[keyword]}
-      </span>
-      {isOpen && (
-        <div style={style} className="selections" ref={setMenuRef}>
+  const selector = isOpen && (
+    <PositionWrapper
+      style={styles.popper}
+      ref={setDropdownEl}
+      {...attributes.popper}
+    >
+      <AnimatedContainer>
+        <Arrow
+          style={styles.arrow}
+          data-placement={state?.placement}
+          data-popper-arrow
+        />
+        <Selections>
           {choices.map((item, idx) => {
             const isActive = idx === currentSelectionIdx;
             return (
-              <button
+              <ItemButton
                 key={idx}
-                data-active={isActive ? "1" : ""}
+                isActive={isActive}
                 onClick={() => {
                   const newSharedSelection = { ...sharedSelection };
                   newSharedSelection[group] = idx;
                   setSharedSelection(newSharedSelection);
+                  setIsAnimating(true);
                   setIsOpen(false);
                 }}
-                className={isActive ? "active" : ""}
               >
                 {item.title}
-              </button>
+              </ItemButton>
             );
           })}
-        </div>
-      )}
-    </span>
+        </Selections>
+      </AnimatedContainer>
+    </PositionWrapper>
+  );
+
+  const portal = getPortal();
+
+  return (
+    <React.Fragment>
+      <KeywordDropdown
+        key={index}
+        ref={setReferenceEl}
+        role="button"
+        tabIndex={0}
+        title={currentSelection?.title}
+        onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={(e) => e.key === "Enter" && setIsOpen(!isOpen)}
+      >
+        <KeywordIndicator isOpen={isOpen} />
+        <span
+          style={{
+            // We set inline-grid only when animating the keyword so they
+            // correctly overlap during animations, but this must be removed
+            // after so copy-paste correctly works.
+            display: isAnimating ? "inline-grid" : undefined,
+          }}
+        >
+          <AnimatePresence
+            initial={false}
+            onExitComplete={() => setIsAnimating(false)}
+          >
+            <Keyword key={currentSelectionIdx}>
+              {currentSelection[keyword]}
+            </Keyword>
+          </AnimatePresence>
+        </span>
+      </KeywordDropdown>
+      {portal &&
+        ReactDOM.createPortal(
+          <AnimatePresence>{selector}</AnimatePresence>,
+          portal
+        )}
+    </React.Fragment>
   );
 }
+
+const Keyword = styled(motion.span)`
+  grid-row: 1;
+  grid-column: 1;
+`;
+
+Keyword.defaultProps = {
+  initial: { opacity: 0, y: -10 },
+  animate: { opacity: 1, y: 0, transition: { delay: 0.1 } },
+  exit: { opacity: 0, y: 20 },
+  transition: {
+    opacity: { duration: 0.15 },
+    y: { duration: 0.25 },
+  },
+};
+
+const KeywordDropdown = styled("span")`
+  border-radius: 3px;
+  margin: 0 2px;
+  padding: 0 4px;
+  z-index: -1;
+  cursor: pointer;
+  background: #382f5c;
+  transition: background 200ms ease-in-out;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus,
+  &:hover {
+    background: #1d1127;
+  }
+`;
+
+const KeywordIndicator = styled(ArrowDown)<{ isOpen: boolean }>`
+  user-select: none;
+  margin-right: 2px;
+  transition: transform 200ms ease-in-out;
+  transform: rotate(${(p) => (p.isOpen ? "180deg" : "0")});
+  stroke-width: 3px;
+  position: relative;
+  top: -1px;
+`;
+
+KeywordIndicator.defaultProps = {
+  size: "12px",
+};
+
+const PositionWrapper = styled("div")`
+  z-index: 100;
+`;
+
+const Arrow = styled("div")`
+  position: absolute;
+  width: 10px;
+  height: 5px;
+  margin-top: -10px;
+
+  &::before {
+    content: "";
+    display: block;
+    border: 5px solid transparent;
+  }
+
+  &[data-placement*="bottom"] {
+    &::before {
+      border-bottom-color: #fff;
+    }
+  }
+
+  &[data-placement*="top"] {
+    bottom: -5px;
+    &::before {
+      border-top-color: #fff;
+    }
+  }
+`;
+
+const Selections = styled("div")`
+  padding: 4px 0;
+  margin-top: -2px;
+  background: #fff;
+  border-radius: 3px;
+  overflow: scroll;
+  max-height: 210px;
+  min-width: 300px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+`;
+
+const AnimatedContainer = styled(motion.div)``;
+
+AnimatedContainer.defaultProps = {
+  initial: { opacity: 0, y: 5 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.95 },
+  transition: {
+    opacity: { duration: 0.15 },
+    y: { duration: 0.3 },
+    scale: { duration: 0.3 },
+  },
+};
+
+const ItemButton = styled("button")<{ isActive: boolean }>`
+  font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI";
+  font-size: 0.85rem;
+  text-align: left;
+  padding: 2px 8px;
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #eee;
+  }
+
+  &:focus {
+    outline: none;
+    background: #eee;
+  }
+
+  ${(p) =>
+    p.isActive
+      ? `
+    background-color: #6C5FC7;
+    color: #fff;
+  `
+      : `
+    &:hover,
+    &.active {
+      background-color: #FAF9FB;
+    }
+  `}
+`;
 
 function CodeWrapper(props): JSX.Element {
   let { children, class: className, ...rest } = props;
