@@ -39,7 +39,28 @@ A hash generated using your Client Secret and the request itself – used to ver
 
 #### Verifying the Signature
 
-<PlatformContent includePath="webhooks-verifying-signature" />
+```javascript
+const crypto = require("crypto");
+
+function verifySignature(request, secret = "") {
+  const hmac = crypto.createHmac("sha256", secret);
+  hmac.update(JSON.stringify(request.body), "utf8");
+  const digest = hmac.digest("hex");
+  return digest === request.headers["Sentry-Hook-Signature"];
+}
+```
+
+```python
+    body = json.dumps(request.body)
+    expected = hmac.new(
+        key=client_secret.encode('utf-8'),
+        msg=body,
+        digestmod=sha256,
+    ).hexdigest()
+
+    if expected != request.headers['Sentry-Hook-Signature']:
+            raise UnauthorizedError
+```
 
 ## Request Structure
 
