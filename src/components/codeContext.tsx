@@ -54,7 +54,8 @@ const DEFAULTS: CodeKeywords = {
       ORG_ID: 0,
       ORG_SLUG: "exmaple-org",
       ORG_INGEST_DOMAIN: "o0.ingest.sentry.io",
-      MINIDUMP_URL: "https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey",
+      MINIDUMP_URL:
+        "https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey",
       UNREAL_URL: "https://o0.ingest.sentry.io/api/0/unreal/examplePublicKey/",
       title: `example-org / example-project`,
     },
@@ -96,56 +97,60 @@ const formatApiUrl = ({ scheme, host }: Dsn) => {
   return `${scheme}${apiHost}/api`;
 };
 
-export function fetchCodeKeywords() {
-  return new Promise(resolve => {
-    function transformResults(projects: ProjectApiResult[]) {
-      if (projects.length === 0) {
-        console.warn("Unable to fetch codeContext - using defaults.");
-        resolve(DEFAULTS);
-      } else {
-        resolve({
-          PROJECT: projects.map(project => {
-            const parsedDsn = parseDsn(project.dsn);
-            return {
-              DSN: project.dsn,
-              PUBLIC_DSN: project.dsnPublic,
-              PUBLIC_KEY: parsedDsn.publicKey,
-              SECRET_KEY: parsedDsn.secretKey,
-              API_URL: formatApiUrl(parsedDsn),
-              PROJECT_ID: project.id,
-              PROJECT_SLUG: project.projectSlug,
-              ORG_ID: project.organizationId,
-              ORG_SLUG: project.organizationSlug,
-              ORG_INGEST_DOMAIN: `o${project.organizationId}.ingest.sentry.io`,
-              MINIDUMP_URL: formatMinidumpURL(parsedDsn),
-              UNREAL_URL: formatUnrealEngineURL(parsedDsn),
-              title: `${project.organizationSlug} / ${project.projectSlug}`,
-            };
-          }),
-        });
-      }
+/**
+ * Fetch project details from sentry
+ */
+export async function fetchCodeKeywords() {
+  let json: { projects: ProjectApiResult[] } | null = null;
+
+  const url =
+    process.env.NODE_ENV === "development"
+      ? "http://dev.getsentry.net:8000/docs/api/user/"
+      : "https://sentry.io/docs/api/user/";
+
+  const useDefaults = () => {
+    console.warn("Unable to fetch codeContext - using defaults.");
+    return DEFAULTS;
+  };
+
+  try {
+    const resp = await fetch(url, { credentials: "include" });
+
+    if (!resp.ok) {
+      return useDefaults();
     }
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", "https://sentry.io/docs/api/user/");
-    xhr.withCredentials = true;
-    xhr.responseType = "json";
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 0) {
-          transformResults([]);
-        } else {
-          const {
-            projects,
-          }: {
-            projects: ProjectApiResult[];
-          } = xhr.response;
-          transformResults(projects);
-        }
-      }
-    };
-    xhr.send(null);
-  });
+    json = await resp.json();
+  } catch {
+    return useDefaults();
+  }
+
+  const { projects } = json;
+
+  if (projects?.length === 0) {
+    return useDefaults();
+  }
+
+  return {
+    PROJECT: projects.map(project => {
+      const parsedDsn = parseDsn(project.dsn);
+      return {
+        DSN: project.dsn,
+        PUBLIC_DSN: project.dsnPublic,
+        PUBLIC_KEY: parsedDsn.publicKey,
+        SECRET_KEY: parsedDsn.secretKey,
+        API_URL: formatApiUrl(parsedDsn),
+        PROJECT_ID: project.id,
+        PROJECT_SLUG: project.projectSlug,
+        ORG_ID: project.organizationId,
+        ORG_SLUG: project.organizationSlug,
+        ORG_INGEST_DOMAIN: `o${project.organizationId}.ingest.sentry.io`,
+        MINIDUMP_URL: formatMinidumpURL(parsedDsn),
+        UNREAL_URL: formatUnrealEngineURL(parsedDsn),
+        title: `${project.organizationSlug} / ${project.projectSlug}`,
+      };
+    }),
+  };
 }
 
 export default CodeContext;
