@@ -132,7 +132,6 @@ function KeywordSelector({ keyword, group, index }: KeywordSelectorProps) {
                   const newSharedSelection = { ...sharedSelection };
                   newSharedSelection[group] = idx;
                   setSharedSelection(newSharedSelection);
-                  setIsAnimating(true);
                   setIsOpen(false);
                 }}
               >
@@ -156,7 +155,7 @@ function KeywordSelector({ keyword, group, index }: KeywordSelectorProps) {
         tabIndex={0}
         title={currentSelection?.title}
         onClick={() => setIsOpen(!isOpen)}
-        onKeyDown={(e) => e.key === "Enter" && setIsOpen(!isOpen)}
+        onKeyDown={e => e.key === "Enter" && setIsOpen(!isOpen)}
       >
         <KeywordIndicator isOpen={isOpen} />
         <span
@@ -167,11 +166,12 @@ function KeywordSelector({ keyword, group, index }: KeywordSelectorProps) {
             display: isAnimating ? "inline-grid" : undefined,
           }}
         >
-          <AnimatePresence
-            initial={false}
-            onExitComplete={() => setIsAnimating(false)}
-          >
-            <Keyword key={currentSelectionIdx}>
+          <AnimatePresence initial={false}>
+            <Keyword
+              onAnimationStart={() => setIsAnimating(true)}
+              onAnimationComplete={() => setIsAnimating(false)}
+              key={currentSelectionIdx}
+            >
               {currentSelection[keyword]}
             </Keyword>
           </AnimatePresence>
@@ -192,8 +192,13 @@ const Keyword = styled(motion.span)`
 `;
 
 Keyword.defaultProps = {
-  initial: { opacity: 0, y: -10 },
-  animate: { opacity: 1, y: 0, transition: { delay: 0.1 } },
+  initial: { position: "absolute", opacity: 0, y: -10 },
+  animate: {
+    position: "relative",
+    opacity: 1,
+    y: 0,
+    transition: { delay: 0.1 },
+  },
   exit: { opacity: 0, y: 20 },
   transition: {
     opacity: { duration: 0.15 },
