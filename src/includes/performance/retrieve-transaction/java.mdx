@@ -9,9 +9,9 @@ import io.sentry.SpanStatus;
 
 ISpan span = Sentry.getSpan();
 if (span == null) {
-  span = Sentry.startTransaction("task");
+  span = Sentry.startTransaction("transaction-name", "task");
 } else {
-  span = span.startChild();
+  span = span.startChild("task");
 }
 
 try {
@@ -19,6 +19,7 @@ try {
 } catch (Exception e) {
   span.setThrowable(e);
   span.setStatus(SpanStatus.INTERNAL_ERROR);
+  throw e;
 } finally {
   span.finish();
 }
@@ -28,13 +29,14 @@ try {
 import io.sentry.Sentry
 import io.sentry.SpanStatus
 
-val span = Sentry.getSpan()?.startChild() ?: Sentry.startTransaction("task")
+val span = Sentry.getSpan()?.startChild("task") ?: Sentry.startTransaction("transaction-name", "task")
 
 try {
   // omitted code
 } catch (e: Exception) {
   span.throwable = e
   span.status = SpanStatus.INTERNAL_ERROR
+  throw e
 } finally {
   span.finish()
 }

@@ -2,13 +2,24 @@
 
 Sentry errors can be linked with transactions and spans.
 
+<PlatformSection supported={["java"]} notSupported={["android", "java.spring", "java.spring-boot"]}>
+
+<Note>
+
+We have dedicated performance features for our [Spring](/platforms/java/guides/spring/) and [Spring Boot](/platforms/java/guides/spring-boot/) integrations. In addition, errors are linked with spans automatically using either of these integrations.
+
+</Note>
+
+</PlatformSection>
+
 Errors reported to Sentry while transaction or span is running are linked automatically:
 
 ```java {tabTitle:Java}
 import io.sentry.Sentry;
 import io.sentry.ISpan;
 
-ISpan span = Sentry.startTransaction("task");
+ITransaction span = Sentry.startTransaction(item.getTransactionName(), "task");
+Sentry.configureScope(scope -> scope.setTransaction(span));
 try {
   processItem();
 } catch (Exception e) {
@@ -21,7 +32,8 @@ try {
 ```kotlin {tabTitle:Kotlin}
 import io.sentry.Sentry
 
-val span = Sentry.startTransaction("task")
+val span = Sentry.startTransaction(item.getTransactionName(), "task")
+Sentry.configureScope { scope -> scope.setTransaction(span) }
 try {
   processItem()
 } catch (e: Exception) {
@@ -39,7 +51,7 @@ import io.sentry.ISpan;
 
 ISpan span = Sentry.getSpan();
 if (span == null) {
-  span = Sentry.startTransaction("task");
+  span = Sentry.startTransaction(item.getTransactionName(), "task");
 }
 try {
   processItem();
@@ -54,7 +66,7 @@ try {
 ```kotlin {tabTitle:Kotlin}
 import io.sentry.Sentry
 
-val span = Sentry.getSpan()?: Sentry.startTransaction("task")
+val span = Sentry.getSpan()?: Sentry.startTransaction(item.getTransactionName(), "task")
 try {
   processItem()
 } catch (e: Exception) {

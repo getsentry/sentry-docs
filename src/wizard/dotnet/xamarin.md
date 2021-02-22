@@ -1,7 +1,7 @@
 ---
 name: Xamarin
 doc_link: https://docs.sentry.io/platforms/dotnet/guides/xamarin/
-support_level: alpha
+support_level: production
 type: library
 ---
 
@@ -9,10 +9,10 @@ type: library
 
 ```shell
 # For Xamarin.Forms
-Install-Package Sentry.Xamarin.Forms -Version 1.0.0
+Install-Package Sentry.Xamarin.Forms -Version {{ packages.version('sentry.dotnet.xamarin') }}
 
 # If you are not using Xamarin.Forms, but only Xamarin:
-Install-Package Sentry.Xamarin -Version 1.0.0
+Install-Package Sentry.Xamarin -Version {{ packages.version('sentry.dotnet.xamarin-forms') }}
 
 ```
 
@@ -89,4 +89,4 @@ There are no line numbers on stack traces for UWP and in release builds for Andr
 
 ### Samples
 
-You can find an example of a Xamarin Forms app with Sentry integrated [on this GitHub repository.](https://github.com/getsentry/sentry-dotnet-xamarin/tree/main/Samples)
+You can find an example of a Xamarin Forms app with Sentry integrated [on this GitHub repository.](https://github.com/getsentry/sentry-xamarin/tree/main/Samples)

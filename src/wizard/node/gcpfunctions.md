@@ -1,5 +1,5 @@
 ---
-name: GCP Cloud Functions (Node)
+name: Google Cloud Functions (Node)
 doc_link: https://docs.sentry.io/platforms/node/guides/gcp-functions/
 support_level: production
 type: framework
@@ -11,7 +11,7 @@ Add `@sentry/serverless` as a dependency to `package.json`:
   "@sentry/serverless": "^5.26.0"
 ```
 
-To set up Sentry for a GCP Cloud Function:
+To set up Sentry for a Google Cloud Function:
 
 ```javascript {tabTitle:http functions}
 const Sentry = require("@sentry/serverless");

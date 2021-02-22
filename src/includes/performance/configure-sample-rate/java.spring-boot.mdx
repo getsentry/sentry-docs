@@ -8,7 +8,7 @@ sentry.traces-sample-rate=0.3
 
 Or through providing a bean of type `SentryOptions#TracesSamplerCallback`:
 
-```java {tabTitle:Java}
+```java
 import io.sentry.SentryOptions.TracesSamplerCallback;
 import io.sentry.SamplingContext;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,14 @@ import org.springframework.stereotype.Component;
 class CustomTracesSamplerCallback implements TracesSamplerCallback {
   @Override
   public Double sample(SamplingContext samplingContext) {
-    // return a number between 0 and 1
+    CustomSamplingContext customSamplingContext = context.getCustomSamplingContext();
+    if (customSamplingContext != null) {
+      HttpServletRequest request = (HttpServletRequest) customSamplingContext.get("request");
+      // return a number between 0 and 1
+    } else {
+      // return a number between 0 and 1
+    }
+
   }
 }
 ```
@@ -30,7 +37,13 @@ import org.springframework.stereotype.Component
 @Component
 class CustomTracesSamplerCallback : TracesSamplerCallback {
   override fun sample(samplingContext: SamplingContext): Double? {
-    // return a number between 0 and 1
+    val customSamplingContext = samplingContext.customSamplingContext
+    if (customSamplingContext != null) {
+      val request = customSamplingContext["request"] as HttpServletRequest
+      // return a number between 0 and 1
+    } else {
+      // return a number between 0 and 1
+    }
   }
 }
 ```
