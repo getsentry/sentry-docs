@@ -8,13 +8,19 @@ Sentry automatically assigns you a Data Source Name (DSN) when you create a proj
 
 ### What the DSN Does
 
-The DSN tells the SDK where to send the events. If this value is not provided, the SDK will try to read it from the `SENTRY_DSN` environment variable. If that variable also does not exist, the SDK will just not send any events.
+A DSN tells a Sentry SDK where to send events so the events are associated with the correct project.
 
-<Note>
+If this value is not provided, SDKs will try to read it from the `SENTRY_DSN` environment variable, where applicable. This fallback does not apply in cases like a web browser, where the concept of environment variables does not exist.
 
-In runtimes without a process environment (such as the browser) that fallback does not apply.
+If an SDK is not initialized or if it is initialized with an empty DSN, the SDK will not send any data over the network, such as captured exceptions.
 
-</Note>
+### DSN Utilization
+
+DSNs are safe to keep public because they only allow submission of new events and related event data; they do not allow read access to any information.
+
+While there is a risk of abusing a DSN, where any user can send events to your organization with any information they want, this is a rare occurrence. Sentry provides controls to [block IPs](/platform-redirect/?next=/configuration/options/) and similar concerns. You can also rotate (and revoke) DSNs by navigating to _Settings > Projects > Client Keys (DSN)_.
+
+If your application is shipped to client devices, if possible, we recommend having a way to configure the DSN dynamically. In an ideal scenario, you can "ship" a new DSN to your application without the customer downloading the latest version. We recognize that this may not always be practical, but we cannot offer further advice as this scenario is implementation specific.
 
 ### Where to Find Your DSN
 
@@ -36,10 +42,7 @@ Has the following settings:
 
 - URI = https://sentry.example.com
 - Public Key = public
-- Secret Key = secret
 - Project ID = 1
-
-The resulting POST request for a plain JSON payload would then transmit to `https://sentry.example.com/api/1/store/`.
 
 <Note>
 
