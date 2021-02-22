@@ -4,9 +4,17 @@ sidebar_order: 1000
 description: "Learn about migrating from io.sentry:sentry 1.x to io.sentry:sentry 3.x."
 ---
 
-## Migrating from `io.sentry:sentry` `4.1.0` to `io.sentry:sentry` `4.1.1`
+## Migrating from `io.sentry:sentry` `4.1.0` to `io.sentry:sentry` `4.2.0`
+
+`operation` is now a required property of the `SentryTransaction` and `SentrySpan`. Whenever a transaction or span is started, the value for `operation` must be provided:
+
+```java
+Sentry.startTransaction("transaction-name", "operation-name");
+```
 
 ### Spring
+
+#### RestTemplate instrumentation
 
 Simplified `RestTemplate` instrumentation does not involve anymore setting `UriTemplateHandler` using `SentrySpanClientHttpRequestInterceptor`.
 
@@ -33,6 +41,42 @@ RestTemplate restTemplate(IHub hub) {
   SentrySpanClientHttpRequestInterceptor sentryRestTemplateInterceptor = new SentrySpanClientHttpRequestInterceptor(hub);
   restTemplate.setInterceptors(Collections.singletonList(sentryRestTemplateInterceptor));
   return restTemplate;
+}
+```
+
+#### SentryExceptionResolver does not send handled errors by default
+
+To prevent `SentryExceptionResolver` from sending errors that have been already captured by `@ExceptionHandlers`, we've changed the order for `SentryExceptionResolver` to `1`.
+
+Old behavior can be brought back by setting `exceptionResolverOrder` property on `@EnableSentry`:
+
+```java
+@EnableSentry(exceptionResolverOrder = -2147483648)
+class CustomConfiguration {
+  ...
+}
+```
+
+### Spring Boot
+
+#### SentryExceptionResolver does not send handled errors by default
+
+To prevent `SentryExceptionResolver` from sending errors that have been already captured by `@ExceptionHandlers`, we've changed the order for `SentryExceptionResolver` to `1`.
+
+Old behavior can be brought back by setting a property `sentry.exception-resolver-order=-2147483648`
+
+#### `@SentryTransaction` `operation` is now required
+
+`@SentryTransaction` must have `operation` property provided.
+
+```java
+class MyComponent {
+
+  @SentryTransaction(name = "transaction-name", operation = "operation-name")
+  @Scheduled(fixedRate = 3 * 1000L)
+  void execute() {
+      ...
+    }
 }
 ```
 
