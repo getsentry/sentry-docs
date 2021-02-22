@@ -4,6 +4,38 @@ sidebar_order: 1000
 description: "Learn about migrating from io.sentry:sentry 1.x to io.sentry:sentry 3.x."
 ---
 
+## Migrating from `io.sentry:sentry` `4.1.0` to `io.sentry:sentry` `4.1.1`
+
+### Spring
+
+Simplified `RestTemplate` instrumentation does not involve anymore setting `UriTemplateHandler` using `SentrySpanClientHttpRequestInterceptor`.
+
+Code snippet adding Sentry `RestTemplate` instrumentation changed from:
+
+```java
+@Bean
+RestTemplate restTemplate(IHub hub) {
+  RestTemplate restTemplate = new RestTemplate();
+  SentrySpanClientHttpRequestInterceptor sentryRestTemplateInterceptor = new SentrySpanClientHttpRequestInterceptor(hub);
+  UriTemplateHandler templateHandler = restTemplate.getUriTemplateHandler();
+  restTemplate.setUriTemplateHandler(sentryRestTemplateInterceptor.createUriTemplateHandler(templateHandler));
+  restTemplate.setInterceptors(Collections.singletonList(sentryRestTemplateInterceptor));
+  return restTemplate;
+}
+```
+
+into:
+
+```java
+@Bean
+RestTemplate restTemplate(IHub hub) {
+  RestTemplate restTemplate = new RestTemplate();
+  SentrySpanClientHttpRequestInterceptor sentryRestTemplateInterceptor = new SentrySpanClientHttpRequestInterceptor(hub);
+  restTemplate.setInterceptors(Collections.singletonList(sentryRestTemplateInterceptor));
+  return restTemplate;
+}
+```
+
 ## Migrating from `io.sentry:sentry` `1.x` to `io.sentry:sentry` `4.x`
 
 
