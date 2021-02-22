@@ -23,8 +23,8 @@ class MyRpcException extends Exception {
 
 SentryAndroid.init(this, options -> {
   options.setBeforeSend((event, hint) -> {
-    if (event.getThrowable() instanceof MyRpcException) {
-      MyRpcException exception = (MyRpcException) event.getThrowable();
+    if (event.getOriginThrowable() instanceof MyRpcException) {
+      MyRpcException exception = (MyRpcException) event.getOriginThrowable();
       event.setFingerprints(
           Arrays.asList(
               "{{ default }}",
@@ -48,8 +48,8 @@ class MyRpcException(
 
 SentryAndroid.init(this) { options ->
   options.beforeSend = BeforeSendCallback { event, hint ->
-    if (event.throwable is MyRpcException) {
-      val exception = event.throwable as MyRpcException
+    if (event.originThrowable is MyRpcException) {
+      val exception = event.originThrowable as MyRpcException
       event.fingerprints = listOf(
         "{{ default }}",
         exception.function,
