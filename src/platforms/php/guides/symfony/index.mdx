@@ -46,3 +46,29 @@ class AppKernel extends Kernel
     // ...
 }
 ```
+
+### Monolog Integration
+
+If monolog is used some additional configuration and services is needed
+to run log errors correctly:
+
+```yaml
+sentry:
+    register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
+    dsn: "%env(SENTRY_DSN)%"
+
+monolog:
+    handlers:
+        sentry:
+            type: service
+            id: Sentry\Monolog\Handler
+
+services:
+    Monolog\Processor\PsrLogMessageProcessor:
+        tags: { name: monolog.processor, handler: sentry }
+
+    Sentry\Monolog\Handler:
+        arguments:
+            $hub: '@Sentry\State\HubInterface'
+            $level: !php/const Monolog\Logger::ERROR
+```
