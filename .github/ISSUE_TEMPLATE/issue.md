@@ -2,24 +2,19 @@
 name: 🐞 Documentation issue
 about: Missing, incorrect, unclear documentation or code samples
 ---
+## Issue
 
-## Important Details
-
-This an issue with: 
-<!-- Please pick one of the following -->
+This an issue with:
+<!-- Please choose either of the following -->
 Platform/SDK documentation (Which one?)
 <!-- --------------- -->
-Sentry Product 
+Sentry Product (Which area?)
 <!-- --------------- -->
 
 ## Description
 
-[What were you looking for/trying to do]
+[What were you looking for/trying to do/expecting?]
 
-### What you expected to happen
+### Suggested Solution
 
-[What you think should be happening]
-
-### Possible Solution
-
-[If you have an idea on how this could be solved include that detail here.]
+[If you have an idea on how we can solve this, please share]
