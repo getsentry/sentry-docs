@@ -50,6 +50,53 @@ This integration is the core part of the SDK. It hooks into all signal and excep
 
 This integration will swizzle some methods to create breadcrumbs e.g.: for `UIApplicationDidReceiveMemoryWarningNotification`, `sendAction:to:from:forEvent:` (UI interactions) or `viewDidAppear:` those breadcrumbs will be attached to your events.
 
+## In App Stack Frames
+
+To highlight essential frames of your stacktrace, the Sentry UI only displays frames related to your application by default. Sentry marks such frames as inApp.
+To achieve this, the SDK only sets the inApp flag for frames originating from the main executable by using the [CFBundleExecutable].
+Public frameworks such as UIKitCore, CoreFoundation, GraphicsServices, etc., are always marked as not inApp.
+For private frameworks, such as Sentry, there is a difference between dynamic or static frameworks. If you are not familiar with these terms, we recommend
+reading [Dynamic Library Programming Topics].
+
+[CFBundleExecutable]: https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleexecutable
+[Dynamic Library Programming Topics]: https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/DynamicLibraries/000-Introduction/Introduction.html
+
+### Dynamic Frameworks
+If you use dynamic frameworks, such as, for example, Sentry, the SDK marks these as not inApp. In case you have a private framework that should be inApp,
+you can use inAppIncludes of the SentryOptions.
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+
+    // The SDK marks all frameworks starting with MyBusinessLogic as inApp
+    options.add(inAppInclude: "MyBusinessLogic")
+
+    // The SDK marks all frameworks starting with MyFramework as not inApp
+    options.add(inAppExclude: "MyFramework")
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+
+    // The SDK marks all frameworks starting with MyBusinessLogic as inApp
+    [options addInAppInclude:@"MyBusinessLogic"];
+
+    // The SDK marks all framework starting with MyFramework as not inApp
+    [options addInAppExclude:@"MyFramework"];
+}];
+```
+
+### Static Frameworks
+When using static frameworks, the frameworks end up in the main executable. Therefore, the SDK currently can't detect if a frame of the main executable
+originates from your application or a private framework and marks all of them as inApp. To improve your experience, use <PlatformLink to="/data-management/event-grouping/stack-trace-rules/#mark-in-app-frames">stack trace rules</PlatformLink> to tell Sentry which it should mark not as inApp.
+
 ## Known Limitations
 
 - Since version 6.0.0 of this SDK, Sentry on-premises version greater than version 20.6.0 is required. If you are using sentry.io, no action is needed.
