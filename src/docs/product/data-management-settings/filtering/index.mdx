@@ -24,8 +24,24 @@ Inbound filters include:
 - From specific release versions of your code
 - From certain IP addresses
 
+<Note>
+
+Filters do not apply to [sessions](/product/releases/health/#session). Error messages from minidumps also do not yet apply.
+
+</Note>
+
 Once applied, you can track the filtered events (numbers and cause) using the graph provided at the top of the Inbound Data Filters view.
 
 ![](builtin-inbound-filters.png)
 
-Data filters do not apply to [sessions](/product/releases/health/#session).
+## How Inbound Filters Work
+
+Inbound data filters are not case sensitive.
+
+### Filtering by Error Message
+
+To use inbound data filters for error messages, keep the following in mind:
+
+- The filter matches the entire error description. For example, to match "ConnectionError", use the filter `*ConnectionError*`. Because filters are not case sensitive, `*connectionerror*` is fine, too.
+- Square brackets (`[` and `]`) have a special meaning due to the way our globs are evaluated. To match a square bracket, escape it as in this example: `*please try again \[not found\]*`.
+- Exceptions with an exception title (usually the class name) and description are joined with a colon, which is the the same as it is in the terminal. We don't recommend this type of matching, however, and suggest you match with wildcards instead. For example: Exception title "ConnectionError" and description "Max retries exceeded" will join to a literal "ConnectionError: Max retries exceeded" for filter evaluation.
