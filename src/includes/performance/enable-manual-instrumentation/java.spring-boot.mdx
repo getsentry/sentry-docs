@@ -24,7 +24,7 @@ import io.sentry.spring.tracing.SentryTransaction;
 class ScheduledJob {
 
   @Scheduled(...)
-  @SentryTransaction
+  @SentryTransaction(operation = "task")
   void execute() {
     ...
   }
@@ -40,14 +40,16 @@ import io.sentry.spring.tracing.SentryTransaction
 class ScheduledJob {
 
   @Scheduled(...)
-  @SentryTransaction
+  @SentryTransaction(operation = "task")
   fun execute() {
     ...
   }
 }
 ```
 
-`@SentryTransaction` can be configured with custom `name` and `op` properties. If not defined, `name` will be resolved from the class, and the method name.
+`@SentryTransaction` can be configured with custom `name`. If not defined, `name` will be resolved from the class, and the method name.
+
+`@SentryTransaction` can be also placed on a class or an interface - it turns every method execution from the annotated type into a transaction.
 
 Advanced Spring AOP users can redefine transaction pointcut by providing a custom `org.springframework.aop.Pointcut` bean with name `sentryTransactionPointcut`.
 
@@ -76,13 +78,15 @@ import io.sentry.spring.tracing.SentrySpan
 @Component
 class PersonService {
 
-  @SentrySpan
+  @SentrySpan(operation = "task")
   fun findById(id: Long): Person {
     ...
   }
 }
 ```
 
-`@SentrySpan` can be configured with custom `description` and `op` properties. If not defined, `description` will be resolved from the class, and the method name.
+`@SentrySpan` can be configured with custom `description` property. If not defined, `operation` will be resolved from the class, and the method name.
+
+`@SentrySpan` can be also placed on a class or an interface - it turns every method execution from the annotated type into a span.
 
 Advanced Spring AOP users can redefine span pointcut by providing a custom `org.springframework.aop.Pointcut` bean with name `sentrySpanPointcut`.
