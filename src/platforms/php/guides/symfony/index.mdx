@@ -18,7 +18,7 @@ composer require sentry/sentry-symfony
 ```
 
 <Alert level="warning" title="Note">
-**Warning:** due to a bug in all versions lower than `6.0` of the [`SensioFrameworkExtraBundle`](https://github.com/sensiolabs/SensioFrameworkExtraBundle) bundle,
+Due to a bug in all versions lower than `6.0` of the [`SensioFrameworkExtraBundle`](https://github.com/sensiolabs/SensioFrameworkExtraBundle) bundle,
 if you have it installed you will likely get an error during the execution of the command above in regards to the missing `Nyholm\Psr7\Factory\Psr17Factory`
 class. To workaround the issue, if you are not using the PSR-7 bridge, please change the configuration of that bundle as follows:
 
@@ -53,12 +53,11 @@ return [
 
 ### Monolog Integration
 
-If you are using monolog, these additional configuration and services are needed to log the errors correctly:
+If you are using [Monolog](https://github.com/Seldaek/monolog), these additional configuration and services are needed to log the errors correctly:
 
 ```yaml {filename:config/packages/sentry.yaml}
 sentry:
     register_error_listener: false # Disables the ErrorListener to avoid duplicated log in sentry
-    dsn: "%env(SENTRY_DSN)%"
 
 monolog:
     handlers:
@@ -112,11 +111,13 @@ class SentryTestController
      */
     public function testLog(Request $request)
     {
+        // the following code will test if monolog integration works
         $this->logger->error('My custom logged error.');
 
+        // the following code will test if uncatched exception works with sentry
         throw new \RuntimeException('Example exception.');
     }
 }
 ```
 
-After you visit now `/_sentry-test` this **both** errors should appear on sentry.
+After you visit the `/_sentry-test` page, you should see two errors logged in Sentry.
