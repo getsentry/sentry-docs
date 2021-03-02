@@ -170,7 +170,8 @@ Our acceptance tests leverage selenium and chromedriver to simulate a user using
 front-end application and the entire backend stack. We use acceptance tests for two purposes at Sentry:
 
 1. To cover workflows that are not possible to cover with just endpoint tests or with Jest alone.
-2. To prepare snapshots for visual regression tests via percy.
+2. To prepare snapshots for visual regression tests via our visual regression
+   GitHub Actions.
 
 Acceptance tests can be found in `tests/acceptance` and run locally with `pytest`.
 
@@ -213,28 +214,30 @@ All of our data is loaded asynchronously into the front-end and acceptance tests
 various latencies and response times. We favour using selenium's `wait_until*` features to poll the DOM
 until elements are present or visible. We do not use `sleep()`.
 
-### Percy
+### Visual Regression
 
-Pixels Matter and because of that we use Percy to help catch visual regressions with how Sentry is rendered.
-We send Percy a variety of HTML snapshots from our acceptance tests. Percy renders these HTMl snapshots into images
-and compares them with approved baselines. If differences are detected percy will fail.
+Pixels Matter and because of that we use visual regressions to help catch
+unintended changes to how Sentry is rendered. During acceptance tests we capture
+screenshots and compare the screenshots in your pull request to approved
+baselines.
 
-While we have fairly wide coverage with percy there are a few important blind spots:
+While we have fairly wide coverage with visual regressions there are a few
+important blind spots:
 
-* Tooltips
 * Hover cards and hover states
 * Modal windows
 * Charts and data visualizations
 
-All of these components and interactions are generally not included in percy snapshots, and you should take care
+All of these components and interactions are generally not included in visual snapshots, and you should take care
 when working on any of them.
 
 #### Dealing with always changing data
 
-Because percy compares image snapshots, and a significant portion of our data deals with timeseries data we often
-need to replace time based content with 'fixed' data. You can use the `getDynamicText` helper to provide fixed
-content for components/data that is dependent on the current time or varies too frequently to be included in a
-percy snapshot.
+Because visual regression compares image snapshots, and a significant portion of
+our data deals with timeseries data we often need to replace time based content
+with 'fixed' data. You can use the `getDynamicText` helper to provide fixed
+content for components/data that is dependent on the current time or varies too
+frequently to be included in a visual snapshot.
 
 ## Jest Tests
 
