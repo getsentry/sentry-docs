@@ -12,17 +12,20 @@ The Laravel integration will create [breadcrumbs](../../enriching-events/breadcr
 
 ```php {filename:config/sentry.php}
 'breadcrumbs' => [
-    // Capture Laravel logs. Defaults to `true`.
+    // Capture Laravel logs in breadcrumbs
     'logs' => true,
 
-    // Capture queue job information. Defaults to `true`.
-    'queue_info' => true,
-
-    // Capture SQL queries. Defaults to `true`.
+    // Capture SQL queries in breadcrumbs
     'sql_queries' => true,
 
-    // Capture bindings (parameters) on SQL queries. Defaults to `false`.
-    'sql_bindings' => false,
+    // Capture bindings on SQL queries logged in breadcrumbs
+    'sql_bindings' => true,
+
+    // Capture queue job information in breadcrumbs
+    'queue_info' => true,
+
+    // Capture command information in breadcrumbs
+    'command_info' => true,
 ],
 ```
 
@@ -33,4 +36,16 @@ To enable performance monitoring, set this to a value greater than `0.0`:
 ```php {filename:config/sentry.php}
 // Be sure to lower this in production to prevent quota issues
 'traces_sample_rate' => 1.0,
+```
+
+## Controller base namespace
+
+Performance monitoring and router breadcrumbs can report the controller classname that handled the request.
+
+These names are generally longer than needed, that's why we strip away the base namespace that is the same for all controller classes.
+
+In Laravel this is `App\Http\Controllers` by default but you can override this using the `controllers_base_namespace` option:
+
+```php {filename:config/sentry.php}
+'controllers_base_namespace' => env('SENTRY_CONTROLLERS_BASE_NAMESPACE', 'App\\Http\\Controllers'),
 ```
