@@ -59,53 +59,35 @@ Note that the paths in step 2 and 4 refer to the directory named `getsentry` wit
 
 ### Debugging with PyCharm
 
-The `devserver` command exists mainly to spawn daemons in separate processes, which means it is not very useful to attach a debugger to it. In order to debug the more interesting code, you will need to launch those processes yourself, in their own run configurations.
+The `devserver` command exists mainly to spawn daemons in separate processes, which means it is not very useful to attach a debugger to it in its default mode.
 
-To suppress those processes from being launched by the devserver, change your devserver parameters to:
+#### Web server
 
-- Parameters: `devserver --workers --skip-daemons=cron,worker,server`
+The `devserver` command has a special flag that will cause the web server to be launched in a thread of the same process (rather than as the `web` daemon). This allows the same PyCharm "Debug" action that launches the devserver to attach to the web server and hit breakpoints on its back end.
 
-Then, create three additional run configurations to replace the skipped daemons. The following attributes should be the same as your original config. (You may clone it and change only the "Parameters" field.)
+Clone your devserver run configuration and add `--debug-server` to the end of the "Parameters" field. Launch it by selecting "Debug" rather than "Run".
+
+The `--debug-server` flag may cause the process to not respond correctly to SIGINT and to shut down less gracefully than your original configuration. It is recommended to keep both, using the first with the "Run" command and the second with the "Debug" command.
+
+You may keep the `--workers` flag alongside `--debug-server`, but note that it will not be possible to attach breakpoints to the workers, nor to any other daemons spawned by the devserver.
+
+#### Stand-alone daemons
+
+To attach a debugger to an individual daemon other than `web`, create a run configuration for the daemon. The following attributes should be the same as your devserver config. (You may clone it and change only the "Parameters" field.)
 
 - Script path: `<venv dir>/bin/sentry` e.g. `~/venv/sentry/bin/sentry`
 - Python interpreter: the venv interpreter
 - Working dir: (the `src` path in your sentry installation directory ) e.g. `~/dev/sentry/src`
 
-In order to debug with PyCharm you need to run the web worker with a python webserver.
+Set the new run configuration's parameters to a `run` command that launches the daemon, such as:
 
-#### Cron config:
-
-- Parameters:  `run cron`
-
-#### Worker config:
-
-- Parameters: `run worker -c 1`
-
-#### Web config:
-
-Note that the `run web` command corresponds to the `server` daemon name.
-
-- Parameters: `run web --bind=127.0.0.1:8889`
-
-Put this into your `~/.sentry/sentry.conf.py`:
-
-```
-SENTRY_USE_UWSGI = False
-```
-
-The correct value of the `--bind` option may vary with your local environment. If you encounter errors, try running `sentry devserver` without `--skip-daemons`. Look in the console logs for a line that looks like
-
-> `server | uwsgi socket 0 bound to TCP address 127.0.0.1:8889 fd 3`
-
-and substitute the address as the `--bind` value.
-
-The `SENTRY_USE_UWSGI = False` setting is necessary because, otherwise, the `SentryHTTPServer` class will spawn a [uWSGI](https://uwsgi-docs.readthedocs.io/) server in a separate process, which once again makes it impossible to attach a debugger. (Inspect `src/sentry/services/http.py` for details.)
+- `run cron`
+- `run worker -c 1`
 
 #### Tips and troubleshooting
 
 - The same set of modifications will work on run configs for the `getsentry` project, if you want to debug that.
-- You don't need all three arguments to `--skip-daemons` if you don't want to debug all three individually. For example, you probably do not touch the `cron` component very much. If you wish, you may delete individual values from the `--skip-daemons` list and skip running those configurations.
-- PyCharm's "Compound" run configuration type is useful for launching several run configurations at once. The most convenient setup is to have one "full" devserver configuration with no `--skip-daemons` option, and a "minimal" duplicate with `--skip-daemons` added. Then create a compound run config that combines your minimal devserver config with the individual configs for daemons.
+- PyCharm's "Compound" run configuration type is useful for launching several run configurations at once. It may be convenient to set one up if you are debugging one or more stand-alone daemons in concert with a devserver.
 
 ![img/DevserverLeetSetup.png](img/DevserverLeetSetup.png)
 
@@ -113,6 +95,6 @@ The `SENTRY_USE_UWSGI = False` setting is necessary because, otherwise, the `Sen
 
 ![img/PycharmRunConfigEnvVar.png](img/PycharmRunConfigEnvVar.png)
 
-- If your individually-run daemons are not working, do you have a happy devserver in the "full" configuration? If so, you can attach a debugger to `src/sentry/runner/commands/devserver.py` and manually inspect the commands that it is running. (Look for the `manager.add_process` call near the bottom.) The parameters in your run configs should generally match those commands (aside from the extra ones that need to be added to `run web`, as documented above). If they don't match, your run configs may need to be updated.
+- If your individually-run daemons are not working, you can troubleshoot by debugging `devserver --debug-server` and inserting breakpoints on `src/sentry/runner/commands/devserver.py`. This will let you manually inspect the commands that the `devserver` command is running. (Look for the `manager.add_process` call near the bottom.) Try adjusting the parameters in your run configs to match those commands if they don't already.
 
 ![img/DevserverTroubleshooting.png](img/DevserverTroubleshooting.png)
