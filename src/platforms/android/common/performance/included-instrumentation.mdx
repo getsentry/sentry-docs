@@ -12,13 +12,13 @@ Capturing transactions requires that you first <PlatformLink to="/performance/">
 
 <Note>
 
-This is only available on Sentry's Android SDK since version `4.3.0`
+This is only available since Sentry's Android SDK version `4.3.0`
 
 </Note>
 
 ### Android's Activity Instrumentation
 
-The Activity's instrumentation, once enabled, captures transactions for each Activity's lifecycle, Transaction names follow pattern `ActivityName`, for example for an Activity called `MainActivity`, The Transaction's name is `MainActivity` and its operation is `navigation`.
+The Activity's instrumentation, once enabled, captures transactions for each Activity's start up, Transaction names follow pattern `ActivityName`, for example for an Activity called `MainActivity`, The Transaction's name is `MainActivity` and its operation is `navigation`.
 
 The transaction starts before each Activity's `onCreate` method is called.
 
@@ -30,7 +30,7 @@ _The Activity's instrumentation is enabled by default, but you may disable it by
 </manifest>
 ```
 
-The transaction finishes after each Activity's `onResume` method is called.
+The transaction finishes after each Activity's `onResume` method is executed.
 
 _The transaction finishes automatically, but you may disable it by setting:_
 
@@ -40,24 +40,23 @@ _The transaction finishes automatically, but you may disable it by setting:_
 </manifest>
 ```
 
-and finish the transaction manually based on your App's business logic, for example, the transaction should be only finished when your API call triggered on `onCreate` has been finished and you've shown the the data in the UI to the user, to do that you should do:
+You may finish the transaction manually based on your App's business logic, for example, the transaction should be only finished when your API call triggered on Activity's `onCreate` has been executed and you've shown the the data in the UI to the user, to do that you should do:
 
 ```java
 import io.sentry.Sentry;
 import io.sentry.SpanStatus;
 
-// be sure you don't have any unfinished spans.
 ISpan span = Sentry.getSpan();
 if (span != null) {
   span.finish(SpanStatus.OK);
 }
 ```
 
-In case that the user left this Activity before you've finished the transaction manually, the transaction will be finished once the `onDestroy` method is called.
+In case that the user left this Activity before you've finished the transaction manually, the transaction will be finished automatically once the `onDestroy` method is called.
 
 Transactions are always finished with the `SpanStatus.OK` status if there's none set.
 
-Transactions are always bound to the Scope automatically if there's none set, because of that, you may create spans using the manual instrumentation and those spans will be automatically associated with the Activity's running transaction.
+Transactions are always bound to the Scope automatically if there's none set, because of that, you may create spans using the manual instrumentation and those spans will be automatically associated with the Activity's running transaction, for example.
 
 ```java
 import io.sentry.Sentry;
@@ -66,10 +65,14 @@ import io.sentry.SpanStatus;
 ISpan span = Sentry.getSpan();
 if (span != null) {
   ISpan userDataSpan = span.startChild("displayUserData");
+
   // do some work
+
   userDataSpan.finish(SpanStatus.OK);
 
-  // in case you've opt-out of the 'auto-finish' feature, also finish the transaction.
+  // in case you've opt-out of the 'auto-finish' feature, finish the transaction manually.
   span.finish(SpanStatus.OK);
 }
 ```
+
+If you've not finished the transaction yet, but you've started a new Activity, the previous transaction will be finished automatically regardeless the feature 'auto-finish' being enabled or not, due to the limitation of having a single transaction per time bound to the Scope, to work around that, you may create transactions manually using the custom instrumentation and using its instance to start spans instead of the Static API.
