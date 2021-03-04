@@ -1,1 +1,75 @@
-test
+---
+title: Included Instrumentation
+sidebar_order: 21
+description: "Learn what transactions are captured after tracing is enabled."
+---
+
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
+
+</Note>
+
+<Note>
+
+This is only available on Sentry's Android SDK since version `4.3.0`
+
+</Note>
+
+### Android's Activity Instrumentation
+
+The Activity's instrumentation, once enabled, captures transactions for each Activity's lifecycle, Transaction names follow pattern `ActivityName`, for example for an Activity called `MainActivity`, The Transaction's name is `MainActivity` and its operation is `navigation`.
+
+The transaction starts before each Activity's `onCreate` method is called.
+
+_The Activity's instrumentation is enabled by default, but you may disable it by setting:_
+
+```xml {filename:AndroidManifest.xml}
+<manifest>
+    <meta-data android:name="io.sentry.traces.activity.enable" android:value="false" />
+</manifest>
+```
+
+The transaction finishes after each Activity's `onResume` method is called.
+
+_The transaction finishes automatically, but you may disable it by setting:_
+
+```xml {filename:AndroidManifest.xml}
+<manifest>
+    <meta-data android:name="io.sentry.traces.activity.auto-finish.enable" android:value="false" />
+</manifest>
+```
+
+and finish the transaction manually based on your App's business logic, for example, the transaction should be only finished when your API call triggered on `onCreate` has been finished and you've shown the the data in the UI to the user, to do that you should do:
+
+```java
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
+
+// be sure you don't have any unfinished spans.
+ISpan span = Sentry.getSpan();
+if (span != null) {
+  span.finish(SpanStatus.OK);
+}
+```
+
+In case that the user left this Activity before you've finished the transaction manually, the transaction will be finished once the `onDestroy` method is called.
+
+Transactions are always finished with the `SpanStatus.OK` status if there's none set.
+
+Transactions are always bound to the Scope automatically if there's none set, because of that, you may create spans using the manual instrumentation and those spans will be automatically associated with the Activity's running transaction.
+
+```java
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
+
+ISpan span = Sentry.getSpan();
+if (span != null) {
+  ISpan userDataSpan = span.startChild("displayUserData");
+  // do some work
+  userDataSpan.finish(SpanStatus.OK);
+
+  // in case you've opt-out of the 'auto-finish' feature, also finish the transaction.
+  span.finish(SpanStatus.OK);
+}
+```
