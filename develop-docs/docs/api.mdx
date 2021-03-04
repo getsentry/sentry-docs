@@ -68,9 +68,24 @@ If your answers are Yes, No and Yes, you're in business - make the API public.
 
 ## How to make an endpoint public?
 
-We use [Open API Spec 3](https://swagger.io/docs/specification/about/) to write our API documentation. You can find that content here: [https://github.com/getsentry/sentry/tree/master/api-docs.](https://github.com/getsentry/sentry/tree/master/api-docs) You can find the tests here: [https://github.com/getsentry/sentry/tree/master/tests/apidocs](https://github.com/getsentry/sentry/tree/master/tests/apidocs).
+We use [Open API Spec 3](https://swagger.io/docs/specification/about/) to write our API documentation. 
+You can find that content here: [https://github.com/getsentry/sentry/tree/master/api-docs.](https://github.com/getsentry/sentry/tree/master/api-docs) 
+You can find the tests here: [https://github.com/getsentry/sentry/tree/master/tests/apidocs](https://github.com/getsentry/sentry/tree/master/tests/apidocs).
 
 ### Local development
+**To add documentation for a new endpoint**:
+
+1. Create a new file for your schema under the appropriate folder [here](https://github.com/getsentry/sentry/tree/master/api-docs/paths). Document the schema for the relevant requests.
+2. Add the new path to [this file](https://github.com/getsentry/sentry/blob/master/api-docs/openapi.json).
+3. Write a test [here](https://github.com/getsentry/sentry/tree/master/tests/apidocs).
+
+
+**Tips**:
+- `make test-api-docs` runs all API docs tests. This command also builds the derefed JSON. This runs in CI but can be useful for local development to make sure everything passes.
+- `yarn run build-derefed-docs` builds the derefed JSON. This is useful in the case where you're only running one test locally, making a change to the schema, and then re-running the test. Since the tests run against the derefed version, you'll need to rebuild it.
+
+
+**To see your changes in the docs locally**:
 
 In `sentry`:
 1. Run `yarn run watch-api-docs`. This command will watch API docs files and continuously build an intermediate asset `tests/apidocs/openapi-derefed.json`.
@@ -79,12 +94,16 @@ In `sentry`:
 In `sentry-docs`:
 1. Run `OPENAPI_LOCAL_PATH=COPIED_FULL_PATH DISABLE_THUMBNAILS=1 yarn start` and substitute `COPIED_FULL_PATH` with the copied path to your local openapi-derefed.json
 
+When you open the pull request, please add a screenshot of the page or pages you're adding.
+
+
 ### Build process
+The openapi-diff test will fail when CI runs on your pull request, this is expected and meant to highlight the diff. It is not required to merge.
 
-Once you make changes to an endpoint and merge the change into Sentry, a series of Github Actions will be triggered to make your changes automatically go live:
+Once you make changes to an endpoint and merge the change into Sentry, a series of GitHub Actions will be triggered to make your changes automatically go live:
 
-1. The `openapi / deref_json` Github Action in [sentry](https://github.com/getsentry/Sentry) will update the schema in [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) with the OpenAPI build artifact.
-2. In [sentry-api-schema](https://github.com/getsentry/sentry-api-schema), the `sentry-docs / bump` Github Action will be triggered and this will bump the SHA that references [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) in [sentry-docs](https://github.com/getsentry/sentry-docs) with the latest.
+1. The `openapi / deref_json` GitHub Action in [sentry](https://github.com/getsentry/Sentry) will update the schema in [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) with the OpenAPI build artifact.
+2. In [sentry-api-schema](https://github.com/getsentry/sentry-api-schema), the `sentry-docs / bump` GitHub Action will be triggered and this will bump the SHA that references [sentry-api-schema](https://github.com/getsentry/sentry-api-schema) in [sentry-docs](https://github.com/getsentry/sentry-docs) with the latest.
 3. Finally, a build is triggered in [sentry-docs](https://github.com/getsentry/sentry-docs).
 
 ### Requesting an API to be public
