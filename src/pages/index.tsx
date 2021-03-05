@@ -32,6 +32,7 @@ const HIGHLIGHTED_PLATFORMS = [
   "apple",
   "java.spring-boot",
   "ruby.rails",
+  "flutter",
 ];
 
 const IndexPage = () => {
