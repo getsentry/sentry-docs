@@ -1,0 +1,47 @@
+---
+title: "Processing Issues & PRs"
+---
+
+This document describes Sentry's process for handling issues and PRs—let's use "tickets" to refer to both together, if that's okay—that are created by external contributors in our public GitHub repos.
+
+## 1. Validate
+
+*SLA: 1 hour*
+
+The Open Source Team maintains [a bot](https://github.com/getsentry/.github/blob/main/.github/workflows/validate-new-issue.yml) that validates incoming tickets. Invalid tickets are closed; valid tickets are given the label `Status: Unrouted`. The bot is installed on three repos: `sentry`, `sentry-docs`, and `onpremise`.
+
+## 2. Route
+
+*SLA: 72 hours*
+
+Each ticket is routed to a single Engineering team based on our internal [Product and Service Registry](https://www.notion.so/Product-and-Service-Registry-f90c702816794dcaa7f81ef8e79e40ea):
+
+1. Most repos are owned by a single Engineering team, so tickets opened in those repos are already routed.
+2. For the `sentry` repo, the Open Source Team is responsible for routing.
+3. For the `sentry-docs` repos, the Documentation Team is responsible for routing.
+
+Routing in the `sentry` and `sentry-docs` repos is done with `Team: Foo` labels and a comment mentioning `@getsentry/team`, with the "Team" field in the Registry being the source of truth for who owns what.
+
+Some of our code is covered by a [`CODEOWNERS`](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners) file; most is not. For the code that is in `CODEOWNERS`, GitHub will auto-assign a GitHub Team to review the PR. All tickets should get a `Team` label and a mention, regardless of whether they are also assigned directly. If and when GitHub allows for [assigning issues to teams](https://github.com/dear-github/dear-github/issues/170), we can revisit the use of labels/mentions vs. direct assignments.
+
+<Alert level="warning">When a ticket is routed, remove <code>Status: Unrouted</code> and add <code>Status: Untriaged</code>.</Alert>
+
+## 3. Triage
+
+*SLA: 1 week*
+
+Each Engineering team is responsible for monitoring issues assigned to their team (whether in repos they own, via `@mentions`, or via their `Team` label), and triaging each ticket within one week by removing `Status: Untriaged`, and either closing the ticket or applying exactly one of these three labels (likely with a comment in either case explaining the decision):
+
+1. `Status: Needs More Information` — The ticket is not actionable.
+2. `Status: On Hold` — The ticket is actionable, but is not actively being worked.
+3. `Status: Accepted` — The ticket is actionable, and is actively being worked.
+
+The Open Source Team maintains [a bot](https://github.com/getsentry/sentry/blob/master/.github/workflows/stale.yml) (installed on the same repos as the validation bot) that closes tickets (with a warning) after four weeks of inactivity unless they have the `Status: On Hold` or `Status: Accepted` label.
+
+## 4. Resolve
+
+*SLA: none*
+
+Once a ticket is triaged it is up to each team to decide if and when it will be worked on, manage the work using their tools of choice (GitHub, Jira, Asana, clay tablets, ...), and communicate with customers via the GitHub ticket and whatever other channels pertain.
+
+**GitHub is the source of truth for the customer.**
