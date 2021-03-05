@@ -8,17 +8,13 @@ description: "Learn what transactions are captured after tracing is enabled."
 
 Capturing transactions requires that you first <PlatformLink to="/performance/">set up performance monitoring</PlatformLink> if you haven't already.
 
-</Note>
-
-<Note>
-
 Supported in Sentry's Android SDK version `4.3.0` and above.
 
 </Note>
 
 ### Android's Activity Instrumentation
 
-The Activity's instrumentation, once enabled, captures transactions for each Activity's start up, Transaction names follow pattern `ActivityName`, for example for an Activity called `MainActivity`, The Transaction's name is `MainActivity` and its operation is `navigation`.
+The Activity's instrumentation, once enabled, captures transactions for each launch of an Activity. The SDK sets the Transaction name to the name of the Activity, for example, `MainActivity`, and Transaction operation to `navigation`.
 
 The transaction starts before each Activity's `onCreate` method is called.
 
@@ -40,7 +36,7 @@ _The transaction finishes automatically, but you may disable it by setting:_
 </manifest>
 ```
 
-You may finish the transaction manually based on your App's business logic, for example, the transaction should be only finished when your API call triggered on Activity's `onCreate` has been executed and you've shown the the data in the UI to the user, to do that you should do:
+We offer the possibility to finish the transaction manually. For example, you might want to finish the transaction after an API call triggered on Activity's `onCreate` and shown the data to the user. To achieve that you can do:
 
 ```java
 import io.sentry.Sentry;
@@ -52,11 +48,11 @@ if (span != null) {
 }
 ```
 
-In case that the user left this Activity before you've finished the transaction manually, the transaction will be finished automatically once the `onDestroy` method is called.
+In case that the user left this Activity before you've finished the transaction manually, the SDK finishes the transaction automatically when the `onDestroy` method is called.
 
 Transactions are always finished with the `SpanStatus.OK` status if there's none set.
 
-Transactions are always bound to the Scope automatically if there's none set, because of that, you may create spans using the manual instrumentation and those spans will be automatically associated with the Activity's running transaction, for example.
+Transactions are always bound to the Scope automatically if there's none set. Because of that, you may create spans using manual instrumentation, and those spans will be automatically associated with the Activity's running transaction.
 
 ```java
 import io.sentry.Sentry;
@@ -75,4 +71,4 @@ if (span != null) {
 }
 ```
 
-If you've not finished the transaction yet, but you've started a new Activity, the previous transaction will be finished automatically regardeless the feature 'auto-finish' being enabled or not, due to the limitation of having a single transaction per time bound to the Scope, to work around that, you may create transactions manually using the custom instrumentation and using its instance to start spans instead of the Static API.
+When you didn't finish the transaction yet, but you start a new Activity, the SDK always automatically finishes the previous Activity transaction. This is due to the fact that only one transaction at a time can be bound to the Scope. To work around that, you may create transactions manually using the custom instrumentation and its instance to start spans instead of the Static API.
