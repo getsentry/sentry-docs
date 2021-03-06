@@ -23,7 +23,7 @@ yarn add @sentry/react-native
 Link the SDK to your native projects to enable native crash reporting. If you are running a project with `react-native < 0.60`, you still need to call `react-native link`, otherwise you can skip this step as `react-native >=0.60` does this automatically.
 
 ```bash
-npx @sentry-wizard -i reactNative -p ios android
+npx @sentry/wizard -i reactNative -p ios android
 # or
 yarn sentry-wizard -i reactNative -p ios android
 
