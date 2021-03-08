@@ -11,7 +11,6 @@ export const sourceNodes = async (
   pluginOptions
 ) => {
   const { createNode } = actions;
-
   let content = null;
   try {
     content = await pluginOptions.resolve();

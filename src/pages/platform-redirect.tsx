@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "@reach/router";
 import { parse } from "query-string";
-import PlatformIcon from "platformicons";
+import { PlatformIcon } from "platformicons";
 
 import Layout from "../components/layout";
 import SmartLink from "../components/smartLink";

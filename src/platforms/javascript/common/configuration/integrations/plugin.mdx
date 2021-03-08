@@ -1,6 +1,6 @@
 ---
 title: Pluggable Integrations
-description: "Learn more about pluggable integrations `ExtraErrorData`, `CaptureConsole`, `Dedupe`, `Debug`, `RewriteFrames`, `ReportingObserver`, which are snippets of code that augment functionality for specific applications and/or frameworks."
+description: "Learn more about pluggable integrations ExtraErrorData, CaptureConsole, Dedupe, Debug, Offline, RewriteFrames, and ReportingObserver, which are snippets of code that augment functionality for specific applications and/or frameworks."
 redirect_from:
   - /platforms/javascript/integrations/plugin/
   - /platforms/javascript/pluggable-integrations/
@@ -14,15 +14,7 @@ Install the `@sentry/integrations` package and provide a new instance with your 
 
 For example:
 
-```javascript
-import * as Sentry from "@sentry/browser";
-import { ReportingObserver as ReportingObserverIntegration } from "@sentry/integrations";
-
-Sentry.init({
-  dsn: "___PUBLIC_DSN___",
-  integrations: [new ReportingObserverIntegration()],
-});
-```
+<PlatformContent includePath="configuration/enable-pluggable-integrations" />
 
 ### ExtraErrorData
 
@@ -32,14 +24,7 @@ This integration extracts all non-native attributes from the Error object and at
 
 Available options:
 
-```javascript
-{
-  // limit of how deep the object serializer should go. Anything deeper than limit will
-  // be replaced with standard Node.js REPL notation of [Object], [Array], [Function] or
-  // a primitive value. Defaults to 3.
-  depth: number;
-}
-```
+<PlatformContent includePath="configuration/extra-error-data" />
 
 ### CaptureConsole
 
@@ -47,19 +32,15 @@ _Import name: `Sentry.Integrations.CaptureConsole`_
 
 This integration captures all `Console API` calls and redirects them to Sentry using the `captureMessage` call. It then retriggers to preserve default native behavior.
 
-```javascript
-{
-  // array of methods that should be captured
-  // defaults to ['log', 'info', 'warn', 'error', 'debug', 'assert']
-  levels: string[];
-}
-```
+<PlatformContent includePath="configuration/capture-console" />
 
 ### Dedupe
 
 _Import name: `Sentry.Integrations.Dedupe`_
 
 This integration deduplicates certain events; it can be helpful if you are receiving many duplicate errors. Be aware that Sentry will only compare stack traces and fingerprints.
+
+<PlatformContent includePath="configuration/dedupe" />
 
 ### Debug
 
@@ -69,15 +50,17 @@ This integration allows you to inspect the content of the processed event, that 
 
 Available options:
 
-```javascript
-{
-  // trigger DevTools debugger instead of using console.log
-  debugger: boolean;
+<PlatformContent includePath="configuration/debug" />
 
-  // stringify event before passing it to console.log
-  stringify: boolean;
-}
-```
+### Offline
+
+_Import name: `Sentry.Integrations.Offline`_
+
+This integration uses the web browser's [online and offline events](https://developer.mozilla.org/en-US/docs/Web/API/NavigatorOnLine/Online_and_offline_events) to detect when no network connectivity is available. If offline, it saves events to the web browser's client-side storage (typically IndexedDB) then automatically uploads events when network connectivity is restored.
+
+This plugin does not attempt to provide local storage or retries for other scenarios. For example, if the browser has a local area connection but no internet connection, then it may report that it's online, and Sentry's `Offline` plugin will not attempt to save or retry any send failures in this case.
+
+<PlatformContent includePath="configuration/offline" />
 
 ### RewriteFrames
 
@@ -89,15 +72,7 @@ On Windows machines, you have to use Unix paths and skip the volume letter in `
 
 Available options:
 
-```javascript
-{
-  // root path that will be appended to the basename of the current frame's url
-  root: string;
-
-  // function that takes the frame, applies a transformation, and returns it
-  iteratee: (frame) => frame;
-}
-```
+<PlatformContent includePath="configuration/rewrite-frames" />
 
 ### ReportingObserver
 
@@ -107,8 +82,4 @@ This integration hooks into the ReportingObserver API and sends captured events 
 
 Available options:
 
-```javascript
-{
-  types: <'crash'|'deprecation'|'intervention'>[];
-}
-```
+<PlatformContent includePath="configuration/reporting-observer" />

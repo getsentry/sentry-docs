@@ -12,9 +12,9 @@ Sentry captures data by using an SDK within your application’s runtime. These 
 To install the Android SDK, please update your build.gradle file as follows:
 
 ```groovy
-// Make sure jcenter is there.
+// Make sure mavenCentral is there.
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 // Enable Java 1.8 source compatibility if you haven't yet.
@@ -27,7 +27,7 @@ android {
 
 // Add Sentry's SDK as a dependency.
 dependencies {
-    implementation 'io.sentry:sentry-android:3.1.0'
+    implementation 'io.sentry:sentry-android:{{ packages.version('sentry.java.android', '4.0.0') }}'
 }
 ```
 
@@ -49,10 +49,19 @@ Great! Now that you’ve completed setting up the SDK, maybe you want to quickly
 
 ```java
 public class MyActivity extends AppCompatActivity {
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Sentry.captureMessage("testing SDK setup");
-    }
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    Sentry.captureMessage("testing SDK setup");
+  }
+}
+```
+
+```kotlin
+class MyActivity : AppCompatActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    Sentry.captureMessage("testing SDK setup")
+  }
 }
 ```
 

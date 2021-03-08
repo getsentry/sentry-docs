@@ -1,0 +1,71 @@
+---
+title: Wasm
+sdk: sentry.javascript.wasm
+description: "Learn how to use Sentry's Wasm integration and how it automatically reports errors and exceptions in your Wasm module."
+keywords: ["wasm", "webassembly"]
+---
+
+Sentry's Wasm integration enhances the Browser SDK, and allows it to provide more detailed debug information not only for the error itself, but also for the entire module it was executed from. It includes things like Debug IDs, Debug Files, Code IDs, Code Files and memory addresses.
+
+### Install
+
+Install `@sentry/browser` and `@sentry/wasm` using `yarn` or `npm`:
+
+```bash
+# Using yarn
+yarn add @sentry/browser @sentry/wasm
+
+# Using npm
+npm install --save @sentry/browser @sentry/wasm
+```
+
+and afterwards use it like this:
+
+```javascript
+import * as Sentry from "@sentry/browser";
+import { Wasm as WasmIntegration } from "@sentry/wasm";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new WasmIntegration()],
+});
+
+// Now, whenever any code from WebAssembly module will throw an error,
+// it'll get captured and it'll contain all the necessary information.
+
+function executeInternalWasmStuff() {
+  throw new Error('whoops');
+}
+
+const { instance } = await WebAssembly.instantiateStreaming(fetch('very-complex-module.wasm'), {
+  env: {
+    external_func: executeInternalWasmStuff,
+  },
+});
+
+instance.exports.internal_func();
+```
+
+If you are curious how Wasm modules look from the inside, here's a quick example written in Rust:
+
+```rust
+#![no_std]
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
+}
+
+extern "C" {
+    pub fn external_func();
+}
+
+#[no_mangle]
+pub fn internal_func() {
+    unsafe {
+        external_func();
+    }
+}
+```
+
+For more details on how to compile Rust to Wasm, see [Compiling from Rust to WebAssembly](https://developer.mozilla.org/en-US/docs/WebAssembly/Rust_to_wasm) MDN documentation.

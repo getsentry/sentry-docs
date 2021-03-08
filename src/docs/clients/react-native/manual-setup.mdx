@@ -123,6 +123,11 @@ if [[ -x "$HOME/.nodenv/bin/nodenv" ]]; then
 eval "$("$HOME/.nodenv/bin/nodenv" init -)"
 fi
 
+# Set up the nfm node version manager if present
+if [[ -s "$HOME/.fnm/fnm" ]]; then
+  eval "`$HOME/.fnm/fnm env --multi`"
+fi
+
 # Trying notion
 if [ -z "$NODE_BINARY" ]; then
 if [[ -s "$HOME/.notion/bin/node" ]]; then
@@ -154,6 +159,11 @@ fi
 # Set up the nodenv node version manager if present
 if [[ -x "$HOME/.nodenv/bin/nodenv" ]]; then
 eval "$("$HOME/.nodenv/bin/nodenv" init -)"
+fi
+
+# Set up the nfm node version manager if present
+if [[ -s "$HOME/.fnm/fnm" ]]; then
+  eval "`$HOME/.fnm/fnm env --multi`"
 fi
 
 # Trying notion
@@ -212,18 +222,30 @@ dependencies {
 Please make sure your `MainApplication.java` looks something like this:
 
 ```java
-import io.sentry.RNSentryPackage;
+import io.sentry.react.RNSentryPackage;
 
 public class MainApplication extends Application implements ReactApplication {
 
-    @Override
-    protected List<ReactPackage> getPackages() {
-        return Arrays.<ReactPackage>asList(
-                new MainReactPackage(),
-                new RNSentryPackage()
-        );
-    }
+  @Override
+  protected List<ReactPackage> getPackages() {
+    return Arrays.<ReactPackage>asList(
+        new MainReactPackage(),
+        new RNSentryPackage()
+    );
+  }
+}
+```
 
+```kotlin
+import io.sentry.react.RNSentryPackage
+
+class MainApplication() : Application(), ReactApplication {
+  override fun getPackages(): List<ReactPackage> {
+    return listOf(
+      MainReactPackage(),
+      RNSentryPackage()
+    )
+  }
 }
 ```
 

@@ -1,0 +1,66 @@
+Add the `@sentry/react-native` dependency:
+
+```npm
+npm install --save @sentry/react-native
+```
+
+```yarn
+yarn add @sentry/react-native
+```
+
+<Note>
+
+If you are using Expo, see [How to Add Sentry to Your Expo Project](https://docs.expo.io/guides/using-sentry/). This SDK works for both managed and bare projects.
+
+</Note>
+
+### Linking
+
+Link the SDK to your native projects to enable native crash reporting.
+
+```bash
+react-native link @sentry/react-native
+```
+
+<Note>
+
+If you are running a project with `react-native` prior to 0.60, you still need to call `react-native link`, otherwise you can skip this step as `react-native` version 0.60 and above does this automatically.
+
+</Note>
+
+```npx
+npx @sentry/wizard -i reactNative -p ios android
+
+cd ios
+pod install
+```
+
+```yarn
+yarn sentry-wizard -i reactNative -p ios android
+
+cd ios
+pod install
+```
+
+The call to the [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [link manually](/platforms/react-native/manual-setup/manual-setup/) if you prefer. You need to do this only once, then the created files can go into your version control system.
+
+The following changes will be performed by Sentry Wizard:
+
+- add the `sentry-android` package for native crash reporting on Android
+- add the `sentry-cocoa` package for native crash reporting on iOS
+- enable the Sentry Gradle build step for Android
+- patch _*MainApplication.java*_ for Android
+- configure Sentry for the supplied DSN in your _*index.js/App.js*_ files
+- store build credentials in _*ios/sentry.properties*_ and _*android/sentry.properties*_.
+
+### iOS Specifics
+
+When you use Xcode, you can hook directly into the build process to upload debug symbols and source maps. However, if you are using bitcode, you will need to disable the “Upload Debug Symbols to Sentry” build phase and then separately upload debug symbols from iTunes Connect to Sentry.
+
+### Android Specifics
+
+For Android, we hook into Gradle for the source map build process. When you run `react-native link`, the Gradle files are automatically updated. When you run `./gradlew assembleRelease`, source maps are automatically built and uploaded to Sentry.
+
+If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build.
+
+To disable this feature, set `org.gradle.configureondemand=false` or remove it as its default value is disabled, do this in the `gradle.properties` file.

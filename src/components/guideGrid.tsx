@@ -1,5 +1,5 @@
 import React from "react";
-import PlatformIcon from "platformicons";
+import { PlatformIcon } from "platformicons";
 
 import SmartLink from "./smartLink";
 import usePlatform, { Platform } from "./hooks/usePlatform";
@@ -23,7 +23,7 @@ export default ({ platform }: Props): JSX.Element => {
             <PlatformIcon
               size={16}
               platform={guide.key}
-              style={{ marginRight: "0.5rem" }}
+              style={{ marginRight: "0.5rem", border: 0, boxShadow: "none" }}
               format="lg"
             />
             <h4 style={{ display: "inline-block" }}>{guide.title}</h4>

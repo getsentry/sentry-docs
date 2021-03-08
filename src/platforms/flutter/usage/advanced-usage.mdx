@@ -1,0 +1,31 @@
+---
+title: Advanced Usage
+sidebar_order: 2
+description: "Learn about advanced uses of the Flutter SDK, including uploading debug symbols, known limitations, and bundling."
+---
+
+
+## Uploading Debug Symbols (Android and iOS)
+
+Debug symbols provide information that Sentry displays on the Issue Details page to help you triage an issue.
+
+- [iOS dSYM files](/platforms/apple/dsym/)
+- [Android NDK](/product/cli/dif/#uploading-files) need to be done manually. Do not use the `uploadNativeSymbols` flag from the [Sentry Gradle Plugin](/platforms/android/proguard/) as it is not yet supported.
+- [Android Proguard/R8 mapping file](/platforms/android/proguard/)
+- [Source maps for Flutter Web](/product/cli/releases/#managing-release-artifacts)
+
+## Known Limitations
+
+- Flutter `split-debug-info` and `obfuscate` flags aren't yet supported on iOS; they are supported only on Android. If this feature is enabled, Dart stack traces are not human readable, this is a tooling limitation, See: [43612](https://github.com/dart-lang/sdk/issues/43612) and [43274](https://github.com/dart-lang/sdk/issues/43274).
+- If you enable the `split-debug-info` feature, you must upload the Debug Symbols manually.
+- Also, Issue's titles might be obfuscated as we rely on the `runtimeType`, but they may not be human-readable, See: [Obfuscate Caveat](https://flutter.dev/docs/deployment/obfuscate#caveat)
+- Layout related errors are only caught by [FlutterError.onError](https://api.flutter.dev/flutter/foundation/FlutterError/onError.html) in debug mode. In release mode, they are removed by the Flutter framework. See [Flutter build modes](https://flutter.dev/docs/testing/build-modes).
+
+## Building Specific ABI on Android
+
+The Sentry Flutter SDK includes the Sentry Android SDK, which bundles multiple native libraries for multiple ABIs.
+Building a Flutter app for a specific ABI using the `--target-platform` argument, for example an ARM 32bit apk, looks like this, which should also include the `--split-per-abi` flag:
+
+```bash
+flutter build apk --target-platform=android-arm --split-per-abi
+```

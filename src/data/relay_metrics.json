@@ -140,7 +140,7 @@
   {
     "type": "Counter",
     "name": "events.outcomes",
-    "description": "Number of outcomes and reasons for rejected Envelopes.\n\nThis metric is tagged with:\n- `outcome`: The basic cause for rejecting the event.\n- `reason`: A more detailed identifier describing the rule or mechanism leading to the\noutcome.\n\nPossible outcomes are:\n- `filtered`: Dropped by inbound data filters. The reason specifies the filter that\nmatched.\n- `rate_limited`: Dropped by organization, project, or DSN rate limit, as well as exceeding\nthe Sentry plan quota. The reason contains the rate limit or quota that was exceeded.\n- `invalid`: Data was considered invalid and could not be recovered. The reason indicates\nthe validation that failed.",
+    "description": "Number of outcomes and reasons for rejected Envelopes.\n\nThis metric is tagged with:\n- `outcome`: The basic cause for rejecting the event.\n- `reason`: A more detailed identifier describing the rule or mechanism leading to the\noutcome.\n- `to`: Describes the destination of the outcome. Can be either 'kafka' (when in\nprocessing mode) or 'http' (when outcomes are enabled in an external relay).\n\nPossible outcomes are:\n- `filtered`: Dropped by inbound data filters. The reason specifies the filter that\nmatched.\n- `rate_limited`: Dropped by organization, project, or DSN rate limit, as well as exceeding\nthe Sentry plan quota. The reason contains the rate limit or quota that was exceeded.\n- `invalid`: Data was considered invalid and could not be recovered. The reason indicates\nthe validation that failed.",
     "features": [
       "processing"
     ]
@@ -204,6 +204,12 @@
     "features": []
   },
   {
+    "type": "Counter",
+    "name": "project_state.no_cache",
+    "description": "Number of times a project config was requested with `.no-cache`.\n\nThis effectively counts the number of envelopes or events that have been sent with a\ncorresponding DSN. Actual queries to the upstream may still be deduplicated for these\nproject state requests.\n\nA maximum of 1 such requests per second is allowed per project key. This metric counts only\npermitted requests.",
+    "features": []
+  },
+  {
     "type": "Histogram",
     "name": "project_state.pending",
     "description": "Number of projects in the in-memory project cache that are waiting for their state to be\nupdated.\n\nSee `project_cache.size` for more description of the project cache.",
@@ -246,6 +252,12 @@
     "features": []
   },
   {
+    "type": "Timer",
+    "name": "requests.timestamp_delay",
+    "description": "The delay between the timestamp stated in a payload and the receive time.\n\nSDKs cannot transmit payloads immediately in all cases. Sometimes, crashes require that\nevents are sent after restarting the application. Similarly, SDKs buffer events during\nnetwork downtimes for later transmission. This metric measures the delay between the time of\nthe event and the time it arrives in Relay. The delay is measured after clock drift\ncorrection is applied.\n\nOnly payloads with a delay of more than 1 minute are captured.\n\nThis metric is tagged with:\n\n- `category`: The data category of the payload. Can be one of: `event`, `transaction`,\n`security`, or `session`.",
+    "features": []
+  },
+  {
     "type": "Counter",
     "name": "responses.status_codes",
     "description": "Number of completed HTTP requests.\n\nThis metric is tagged with:\n\n- `status_code`: The HTTP status code number.\n- `method`: The HTTP method used in the request in uppercase.\n- `route`: Unique dashed identifier of the endpoint.",
@@ -273,6 +285,12 @@
     "type": "Set",
     "name": "unique_projects",
     "description": "Represents the number of active projects in the current slice of time",
+    "features": []
+  },
+  {
+    "type": "Gauge",
+    "name": "upstream.network_outage",
+    "description": "The state of Relay with respect to the upstream connection.\nPossible values are `0` for normal operations and `1` for a network outage.",
     "features": []
   },
   {

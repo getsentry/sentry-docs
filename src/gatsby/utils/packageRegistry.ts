@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { BASE_REGISTRY_URL } from "./shared";
+
 type FileData = {
   checksums: {
     [name: string]: string;
@@ -29,7 +31,7 @@ export default class PackageRegistry {
     if (!this.indexCache) {
       try {
         const result = await axios({
-          url: `https://release-registry.services.sentry.io/sdks`,
+          url: `${BASE_REGISTRY_URL}/sdks`,
         });
         this.indexCache = result.data;
       } catch (err) {
@@ -44,12 +46,12 @@ export default class PackageRegistry {
 
   getData = async (name: string) => {
     await this.getList();
-    return this.indexCache[name]
+    return this.indexCache[name];
   };
 
   version = async (name: string, defaultValue: string = "") => {
     const data = (await this.getData(name)) as VersionData;
-    return data && data.version || defaultValue;
+    return (data && data.version) || defaultValue;
   };
 
   checksum = async (name: string, fileName: string, checksum: string) => {

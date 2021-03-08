@@ -5,13 +5,14 @@ keywords: ["pii", "gdpr", "personally identifiable data", "compliance", "minidum
 ---
 
 
-Events can include attachments. In some cases, attachments may contain PII. [Minidumps](/platforms/native/guides/minidumps) are a common attachment type for native crash reports, and minidumps may contain PII in various sections of the file.
+PII can be included in attachments which are included in events.
+[Minidumps](/platforms/native/guides/minidumps), a common attachment type for native crash reports, may contain PII in various sections of the file.
 
 
 ## Data Scrubbing Methods in Attachments
 
-When scrubbing attachments, and especially minidump, it is often important to do so without destroying the original file format.
-We do this by providing some built-in knowledge of some file formats and provide you with custom [source-selectors](#attachment-source-selectors) which help you write scrubbing rules without damage to the file if used carefully.
+Scrubbing attachments, and especially minidumps, should be done carefully and without destroying the original file format.
+Sentry provides some built-in knowledge of some file formats and provides custom [source-selectors](#attachment-source-selectors) to help you write scrubbing rules that won't damage the file when used carefully.
 
 When modifying data in the file, Sentry cannot modify the length of the file. This has implications for how the [Methods](../advanced-datascrubbing/#methods) behave:
 
@@ -49,7 +50,8 @@ For the purpose of PII scrubbing, we currently represent the minidump as a flat 
 
   We **do not recommend** scrubbing stack memory since it is required by Sentry to build a readable stack trace for the event.
   Inadvertently modifying the stack in an undesired way will make this process impossible and the event far less useful.
-  Because of this there is no way to select the stack memory by a more generic selector like a [value type](../advanced-datascrubbing/#value-types), you must select it explicitly e.g. using `stack_memory` or `$minidump.stack_memory` for it to be scrubbed.
+  Because of this, you cannot select the stack memory by a more generic selector like a [value type](../advanced-datascrubbing/#value-types).
+  You must select it explicitly, such as by `stack_memory` or `$minidump.stack_memory`, for it to be scrubbed.
 
   In general, all [data types](../advanced-datascrubbing/#data-types) result in a textual regular expression match on some data.
   For the stack, this regular expression is matched as a binary UTF-8 regular expression so that any UTF-8 embedded in the binary data will be matched.
@@ -76,7 +78,7 @@ For the purpose of PII scrubbing, we currently represent the minidump as a flat 
 
   Both fields have a [value type](../advanced-datascrubbing/#value-types) of `$string`. Any modification will exclude the basename of the pathnames to ensure the event processing pipeline can still operate correctly on the minidump.
 
-  This example is how the UI displays a rule to scrub these fields:
+  This example illustrates how a rule to scrub these fields displays in sentry.io:
 
   ```
   [Remove] [Usernames in filepaths] from [$minidump.code_file || $minidump.debug_file]
@@ -101,7 +103,7 @@ For the purpose of PII scrubbing, we currently represent the minidump as a flat 
   Note the syntax to denote a string delimited by NULL in the regular expression: any sequence of characters not containing NULL, but ending in NULL. Here, NULL itself is represented by its unicode codepoint: `\u0000`.
 
 
-## Malformed minidumps
+## Malformed Minidumps
 
 If a minidump fails to be parsed because it is malformed it could still contain PII.
 For this reason the minidump attachment is also scrubbed as one binary field if it can not be parsed.

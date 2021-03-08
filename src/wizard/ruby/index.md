@@ -7,41 +7,40 @@ type: language
 
 ## Installation {#install}
 
-Raven Ruby comes as a gem and is straightforward to install. If you are using Bundler just add this to your `Gemfile`:
+Sentry Ruby comes as a gem and is straightforward to install. If you are using Bundler just add this to your `Gemfile`:
 
 ```ruby
-gem "sentry-raven"
+gem "sentry-ruby"
 ```
 
 ## Configuration {#configure}
 
-To use Raven Ruby all you need is your DSN. Like most Sentry libraries it will honor the `SENTRY_DSN` environment variable. You can find it on the project settings page under API Keys. You can either export it as environment variable or manually configure it with `Raven.configure`:
+To use Sentry Ruby all you need is your DSN. Like most Sentry libraries it will honor the `SENTRY_DSN` environment variable. You can find it on the project settings page under API Keys. You can either export it as environment variable or manually configure it with `Sentry.init`:
 
 ```ruby
-Raven.configure do |config|
+Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
+
+  # To activate performance monitoring, set one of these options.
+  # We recommend adjusting the value in production:
+  config.traces_sample_rate = 0.5
+  # or
+  config.traces_sampler = lambda do |context|
+    true
+  end
 end
 ```
 
-## Reporting Failures
+## Usage {#usage}
 
-If you use Rails, Rake, Sidekiq, etc, you’re already done - no more configuration required! Check [_Integrations_](/platforms/ruby/configuration/integrations/) for more details on other gems Sentry integrates with automatically.
-
-Rack requires a little more setup: [_Rack (Sinatra etc.)_](/platforms/ruby/guides/rack/)
-
-Otherwise, Raven supports two methods of capturing exceptions:
+You can then report errors or messages to Sentry:
 
 ```ruby
-Raven.capture do
-  # capture any exceptions which happen during execution of this block
-  1 / 0
-end
-
 begin
   1 / 0
 rescue ZeroDivisionError => exception
-  Raven.capture_exception(exception)
+  Sentry.capture_exception(exception)
 end
-```
 
-You can add either of the snippets above into your application to verify that Sentry is set up correctly.
+Sentry.capture_message("test message")
+```

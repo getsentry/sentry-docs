@@ -1,0 +1,77 @@
+---
+title: Included Instrumentation
+sidebar_order: 10
+supported:
+  - javascript
+description: "Learn what transactions are captured after tracing is enabled."
+---
+
+<Note>
+
+Capturing transactions requires that you first <PlatformLink to="/performance/">set up tracing in your app</PlatformLink> if you haven't already.
+
+</Note>
+
+The `@sentry/tracing` package provides a `BrowserTracing` integration to add _automatic_ instrumentation for monitoring the performance of browser applications.
+
+## What Our Instrumentation Provides
+
+The `BrowserTracing` integration creates a new transaction for each page load and navigation event, and creates a child span for every `XMLHttpRequest` or `fetch` request that occurs while those transactions are open. Learn more about [traces, transactions, and spans](/product/performance/distributed-tracing/).
+
+## Enable Instrumentation
+
+To enable this tracing, include the `BrowserTracing` integration in your SDK configuration options. (Note that when using ESM modules, the main `@sentry/*` import must come before the `@sentry/tracing` import.)
+
+<PlatformContent includePath="performance/enable-automatic-instrumentation" />
+
+## Configuration Options
+
+You can pass many different options to the `BrowserTracing` integration (as an object of the form `{optionName: value}`), but it comes with reasonable defaults out of the box. For all possible options, see [TypeDocs](https://getsentry.github.io/sentry-javascript/interfaces/tracing.browsertracingoptions.html).
+
+### tracingOrigins
+
+The default value of `tracingOrigins` is `['localhost', /^\//]`. The JavaScript SDK will attach the `sentry-trace` header to all outgoing XHR/fetch requests whose destination contains a string in the list or matches a regex in the list. If your frontend is making requests to a different domain, you will need to add it there to propagate the `sentry-trace` header to the backend services, which is required to link transactions together as part of a single trace. **The `tracingOrigins` option matches against the whole request URL, not just the domain. Using stricter regex to match certain parts of the URL ensures that requests do not unnecessarily have the `sentry-trace` header attached.**
+
+<PlatformContent includePath="performance/tracingOrigins-example" />
+
+You will need to configure your web server CORS to allow the `sentry-trace` header. The configuration might look like `"Access-Control-Allow-Headers: sentry-trace"`, but the configuration depends on your set up. If you do not allow the `sentry-trace` header, the request might be blocked.
+
+### beforeNavigate
+
+For `pageload` and `navigation` transactions, the `BrowserTracing` integration uses the browser's `window.location` API to generate a transaction name. To customize the name of the `pageload` and `navigation` transactions, you can supply a `beforeNavigate` option to the `BrowserTracing` integration. This option allows you to modify the transaction name to make it more generic, so that, for example, transactions named `GET /users/12312012` and `GET /users/11212012` can both be renamed `GET /users/:userid`, so that they'll group together.
+
+<PlatformContent includePath="performance/beforeNavigate-example" />
+
+### shouldCreateSpanForRequest
+
+This function can be used to filter out unwanted spans such as XHR's running health checks or something similar. By default `shouldCreateSpanForRequest` already filters out everything but what was defined in `tracingOrigins`.
+
+<PlatformContent includePath="performance/filter-span-example" />
+
+### idleTimeout
+
+The time, measured in ms, to wait until the transaction will be finished. The transaction will use the end timestamp of the last finished span as the endtime for the transaction.
+
+The default is 1000.
+
+### startTransactionOnLocationChange
+
+This flag enables or disables creation of `navigation` transaction on history changes.
+
+The default value is `true`.
+
+### startTransactionOnPageLoad
+
+The default value of `startTransactionOnPageLoad` is `true`. This flag enables or disables creation of `navigation` transaction on first pageload.
+
+### maxTransactionDuration
+
+The maximum duration of a transaction before it will be marked as "deadline_exceeded", measured in seconds. If you never want to mark a transaction, set `maxTransactionDuration` to 0.
+
+The default is 600.
+
+### markBackgroundTransactions
+
+This option flags transactions when tabs are moved to the background with "cancelled". Because browser background tab timing is not suited for precise measurements of operations and can affect your statistics in nondeterministic ways, we recommend that this option be enabled.
+
+The default is `true`.

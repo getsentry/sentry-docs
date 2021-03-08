@@ -4,7 +4,83 @@ sidebar_order: 1000
 description: "Learn about migrating from io.sentry:sentry 1.x to io.sentry:sentry 3.x."
 ---
 
-## Migrating from `io.sentry:sentry` `1.x` to `io.sentry:sentry` `3.x`
+## Migrating from `io.sentry:sentry` `4.1.0` to `io.sentry:sentry` `4.2.0`
+
+`operation` is now a required property of the `SentryTransaction` and `SentrySpan`. Whenever a transaction or span is started, the value for `operation` must be provided:
+
+```java
+Sentry.startTransaction("transaction-name", "operation-name");
+```
+
+### Spring
+
+#### RestTemplate instrumentation
+
+Simplified `RestTemplate` instrumentation does not involve anymore setting `UriTemplateHandler` using `SentrySpanClientHttpRequestInterceptor`.
+
+Code snippet adding Sentry `RestTemplate` instrumentation changed from:
+
+```java
+@Bean
+RestTemplate restTemplate(IHub hub) {
+  RestTemplate restTemplate = new RestTemplate();
+  SentrySpanClientHttpRequestInterceptor sentryRestTemplateInterceptor = new SentrySpanClientHttpRequestInterceptor(hub);
+  UriTemplateHandler templateHandler = restTemplate.getUriTemplateHandler();
+  restTemplate.setUriTemplateHandler(sentryRestTemplateInterceptor.createUriTemplateHandler(templateHandler));
+  restTemplate.setInterceptors(Collections.singletonList(sentryRestTemplateInterceptor));
+  return restTemplate;
+}
+```
+
+into:
+
+```java
+@Bean
+RestTemplate restTemplate(IHub hub) {
+  RestTemplate restTemplate = new RestTemplate();
+  SentrySpanClientHttpRequestInterceptor sentryRestTemplateInterceptor = new SentrySpanClientHttpRequestInterceptor(hub);
+  restTemplate.setInterceptors(Collections.singletonList(sentryRestTemplateInterceptor));
+  return restTemplate;
+}
+```
+
+#### SentryExceptionResolver does not send handled errors by default
+
+To prevent `SentryExceptionResolver` from sending errors that have been already captured by `@ExceptionHandlers`, we've changed the order for `SentryExceptionResolver` to `1`.
+
+Old behavior can be brought back by setting `exceptionResolverOrder` property on `@EnableSentry`:
+
+```java
+@EnableSentry(exceptionResolverOrder = -2147483648)
+class CustomConfiguration {
+  ...
+}
+```
+
+### Spring Boot
+
+#### SentryExceptionResolver does not send handled errors by default
+
+To prevent `SentryExceptionResolver` from sending errors that have been already captured by `@ExceptionHandlers`, we've changed the order for `SentryExceptionResolver` to `1`.
+
+Old behavior can be brought back by setting a property `sentry.exception-resolver-order=-2147483648`
+
+#### `@SentryTransaction` `operation` is now required
+
+`@SentryTransaction` must have `operation` property provided.
+
+```java
+class MyComponent {
+
+  @SentryTransaction(name = "transaction-name", operation = "operation-name")
+  @Scheduled(fixedRate = 3 * 1000L)
+  void execute() {
+      ...
+    }
+}
+```
+
+## Migrating from `io.sentry:sentry` `1.x` to `io.sentry:sentry` `4.x`
 
 
 Our update to the API follows the [Unified API](https://develop.sentry.dev/sdk/unified-api/) more closely. It's a completely updated code base, written to support our Android SDK.
@@ -19,10 +95,18 @@ _Previous_:
 Sentry.getContext().addTag("tagName", "tagValue");
 ```
 
+```kotlin
+Sentry.getContext().addTag("tagName", "tagValue")
+```
+
 _Updated_:
 
 ```java
 Sentry.setTag("tagName", "tagValue");
+```
+
+```kotlin
+Sentry.setTag("tagName", "tagValue")
 ```
 
 #### Capture custom exception
@@ -31,9 +115,17 @@ _Previous_:
 
 ```java
 try {
-    int x = 1 / 0;
+  int x = 1 / 0;
 } catch (Exception e) {
-    Sentry.capture(e);
+  Sentry.capture(e);
+}
+```
+
+```kotlin
+try {
+  val x = 1 / 0
+} catch (e: Exception) {
+  Sentry.capture(e)
 }
 ```
 
@@ -41,9 +133,17 @@ _New_:
 
 ```java
 try {
-    int x = 1 / 0;
+  int x = 1 / 0;
 } catch (Exception e) {
-    Sentry.captureException(e);
+  Sentry.captureException(e);
+}
+```
+
+```kotlin
+try {
+  val x = 1 / 0
+} catch (e: Exception) {
+  Sentry.captureException(e)
 }
 ```
 
@@ -55,11 +155,20 @@ _Previous_:
 Sentry.capture("This is a test");
 ```
 
+```kotlin
+Sentry.capture("This is a test")
+```
+
 _New_:
 
 ```java
 Sentry.captureMessage("This is a test"); // SentryLevel.INFO by default
 Sentry.captureMessage("This is a test", SentryLevel.WARNING); // or specific level
+```
+
+```kotlin
+Sentry.captureMessage("This is a test") // SentryLevel.INFO by default
+Sentry.captureMessage("This is a test", SentryLevel.WARNING) // or specific level
 ```
 
 #### Breadcrumbs
@@ -68,8 +177,14 @@ _Previous_:
 
 ```java
 Sentry.getContext().recordBreadcrumb(
-    new BreadcrumbBuilder().setMessage("User made an action").build()
+  new BreadcrumbBuilder().setMessage("User made an action").build()
 );
+```
+
+```kotlin
+Sentry.getContext().recordBreadcrumb(
+  BreadcrumbBuilder().setMessage("User made an action").build()
+)
 ```
 
 _New_:
@@ -78,14 +193,24 @@ _New_:
 Sentry.addBreadcrumb("User made an action");
 ```
 
+```kotlin
+Sentry.addBreadcrumb("User made an action")
+```
+
 #### User
 
 _Previous_:
 
 ```java
 Sentry.getContext().setUser(
-    new UserBuilder().setEmail("hello@sentry.io").build()
+  new UserBuilder().setEmail("hello@sentry.io").build()
 );
+```
+
+```kotlin
+Sentry.getContext().setUser(
+  UserBuilder().setEmail("hello@sentry.io").build()
+)
 ```
 
 _New_:
@@ -96,6 +221,13 @@ user.setEmail("hello@sentry.io");
 Sentry.setUser(user);
 ```
 
+```kotlin
+val user = User().apply {
+  email = "hello@sentry.io"
+}
+Sentry.setUser(user)
+```
+
 #### Set extra
 
 _Previous_:
@@ -104,8 +236,80 @@ _Previous_:
 Sentry.getContext().addExtra("extra", "thing");
 ```
 
+```kotlin
+Sentry.getContext().addExtra("extra", "thing")
+```
+
 _New_:
 
 ```java
 Sentry.setExtra("extra", "thing");
+```
+
+```kotlin
+Sentry.setExtra("extra", "thing")
+```
+
+### Removed Properties
+
+Following configuration properties have been removed:
+
+- `buffer.dir` - can be set with `SentryOptions#cacheDirPath`
+- `buffer.size`  - can be set with `SentryOptions#cacheDirSize`
+- `buffer.flushtime` - can be set with `SentryOptions#flushTimeoutMillis`
+- `buffer.shutdowntimeout`
+- `buffer.gracefulshutdown`
+- `async`
+- `async.shutdowntimeout` - can be set with `SentryOptions#shutdownTimeout`
+- `async.gracefulshutdown`
+- `async.queuesize` - can be set with `SentryOptions#maxQueueSize`
+- `async.threads`
+- `async.priority`
+- `compression`
+- `maxmessagelength`
+- `factory`
+- `mdcTags`
+- `extra` - can be set on the scope with `Scope#extra`
+
+
+### Property Name Changes
+
+Following properties cannot be set anymore through external configuration and have to be set directly on `SentryOptions` object when initializing Sentry:
+
+- `sample.rate` - through `SentryOptions#sampleRate`
+- `timeout` - through `SentryOptions#connectionTimeoutMillis` and `SentryOptions#readTimeoutMillis`
+
+See <PlatformLink to="/configuration/">Configuration</PlatformLink> page to find all available configuration properties.
+
+#### Tags
+
+_Previous_:
+
+```properties
+tags=tag1:value1,tag2:value2
+```
+
+_New_:
+
+```properties
+tags.tag1=value1
+tags.tag2=value2
+```
+
+#### “In Application” Stack Frames
+
+```java
+stacktrace.app.packages=com.mycompany,com.other.name
+```
+
+_New_:
+
+```properties
+in-app-includes=com.mycompany,com.other.name
+```
+
+There is also an option to exclude certain packages from stacktraces:
+
+```properties
+in-app-excludes=com.packages.to.exclude
 ```

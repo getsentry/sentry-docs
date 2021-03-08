@@ -23,7 +23,7 @@ compileOptions {
 
 // Add the Sentry Android SDK as a dependency
 dependencies {
-    implementation 'io.sentry:sentry-android-core:3.1.0'
+    implementation 'io.sentry:sentry-android-core:{{ packages.version('sentry.java.android', '4.2.0') }}'
 }
 ```
 
@@ -32,8 +32,7 @@ If you want to use the SDK with the NDK, but you still want to support the devic
 ```xml {filename:AndroidManifest.xml}
 <manifest>
     <!-- Merging strategy for the imported manifests -->
-    <uses-sdk
-        tools:overrideLibrary="io.sentry.android" />
+    <uses-sdk tools:overrideLibrary="io.sentry.android" />
 </manifest>
 ```
 
@@ -83,15 +82,29 @@ Sentry differentiates stack frames that are directly related to your application
 You can configure which package prefixes belong in your application and which don't.
 
 ```java
+import io.sentry.android.core.SentryAndroid;
+
 // This can be set only during the initialization of the SDK.
 SentryAndroid.init(this, options -> {
-        // set all sub packages of java. as packages that do not belong to your application
-        options.addInAppExclude("java.");
+  // set all sub packages of java. as packages that do not belong to your application
+  options.addInAppExclude("java.");
 
-        // set all sub packages of io.sentry as packages that belong to your application
-        options.addInAppInclude("io.sentry");
+  // set all sub packages of io.sentry as packages that belong to your application
+  options.addInAppInclude("io.sentry");
+});
+```
 
-    });
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+// This can be set only during the initialization of the SDK.
+SentryAndroid.init(this) { options ->
+  // set all sub packages of java. as packages that do not belong to your application
+  options.addInAppExclude("java.")
+
+  // set all sub packages of io.sentry as packages that belong to your application
+  options.addInAppInclude("io.sentry")
+}
 ```
 
 ### Disable Automatic Breadcrumbs
@@ -100,16 +113,16 @@ If you want to disable the automatic collection of breadcrumbs, please add the f
 
 ```xml {filename:AndroidManifest.xml}
 <application>
-    <!--    To disable the activity lifecycle breadcrumbs integration-->
+    <!-- To disable the activity lifecycle breadcrumbs integration -->
     <meta-data android:name="io.sentry.breadcrumbs.activity-lifecycle" android:value="false" />
 
-    <!--     To disable the app lifecycle breadcrumbs integration-->
+    <!-- To disable the app lifecycle breadcrumbs integration -->
     <meta-data android:name="io.sentry.breadcrumbs.app-lifecycle" android:value="false" />
 
-    <!--    To disable the system events breadcrumbs integration-->
+    <!-- To disable the system events breadcrumbs integration -->
     <meta-data android:name="io.sentry.breadcrumbs.system-events" android:value="false" />
 
-    <!--    To disable the app components breadcrumbs integration-->
+    <!-- To disable the app components breadcrumbs integration -->
     <meta-data android:name="io.sentry.breadcrumbs.app-components" android:value="false" />
 </application>
 ```
@@ -140,7 +153,7 @@ Sentry uses the AndroidX libraries for detecting when the Application is either 
 We check at runtime for availability, so if you're not using AndroidX libraries, you can remove them from Sentry's transitive dependencies.
 
 ```groovy
-implementation ('io.sentry:sentry-android:{version}') {
+implementation ('io.sentry:sentry-android:{{ packages.version('sentry.java.android', '4.0.0') }}') {
     exclude group: 'androidx.lifecycle', module: 'lifecycle-process'
     exclude group: 'androidx.lifecycle', module: 'lifecycle-common-java8'
 }
@@ -160,6 +173,8 @@ This functionality is [disabled by default](https://developer.android.com/studio
 when using a Android Gradle Plugin >= v3.6.0, and it needs to be enabled with the
 [`extractNativeLibs`](https://developer.android.com/guide/topics/manifest/application-element#extractNativeLibs) configuration option.
 
+If you're using [Android App Bundle](https://developer.android.com/guide/app-bundle), set `android.bundle.enableUncompressedNativeLibs=false` along with the `extractNativeLibs` configuration option.
+
 Apart from this, `sentry-native` also uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
 internally, and will therefore not work out of the box on newer Android devices which have their own conflicting pointer tagging.
 If you are using `sentry-android` version earlier than 3.1, you must manually disable the [`allowNativeHeapPointerTagging`](https://developer.android.com/guide/topics/manifest/application-element#allowNativeHeapPointerTagging) configuration option because `sentry-native` uses [tagged pointers](https://source.android.com/devices/tech/debug/tagged-pointers)
@@ -170,9 +185,14 @@ internally. As a result, this option will not work out of the box on newer Andro
 ```xml {filename:AndroidManifest.xml}
 <application
     android:allowNativeHeapPointerTagging="false"
-    android:extractNativeLibs="true"
-    >
+    android:extractNativeLibs="true">
 </application>
+```
+
+**Example gradle.properties**:
+
+```properties {filename:gradle.properties}
+android.bundle.enableUncompressedNativeLibs=false
 ```
 
 To use the Android NDK in your native code, include the Sentry NDK libraries into your project so that the compiler can link the libraries during the build.
@@ -184,7 +204,7 @@ First, we need to declare the dependency in the project build.gradle file:
 ```groovy {filename:build.gradle}
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
@@ -231,7 +251,7 @@ Java_io_sentry_demo_NativeDemo_crash(JNIEnv *env, jclass cls) {
 }
 ```
 
-To symbolicate the stack trace from native code, we need to have access to the debug symbols of your application. Please check the full documentation on [uploading files](../../data-management/debug-files/#uploading-files) to learn more about the upload of the debug symbols.
+To symbolicate the stack trace from native code, we need to have access to the debug symbols of your application. Please check the full documentation on [uploading files](../../data-management/debug-files/upload/) to learn more about the upload of the debug symbols.
 
 Example of uploading all your .so files:
 
@@ -251,6 +271,21 @@ If you want to set context data in the Java layer, then receive that context dat
     <meta-data android:name="io.sentry.ndk.scope-sync.enable" android:value="true" />
 </application>
 ```
+
+#### Multi-Process Apps
+
+The Sentry Android SDK will not automatically initialize in non-main processes because of `ContentProvider`. If you'd like to automatically `auto-init` the Sentry Android SDK in other processes, add the following to your manifest:
+
+```xml {filename:AndroidManifest.xml}
+<provider
+    android:name="io.sentry.android.core.SentryInitProvider"
+    android:authorities="${applicationId}.SentryInitProvider"
+    android:exported="false"
+    android:process="YOUR_PROCESS_HERE"
+    tools:node="merge" />
+```
+
+Alternatively, you can call `SentryAndroid.init(...)`.
 
 ## Manual Initialization
 
@@ -282,27 +317,63 @@ The SDK can catch errors and crashes only after you've initialized it. So, we re
 Configuration options will be loaded from the manifest so that you don't need to have the static properties in your code. In the `init` method, you can provide a callback that will modify the configuration and also register new options.
 
 ```java
+import io.sentry.SentryLevel;
+import io.sentry.android.core.SentryAndroid;
+import android.app.Application;
+
 public class SentryApplication extends Application {
-    public void onCreate() {
-        super.onCreate();
-        /**
-            * Manual Initialization of the Sentry Android SDK
-            * @Context - Instance of the Android Context
-            * @Options - Call back function that you need to provide to be able to modify the options.
-            * The call back function is provided with the options loaded from the manifest.
-            *
-            */
-        SentryAndroid.init(this, options -> {
-            // Add a callback that will be used before the event is sent to Sentry.
-            // With this callback, you can modify the event or, when returning null, also discard the event.
-            options.setBeforeSend((event, hint) -> {
-                if (SentryLevel.DEBUG.equals(event.getLevel()))
-                    return null;
-                else
-                    return event;
-            });
-        });
+  public void onCreate() {
+    super.onCreate();
+    /**
+     * Manual Initialization of the Sentry Android SDK
+     * @Context - Instance of the Android Context
+     * @Options - Call back function that you need to provide to be able to modify the options.
+     * The call back function is provided with the options loaded from the manifest.
+     *
+     */
+    SentryAndroid.init(this, options -> {
+      // Add a callback that will be used before the event is sent to Sentry.
+      // With this callback, you can modify the event or, when returning null, also discard the event.
+      options.setBeforeSend((event, hint) -> {
+        if (SentryLevel.DEBUG.equals(event.getLevel()))
+          return null;
+        else
+          return event;
+      });
+    });
+  }
+}
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+import io.sentry.SentryOptions.BeforeSendCallback
+import android.app.Application
+
+class SentryApplication : Application() {
+  override fun onCreate() {
+    super.onCreate()
+
+    /**
+     * Manual Initialization of the Sentry Android SDK
+     * @Context - Instance of the Android Context
+     * @Options - Call back function that you need to provide to be able to modify the options.
+     * The call back function is provided with the options loaded from the manifest.
+     *
+     */
+    SentryAndroid.init(this) { options ->
+      // Add a callback that will be used before the event is sent to Sentry.
+      // With this callback, you can modify the event or, when returning null, also discard the event.
+      options.beforeSend =
+        BeforeSendCallback { event: SentryEvent, hint: Any? ->
+          if (SentryLevel.DEBUG == event.level) {
+            null
+          } else {
+            event
+          }
+        }
     }
+  }
 }
 ```
 

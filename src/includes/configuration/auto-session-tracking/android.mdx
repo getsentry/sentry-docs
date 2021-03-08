@@ -1,3 +1,33 @@
+To benefit from the health data, you must use at least version 2.1.0 of the Android SDK, and enable the collection of release health metrics in the initialization options for the SDK. Release health is captured, by default, in our Android version 3.0 and higher, unless you specifically disabled collecting it in the initialization options for the SDK.
+
+By default, the session is terminated once the application is in the background for more than 30 seconds. You can change the time out with the option named `sessionTrackingIntervalMillis`. It takes the amount in milliseconds. For example, to configure it to be 60 seconds:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+  <meta-data android:name="io.sentry.session-tracking.timeout-interval-millis" android:value="60000" />
+</application>
+```
+
+Or, if you are manually instrumenting Sentry:
+
+```java
+import io.sentry.android.core.SentryAndroid;
+
+SentryAndroid.init(this, options -> {
+  options.setSessionTrackingIntervalMillis(60000);
+});
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.sessionTrackingIntervalMillis = 60000
+}
+```
+
+If you'd like to opt-out of this feature, you can do it via options.
+
 ```xml {filename:AndroidManifest.xml}
 <application>
   <meta-data android:name="io.sentry.session-tracking.enable" android:value="true" />
@@ -7,7 +37,17 @@
 Or, if you are manually instrumenting Sentry:
 
 ```java
+import io.sentry.android.core.SentryAndroid;
+
 SentryAndroid.init(this, options -> {
-    options.setEnableSessionTracking(true);
+  options.setEnableSessionTracking(true);
 });
+```
+
+```kotlin
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.isEnableSessionTracking = true
+}
 ```
