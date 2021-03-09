@@ -167,7 +167,7 @@ export default ({
                 </p>
                 <p>
                   If you think this is an error, feel free to{" "}
-                  <SmartLink to="https://github.com/getsentry/sentry-docs/issues/new">
+                  <SmartLink to="https://github.com/getsentry/sentry-docs/issues/new/choose">
                     let us know on GitHub
                   </SmartLink>
                   .
