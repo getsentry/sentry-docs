@@ -25,8 +25,9 @@ const Sentry = require("@sentry/serverless");
 Sentry.AWSLambda.init({
   dsn: "___PUBLIC_DSN___",
   
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 
@@ -41,8 +42,9 @@ const Sentry = require("@sentry/serverless");
 Sentry.AWSLambda.init({
   dsn: "___PUBLIC_DSN___",
   
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 

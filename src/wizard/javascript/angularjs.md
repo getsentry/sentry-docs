@@ -33,6 +33,9 @@ Sentry.init({
       tracingOrigins: ["localhost", "https://yourserver.io/api"],
     }),
   ],
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 });
 
