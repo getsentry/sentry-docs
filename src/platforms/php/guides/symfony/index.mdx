@@ -7,7 +7,7 @@ redirect_from:
 description: "Learn about using Sentry with Symfony."
 ---
 
-Symfony is supported via the [sentry-symfony](https://github.com/getsentry/sentry-symfony) package as a native bundle.
+Symfony is supported via the [`sentry-symfony`](https://github.com/getsentry/sentry-symfony) package as a native bundle.
 
 ## Install
 
@@ -21,28 +21,25 @@ composer require sentry/sentry-symfony
 
 Add your DSN to `app/config/config.yml`:
 
-```yaml {filename:app/config/config.yml}
+```yaml {filename:config/config.yml}
 sentry:
-  dsn: "___PUBLIC_DSN___"
+  dsn: "%env(SENTRY_DSN)%"
 ```
 
-If you **are not** using Symfony Flex, you'll also need to enable the bundle in `app/AppKernel.php`:
+And in your `.env` file:
+```env
+###> sentry/sentry-symfony ###
+SENTRY_DSN="___PUBLIC_DSN___"
+###< sentry/sentry-symfony ###
+```
 
-```php {filename:app/AppKernel.php}
+If you **are not** using Symfony Flex, you'll also need to enable the bundle in `config/bundles.php`:
+
+```php {filename:config/bundles.php}
 <?php
-class AppKernel extends Kernel
-{
-    public function registerBundles()
-    {
-        $bundles = array(
-            // ...
 
-            new Sentry\SentryBundle\SentryBundle(),
-        );
-
-        // ...
-    }
-
-    // ...
-}
+return [
+  // ...
+  new Sentry\SentryBundle\SentryBundle(),
+];
 ```
