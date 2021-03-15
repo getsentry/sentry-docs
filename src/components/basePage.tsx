@@ -113,7 +113,9 @@ export default ({
               <Banner isModule={true} />
               <React.Fragment>
                 {prependToc}
-                {hasToc && <WrappedTOC ref={contentRef} />}
+                {hasToc && (
+                  <WrappedTOC ref={contentRef} pageContext={pageContext} />
+                )}
               </React.Fragment>
             </div>
           </div>
