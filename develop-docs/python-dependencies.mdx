@@ -2,34 +2,29 @@
 title: "Python Dependencies"
 ---
 
-Sentry as you might know for the most part runs on an old version of Python (2.7). This version has reached end of life which has some consequences in how we develop and pick dependencies.
+Unlike our frontend JavaScript story, where we're generally very happy pulling in dependencies, we're much more conservative on
+the backend. Any dependency we pull in, might require us to eventually (temporarily) fork and vendor it if the upstream
+project no longer supports our version of Python.
 
-Unlike our frontend JavaScript story where we're generally very happy pulling in dependencies we're much more conservative on the backend. Any dependency we pull in might require us to eventually (temporarily) fork and vendor it if the upstream project no longer supports our version of Python.
-
-Additionally all these dependencies run on the server and are thus much riskier as they have direct access to customer data if they turn out to be malicious.
+Additionally, all these dependencies run on the server, thus, making them riskier as they have direct access to customer
+data if they turn out to be malicious.
 
 So here are the rules we worked with so far:
 
 ## Rules on Dependencies
 
 1. Any new dependency needs to be thoroughly reviewed and approved
-2. Dependencies must be range pinned semver conforming in [the requirements file of **sentry**](https://github.com/getsentry/sentry/blob/master/requirements-base.txt)
-3. Dependencies **must** be hard pinned in [the requirements file of **getsentry**](https://github.com/getsentry/getsentry/blob/master/requirements-base.txt)
+2. Dependencies **must** be hard pinned in [the requirements file of **sentry**](https://github.com/getsentry/sentry/blob/master/requirements-base.txt)
 
-## Safest workflow for editing Python requirements
-
-In order to avoid ever breaking master, you can:
-
-1. Open PR in getsentry to update requirements
-2. Open PR in sentry with the same branch name, put [`#sync-getsentry`](/workflow/) in the PR's description (that is, the first comment when you open the PR)
-3. Merge both when both PRs are green
-
-Unfortunately, you'll have to revert the SHA changes made by the sync bot before merging, so this process is elaborate and time-consuming, but by far the safest that never breaks master.
+Note: If you need to add a dependency with a URL you will have to place it with a range in Sentry and place the URL in getsentry's
+requirements. This is because we release sentry as a package in PyPI and it does not accept URLs.
 
 ## Rules on Licenses
 
-Sentry uses BSD/MIT/ISC and Apache 2 licenses. Whatever we used needs to be compatible with this. This means an absolute hard no on GPL/AGPL and a soft no on LGPL unless absolutely necessary. Acceptable uses of LGPL are swappable components like database drivers.
+Sentry uses BSD/MIT/ISC and Apache 2 licenses. Whatever we used needs to be compatible with this. This means an absolute
+hard no on GPL/AGPL and a soft no on LGPL unless absolutely necessary. Acceptable uses of LGPL are swappable components
+like database drivers.
 
 ## Unclear?
 
-If you have questions about dependencies feel free to reach out to Armin Ronacher or Matt Robenolt with questions.
+If you have questions about dependencies feel free to reach out to [owners-python-build](https://github.com/orgs/getsentry/teams/owners-python-build/members) with questions.
