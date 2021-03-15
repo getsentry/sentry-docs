@@ -10,7 +10,10 @@ Sentry.init(options -> {
   options.setTracesSampler(context -> {
     CustomSamplingContext ctx = context.getCustomSamplingContext();
     if (ctx != null) {
-      if ("/payment".equals(ctx.get("url"))) {
+      Boolean parentSampled = context.getTransactionContext().getParentSampled();
+      if (parentSampled != null) {
+        return parentSampled ? 1.0 : 0.0;
+      } else if ("/payment".equals(ctx.get("url"))) {
         // These are important - take a big sample
         return 0.5;
       } else if ("/search".equals(ctx.get("url"))) {
