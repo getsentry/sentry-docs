@@ -100,18 +100,6 @@ export const PlatformSidebar = ({
         tree={tree}
       />
       <DynamicNav
-        root={`/platforms/${platformName}/guides`}
-        title="Other Guides"
-        prependLinks={
-          guideName ? [[`/platforms/${platformName}/`, platform.title]] : null
-        }
-        exclude={
-          guideName ? [`/platforms/${platformName}/guides/${guideName}/`] : []
-        }
-        suppressMissing
-        tree={tree}
-      />
-      <DynamicNav
         root="platforms"
         title="Other Platforms"
         tree={tree}
