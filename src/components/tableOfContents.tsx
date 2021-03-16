@@ -98,7 +98,7 @@ export default ({ contentRef, pageContext }: Props) => {
       </div>
       <ul className="section-nav">{recurse(items)}</ul>
       <div className="doc-toc-title">
-        <h6>Other Guides</h6>
+        <h6>Related Guides</h6>
       </div>
       <GuideGrid platform={platform.name} className="section-nav" />
     </div>
