@@ -11,9 +11,9 @@ Sentry.init(options -> {
     CustomSamplingContext ctx = context.getCustomSamplingContext();
     if (ctx != null) {
       // If this is the continuation of a trace, just use that decision (rate controlled by the caller).
-      if (ctx.getParentSampled() != null) {
-        return ctx.getParentSampled();
-      }
+      Boolean parentSampled = context.getTransactionContext().getParentSampled();
+      if (parentSampled != null) {
+        return parentSampled ? 1.0 : 0.0;
       if ("/payment".equals(ctx.get("url"))) {
         // These are important - take a big sample
         return 0.5;
