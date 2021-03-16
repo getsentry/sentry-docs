@@ -30,8 +30,23 @@ const GitHubCTA = ({
   </div>
 );
 
+export type PageContext = {
+  title?: string;
+  description?: string;
+  excerpt?: string;
+  noindex?: boolean;
+  notoc?: boolean;
+  platform?: {
+    name: string;
+  };
+};
+
+type WrappedTOCProps = {
+  pageContext: PageContext;
+};
+
 const WrappedTOC = React.forwardRef(
-  (props, ref: React.RefObject<HTMLDivElement>) => {
+  (props: WrappedTOCProps, ref: React.RefObject<HTMLDivElement>) => {
     return <TableOfContents {...props} contentRef={ref} />;
   }
 );

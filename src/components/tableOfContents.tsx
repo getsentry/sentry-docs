@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import * as Sentry from "@sentry/gatsby";
 import GuideGrid from "./guideGrid";
+import { PageContext } from "./basePage";
 
 type Item = {
   title?: string;
@@ -57,11 +58,7 @@ const getHeadings = (element: HTMLElement): Item[] => {
 
 type Props = {
   contentRef: React.RefObject<HTMLElement>;
-  pageContext?: {
-    platform?: {
-      name: string;
-    };
-  };
+  pageContext?: PageContext;
 };
 
 export default ({ contentRef, pageContext }: Props) => {
