@@ -8,7 +8,7 @@ const navQuery = graphql`
     allSitePage(
       filter: {
         context: { draft: { ne: false } }
-        path: { regex: "/^/platforms/" }
+        path: { regex: "/^/(platforms|product)/" }
       }
     ) {
       nodes {
@@ -98,6 +98,12 @@ export const PlatformSidebar = ({
         root={`/${pathRoot}/data-management`}
         title="Data Management"
         tree={tree}
+      />
+      <DynamicNav
+        root="product"
+        title="Product guides"
+        tree={tree}
+        exclude={[`/product/`]}
       />
       <DynamicNav
         root="platforms"
