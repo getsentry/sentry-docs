@@ -2,7 +2,7 @@ For Laravel 5 up to 5.4 you need to open up `App/Exceptions/Handler.php` and ext
 `render` method to make sure the 500 error is rendered as a view correctly, in 5.5+ this
 step is not required anymore and you can skip ahead to the next one:
 
-```php
+```php {filename:app/Exceptions/Handler.php}
 <?php
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -18,6 +18,8 @@ class Handler extends ExceptionHandler
         parent::report($exception);
     }
 
+    // This method is ONLY needed for Laravel 5 up to 5.4.
+    // You can skip this method if you are using Laravel 5.5+.
     public function render($request, Exception $exception)
     {
         // Convert all non-http exceptions to a proper 500 http exception
@@ -44,16 +46,16 @@ Make sure you've got the JavaScript SDK available:
 
 Next, create `resources/views/errors/500.blade.php`, and embed the feedback code:
 
-```html
+```html {filename:resources/views/errors/500.blade.php}
 <div class="content">
   <div class="title">Something went wrong.</div>
 
   @if(app()->bound('sentry') && app('sentry')->getLastEventId())
-  <div class="subtitle">Error ID: {{ app('sentry')->getLastEventId() }}</div>
-  <script>
-    Sentry.init({ dsn: '___PUBLIC_DSN___' });
-    Sentry.showReportDialog({ eventId: '{{ app('sentry')->getLastEventId() }}' });
-  </script>
+    <div class="subtitle">Error ID: {{ app('sentry')->getLastEventId() }}</div>
+    <script>
+      Sentry.init({ dsn: '___PUBLIC_DSN___' });
+      Sentry.showReportDialog({ eventId: '{{ app('sentry')->getLastEventId() }}' });
+    </script>
   @endif
 </div>
 ```

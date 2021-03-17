@@ -8,7 +8,7 @@ import io.sentry.ITransaction;
 import io.sentry.Sentry;
 
 void executeTask() {
-  ITransaction transaction = Sentry.startTransaction("task");
+  ITransaction transaction = Sentry.startTransaction("transaction-name", "task");
   Sentry.configureScope(scope -> scope.setTransaction(transaction));
 
   executeSubTask();
@@ -19,9 +19,9 @@ void executeTask() {
 private void executeSubTask() {
   ISpan span = Sentry.getSpan();
   if (span == null) {
-    span = Sentry.startTransaction("sub-task");
+    span = Sentry.startTransaction("transaction-name", "sub-task");
   } else {
-    span = span.startChild();
+    span = span.startChild("operation");
   }
   // ...
   span.finish();
@@ -34,7 +34,7 @@ import io.sentry.ITransaction
 import io.sentry.Sentry
 
 fun executeTask() {
-  val transaction = Sentry.startTransaction("task")
+  val transaction = Sentry.startTransaction("transaction-name", "task")
   Sentry.configureScope(scope -> scope.setTransaction(transaction))
 
   executeSubTask()
@@ -45,9 +45,9 @@ fun executeTask() {
 private fun executeSubTask() {
   var span = Sentry.getSpan()
   span = if (span == null) {
-    Sentry.startTransaction("sub-task")
+    Sentry.startTransaction("transaction-name", "sub-task")
   } else {
-    span.startChild()
+    span.startChild("operation")
   }
   // ...
   span.finish()

@@ -253,7 +253,7 @@ export default (
     location
   );
   let currentValue: string | null =
-    value || valueFromLocation ? valueFromLocation.join(".") : null;
+    value || (valueFromLocation ? valueFromLocation.join(".") : null);
 
   if (!currentValue && !isFixed && useStoredValue) {
     currentValue = storedValue;

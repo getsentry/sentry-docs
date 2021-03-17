@@ -5,30 +5,25 @@ support_level: production
 type: language
 ---
 
-## Integrating the SDK
+Sentry captures data by using an SDK within your application’s runtime.
 
-Sentry captures data by using an SDK within your application’s runtime. These are platform-specific and allow Sentry to have a deep understanding of how your application works.
-
-> If you are using `expo-cli` you need to use another SDK see: [https://docs.expo.io/versions/latest/guides/using-sentry/](https://docs.expo.io/versions/latest/guides/using-sentry/)
-> This SDK only works for ejected projects or projects that directly use React Native.
+> If you are using Expo, see [How to Add Sentry to Your Expo Project](https://docs.expo.io/guides/using-sentry/). This SDK works for both managed and bare projects.
 
 
-To install the React Native SDK, add the dependency to your project by either using `npm` or `yarn`.
+Install our React Native SDK using either `yarn` or `npm`:
 
 ```bash
-npm install @sentry/react-native --save
+npm install --save @sentry/react-native
 # or
 yarn add @sentry/react-native
 ```
 
 ### Linking
 
-Since our SDK also supports native crashes, we need to link the SDK to your native projects.
-
-Above `react-native >= 0.60` you need to do:
+Link the SDK to your native projects to enable native crash reporting. If you are running a project with `react-native < 0.60`, you still need to call `react-native link`, otherwise you can skip this step as `react-native >=0.60` does this automatically.
 
 ```bash
-npx sentry-wizard -i reactNative -p ios android
+npx @sentry/wizard -i reactNative -p ios android
 # or
 yarn sentry-wizard -i reactNative -p ios android
 
@@ -36,32 +31,12 @@ cd ios
 pod install
 ```
 
-Since our SDK supports [auto-linking](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) and iOS relies on CocoaPods, you need to install the dependencies.
+The call to the [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will patch your project accordingly, though you can [link manually](https://docs.sentry.io/platforms/react-native/manual-setup/manual-setup/) if you prefer.
 
-If you are running a project with `react-native < 0.60` you still need to call `react-native link`.
+- iOS Specifics: When you use Xcode, you can hook directly into the build process to upload debug symbols and source maps. However, if you are using bitcode, you will need to disable the “Upload Debug Symbols to Sentry” build phase and then separately upload debug symbols from iTunes Connect to Sentry.
+- Android Specifics: We hook into Gradle for the source map build process. When you run `react-native link`, the Gradle files are automatically updated. When you run `./gradlew assembleRelease`, source maps are automatically built and uploaded to Sentry. If you have enabled Gradle's `org.gradle.configureondemand` feature, you'll need a clean build, or you'll need to disable this feature to upload the source map on every build by setting `org.gradle.configureondemand=false` or remove it.
 
-```bash
-react-native link @sentry/react-native
-```
-
-The _link_ step or the `sentry-wizard` call will patch your project accordingly.
-
-The [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will guide you through the process of setting everything up correctly. This has to be done only once, and the files created can go into your version control system.
-
-The following changes will be performed:
-
-- add the sentry-android package for native crash reporting on Android
-- add the sentry-cocoa package for native crash reporting on iOS
-- enable the Sentry Gradle build step for Android
-- patch _*MainApplication.java*_ for Android
-- configure Sentry for the supplied DSN in your _*index.js/App.js*_ files
-- store build credentials in _*ios/sentry.properties*_ and _*android/sentry.properties*_.
-
-## Connecting the SDK to Sentry
-
-After you’ve completed setting up a project in Sentry, Sentry will give you a value which we call a DSN or Data Source Name. It looks a lot like a standard URL, but it’s just a representation of the configuration required by the Sentry SDKs. It consists of a few pieces, including the protocol, public key, the server address, and the project identifier.
-
-To initialize the SDK, you need to call:
+Initialize the SDK:
 
 ```javascript
 import * as Sentry from "@sentry/react-native";
@@ -73,16 +48,17 @@ Sentry.init({
 
 The `sentry-wizard` will try to add it to your `App.js`
 
-## Verifying Your Setup
-
-Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. You can trigger a JS exception by throwing one in your application:
+Then create an intentional error, so you can test that everything is working:
 
 ```javascript
 throw new Error("My first Sentry error!");
 ```
 
-You can even try a native crash with:
+Or, try a native crash with:
 
 ```javascript
 Sentry.nativeCrash();
 ```
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
+
+If you're an existing user and have disabled alerts, you won't receive this email.

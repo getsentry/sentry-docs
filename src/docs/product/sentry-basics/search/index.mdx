@@ -8,9 +8,9 @@ redirect_from:
 description: "Learn more about Search, which is available on several major Sentry views: Issues, Events, and Releases."
 ---
 
-Search is available on several major Sentry views: Issues, Events, and Releases.
+Search is available on several major [sentry.io](https://sentry.io) views: Issues, Events, and Releases.
 
-<Alert title="Looking for information on Discover?" level="info">
+<Alert title="Looking for information on searching and Discover?" level="info">
 
 Discover is Sentry's powerful query builder for aggregating raw event data and has its own unique syntax not covered here. For more information, see [full Discover documentation](/product/discover-queries/).
 
@@ -18,7 +18,7 @@ Discover is Sentry's powerful query builder for aggregating raw event data and h
 
 ## Syntax
 
-Queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token` and the optional raw search is itself a single `token`. The `key:value` pair `tokens` are treated as issue or event properties. The optional raw search is treated as a single `token` and searches event titles/messages.
+Search queries are constructed using a `key:value` pattern, with an optional raw search at the end. Each `key:value` pair is a `token` and the optional raw search is itself a single `token`. The `key:value` pair `tokens` are treated as issue or event properties. The optional raw search is treated as a single `token` and searches event titles/messages.
 
 For example:
 
@@ -37,11 +37,19 @@ The tokens `is:resolved` and `user.username:"Jane Doe"` are standard search toke
 
 The token `example error` is utilizing the optional raw search and is passed as part of the issue search query (which uses a CONTAINS match similar to SQL). When using the optional raw search, you can provide _one_ string, and the query uses that entire string.
 
-NOTE: Search for [Releases](/product/releases/) supports raw text but not query syntax.
+<Note>
+
+Search for [Releases](/product/releases/) supports raw text but not query syntax.
+
+</Note>
 
 ### Using `OR` and `AND`
 
-NOTE: `OR` and `AND` search conditions are only available for [Discover](/product/discover-queries/), [Performance](/product/performance/), and [Metric Alerts](/product/alerts-notifications/metric-alerts/).
+<Note>
+
+`OR` and `AND` search conditions are only available for [Discover](/product/discover-queries/), [Performance](/product/performance/), and [Metric Alerts](/product/alerts-notifications/metric-alerts/).
+
+</Note>
 
 Use `OR` and `AND` between tokens, and use parentheses `()` to group conditions. `AND` can also be used between non-aggregates and aggregates. However, `OR` cannot.
 
@@ -72,12 +80,14 @@ tags[project_id]:tag_value
 ### Advanced
 
 <Alert title="Note" level="info">
-Advanced search is available for organizations on the new Developer, Team, and Business plans.
+
+Advanced search is available for organizations on the Developer, Team, and Business plans.
+
 </Alert>
 
 #### Exclusion
 
-By default, search terms are `AND`-ed together; they return the intersection of issues/events that match all search terms.
+By default, search terms use the `AND` operator; that is, they return the intersection of issues/events that match all search terms.
 
 To change this, you can use the negation operator `!` to _exclude_ a search parameter.
 
@@ -115,104 +125,28 @@ Issues are an aggregate of one or more events. Searchable properties include wor
 
 Below is a list of Issue-level tokens reserved and known to Sentry:
 
-`age`
+| Token                    | Description |
+|--------------------------|-------------|
+| age | Restrict results to issues created since `age`. The syntax is similar to the Unix `find` command. Supported suffixes: `m -> minutes`, `h -> hours`, `d -> days` `w -> weeks` |
+| age:-24h | Return issues that are new in the last 24 hours. |
+| age:+12h | Return issues older than 12 hours. |
+| age:+12h age:-24h | Return issues created between 12 and 24 hours ago. |
+| assigned | Filter on the user which the issue is assigned to. Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or `#team-name`. |
+| assigned_or_suggested | Filter on the user or team to which the issue is assigned or suggested to be assigned. Suggested assignees are determined by matching [ownership rules](/product/error-monitoring/issue-owners/) and [suspect commits](/product/releases/suspect-commits/). Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or `#team-name`. |
+| bookmarks | Filter on the user which the issue is bookmarked by. Values can be your user ID (your email address) or `me` for yourself. |
+| first-release | Restrict results to issues first seen within the given release. Exact match on the version of a release, or `first-release:latest` to pick the most recent release. |
+| has | Restrict results to issues which have _any_ value for a tag. |
+| has:user | Restrict results to issues which have a user value for a tag. |
+| is | Filter on various properties of an issue. |
+| is:unresolved<br /> is:resolved<br /> is:ignored | Filter on the state of an issue. |
+| is:assigned<br /> is:unassigned | Return issues based on whether they are are assigned or not. |
+| is:linked<br /> is:unlinked | Return issues based on whether they are linked (to an external issue tracker) or not. |
+| lastSeen | Restrict results to issues that were last seen since or until a given point in time. Usage is similar to the `age` token (see above). |
+| lastSeen:+30d | Return issues last seen 30 days ago or more. |
+| lastSeen:-2d | Return issues last seen within the last two days. |
+| timesSeen | Restrict results to issues that have been seen exactly, at least, or at most some number of times.<br /><br /> An exact match token: `timesSeen:10`.<br /><br /> Upper or lower bounds tokens: `timesSeen:>10`, `timesSeen:>=10`, `timesSeen:<10`, `timesSeen:<=10` |
 
-: Restrict results to issues created since `age`. The syntax is similar to the Unix `find` command:
 
-Issues new in the last 24 hours:
-
-`age:-24h`
-
-Issues older than 12 hours:
-
-`age:+12h`
-
-Issues created between 12 and 24 hours ago:
-
-`age:+12h age:-24h`
-
-Supported suffixes:
-
-`m -> minutes` `h -> hours` `d -> days` `w -> weeks`
-
-`assigned`
-
-: Filter on the user which the issue is assigned to.
-
-Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee, or `#team-name`.
-
-`assigned_or_suggested`
-
-: Filter on the user or team to which the issue is assigned or suggested to be assigned. Suggested assignees are determined by matching [ownership rules](/product/error-monitoring/issue-owners/) and [suspect commits](/product/releases/suspect-commits/).
-
-Values can be a user ID (your email address), `me` for yourself, `me_or_none` for yourself or no assignee/suggestions, or `#team-name`.
-
-`bookmarks`
-
-: Filter on the user which the issue is bookmarked by.
-
-Values can be your user ID (your email address) or `me` for yourself.
-
-`first-release`
-
-: Restrict results to issues first seen within the given release.
-
-Exact match on the version of a release, or `first-release:latest` to pick the most recent release.
-
-`has`
-
-: Restrict results to issues which have _any_ value for a tag.
-
-`has:user`
-
-`is`
-
-: Filter on various properties of an issue.
-
-Issue state:
-
-`is:unresolved is:resolved is:ignored`
-
-Issue assigned:
-
-`is:assigned is:unassigned`
-
-Issue linked (to an external issue tracker):
-
-`is:linked is:unlinked`
-
-`lastSeen`
-
-: Restrict results that were last seen since or until a given point in time. Usage is similar to the `age` token (see above).
-
-Issues last seen 30 days ago or more:
-
-`lastSeen:+30d`
-
-Issues last seen within the last two days:
-
-`lastSeen:-2d`
-
-`status`
-
-: Filter on the status of an issue.
-
-Values are `resolved`, `unresolved`, and `ignored`.
-
-`timesSeen`
-
-: Restrict results to issues that have been seen exactly, at least, or at most some number of times.
-
-Exact match:
-
-`timesSeen:10`
-
-Upper or lower bounds:
-
-- `timesSeen:>10`
-- `timesSeen:>=10`
-- `timesSeen:<10`
-- `timesSeen:<=10`
 
 ### Event Properties
 
@@ -222,101 +156,21 @@ When searching on Event properties within the Issues search, Issue Search will r
 
 Below is a list of Event-level tokens reserved and known to Sentry:
 
-`location`
-
-: Restrict results to the events with a matching location.
-
-`message`
-
-: Restrict results to a matching message
-
-`environment`
-
-: Restrict results to events tagged with the given environment.
-
-`release`
-
-: Restrict results to events tagged with the given release.
-
-Exact match on the version of a release, or `release:latest` to pick the most recent release.
-
-`transaction`
-
-: Restrict results to events tagged a URL template/job name.
-
-`geo.country_code`<br />
-`geo.region`<br />
-`geo.city`<br />
-
-: Restrict results to events triggered by a geographic area.
-
-`http.method`<br />
-`http.referer`<br />
-`http.url`<br />
-
-: Restrict results based on the HTTP request context.
-
-`user.id`<br />
-`user.email`<br />
-`user.username`<br />
-`user.ip`<br />
-
-: Restrict results to events affecting the given user.
-
-`event.timestamp`
-
-: Restrict results to events that occurred at the given timestamp. This filter can be passed twice to provide a range.
-
-Events occurred on January 2, 2016:
-
-`event.timestamp:2016-01-02`
-
-Events between 01:00 and 02:00 (UTC):
-
-`event.timestamp:>=2016-01-02T01:00:00 event.timestamp:<2016-01-02T02:00:00`
-
-The following comparative operators are available:
-
-- greater than (`>`)
-- greater than or equal (`>=`)
-- less than (`<`)
-- less than or equal (`<=`)
-
-`device.arch`<br />
-`device.battery_level`<br />
-`device.brand`<br />
-`device.charging`<br />
-`device.locale`<br />
-`device.model_id`<br />
-`device.name`<br />
-`device.online`<br />
-`device.orientation`<br />
-`device.simulator`<br />
-`device.uuid`
-
-: Restrict results to events tagged with a specific device attribute.
-
-`os.build`<br />
-`os.kernel_version`
-
-: Restrict results to events tagged with a specific operating system property.
-
-`stack.abs_path`<br />
-`stack.filename`<br />
-`stack.function`<br />
-`stack.module`<br />
-`stack.package`<br />
-`stack.stack_level`<br />
-`stack.lineno`<br />
-
-: Restrict results to events with a matching stack property. Note: For Native SDK users, `stack.package` is the Native equivalent for `stack.module`. For more details about enhancing search, see the full documentation on [adding context and customizing tags](/platforms/native/enriching-events/).
-
-`error.type`<br />
-`error.value`<br />
-`error.mechanism`<br />
-`error.handled`<br />
-
-: Restrict results to events with a matching error property.
+| Token                     | Description |
+|---------------------------| ----------- |
+| location | Restrict results to the events with a matching location. |
+| message | Restrict results to events with a matching message. |
+| environment | Restrict results to events tagged with the matching environment. |
+| release | Restrict results to events tagged with the matching release. You can create a token with an exact match on the version of a release, or `release:latest` to pick the most recent release. |
+| transaction | Restrict results to events tagged with a URL template/job name. |
+| geo.country_code<br /> geo.region geo.city | Restrict results to events triggered by a geographic area. |
+| http.method<br /> http.referer<br /> http.url | Restrict results based on the HTTP request context. |
+| user.id user.email<br /> user.username<br /> user.ip | Restrict results to events affecting a given user. |
+| event.timestamp | Restrict results to events that occurred at the given timestamp. This filter can be passed twice to provide a range.<br /><br /> Events occurred on January 2, 2016: `event.timestamp:2016-01-02`<br /><br /> Events between 01:00 and 02:00 (UTC): `event.timestamp:>=2016-01-02T01:00:00 event.timestamp:<2016-01-02T02:00:00`<br /><br /> The following comparative operators are available: greater than (`>`), greater than or equal (`>=`), less than (`<`), less than or equal (`<=`) |
+| device.arch<br /> device.battery_level<br /> device.brand<br /> device.charging<br /> device.locale<br /> device.model_id<br /> device.name<br /> device.online<br /> device.orientation<br /> device.simulator<br /> device.uuid | Restrict results to events tagged with a specific device attribute. |
+| os.build<br /> os.kernel_version | Restrict results to events tagged with a specific operating system property. |
+| stack.abs_path<br /> stack.filename<br /> stack.function<br /> stack.module<br /> stack.package<br /> stack.stack_level<br /> stack.lineno | Restrict results to events with a matching stack property.<br /><br /> For Native SDK users, `stack.package` is the Native equivalent for `stack.module`. For more details about enhancing search, see the full documentation on [adding context and customizing tags](/platforms/native/enriching-events/). |
+| error.type<br /> error.value<br /> error.mechanism<br /> error.handled | Restrict results to events with a matching error property. |
 
 ### Custom Tags
 
@@ -372,11 +226,11 @@ You can pin a premade search the same way you pin any other search. When you've 
 
 Owners and managers can create a persistent view for their organization by creating custom saved searched. These saved searches will not be associated with a specific project, but with all projects (and users) across the org.
 
-1. Type a search into the search bar, then click the "add to Organization saved searches" icon just to the right of it. Keep in mind that you need to be an owner or manager within the org to use this feature.
+1. Type a search into the search bar, then click the "Add to Organization saved searches" icon just to the right of it. Keep in mind that you need to be an owner or manager within the org to use this feature.
 
    ![](search-add-org-filter-step-one.png)
 
-2. Name the search in the resulting modal and click 'Save.'
+2. Name the search in the resulting modal and click '"Save".
 
    ![](search-add-org-filter-step-two.png)
 

@@ -21,8 +21,9 @@ To use Sentry Ruby all you need is your DSN. Like most Sentry libraries it will 
 Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
 
-  # To activate performance monitoring, set one of these options.
-  # We recommend adjusting the value in production:
+  # Set traces_sample_rate to 1.0 to capture 100%
+  # of transactions for performance monitoring.
+  # We recommend adjusting this value in production.
   config.traces_sample_rate = 0.5
   # or
   config.traces_sampler = lambda do |context|

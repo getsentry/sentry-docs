@@ -8,7 +8,7 @@ const navQuery = graphql`
     allSitePage(
       filter: {
         context: { draft: { ne: false } }
-        path: { regex: "/^/platforms/" }
+        path: { regex: "/^/(platforms|product)/" }
       }
     ) {
       nodes {
@@ -100,16 +100,10 @@ export const PlatformSidebar = ({
         tree={tree}
       />
       <DynamicNav
-        root={`/platforms/${platformName}/guides`}
-        title="Other Guides"
-        prependLinks={
-          guideName ? [[`/platforms/${platformName}/`, platform.title]] : null
-        }
-        exclude={
-          guideName ? [`/platforms/${platformName}/guides/${guideName}/`] : []
-        }
-        suppressMissing
+        root="product"
+        title="Product guides"
         tree={tree}
+        exclude={[`/product/`]}
       />
       <DynamicNav
         root="platforms"
