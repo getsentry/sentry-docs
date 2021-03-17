@@ -51,3 +51,17 @@ SentryAndroid.init(this) { options ->
   options.isEnableSessionTracking = true
 }
 ```
+### AndroidX Support
+
+Sentry uses the AndroidX libraries for detecting when the application is either in the background or in the foreground. This is necessary for having an accurate result across all the Android OS versions.
+
+We check at runtime for availability, so if you're not using AndroidX libraries, you can remove them from Sentry's transitive dependencies.
+
+```Groovy
+implementation ('io.sentry:sentry-android:4.3.0') {
+    exclude group: 'androidx.lifecycle', module: 'lifecycle-process'
+    exclude group: 'androidx.lifecycle', module: 'lifecycle-common-java8'
+}
+```
+
+Be aware that by removing those transitive dependencies, the automatic session tracking won't work, but you can still do it manually by calling the public APIs `startSession` and `endSession`.
