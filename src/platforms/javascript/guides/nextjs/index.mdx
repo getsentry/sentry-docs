@@ -6,14 +6,21 @@ redirect_from:
   - /clients/javascript/integrations/nextjs/
   - /sdks/nextjs/
   - /platforms/nextjs/
-description: "Learn how to use Sentry's NextJS SDK and how it automatically reports errors and exceptions in your application."
+description: "Learn how to use Sentry’s NextJS SDK and how it automatically reports errors and exceptions in your application."
 ---
 
-To use Sentry with a NextJS application, we will need to use Sentry’s NextJS SDK: `@sentry/nextjs`.
+On this page, we provide concise information to get you up and running with Sentry’s NextJS SDK, automatically reporting errors and exceptions in your application.
+
+<Note>
+
+If you don’t already have an account and Sentry project established, head over to [sentry.io](https://sentry.io/signup/), then return to this page.
+
+</Note>
 
 ## Install
 
-Add the Sentry SDK as a dependency using `npm` or `yarn`:
+To use Sentry with a NextJS application, we will need to use Sentry’s NextJS SDK: `@sentry/nextjs`.
+Add it as a dependency using `npm` or `yarn`:
 
 ```bash {tabTitle:npm}
 npm install --save @sentry/nextjs
@@ -25,35 +32,32 @@ yarn add @sentry/nextjs
 
 ## Configure
 
-Currently, the default config is rather lengthy; but, we provide a more automatic way of configuring it.
-Either way, the default `next.config.js` provides frontend and backend error monitoring, Source Maps for JavaScript and TypeScript, and Vercel deployment support.
+Configuration should happen as early as possible in your application’s lifecycle.
 
-The automatic configuration will at the end create a `sentry.properties` file and populate it with some data; including, but not limited to, the organization, project, and the authentication token.
-We can also provide this data through environment variables, which can be used in combination with the properties file, although they will override it:
-
-```properties {tabTitle:properties} {filename:sentry.properties}
-defaults.org=___ORG_SLUG___
-defaults.project=___PROJECT_SLUG___
-auth.token=___TOKEN___
-```
-
-```bash
-export SENTRY_ORG=___ORG_SLUG___
-export SENTRY_PROJECT=___PROJECT_SLUG___
-export SENTRY_AUTH_TOKEN=___TOKEN___
-```
+You only need to configure the project once, then the created files can go into your version control system.
+The default configuration provides frontend and backend error monitoring, Source Maps for both JavaScript and TypeScript, and Vercel deployment support.
+Currently, the default config is rather lengthy, but we provide a more automatic way of configuring it.
 
 ### Automatic configuration
 
-The [`sentry-wizard`](https://github.com/getsentry/sentry-wizard) provides an automatic way of setting up the configuration, and we only need to follow a few steps to finish the setup:
+The call to the [Sentry Wizard](https://github.com/getsentry/sentry-wizard) will automatically patch your project accordingly. It will perform the following changes:
+
+- create `next.config.js` with the default configuration. If such file already exists, it will create `_next.config.js` instead, which will need to be merged manually.
+- create `sentry.properties` with Sentry’s project-specific data. This file isn’t required if environment variables are correctly set, see [How to set environment variables for a project](TODO).
 
 ```bash
 sentry-wizard -i nextjs
 ```
 
+If you haven’t installed the SDK but want to use the wizard to configure it:
+
+```bash
+npx @sentry/wizard -i nextjs
+```
+
 ### Manual configuration
 
-First, we need to create the following `next.config.js` file (if there's already one, we need to merge it manually):
+Firstly, we need to extend NextJS’s usage of webpack by creating a custom `next.config.js` file (if there’s already one, we need to merge it manually):
 
 ```javascript {filename:next.config.js}
 const {
@@ -133,7 +137,7 @@ module.exports = {
 };
 ```
 
-If we're using TypeScript, make sure the compiler generates Source Maps:
+If we’re using TypeScript, make sure the compiler generates Source Maps:
 
 ```json {filename:tsconfig.json}
 {
@@ -141,6 +145,14 @@ If we're using TypeScript, make sure the compiler generates Source Maps:
     "sourceMap": true,
   }
 }
+```
+
+To set Sentry’s project specific data, we can create a `sentry.properties` file, or if you’re interested in using environment variables, see [How to set environment variables for a project](TODO) to avoid creating it:
+
+```properties {filename:sentry.properties}
+defaults.org=___ORG_SLUG___
+defaults.project=___PROJECT_SLUG___
+auth.token=___TOKEN___
 ```
 
 ## Usage
