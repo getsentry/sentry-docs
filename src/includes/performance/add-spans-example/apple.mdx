@@ -1,0 +1,66 @@
+For example, if you want to create a transaction for a user interaction in your application:
+
+```objc {tabTitle:Objective-C}
+// Let's say this method is called in a background thread when a user clicks on the checkout button of your shop
+-(void) performCheckout
+{
+  // This will create a new Transaction for you
+  id<Span> transaction = [SentrySdk startTransactionWithName:@"checkout",
+                                                   operation:@"perform-checkout"
+  );
+
+  // Validate the cart
+  id<Span> validationSpan = [transaction startChildWithOperation:@"validation",
+                                                     description:@"validating shopping cart"];
+  
+  [self validateShoppingCart]; //Some long process, maybe a sync http request.
+
+  [validationSpan finish];
+
+  // Process the order
+  id<Span> processSpan = [transaction startChildWithOperation:@"process", 
+                                                  description:@"processing shopping cart"];
+                                                    
+  [self processShoppingCart]; //Another time consuming process.
+
+  [processSpan finish];
+
+  [transaction finish];
+}
+```
+
+```swift {tabTitle:Swift}
+// Let's say this method is called in a background thread when a user clicks on the checkout button of your shop
+func performCheckout()
+{
+  // This will create a new Transaction for you
+  let transaction = SentrySdk.startTransaction(
+      name: "checkout", 
+      operation: "perform-checkout" 
+  )
+
+  // Validate the cart
+  let validationSpan = transaction.startChild(
+      operation: "validation", 
+      description: "validating shopping cart"
+  )
+
+  ValidateShoppingCart(); //Some long process, maybe a sync http request.
+
+  validationSpan.finish();
+
+  // Process the order
+  let processSpan = transaction.startChild(
+      operation: "process", 
+      description: "processing shopping cart"
+  )
+
+  ProcessShoppingCart(); //Another time consuming process.
+
+  processSpan.finish();
+
+  transaction.finish();
+}
+```
+
+This example will send a transaction `checkout` to Sentry. The transaction will contain a `validation` span that measures how long `ValidateShoppingCart` took and a `process` span that measures `ProcessShoppingCart`. Finally, the call to `transaction.Finish` will finish the transaction and send it to Sentry.
