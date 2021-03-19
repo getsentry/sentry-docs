@@ -7,17 +7,12 @@ In addition to the [configuration available in the PHP SDK](../configuration/opt
 
 All configuration for Symfony is done in `app/config/config.yml`.
 
-N.B. The `register_error_listener` and `monolog` configuration options are available since [sentry/sentry-symfony:^3.2.0](https://github.com/getsentry/sentry-symfony/releases/tag/3.2.0)
+N.B. The `register_error_listener` configuration option is available since [sentry/sentry-symfony:^3.2.0](https://github.com/getsentry/sentry-symfony/releases/tag/3.2.0).
 
 ```yaml {filename:app/config/config.yml}
 sentry:
   dsn: "___PUBLIC_DSN___"
   register_error_listener: true
-  monolog:
-    error_handler:
-      enabled: false
-      level: DEBUG
-      bubble: true
   options:
     attach_stacktrace: true
     before_breadcrumb: "@sentry.callback.before_breadcrumb"
@@ -54,6 +49,12 @@ sentry:
     request: 1
     subrequest: 1
     console: 1
+services:
+    Sentry\Monolog\Handler:
+        arguments:
+            $hub: '@Sentry\State\HubInterface'
+            $level: !php/const Monolog\Logger::ERROR
+            $bubble: false
 ```
 
 The DSN option is the only required option: it sets the Sentry DSN, and so reports all events to the related project. If it's
