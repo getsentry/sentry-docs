@@ -5,11 +5,11 @@ description: "Learn about Symfony-specific configuration options."
 
 In addition to the [configuration available in the PHP SDK](../configuration/options/), there are some Symfony-specific options.
 
-All configuration for Symfony is done in `app/config/config.yml`.
+All configuration for Symfony is done in `config/packages/sentry.yaml`.
 
 N.B. The `register_error_listener` configuration option is available since [sentry/sentry-symfony:^3.2.0](https://github.com/getsentry/sentry-symfony/releases/tag/3.2.0).
 
-```yaml {filename:app/config/config.yml}
+```yaml {filename:config/packages/sentry.yaml}
 sentry:
   dsn: "___PUBLIC_DSN___"
   register_error_listener: true
@@ -49,12 +49,6 @@ sentry:
     request: 1
     subrequest: 1
     console: 1
-services:
-    Sentry\Monolog\Handler:
-        arguments:
-            $hub: '@Sentry\State\HubInterface'
-            $level: !php/const Monolog\Logger::ERROR
-            $bubble: false
 ```
 
 The DSN option is the only required option: it sets the Sentry DSN, and so reports all events to the related project. If it's
@@ -64,6 +58,22 @@ disable it in the `test` and `dev` environments.
 All the possible configurations under the `options` key map directly to the correspondent options from the base SDK;
 you can read more about those in the [general configuration docs](../configuration/),
 and on the [PHP specific SDK docs](../config/).
+
+If you use Monolog, you can configure it by appending a `services` entry to your configuration file:
+
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+  dsn: "___PUBLIC_DSN___"
+  register_error_listener: false  # avoids double reporting
+  # ...
+
+services:
+  Sentry\Monolog\Handler:
+    arguments:
+      $hub: '@Sentry\State\HubInterface'
+      $level: !php/const Monolog\Logger::ERROR
+      $bubble: false
+```
 
 Below you can find additional documentation that is specific to the bundle usage, or information about the sensible default
 values that you can use in some cases.
