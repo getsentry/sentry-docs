@@ -107,3 +107,13 @@ fun displayUserData() {
 ```
 
 When you didn't finish the transaction yet, but you start a new Activity, the SDK always automatically finishes the previous Activity transaction. This is due to the fact that only one transaction at a time can be bound to the Scope. To work around that, you may create transactions manually using the custom instrumentation and its instance to start spans instead of the Static API.
+
+### OkHttp library Instrumentation
+
+The OkHttp's instrumentation, once added the `SentryOkHttpInterceptor`, starts a Span out of the running Transaction bound to the Scope for each HTTP Request. The SDK sets the Span `operation` to `http.client` and `description` to Request `$method and $URL`, for example, `GET https://sentry.io`
+
+The Span finishes once the Request has been executed, the Span `status` will be depending on the HTTP Response `code` or `SpanStatus.INTERNAL_ERROR` if the `code` does not match any of Sentry's `SpanStatus`.
+
+When the HTTP Request throws an `IOException`, Sentry's SDK associates this exception to the running Span, in case you don't swallow the exception and capture it, Span and SentryEvent on Sentry dashboard will be linked.
+
+For more information see our <Link to="/platforms/android/guides/okhttp/">OkHttp</Link> integration.
