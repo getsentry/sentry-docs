@@ -11,9 +11,12 @@ SentrySdk.start { options in
     // OR if you prefer, determine traces sample rate based on the
     // sampling context
     options.tracesSampler = { context in
-        // Return a number between 0 and 1, or nil to fallback
-        // to the configured value in tracesSampleRate.
-        return 1.0
+         // Don't miss any transactions for VIP users 
+        if context?["vip"] as? Bool == true { 
+            return 1.0 
+        } else { 
+            return 0.25 // 25% for everything else
+        }
     }
 }
 ```
@@ -29,9 +32,13 @@ SentrySdk.start { options in
     options.tracesSampleRate = @1.0;
     
     // OR if you prefer, determine traces sample rate based on the sampling context
-    options.tracesSampler = ^NSNumber * _Nullable(SentrySamplingContext * _Nonnull samplingContext) {
-        // Return a number between 0 and 1, or null (to fallback to configured value)
-        return @1.0;
+    options.tracesSampler = ^NSNumber * (SentrySamplingContext * samplingContext) {
+        // Don't miss any transactions for VIP users 
+        if ([samplingContext[@"vip"] boolValue] == YES) { 
+            return @1.0; 
+        } else { 
+            return @0.25; // 25% for everything else
+        }
     };
 }];
 ```
