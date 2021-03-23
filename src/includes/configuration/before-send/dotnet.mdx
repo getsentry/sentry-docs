@@ -7,8 +7,13 @@ SentrySdk.Init(o =>
 {
     o.BeforeSend = sentryEvent =>
     {
-        // Modify the event here:
-        sentryEvent.ServerName = null; // Don't send server names.
+        if (sentryEvent.Exception != null
+          && sentryEvent.Exception.Message.Contains("Noisy Exception"))
+        {
+            return null; // Don't send this event to Sentry
+        }
+
+        sentryEvent.ServerName = null; // Never send Server Name to Sentry
         return sentryEvent;
     };
 });
@@ -19,9 +24,11 @@ open Sentry
 
 SentrySdk.Init (fun o ->
     o.BeforeSend <- fun (event ->
-        // Modify the event here:
-        event.ServerName <- null // Don't send server names.
-        event
+        if event.Exception <> null && event.Exception.Message.Contains("Noisy Exception") then
+            null // Don't send this event to Sentry
+        else
+            event.ServerName <- null // Never send Server Name to Sentry
+            event
         )
     )
 ```

@@ -5,7 +5,6 @@ import { Nav } from "react-bootstrap";
 import Search from "./search";
 import SmartLink from "./smartLink";
 
-import NavbarProductDropdown from "./navbarProductDropdown";
 import NavbarPlatformDropdown from "./navbarPlatformDropdown";
 
 type Props = {
@@ -20,7 +19,6 @@ export default ({ platforms }: Props): JSX.Element => {
       <div className="collapse navbar-collapse content-max" id="navbar-menu">
         <Search path={location.pathname} platforms={platforms} />
         <Nav className="justify-content-end" style={{ flex: 1 }}>
-          <NavbarProductDropdown />
           <NavbarPlatformDropdown />
           <Nav.Item>
             <SmartLink className="nav-link" to="/api/">
