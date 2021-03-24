@@ -3,6 +3,11 @@ import io.sentry.android.core.SentryAndroid;
 
 SentryAndroid.init(this, options -> {
   options.setTracesSampler(context -> {
+    // If this is the continuation of a trace, just use that decision (rate controlled by the caller).
+    Boolean parentSampled = context.getTransactionContext().getParentSampled();
+    if (parentSampled != null) {
+      return parentSampled ? 1.0 : 0.0;
+    }
     if (/* make a decision based on `samplingContext` */) {
       // Drop this transaction, by setting its sample rate to 0%
       return 0.0;
@@ -22,6 +27,11 @@ import io.sentry.SentryOptions.TracesSamplerCallback
 
 SentryAndroid.init(this, options ->
   options.tracesSampler = TracesSamplerCallback { context ->
+    // If this is the continuation of a trace, just use that decision (rate controlled by the caller).
+    val parentSampled = context.transactionContext.parentSampled
+    if (parentSampled != null) {
+      return if (parentSampled) 1.0 else 0.0
+    }
     if (/* make a decision based on `samplingContext` */) {
       // Drop this transaction, by setting its sample rate to 0%
       return 0.0
