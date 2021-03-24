@@ -1,0 +1,29 @@
+---
+title: Custom initialialization
+sidebar_order: 3
+description: "Learn how to customize the SDK initialization."
+---
+
+Unlike other Sentry SDKs, the Next.js SDK doesn’t have to be initialized in code, since we do it for you.
+You can still customize the `Sentry.init` call, though.
+
+## Serializable values
+
+Serializable values must be placed in the `next.config.js`:
+
+- `module.exports.serverRuntimeConfig.sentry` for server-side code.
+- `module.exports.publicRuntimeConfig.sentry` for client-side code and fallback for server-side code.
+
+See an example setting `debug: true` in [Manual configuration](/platforms/javascript/guides/nextjs/manual-setup/manual-config#extend-the-usage-of-webpack).
+
+## Non-serializable values
+
+Sentry’s plugin for Next.js, installed along with the SDK, contains the `clientConfig` and `serverConfig` objects where non-serializable values must be defined for the client-side and server-side, respectively.
+This must be done in the override of the `App` component:
+
+```javascript {filename:./pages/_app.js}
+import { serverConfig, clientConfig } from "@sentry/next-plugin-sentry";
+clientConfig.beforeSend = () => {
+  // ...
+};
+```
