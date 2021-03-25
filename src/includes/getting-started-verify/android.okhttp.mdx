@@ -1,5 +1,6 @@
 ```kotlin
 import io.sentry.android.okhttp.SentryOkHttpInterceptor
+import io.sentry.Sentry
 import java.io.IOException
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -10,15 +11,20 @@ fun run(url: String): String? {
     .url(url)
     .build()
 
-  return client
+  val bodyStr = client
     .newCall(request)
     .execute()
     .body?.toString()
+
+  Sentry.captureMessage(bodyStr)
+
+  return bodyStr
 }
 ```
 
 ```java
 import io.sentry.android.okhttp.SentryOkHttpInterceptor;
+import io.sentry.Sentry
 import java.io.IOException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -34,6 +40,10 @@ String run(String url) throws IOException {
     .execute()
     .body();
 
-  return body != null ? body.toString() : null;
+  String bodyStr = body != null ? body.toString() : null;
+
+  Sentry.captureMessage(bodyStr);
+
+  return bodyStr;
 }
 ```
