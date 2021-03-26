@@ -11,9 +11,16 @@ SentrySdk.Init(options =>
     // OR: Determine traces sample rate based on the sampling context
     options.TracesSampler = context =>
     {
-        var ctx = context.CustomSamplingContext;
+        // If this is the continuation of a trace, just use that decision (rate controlled by the caller)
+        if (context.TransactionContext.IsParentSampled is not null)
+        {
+            return context.TransactionContext.IsParentSampled.Value
+                ? 1.0
+                : 0.0;
+        }
 
-        return ctx.GetValueOrDefault("url") switch
+        // Otherwise, sample based on URL (exposed through custom sampling context)
+        return context.CustomSamplingContext.GetValueOrDefault("url") switch
         {
             // These are important - take a big sample
             "/payment" => 0.5,
@@ -27,7 +34,7 @@ SentrySdk.Init(options =>
             // Default sample rate
             _ => 0.1
 
-            // Or return null to fallback to options.TracesSampleRate
+            // Or return null to fallback to options.TracesSampleRate (1.0 in this case)
             // _ => null
         };
     };
