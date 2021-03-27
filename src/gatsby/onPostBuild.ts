@@ -80,7 +80,7 @@ const writeJson = async (
     // eslint-disable-next-line no-unused-vars
     const [, main, sub] = pathMatch;
     if (!indexJson[main]) indexJson[main] = {};
-    if (!node.frontmatter.doc_link) {
+    if (!node.frontmatter.doc_link && main !== "other") {
       throw new Error(
         `Invalid wizard frontmatter found in ${node.fields.slug}`
       );
