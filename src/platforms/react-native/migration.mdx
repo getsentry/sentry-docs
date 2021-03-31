@@ -4,6 +4,78 @@ sidebar_order: 100
 description: "Learn about migrating from 1.x to 2.x to enable release health tracking and native stack traces by default."
 ---
 
+## React Navigation Instrumentation from <2.3.0
+
+We changed the initialization method for the React Navigation V5 routing instrumentation to avoid a potential issue when using linking. You now register the navigation container inside the `onReady` prop passed to the `NavigationContainer`.
+
+From:
+
+```javascript
+// Old Functional Component Example
+const App = () => {
+  const navigation = React.useRef();
+
+  React.useEffect(() => {
+    routingInstrumentation.registerNavigationContainer(navigation);
+  }, []);
+
+  return <NavigationContainer ref={navigation}>...</NavigationContainer>;
+};
+
+// Old Class Component Example
+class App extends React.Component {
+  navigation = React.createRef();
+
+  componentDidMount() {
+    routingInstrumentation.registerNavigationContainer(navigation);
+  }
+
+  render() {
+    return <NavigationContainer ref={this.navigation}>...</NavigationContainer>;
+  }
+}
+```
+
+To:
+
+```javascript
+// Functional Component Example
+const App = () => {
+  const navigation = React.useRef();
+
+  return (
+    <NavigationContainer
+      ref={navigation}
+      onReady={() => {
+        // Register the navigation container with the instrumentation inside onReady
+        routingInstrumentation.registerNavigationContainer(navigation);
+      }}
+    >
+      ...
+    </NavigationContainer>
+  );
+};
+
+// Class Component Example
+class App extends React.Component {
+  navigation = React.createRef();
+
+  render() {
+    return (
+      <NavigationContainer
+        ref={this.navigation}
+        onReady={() => {
+          // Register the navigation container with the instrumentation inside onReady
+          routingInstrumentation.registerNavigationContainer(navigation);
+        }}
+      >
+        ...
+      </NavigationContainer>
+    );
+  }
+}
+```
+
 ## From 1.x to 2.x
 
 Sentry's most recent version of our React Native SDK enables release health tracking and native stack traces by default.

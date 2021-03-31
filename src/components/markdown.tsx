@@ -22,6 +22,7 @@ import PlatformLink from "./platformLink";
 import PlatformSection from "./platformSection";
 import PlatformIdentifier from "./platformIdentifier";
 import RelayMetrics from "./relayMetrics";
+import { VimeoEmbed, YouTubeEmbed } from "./video";
 
 const mdxComponents = {
   Alert,
@@ -43,6 +44,8 @@ const mdxComponents = {
   PlatformIdentifier,
   RelayMetrics,
   LambdaLayerDetail,
+  VimeoEmbed,
+  YouTubeEmbed,
 };
 
 export default ({ value }) => {
