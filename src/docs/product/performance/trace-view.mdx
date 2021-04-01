@@ -1,0 +1,67 @@
+---
+title: "Trace View"
+sidebar_order: 7
+description: "Learn more about the trace view and what kind of high level information you can see for a Trace"
+---
+
+<Note>
+
+This feature is available only if you're in the Early Adopter program. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony.
+
+If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily.
+
+</Note>
+
+From Performance, Issues, and Discover, you can drill down into a single [trace](/product/performance/distributed-tracing) and traverse all of the transactions in that trace. This will accelerate your ability to debug slow services, identify related errors, and root out other bottlenecks.
+
+Currently, the trace view will only show up to 100 transactions from the trace. Additional transactions can be found through [Discover](/product/discover-queries).
+
+![Trace View showing all the transactions of the trace, with a header of details and a search bar](./perf-trace-view.png)
+
+
+## Trace View
+
+The trace view is a split view where the left-hand side shows the trace's transaction tree, and the right-hand side represents each transaction as a colored rectangle. The first row listed is always the trace itself, from which all other spans in the trace descent.
+
+to find these views, you can either go through the [Transaction Summary](/product/performance/transaction-summary/), [Event Details](/product/performance/event-detail/), [Issue Details](/product/issues/issue-details/), or [Query Builder](/product/discover-queries/query-builder/). Trace IDs will be linked to the corresponding Trace Detail.
+
+## With Transaction Summary
+
+Select the [Performance Homepage](/product/performance/), then the affected transaction, and clicking on a trace ID in the table will display the trace data.
+
+## With Event Details
+
+Beneath the quick trace on the top right of the Event Details page, click on the trace ID will display the trace data.
+
+## With Issue Details
+
+Above the quick trace on the Issue Details page, click on View Full Trace will display the trace data.
+
+## With Query Builder
+
+Build a query with the trace column, then clicking a trace ID in the table will display the trace data.
+
+## Waterfall
+
+The waterfall view is a split view where the left reflects the trace's transaction tree, and the right reflects each transaction as a horizontal bar.
+
+## Transaction Details
+
+Clicking on a transaction row expands the details of that span. From here you can see many of the attached properties, such as tags and other field data. With the transaction name, you'll be able to view the [Transaction Summary](/product/performance/transaction-summary/) of that transaction across traces. Click on "View Summary" to see that summary.
+
+## Traversing Transactions
+
+Every transaction within a trace has additional details such as spans that. Click on "View Transaction" to see a detailed view of that transaction.
+
+# Troubleshooting
+
+## Orphan Traces and Broken Subtraces
+While in a fully instrumented system, a span in one service will give rise to a transaction in a subsequent service. There can be a variety of reasons why the transaction in the first service may not arrive in Sentry. When Sentry encounters transactions like this within a trace we link the transactions with a dashed line since they can no longer be directly connected to the root.
+
+Some reasons for trace data like this include:
+- [Ad blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers) may prevent transactions in browsers being sent, but HTTP requests to backend projects will still create child transactions
+- [Rate-limiting](/product/accounts/quotas/#limiting-events) on a project can mean only some of the events arrive in Sentry
+- [Project permissions](/product/accounts/membership/#restricting-access) could result in transactions in another project to appear missing if your account does not have access
+
+## Multiple Roots
+For each trace id there should exist only one transaction without any parents, included instrumentation should prevent this case but if the trace id of your transactions are being set manually you may see this problem.
