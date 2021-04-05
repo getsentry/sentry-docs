@@ -11,15 +11,37 @@ description: "Performance Monitoring helps you to see everything from macro-leve
 
 The Performance Monitoring homepage is the main view where you can search or browse for transaction data. Filter by search conditions or choose from a list of sortable transactions in the table. As soon as a transaction of interest has been rooted out, you can investigate further by clicking it for its [summary view](/product/performance/transaction-summary/).
 
-![Performance Homepage](perf-homepage.png)
+## Display Options
+
+[The Display dropdown](display/) automatically selects a set of [metrics](metrics/) and table columns based on the platform of the selected project.
+
+A display dropdown can be found next to the search bar. This  automatically selects a set of [metrics](../metrics/) and table columns based on the platform of your project. For example, a JavaScript project defaults to Display: Frontend (Pageload). You can change the Display selection, but some modes may not be applicable to the platform.
+
+### All Transactions
+
+All mode shows [Apdex](../metrics/#apdex) and [TPM](../metrics/#throughput-total-tpm-tps). You can configure the Apdex threshold in **Settings > Performance**.
+
+![Performance Homepage with Display: All](00_performance_landing.png)
+
+### Frontend (Pageload)
+
+Frontend (Pageload) mode shows [Web Vitals](../web-vitals/) and LCP information. Additionally, transactions are automatically filtered by `transaction.op:pageload`. This generally corresponds to all browser page transitions that are not handled internally in SPA frameworks, such as React or Vue.
+
+![Performance Homepage with Display: Frontend (Pageload)](01_performance_landing.png)
+
+### Frontend (Other)
+
+Frontend (Other) mode shows duration information. Additionally, transactions are automatically filtered by `transaction.op:!pageload`. This generally corresponds to page transitions handled internally in SPA frameworks, such as React or Vue. Note that if you've selected a backend project, this mode also displays backend transactions.
+
+### Backend
+
+Backend mode shows duration, throughput, failure rate, and Apdex information. You can configure the Apdex threshold in **Settings > Performance**. Note that if you've selected a frontend project, this mode also displays frontend non-pageload transactions.
+
+![Performance Homepage with Display: Backend](02_performance_landing.png)
 
 ## Filter by Search Conditions
 
 The search bar operates similarly to the one in the Discover [Query Builder](/product/discover-queries/query-builder/#filter-by-search-conditions). For example, you can refine your transaction search to a specific release by using `release:` as a key field and assigning the version as a value.
-
-## Configure Display
-
-[The Display dropdown](display/) automatically selects a set of [metrics](metrics/) and table columns based on the platform of the selected project.
 
 ## Graphs
 
@@ -47,18 +69,3 @@ Below the graphs are a list of transactions that may be filtered down based on g
 - [User Misery](/product/performance/metrics/#user-misery)
 
 If you have transactions you frequently return to, you can mark up to 10 transactions as a key transaction by clicking the star in the corresponding row. Clicking the star ensures that these key transactions are always surfaced to the top of the list. You can also mark a transaction as a key transaction in its corresponding [summary view](/product/performance/transaction-summary/#key-transaction).
-
-## Trends View
-
-Trends surfaces transactions that have had significant changes in their performance over time. You can find the Trends View by toggling the tab in the Performance homepage's upper right corner.
-
-![trends Homepage](trends-homepage.png)
-
-Trending transactions are calculated first by filtering out transactions with large [throughput](/product/performance/metrics/#throughput-total-tpm-tps) fluctuations, determining the baselines of the two halves of the duration, and calculating their percentage change. Regressions are any percentage changes greater than zero, while improvements are percentage changes less than zero.
-Sentry uses a [t-test](https://academic.oup.com/beheco/article/17/4/688/215960) to compare the before and after periods of the transaction and assign a confidence score. Only high confidence, statistically significant results are shown.
-
-For example, looking at a transaction over two weeks with the default [P50](/product/performance/metrics/#average-transaction-duration) baseline, if the first week had a `p(50)=100s`, and the second a `p(50)=110s`, the percentage is `(110/100)-1 = 0.1`. The example transaction had a performance regression of `10%`.
-
-The more data is available, the more the accuracy of the trend improves. For this reason, trends perform best over long periods and with transactions with large counts.
-
-While we default the baseline calculation to use P50, you can change the baseline calculation via the dropdown. Other options include P75, P95, P99, and average, and this baseline is used to determine the percentage change.
