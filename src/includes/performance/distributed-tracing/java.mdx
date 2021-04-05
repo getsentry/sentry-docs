@@ -2,18 +2,35 @@
 
 Traces can span across multiple software services. Each span can be represented as a `sentry-trace` header, containing the trace id, span id and sampling details. This `sentry-trace` header, can be passed to downstream services so that they can create spans being a continuation of the trace started in the originating service.
 
-To obtain a trace header from the span use `ISpan#toTraceHeaders()` method. Then pass it to the downstream service. If the communication happens over HTTP it is recommended to set the value to the `sentry-trace` (also available as a constant `SentryTraceHeader.SENTRY_TRACE_HEADER`) HTTP header.
+To obtain a trace header from the span use `ISpan#toSentryTrace()` method. Then pass it to the downstream service. If the communication happens over HTTP it is recommended to set the value to the `sentry-trace` (also available as a constant `SentryTraceHeader.SENTRY_TRACE_HEADER`) HTTP header.
 
 To create a span as a continuation of the trace retrieved from the upstream service, pass the `sentry-trace` header value to the transaction context:
 
 ```java
+import io.sentry.Sentry;
+import io.sentry.SentryTraceHeader;
+import io.sentry.TransactionContext;
+
 String sentryTrace = request.getHeader(SentryTraceHeader.SENTRY_TRACE_HEADER);
-Sentry.startTransaction(TransactionContext.fromSentryTrace("name", "op", new SentryTraceHeader(sentryTrace)));
+ITransaction transaction = null;
+try {
+  transaction = Sentry.startTransaction(TransactionContext.fromSentryTrace("name", "op", new SentryTraceHeader(sentryTrace)));
+} catch (InvalidSentryTraceHeaderException e) {
+  // handle invalid trace header
+}
 ```
 
 ```kotlin
+import io.sentry.Sentry
+import io.sentry.SentryTraceHeader
+import io.sentry.TransactionContext
+
 val sentryTrace = request.getHeader(SentryTraceHeader.SENTRY_TRACE_HEADER)
-Sentry.startTransaction(TransactionContext.fromSentryTrace("name", "op", SentryTraceHeader(sentryTrace)))
+val transaction = try {
+  Sentry.startTransaction(TransactionContext.fromSentryTrace("name", "op", SentryTraceHeader(sentryTrace)))
+} catch (e: InvalidSentryTraceHeaderException) {
+  // handle invalid trace header
+}
 ```
 
 <Note>
