@@ -1,0 +1,47 @@
+---
+title: "Trace View"
+sidebar_order: 7
+description: "Learn more about the trace view and the high level information you can view for a Trace."
+---
+
+<Note>
+
+This feature is available only if you're in the Early Adopter program. Features available to Early Adopters are still in-progress and may have bugs. We recognize the irony.
+
+If you’re interested in being an Early Adopter, you can turn your organization’s Early Adopter status on/off in General Settings. This will affect all users in your organization and can be turned back off just as easily.
+
+</Note>
+
+From Performance, Issues, and Discover, you can drill down into a single [trace](/product/performance/distributed-tracing) and traverse all of the transactions in that trace. This will accelerate your ability to debug slow services, identify related errors, and root out other bottlenecks.
+
+Currently, the trace view will only show up to 100 transactions from the trace. Additional transactions can be found through [Discover](/product/discover-queries).
+
+## Trace View
+
+The trace view provides a split view. On the left, you can view the trace's transaction tree. On the right, you can view a representation of each transaction as a colored rectangle. The first row lists the trace itself, with all other spans descending from that trace.
+
+You can display these views from:
+- [Transaction Summary](/product/performance/transaction-summary/): Select the [Performance Homepage](/product/performance/), the affected transaction, then click a trace ID.
+- [Event Details](/product/performance/event-detail/): Click the trace ID beneath the quick trace on the top right.
+- [Issue Details](/product/issues/issue-details/): Click "View Full Trace" above the quick trace.
+- [Query Builder](/product/discover-queries/query-builder/): Build a query with the trace column, then click a trace ID in the table.
+
+Trace IDs are linked to the corresponding Trace Detail.
+
+## Transaction Details
+
+Clicking a transaction row expands the details of that transaction to view many of the attached properties, such as tags and other field data. With the transaction name, you can view the [Transaction Summary](/product/performance/transaction-summary/) of that transaction across traces. Click "View Summary" to see that summary. As well with the transaction ID, you can see the [event details](/product/performance/event-detail/) of that transaction by clicking on "View Transaction".
+
+# Troubleshooting
+
+## Orphan Traces and Broken Subtraces
+In a fully instrumented system, a span in one service will connect to a transaction in a subsequent service. For a variety of reasons, a transaction in a service may not arrive in Sentry. When Sentry encounters these types of transactions within a trace, we link the transactions with a dashed line since they can no longer be directly connected to the root.
+
+Broken subtraces may be caused by:
+- [Ad blockers](/platforms/javascript/troubleshooting/#dealing-with-ad-blockers) may prevent transactions in browsers being sent, but HTTP requests to backend projects will still create child transactions
+- [Rate-limiting](/product/accounts/quotas/#limiting-events) on a project may cause only some events to be sent to Sentry
+- [Project permissions](/product/accounts/membership/#restricting-access) may mean you do not have access to transactions in another project
+
+## Multiple Roots
+
+Each trace ID should have only one root, a transaction without any parents. Included instrumentation should prevent multiple roots; however, if the trace ID of your transactions are being set using custom instrumentation, you may encounter multiple roots.
