@@ -1,0 +1,59 @@
+---
+title: DataSource Instrumentation
+description: "Learn how to instrument DataSource"
+---
+
+Sentry provides integration with [P6Spy]() and [DataSource Proxy](https://github.com/ttddyy/datasource-proxy) to intercept database queries and create spans around them.
+
+## P6Spy
+
+To create spans around database queries, `P6DataSource` must be configured to use `SentryJdbcEventListener`:
+
+```java
+import io.sentry.p6spy.SentryJdbcEventListener;
+import com.p6spy.engine.spy.P6DataSource;
+
+DataSource dataSource = // original datasource
+P6DataSource proxyDataSource = new P6DataSource(dataSource);
+proxyDataSource.setJdbcEventListenerFactory(SentryJdbcEventListener::new);
+```
+
+```kotlin
+import io.sentry.p6spy.SentryJdbcEventListener
+import com.p6spy.engine.spy.P6DataSource
+
+val dataSource = // original datasource
+val proxyDataSource = P6DataSource(dataSource)
+proxyDataSource.setJdbcEventListenerFactory { SentryJdbcEventListener() }
+```
+
+## DataSource Proxy
+
+To create spans around database queries, `ProxyDataSource` must be configured to use `SentryQueryExecutionListener`:
+
+```java
+import io.sentry.dsproxy.SentryQueryExecutionListener;
+import net.ttddyy.dsproxy.support.ProxyDataSource;
+import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
+
+DataSource dataSource = // original datasource
+ProxyDataSource proxyDataSource = ProxyDataSourceBuilder.create(dataSource)
+  .listener(new SentryQueryExecutionListener())
+  .build();
+```
+
+```kotlin
+import io.sentry.dsproxy.SentryQueryExecutionListener
+import net.ttddyy.dsproxy.support.ProxyDataSource
+import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder
+
+val dataSource = // original datasource
+val proxyDataSource = ProxyDataSourceBuilder.create(dataSource)
+  .listener(SentryQueryExecutionListener())
+  .build()
+```
+
+## Using with Spring Boot
+
+Spring Boot out of the box does not provide datasource proxying capabilities. We recommend using either Sentry P6Spy or Sentry DataSource Proxy integration together with a 3rd party library [Spring Boot DataSource Decorator
+](https://github.com/gavlyukovskiy/spring-boot-data-source-decorator).
