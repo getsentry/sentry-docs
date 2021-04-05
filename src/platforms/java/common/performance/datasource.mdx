@@ -1,11 +1,25 @@
 ---
 title: DataSource Instrumentation
-description: "Learn how to instrument DataSource"
+description: "Learn how to instrument javax.sql.DataSource"
 ---
 
-Sentry provides integration with [P6Spy]() and [DataSource Proxy](https://github.com/ttddyy/datasource-proxy) to intercept database queries and create spans around them.
+Sentry provides integration with [P6Spy](https://github.com/p6spy/p6spy) and [DataSource Proxy](https://github.com/ttddyy/datasource-proxy) to intercept *JDBC* database queries and create spans around them.
 
 ## P6Spy
+
+To start using *Sentry P6Spy* integration, include following dependency in your project:
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-p6spy</artifactId>
+    <version>{{ packages.version('sentry.java.spring-boot', '4.4.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-p6spy:{{ packages.version('sentry.java.spring-boot', '4.4.0') }}'
+```
 
 To create spans around database queries, `P6DataSource` must be configured to use `SentryJdbcEventListener`:
 
@@ -28,6 +42,20 @@ proxyDataSource.setJdbcEventListenerFactory { SentryJdbcEventListener() }
 ```
 
 ## DataSource Proxy
+
+To start using *Sentry DataSource Proxy* integration, include following dependency in your project:
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-datasource-proxy</artifactId>
+    <version>{{ packages.version('sentry.java.spring-boot', '4.4.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-datasource-proxy:{{ packages.version('sentry.java.spring-boot', '4.4.0') }}'
+```
 
 To create spans around database queries, `ProxyDataSource` must be configured to use `SentryQueryExecutionListener`:
 
@@ -55,5 +83,5 @@ val proxyDataSource = ProxyDataSourceBuilder.create(dataSource)
 
 ## Using with Spring Boot
 
-Spring Boot out of the box does not provide datasource proxying capabilities. We recommend using either Sentry P6Spy or Sentry DataSource Proxy integration together with a 3rd party library [Spring Boot DataSource Decorator
-](https://github.com/gavlyukovskiy/spring-boot-data-source-decorator).
+Spring Boot out of the box does not provide datasource proxying capabilities. We recommend using either *Sentry P6Spy* or *Sentry DataSource Proxy* integration together with a 3rd party library [Spring Boot DataSource Decorator
+](https://github.com/gavlyukovskiy/spring-boot-data-source-decorator). *Sentry Spring Boot Starter* provides auto-configuration classes creating `SentryJdbcEventListener` and `SentryQueryExecutionListener` beans when respective integrations are on the classpath.
