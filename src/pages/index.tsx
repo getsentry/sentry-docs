@@ -8,7 +8,6 @@ import SEO from "../components/seo";
 import Search from "../components/search";
 import SmartLink from "../components/smartLink";
 import { usePlatformList } from "../components/hooks/usePlatform";
-import NavbarProductDropdown from "../components/navbarProductDropdown";
 import NavbarPlatformDropdown from "../components/navbarPlatformDropdown";
 
 import SentryWordmarkSVG from "../logos/sentry-wordmark-dark.svg";
@@ -68,7 +67,6 @@ const IndexPage = () => {
               <img src={SentryWordmarkSVG} />
             </a>
             <Nav className="justify-content-end" style={{ flex: 1 }}>
-              <NavbarProductDropdown />
               <NavbarPlatformDropdown />
               <Nav.Item>
                 <SmartLink className="nav-link" to="/api/">
