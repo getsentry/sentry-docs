@@ -35,3 +35,49 @@ Sentry.init { options ->
   }
 }
 ```
+
+## High-Throughput Transport
+
+For high traffic applications, we recommend using high-throughput HTTP transport based on [Apache HTTP Client 5](https://hc.apache.org/httpcomponents-client-5.0.x/index.html).
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-apache-http-client-5</artifactId>
+    <version>{{ packages.version('sentry.java.apache-http-client-5', '4.2.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-apache-http-client-5:{{ packages.version('sentry.java.apache-http-client-5', '4.2.0') }}'
+```
+
+```scala {tabTitle:SBT}
+libraryDependencies += "io.sentry" % "sentry-apache-http-client-5" % "{{ packages.version('sentry.java.apache-http-client-5', '4.2.0') }}"
+```
+
+Once the dependency to `sentry-apache-http-client-5` is on the class path, `ApacheHttpClientTransportFactory` must be set on the `SentryOptions`:
+
+```java {tabTitle:Java}
+import io.sentry.Sentry;
+import io.sentry.transport.apache.ApacheHttpClientTransportFactory;
+
+Sentry.init(options -> {
+  // configure DSN and sampling
+  // ...
+  // configure transport factory
+  options.setTransportFactory(new ApacheHttpClientTransportFactory());
+});
+```
+
+```kotlin {tabTitle:Kotlin}
+import io.sentry.Sentry
+import io.sentry.transport.apache.ApacheHttpClientTransportFactory
+
+Sentry.init { options ->
+  // configure DSN and sampling
+  // ...
+  // configure transport factory
+  options.setTransportFactory(ApacheHttpClientTransportFactory())
+}
+```
