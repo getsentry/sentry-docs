@@ -1,0 +1,82 @@
+---
+title: Troubleshooting and diagnosing issues
+description: "How to enable logging in Sentry SDK for troubleshooting purposes."
+sidebar_order: 20
+---
+
+Sentry has its own logger that it uses to report diagnostics which may be useful when troubleshooting. To enable logging, set the `Debug` option to `true`:
+
+```csharp
+SentrySdk.Init(o =>
+{
+    o.Dsn = "___PUBLIC_DSN___";
+
+    // Enable debug mode to write diagnostic messages
+    o.Debug = true;
+});
+```
+
+By default, Sentry will write diagnostic messages to console. This may not be optimal in some circumstances, for example when running applications that don't have a visible console window attached.
+
+To override this behavior, you can provide your own implementation of `IDiagnosticLogger`. Here's an example implementation that appends diagnostic messages to a file:
+
+```csharp
+using System;
+using System.Globalization;
+using System.IO;
+using Sentry.Extensibility;
+using Sentry.Protocol;
+
+public class FileAppenderDiagnosticLogger : IDiagnosticLogger, IDisposable
+{
+    private readonly StreamWriter _writer;
+    private readonly SentryLevel _minimalLevel;
+
+    public FileAppenderDiagnosticLogger(string filePath, SentryLevel minimalLevel)
+    {
+        _writer = new StreamWriter(filePath);
+        _minimalLevel = minimalLevel;
+    }
+
+    public bool IsEnabled(SentryLevel level) => level >= _minimalLevel;
+
+    public void Log(SentryLevel logLevel, string message, Exception exception = null, params object[] args)
+    {
+        lock (_writer)
+        {
+            _writer.Write("{0} - {1}: ", DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.ffffZ", DateTimeFormatInfo.InvariantInfo), logLevel);
+            _writer.Write("");
+            _writer.Write(message, args);
+            if (exception is Exception)
+            {
+                _writer.Write("Exception: ");
+                _writer.Write(exception);
+            }
+            _writer.WriteLine();
+            _writer.Flush();
+        }
+    }
+
+    public void Dispose()
+    {
+        lock (_writer)
+        {
+            _writer.Dispose();
+        }
+    }
+}
+```
+
+To use your custom implementation of `IDiagnosticLogger`, pass it to the `DiagnosticLogger` option:
+
+```csharp
+SentrySdk.Init(o =>
+{
+    o.Dsn = "___PUBLIC_DSN___";
+
+    o.Debug = true;
+
+    // Provide custom logger
+    o.DiagnosticLogger = new FileAppenderDiagnosticLogger("log.txt", SentryLevel.Debug);
+});
+```
