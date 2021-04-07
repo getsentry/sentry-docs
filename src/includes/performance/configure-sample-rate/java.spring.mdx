@@ -17,7 +17,13 @@ import org.springframework.stereotype.Component;
 class CustomTracesSamplerCallback implements TracesSamplerCallback {
   @Override
   public Double sample(SamplingContext samplingContext) {
-    // return a number between 0 and 1
+    CustomSamplingContext customSamplingContext = context.getCustomSamplingContext();
+    if (customSamplingContext != null) {
+      HttpServletRequest request = (HttpServletRequest) customSamplingContext.get("request");
+      // return a number between 0 and 1 or null (to fallback to configured value)
+    } else {
+      // return a number between 0 and 1 or null (to fallback to configured value)
+    }
   }
 }
 ```
@@ -33,9 +39,9 @@ class CustomTracesSamplerCallback : TracesSamplerCallback {
     val customSamplingContext = samplingContext.customSamplingContext
     if (customSamplingContext != null) {
       val request = customSamplingContext["request"] as HttpServletRequest
-      // return a number between 0 and 1
+      // return a number between 0 and 1 or null (to fallback to configured value)
     } else {
-      // return a number between 0 and 1
+      // return a number between 0 and 1 or null (to fallback to configured value)
     }
   }
 }

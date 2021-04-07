@@ -92,6 +92,12 @@ We currently provide two routing instrumentations out of the box to instrument r
 
 ### React Navigation V5
 
+<Note>
+
+If you are coming from a version prior to 2.3.0, make sure you update where `registerNavigationContainer` is called. You can find the instructions on [our migration guide](/platforms/react-native/migration/#react-navigation-instrumentation-from-230).
+
+</Note>
+
 Note that this routing instrumentation will create a transaction on every route change including `goBack` navigations.
 
 ```javascript
@@ -114,16 +120,16 @@ Sentry.init({
 // Functional Component Example
 const App = () => {
   // Create a ref for the navigation container
-  const navigation = React.createRef();
-
-  // Register the navigation container with the instrumentation
-  React.useEffect(() => {
-    routingInstrumentation.registerNavigationContainer(navigation);
-  }, []);
+  const navigation = React.useRef();
 
   return (
     // Connect the ref to the navigation container
-    <NavigationContainer ref={navigation}>
+    <NavigationContainer
+      ref={navigation}
+      onReady={() => {
+        // Register the navigation container with the instrumentation
+        routingInstrumentation.registerNavigationContainer(navigation);
+      }}>
       ...
     </NavigationContainer>
   );
@@ -134,21 +140,33 @@ class App extends React.Component {
   // Create a ref for the navigation container
   navigation = React.createRef();
 
-  componentDidMount() {
-    // Register the navigation container with the instrumentation
-    routingInstrumentation.registerNavigationContainer(navigation);
-  }
-
   render() {
     return (
       // Connect the ref to the navigation container
-      <NavigationContainer ref={this.navigation}>
+      <NavigationContainer
+        ref={this.navigation}
+        onReady={() => {
+          // Register the navigation container with the instrumentation
+          routingInstrumentation.registerNavigationContainer(navigation);
+        }}>
         ...
       </NavigationContainer>
     )
   }
 }
 ```
+
+#### Configuration
+
+You can configure the instrumentation by passing an options object to the constructor:
+
+```javascript
+new Sentry.ReactNavigationV5Instrumentation({ ... });
+```
+
+##### routeChangeTimeoutMs
+
+How long the instrumentation will wait for the route to mount after a change has been initiated before the transaction is discarded. Default: 1000ms
 
 ### React Navigation V4
 
@@ -172,7 +190,7 @@ Sentry.init({
 // Functional Component Example
 const App = () => {
   // Create a ref for the navigation container
-  const appContainer = React.createRef();
+  const appContainer = React.useRef();
 
   // Register the navigation container with the instrumentation
   React.useEffect(() => {
@@ -192,17 +210,29 @@ class App extends React.Component {
 
   componentDidMount() {
     // Register the navigation container with the instrumentation
-    routingInstrumentation.registerAppContainer(appContainer);
+    routingInstrumentation.registerAppContainer(this.appContainer);
   }
 
   render() {
     return (
       // Connect the ref to the navigation container
-      <AppContainer ref={appContainer} />
+      <AppContainer ref={this.appContainer} />
     )
   }
 }
 ```
+
+#### Configuration
+
+You can configure the instrumentation by passing an options object to the constructor:
+
+```javascript
+new Sentry.ReactNavigationV4Instrumentation({ ... });
+```
+
+##### routeChangeTimeoutMs
+
+How long the instrumentation will wait for the **initial** route to mount after a change has been initiated before the transaction is discarded. Default: 1000ms
 
 ### Other Routing Libraries or Custom Routing Implementations
 
@@ -276,12 +306,35 @@ We export the React Profiler from our React Native SDK as well, you can read mor
 
 After you instrument your app's routing, if you wrap a component that renders on one of the routes with `withProfiler`, you will be able to track the component's lifecycle as a child span of the route transaction.
 
-```javascript
+```javascript {tabTitle: Higher Order Component}
 import * as Sentry from "@sentry/react-native";
 
+// withProfiler HOC
 const SomeComponent = () => {
   // ...
 };
 
 export default Sentry.withProfiler(SomeComponent);
+```
+
+```javascript {tabTitle: Parent Component}
+// Profiler parent
+const SomeComponent = () => {
+  return (
+    <Sentry.Profiler name="SomeChild">
+      <SomeChild />
+    </Sentry.Profiler>
+  );
+};
+```
+
+```javascript {tabTitle: Hook}
+// useProfiler hook
+const SomeComponent = () => {
+  Sentry.useProfiler("SomeComponent");
+
+  return (
+    //...
+  )
+}
 ```
