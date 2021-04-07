@@ -48,7 +48,7 @@ Turns debug mode on or off. If debug is enabled SDK will attempt to print out us
 
 </ConfigKey>
 
-<ConfigKey name="diagnostic-level" supported={["dotnet", "java", "android", "dart", "flutter"]}>
+<ConfigKey name="diagnostic-level" supported={["dotnet", "java", "android", "dart", "flutter", "apple"]}>
 
 Enabling `debug` mode makes the SDK generate as much diagnostic data as possible. However, if you'd prefer to lower the verbosity of the Sentry SDK diagnostics logs, configure this option to set the appropriate level:
 
@@ -96,6 +96,12 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 
 </ConfigKey>
 
+<ConfigKey name="max-cache-items" supported={[ "dotnet" ]} >
+
+The maximum number of [envelopes](https://develop.sentry.dev/sdk/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
+
+</ConfigKey>
+
 <ConfigKey name="attach-stacktrace">
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
@@ -115,7 +121,7 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </ConfigKey>
 
-<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "javascript", "node", "react-native", "python", "java", "php", "rust"]}>
+<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "javascript", "node", "react-native", "python", "java", "php", "rust", "dart"]}>
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
@@ -143,19 +149,20 @@ will be sent. This is a "contains" match to the entire file URL. As a result, if
 
 </ConfigKey>
 
-<ConfigKey name="auto-session-tracking" supported={["javascript"]}>
+<ConfigKey name="auto-session-tracking" supported={["javascript", "flutter", "android", "apple"]} >
 
 When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry.
 
 </ConfigKey>
 
-<ConfigKey name="in-app-include" supported={["dotnet", "python", "rust", "csharp", "php", "java", "dart"]}>
-
+<ConfigKey name="in-app-include" supported={["apple", "dotnet", "python", "rust", "csharp", "php", "java", "dart"]}>
 A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
+
+Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in the sentry.io, where only the "in application" frames are displayed by default.
 
 </ConfigKey>
 
-<ConfigKey name="in-app-exclude" supported={["dotnet", "python", "rust", "csharp", "php", "java", "dart"]}>
+<ConfigKey name="in-app-exclude" supported={["apple", "dotnet", "python", "rust", "csharp", "php", "java", "dart"]}>
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
@@ -203,7 +210,7 @@ Sentry SDKs normalize any contextual data to a given depth. Any keys containing 
 
 </ConfigKey>
 
-<PlatformSection supported={["javascript", "python", "node"]}>
+<PlatformSection supported={["javascript", "python", "node", "flutter"]}>
 
 ## Integration Configuration
 
@@ -236,13 +243,13 @@ The callback typically gets a second argument (called a "hint") which contains t
 
 </ConfigKey>
 
-<PlatformSection supported={["javascript", "java", "python", "node", "php", "dotnet"]}>
+<PlatformSection supported={["javascript", "java", "python", "node", "php", "dotnet", "flutter"]}>
 
 ## Transport Options
 
 Transports are used to send events to Sentry. Transports can be customized to some degree to better support highly specific deployments.
 
-<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet"]}>
+<ConfigKey name="transport" supported={["javascript", "php", "python", "java", "dotnet", "flutter"]}>
 
 Switches out the transport used to send events. How this works depends on the SDK. It can, for instance, be used to capture events for unit-testing or to send it through some more complex setup that requires proxy authentication.
 
@@ -260,7 +267,7 @@ Configures a separate proxy for outgoing HTTPS requests. This value might not be
 
 </ConfigKey>
 
-<ConfigKey name="cache-directory-path" supported={["dotnet"]}>
+<ConfigKey name="cache-directory-path" supported={["dotnet", "android"]}>
 
 Specifies a local directory used for cacheing payloads. When this option is enabled (that is, when the directory is set), the Sentry SDK will persist envelopes locally before sending to Sentry. This configuration option is particularly useful if you expect your application to run in environments where internet connectivity is limited.
 
@@ -284,16 +291,20 @@ Controls how many seconds to wait before shutting down. Sentry SDKs send events 
 
 </PlatformSection>
 
+<PlatformSection supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]}>
+
 ## Tracing Options
 
-<ConfigKey name="tracesSampleRate" supported={["node", "javascript", "python", "php", "dotnet"]}>
+<ConfigKey name="traces-sample-rate" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]}>
 
 A number between 0 and 1, controlling the percentage chance a given transaction will be sent to Sentry. (0 represents 0% while 1 represents 100%.) Applies equally to all transactions created in the app. Either this or <PlatformIdentifier name="traces-sampler" /> must be defined to enable tracing.
 
 </ConfigKey>
 
-<ConfigKey name="tracesSampler" supported={["node", "javascript", "python", "php", "dotnet"]}>
+<ConfigKey name="traces-sampler" supported={["node", "javascript", "python", "php", "dotnet", "java", "ruby", "go", "react-native", "android", "dotnet"]}>
 
 A function responsible for determining the percentage chance a given transaction will be sent to Sentry. It will automatically be passed information about the transaction and the context in which it's being created, and must return a number between `0` (0% chance of being sent) and `1` (100% chance of being sent). Can also be used for filtering transactions, by returning 0 for those that are unwanted. Either this or <PlatformIdentifier name="traces-sample-rate" /> must be defined to enable tracing.
 
 </ConfigKey>
+
+</PlatformSection>

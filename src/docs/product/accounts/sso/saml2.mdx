@@ -21,21 +21,21 @@ Sentry supports the following SAML services:
 
 ## Register Sentry with IdP
 
-Before connecting Sentry to the Identity Provider (IdP), it’s important to first register Sentry as an application on the IdP’s side. Sentry’s SAML endpoints are as follows, where the `[organization_slug]` is substituted for your organization slug:
+Before connecting Sentry to the Identity Provider (IdP), it’s important to first register Sentry as an application on the IdP’s side. Sentry’s SAML endpoints are as follows, where `YOUR_ORG_SLUG` is substituted for your organization slug:
 
 <table class="table">
 <tbody valign="top">
-<tr><th>ACS:</th><td><code class="docutils literal">https://sentry.io/saml/acs/[organization_slug]/</code></td></tr>
-<tr><th>SLS:</th><td><code class="docutils literal">https://sentry.io/saml/sls/[organization_slug]/</code></td></tr>
-<tr><th>Metadata:</th><td><code class="docutils literal">https://sentry.io/saml/metadata/[organization_slug]/</code></td></tr>
+<tr><th>ACS:</th><td><code class="docutils literal">https://sentry.io/saml/acs/YOUR_ORG_SLUG/</code></td></tr>
+<tr><th>SLS:</th><td><code class="docutils literal">https://sentry.io/saml/sls/YOUR_ORG_SLUG/</code></td></tr>
+<tr><th>Metadata:</th><td><code class="docutils literal">https://sentry.io/saml/metadata/YOUR_ORG_SLUG/</code></td></tr>
 </tbody>
 </table>
 
 **What are these three things?**
 
-- `ACS` means _Assertion Consumer Service_, and is used for establishing a session based on rules made between your IdP and the service provider it is integrating with. _Please note: Sentry’s ACS endpoint uses HTTP-POST bindings_
+- `ACS` means _Assertion Consumer Service_. It is used for establishing a session based on rules made between your IdP and the service provider with which it is integrating. Please note that Sentry’s ACS endpoint uses HTTP-POST bindings.
 - `SLS` stands for _Single Logout Service_, and is used to address logout requests from the IdP.
-- `Metadata`, alternatively referred to as the `entityID` in some systems, refers to the configuration data for an IdP or an SP. In this case, the Metadata endpoint in Sentry refers to your Sentry organization’s metadata on the Service Provider end.
+- `Metadata`, alternatively referred to as the `entityID` in some systems, refers to the configuration data for an IdP or an SP. In this case, the metadata endpoint in Sentry refers to your Sentry organization’s metadata on the Service Provider end.
 
 When setting these values up on the IdP end, it’s important to remember that Sentry does not need to provide a signing certificate for the integration to work.
 
@@ -51,7 +51,7 @@ This method only requires a Metadata URL provided by the IdP platform. After it 
 
 ### Using Provider XML
 
-For this method to work, an administrator needs to provide the contents of the IdP’s generated metadata file. Once the contents are pasted directly into the text field, Sentry will do the rest. _Sentry does not require a signing certificate._
+For this method to work, an administrator needs to provide the contents of the IdP’s generated metadata file. Once the contents are pasted directly into the text field, Sentry will do the rest. Please note that Sentry does not require a signing certificate.
 
 ![](saml2-provider-xml.png)
 
@@ -59,7 +59,7 @@ Here’s an example of what the Metadata XML contents look like.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="http://www.okta.com/exkf25e40eapgLtXx0h7">
+<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="http://www.okta.com/SENTRY_APP_ID">
   <md:IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
     <md:KeyDescriptor use="signing">
       <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
@@ -70,8 +70,8 @@ Here’s an example of what the Metadata XML contents look like.
     </md:KeyDescriptor>
     <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified</md:NameIDFormat>
     <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
-    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://dev-517249.oktapreview.com/app/sentry/exkf25e40eapgLtXx0h7/sso/saml" />
-    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://dev-517249.oktapreview.com/app/sentry/exkf25e40eapgLtXx0h7/sso/saml" />
+    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://YOUR_OKTA_ORG.okta.com/app/sentry/SENTRY_APP_ID/sso/saml" />
+    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://YOUR_OKTA_ORG.okta.com/app/sentry/SENTRY_APP_ID/sso/saml" />
   </md:IDPSSODescriptor>
 </md:EntityDescriptor>
 ```

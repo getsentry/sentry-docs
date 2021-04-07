@@ -20,15 +20,16 @@ gem "sentry-rails"
 
 ## Configuration
 
-Initialize the SDK within your `config/application.rb`:
+Initialize the SDK within your `config/initializers/sentry.rb`:
 
 ```ruby
 Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
   config.breadcrumbs_logger = [:active_support_logger]
 
-  # To activate performance monitoring, set one of these options.
-  # We recommend adjusting the value in production:
+  # Set tracesSampleRate to 1.0 to capture 100%
+  # of transactions for performance monitoring.
+  # We recommend adjusting this value in production
   config.traces_sample_rate = 0.5
   # or
   config.traces_sampler = lambda do |context|
