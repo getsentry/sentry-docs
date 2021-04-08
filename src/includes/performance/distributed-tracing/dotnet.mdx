@@ -27,16 +27,18 @@ using System;
 using Sentry;
 
 var httpContext = ...;
-var sentryTraceHeaderValue = httpContext.Request.Headers["sentry-trace"].ToString();
 
-try
+if (httpContext.Request.Headers.TryGetValue("sentry-trace", out var sentryTraceHeaderValue))
 {
-    var sentryTraceHeader = SentryTraceHeader.Parse(sentryTraceHeaderValue);
-    var transaction = SentrySdk.StartTransaction("name", "op", sentryTraceHeader);
-}
-catch (FormatException e)
-{
-    // Handle invalid trace header
+    try
+    {
+        var sentryTraceHeader = SentryTraceHeader.Parse(sentryTraceHeaderValue);
+        var transaction = SentrySdk.StartTransaction("name", "op", sentryTraceHeader);
+    }
+    catch (FormatException e)
+    {
+        // Handle invalid trace header
+    }
 }
 ```
 
