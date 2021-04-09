@@ -1,4 +1,12 @@
-To obtain a trace header from the span, use `ISpan.GetTraceHeader()` method, then pass it to the downstream service. If the communication happens over HTTP, it is recommended that you set the value to the `sentry-trace` HTTP header.
+To obtain a trace header from the span, use `ISpan.GetTraceHeader()` method, then pass it to the downstream service.
+
+<Note>
+
+For HTTP communications, Sentry's SDK providers `SentryHttpMessageHandler`, which can be used to [automatically attach trace headers to outgoing HTTP requests](/platforms/dotnet/performance/included-instrumentation/).
+
+</Note>
+
+The code snippet below demonstrates propagating the trace programatically. Even though `SentryHttpMessageHandler` does that automatically for your, this illustrates the mechanism so it can be replicated in other protocols and technologies such a messaging systems.
 
 ```csharp
 using System;
@@ -12,11 +20,6 @@ using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com"
 request.Headers.Add("sentry-trace", sentryTraceHeader.ToString());
 ```
 
-<Note>
-
-Sentry also provides `SentryHttpMessageHandler`, which can be used to [automatically attach trace headers to outgoing HTTP requests](/platforms/dotnet/performance/included-instrumentation/).
-
-</Note>
 
 To create a span as a continuation of the trace retrieved from the upstream service, pass the `sentry-trace` header value to the `StartTransaction(...)` method:
 
