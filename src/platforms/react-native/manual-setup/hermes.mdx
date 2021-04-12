@@ -16,19 +16,49 @@ For Sentry open source, self-hosted users, the minimum version required is [f073
 
 Other than making sure you have the minimum version of the SDK, Sentry itself is all you need besides the standard integration described in the [React Native Sentry documentation](/clients/react-native/).
 
-## Custom SourceMaps
+## Source Maps
 
-The combination of `@sentry/react-native` and `@sentry/cli` should integrate
-correctly into the `react-native` build pipeline to find and upload the correct source map.
+If you do not need custom sourcemaps, the `sentry.gradle` build step fully supports hermes sourcemaps and should handle everything for you.
+
+## Custom Source Maps
 
 However, care must be taken to upload the correct source map when manually bundling and building React Native apps.
 
 Building Hermes bundles is a three-step process, each of which creates a different
 source map.
 
-1. Bundling / minifying using `metro`: `index.android.bundle.packager.map`
-2. Compiling to bytecode using `hermes`: `index.android.bundle.compiler.map`
-3. Merging SourceMaps using `compose-source-maps`: `index.android.bundle.packager.map + index.android.bundle.compiler.map => index.android.bundle.map`
+1. Bundling / minifying using `metro` (`react-native`): `.packager.map`
+2. Compiling to bytecode using `hermes`: `.compiler.map`
+3. Merging SourceMaps using `compose-source-maps`: `.packager.map + .compiler.map => .map`
 
-It is important to upload the third SourceMap (`index.android.bundle.map`)
-via `sentry-cli`.
+```bash{tabTitle:iOS}
+$ react-native bundle --platform ios --entry-file index.js --bundle-output main.jsbundle --sourcemap-output main.jsbundle.packager.map
+$ hermes -O -emit-binary -output-source-map -out=main.jsbundle.compiler.map main.jsbundle.packager.map
+$ node react-native/scripts/compose-source-maps.js main.jsbundle.packager.map main.jsbundle.compiler.map -o main.jsbundle.map
+```
+
+```bash{tabTitle:Android}
+$ react-native bundle --platform android --entry-file index.js --bundle-output index.android.bundle --sourcemap-output index.android.bundle.packager.map
+$ hermes -O -emit-binary -output-source-map -out=index.android.bundle.compiler.map index.android.bundle.packager.map
+$ node react-native/scripts/compose-source-maps.js index.android.bundle.packager.map index.android.bundle.compiler.map -o index.android.bundle.map
+```
+
+You will then upload the output from the third command (`main.jsbundle.map` or `index.android.bundle.map`) to Sentry via `sentry-cli`, you can read more about custom sourcemaps [over at the Source Maps page](/platforms/react-native/manual-setup/sourcemaps/#configure-cli). Note that this three-stage bundle step you just did replaces the regular bundle step.
+
+```bash{tabTitle:iOS}
+node_modules/@sentry/cli/bin/sentry-cli releases \
+    files RELEASE_NAME \
+    upload-sourcemaps \
+    --dist DISTRIBUTION_NAME \
+    --strip-prefix /path/to/project/root \
+    --rewrite main.jsbundle main.jsbundle.map
+```
+
+```bash{tabTitle:Android}
+node_modules/@sentry/cli/bin/sentry-cli releases \
+    files RELEASE_NAME \
+    upload-sourcemaps \
+    --dist DISTRIBUTION_NAME \
+    --strip-prefix /path/to/project/root \
+    --rewrite index.android.bundle index.android.bundle.map
+```
