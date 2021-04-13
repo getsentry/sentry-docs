@@ -4,15 +4,15 @@ description: "Migrating between versions of Sentry SDK for .NET."
 sidebar_order: 10
 ---
 
-# Migrating from Sentry SDK v2.x to Sentry SDK v3.x
+## Migrating from Sentry SDK v2.x to Sentry SDK v3.x
 
 Upgrading to Sentry SDK v3.x includes the following breaking changes and new features.
 
-## Breaking Changes
+### Breaking Changes
 
 Please read through **all** breaking changes relevant to you before upgrading.
 
-### !Important: Grouping Changes
+#### !Important: Grouping Changes
 
 The format of the stack traces were greatly improved with the help of Ben Adam's iconic library `Ben.Demystifier`. Frames now include details such as `async`, `static`, the actual return type, method parameters, tuples and their names, and more.
 
@@ -22,11 +22,11 @@ One big caveat is that this will **affect grouping!**. If you prefer to stay wit
 options.StackTraceMode = StackTraceMode.Original;
 ```
 
-### Namespace Change
+#### Namespace Change
 
 Classes under `Sentry.Protocol` were moved to the root namespace `Sentry`. All except `Context` classes like `App`, `Device`, etc.
 
-### ASP.NET
+#### ASP.NET
 
 ASP.NET (**not Core**) users need to install an additional package:
 
@@ -44,16 +44,16 @@ SentrySdk.Init(o =>
 
 The motivation was to remove the reference to `System.Web` to decouple the core of the package with any specific namespaces of the .NET Framework, which improves the experience from other environments such as game engines like Unity and [Godot](https://gatomalo.dev/blog/2020/03/21/error-monitoring-godot-sentry/#android).
 
-### ASP.NET Core Environment Casing
+#### ASP.NET Core Environment Casing
 
 To match Sentry's default environment naming convention, unless explicitly set otherwise, the Sentry environment will be reported lowercase. That means if `ASPNET_ENVIRONMENT` is equal to `Production`, the Sentry SDK will report it as `production`.
 
-### ASP.NET Core `IncludeRequestPayload`
+#### ASP.NET Core `IncludeRequestPayload`
 
 The option `IncludeRequestPayload` that was deprecated in the Sentry SDK 2.0 has been removed.
 The replacement is the option `MaxRequestBodySize`.
 
-### `IHub` and `ISentryClient` received new methods
+#### `IHub` and `ISentryClient` received new methods
 
 Sentry's Performance product requires additive API changes to interfaces such as `IHub` and `ISentryClient`.
 If you implement your own `IHub`, you'll need to implement two new methods:
@@ -61,58 +61,58 @@ If you implement your own `IHub`, you'll need to implement two new methods:
 `ISentryClient` received: `CaptureTransaction`.
 `IHub` received: `StartTransaction` and `GetTraceHeader`.
 
-### `DiagnosticsLogger` renamed to `DiagnosticLogger`
+#### `DiagnosticsLogger` renamed to `DiagnosticLogger`
 
 To align with other SDKs, the option is now named: `DiagnosticLogger`
 [Docs PR](https://github.com/getsentry/sentry-docs/pull/2945).
 
-### `Dsn` is just a string
+#### `Dsn` is just a string
 
 `SentryOptions` now take a string for `Dsn`:
 
 Before: `o.Dsn = new Dsn("..");`
 After: `o.Dsn = "..";`
 
-### `LogEntry` became `Message`
+#### `LogEntry` became `Message`
 
 The property of `SentryEvent` that supports a structured log entry was renamed to `Message` to align with the protocol and other SDKs.
 
-### Sentry On Premise Support
+#### Sentry On Premise Support
 
 This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are using an on-premise installation it requires Sentry version >= v20.6.0 to work. If you are using sentry.io nothing will change and no action is needed.
 
-## New features and improvements
+### New features and improvements
 
-### Offline Caching
+#### Offline Caching
 
 You can optionally have events cached to disk.
 To do that, you must specify which directory the SDK can use to write the crash files:
 
 `options.CacheDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))`
 
-### Attachments
+#### Attachments
 
 You can add attachments to events now. Please refer to the [Attachments documentation](../enriching-events/attachments/).
 
-### User Feedback
+#### User Feedback
 
 You can add user feedback to events via a .NET API. Please refer to the [User Feedback documentation](../enriching-events/user-feedback/).
 
-### ASP.NET Core gRPC support
+#### ASP.NET Core gRPC support
 
 A new package was added ASP.NET Core gPRC support. With the ability to log the request payload in case of errors.
 
-## Release Notes
+### Release Notes
 
 Please refer to [GitHub for the complete release notes](https://github.com/getsentry/sentry-dotnet/releases/tag/3.0.0).
 
-# Migrating from SharpRaven to Sentry SDK
+## Migrating from SharpRaven to Sentry SDK
 
 Below are the main differences between SharpRaven and Sentry SDK.
 
-## List of differences between SharpRaven and SentrySdk
+### List of differences between SharpRaven and SentrySdk
 
-### Sentry package
+#### Sentry package
 
 - Automatic Captures global unhandled exceptions (AppDomain)
 - Scope management
@@ -136,7 +136,7 @@ Below are the main differences between SharpRaven and Sentry SDK.
 - Enable SDK debug mode (opt-in)
 - Attach stack trace for captured messages (opt-in)
 
-### Sentry.Extensions.Logging
+#### Sentry.Extensions.Logging
 
 - Includes all features from the Sentry package.
 - BeginScope data added to Sentry scope, sent with events
@@ -144,7 +144,7 @@ Below are the main differences between SharpRaven and Sentry SDK.
 - LogError or higher automatically captures an event
 - Minimal levels are configurable.
 
-### Sentry.AspNetCore
+#### Sentry.AspNetCore
 
 - Includes all features from the Sentry package.
 - Includes all features from the Sentry.Extensions.Logging package.
@@ -195,13 +195,13 @@ It's also very configurable, for example:
 - Enable SDK debug mode
 - Attach stack trace for captured messages (opt-in)
 
-## Breaking changes
+### Breaking changes
 
-### .NET Framework support reduced
+#### .NET Framework support reduced
 
 If your project is targeting .NET Framework, it will need to be using at least v4.6.1 to use Sentry (SharpRaven supported .NET Framework v3.5 and higher).
 
-### Initialization
+#### Initialization
 
 Changed how to initialize Sentry:
 
@@ -232,7 +232,7 @@ SentrySdk.Init(o =>
 });
 ```
 
-### Event queue
+#### Event queue
 
 Contrary to SharpRaven, events in Sentry SDK are sent in background without blocking the currently executing code. Calling `SentrySdk.CaptureException(...)` does not immediately send an event, but instead queues it up on a background thread.
 
@@ -259,7 +259,7 @@ SentrySdk.CaptureMessage("hello world");
 sentryInitialization.Dispose();
 ```
 
-### Event processors
+#### Event processors
 
 Usage changes:
 
