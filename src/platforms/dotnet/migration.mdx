@@ -108,3 +108,183 @@ A new package was added ASP.NET Core gPRC support. With the ability to log the r
 # Release notes
 
 Please refer to [GitHub for the complete release notes](https://github.com/getsentry/sentry-dotnet/releases/tag/3.0.0).
+
+<Note>
+
+Migrating from SharpRaven to Sentry SDK
+
+</Note>
+
+# Breaking changes
+
+## .NET Framework support reduced
+
+If your project is targeting .NET Framework, it will need to be using at least v4.6.1 to use Sentry (SharpRaven supported .NET Framework v3.5 and higher).
+
+## Initialization
+
+Changed how to initialize Sentry:
+
+```csharp
+using Sentry;
+
+// Initialize with DSN
+SentrySdk.Init("___PUBLIC_DSN___");
+
+// Initialize with options
+SentrySdk.Init(o =>
+{
+    o.Dsn = "___PUBLIC_DSN___";
+});
+```
+
+For ASP.NET (classic) integration, add `Sentry.AspNet` package and initialize it by calling `o.AddAspNet()`:
+
+```csharp
+using Sentry;
+using Sentry.AspNet;
+
+SentrySdk.Init(o =>
+{
+    o.Dsn = "___PUBLIC_DSN___";
+
+    o.AddAspNet();
+});
+```
+
+## Event queue
+
+Contrary to SharpRaven, events in Sentry SDK are sent in background without blocking the currently executing code. Calling `SentrySdk.CaptureException(...)` does not immediately send an event, but instead queues it up on a background thread.
+
+Usage changes:
+
+```csharp
+// Before
+ravenClient.Capture(...);
+await ravenClient.CaptureAsync(...);
+
+// After
+SentrySdk.CaptureEvent(...);
+```
+
+You can flush the event queue by invoking the `IDisposable` returned by `SentrySdk.Init(...)`:
+
+```csharp
+var sentryInitialization = SentrySdk.Init("___PUBLIC_DSN___");
+
+// Capture a non-error message
+SentrySdk.CaptureMessage("hello world");
+
+// Tear down Sentry and flush queued up events
+sentryInitialization.Dispose();
+```
+
+## Event processors
+
+Usage changes:
+
+```csharp
+// Before
+ravenClient.BeforeSend = requester =>
+{
+    // Here you can log data from the requester
+    // or replace it entirely if you want.
+    return requester;
+};
+
+// After
+SentrySdk.Init(o =>
+{
+    o.BeforeSend = e =>
+    {
+        // Mutate the event or return null to drop it altogether
+        return e;
+    };
+}
+});
+```
+
+## List of differences between SharpRaven and SentrySdk
+
+### Sentry package
+
+- Automatic Captures global unhandled exceptions (AppDomain)
+- Scope management
+- Duplicate events automatically dropped
+- Events from the same exception automatically dropped
+- Web proxy support
+- HttpClient/HttpClientHandler configuration callback
+- Compress request body
+- Event sampling opt-in
+- Event flooding protection (429 retry-after and internal bound queue)
+- Release automatically set (AssemblyInformationalVersionAttribute, AssemblyVersion or env var)
+- DSN discovered via environment variable
+- Release (version) reported automatically
+- CLS Compliant
+- Strong named
+- BeforeSend and BeforeBreadcrumb callbacks
+- Event and Exception processors
+- SourceLink (including PDB in nuget package)
+- Device OS info sent
+- Device Runtime info sent
+- Enable SDK debug mode (opt-in)
+- Attach stack trace for captured messages (opt-in)
+
+### Sentry.Extensions.Logging
+
+- Includes all features from the Sentry package.
+- BeginScope data added to Sentry scope, sent with events
+- LogInformation or higher added as breadcrumb, sent with next events.
+- LogError or higher automatically captures an event
+- Minimal levels are configurable.
+
+### Sentry.AspNetCore
+
+- Includes all features from the Sentry package.
+- Includes all features from the Sentry.Extensions.Logging package.
+- Easy ASP.NET Core integration, single line: UseSentry.
+- Captures unhandled exceptions in the middleware pipeline
+- Captures exceptions handled by the framework UseExceptionHandler and Error page display.
+- Any event sent will include relevant application log messages
+- RequestId as tag
+- URL as tag
+- Environment is automatically set (IHostingEnvironment)
+- Request payload can be captured if opt-in
+- Support for EventProcessors registered with DI
+- Support for ExceptionProcessors registered with DI
+- Captures logs from the request (using Microsoft.Extensions.Logging)
+- Supports configuration system (e.g: appsettings.json)
+- Server OS info sent
+- Server Runtime info sent
+- Request headers sent
+- Request body compressed
+
+All packages are:
+
+- Strong named
+- Tested on Windows, Linux and macOS
+- Tested on .NET Core, .NET Framework and Mono
+
+It's also very configurable, for example:
+
+- HTTP Proxy
+- Event sampling
+- Enable request body extraction
+- Send PII data (Personal Identifiable Information, requires opt-in)
+- Read diagnostics activity data
+- BeforeSend: Callback to modify/reject event before sending
+- BeforeBreadcrumb: Callback to modify/reject a breadcrumb
+- LogEventFilter: Filter events by inspecting log data
+- Maximum number of breadcrumbs to store
+- Event queue depth
+- Shutdown timeout: If there are events to send, how long to wait until shutdown
+- Accept compressed response
+- Compress request body
+- Breadcrumb level: Minimum log level to store as a breadcrumb
+- Event level: Minimum log level to send an event to Sentry
+- Disable duplicate event detection
+- Disable capture of global unhandled exceptions
+- Add event processor
+- Add exception processor
+- Enable SDK debug mode
+- Attach stack trace for captured messages (opt-in)
