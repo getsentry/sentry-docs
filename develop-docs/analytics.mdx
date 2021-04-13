@@ -1,0 +1,58 @@
+---
+title: "Analytics"
+---
+
+This guide steps you through instrumenting your code with Sentry's 3rd-party analytics infrastructure.
+
+## Big Query
+
+Send events to Big Query and run queries in [Redash](https://redash.getsentry.net/).
+
+Create a new file in `src/sentry/analytics/events` using the key in snake case as the filename.
+
+In this file, you will need to register the event with attributes (for validation).
+```python
+from sentry import analytics
+
+class CodeownersAssignment(analytics.Event):
+    type = "codeowners.assignment" # replace with your key
+
+    attributes = (
+        analytics.Attribute("organization_id"),
+        analytics.Attribute("project_id"),
+        analytics.Attribute("group_id"),
+        # more attributes
+    )
+
+analytics.register(CodeownersAssignment)
+```
+
+Now in the code that you want instrumented, use the `analytics.record` function with the registered key.
+```python 
+from sentry import analytics
+
+analytics.record(
+    "codeowners.assignment", # replace with your key
+    organization_id=project.organization_id,
+    project_id=project.id,
+    group_id=group.id,
+    # more attributes
+)
+```
+
+## Metrics
+
+Track aggregrate stats with [Metrics](/services/metrics/). For example, this can be used to track aggregate response codes for an endpoint.
+
+Import the metrics library and use the `metrics.inc` function. The key needs to be unique.
+
+```python
+from sentry.utils import metrics
+
+metrics.incr(
+    "codeowners.create.http_response", # needs to be unique
+    sample_rate=1.0,
+    tags={"status": status},
+)
+```
+If you don't put a sample rate, you get 1 in 10 events. If the service is expected to have low traffic, we can start with a sample rate of 1.
