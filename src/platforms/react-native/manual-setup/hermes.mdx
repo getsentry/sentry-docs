@@ -34,29 +34,29 @@ npx react-native bundle --platform ios --dev false --entry-file index.js --bundl
 npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output index.android.bundle --sourcemap-output index.android.bundle.packager.map
 ```
 
-2. Compiling to bytecode using `hermes` to get the compiler source map => `.compiler.map`:
+2. Compiling to bytecode using `hermes` to get the compiler source map => `.hbc.map`:
 
 - `{OS-BIN}` is either `osx-bin`, `win64-bin`, or `linux-bin` depending on which operating system you are using.
 
 ```bash {tabTitle:iOS}
-node_modules/hermes-engine/{OS-BIN}/hermesc -O -emit-binary -output-source-map -out=main.jsbundle.compiler.map main.jsbundle
+node_modules/hermes-engine/{OS-BIN}/hermesc -O -emit-binary -output-source-map -out=main.jsbundle.hbc main.jsbundle
 ```
 
 ```bash {tabTitle:Android}
-node_modules/hermes-engine/{OS-BIN}/hermesc -O -emit-binary -output-source-map -out=index.android.bundle.compiler.map index.android.bundle
+node_modules/hermes-engine/{OS-BIN}/hermesc -O -emit-binary -output-source-map -out=index.android.bundle.hbc index.android.bundle
 ```
 
 3. Merging the two source maps using `compose-source-maps` to get the final source map => `.map`:
 
 ```bash {tabTitle:iOS}
-node react-native/scripts/compose-source-maps.js main.jsbundle.packager.map main.jsbundle.compiler.map -o main.jsbundle.map
+node node_modules/react-native/scripts/compose-source-maps.js main.jsbundle.packager.map main.jsbundle.compiler.map -o main.jsbundle.map
 ```
 
 ```bash {tabTitle:Android}
-node react-native/scripts/compose-source-maps.js index.android.bundle.packager.map index.android.bundle.compiler.map -o index.android.bundle.map
+node node_modules/react-native/scripts/compose-source-maps.js index.android.bundle.packager.map index.android.bundle.hbc.map -o index.android.bundle.map
 ```
 
-Then upload the bundle from the first command (`main.jsbundle` or `index.android.bundle`), and the source map from the third command (`main.jsbundle.map` or `index.android.bundle.map`) to Sentry via Sentry CLI.
+Then upload the bundle from the first command, either `main.jsbundle` or `index.android.bundle`, and the source map from the third command, either `main.jsbundle.map` or `index.android.bundle.map`, to Sentry via Sentry CLI.
 
 You can read more about custom source maps [over at the Source Maps page](/platforms/react-native/manual-setup/sourcemaps/#configure-cli). Note that this three-stage bundle step replaces the regular bundle step.
 
