@@ -24,27 +24,39 @@ If you do not need custom sourcemaps, the `sentry.gradle` build step fully suppo
 
 When manually bundling and building React Native apps, building Hermes bundles is a three-step process, each of which creates a different source map.
 
-1. Bundling / minifying using `metro` (`react-native`): `.packager.map`
-2. Compiling to bytecode using `hermes`: `.compiler.map`
-3. Merging SourceMaps using `compose-source-maps`: `.packager.map + .compiler.map => .map`
+1. Bundling / minifying using `metro` (`react-native`) to get the packager source map => `.packager.map`:
 
 ```bash {tabTitle:iOS}
-react-native bundle --platform ios --entry-file index.js --bundle-output main.jsbundle --sourcemap-output main.jsbundle.packager.map
+npx react-native bundle --platform ios --dev false --entry-file index.js --bundle-output main.jsbundle --sourcemap-output main.jsbundle.packager.map
+```
 
-hermes -O -emit-binary -output-source-map -out=main.jsbundle.compiler.map main.jsbundle.packager.map
+```bash {tabTitle:Android}
+npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output index.android.bundle --sourcemap-output index.android.bundle.packager.map
+```
 
+2. Compiling to bytecode using `hermes` to get the compiler source map => `.compiler.map`:
+
+- `{OS-BIN}` is either `osx-bin`, `win64-bin`, or `linux-bin` depending on which operating system you are using.
+
+```bash {tabTitle:iOS}
+node_modules/hermes-engine/{OS-BIN}/hermesc -O -emit-binary -output-source-map -out=main.jsbundle.compiler.map main.jsbundle
+```
+
+```bash {tabTitle:Android}
+node_modules/hermes-engine/{OS-BIN}/hermesc -O -emit-binary -output-source-map -out=index.android.bundle.compiler.map index.android.bundle
+```
+
+3. Merging the two source maps using `compose-source-maps` to get the final source map => `.map`:
+
+```bash {tabTitle:iOS}
 node react-native/scripts/compose-source-maps.js main.jsbundle.packager.map main.jsbundle.compiler.map -o main.jsbundle.map
 ```
 
 ```bash {tabTitle:Android}
-react-native bundle --platform android --entry-file index.js --bundle-output index.android.bundle --sourcemap-output index.android.bundle.packager.map
-
-hermes -O -emit-binary -output-source-map -out=index.android.bundle.compiler.map index.android.bundle.packager.map
-
 node react-native/scripts/compose-source-maps.js index.android.bundle.packager.map index.android.bundle.compiler.map -o index.android.bundle.map
 ```
 
-Then upload the output from either `main.jsbundle.map` or `index.android.bundle.map` to Sentry via Sentry CLI. 
+Then upload the bundle from the first command (`main.jsbundle` or `index.android.bundle`), and the source map from the third command (`main.jsbundle.map` or `index.android.bundle.map`) to Sentry via Sentry CLI.
 
 You can read more about custom source maps [over at the Source Maps page](/platforms/react-native/manual-setup/sourcemaps/#configure-cli). Note that this three-stage bundle step replaces the regular bundle step.
 
