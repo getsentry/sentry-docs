@@ -3,32 +3,29 @@ A `Func<SentryEvent, SentryEvent>` can be used to mutate, discard (return null),
 ```csharp
 using Sentry;
 
-SentrySdk.Init(o =>
+// Add this to the SDK initialization callback
+options.BeforeSend = sentryEvent =>
 {
-    o.BeforeSend = sentryEvent =>
+    if (sentryEvent.Exception != null
+      && sentryEvent.Exception.Message.Contains("Noisy Exception"))
     {
-        if (sentryEvent.Exception != null
-          && sentryEvent.Exception.Message.Contains("Noisy Exception"))
-        {
-            return null; // Don't send this event to Sentry
-        }
+        return null; // Don't send this event to Sentry
+    }
 
-        sentryEvent.ServerName = null; // Never send Server Name to Sentry
-        return sentryEvent;
-    };
-});
+    sentryEvent.ServerName = null; // Never send Server Name to Sentry
+    return sentryEvent;
+};
 ```
 
 ```fsharp
 open Sentry
 
-SentrySdk.Init (fun o ->
-    o.BeforeSend <- fun (event ->
-        if event.Exception <> null && event.Exception.Message.Contains("Noisy Exception") then
-            null // Don't send this event to Sentry
-        else
-            event.ServerName <- null // Never send Server Name to Sentry
-            event
-        )
+// Add this to the SDK initialization callback
+options.BeforeSend <- fun (event ->
+    if event.Exception <> null && event.Exception.Message.Contains("Noisy Exception") then
+        null // Don't send this event to Sentry
+    else
+        event.ServerName <- null // Never send Server Name to Sentry
+        event
     )
 ```

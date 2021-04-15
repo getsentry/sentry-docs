@@ -8,23 +8,21 @@ public class MyRpcException : Exception
     public HttpStatusCode Code { get; set; }
 }
 
-SentryXamarin.Init(o =>
+// Add this to the SDK initialization callback
+options.BeforeSend = @event =>
 {
-    o.BeforeSend = @event =>
+    if (@event.Exception is MyRpcException ex)
     {
-        if (@event.Exception is MyRpcException ex)
-        {
-            @event.SetFingerprint(
-                new []
-                {
-                    "{{ default }}",
-                    ex.Function,
-                    ex.Code.ToString(),
-                }
-            );
-        }
+        @event.SetFingerprint(
+            new []
+            {
+                "{{ default }}",
+                ex.Function,
+                ex.Code.ToString(),
+            }
+        );
+    }
 
-        return @event;
-    };
-}
+    return @event;
+};
 ```
