@@ -10,22 +10,20 @@ For example, here's how to sample a transaction based on the requested path:
 ```csharp
 using Sentry;
 
-UseSentry(options =>
+// Add this to the SDK initialization callback
+options.TracesSampler = context =>
 {
-    options.TracesSampler = context =>
+    var requestPath = context.TryGetHttpPath();
+
+    // We're interested in the checkout page more than others
+    if (string.Equals(requestPath, "/checkout", StringComparison.OrdinalIgnoreCase))
     {
-        var requestPath = context.TryGetHttpPath();
+        return 0.8; // Sample 80% of checkout transactions
+    }
 
-        // We're interested in the checkout page more than others
-        if (string.Equals(requestPath, "/checkout", StringComparison.OrdinalIgnoreCase))
-        {
-            return 0.8; // Sample 80% of checkout transactions
-        }
-
-        // Sample only 5% of the everything else
-        return 0.05;
-    };
-});
+    // Sample only 5% of the everything else
+    return 0.05;
+};
 ```
 
 Besides `context.TryGetHttpPath()`, you can also use `context.TryGetHttpRoute()` to get the route name (if available) and `context.TryGetHttpMethod()` to get the HTTP method used to execute the request.
