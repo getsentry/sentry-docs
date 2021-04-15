@@ -8,25 +8,23 @@ public class MyRpcException : Exception
     public HttpStatusCode Code { get; set; }
 }
 
-using (SentrySdk.Init(o =>
+// Add this to the SDK initialization callback
+options.BeforeSend = @event =>
 {
-    o.BeforeSend = @event =>
+    if (@event.Exception is MyRpcException ex)
     {
-        if (@event.Exception is MyRpcException ex)
-        {
-            @event.SetFingerprint(
-                new []
-                {
-                    "{{ default }}",
-                    ex.Function,
-                    ex.Code.ToString(),
-                }
-            );
-        }
+        @event.SetFingerprint(
+            new []
+            {
+                "{{ default }}",
+                ex.Function,
+                ex.Code.ToString(),
+            }
+        );
+    }
 
-        return @event;
-    };
-}
+    return @event;
+};
 ```
 
 ```fsharp
@@ -37,17 +35,16 @@ type MyRpcException() =
 
     member val Code: HttpStatusCode = HttpStatusCode.OK with get, set
 
-use __ = SentrySdk.Init(fun o ->
-    o.BeforeSend <- (fun event ->
-        match event.Exception with
-        | :? MyRpcException as ex -> event.SetFingerprint([
-                    "{{ default }}"
-                    ex.Function
-                    ex.Code.ToString()
-                ])
-        | _ -> ()
+// Add this to the SDK initialization callback
+options.BeforeSend <- (fun event ->
+    match event.Exception with
+    | :? MyRpcException as ex -> event.SetFingerprint([
+                "{{ default }}"
+                ex.Function
+                ex.Code.ToString()
+            ])
+    | _ -> ()
 
-        event
-        )
+    event
     )
 ```
