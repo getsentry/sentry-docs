@@ -10,22 +10,12 @@ standard library or the interpreter itself. They are documented so you can see
 what they do and that they can be disabled if they cause issues. To disable
 system integrations set `default_integrations => false` when calling `init()`.
 
-## Core
+### ExceptionListenerIntegration
 
-### RequestIntegration
+This integration catches all global uncaught exceptions and emits events when an error occurs.
 
-This integration adds to the event request data like:
-
-- HTTP method
-- URL,
-- query string
-
-If the [`send_default_pii` option](../configuration/options/#send-default-pii)
-is enabled, it will also send PII information like:
-
-- user IP address
-- cookies
-- headers
+To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
+as an exception listener.
 
 ### ErrorListenerIntegration
 
@@ -42,16 +32,35 @@ handlers. In that case, please refer to their documentation.
 Also, by default `E_ALL` will be handled, you can change it by setting `error_types`
 a different constant in `init()`.
 
-## ExceptionListenerIntegration
-
-This integration catches all global uncaught exceptions and emits events when an error occurs.
-
-To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
-as an exception listener.
-
-## FatalErrorListenerIntegration
+### FatalErrorListenerIntegration
 
 This integration catches all fatal errors and emits the corresponding events.
 
 To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
 as a fatal error listener.
+
+### RequestIntegration
+
+This integration adds to the event request data like:
+
+- HTTP method
+- URL (including the query string)
+- Body (by default only if the body is 10Kb or less)
+
+If the [`send_default_pii` option](../configuration/options/#send-default-pii) is enabled, it will also send PII information like:
+
+- IP address
+- Cookies
+- Headers
+
+### TransactionIntegration
+
+This integration sets the `transaction` attribute of the event to the value found in the raw event payload or to the value of the `PATH_INFO` server var if present.
+
+### FrameContextifierIntegration
+
+This integration reads excerpts of code around the line that originated an error.
+
+### EnvironmentIntegration
+
+This integration fills the event data with PHP runtime and server OS information.
