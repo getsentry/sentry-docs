@@ -1,9 +1,12 @@
 ---
-title: Default Integrations
-description: "Default integrations are integrations enabled by default that integrate into the
-standard library or the interpreter itself."
+title: Integrations
+description: "Learn about the automatic integrations Sentry provides and how to configure them."
 sidebar_order: 500
+redirect_from:
+  - /platforms/php/default-integrations/
 ---
+
+## Default Integrations
 
 Default integrations are integrations enabled by default that integrate into the
 standard library or the interpreter itself. They are documented so you can see
@@ -64,3 +67,54 @@ This integration reads excerpts of code around the line that originated an error
 ### EnvironmentIntegration
 
 This integration fills the event data with PHP runtime and server OS information.
+
+
+## Optional Integrations
+
+You can enable option integration by passing them to the `integrations` option when initializing the Sentry SDK.
+
+In the example below we add the optional `ModulesIntegration`.
+
+```php
+\Sentry\init([
+    'dsn' => '...',
+    'integrations' => [
+        new \Sentry\Integration\ModulesIntegration(),
+    ],
+]);
+```
+
+### IgnoreErrorsIntegration
+
+This integration decides whether an event should not be captured according to a series of options that must match with its data.
+
+### ModulesIntegration
+
+This integration logs with the event details all the versions of the packages installed with Composer; the root project is included too.
+
+
+## Customize Integrations
+
+It is also possible to customize the list of integration without disabling the default integration using the `integrations` option and passing a callable.
+
+In the example below we leave all integrations enabled exception for the `ExceptionListenerIntegration` and add the `ModulesIntegration`.
+
+```php
+\Sentry\init([
+    'dsn' => '...',
+    'integrations' => static function (array $integrations) {
+        $integrations = array_filter($integrations, static function (\Sentry\Integration\IntegrationInterface $integration) {
+            // Check if the integration if an instance of the exception listener and return false to remove it from the array
+            if ($integration instanceof \Sentry\Integration\ExceptionListenerIntegration) {
+                return false;
+            }
+
+            return true;
+        });
+
+        $integrations[] = new \Sentry\Integration\ModulesIntegration();
+
+        return $integrations;
+    },
+]);
+```
