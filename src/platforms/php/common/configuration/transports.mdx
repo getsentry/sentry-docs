@@ -90,8 +90,6 @@ use Http\Discovery\HttpAsyncClientDiscovery;
 use Http\Discovery\MessageFactoryDiscovery;
 use Http\Discovery\StreamFactoryDiscovery;
 use Http\Discovery\UriFactoryDiscovery;
-use Http\Message\ResponseFactory;
-use Http\Message\UriFactory;
 use Sentry\ClientBuilder;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\HttpClient\HttpClientFactoryInterface;
@@ -130,50 +128,6 @@ $builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
 $builder->setTransportFactory($transportFactory);
 
 SentrySdk::getCurrentHub()->bindClient($builder->getClient());
-```
-
-<Alert level="warning" title="Note">
-
-`SentrySdk::getCurrentHub()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead.
-
-</Alert>
-
-##### SpoolTransport
-
-The default behavior is to send events immediately. You may, however, want to
-avoid waiting for the communication to the Sentry server that could be slow
-or unreliable. Avoid this by choosing the `SpoolTransport` which
-stores the events in a queue so that another process can read it and take
-care of sending them. Currently only spooling to memory is supported.
-
-```php
-use Sentry\ClientBuilder;
-use Sentry\Transport\SpoolTransport;
-use Sentry\Transport\HttpTransport;
-use Sentry\SentrySdk;
-
-$options = ['dsn' => '___PUBLIC_DSN___'];
-
-$httpTransport = new HttpTransport($options, HttpAsyncClientDiscovery::find(), MessageFactoryDiscovery::find());
-
-$spool = new MemorySpool();
-
-$transportFactory = new class implements TransportFactoryInterface {
-    public function create(\Sentry\Options $options): \Sentry\Transport\TransportInterface
-    {
-        return new SpoolTransport($spool);
-    }
-};
-
-$builder = ClientBuilder::create($options);
-$builder->setTransportFactory($transportFactory);
-
-SentrySdk::getCurrentHub()->bindClient($builder->getClient());
-
-// When the spool queue is flushed the events are sent using the transport
-// passed as parameter of the flushQueue method.
-
-$spool->flushQueue($httpTransport);
 ```
 
 <Alert level="warning" title="Note">
