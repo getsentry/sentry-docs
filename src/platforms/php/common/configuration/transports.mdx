@@ -56,7 +56,7 @@ the events, but report them as sent.
 ```php
 use Sentry\ClientBuilder;
 use Sentry\Transport\NullTransport;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 use Sentry\Transport\TransportFactoryInterface;
 
 $transportFactory = new class implements TransportFactoryInterface {
@@ -70,12 +70,12 @@ $transportFactory = new class implements TransportFactoryInterface {
 $builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
 $builder->setTransportFactory($transportFactory);
 
-Hub::getCurrent()->bindClient($builder->getClient());
+SentrySdk::getCurrentHub()->bindClient($builder->getClient());
 ```
 
 <Alert level="warning" title="Note">
 
-`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead.
+`SentrySdk::getCurrentHub()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead.
 
 </Alert>
 
@@ -96,7 +96,7 @@ use Sentry\ClientBuilder;
 use Sentry\HttpClient\HttpClientFactory;
 use Sentry\HttpClient\HttpClientFactoryInterface;
 use Sentry\Transport\HttpTransport;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 use Sentry\Transport\TransportFactoryInterface;
 
 $httpClientFactory = new HttpClientFactory(
@@ -129,12 +129,12 @@ $transportFactory = new class($httpClientFactory) implements TransportFactoryInt
 $builder = ClientBuilder::create(['dsn' => '___PUBLIC_DSN___']);
 $builder->setTransportFactory($transportFactory);
 
-Hub::getCurrent()->bindClient($builder->getClient());
+SentrySdk::getCurrentHub()->bindClient($builder->getClient());
 ```
 
 <Alert level="warning" title="Note">
 
-`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead.
+`SentrySdk::getCurrentHub()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead.
 
 </Alert>
 
@@ -150,7 +150,7 @@ care of sending them. Currently only spooling to memory is supported.
 use Sentry\ClientBuilder;
 use Sentry\Transport\SpoolTransport;
 use Sentry\Transport\HttpTransport;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 
 $options = ['dsn' => '___PUBLIC_DSN___'];
 
@@ -168,7 +168,7 @@ $transportFactory = new class implements TransportFactoryInterface {
 $builder = ClientBuilder::create($options);
 $builder->setTransportFactory($transportFactory);
 
-Hub::getCurrent()->bindClient($builder->getClient());
+SentrySdk::getCurrentHub()->bindClient($builder->getClient());
 
 // When the spool queue is flushed the events are sent using the transport
 // passed as parameter of the flushQueue method.
@@ -178,6 +178,6 @@ $spool->flushQueue($httpTransport);
 
 <Alert level="warning" title="Note">
 
-`Hub::getCurrent()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead.
+`SentrySdk::getCurrentHub()->bindClient($builder->getClient());` is required to make the global function calls to use your new `Client` instead.
 
 </Alert>
