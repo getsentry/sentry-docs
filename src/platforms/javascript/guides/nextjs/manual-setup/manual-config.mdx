@@ -8,11 +8,12 @@ If you can’t (or prefer not to) run the [configuration step](/platforms/javasc
 
 ## Set Initialization Config Files
 
-To initialize the SDK you must perform the initialization for both client and server in `sentry.client.config.js` and `sentry.server.config.js` respectively, in the root directory of your project.
-Both files must initialize Sentry:
+Create two files in the root directory of your project, `sentry.client.config.js` and `sentry.server.config.js`, and include in them your initialization code for the client-side SDK and server-side SDK, respectively.
+
+For the client:
 
 ```javascript {filename:sentry.client.config.js}
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from "@sentry/nextjs";
 
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
 
@@ -25,7 +26,7 @@ Sentry.init({
 And the server:
 
 ```javascript {filename:sentry.server.config.js}
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from "@sentry/nextjs";
 
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
 
@@ -35,15 +36,15 @@ Sentry.init({
 });
 ```
 
+You can include your DSN directly in these two files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
+
 ## Extend Default Webpack Usage for Source Maps
 
-You must extend the default Next.js’s usage of Webpack to generate source maps in `next.config.js`:
+Extend the default Next.js usage of Webpack to generate source maps and upload them to Sentry. Include the following in `next.config.js`:
 
 ```javascript {filename:next.config.js}
-// This file sets a custom webpack configuration to use your Next.js app
-// with Sentry.
-// https://nextjs.org/docs/api-reference/next.config.js/introduction
-// https://docs.sentry.io/platforms/javascript/guides/nextjs/
+const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+const fs = require("fs");
 
 const {
   VERCEL_GITHUB_COMMIT_SHA,
@@ -53,19 +54,22 @@ const {
   SENTRY_ORG,
   SENTRY_PROJECT,
   SENTRY_AUTH_TOKEN,
+  SENTRY_RELEASE,
 } = process.env;
 
-const COMMIT_SHA =
-  VERCEL_GITHUB_COMMIT_SHA ||
-  VERCEL_GITLAB_COMMIT_SHA ||
-  VERCEL_BITBUCKET_COMMIT_SHA;
+function getSentryRelease() {
+  return (
+    SENTRY_RELEASE ||
+    VERCEL_GITHUB_COMMIT_SHA ||
+    VERCEL_GITLAB_COMMIT_SHA ||
+    VERCEL_BITBUCKET_COMMIT_SHA
+  );
+}
 
-const SentryWebpackPlugin = require('@sentry/webpack-plugin');
-const fs = require('fs');
-
-// We require this to fake that our plugin matches the next version
-function replaceVersion() {
-  const packageJson = require('./package.json');
+// Next.js requires a plugin's version to match the Next.js version, so we fake
+// it here by rewriting our plugin's package.json
+function syncSentryPluginVersion() {
+  const packageJson = require("./package.json");
   if (
     packageJson &&
     packageJson.dependencies &&
@@ -79,48 +83,49 @@ function replaceVersion() {
     console.error(`Can't find 'next' dependency`);
   }
 }
-replaceVersion();
+syncSentryPluginVersion();
 
 module.exports = {
   experimental: { plugins: true },
-  plugins: ['@sentry/next-plugin-sentry'],
+  plugins: ["@sentry/next-plugin-sentry"],
   productionBrowserSourceMaps: true,
   webpack: (config, { dev }) => {
     if (!dev) {
       // Enable high-quality source-maps for non-dev builds. See
       // https://github.com/vercel/next.js/blob/master/errors/improper-devtool.md
-      config.devtool = 'source-map';
+      config.devtool = "source-map";
     }
     config.plugins.push(
       new SentryWebpackPlugin({
-        release: COMMIT_SHA,
+        release: getSentryRelease(),
         url: SENTRY_URL,
         org: SENTRY_ORG,
         project: SENTRY_PROJECT,
         authToken: SENTRY_AUTH_TOKEN,
-        configFile: 'sentry.properties',
-        // Webpack specific configuration
-        stripPrefix: ['webpack://_N_E/'],
+        configFile: "sentry.properties",
+        stripPrefix: ["webpack://_N_E/"],
         urlPrefix: `~/_next`,
-        include: '.next/',
-        ignore: ['node_modules', 'webpack.config.js'],
+        include: ".next/",
+        ignore: ["node_modules", "webpack.config.js"],
         dryRun: dev,
-      }),
+        // for all available options, see
+        // https://github.com/getsentry/sentry-webpack-plugin#options
+      })
     );
     return config;
   },
 };
 ```
 
-<Note>
-
 Set up the `SentryWebpackPlugin` as the final plugin to run; otherwise, the source maps the plugin receives may not be final.
 
-</Note>
+## Configure sentry-cli
 
-## Properties File
+Under the hood, the `SentryWebpackPlugin` uses `sentry-cli`, which can be configured in one of two ways - using a properties file, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](https://docs.sentry.io/product/cli/configuration/). (If you choose to combine the two approaches, the environment variables will take precedence over values set in the properties file.)
 
-You can create a `sentry.properties` file in the base directory of your project to configure the SDK with values required for using `sentry-cli` to automate the uploading of source maps to Sentry. Here is an example:
+### Properties File
+
+You can create a `sentry.properties` file in the base directory of your project. (This is the approach taken by the wizard.) Here is an example:
 
 ```properties {filename:sentry.properties}
 defaults.url=https://sentry.io/
@@ -132,8 +137,7 @@ auth.token=___TOKEN___
 
 ### Environment Variables
 
-Using environment variables allows you more exhaustive control over the Sentry parameters the [Webpack Plugin](https://github.com/getsentry/sentry-webpack-plugin) needs, and removes the need for a properties file.
-If you choose to combine environment variables with a properties file, the environment variables will take precedence over parameters set in the properties file.
+Alternatively, the cli can be configured using environment variables.
 
 | Property name      | Environment variable |
 | ------------------ | -------------------- |
@@ -141,5 +145,3 @@ If you choose to combine environment variables with a properties file, the envir
 | `defaults.org`     | `SENTRY_ORG`         |
 | `defaults.project` | `SENTRY_PROJECT`     |
 | `auth.token`       | `SENTRY_AUTH_TOKEN`  |
-
-You can also set the Sentry DSN using the environment variable `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN` instead of having it in the [Initialization Config Files](/platforms/javascript/guides/nextjs/manual-setup/manual-config/#set-initialization-config-files).
