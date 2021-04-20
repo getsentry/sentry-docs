@@ -54,81 +54,28 @@ Extend the default Next.js usage of Webpack to generate source maps and upload t
 // https://nextjs.org/docs/api-reference/next.config.js/introduction
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-const SentryWebpackPlugin = require('@sentry/webpack-plugin');
-const fs = require('fs');
+const { withSentryConfig } = require("@sentry/nextjs");
 
-const {
-  VERCEL_GITHUB_COMMIT_SHA,
-  VERCEL_GITLAB_COMMIT_SHA,
-  VERCEL_BITBUCKET_COMMIT_SHA,
-  SENTRY_URL,
-  SENTRY_ORG,
-  SENTRY_PROJECT,
-  SENTRY_AUTH_TOKEN,
-  SENTRY_RELEASE,
-} = process.env;
-
-function getSentryRelease() {
-  return (
-    SENTRY_RELEASE ||
-    VERCEL_GITHUB_COMMIT_SHA ||
-    VERCEL_GITLAB_COMMIT_SHA ||
-    VERCEL_BITBUCKET_COMMIT_SHA
-  );
-}
-
-// Next.js requires a plugin's version to match the Next.js version, so we fake
-// it here by rewriting our plugin's package.json
-function syncSentryPluginVersion() {
-  const packageJson = require('./package.json');
-  if (
-    packageJson &&
-    packageJson.dependencies &&
-    packageJson.dependencies.next
-  ) {
-    const packagePluginPath = `./node_modules/@sentry/next-plugin-sentry/package.json`;
-    const packagePlugin = require(packagePluginPath);
-    packagePlugin.version = packageJson.dependencies.next;
-    fs.writeFileSync(packagePluginPath, JSON.stringify(packagePlugin));
-  } else {
-    console.error(`Can't find 'next' dependency`);
-  }
-}
-syncSentryPluginVersion();
-
-module.exports = {
-  experimental: { plugins: true },
-  plugins: ['@sentry/next-plugin-sentry'],
-  productionBrowserSourceMaps: true,
-  webpack: (config, { dev }) => {
-    if (!dev) {
-      // Enable high-quality source-maps for non-dev builds. See
-      // https://github.com/vercel/next.js/blob/master/errors/improper-devtool.md
-      config.devtool = 'source-map';
-    }
-    config.plugins.push(
-      new SentryWebpackPlugin({
-        release: getSentryRelease(),
-        url: SENTRY_URL,
-        org: SENTRY_ORG,
-        project: SENTRY_PROJECT,
-        authToken: SENTRY_AUTH_TOKEN,
-        configFile: 'sentry.properties',
-        stripPrefix: ['webpack://_N_E/'],
-        urlPrefix: `~/_next`,
-        include: '.next/',
-        ignore: ['node_modules', 'webpack.config.js'],
-        dryRun: dev,
-        // for all available options, see
-        // https://github.com/getsentry/sentry-webpack-plugin#options
-      }),
-    );
-    return config;
-  },
+const moduleExports = {
+  // your existing module.exports
 };
+
+const SentryWebpackPluginOptions = {
+  // Additional config options for the Sentry Webpack plugin. Keep in mind that
+  // the following options are set automatically, and overriding them is not
+  // recommended:
+  //   release, url, org, project, authToken, configFile, stripPrefix,
+  //   urlPrefix, include, ignore
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options.
+};
+
+// Make sure adding Sentry options is the last code to run before exporting, to
+// ensure that your source maps include changes from all other Webpack plugins
+module.exports = withSentryConfig(moduleExports);
 ```
 
-Set up the `SentryWebpackPlugin` as the final plugin to run; otherwise, the source maps the plugin receives may not be final.
+Make sure to add the Sentry config last; otherwise, the source maps the plugin receives may not be final.
 
 ## Configure sentry-cli
 
