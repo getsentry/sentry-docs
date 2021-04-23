@@ -2,17 +2,19 @@
 title: "Environment"
 ---
 
-This guide steps you through configuring a local development environment for the Sentry server on macOS. If you're using 
-another operating system the instructions are still roughly the same, but we don't maintain any official documentation 
+This guide steps you through configuring a local development environment for the Sentry server on macOS. If you're using
+another operating system the instructions are still roughly the same, but we don't maintain any official documentation
 for anything else for now.
+
+This documentation is meant for Mac OS and Linux. Windows is currently unsupported.
 
 Read about known issues in [the troubleshooting section](#troubleshooting).
 
 ## Clone the Repository
 
-To get started, clone the repo at [https://github.com/getsentry/sentry](https://github.com/getsentry/sentry) - or, your fork.
+To get started, clone the repo at [https://github.com/getsentry/sentry](https://github.com/getsentry/sentry) or your fork.
 
-```bash
+```shell
 git clone https://github.com/getsentry/sentry.git
 cd sentry
 ```
@@ -21,7 +23,7 @@ You're going to be working out of this repository for the remainder of the setup
 
 ## System Dependencies
 
-### Xcode CLI tools
+### Xcode CLI tools (Mac specific)
 
 You'll need to first install Xcode CLI tools. Run this command and follow the instructions:
 
@@ -31,28 +33,37 @@ xcode-select --install
 
 ### Brew
 
-Once you have Xcode installed, install [Homebrew](http://brew.sh), and then the following command to install
+Install [Homebrew](http://brew.sh), and then the following command to install
 the various system packages as listed in Sentry's `Brewfile`.
 
 ```shell
 brew bundle --verbose
 ```
 
-### Docker
+### Docker (Mac specific)
 
-One thing that requires manual attention is `docker`, which should have just been installed. Open up Spotlight,
-search for "Docker" and start it. You should soon see the Docker icon in your macOS menubar. Docker will automatically
-run on system restarts, so this should be the only time you do this.
+On Mac, `docker` (which brew has already installed for you) needs some manual intervention. You
+can run this command to set it up automatically for you or you can follow the manual steps below:
+
+```shell
+SENTRY_NO_VENV_CHECK=1 ./scripts/do.sh init-docker
+```
+
+#### Manual steps
+
+Open up Spotlight, search for "Docker" and start it. You should soon see the Docker icon in
+your macOS menubar. Docker will automatically run on system restarts, so this should be the
+only time you do this.
 
 You can verify that Docker is running by running `docker ps` in your terminal.
 
 ## Build Toolchain
 
-Sentry depends on [Python Wheels](https://pythonwheels.com/), packages containing binary extension modules.
-We distribute these wheels for the following platforms:
+Sentry depends on [Python Wheels](https://pythonwheels.com/) (packages containing binary extension modules),
+which, we distribute for the following platforms:
 
 - Linux compatible with [PEP-513](https://www.python.org/dev/peps/pep-0513/) (`manylinux1`)
-- macOS 10.15.0 or newer
+- macOS 10.15 or newer
 
 If your development machine does not run one of the above systems, you need to install the Rust
 toolchain. Follow the instructions at [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
@@ -62,67 +73,51 @@ binary modules without additional configuration.
 We generally track the latest stable Rust version, which updates every six weeks. Therefore, ensure to keep your Rust
 toolchain up to date by occasionally running:
 
-```bash
+```shell
 rustup update stable
 ```
 
 ## Python
 
-We utilize [pyenv](https://github.com/pyenv/pyenv) to install and manage Python versions. It should have already been
-installed earlier when you ran `brew bundle`.
+We utilize [pyenv](https://github.com/pyenv/pyenv) to install and manage Python versions. It got
+installed when you ran `brew bundle`.
 
-To install the required versions of Python you'll need to run the following command. This will take a while, since your
+To install the required version of Python you'll need to run the following command. This will take a while, since your
 computer is actually compiling Python!
 
 ```shell
 make setup-pyenv
 ```
 
-After this, if you type `which python`, you should see something like `/usr/bin/python`... this means `python` will
-resolve to the system's Python. You'll need to make some manual changes to your shell initialization files, if you
-want your shell to see pyenv's Python.
-
-If you're using bash, make sure your `~/.bash_profile` contains the following:
-
-```bash {filename: ~/.bash_profile}
-source ~/.bashrc
-```
-
-Configure your shell to load pyenv:
-
-```bash {filename: ~/.bashrc}
-eval "$(pyenv init -)"
-```
-
-```bash {filename: ~/.zshrc} {tabTitle: Zsh}
-eval "$(pyenv init -)"
-```
-
-```bash {filename: ~/.config/fish/config.fish} {tabTitle: Fish}
-source (pyenv init - | psub)
-```
-
-
 Once that's done, your shell needs to be reloaded. You can either reload it in-place, or close your terminal and start it
 again and cd into sentry. To reload it, run:
 
-```bash
+```shell
 exec "$SHELL"
 ```
 
-If it worked, running `which python` should result in something like `/Users/you/.pyenv/shims/python`.
+After this, if you type `which python`, you should see something like `$HOME/.pyenv/shims/python`
+rather than `/usr/bin/python` this is because the following has been added to your start up script:
+
+```shell
+if command -v pyenv 1>/dev/null 2>&1; then
+  eval "$(pyenv init -)"
+fi
+```
+
+Note: If you use Fish, add `source (pyenv init - | psub)` to `~/.config/fish/config.fish`.
 
 ### Virtual Environment
 
 You're now ready to create a Python virtual environment. Run:
 
-```bash
+```shell
 python -m venv .venv
 ```
 
 And activate the virtual environment:
 
-```bash
+```shell
 source .venv/bin/activate
 ```
 
@@ -133,99 +128,107 @@ If everything worked, running `which python` should now result in something like
 We use [volta](https://github.com/volta-cli/volta) to install and manage the version of Node.js that Sentry requires.
 To install Volta run:
 
-```bash
+```shell
 curl https://get.volta.sh | bash
 ```
 
 The volta installer will tell you to "open a new terminal to start using Volta", but you don't have to! You can just
-reload your shell like before:
+reload your shell:
 
-```bash
+```shell
 exec "$SHELL"
 ```
-
 
 This works because the volta installer conveniently made changes to your shell installation files for your shell's
 startup script:
 
-```bash {filename: ~/.bashrc}
-eval "$(pyenv init -)"
-
+```shell {filename: ~/.bashrc} {tabTitle: Bash}
 export VOLTA_HOME="~/.volta"
 grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
-```
 
-```bash {filename: ~/.zshrc} {tabTitle: Zsh}
-eval "$(pyenv init -)"
+````
 
+```shell {filename: ~/.zshrc} {tabTitle: Zsh}
 export VOLTA_HOME="~/.volta"
 grep --silent "$VOLTA_HOME/bin" <<< $PATH || export PATH="$VOLTA_HOME/bin:$PATH"
-```
+````
 
-```bash {filename: ~/.config/fish/config.fish} {tabTitle: Fish}
+```shell {filename: ~/.config/fish/config.fish} {tabTitle: Fish}
 set -gx VOLTA_HOME "$HOME/.volta"
-set -gx PATH "$VOLTA_HOME/bin" $PATH
-```
+set -gx PATH "$VOLTA_HOME/bin" \$PATH
+
+````
 
 Now, if you try and run `volta`, you should see some help text, meaning volta is installed correctly. To install node,
 simply run:
 
-```bash
+```shell
 node -v
-```
+````
 
 Volta intercepts this and automatically downloads and installs the node and yarn versions in sentry's `package.json`.
-
 
 ## Bootstrap Services
 
 Source your virtual environment again (`source .venv/bin/activate`), then run `make bootstrap`. This will take a long time,
-as it bootstraps not only Sentry and its dependencies, but starts up related services, and runs database migrations.
+as it bootstraps Sentry, its dependencies, starts up related services and runs database migrations.
 
 The `bootstrap` command does a few things you'll want to know about:
 
 - `sentry init` creates the baseline Sentry configuration in `~/.sentry/`.
 - `sentry devservices up` spins up required Docker services (such as Postgres and Clickhouse)
 - `sentry upgrade` runs Postgres migrations, and will also prompt you to create a user. You will want to ensure your first
-user is designated as **superuser**.
+  user is designated as **superuser**.
 
 Once this command has finished you'll have Sentry installed in development mode with all its required dependencies.
+
+**Note**: This command is meant to be run only once. To bring your dependencies up-to-date use `make develop`.
 
 ## direnv
 
 [direnv](https://github.com/direnv/direnv) _automatically activates your virtual environment_, sets some helpful environment
 variables for you, and performs some simple checks to make sure your environment is as expected (and tries its best to guide
-you if it isn't).
+you if it isn't). This happens every time you change directories into sentry.
 
 First, you should be done bootstrapping. Then, run `brew install direnv` and add the following snippet to the end of your
 startup script:
 
-```bash {filename: ~/.bashrc}
-eval "$(direnv hook bash)"
-```
+```shell {filename: ~/.bashrc} {tabTitle: Bash}
+eval "\$(direnv hook bash)"
 
-```bash {filename: ~/.zshrc} {tabTitle: Zsh}
+````
+
+```shell {filename: ~/.zshrc} {tabTitle: Zsh}
 eval "$(direnv hook zsh)"
-```
+````
 
-```bash {filename ~/.config/fish/config.fish} {tabTitle: Fish}
+```shell {filename ~/.config/fish/config.fish} {tabTitle: Fish}
 direnv hook fish | source
-```
+
+````
 
 And after doing that, reload your shell:
 
-```bash
+```shell
 exec "$SHELL"
-```
+````
 
 Any time the `.envrc` configuration changes (including the first time) you will be prompted to run `direnv allow` before any
 of the configuration will run. This is for security purposes and you are encouraged to inspect the changes before running this command.
+
+### Customize your development environment variables
+
+If you want to personalize your environment variables, you can do so by creating a `.env` file. This file is
+ignored by `git`, thus, you will not be able to leak it into one of your PRs.
+
+Two examples of variables that you can place there are `SENTRY_SILENCE_DIRENV_NOTICE` to make `direnv` output less noisy
+and `SENTRY_DEVENV_NO_REPORT=1` to prevent the development environment to report errors to Sentry.
 
 ## Running the Development Server
 
 Once you’ve successfully stood up your datastore, you can now run the development server:
 
-```bash
+```shell
 sentry devserver --workers
 ```
 
@@ -255,7 +258,7 @@ the development workflow <Link to="/workflow/">here</Link>.
 Let's start off by cloning the `getsentry` repository to be adjacent with your
 sentry repository:
 
-```bash
+```shell
 # Go to where you have sentry and clone getsentry.
 cd /path/to/sentry
 cd ..
@@ -263,10 +266,10 @@ git clone git@github.com:getsentry/getsentry.git
 ```
 
 It's necessary to keep getsentry in an adjacent directory (it's expected by
-`install-py-dev` in the getsentry Makefile). For example, if you
+various make targets in the getsentry Makefile). For example, if you
 did a `ls ~/code` you'd see something like:
 
-```bash
+```shell
 sentry/   getsentry/
 ```
 
@@ -276,25 +279,26 @@ Then, run `make bootstrap` and follow any additional instructions that come up.
 
 If all went well, then you can start the development server:
 
-```bash
+```shell
 getsentry devserver --workers
 ```
 
-Note that you **cannot** have both sentry and getsentry devserver running at the same time.
+**Note**: You **cannot** have both sentry and getsentry devserver running at the same time.
 
 After the server warms up for a little while, you should be able to access it
 at [http://dev.getsentry.net:8000](http://dev.getsentry.net:8000/).
 
 If you see `DoesNotExist: Subscription matching query does not exist` in your dev server,
 run the following in getsentry:
-```bash
+
+```shell
 ./bin/mock-subscription
 ```
 
 You can set your local instance's org to use a business plan by running the
 following in getsentry:
 
-```bash
+```shell
 ./bin/mock-subscription <org_slug> --plan mm2_a_500k
 ```
 
@@ -312,7 +316,7 @@ You might also be interested in <Link to="/continuous-integration/#troubleshooti
 
 **Problem:** You see `Error occured while trying to proxy to: dev.getsentry.net:8000/`
 
-**Solution:**  You likely need to upgrade your Python dependencies. Go to the git root directory and run `make install-py-dev`.
+**Solution:** You likely need to upgrade your Python dependencies. Go to the git root directory and run `make install-py-dev`.
 
 ---
 
@@ -320,7 +324,7 @@ You might also be interested in <Link to="/continuous-integration/#troubleshooti
 
 **Solution:**
 
-```bash
+```shell
 make build-platform-assets
 ```
 
@@ -343,7 +347,7 @@ RetryException: Could not successfully execute <functools.partial object at 0x10
 
 **Solution:**
 
-```bash
+```shell
 brew upgrade --cask chromedriver
 ```
 
@@ -383,7 +387,7 @@ pip install --no-cache-dir uwsgi
 
 **Solution:** In getsentry run the following to mock a subscription:
 
-```bash
+```shell
 ./bin/mock-subscription <org_slug>
 ```
 
@@ -394,6 +398,6 @@ pip install --no-cache-dir uwsgi
 **Solution:** Review the [bootstrap services](/environment/#bootstrap-services)
 section or spin up Docker services with:
 
-```bash
+```shell
 sentry devservices up
 ```
