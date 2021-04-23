@@ -89,14 +89,19 @@ Available options:
 
 Here is a code example of how this could be implemented:
 
-```
-document.querySelector('#teststuff').addEventListener('click', () => {
-    e1 = new Error('fooooo');
-    e2 = new Error('bar?');
-    e2.cause = e1;
-    Sentry.captureException(e2);
-  });
-```
+```javascript
+document.querySelector('#teststuff').addEventListener('click', async (event) => {
+  const movie = event.target.dataset.title;
+  try {
+    const reviews = await fetchMovieReviews(movie);
+    renderMovieReviews(reviews);
+  } catch (e) {
+    const fetchError = new Error(`Failed to fetch reviews for: ${movie}`);
+    fetchError.cause = e;
+    Sentry.captureException(fetchError);
+    renderMovieReviewsError(fetchError);
+  }
+});
 
 
 
