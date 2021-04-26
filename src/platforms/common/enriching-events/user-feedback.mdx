@@ -5,36 +5,63 @@ redirect_from:
   - /learn/user-feedback/
 description: "Learn more about collecting user feedback when an event occurs. Sentry pairs the feedback with the original event, giving you additional insight into issues."
 notSupported:
-  - native(question out)
-  - native.breakpad(question out)
-  - native.crashpad(question out)
-  - native.minidumps(likely should disable...kind of ... weird)
-  - native.wasm(question out)
-  - native.ue4(question out)
-  - dart (question out)
-  - flutter(question out)
-  - ruby(question out)
+  - native
+  - dart
+  - flutter
+  - ruby
 ---
 
 When a user experiences an error, Sentry provides the ability to collect additional feedback. You can collect feedback according to the method supported by the SDK.
+
+<PlatformSection supported={["java", "apple", "android"]} >
+
+## User Feedback API
+
+The user feedback API provides the ability to collect user information when an event occurs. You can use the same programming languge you have in your app to send user feedback. In this case, the SDK creates the HTTP request so you don't have to deal with posting data via HTTP.
+
+Sentry pairs the feedback with the original event, giving you additional insight into issues. Sentry needs the `eventId` to be able to associate the user feedback to the corresponding event. To get the `eventId`, for example, you can use the <PlatformLink to="/configuration/options/#before-send">beforeSend</PlatformLink> or the return value of the methods capturing an event.
+
+<PlatformContent includePath="user-feedback/http-request" />
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet"]}>
+
+## Use the .NET SDK
+
+You can create a form to collect the user input in your prefered framework, and use the SDK's API to send the information to Sentry. You can also use the widget, as described below. If you'd prefer an alternative to the widget or do not have a JavaScript frontend, you can use this API or a [Web API](/api/projects/submit-user-feedback/).
+
+```csharp {tabTitle:C#}
+using Sentry;
+
+var eventId = SentrySdk.CaptureMessage("An event that will receive user feedback.");
+
+SentrySdk.CaptureUserFeedback(eventId, "user@example.com", "It broke.", "The User");
+```
+
+```fsharp {tabTitle:F#}
+open Sentry
+
+let eventId = SentrySdk.CaptureMessage("An event that will receive user feedback.")
+
+SentrySdk.CaptureUserFeedback(eventId, "user@example.com", "It broke.", "The User")
+```
+
+</PlatformSection>
 
 <PlatformSection notSupported={["android", "apple", "java", "native", "dart", "flutter", "ruby"]}>
 
 ## Embeddable JavaScript Widget
 
-Our embeddable JavaScript widget is useful for browser-based SDKs when you may typically render a plain error page (the classic `500.html`).
+Our embeddable JavaScript widget is useful when you may typically render a plain error page (the classic `500.html`) on your website.
 
-To collect feedback our embeddable JavaScript widget requests and collects the user's name, email address, and a description of what occurred. When feedback is provided, Sentry pairs the feedback with the original event, giving you additional insights into issues.
+To collect feedback, the widget requests and collects the user's name, email address, and a description of what occurred. When feedback is provided, Sentry pairs the feedback with the original event, giving you additional insights into issues.
 
 The screenshot below provides an example of the User Feedback widget, though yours may differ depending on your customization:
 
 ![An example of a user feedback widget with text boxes for user name, email, and additional details about the break.](user_feedback_widget.png)
 
-## User Feedback API
-
-If you'd prefer an alternative to the widget or do not have a JavaScript frontend, you can use the [User Feedback API](/api/projects/post-project-user-reports/).
-
-## Collecting Feedback
+### Integration
 
 To integrate the widget, you'll need to be running version 2.1 or newer of our JavaScript SDK. The widget authenticates with your public DSN, then passes in the Event ID that was generated on your backend.
 
@@ -67,17 +94,8 @@ An override for Sentry’s automatic language detection (e.g. `lang=de`)
 | `successMessage` | Your feedback has been sent. Thank you!                                                           |
 | `onLoad`         | n/a                                                                                               |
 
-</PlatformSection>
+## User Feedback API
 
-<PlatformSection supported={["java", "dotnet", "apple", "android"]} >
-
-## Manage the HTTP Request
-
-The user feedback API provides the ability to collect user information when an event occurs. You can use the same programming languge you have in your app to send user feedback. In this case, the SDK creates the HTTP request so you don't have to deal with posting data via HTTP.
-
-Sentry pairs the feedback with the original event, giving you additional insight into issues.
-Sentry needs the `eventId` to be able to associate the user feedback to the corresponding event. To get the `eventId`, for example, you can use the <PlatformLink to="/configuration/options/#before-send">beforeSend</PlatformLink> or the return value of the methods capturing an event.
-
-<PlatformContent includePath="user-feedback/http-request" />
+If you'd prefer an alternative to the widget or do not have a JavaScript frontend, you can use the [User Feedback API](/api/projects/post-project-user-reports/).
 
 </PlatformSection>
