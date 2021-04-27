@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     sentry_init(options);
 
     // Make sure everything flushes
-    auto sentryShutdown = qScopeGuard([] { sentry_shutdown(); });
+    auto sentryClose = qScopeGuard([] { sentry_close(); });
 
     QApplication app(argc, argv);
     /* ... */

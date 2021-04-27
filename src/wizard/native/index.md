@@ -22,7 +22,7 @@ int main(void) {
   /* ... */
 
   // make sure everything flushes
-  sentry_shutdown();
+  sentry_close();
 }
 ```
 
