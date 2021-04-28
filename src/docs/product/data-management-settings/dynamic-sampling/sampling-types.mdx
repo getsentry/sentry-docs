@@ -1,0 +1,63 @@
+---
+title: Sampling Types
+sidebar_order: 20
+description: "Learn more about the types of sampling available for your project."
+---
+
+In Sentry, you can set up sampling in one of two ways:
+
+1. Client-side, in your SDK, by [configuring the transaction sample rate](/platform-redirect/?next=/configuration/sampling/#configuring-the-transaction-sample-rate) during SDK initialization.
+
+    This sampling approach is simple and works well in many scenarios. However, it can be difficult to change in scenarios where the application is distributed and redeployment is either not an option or very difficult (for example, in mobile applications).
+
+2. Server-side, with dynamic sampling in the Filters & Sampling settings for your Project in sentry.io. This approach offers several benefits:
+
+    - No need to create a new release or deployment. Update the sample rate in sentry.io, which applies immediately.
+    - Holistic sample of an entire trace, as every transaction associated with the trace will be captured - from frontend to backend.
+
+With dynamic sampling, you can add rules, sample by individual events or by entire traces. If you sample by traces, you can sample by specific cases: release, environment, and user. Learn how to [set your Filters & Sampling](TODO: add link).
+
+## Using Both Types of Sampling
+
+You can use both types of sampling - configuring your SDK as well as setting a dynamic sampling rate - in your project. If you do so, we suggest the following:
+
+- For applications using our frontend SDKs, send all your data without configuring a sample rate on your SDK. Use dynamic sampling as your primary sampling control.
+- For applications using our backend SDKs, assess the impact of tracing on your operation and keep your client-side sample rate as high as possible.
+
+## Dynamic Sampling Operations
+
+Dynamic sampling operates on both error events and transaction events.
+
+## Errors
+
+Error sampling decisions are made based on the event data.
+
+A sampling rule is selected from the available sampling rules by going through the list of dynamic sampling rules for errors and picking up the first rule that matches the event data. Rule matching is described in more detail below.
+
+## Transactions
+
+Transactions can be considered either as independent events or in the context of all other transactions belonging to a trace (see TODO tracing link for more info on traces).
+
+Sentry offers the possibility to sample transactions either independently or as part of a trace; there are different benefits for each case.
+
+Sampling transactions using transaction traces is advantageous when trying to understand transactions in the context of the global system. In this case we are not interested in seeing a particular transaction, but the whole group of transactions in a trace so sampling should occur at the trace level.
+
+When sampling transaction traces, the sampling rules are based on the transaction context, this means that the sampling decisions are based on the information extracted from the system that initiated the transaction.
+Transaction trace sample rules are based on the following attributes (all attributes belong to the initial
+transaction, the transaction that started the trace):
+
+* project id
+* release
+* environment
+* user segment
+
+While sampling transaction traces gives a very good view of how transactions flow through the system, sometimes we are
+interested in analysing transactions from a particular service that happens not to be the initiator of transaction
+(e.g. a backend server). If we are interested in creating rules based on attributes specific to our service, for
+example we have a suspicion that a particular release might have some performance problems, we can sample based on
+transaction event.
+
+Individual transaction rules are based on the transaction attributes and not on the trace context attributes and
+therefore can target individual services that are not initiating traces.
+
+(TODO In the future we can say that these rules can use more attributes).

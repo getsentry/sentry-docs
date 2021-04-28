@@ -1,0 +1,44 @@
+---
+title: Dynamic Sampling Operations
+sidebar_order: 30
+description: "Learn more about how dynamic sampling rules are applied."
+---
+
+Dynamic sampling operates on both error events and transaction events.
+
+## Error Sampling Decisions
+
+Error sampling decisions are made based on the event data.
+
+Sentry selects a sampling rule from those available by going through the list of dynamic sampling rules for errors, then picking the first rule that matches the event data. Rule matching is described in more detail below.
+
+## Transactions Sampling Decisions
+
+Transactions can be considered either as independent events or in the context of all other transactions belonging to a trace (see TODO tracing link for more info on traces). You can either sample transactions independently or as part of a trace, each case offers different benefits.
+
+Sampling transactions using transaction traces is advantageous when trying to understand transactions in the context of the global system. In this case, you are not sampling to see a particular transaction, rather you are sampling to see the whole group of transactions in a trace. In this case, you should set dynamic sampling to occur at the trace level.
+
+When sampling transaction traces, dynamic sampling rules are based on the transaction context. This means that dynamic sampling decisions are based on information extracted from the system that started the transaction. Transaction trace dynamic sampling rules are based on the following attributes, all of which belong to the transaction that started the trace:
+
+- Project ID
+- Release
+- Environment
+- User segment
+
+Dynamic sampling of transaction traces provides a very good view of how transactions flow through the system. However, sometimes you are analyzing transactions from a particular service that is not the initiator of transaction (such as a backend server). If you are interested in creating rules based on attributes specific to your service; for example, if you have a suspicion that a particular release might have some performance problems, you can sample based on transaction event.
+
+Individual transaction dynamic sampling rules are based on the transaction attributes, not on the trace context attributes. As a result, you can target individual services that are not initiating traces.
+
+(TODO In the future we can say that these rules can use more attributes).
+
+## Dynamic Sampling and Inbound Filters
+
+<Note> not yet edited; need to determine Inbound Filter content consumption </Note>
+
+(TODO Decide if we should keep this since we'll probably remove inbound filters in the future.)
+
+Inbound filters are a related concept, withe key differences from Dynamic Sampling. Inbound filters may be viewed as a coarse sampling technique, where only 0% and 100% sampling rates are available. The key difference between filters and sampling is that filters compose while sampling rules do not, the example provides an illustration:
+
+With two filters defined - one that removes all requests coming from Internet Explorer 9 or lower, and one that filters requests coming from an application with release 1.* - all  events coming either from Explorer 9 or from a client with release 1.* will be filtered out, effectively the two filters are ORed together (TODO check if it is proper English) .
+
+With two sampling rules defined - first on release 1.* at 10%, and the second sampling on "prod1" environment at 20% - the combined effect will not be  similar to the inbound filters case. A request coming for release 1.1 and prod1 will match the first rule and will be sampled at 10% , a request for release 1.1 & prod2 will still match the first rule and will be sampled at 10% while a request for release 2.1 and prod1 will match the second rule and will be sampled at 20%.
