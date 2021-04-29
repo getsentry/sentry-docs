@@ -38,6 +38,18 @@ Sentry.init({
 });
 ```
 
+If you want to instrument [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction), which run on serverless, you need to wrap your handler in our `withSentry` wrapper in order to be able to capture crashes:
+
+```javascript {filename:pages/api*}
+import { withSentry } from '@sentry/nextjs';
+
+const handler = async (req, res) => {
+  res.status(200).json({ name: 'John Doe' })
+}
+
+export default withSentry(handler);
+```
+
 You can include your DSN directly in these two files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
 
 ## Extend Default Webpack Usage for Source Maps
@@ -72,6 +84,7 @@ module.exports = withSentryConfig(moduleExports, SentryWebpackPluginOptions);
 ```
 
 Make sure to add the Sentry config last; otherwise, the source maps the plugin receives may not be final.
+Also keep in mind, by default we disable source map upload in `dev` mode when running `next dev` to not upload the source maps on every file change. If you build your app for production, we'll upload your source maps by default.
 
 ## Configure sentry-cli
 
