@@ -22,6 +22,51 @@ One big caveat is that this will **affect grouping!**. If you prefer to stay wit
 options.StackTraceMode = StackTraceMode.Original;
 ```
 
+### Serialization
+
+On version 3.0.0 the Sentry SDK for .NET changed from `Newtonsoft.Json` to `System.Text.Json`.
+This introduces some advantages, such as no dependency is needed (when targeting .NET Core 3.0, .NET 5 and later version) and much faster performance.
+
+One breaking change in behavior that came up was that `Newtonsoft.Json` was able to serialize some types that are not possible with `System.Text.Json`.
+This affects objects set as [Context](../enriching-events/context/) and `Extra`.
+
+Setting an instance of `Exception` that was caugh in a `catch` block could fail to serialze, and the event would be dropped by Sentry (this wouldn't break your app, but the error wouldn't make into Sentry):
+
+```
+ ---> System.NotSupportedException: Serialization and deserialization of 'System.Type' instances are not supported and should be avoided since they can lead to security issues.
+   at System.Text.Json.Serialization.Converters.TypeConverter.Write(Utf8JsonWriter writer, Type value, JsonSerializerOptions options)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.JsonPropertyInfo`1.GetMemberAndWriteJson(Object obj, WriteStack& state, Utf8JsonWriter writer)
+   at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.JsonPropertyInfo`1.GetMemberAndWriteJson(Object obj, WriteStack& state, Utf8JsonWriter writer)
+   at System.Text.Json.Serialization.Converters.ObjectDefaultConverter`1.OnTryWrite(Utf8JsonWriter writer, T value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.TryWrite(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+   at System.Text.Json.Serialization.JsonConverter`1.WriteCore(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
+```
+
+To avoid such error, make sure to pass a serializable object into Sentry. For example, map the instance of `Exception` to an anonymous object:
+
+```
+try
+{
+    throw new ArgumentNullException("test");
+}
+catch (Exception e)
+{
+    SentrySdk.ConfigureScope(s =>
+    {
+        s.Contexts["Exception"] = new
+        {
+            e.Message,
+            e.StackTrace,
+            e.Data
+        };
+    });
+    SentrySdk.CaptureMessage("Exception in contexts");
+}
+```
+
 #### Namespace Change
 
 Classes under `Sentry.Protocol` were moved to the root namespace `Sentry`. All except `Context` classes like `App`, `Device`, etc.
