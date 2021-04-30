@@ -69,17 +69,19 @@ For example:
 EnvironmentProject.objects.filter(environment__name="none")
 ```
 
-Because there are too many `EnvironmentProject` rows, this will lock the whole table.
-Instead we should iterate over all the `Environment` rows using `RangeQuerySetWrapperWithProgressBar` since it will do it in chunks.
+Because there are too many `EnvironmentProject` rows, this will bring too many rows into memory at once.
+Instead we should iterate over all the `EnvironmentProject` rows using `RangeQuerySetWrapperWithProgressBar` since it will do it in chunks.
 For example:
 
 ```python
-for env in RangeQuerySetWrapperWithProgressBar(Environment.objects.all()):
+for env in RangeQuerySetWrapperWithProgressBar(EnvironmentProject.objects.all()):
 	if env.name == 'none':
 		# Do what you need
 ```
 
-This will run slower, but that's better than locking the database.
+We generally prefer to avoid using `.filter` with `RangeQuerySetWrapperWithProgressBar`. Since it already orders by the id to iterate through the table,
+we can't take advantage of any indexes on the fields, and could potentially scan a large number of rows for each chunk. This will run slower, but we 
+generally prefer that, since it averages the load out over a longer period of time, and makes each query to fetch each chunk fairly cheap.
 
 ### Indexes
 
@@ -87,7 +89,7 @@ We prefer to create indexes on large existing tables with `CREATE INDEX CONCURRE
 
 ### Deleting columns/tables
 
-This is complicated due to our deploy process. When we deploy, we run migrations, and then push out the application code, which takes a while. This means that if we just delete a column or model, then code in sentry will be looking for those columns/tables and erroring until the deploy completes. In some cases, this can mean sentry is hard down until the deploy is finished.
+This is complicated due to our deploy process. When we deploy, we run migrations, and then push out the application code, which takes a while. This means that if we just delete a column or model, then code in sentry will be looking for those columns/tables and erroring until the deploy completes. In some cases, this can mean Sentry is hard down until the deploy is finished.
 
 To avoid this, follow these steps:
 
@@ -235,3 +237,34 @@ Then we deploy this and we're done.
 ### Foreign Keys
 
 Creating foreign keys is mostly fine, but for some large/busy tables like `Project`, `Group` it can cause problems due to difficulties in acquiring a lock. You can still create a Django level foreign key though, without creating a database constraint. To do so, set `db_constraint=False` when defining the key.
+
+### Adding Columns
+
+When creating new columns they should always be created as nullable. This is for two reasons:
+ - If there are existing rows, adding a not null column requires a default to be set, and adding a default requires a full rewrite of the table. This is dangerous and will most likely result in downtime
+ - During the deploy, a mix of old and new code is running. If old code attempts to insert a row to the table the insert will fail, since the old code doesn't know the new column exist, and so has no way to provide a value to the column.
+
+### Renaming Tables
+
+Renaming tables is dangerous and will result in downtime. The reason this occurs is that during the deploy a mix of old/new code will be running. So once we rename the table in Postgres, the old code will immediately start erroring if it attempts to access it. There are two ways to handle renaming a table:
+ - Don't rename the table in Postgres. Instead, just rename the model in Django, and make sure `Meta.db_table` is set to the current tablename so that nothing breaks. This is the preferred method.
+ - If you absolutely want to rename the table, then the steps would be:
+  - Create a table with the new name
+  - Start dual-writing to both the old and new table, ideally in a transaction.
+  - Backfill the old rows into the new table.
+  - Change the model to start reading from the new table.
+  - Stop writing to the old table and remove references from the code.
+  - Drop the old table.
+  - Generally, this is not worth doing and a lot of risk/effort compared to the reward.
+
+### Renaming Columns
+This is basically identical to renaming a table. Renaming columns is dangerous and will result in downtime. The reason this occurs is that during the deploy a mix of old/new code will be running. So once we rename the column in Postgres, the old code will immediately start erroring if it attempts to access it. There are two ways to handle renaming a column:
+ - Don't rename the column in Postgres. Instead, just rename the field in Django, and use `db_column` in the definition to set it to the existing column name so that nothing breaks. This is the preferred method.
+ - If you absolutely want to rename the column, then the steps would be:
+  - Create a column with the new name
+  - Start dual-writing to both the old and new column.
+  - Backfill the old column values into the new column.
+  - Change the field to start reading from the new column.
+  - Stop writing to the old column and remove references from the code.
+  - Drop the old column from the database.
+  - Generally, this is not worth doing and a lot of risk/effort compared to the reward.
