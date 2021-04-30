@@ -70,6 +70,7 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
       .query(query, {
         path,
         platforms: platforms.map(platform => standardSDKSlug(platform).slug),
+        searchAllIndexes: showOffsiteResults,
         ...args,
       })
       .then((results: Result[]) => {
