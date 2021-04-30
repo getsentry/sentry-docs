@@ -63,6 +63,21 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
     setShowOffsiteResults(false);
   });
 
+  const searchFor = (query, args = {}) => {
+    setQuery(query);
+
+    search
+      .query(query, {
+        path,
+        platforms: platforms.map(platform => standardSDKSlug(platform).slug),
+        ...args,
+      })
+      .then((results: Result[]) => {
+        if (loading) setLoading(false);
+        setResults(results);
+      });
+  };
+
   const totalHits = results.reduce((a, x) => a + x.hits.length, 0);
 
   return (
@@ -73,19 +88,7 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
         aria-label="Search"
         className="form-control"
         onChange={({ target: { value: query } }) => {
-          setQuery(query);
-
-          search
-            .query(query, {
-              path,
-              platforms: platforms.map(
-                platform => standardSDKSlug(platform).slug
-              ),
-            })
-            .then((results: Result[]) => {
-              if (loading) setLoading(false);
-              setResults(results);
-            });
+          searchFor(query);
         }}
         value={query}
         onFocus={() => setFocus(true)}
@@ -174,6 +177,9 @@ export default ({ path, platforms = [] }: Props): JSX.Element => {
                     <button
                       className="sgs-expand-results-button"
                       onClick={() => setShowOffsiteResults(true)}
+                      onMouseOver={() =>
+                        searchFor(query, { searchAllIndexes: true })
+                      }
                     >
                       Search <em>{query}</em> across all Sentry sites
                     </button>
