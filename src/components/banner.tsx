@@ -7,9 +7,9 @@ import React, { useState, useEffect } from "react";
 //
 const SHOW_BANNER = false;
 const BANNER_TEXT =
-  "Upcoming Technical Workshop: Error and Performance Monitoring for Mobile Apps";
+  "Upcoming Technical Workshop: Improve and Automate Your Workflow.";
 const BANNER_LINK_URL =
-  "https://zoom.us/webinar/register/3516118715448/WN_dhRyS4mHS76syfj0nZVYcg";
+  "https://us06web.zoom.us/webinar/register/1016170689371/WN_GwnbdpXlQ6yQDEV_qVhVOg";
 const BANNER_LINK_TEXT = "Register here.";
 const OPTIONAL_BANNER_IMAGE = null;
 

@@ -2,13 +2,8 @@
 Sentry.init do |config|
   filter = ActiveSupport::ParameterFilter.new(Rails.application.config.filter_parameters)
   config.before_send = lambda do |event, hint|
-    request = event.request
-
-    if request
-      request.data = filter.filter(request.data)
-    end
-
-    event
+    # use Rails' parameter filter to sanitize the event
+    filter.filter(event.to_hash)
   end
 end
 ```

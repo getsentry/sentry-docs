@@ -24,7 +24,7 @@ const PlatformRedirect = ({ path = "/" }: Props) => {
       </p>
 
       <ul>
-        {platformList.map(platform => (
+        {platformList.map((platform) => (
           <li key={platform.key}>
             <SmartLink to={`/platforms/${platform.key}${path}`}>
               <PlatformIcon
@@ -43,16 +43,22 @@ const PlatformRedirect = ({ path = "/" }: Props) => {
 };
 
 export default () => {
+  const platformList = usePlatformList();
+
   const location = useLocation();
   const navigate = useNavigate();
 
   const queryString = parse(location.search, { arrayFormat: "none" });
   const path = (queryString.next as string | null) || "";
-  const platform = queryString.platform as string | null;
+  const requestedPlatform = queryString.platform as string | null;
 
-  if (platform) {
+  const isValidPlatform = platformList.some(
+    (p) => p.key === requestedPlatform?.toLowerCase()
+  );
+
+  if (isValidPlatform && requestedPlatform) {
     useEffect(() => {
-      navigate(`/platforms/${platform}${path}`);
+      navigate(`/platforms/${requestedPlatform}${path}`);
     });
     return null;
   }
