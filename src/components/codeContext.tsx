@@ -52,7 +52,7 @@ const DEFAULTS: CodeKeywords = {
       PROJECT_ID: 0,
       PROJECT_SLUG: "example-project",
       ORG_ID: 0,
-      ORG_SLUG: "exmaple-org",
+      ORG_SLUG: "example-org",
       ORG_INGEST_DOMAIN: "o0.ingest.sentry.io",
       MINIDUMP_URL:
         "https://o0.ingest.sentry.io/api/0/minidump/?sentry_key=examplePublicKey",

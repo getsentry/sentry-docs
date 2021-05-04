@@ -4,7 +4,6 @@ sidebar_order: 1
 description: "Learn more about how to configure the SDK. These options are set when the SDK is first initialized, passed to the init function as an object."
 notSupported:
   - perl
-  - unity
 ---
 
 SDKs are configurable using a variety of options. The options are largely standardized among SDKs, but there are some differences to better accommodate platform peculiarities. Options are set when the SDK is first
@@ -48,7 +47,7 @@ Turns debug mode on or off. If debug is enabled SDK will attempt to print out us
 
 </ConfigKey>
 
-<ConfigKey name="diagnostic-level" supported={["dotnet", "java", "android", "dart", "flutter"]}>
+<ConfigKey name="diagnostic-level" supported={["dotnet", "java", "android", "dart", "flutter", "apple"]}>
 
 Enabling `debug` mode makes the SDK generate as much diagnostic data as possible. However, if you'd prefer to lower the verbosity of the Sentry SDK diagnostics logs, configure this option to set the appropriate level:
 
@@ -96,6 +95,12 @@ This variable controls the total amount of breadcrumbs that should be captured. 
 
 </ConfigKey>
 
+<ConfigKey name="max-cache-items" supported={[ "dotnet" ]} >
+
+The maximum number of [envelopes](https://develop.sentry.dev/sdk/envelopes/) to keep in cache. The SDKs use envelopes to send data, such as events, attachments, user feedback, and sessions to sentry.io. An envelope can contain multiple items, such as an event with a session and two attachments. Depending on the usage of the SDK, the size of an envelope can differ. If the number of envelopes in the local cache exceeds `max-cache-items`, the SDK deletes the oldest envelope and migrates the sessions to the next envelope to maintain the integrity of your release health stats. The default is `30`.
+
+</ConfigKey>
+
 <ConfigKey name="attach-stacktrace">
 
 When enabled, stack traces are automatically attached to all messages logged. Stack traces are always attached to exceptions; however, when this option is set, stack traces are also sent with messages. This option, for instance, means that stack traces appear next to all log messages.
@@ -115,11 +120,17 @@ Grouping in Sentry is different for events with stack traces and without. As a r
 
 </ConfigKey>
 
-<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "javascript", "node", "react-native", "python", "java", "php", "rust"]}>
+<ConfigKey name="send-default-pii" supported={["apple", "dotnet", "javascript", "node", "react-native", "python", "java", "php", "rust", "dart"]}>
 
 If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
 
-If possible, we recommended turning on this feature to send all such data by default, and manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
+<Note>
+
+If you are using Sentry in your mobile app, read our [frequently asked questions about mobile data privacy](/product/security/mobile-privacy/) to assist with Apple App Store and Google Play app privacy details.
+
+</Note>
+
+If possible, we recommended turning on this feature to send all such data by default, and manually removing what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
 </ConfigKey>
 
@@ -139,11 +150,11 @@ A list of strings or regex patterns that match error URLs that should not be sen
 <ConfigKey name="allow-urls" supported={["javascript"]}>
 
 A legacy alias for a list of strings or regex patterns that match error URLs which should exclusively be sent to Sentry. By default, all errors
-will be sent. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `[https://bar.com/myfile/foo.com](https://bar.com/myfile/foo.com)` By default, all errors will be sent.
+will be sent. This is a "contains" match to the entire file URL. As a result, if you add `foo.com` to it, it will also match on `https://bar.com/myfile/foo.com`. By default, all errors will be sent.
 
 </ConfigKey>
 
-<ConfigKey name="auto-session-tracking" supported={["javascript", "flutter"]} >
+<ConfigKey name="auto-session-tracking" supported={["javascript", "flutter", "android", "apple"]} >
 
 When set to `true`, the SDK will send session events to Sentry. This is supported in all browser SDKs, emitting one session per pageload and page navigation to Sentry.
 
@@ -153,13 +164,15 @@ When set to `true`, the SDK will send session events to Sentry. This is supporte
 
 A list of string prefixes of module names that belong to the app. This option takes precedence over `in-app-exclude`.
 
+Sentry differentiates stack frames that are directly related to your application ("in application") from stack frames that come from other packages such as the standard library, frameworks, or other dependencies. The application package is automatically marked as `inApp`. The difference is visible in the sentry.io, where only the "in application" frames are displayed by default.
+
 </ConfigKey>
 
 <ConfigKey name="in-app-exclude" supported={["apple", "dotnet", "python", "rust", "csharp", "php", "java", "dart"]}>
 
 A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default.
 
-This option can be overridden using `in-app-include`.
+This option can be overridden using <PlatformIdentifier name="in-app-include" />.
 
 </ConfigKey>
 
@@ -174,7 +187,18 @@ This parameter controls if integrations should capture HTTP request bodies. It c
 
 </ConfigKey>
 
-<ConfigKey name="max-request-body-size" supported={["php", "dotnet.aspnet", "dotnet.aspnetcore"]}>
+<ConfigKey name="max-request-body-size" supported={["php"]}>
+
+This parameter controls if integrations should capture HTTP request bodies. It can be set to one of the following values:
+
+- `none`: request bodies are never sent
+- `small`: only small request bodies will be captured where the cutoff for small depends on the SDK (typically 4KB)
+- `medium`: medium and small requests will be captured (typically 10KB)
+- `always`: the SDK will always capture the request body for as long as Sentry can make sense of it
+
+</ConfigKey>
+
+<ConfigKey name="max-request-body-size" supported={["dotnet.aspnet", "dotnet.aspnetcore"]}>
 
 This parameter controls if integrations should capture HTTP request bodies. It can be set to one of the following values:
 
@@ -182,6 +206,12 @@ This parameter controls if integrations should capture HTTP request bodies. It c
 - `small`: only small request bodies will be captured where the cutoff for small depends on the SDK (typically 4KB)
 - `medium`: medium and small requests will be captured (typically 10KB)
 - `always`: the SDK will always capture the request body for as long as Sentry can make sense of it
+
+</ConfigKey>
+
+<ConfigKey name="max-value-length" supported={["php"]}>
+
+The number of characters after which the values containing text in the event payload will be truncated (defaults to `1024`).
 
 </ConfigKey>
 
@@ -260,7 +290,7 @@ Configures a separate proxy for outgoing HTTPS requests. This value might not be
 
 </ConfigKey>
 
-<ConfigKey name="cache-directory-path" supported={["dotnet"]}>
+<ConfigKey name="cache-directory-path" supported={["dotnet", "android"]}>
 
 Specifies a local directory used for cacheing payloads. When this option is enabled (that is, when the directory is set), the Sentry SDK will persist envelopes locally before sending to Sentry. This configuration option is particularly useful if you expect your application to run in environments where internet connectivity is limited.
 

@@ -20,7 +20,7 @@ gem "sentry-rails"
 
 ## Configuration
 
-Initialize the SDK within your `config/application.rb`:
+Initialize the SDK within your `config/initializers/sentry.rb`:
 
 ```ruby
 Sentry.init do |config|

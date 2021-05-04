@@ -3,44 +3,88 @@ title: Migration Guide
 sidebar_order: 1000
 ---
 
-## Migrating from 5.x to 6.x
+To upgrade from the 4.x version of the SDK to the 7.x version of the SDK, you must first migrate from 4.x to 5.x, then 5.x to 6.x and finally from 6.x to 7.x.
 
-In this version there are a few breaking changes. This guide should help you to update your code.
+## Migrating from 6.x to 7.x
+
+Migrating to 7.x from 6.x includes a few breaking changes. We provide this guide to help you to update your SDK.
 
 ### Configuration Changes
 
-With this version we changed a few things for the configuration:
+This version includes the following configuration changes:
 
-- [Auto Session Tracking](https://github.com/getsentry/sentry-cocoa/blob/7876949ca78aebfe7883432e35727993c5c30829/Sources/Sentry/include/SentryOptions.h#L101)
-  is enabled per default.
-  [This feature](/product/releases/health/)
-  is collecting and sending health data about the usage of your
+- Change the default maximum number of cached envelopes from 100 to 30. You can now configure this number with `SentryOptions.maxCacheItems`.
+- When setting a value `SentryOptions.sampleRate` that is not >= 0.0 and <= 1.0 the SDK sets it to the default of 1.0 instead of keeping the set value.
+
+### Breaking Changes
+
+#### Issue Grouping
+
+This version introduces a change to the grouping of issues. The SDK now sets the `inApp`
+flag for frames originating from only the main executable using [CFBundleExecutable](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleexecutable).
+In previous versions, all frames originating from the application bundle were marked as `inApp`. This had the
+downside of marking frames of private frameworks inside the bundle as `inApp`. This problem is fixed now.
+Applications using static frameworks shouldn't be affected by this change.
+For more information read <PlatformLink to="/data-management/event-grouping/stack-trace-rules/#mark-in-app-frames">mark in-app frames</PlatformLink>.
+
+#### Cleanup Public Classes
+
+We cleaned up our public classes by removing a few functions and properties, that shouldn't be public, to make the API cleaner. In case we removed something you need, please [open an issue](https://github.com/getsentry/sentry-cocoa/issues/new/choose) on GitHub.
+
+- Remove `SentrySDK.currentHub` and `SentrySDK.setCurrentHub`.
+- Remove `SentryClient.storeEnvelope`, which is reserved for Hybrid SDKs.
+- Make `closeCachedSessionWithTimestamp` private, which is reserved for internal use.
+- Remove deprecated `SentryHub.getScope`. Use `SentryHub.scope` instead.
+- Replace `SentryException.thread` with `SentryException.threadId` and `SentryException.stacktrace` to align with the [unified API](https://develop.sentry.dev/sdk/unified-api/).
+- Replace dict `SentryMechanism.meta` with new class `SentryMechanismMeta` and move `SenryNSError` to `SentryMechanismMeta` to align with the [unified API](https://develop.sentry.dev/sdk/unified-api/).
+- Change `SentryEvent.timestamp` to `nullable`.
+
+### SentryLogLevel
+
+We replaced the `SentryLogLevel` with `SentryLevel`, renamed `logLevel` to `diagnosticLevel`
+on `SentryOptions` to align with other Sentry SDKs, and set the default `diagnosticLevel` to
+`SentryLevel.debug`. Furthermore, we removed setting the `logLevel` statically on the `SentrySDK`.
+Please use the `SentryOptions` to set the `diagnosticLevel` instead.
+
+
+6.x
+```swift
+SentrySDK.start { options in
+  options.logLevel = SentryLogLevel.verbose
+}
+
+// Or
+
+SentrySDK.logLevel = SentryLogLevel.verbose
+```
+
+7.x
+```swift
+SentrySDK.start { options in
+  options.diagnosticLevel = SentryLevel.debug
+}
+```
+
+## Migrating from 5.x to 6.x
+
+Migrating to 6.x from 5.x includes a few breaking changes. We provide this guide to help you to update your SDK.
+
+### Configuration Changes
+
+This version includes the following configuration changes:
+
+- [Auto Session Tracking](https://github.com/getsentry/sentry-cocoa/blob/7876949ca78aebfe7883432e35727993c5c30829/Sources/Sentry/include/SentryOptions.h#L101) is enabled by default. [This feature](/product/releases/health/) is collecting and sending health data about the usage of your
   application.
-
-- [Attach stacktraces](https://github.com/getsentry/sentry-cocoa/blob/b5bf9769a158c66a34352556ade243e55f163a27/Sources/Sentry/Public/SentryOptions.h#L109)
-  is enabled per default.
-
+- [Attach stacktraces](https://github.com/getsentry/sentry-cocoa/blob/b5bf9769a158c66a34352556ade243e55f163a27/Sources/Sentry/Public/SentryOptions.h#L109) is enabled per default.
 - We bumped the minimum iOS version to 9.0.
-
 - Use a BOOL in SentryOptions instead of NSNumber to store booleans.
-
-- We removed the [enabled](https://github.com/getsentry/sentry-cocoa/blob/5.2.2/Sources/Sentry/include/SentryOptions.h#L63) option from SentryOptions,
-  but we brought it back in 6.0.7 with a slightly changed functionality. Previously setting
-  an empty or incorrect DSN also set `enabled` to `false`. This side effect is removed now. Setting
-  the DSN has no impact on `enabled`. If the DSN is nil or empty or `enabled` is set
-  to `false`, the client won't send any data to Sentry.
+- We had previously removed the [enabled](https://github.com/getsentry/sentry-cocoa/blob/5.2.2/Sources/Sentry/include/SentryOptions.h#L63) option from SentryOptions, but we brought it back in version 6.0.7 with slightly changed functionality. Previously setting an empty or incorrect DSN also set `enabled` to `false`. This side effect is removed. Setting the DSN has no impact on `enabled`. If the DSN is nil or empty or `enabled` is set to `false` and the client won't send any data to Sentry.
 
 ### Breaking Changes
 
 #### Store Endpoint
 
-This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/).
-If you are using self-hosted Sentry, it requires Sentry version
-`>= v20.6.0` to work. If you are using sentry.io nothing will change and
-no action is needed. For this change, we also cache events now in envelopes on the disk.
-We decided not to take the effort to migrate these few cached events from 5.x to 6.x into
-envelopes. Instead we remove them from the disk. This means you might lose a few cached
-events of your users when upgrading.
+This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are using self-hosted Sentry, you must use Sentry version `>= v20.6.0` or higher. If you are using sentry.io, there is no impact. For this change, we also now cache events in envelopes on the disk. We decided not to migrate the few cached events from 5.x to 6.x into envelopes. Instead, we remove them from the disk. As a result, you might lose a few cached events when upgrading.
 
 #### SDK Inits
 
@@ -66,17 +110,13 @@ SentrySDK.start { options in
 
 #### Cleanup Public Headers
 
-We cleaned up our public headers and made most of our classes private. If you can't access one
-of the classes you need please [open an issue](https://github.com/getsentry/sentry-cocoa/issues/new/choose)
-and tell us your use case so we either make the class public again or provide another API for you.
+We cleaned up our public headers and made most of our classes private. If you can't access one of the classes you need please [open an issue](https://github.com/getsentry/sentry-cocoa/issues/new/choose) and tell us your use case so we can evaluates whether to either make the class public again or provide another API for you.
 
 #### New type SentryId for eventId
 
-In 5.x we use a nullable NSString to represent an event ID. The SDK, Hub and Client returned this
-nullable NSString for the event ID for capturing messages, events, errors, etc. With 6.x we have a new type SentryId which is not nullable to represent an event ID.
-Instead of returning `nil` when an event couldn't be queued for submission we return `SentryId.empty`.
+In 5.x, we used a nullable NSString to represent an event ID. The SDK, Hub, and Client returned this nullable NSString for the event ID to capture messages, events, errors, and so forth. In 6.x, we have a new type SentryId, which is not nullable, to represent an event ID. Instead of returning `nil` when an event couldn't be queued for submission we return `SentryId.empty`.
 
-`5.x`
+Example in 5.x:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -100,7 +140,7 @@ if (nil != eventId) {
 }
 ```
 
-`6.x`
+Example in 6.x:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -126,11 +166,9 @@ if (eventId != SentryId.empty) {
 
 #### New type SentryMessage for Event.message
 
-In 6.x we introduce a new type [SentryMessage](https://develop.sentry.dev/sdk/event-payloads/message/)
-for `event.message`. SentryMessage gives you the possibilty to pass a format string with parameters
-to Sentry, which can help to group similar messages into the same issue.
+In 6.x, we introduce a new type [SentryMessage](https://develop.sentry.dev/sdk/event-payloads/message/) for `event.message`. SentryMessage provides you the ability to pass a format string with parameters to Sentry, which can help group similar messages into the same issue.
 
-`5.x`
+Example in 5.x:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -146,7 +184,7 @@ SentryEvent *event = [[SentryEvent alloc] init];
 event.message = "Hello World";
 ```
 
-`6.x`
+Example in 6.x:
 
 ```swift {tabTitle:Swift}
 import Sentry
@@ -164,19 +202,17 @@ event.message = [SentryMessage messageWithFormatted:"Hello World"];
 
 #### Make Scope nonnull for capture methods
 
-In 5.x you could pass a nullable scope to capture methods of the SDK, Hub and Client, such as
-`SentrySdk.captureMessage()`. In 6.x we changed the Scope to nonnull and provide overloads
-for the Hub and the Client.
+In 5.x, you could pass a nullable scope to capture methods of the SDK, Hub, and Client, such as `SentrySdk.captureMessage()`. In 6.x, we changed the Scope to nonnull and provide overloads for the Hub and the Client.
 
-Please checkout the [Changelog](https://github.com/getsentry/sentry-cocoa/blob/master/CHANGELOG.md) for a complete list of changes.
+Please see the [Changelog](https://github.com/getsentry/sentry-cocoa/blob/master/CHANGELOG.md) for a complete list of changes.
 
 ## Upgrading from 4.x to 5.x
 
-Here are some examples of how the new SDK works.
+The samples below illustrate how the SDK works:
 
 ### Initialization
 
-`4.x`
+Example in 4.x:
 
 ```swift {tabTitle:Swift}
 do {
@@ -197,7 +233,7 @@ if (nil != error) {
 }
 ```
 
-`5.x`
+Example in 5.x:
 
 ```swift {tabTitle:Swift}
 SentrySDK.start(options: [
@@ -215,7 +251,7 @@ SentrySDK.start(options: [
 
 ### Add Breadcrumb
 
-`4.x`
+Example in 4.x:`
 
 ```swift {tabTitle:Swift}
 Client.shared?.breadcrumbs.add(Breadcrumb(level: .info, category: "test"))
@@ -225,7 +261,7 @@ Client.shared?.breadcrumbs.add(Breadcrumb(level: .info, category: "test"))
 [SentryClient.sharedClient.breadcrumbs addBreadcrumb:[[SentryBreadcrumb alloc] initWithLevel:kSentrySeverityInfo category:@"test"]];
 ```
 
-`5.x`
+Example in 5.x:
 
 ```swift {tabTitle:Swift}
 SentrySDK.addBreadcrumb(Breadcrumb(level: .info, category: "test"))
@@ -237,7 +273,7 @@ SentrySDK.addBreadcrumb(Breadcrumb(level: .info, category: "test"))
 
 ### CaptureMessage with tags/environment/extra
 
-`4.x`
+Example in 4.x:
 
 ```swift {tabTitle:Swift}
 let event = Event(level: .debug)
@@ -255,7 +291,7 @@ event.extra = @{@"ios": @(YES)};
 [SentryClient.sharedClient sendEvent:event withCompletionHandler:nil];
 ```
 
-`5.x`
+Example in 5.x:
 
 ```swift {tabTitle:Swift}
 SentrySDK.capture(message: "Test Message") { (scope) in
@@ -279,7 +315,7 @@ SentrySDK.capture(message: "Test Message") { (scope) in
 
 ### setUser
 
-`4.x`
+Example in 4.x:
 
 ```swift {tabTitle:Swift}
 let u = User(userId: "1")
@@ -293,7 +329,7 @@ user.email = @"tony@example.com";
 SentryClient.sharedClient.user = user;
 ```
 
-`5.x`
+Example in 5.x:
 
 ```swift {tabTitle:Swift}
 let u = Sentry.User(userId: "1")

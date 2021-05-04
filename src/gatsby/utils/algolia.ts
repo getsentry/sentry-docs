@@ -44,8 +44,6 @@ const flatten = (arr: any[]) =>
         title: context.title,
         section: context.title,
         url: path,
-        // Do not remove until the global lib is in sentry. Removing will break sentry.
-        content: context.excerpt,
         text: context.excerpt,
         platforms,
         pathSegments: extrapolate(path, "/").map(x => `/${x}/`),
@@ -66,12 +64,6 @@ export default [
     indexName: `${indexPrefix}docs`,
     settings: {
       ...sentryAlgoliaIndexSettings,
-
-      // Do not remove until the global lib is in sentry
-      attributesToSnippet: [`content:15`, `text:15`],
-      searchableAttributes: ["section", "title", "content", "text"],
-      attributesToHighlight: ["section", "title", "content"],
-      attributesToRetrieve: ["section", "title", "content", "text", "url"],
     },
   },
 ];

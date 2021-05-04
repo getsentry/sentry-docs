@@ -1,0 +1,112 @@
+---
+title: OkHttp
+caseStyle: camelCase
+supportLevel: production
+categories:
+  - mobile
+redirect_from:
+  - /platforms/android/guides/okhttp/
+---
+
+<Note>
+
+This is a preview API, available in `4.4.0-alpha.1`. Features available in a preview API are still in-progress and may have bugs. We recognize the irony. The API may be renamed, changed, or removed in a future version.
+
+</Note>
+
+The `sentry-android-okhttp` library provides [OkHttp](https://github.com/square/okhttp) support for Sentry via the [OkHttp Interceptor](https://github.com/square/okhttp/blob/a2059dedc0b1d4a977480834ae4ed9ea576a3eb8/okhttp/src/main/kotlin/okhttp3/Interceptor.kt). The source can be found [on GitHub](https://github.com/getsentry/sentry-java/tree/main/sentry-android-okhttp/src/main/java/io/sentry/android/okhttp).
+
+On this page, we get you up and running with Sentry's OkHttp Integration, so that it will automatically add a breadcrumb and start a span out of the active span bound to the scope for each HTTP Request.
+
+## Install
+
+Sentry captures data by adding an `OkHttp Interceptor`. To add the OkHttp integration, initialize the [Android SDK](/platforms/android/), then add the `sentry-android-okhttp` dependency. Using Gradle:
+
+```groovy
+implementation 'io.sentry:sentry-android:4.4.0-alpha.1'
+implementation 'io.sentry:sentry-android-okhttp:4.4.0-alpha.1'
+```
+
+## Configure
+
+Configuration should happen once you create your `OkHttpClient` instance.
+
+```kotlin
+import okhttp3.OkHttpClient
+import io.sentry.android.okhttp.SentryOkHttpInterceptor
+
+private val client = OkHttpClient.Builder()
+  .addInterceptor(SentryOkHttpInterceptor())
+  .build()
+```
+
+```java
+import okhttp3.OkHttpClient;
+import io.sentry.android.okhttp.SentryOkHttpInterceptor;
+
+private final OkHttpClient client = new OkHttpClient.Builder()
+  .addInterceptor(new SentryOkHttpInterceptor())
+  .build();
+```
+
+## Verify
+
+This snippet includes a HTTP Request and captures an intentional message, so you can test that everything is working as soon as you set it up:
+
+```kotlin
+import io.sentry.android.okhttp.SentryOkHttpInterceptor
+import io.sentry.Sentry
+import java.io.IOException
+import okhttp3.OkHttpClient
+import okhttp3.Request
+
+@Throws(IOException::class)
+fun run(url: String): String? {
+  val request = Request.Builder()
+    .url(url)
+    .build()
+
+  val bodyStr = client
+    .newCall(request)
+    .execute()
+    .body?.toString()
+
+  Sentry.captureMessage("The Message $bodyStr")
+
+  return bodyStr
+}
+```
+
+```java
+import io.sentry.android.okhttp.SentryOkHttpInterceptor;
+import io.sentry.Sentry
+import java.io.IOException;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.ResponseBody;
+
+String run(String url) throws IOException {
+  Request request = new Request.Builder()
+    .url(url)
+    .build();
+
+  ResponseBody body = client
+    .newCall(request)
+    .execute()
+    .body();
+
+  String bodyStr = body != null ? body.toString() : null;
+
+  Sentry.captureMessage("The Message " + bodyStr);
+
+  return bodyStr;
+}
+```
+
+<Note>
+
+Learn more about manually capturing an error or message, in our <PlatformLink to="/usage/">Usage documentation</PlatformLink>.
+
+</Note>
+
+To view and resolve the recorded message, log into [sentry.io](https://sentry.io) and open your project. Clicking on the error's title will open a page where you can see detailed information and mark it as resolved.
