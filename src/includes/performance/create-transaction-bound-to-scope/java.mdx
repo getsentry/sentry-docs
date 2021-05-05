@@ -4,7 +4,7 @@ Our SDK can bind a transaction to the scope making it accessible to every method
 
 In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry#getSpan`. This method will return a `SentryTransaction` in case there is a running Transaction or a `Span` in case there is already a running Span, otherwise it returns `null`.
 
-```java {tabTitle:Java}
+```java
 import java.io.FileNotFoundException;
 
 import io.sentry.ISpan;
@@ -29,7 +29,7 @@ void processOrderBatch() {
   if (span == null) {
     span = Sentry.startTransaction("processOrderBatch()", "task");
   }
-  ISpan innerSpan = span.startChild("task", item.getName());
+  ISpan innerSpan = span.startChild("task", "operation");
   try {
     // omitted code
   } catch (FileNotFoundException e) {
@@ -38,6 +38,39 @@ void processOrderBatch() {
     throw e;
   } finally {
     innerSpan.finish();
+  }
+}
+```
+
+```kotlin
+import java.io.FileNotFoundException
+
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+
+val transaction = Sentry.startTransaction("processOrderBatch()", "task", true)
+try {
+  processOrderBatch()
+} catch (e: java.lang.Exception) {
+  transaction.throwable = e
+  transaction.status = SpanStatus.INTERNAL_ERROR
+  throw e
+} finally {
+  transaction.finish()
+}
+
+fun processOrderBatch(item: Item) {
+  val span = Sentry.getSpan() ?: Sentry.startTransaction("processOrderBatch()", "task")
+  val innerSpan = it.startChild("task", "operation")
+
+  try {
+    // omitted code
+  } catch (e: FileNotFoundException) {
+    innerSpan.throwable = e
+    innerSpan.status = SpanStatus.NOT_FOUND
+    throw e
+  } finally {
+    innerSpan.finish()
   }
 }
 ```

@@ -26,8 +26,8 @@ void processOrderBatch(ISpan span) {
   if (span == null) {
     span = Sentry.startTransaction("processOrderBatch()", "task");
   }
-  // span operation: task, span description: item's name
-  ISpan innerSpan = span.startChild("task", item.getName());
+  // span operation: task, span description: operation
+  ISpan innerSpan = span.startChild("task", "operation");
   try {
     // omitted code
   } catch (FileNotFoundException e) {
@@ -36,6 +36,39 @@ void processOrderBatch(ISpan span) {
     throw e;
   } finally {
     innerSpan.finish();
+  }
+}
+```
+
+```kotlin
+import java.io.FileNotFoundException
+
+import io.sentry.Sentry
+import io.sentry.SpanStatus
+
+val transaction = Sentry.startTransaction("processOrderBatch()", "task")
+try {
+  processOrderBatch(transaction)
+} catch (e: Exception) {
+  transaction.throwable = e
+  transaction.status = SpanStatus.INTERNAL_ERROR
+  throw e
+} finally {
+  transaction.finish()
+}
+
+fun processOrderBatch(span: ISpan) {
+  // span operation: task, span description: operation
+  val innerSpan = it.startChild("task", "operation")
+
+  try {
+    // omitted code
+  } catch (e: FileNotFoundException) {
+    innerSpan.throwable = e
+    innerSpan.status = SpanStatus.NOT_FOUND
+    throw e
+  } finally {
+    innerSpan.finish()
   }
 }
 ```
