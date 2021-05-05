@@ -10,74 +10,60 @@ An issue can be in one of three states:
 
 - Unresolved: The default state for all new issues.
 - Ignored: The issue is ignored permanently or until a condition is met, at which point it becomes Unresolved again. [Issue alerts](/product/alerts-notifications/issue-alerts/) are suppressed for ignored issues.
-- Resolved: The issue is resolved because it was fixed. You can also mark an issue as Resolved if you don't expect it to happen again.
+- Resolved: The issue is marked resolved (or automatically resolved) because it was fixed or isn't expected to happen again. If the issue is seen again, its state changes to Unresolved.
 
-The **Issues** page is organized into tabs, each corresponding to a filtered list of issues:
-
-- All Unresolved (`is:unresolved`): All unresolved issues, including issues that need review.
-- [For Review](#review-list) (`is:unresolved is:for_review`): Issues that need to be reviewed; for-review issues are a sub-set of all unresolved issues.
-- Ignored (`is:ignored`): All ignored issues.
-- Saved Searches: Select from a set of [premade](/product/sentry-basics/search/#premade-searches) and custom [saved searches](/product/sentry-basics/search/#organization-wide-saved-searches). The name of the tab changes based on your selection.
-
-These different lists help you with the triaging process.
-
-## Review List
-
-The "For Review" tab, or Review List, displays a list of issues that need to be reviewed. For-review issues are a sub-set of all unresolved issues.
-
-![For Review tab of the Issues page.](for-review-page-docs.png)
-
-When any of the following conditions occur for an issue, that issue is is flagged for review and displayed in the Review List:
+When any of the following conditions occur for an issue, that issue is is flagged *for review* and given a label indicating why it was flagged:
 
 - A new issue is created; it's labeled "New Issue"
 - A resolved issue re-occurs; it's labeled "Regression"
 - An ignored issue meets its ignore conditions; it's labeled "Unignored"
 
-You can mark issues as reviewed, and [sentry.io](https://sentry.io) removes the reason label (the issue stays in the Unresolved state). Unlike ignoring an issue, this is a way to acknowledge that you've seen the update to the issue but don't want to ignore it; that is, you intend to fix it at some point in the future. This action is only available on issues flagged for review.
+For-review issues are a sub-set of all unresolved issues, and you can view these issues in the "For Review" tab of the **Issues** page. By default, they are filtered to display issues relevant to you; that is, issues that are assigned to you or suggested for you.
 
-Note that resolving or ignoring an issue implicitly marks the issue reviewed.
+![For Review tab of the Issues page.](for-review-page-docs.png)
 
-To keep your Review List fresh, [sentry.io](https://sentry.io) automatically marks issues as reviewed if they haven't already been reviewed after seven days.
+When you mark a for-review issue as reviewed, [sentry.io](https://sentry.io) removes the reason label, and the issue remains in the Unresolved state.
 
-While you can work to have zero unresolved issues ("Inbox Zero") by resolving or ignoring all issues, this usually isn't feasible for any non-trivial production application. However, it is feasible to have zero for-review issues by triaging the Review List. We recommend triaging these issues once a day to keep your issues manageable.
+Resolving or ignoring an issue implicitly marks the issue reviewed.
 
-## Issue Triage
+To keep the list of issues in the "For Review" tab fresh, [sentry.io](https://sentry.io) automatically marks issues as reviewed if they haven't already been reviewed after seven days.
 
-Triaging is deciding what to do with an issue. The image below shows how issues move through different states, with the applicable labels: "New Issue", "Regression", or "Unignored".
+The image below shows how issues move through different states with the applicable labels.
 
 ![Worklow for triaging issues](issue-workflow.png)
 
+## Triage Actions
+
 Triage typically involves one or more of the following actions.
-
-### Assign
-
-You can assign issues to teams or individuals manually or let issues be automatically assign by setting up [ownership rules](/product/issues/issue-owners/). This allows you to route issues to the right people and helps you and your team see only relevant issues. You might also see a list of suggested assignees including the owners of suspect commits. Typically, assigning an issue to a team indicates that the team owns the issue and that they're responsible for triaging it further.
-
-### Link Issues
-
-Create an issue in an external project management tool like Jira that tracks the Sentry issue, or link an existing one. [Two-way sync](/product/sentry-basics/guides/getting-started/#33-issue-tracking) is available for some tools. Issues linked using [global integrations](/product/integrations/integration-platform/#public-integrations) or [internal integrations](/product/integrations/integration-platform/#internal-integrations) are searchable using the terms `is:linked` and `is:unlinked`.
 
 ### Resolve
 
-Resolve an issue when it's fixed or you don't expect it to happen again. You can do this manually or by [including the issue ID in a commit](/product/integrations/gitlab/#resolve-via-commit-or-pull-request).
-<Note>
+Resolve an issue when it's fixed or you don't expect it to happen again. You can do this manually or by [including the issue ID in a commit](/product/integrations/gitlab/#resolve-via-commit-or-pull-request). In addition, you can resolve issues by setting the auto-resolve value.
 
-The Auto Resolve setting defines the amount of time an issue can go without being seen again (that is, no new events on that issue) before it's automatically resolved. To check if this has been defined for a project, go to **[Project] > Settings > General Settings** and check the Event Settings section.
-
-</Note>
+The "Auto Resolve" feature allows you to specify an interval after the last occurrence of an issue when it should be automatically resolved. To check if this has been defined for a project, go to **[Project] > Settings > General Settings** and check the "Event Settings" section.
 
 ### Ignore
 
-Ignore an issue **permanently** (the default action when you press the button) if it's just noise and you'll likely never care about it. Or ignore it until a condition is met, at which point it becomes Unresolved. You can also set an issue to Ignore if you're working on the issue if you don't want to keep getting alerts.
+Ignore an issue **permanently** (the default action when you press the button) if it's just noise and you'll likely never care about it. Or ignore it until a condition is met, at which point it becomes Unresolved. You can also use Ignore if you're working on the issue and want to silence alerts in the meantime.
+
+### Mark Reviewed
+
+Mark an issue as reviewed when you want to acknowledge that you've seen the issue but don't want to ignore it; that is, you intend to fix it at some point in the future. Marking an issue reviewed removes the reason label and removes it from the "For Review" tab. The "Mark Reviewed" action is only available on issues flagged for review.
+
+While you can work to have zero unresolved issues ("Inbox Zero") by resolving or ignoring all issues, this usually isn't feasible for any non-trivial production application. However, it is feasible to have zero for-review issues by triaging the issues in the "For Review" tab. **We recommend triaging these issues once a day to keep your issues manageable.**
+
+### Assign
+
+Assign issues to teams or individuals to route them to the right people and help you and your team see only relevant issues. Typically, assigning an issue to a team indicates that the team owns the issue and that they're responsible for triaging it further. You can assign issues manually or automatically using [ownership rules](/product/issues/issue-owners/). On the issue list, you might also see a list of suggested assignees including the owners of suspect commits.
+
+### Link Issues
+
+Create an issue in an external project management tool like Jira that tracks the Sentry issue, or link an existing one. [Two-way sync](/product/sentry-basics/guides/getting-started/#33-issue-tracking) is available for some tools. Issues linked using [global integrations](/product/integrations/integration-platform/#public-integrations) or [internal integrations](/product/integrations/integration-platform/#internal-integrations) are searchable using the terms `is:linked` and `is:unlinked`. You can also set up Sentry issues to be automatically linked to tickets (or issues) in certain integrations using [alert actions](/product/alerts-notifications/issue-alerts/).
 
 ### Delete
 
-Delete an issue to remove it from the system. A new issue is created if a new instance of the issue (a new event) occurs.
+Delete an issue to remove it from [sentry.io](https://sentry.io). A new issue is created if a new instance of the issue (that is, a new event) occurs.
 
 ### Delete and Discard
 
-Delete and discard an issue to remove it from the system. A new issue is not created even if a new instance of the issue (a new event) occurs.
-
-### Reprocess
-
-[Reprocessing](/product/issues/reprocessing/) allows you to apply source maps and debug information files to error events that have already occurred.
+Delete and discard an issue to remove it from [sentry.io](https://sentry.io). A new issue is not created even if a new instance of the issue (that is, a new event) occurs.
