@@ -7,7 +7,56 @@ redirect_from:
 
 ## Migrating from `io.sentry:sentry` `4.3.0` to `io.sentry:sentry` `5.0.0`
 
+If you're using the [Android Native Development Kit](/platforms/android/using-ndk/) support and you've set the `android:extractNativeLibs="true"` meta-data in the `AndroidManifest` file or `android.bundle.enableUncompressedNativeLibs=false` in the `gradle.properties` file, you don't have to anymore, you may remove them.
+Now Sentry is able to symbolicate events with the default value of [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) and [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes)
+
 `Sentry#startTransaction` by default does not bind created transaction to the scope. To start transaction with binding to the scope, use one of the new overloaded `startTransaction` methods taking `bindToScope` parameter and set it to `true`. Bound transaction can be retrieved with `Sentry#getSpan`.
+
+`Settings.Secure.ANDROID_ID` has been removed in favor of a random generated `installationId` and it may affect the number of unique users in the the Issues page and Alerts.
+If you always set a custom user using `Sentry.setUser(customUser)`, you don't have to do anything, but in case you want to keep the old behaviour, you may copy the following code snippet.
+
+```java
+User user = new User();
+user.setId(Settings.Secure.ANDROID_ID);
+
+Sentry.setUser(user);
+```
+
+`SentryOptions#setEnableSessionTracking(boolean)` is deprecated in favor of `SentryOptions#setEnableAutoSessionTracking(boolean)` and it'll be removed in the future.
+
+_New_:
+
+```java
+SentryAndroid.init(this, options -> {
+    options.setEnableAutoSessionTracking(false);
+});
+```
+
+_Old_:
+
+```java
+SentryAndroid.init(this, options -> {
+    options.setEnableSessionTracking(false);
+});
+```
+
+`io.sentry.session-tracking.enable` AndroidManifest meta-data is deprecated in favor of `io.sentry.auto-session-tracking.enable` and it'll be removed in the future.
+
+_Old_:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.session-tracking.enable" android:value="false" />
+</application>
+```
+
+_New_:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.auto-session-tracking.enable" android:value="false" />
+</application>
+```
 
 ## Migrating from `io.sentry:sentry` `4.1.0` to `io.sentry:sentry` `4.2.0`
 
