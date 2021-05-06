@@ -3,7 +3,7 @@ import Sentry
 
 SentrySDK.start { options in
     options.beforeSend = { event in
-        if let error = event.error as? NSError, error.domain == NSURLErrorDomain {
+        if let error = event.error as NSError?, error.domain == NSURLErrorDomain {
             if let failingUrl = error.userInfo[NSURLErrorFailingURLErrorKey] as? String {
                 event.fingerprint = [
                     "{{ default }}",
@@ -28,7 +28,7 @@ SentrySDK.start { options in
                 event.fingerprint = @[
                     @"{{ default }}",
                     failingUrl,
-                    [NSString stringWithFormat:@"%i",event.error.code]
+                    @(event.error.code).stringValue
                 ];
             }
         }
