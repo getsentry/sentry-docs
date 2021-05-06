@@ -10,7 +10,8 @@ You can find a list of features available by looking at
 `sentry/features/__init__.py`. They're declared on the `FeatureManager` like so:
 
 ```python
-default_manager.add("organizations:onboarding", OrganizationFeature)  # NOQA
+# Don't set entity_feature, or set it to False if you don't plan to use Flagr
+default_manager.add("organizations:onboarding", OrganizationFeature, entity_feature=True)
 ```
 
 The feature can be enabled with the following in your `sentry.conf.py`, usually located at `~/.sentry/`:
@@ -60,7 +61,14 @@ The `FeatureManager` handles the application features. We add all the features
 to the `FeatureManager`, including the type of feature we want to add to the
 file `/src/sentry/features/__init__.py`.
 
-In our case, it is
+If you plan to use [flagr in production](#enabling-your-feature-in-production)
+add a third optional boolean parameter when adding the feature, for example:
+
+```python
+default_manager.add('organizations:test-feature', OrganizationFeature, True)
+```
+
+If you don't plan to use flagr don't pass this third parameter, for example: 
 
 ```python
 default_manager.add('organizations:test-feature', OrganizationFeature)
@@ -182,17 +190,13 @@ Feature flags are declared in Sentry's codebase. For self-hosted users, those
 flags are then configured via `sentry.conf.py`. For Sentry's SaaS deployment,
 Flagr is used to configure flags in production.
 
-First, add your feature to the flagr allowlist: in `getsentry/features.py` you
-will find the Flagr feature handler (`FlagrFeatureHandler`) then add your
-feature to the `allowed_features` property.
+If you want to enable your feature for a subset of production users, you will
+need to set up your feature in Flagr. If you haven't already make sure that 
+when you add your flag in sentry that you passed the third option so that Flagr
+knows to check this feature in production.
 
 ```python
-allowed_features = set(
-    [
-        ...
-        "organizations:test-feature",
-    ]
-)
+default_manager.add("organizations:onboarding", OrganizationFeature, True)  # NOQA
 ```
 
 ## Building your feature in Flagr
@@ -362,7 +366,7 @@ After your feature has been mainlined and is available for all hosted customers:
 - If the feature cannot be disabled, or if no application specific overrides are required, remove the feature flag and all related checks from the Sentry code base. If necessary, also remove references to the feature from the [onpremise](https://github.com/getsentry/onpremise) and getsentry repositories.
 - If the feature flag controls a behavior specific to Sentry SaaS, leave it disabled in Sentry and add appropriate feature handlers in getsentry (see below). In this case, keep in mind that the feature is also disabled during development.
 - If the feature is generally available but is constrained to specific organizations or projects on Sentry SaaS, enable the feature by default in in [`conf/server.py`](https://github.com/getsentry/sentry/blob/master/src/sentry/conf/server.py) and add appropriate feature handlers in getsentry. This ensures that the feature is enabled in development and self-hosted Sentry installations.
-- If the feature was enabled through flagr, remove it from `FlagrFeatureHandler.allowed_features`, and delete the feature from the Flagr UI as well this is done by navigating to the flag configuration page then clicking **Delete Flag** at the bottom of the page.
+- If the feature was enabled through flagr, delete the feature from the Flagr UI. This is done by navigating to the flag configuration page then clicking **Delete Flag** at the bottom of the page.
 
 To override features in getsentry, follow these steps:
 
