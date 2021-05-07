@@ -1,22 +1,20 @@
 ---
-title: Migration
+title: Migration Guide
 description: "Migrating between versions of Sentry SDK for .NET."
-sidebar_order: 10
+sidebar_order: 100
 ---
 
-## Migrating from Sentry SDK v2.x to Sentry SDK v3.x
+Upgrading from Sentry SDK v2.x to Sentry SDK v3.x includes both breaking changes and new features.
 
-Upgrading to Sentry SDK v3.x includes the following breaking changes and new features.
+## Breaking Changes
 
-### Breaking Changes
+Please read through **all** breaking changes prior to upgrading.
 
-Please read through **all** breaking changes relevant to you before upgrading.
-
-#### !Important: Grouping Changes
+### Grouping Changes
 
 The format of the stack traces were greatly improved with the help of Ben Adam's iconic library `Ben.Demystifier`. Frames now include details such as `async`, `static`, the actual return type, method parameters, tuples and their names, and more.
 
-One big caveat is that this will **affect grouping!**. If you prefer to stay with the original stack trace format, you can opt-out of this feature with:
+However, this will **affect grouping**. If you prefer to stay with the original stack trace format, you can opt-out of this feature with:
 
 ```
 options.StackTraceMode = StackTraceMode.Original;
@@ -25,7 +23,7 @@ options.StackTraceMode = StackTraceMode.Original;
 ### Serialization
 
 In version 3.0.0, the Sentry SDK for .NET changed from `Newtonsoft.Json` to `System.Text.Json`.
-Using the new library has many advantages. These include the lack of an additional dependency (when targeting .NET Core 3, .NET 5 and later versions) and much faster performance.
+Using the new library has many advantages. These include the lack of an additional dependency (when targeting .NET Core 3, .NET 5, and later versions) and much faster performance.
 
 One breaking change that affects objects set as [Context](../enriching-events/context/) and `Extra` is that `Newtonsoft.Json` was previously able to serialize some types, which is not possible with `System.Text.Json`.
 
@@ -44,7 +42,7 @@ Setting an instance of `Exception` that was caught in a `catch` block could fail
    at System.Text.Json.Serialization.JsonConverter`1.WriteCore(Utf8JsonWriter writer, T& value, JsonSerializerOptions options, WriteStack& state)
 ```
 
-To avoid such an error, pass a serializable object into Sentry. For example, map the instance of `Exception` to an anonymous object:
+To avoid this issue, pass a serializable object into Sentry. For example, map the instance of `Exception` to an anonymous object:
 
 ```
 try
@@ -66,19 +64,16 @@ catch (Exception e)
 }
 ```
 
-#### Namespace Change
+## Namespace Change
 
 Classes under `Sentry.Protocol` were moved to the root namespace `Sentry`. All except `Context` classes like `App`, `Device`, etc.
 
-#### ASP.NET
+## ASP.NET
 
-ASP.NET (**not Core**) users need to install an additional package:
-
-`Sentry.AspNet`.
-
-Without this, HTTP related information will not be added to events.
+ASP.NET (**not Core**) users need to install an additional packag, `Sentry.AspNet`. Without this package, HTTP related information will not be added to events.
 
 You can plug it in to the `Init` as follows:
+
 ```
 SentrySdk.Init(o =>
 {
@@ -86,65 +81,65 @@ SentrySdk.Init(o =>
 });
 ```
 
-The motivation was to remove the reference to `System.Web` to decouple the core of the package with any specific namespaces of the .NET Framework, which improves the experience from other environments such as game engines like Unity and [Godot](https://gatomalo.dev/blog/2020/03/21/error-monitoring-godot-sentry/#android).
+The motivation was to remove the reference to `System.Web` and decouple the core of the package from any specific namespaces of the .NET Framework. This change improves the experience from other environments, such as game engines like Unity and [Godot](https://gatomalo.dev/blog/2020/03/21/error-monitoring-godot-sentry/#android).
 
-#### ASP.NET Core Environment Casing
+## ASP.NET Core
 
-To match Sentry's default environment naming convention, unless explicitly set otherwise, the Sentry environment will be reported lowercase. That means if `ASPNET_ENVIRONMENT` is equal to `Production`, the Sentry SDK will report it as `production`.
+### Environment Casing
 
-#### ASP.NET Core `IncludeRequestPayload`
+To match Sentry's default environment naming convention, unless explicitly set otherwise, the Sentry environment will be reported in lowercase. That means if `ASPNET_ENVIRONMENT` is equal to `Production`, the Sentry SDK will report it as `production`.
+
+### Removal of `IncludeRequestPayload`
 
 The option `IncludeRequestPayload` that was deprecated in the Sentry SDK 2.0 has been removed.
 The replacement is the option `MaxRequestBodySize`.
 
-#### `IHub` and `ISentryClient` Received New Methods
+### New Method for `IHub` and `ISentryClient`
 
-Sentry's Performance product requires additive API changes to interfaces such as `IHub` and `ISentryClient`.
-If you implement your own `IHub`, you'll need to implement two new methods:
+Sentry's performance monitoring capabilities requires additive API changes to interfaces such as `IHub` and `ISentryClient`. If you implement your own `IHub`, you'll need to implement two new methods:
 
 `ISentryClient` received: `CaptureTransaction`.
 `IHub` received: `StartTransaction` and `GetTraceHeader`.
 
-#### `DiagnosticsLogger` Renamed to `DiagnosticLogger`
+### Rename of `DiagnosticsLogger` to `DiagnosticLogger`
 
 To align with other SDKs, the option is now named: `DiagnosticLogger`
 [Docs PR](https://github.com/getsentry/sentry-docs/pull/2945).
 
-#### `Dsn` as a String
+### `Dsn` as a String
 
 `SentryOptions` now take a string for `Dsn`:
 
 Before: `o.Dsn = new Dsn("..");`
 After: `o.Dsn = "..";`
 
-#### `LogEntry` Became `Message`
+### `LogEntry` Became `Message`
 
 The property of `SentryEvent` that supports a structured log entry was renamed to `Message` to align with the protocol and other SDKs.
 
-#### Sentry Self-Hosted Support
+## Self-Hosted Support
 
 This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are using an on-premise installation it requires Sentry version >= v20.6.0 to work. If you are using sentry.io nothing will change and no action is needed.
 
-### New Features and Improvements
+## New Features and Improvements
 
-#### Offline Caching
+### Offline Caching
 
-You can optionally have events cached to disk.
-To do that, you must specify which directory the SDK can use to write the crash files:
+You can optionally have events cached to disk. To do so, specify which directory the SDK can use to write crash files:
 
 `options.CacheDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))`
 
-#### Attachments
+### Attachments
 
-You can add attachments to events now. Please refer to the [Attachments documentation](../enriching-events/attachments/).
+You can add attachments to events. Please refer to our [Attachments documentation](../enriching-events/attachments/).
 
-#### User Feedback
+### User Feedback
 
 You can add user feedback to events via a .NET API. Please refer to the [User Feedback documentation](../enriching-events/user-feedback/).
 
-#### ASP.NET Core gRPC support
+### ASP.NET Core gRPC support
 
-A new package was added ASP.NET Core gPRC support. With the ability to log the request payload in case of errors.
+A new package was added ASP.NET Core gPRC support, adding the ability to log the request payload in case of errors.
 
 ### Release Notes
 
@@ -152,15 +147,11 @@ Please refer to [GitHub for the complete release notes](https://github.com/getse
 
 ## Migrating from SharpRaven to Sentry SDK
 
-Below are the main differences between SharpRaven and Sentry SDK.
+Below are the main differences between SharpRaven and Sentry SDK, including a list of features available in Sentry SDK that are not available in SharpRaven.
 
-### List of Differences Between SharpRaven and Sentry SDK
+### Sentry Package
 
-Here is a list of features available in Sentry SDK that are not available in SharpRaven.
-
-#### Sentry Package
-
-- Automatic Captures global unhandled exceptions (AppDomain)
+- Automatic capture of global unhandled exceptions (AppDomain)
 - Scope management
 - Duplicate events automatically dropped
 - Events from the same exception automatically dropped
@@ -169,7 +160,7 @@ Here is a list of features available in Sentry SDK that are not available in Sha
 - Compress request body
 - Event sampling opt-in
 - Event flooding protection (429 retry-after and internal bound queue)
-- Release automatically set (AssemblyInformationalVersionAttribute, AssemblyVersion or env var)
+- Release automatically set (`AssemblyInformationalVersionAttribute`, `AssemblyVersion` or env var)
 - DSN discovered via environment variable
 - Release (version) reported automatically
 - CLS Compliant
@@ -182,7 +173,7 @@ Here is a list of features available in Sentry SDK that are not available in Sha
 - Enable SDK debug mode (opt-in)
 - Attach stack trace for captured messages (opt-in)
 
-#### Sentry.Extensions.Logging
+### Sentry.Extensions.Logging
 
 - Includes all features from the Sentry package.
 - BeginScope data added to Sentry scope, sent with events
@@ -190,7 +181,7 @@ Here is a list of features available in Sentry SDK that are not available in Sha
 - LogError or higher automatically captures an event
 - Minimal levels are configurable.
 
-#### Sentry.AspNetCore
+### Sentry.AspNetCore
 
 - Includes all features from the Sentry package.
 - Includes all features from the Sentry.Extensions.Logging package.
@@ -214,8 +205,8 @@ Here is a list of features available in Sentry SDK that are not available in Sha
 All packages are:
 
 - Strong named
-- Tested on Windows, Linux and macOS
-- Tested on .NET Core, .NET Framework and Mono
+- Tested on Windows, Linux. and macOS
+- Tested on .NET Core, .NET Framework, and Mono
 
 It's also very configurable, for example:
 
