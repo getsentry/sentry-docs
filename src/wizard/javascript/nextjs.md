@@ -37,7 +37,20 @@ const handler = async (req, res) => {
 export default withSentry(handler);
 ```
 
-The above configuration has automatic error tracking with source maps for both JavaScript and TypeScript. To reduce the volume of performance data captured, change `tracesSampleRate` to a value between 0 and 1.
+Configure the Sentry initialization:
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+```
+
+The above configuration has automatic error tracking with source maps for both JavaScript and TypeScript. We recommend adjusting `tracesSampleRate` in production, see [Sampling](https://docs.sentry.io/platforms/javascript/configuration/sampling/).
 
 Then create an intentional error, so you can test that everything is working from your development environment. For example, a button whose `onClick` handler throws an error:
 
