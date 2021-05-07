@@ -1,8 +1,39 @@
-We create a session for every page load. For single-page applications, we will create a new session for every navigation change (History API). 
+### Browser-side
+
+We create a session for every page load. For single-page applications, we will create a new session for every navigation change (History API).
 
 We mark the session as crashed if an _unhandled error_ or _unhandled promise rejection_ bubbled up to the global handler.
 
-We mark the session as an error if the SDK captures an event that contains an exception (this includes manually captured errors). 
+We mark the session as an error if the SDK captures an event that contains an exception (this includes manually captured errors).
+
+By default, the JavaScript SDKs are sending sessions, to disable this toggle the flag `autoSessionTracking` to `false`:
+
+```javascript
+Sentry.init({
+  autoSessionTracking: false // default: true
+});
+```
+
+### Server-side
+
+Release health on the server side is tracked in two different modes: Single Sessions (that represent a node process e.g. cli application) and Session Aggregates (that represents requests).
+
+In Single Sessions mode, the SDK creates a session for every node process. Session is started on `init` of the SDK, and ended the last thing before the process is exited.
+
+In Session Aggregates mode, sessions will be recorded differently in the sense that sessions will represent the lifetime of requests instead. For the SDK to be able to capture request mode sessions, the `requestHandler` of the [express middleware](/platforms/node/guides/express) has to be enabled.
+
+```javascript
+// The request handler must be the first middleware on the app
+app.use(Sentry.Handlers.requestHandler());
+```
+
+Detection of which mode Release Health will operate in is done automatically by the SDK. By default, the SDK runs in Single Sessions mode, but if the `requestHandler` express middleware is enabled, Release Health mode is automatically toggled to Session Aggregates mode.
+
+It is important to note that if a web server application process is being run for example, but the `requestHandler` express middleware is not enabled, Session Aggregates mode will not be enabled and sessions will represent the health of the web server application process.
+
+We mark the session as crashed if an _unhandled error_ or _unhandled promise rejection_ bubbled up to the global handler.
+
+We mark the session as an error if the SDK captures an event that contains an exception (this includes manually captured errors).
 
 By default, the JavaScript SDKs are sending sessions, to disable this toggle the flag `autoSessionTracking` to `false`:
 
