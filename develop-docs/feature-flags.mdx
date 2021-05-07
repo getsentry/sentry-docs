@@ -174,6 +174,7 @@ Where `SENTRY_FEATURES` will correspond to the `SENTRY_FEATURES` from `step
 Set it to `True` if you'd like the feature to be available and `False` if not.
 
 ## Flagr in development
+
 In general, you do not need to run flagr in development to test your feature
 flagging. If you do want to run flagr, you'll need to be running
 [getsentry](/sentry-vs-getsentry/):
@@ -224,20 +225,24 @@ enable it, this is done via the toggle at the top right of the flag page.
 In Flagr your feature needs a Variant and at least one Segment.
 
 ### Variant
+
 Variants represent the possible variations of a flag. Because flagr is
 currently only used to toggle features, the only supported variant is `on`, and
 this value is case-insensitive.
 
 ### Segment
+
 Segments represent the portions of our audience that your feature will be
 enabled for. Each segment can have multiple conditions **all** of which
 must be matched for a feature to be enabled.
 
 ### Distribution
+
 Represents the distribution of variants in a segment, because we'll only have
 one variant this value should always be 100% for each segment.
 
 ## Creating a segment constraint
+
 When creating a segment, without the distribution set, Flagr will respond as if
 the segment doesn't exist yet. This means that if you're creating or modifying a
 segment do not set the Distribution until you're ready for your feature to be
@@ -252,6 +257,7 @@ segments is that each segment is **OR**ed together, and each constraint is
 **AND**ed together
 
 ### Properties
+
 Properties are a preset dictionary that get sent to flagr by sentry, these depend
 on the organization or project being passed to `features.has`
 
@@ -261,14 +267,16 @@ on the organization or project being passed to `features.has`
 | `organization_slug`             | `string`     | [Example](#releasing-a-feature-to-a-subset-of-organizations)                           |
 | `organization_is-early-adopter` | `bool`       | Users opt in from settings, [example](#releasing-a-feature-to-early-adopters)          |
 | `features`                      | `[string]`   | All active features for org                                                            |
-| `subscription_is-free`          | `bool`       |                                                                                        |
-| `subscription_is-trial-plan`    | `bool`       |                                                                                        |
-| `subscription_plan`             | `string`     | [Example](#releasing-a-feature-to-organizations-with-specific-plans)                   |
+| `subscription_is-free`          | `bool`       | Whether the organization is on a free plan.                                            |
+| `subscription_is-trial-plan`    | `bool`       | Whether the organization is on any of the trial plans.                                 |
+| `subscription_plan-family`      | `string`     | [Example](#releasing-a-feature-to-organizations-with-specific-plans)                   |
+| `subscription_plan-tier`        | `string`     | [Example](#releasing-a-feature-to-organizations-with-specific-plans)                   |
 | `subscription_channel`          | `int`        |                                                                                        |
 | `project_slug`                  | `string`     | Only passed for projects                                                               |
 | `project_id`                    | `int`        | Only passed for projects                                                               |
 | `user_id`                       | `int`        |                                                                                        |
-| `user_domain`                   | `string`     |                                                                                        |
+| `user_email`                    | `string`     | The user's email address                                                               |
+| `user_domain`                   | `string`     | The domain of the user's email address.                                                |
 | `user_is-superuser`             | `bool`       |                                                                                        |
 | `user_is-staff`                 | `bool`       |                                                                                        |
 | `team_slugs`                    | `[string]`   | Use with an organization condition, [example](#releasing-a-feature-to-a-specific-team) |
@@ -279,6 +287,7 @@ cannot contain periods `.` as this is a special character used by flagr, in
 general use an underscore `_` instead.
 
 ### Operators
+
 Operators are generally straightforward, for example, `==` means equal. There
 is the exception however of `CONTAINS` and `IN` which only operate on arrays,
 This means that if you want to check that for a substring you want to use the
@@ -296,17 +305,20 @@ property =~ "foo"          =======> {"property": ["foo", "bar"]} -> False
 ```
 
 ### Values
+
 - Values that are strings must be wrapped in double-quotes `""`
 - Values that are arrays must be wrapped in square brackets `[]`
 - Values that are bools or ints should not be wrapped in quotes, for example,
 `true` or `1`
 
 ### Saving
+
 New constraints must be saved by clicking **Add Constraint**, existing
 constraints are only updated after clicking the green **Save** button, the
 **Save Segment Settings** button does not include constraints.
 
 ## Sample Flagr Configurations
+
 Here are some example flagr configurations for methods to release a feature to
 different audiences
 
@@ -341,8 +353,17 @@ adopters. To do this set the constraint property to
 ### Releasing a feature to organizations with specific plans
 
 Enabling a feature for customers on specific plans can be done by creating a
-segment with the property set to `subscription_plan`, the operator to `IN`, and
-the value to an array of plans
+segment using plan properties. There are a few plan related properties you can
+use:
+
+* `subscription_is-free` Whether or not the account is on a free plan.
+* `subscription_channel` Which billing channel an organization is on. The values
+  of this can be found on the `Subscription` model.
+* `subscription_plan-family` This is one of `Free`, `Team` or `Business` or
+  None.
+* `subscription_plan-tier` This is the plan tier eg. `am1`.
+* `subscription_plan` This property is deprecated and should not be used in new
+  feature flags.
 
 ![img/flagrPlanSubset.png](img/flagrPlanSubset.png)
 
