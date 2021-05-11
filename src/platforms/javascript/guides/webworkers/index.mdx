@@ -1,0 +1,56 @@
+---
+title: Web Workers
+sdk: sentry.javascript
+description: "Learn how to use Sentry's Browser SDK in Web Workers API."
+keywords: ["webworkers"]
+---
+
+Sentry's Browser SDK provides partial support for [Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API), without any need of extra configuration. To be able to capture unhandled errors from webworkers:
+
+Install `@sentry/browser` using `yarn` or `npm`:
+
+```bash
+# Using yarn
+yarn add @sentry/browser
+
+# Using npm
+npm install --save @sentry/browser
+```
+
+and afterwards use it like this:
+
+```javascript {filename:index.js}
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+const worker = new Worker("worker.js");
+
+// Unhandled errors from `onmessage` callback of `worker.js`
+// will be captured.
+worker.postMessage("Hello!");
+```
+
+<Alert level="warning" title="Manual Capturing">
+
+Capturing errors or messages manually inside web workers is not supported yet. Therefore using `captureMessage` or `captureError` inside a web worker will fail silently. Only unhandled errors are captured and sent to Sentry.
+
+</Alert>
+
+```javascript {filename:worker.js}
+import * as Sentry from "@sentry/browser";
+
+self.onmessage = message => {
+  // This won`t work.
+  Sentry.captureMessage("Message received");
+
+  // This will be captured.
+  throw new Error();
+};
+```
+
+### Source Maps
+
+Sentry's source maps integration is supported inside web workers if provided. To learn more about providing your source maps to Sentry, please visit: [Source Maps](/platforms/javascript/sourcemaps/)
