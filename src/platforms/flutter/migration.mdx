@@ -3,6 +3,47 @@ title: Migration Guide
 sidebar_order: 1000
 ---
 
+## Migrating from `sentry_flutter` `5.0.0` to `sentry_flutter` `5.1.0`
+
+# Android specific changes
+
+You may remove `android:extractNativeLibs="true"` meta-data in the `AndroidManifest` file or `android.bundle.enableUncompressedNativeLibs=false` in the `gradle.properties` file if you're using the [Android Native Development Kit](/platforms/android/using-ndk/). Sentry can now symbolicate events with the default value of [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) and [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes).
+
+A random generated installationId replaces [Settings.Secure.ANDROID_ID](https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID), which has been removed. This may affect the number of unique users displayed on the the Issues page and Alerts. If you always set a custom user using Sentry.setUser(customUser), the behavior has not changed. While you don't have to make any update, if you want to maintain the old behavior, use the following code snippet.
+It makes use of the [device_info_plus](https://pub.dev/packages/device_info_plus) plugin:
+
+```dart
+import 'package:flutter/foundation.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = '___PUBLIC_DSN___';
+      // revert to old behavior on Android
+      if (defaultTargetPlatform == TargetPlatform.android && !kIsWeb) {
+        options.addEventProcessor(addAndroidDeviceId);
+      }
+    },
+    // Init your App.
+    appRunner: () => runApp(MyApp()),
+  );
+}
+
+FutureOr<SentryEvent?> addAndroidId(
+  SentryEvent event, {
+  dynamic hint,
+}) async {
+  var info = await DeviceInfoPlugin().androidInfo;
+  var user = (event.user ?? SentryUser()).copyWith(id: info.androidId);
+
+  return event.copyWith(
+    user: user,
+  );
+}
+```
+
 ## Migrating from `sentry_flutter` `4.0.x` to `sentry_flutter` `5.0.0`
 
 In addition to the changes introduced in [sentry](/platforms/dart/migration/):
