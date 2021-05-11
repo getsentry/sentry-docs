@@ -3,13 +3,71 @@ title: Migration Guide
 sidebar_order: 1000
 ---
 
-This migration guide covers the migration from 4.x to 5.x as well as 5.x to 6.x, which is our current version.
+To upgrade from the 4.x version of the SDK to the 7.x version of the SDK, you must first migrate from 4.x to 5.x, then 5.x to 6.x and finally from 6.x to 7.x.
 
-To upgrade from the 4.x version of the SDK to the 6.x version of the SDK, you must first migrate from 4.x to 5.x, then 5.x to 6.x.
+## Migrating from 6.x to 7.x
+
+Migrating to 7.x from 6.x includes a few breaking changes. We provide this guide to help you to update your SDK.
+
+### Configuration Changes
+
+This version includes the following configuration changes:
+
+- Change the default maximum number of cached envelopes from 100 to 30. You can now configure this number with `SentryOptions.maxCacheItems`.
+- When setting a value `SentryOptions.sampleRate` that is not >= 0.0 and <= 1.0 the SDK sets it to the default of 1.0 instead of keeping the set value.
+
+### Breaking Changes
+
+#### Issue Grouping
+
+This version introduces a change to the grouping of issues. The SDK now sets the `inApp`
+flag for frames originating from only the main executable using [CFBundleExecutable](https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleexecutable).
+In previous versions, all frames originating from the application bundle were marked as `inApp`. This had the
+downside of marking frames of private frameworks inside the bundle as `inApp`. This problem is fixed now.
+Applications using static frameworks shouldn't be affected by this change.
+For more information read <PlatformLink to="/data-management/event-grouping/stack-trace-rules/#mark-in-app-frames">mark in-app frames</PlatformLink>.
+
+#### Cleanup Public Classes
+
+We cleaned up our public classes by removing a few functions and properties, that shouldn't be public, to make the API cleaner. In case we removed something you need, please [open an issue](https://github.com/getsentry/sentry-cocoa/issues/new/choose) on GitHub.
+
+- Remove `SentrySDK.currentHub` and `SentrySDK.setCurrentHub`.
+- Remove `SentryClient.storeEnvelope`, which is reserved for Hybrid SDKs.
+- Make `closeCachedSessionWithTimestamp` private, which is reserved for internal use.
+- Remove deprecated `SentryHub.getScope`. Use `SentryHub.scope` instead.
+- Replace `SentryException.thread` with `SentryException.threadId` and `SentryException.stacktrace` to align with the [unified API](https://develop.sentry.dev/sdk/unified-api/).
+- Replace dict `SentryMechanism.meta` with new class `SentryMechanismMeta` and move `SenryNSError` to `SentryMechanismMeta` to align with the [unified API](https://develop.sentry.dev/sdk/unified-api/).
+- Change `SentryEvent.timestamp` to `nullable`.
+
+### SentryLogLevel
+
+We replaced the `SentryLogLevel` with `SentryLevel`, renamed `logLevel` to `diagnosticLevel`
+on `SentryOptions` to align with other Sentry SDKs, and set the default `diagnosticLevel` to
+`SentryLevel.debug`. Furthermore, we removed setting the `logLevel` statically on the `SentrySDK`.
+Please use the `SentryOptions` to set the `diagnosticLevel` instead.
+
+
+6.x
+```swift
+SentrySDK.start { options in
+  options.logLevel = SentryLogLevel.verbose
+}
+
+// Or
+
+SentrySDK.logLevel = SentryLogLevel.verbose
+```
+
+7.x
+```swift
+SentrySDK.start { options in
+  options.diagnosticLevel = SentryLevel.debug
+}
+```
 
 ## Migrating from 5.x to 6.x
 
-Migrating to the current version from 5.x includes a few breaking changes. We provide this guide to help you to update your SDK.
+Migrating to 6.x from 5.x includes a few breaking changes. We provide this guide to help you to update your SDK.
 
 ### Configuration Changes
 

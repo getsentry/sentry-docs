@@ -8,49 +8,43 @@ redirect_from:
 
 ## Default Integrations
 
-Default integrations are integrations enabled by default that integrate into the
-standard library or the interpreter itself. They are documented so you can see
-what they do and that they can be disabled if they cause issues. To disable
-system integrations set `default_integrations => false` when calling `init()`.
+These integrations are enabled by default and integrate into the
+standard library or the interpreter itself. They are documented so you can be both aware of what they do and disable them if they cause issues.
+
+To disable system integrations, set `default_integrations => false` when calling `\Sentry\init()`.
 
 ### ExceptionListenerIntegration
 
 This integration catches all global uncaught exceptions and emits events when an error occurs.
 
-To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
-as an exception listener.
+To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as an exception listener.
 
 ### ErrorListenerIntegration
 
 This integration hooks into the global PHP `error_handler` and emits events when an error occurs.
 
-To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
-as an error listener. By default, the `ErrorHandler` reserves 10 kilobytes of memory to handle
-fatal errors.
+To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as an error listener. By default, the `ErrorHandler` reserves 10 kilobytes of memory to handle fatal errors.
 
-For some frameworks or projects, there are specific integrations provided both
-officially and by third-party users that automatically register the error
-handlers. In that case, please refer to their documentation.
+For some frameworks or projects, specific integrations are provided both officially and by third-party users that automatically register the error handlers. Please refer to their documentation.
 
-Also, by default `E_ALL` will be handled, you can change it by setting `error_types`
-a different constant in `init()`.
+By default, the error_types option defaults to the value returned by the `error_reporting()` function, which can change at runtime. Alternately, you can set the option to a fixed value by setting its value to a bitmask of the PHP `E_*` constants in `\Sentry\init()`. In this case, Sentry will log only errors of those specific types regardless of the current reporting level.
+
 
 ### FatalErrorListenerIntegration
 
 This integration catches all fatal errors and emits the corresponding events.
 
-To do that, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it
-as a fatal error listener.
+To do so, it ensures that Sentry's `ErrorHandler` is registered, and adds a callback to it as a fatal error listener.
 
 ### RequestIntegration
 
-This integration adds to the event request data like:
+This integration adds to the event request data:
 
 - HTTP method
 - URL (including the query string)
 - Body (by default only if the body is 10Kb or less)
 
-If the [`send_default_pii` option](../configuration/options/#send-default-pii) is enabled, it will also send PII information like:
+If the [`send_default_pii` option](../configuration/options/#send-default-pii) is enabled, it will also send the following PII:
 
 - IP address
 - Cookies
@@ -68,12 +62,11 @@ This integration reads excerpts of code around the line that originated an error
 
 This integration fills the event data with PHP runtime and server OS information.
 
-
 ## Optional Integrations
 
-You can enable option integration by passing them to the `integrations` option when initializing the Sentry SDK.
+You can enable these integrations by passing them to the `integrations` option when initializing the Sentry SDK.
 
-In the example below we add the optional `ModulesIntegration`.
+In this example, the optional `ModulesIntegration` is added:
 
 ```php
 \Sentry\init([
@@ -90,14 +83,13 @@ This integration decides whether an event should not be captured according to a 
 
 ### ModulesIntegration
 
-This integration logs with the event details all the versions of the packages installed with Composer; the root project is included too.
+This integration logs all the versions of the packages installed with Composer with the event details; the root project is also included.
 
+## Custom Integrations
 
-## Customize Integrations
+You can customize the list of integration without disabling the default integration using the `integrations` option. You can pass a callable for advanced needs, though a fixed list of integrations will work in most use cases.
 
-It is also possible to customize the list of integration without disabling the default integration using the `integrations` option and passing a callable.
-
-In the example below we leave all integrations enabled exception for the `ExceptionListenerIntegration` and add the `ModulesIntegration`.
+In the example below, all integrations are enabled except the `ExceptionListenerIntegration`. In addition, the `ModulesIntegration` is added.
 
 ```php
 \Sentry\init([

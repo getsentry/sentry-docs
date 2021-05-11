@@ -20,9 +20,9 @@ import Resolver from "ember-resolver";
 import loadInitializers from "ember-load-initializers";
 import config from "./config/environment";
 
-import { InitSentryForEmber } from "@sentry/ember";
+import * as Sentry from "@sentry/ember";
 
-InitSentryForEmber();
+Sentry.InitSentryForEmber();
 
 export default class App extends Application {
   modulePrefix = config.modulePrefix;
