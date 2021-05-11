@@ -5,8 +5,9 @@ For example, if you want to create a transaction for a user interaction on your 
 shopCheckout() {
   // This will create a new Transaction for you
   const transaction = Sentry.startTransaction({ name: "shopCheckout" });
-  // set the transaction on the scope so it picks up any errors
-  hub.configureScope(scope => scope.setSpan(transaction));
+  // Set transaction on scope to associate with errors and get included span instrumentation
+  // If there's currently an unfinished transaction, it may be dropped
+  Sentry.getCurrentHub().configureScope(scope => scope.setSpan(transaction));
 
   // Assume this function makes an xhr/fetch call
   const result = validateShoppingCartOnServer();
