@@ -3,6 +3,51 @@ title: Migration Guide
 sidebar_order: 1000
 ---
 
+## Migrating from `sentry_flutter` `5.0.0` to `sentry_flutter` `5.1.0`
+
+# Android specific changes
+
+You may remove `android:extractNativeLibs="true"` meta-data in the `AndroidManifest` file or `android.bundle.enableUncompressedNativeLibs=false` in the `gradle.properties` file if you're using the [Android Native Development Kit](/platforms/android/using-ndk/). Sentry can now symbolicate events with the default value of [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) and [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes).
+
+Further instructions can be found [here](/platforms/android/migration/).
+
+User identification based on the [Android ID](https://developer.android.com/reference/android/provider/Settings.Secure#ANDROID_ID),
+which was the default behavior of Sentry Android 4, is now deprecated.
+
+You can restore this behavior by using the library [device_info_plus](https://pub.dev/packages/device_info_plus) and the following code snippet:
+
+```dart
+import 'package:flutter/foundation.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = _exampleDsn;
+      // revert to old behavior on Android
+      if (defaultTargetPlatform == TargetPlatform.android && !kIsWeb) {
+        options.addEventProcessor(addAndroidDeviceId);
+      }
+    },
+    // Init your App.
+    appRunner: () => runApp(MyApp()),
+  );
+}
+
+FutureOr<SentryEvent> addAndroidId(
+  SentryEvent event, {
+  dynamic hint,
+}) async {
+  var info = await DeviceInfoPlugin().androidInfo;
+  var user = (event.user ?? SentryUser()).copyWith(id: info.androidId);
+
+  return event.copyWith(
+    user: user,
+  );
+}
+```
+
 ## Migrating from `sentry_flutter` `4.0.x` to `sentry_flutter` `5.0.0`
 
 In addition to the changes introduced in [sentry](/platforms/dart/migration/):
