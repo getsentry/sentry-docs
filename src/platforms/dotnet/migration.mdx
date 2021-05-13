@@ -4,13 +4,15 @@ description: "Migrating between versions of Sentry SDK for .NET."
 sidebar_order: 100
 ---
 
-Upgrading from Sentry SDK v2.x to Sentry SDK v3.x includes both breaking changes and new features.
+Upgrading includes both breaking changes and new features.
 
-## Breaking Changes
+## Migrating from 2.x to 3.x
+
+### Breaking Changes
 
 Please read through **all** breaking changes prior to upgrading.
 
-### Grouping Changes
+#### Grouping Changes
 
 The format of the stack traces were greatly improved with the help of Ben Adam's iconic library `Ben.Demystifier`. Frames now include details such as `async`, `static`, the actual return type, method parameters, tuples and their names, and more.
 
@@ -20,7 +22,7 @@ However, this will **affect grouping**. If you prefer to stay with the original 
 options.StackTraceMode = StackTraceMode.Original;
 ```
 
-### Serialization
+#### Serialization
 
 In version 3.0.0, the Sentry SDK for .NET changed from `Newtonsoft.Json` to `System.Text.Json`.
 Using the new library has many advantages. These include the lack of an additional dependency (when targeting .NET Core 3, .NET 5, and later versions) and much faster performance.
@@ -64,11 +66,11 @@ catch (Exception e)
 }
 ```
 
-## Namespace Change
+### Namespace Change
 
 Classes under `Sentry.Protocol` were moved to the root namespace `Sentry`. All except `Context` classes like `App`, `Device`, etc.
 
-## ASP.NET
+### ASP.NET
 
 ASP.NET (**not Core**) users need to install an additional package, `Sentry.AspNet`. Without this package, HTTP related information will not be added to events.
 
@@ -83,65 +85,65 @@ SentrySdk.Init(o =>
 
 The motivation was to remove the reference to `System.Web` and decouple the core of the package from any specific namespaces of the .NET Framework. This change improves the experience from other environments, such as game engines like Unity and [Godot](https://gatomalo.dev/blog/2020/03/21/error-monitoring-godot-sentry/#android).
 
-## ASP.NET Core
+### ASP.NET Core
 
-### Environment Casing
+#### Environment Casing
 
 To match Sentry's default environment naming convention, unless explicitly set otherwise, the Sentry environment will be reported in lowercase. That means if `ASPNET_ENVIRONMENT` is equal to `Production`, the Sentry SDK will report it as `production`.
 
-### Removal of `IncludeRequestPayload`
+#### Removal of `IncludeRequestPayload`
 
 The option `IncludeRequestPayload` that was deprecated in the Sentry SDK 2.0 has been removed.
 The replacement is the option `MaxRequestBodySize`.
 
-### New Methods on `IHub` and `ISentryClient`
+#### New Methods on `IHub` and `ISentryClient`
 
 Sentry's performance monitoring capabilities requires additive API changes to interfaces such as `IHub` and `ISentryClient`. If you implement your own `IHub`, you'll need to implement two new methods:
 
 `ISentryClient` received: `CaptureTransaction`.
 `IHub` received: `StartTransaction` and `GetTraceHeader`.
 
-### Rename of `DiagnosticsLogger` to `DiagnosticLogger`
+#### Rename of `DiagnosticsLogger` to `DiagnosticLogger`
 
 To align with other SDKs, the option is now named: `DiagnosticLogger`
 [Docs PR](https://github.com/getsentry/sentry-docs/pull/2945).
 
-### `Dsn` as a String
+#### `Dsn` as a String
 
 `SentryOptions` now take a string for `Dsn`:
 
 Before: `o.Dsn = new Dsn("..");`
 After: `o.Dsn = "..";`
 
-### `LogEntry` Became `Message`
+#### `LogEntry` Became `Message`
 
 The property of `SentryEvent` that supports a structured log entry was renamed to `Message` to align with the protocol and other SDKs.
 
-## Self-Hosted Support
+### Self-Hosted Support
 
 This version uses the [envelope endpoint](https://develop.sentry.dev/sdk/envelopes/). If you are using an on-premise installation it requires Sentry version >= v20.6.0 to work. If you are using sentry.io nothing will change and no action is needed.
 
-## New Features and Improvements
+### New Features and Improvements
 
-### Offline Caching
+#### Offline Caching
 
 You can optionally have events cached to disk. To do so, specify which directory the SDK can use to write crash files:
 
 `options.CacheDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))`
 
-### Attachments
+#### Attachments
 
 You can add attachments to events. Please refer to our [Attachments documentation](../enriching-events/attachments/).
 
-### User Feedback
+#### User Feedback
 
 You can add user feedback to events via a .NET API. Please refer to the [User Feedback documentation](../enriching-events/user-feedback/).
 
-### ASP.NET Core gRPC support
+#### ASP.NET Core gRPC support
 
 A new package was added ASP.NET Core gPRC support, adding the ability to log the request payload in case of errors.
 
-### Release Notes
+#### Release Notes
 
 Please refer to [GitHub for the complete release notes](https://github.com/getsentry/sentry-dotnet/releases/tag/3.0.0).
 
