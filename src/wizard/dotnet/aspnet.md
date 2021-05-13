@@ -22,8 +22,12 @@ Install-Package Sentry.AspNet -Version {{ packages.version('sentry.dotnet.aspnet
 You should `init` the Sentry SDK as soon as possible during your application load by adding Sentry to `Global.asax.cs`:
 
 ```csharp
-using System.Web;
+using System;
+using System.Configuration;
+using System.Web.Mvc;
+using System.Web.Routing;
 using Sentry;
+using Sentry.AspNet;
 
 public class MvcApplication : HttpApplication
 {
@@ -42,6 +46,7 @@ public class MvcApplication : HttpApplication
     protected void Application_Error()
     {
         var exception = Server.GetLastError();
+
         // Capture the server errors.
         SentrySdk.CaptureException(exception);
     }
@@ -50,6 +55,43 @@ public class MvcApplication : HttpApplication
     {
         // Flushes out events before shutting down.
         _sentry?.Dispose();
+    }
+    
+    protected void Application_BeginRequest()
+    {
+        // Start a transaction that encompasses the current request
+        var transaction = Context.StartSentryTransaction();
+
+        // Attach transaction to the request context to finish it when the request ends
+        Context.Items["__SentryTransaction"] = transaction;
+    }
+
+    protected void Application_EndRequest()
+    {
+        // Finish the currently active transaction
+        if (Context.Items.Contains("__SentryTransaction"))
+        {
+            var transaction = Context.Items["__SentryTransaction"] as ISpan;
+
+            var status =
+                Context.Response.StatusCode < 400 ? SpanStatus.Ok :
+                Context.Response.StatusCode == 400 ? SpanStatus.InvalidArgument :
+                Context.Response.StatusCode == 401 ? SpanStatus.Unauthenticated :
+                Context.Response.StatusCode == 403 ? SpanStatus.PermissionDenied :
+                Context.Response.StatusCode == 404 ? SpanStatus.NotFound :
+                Context.Response.StatusCode == 409 ? SpanStatus.AlreadyExists :
+                Context.Response.StatusCode == 429 ? SpanStatus.ResourceExhausted :
+                Context.Response.StatusCode == 499 ? SpanStatus.Cancelled :
+                Context.Response.StatusCode < 500 ? SpanStatus.InvalidArgument :
+                Context.Response.StatusCode == 500 ? SpanStatus.InternalError :
+                Context.Response.StatusCode == 501 ? SpanStatus.Unimplemented :
+                Context.Response.StatusCode == 503 ? SpanStatus.Unavailable :
+                Context.Response.StatusCode == 504 ? SpanStatus.DeadlineExceeded :
+                Context.Response.StatusCode < 600 ? SpanStatus.InternalError :
+                SpanStatus.UnknownError;
+
+            transaction?.Finish(status);
+        }
     }
 }
 ```
