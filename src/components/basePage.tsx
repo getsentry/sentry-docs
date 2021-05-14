@@ -24,9 +24,7 @@ const GitHubCTA = ({
     <br></br>
     <small>
     Our documentation is open source and available on GitHub. Your contributions are welcome, whether fixing a typo (drat!) to suggesting an update ("yeah, this would be better").
-    </small>
-    <small>
-    <br></br>
+    <div className={"muted"}>
      <SmartLink
         to={`https://github.com/getsentry/sentry-docs/edit/master/src/${sourceInstanceName}/${relativePath}`}
       >
@@ -44,6 +42,7 @@ const GitHubCTA = ({
       >
         Report a problem
       </SmartLink>{" "}
+      </div>
     </small>
   </div>
 );
