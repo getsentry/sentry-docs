@@ -18,14 +18,32 @@ const GitHubCTA = ({
   relativePath,
 }: GitHubCTAProps): JSX.Element => (
   <div className="github-cta">
+    <medium>
+    Help improve this content
+    </medium>
+    <br></br>
     <small>
-      You can{" "}
-      <SmartLink
+    Our documentation is open source and available on GitHub. Your contributions are welcome, whether fixing a typo (drat!) to suggesting an update ("yeah, this would be better").
+    </small>
+    <small>
+    <br></br>
+     <SmartLink
         to={`https://github.com/getsentry/sentry-docs/edit/master/src/${sourceInstanceName}/${relativePath}`}
       >
-        edit this page
+         Suggest an edit to this page
       </SmartLink>{" "}
-      on GitHub.
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <SmartLink
+        to={`https://docs.sentry.io/contributing/`}
+      >
+        Read our contributor guidelines
+      </SmartLink>{" "}
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <SmartLink
+        to={`https://github.com/getsentry/sentry-docs/issues/new/choose`}
+      >
+        Report a problem
+      </SmartLink>{" "}
     </small>
   </div>
 );
