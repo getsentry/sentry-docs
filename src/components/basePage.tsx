@@ -18,9 +18,9 @@ const GitHubCTA = ({
   relativePath,
 }: GitHubCTAProps): JSX.Element => (
   <div className="github-cta">
-    <medium>
+    <small>
     Help improve this content
-    </medium>
+    </small>
     <br></br>
     <small>
     Our documentation is open source and available on GitHub. Your contributions are welcome, whether fixing a typo (drat!) to suggesting an update ("yeah, this would be better").
