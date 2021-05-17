@@ -284,7 +284,9 @@ SDKs are encouraged to distinguish between different ways of ending a session:
 A session is supposed to transition to `crashed` when it encountered an unhandled
 error such as a full application crash. For applications that cannot fully
 crash such as a website, it's acceptable to transition to the crashed state if
-the user encountered an error dialog.
+the user encountered an error dialog. For server environments where we create sessions 
+for every incoming request, `crashed` is basically like status code `500` internal server error.
+So if there is an unhandled error happening during the request, the session should be `crashed`.
 
 Abnormal are sessions of which their fate is unknown. For desktop applications, for instance, it makes sense to transition a session to abnormal if it was stored
 but the exit of the application was not observed but also did not crash. These are situations where the user forced the app to close via the
@@ -427,3 +429,65 @@ The most basic API exposed is on the hub level and lets you start and stop sessi
 `auto_session_tracking`
 
 > This enables / disables automatic session tracking through integrations.
+
+
+## SDK Implementation Guideline
+
+We track the health of each release of projects in Sentry by sending session payloads from SDKs.
+The session payload provide data such as session duration and the presence or absence of errors/crashes.
+
+SDKs track sessions in one of two modes:
+- Single Session
+- Session Aggregates
+
+Single session is the general case, and is a good fit for (relatively short-lived) applications that are typically involving only a single user. Examples:
+- command-line utility like [`craft`](https://github.com/getsentry/craft); <dfn title="Note: this is just an example, assuming craft was instrumented with a Sentry SDK supporting sessions">every execution of a `craft` subcommand</dfn> report a single session to Sentry
+- user interacting with a mobile app
+- user loading a web site with their favorite browser
+
+Session aggregates are used when sending individual sessions would be undesirable or unpractical. To constrain resource usage (namely memory and network), SDKs keep track of summary information about a batch of sessions that occured in the recent past, never actually having to deal with session objects representing the individual sessions that make up the aggregate. This mode is the choice for applications that run for an arbitrarily long time and handle larger throughputs for potentially multiple users, such as web servers, background job workers, etc. Note that for those types of application, a better definition of session matches the execution of a single HTTP request or task, instead of a single execution of the whole application process.
+
+In either case, SDKs should create and report sessions by default, choosing to report them individually or as aggregates depending on the type of application.
+
+If an SDK can detect that an application is better served by session aggregates, then it must not report an application-wide session. The application-wide session may still be created during SDK initialization but must be aborted and never sent to Sentry. As an example, in the Node.js SDK, we can detect an application is probably a web server if it uses the `requestHandler` integration that is provided.
+
+### Individual Session Functionality
+
+#### Configuration
+
+- On by default for global/static API;
+User should be able to disable sessions if they don't want to track them.
+
+Pre-requisites for reporting sessions and determining Release Health of projects in Sentry, such as release should be automatically detected by the SDK such as by looking up env vars.
+
+(Maybe, needs discussion) if I pre-requisite cannot be detect (for example, no good way to determine release version), then we set some default value so that we can always report sessions by default (depending on discussion, this might not be a change in SDK code, but in Relay, basically removing hard-requirements in the session payload).
+
+#### Lifetime of a Session
+
+Sessions should be enabled by default only for the global hub/client that is initialized by Sentry.init, and disabled by default for any other manually created client.
+A session is started when the SDK is initialized (ideally when the default client is bound to the global hub) and ended when one of these conditions happen:
+The Hub.endSession() method is explicitly called; or
+The program terminates without errors; or
+The program terminates with an unhandled exception; or
+The program terminates with an unhandled promise rejection.
+
+Care must be taken to never attempt to send new session payloads to Sentry for a session that is already ended. For example, if the user manually ends the session with Hub.endSession(), there should not be any new updates to the session when the program terminates.
+
+#### Session Atrributes and Mutability
+
+#### Sending Session to Sentry
+
+Session is sent initially after a certain (initially hard-coded, less config is better) delay (something between 1s to 30s TBD), and then updated with the duration and final status and error count when the program terminates. Note that, as an optimization, short lived programs will not send 2 session requests to Relay, but only the final one with status and duration.
+
+### Session Aggregates Functionality
+
+#### Configuration
+
+Sessions should be enabled by default, a session is started as soon as a request is received by a web server and ends as soon as the response is fully sent back.
+
+#### Lifetime of a Session
+
+Sessions are never tracked nor sent individually, instead they are aggregated and the aggregates are sent every 30s and a final time when the web server is terminating.
+As an implementation hint to the point above, when a "Client" is closed or flushed the associated  "Session Flusher" shall also be flushed and submit the current aggregates the the transport, before the transport is flushed/closed.
+Make sure this works reasonably for Serverless — there we shall not use "request mode" and SessionFlusher because we cannot have any work that happens outside of the request-response flow.
+Provide an easy way to integrate with existing Node frameworks (Express, Next.js, Koa).
