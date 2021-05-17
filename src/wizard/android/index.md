@@ -47,6 +47,7 @@ Add your DSN to the manifest file.
 
 Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
+In **Java**:
 ```java
 public class MyActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,7 @@ public class MyActivity extends AppCompatActivity {
 }
 ```
 
+In **Kotlin**:
 ```kotlin
 class MyActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,7 +67,7 @@ class MyActivity : AppCompatActivity() {
 }
 ```
 
-### Next steps
+### Next Steps
 
 Using ProGuard or R8 to obfuscate your app? Check out [our docs on how to set it up](https://docs.sentry.io/platforms/android/proguard/).
 
