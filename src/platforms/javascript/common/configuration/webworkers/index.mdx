@@ -5,7 +5,7 @@ keywords: ["webworkers"]
 sidebar_order: 9000
 ---
 
-Sentry's Browser SDK provides partial support for [Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API), without needing extra configuration. To capture unhandled errors from web workers:
+Sentry's Browser SDK supports [Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API). To capture unhandled errors from web workers:
 
 Install `@sentry/browser` using `yarn` or `npm`:
 
@@ -28,28 +28,50 @@ Sentry.init({
 
 const worker = new Worker("worker.js");
 
-// Unhandled errors from `onmessage` callback of `worker.js`
+// Errors from `onmessage` callback of `worker.js`
 // will be captured.
 worker.postMessage("Hello!");
 ```
 
 <Alert level="warning" title="Manual Capturing">
 
-Capturing errors or messages manually inside web workers is not yet supported. As a result, using `captureMessage` or `captureError` inside a web worker will fail silently. Only unhandled errors are captured and sent to Sentry.
+To capture errors or messages manually, such as to use `captureMessage` or `captureError` inside web workers, Sentry should be initialized inside each web workers' own scope. Only unhandled errors will be captured and sent to Sentry without worker-level initialization.
 
 </Alert>
 
+#### Usage without worker-level initialization
 ```javascript {filename:worker.js}
 import * as Sentry from "@sentry/browser";
 
 self.onmessage = message => {
-  // This won`t work.
+  // This will fail silently.
   Sentry.captureMessage("Message received");
 
-  // This will be captured.
+  // This error will be captured.
   throw new Error();
 };
 ```
+
+#### Usage with worker-level initialization
+```javascript {filename:worker.js}
+import * as Sentry from "@sentry/browser";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+});
+
+self.onmessage = message => {
+  // This message will be captured
+  Sentry.captureMessage("Message received");
+
+  // This error will also be captured.
+  throw new Error();
+};
+```
+
+### Integrations
+
+Using non-default integrations such as [@sentry/tracing](/platforms/javascript/performance/) inside web workers are not guaranteed to work at the moment. Non-default integrations enabled outside workers' scope are not affected by worker-level configurations and will still work correctly.
 
 ### Source Maps
 
