@@ -5,7 +5,86 @@ redirect_from:
   - /platforms/android/migrate/
 ---
 
-## Migrating from `io.sentry:sentry` `4.3.0` to `io.sentry:sentry` `5.0.0`
+## Migrating from `io.sentry:sentry-android-gradle-plugin 1.x` to `io.sentry:sentry-android-gradle-plugin 2.0.0`
+
+The `io.sentry.android.gradle` >= `2.0.0` publishes the Gradle Plugin Marker to Maven Central. As a result, you no longer need to set the `classpath`.
+
+_Old_:
+
+```groovy
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'io.sentry:sentry-android-gradle-plugin:{version}'
+    }
+}
+
+apply plugin: 'io.sentry.android.gradle'
+```
+
+_New_:
+
+```groovy
+plugins {
+    id "io.sentry.android.gradle" version "{version}"
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
+```kotlin
+plugins {
+    id("io.sentry.android.gradle") version "{version}"
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+```
+
+The Sentry Android Gradle Plugin has been rewritten in Kotlin. As a result, the Groovy or Kotlin DSL syntax has slightly changed.
+
+The `autoProguardConfig` flag has been removed, the Android SDK >= `2.0.0` version already merges the ProGuard rules automatically.
+
+_Old_:
+
+```groovy
+sentry {
+    autoProguardConfig false
+    autoUpload true
+    uploadNativeSymbols false
+    includeNativeSources false
+}
+```
+
+_New_:
+
+```groovy
+sentry {
+    autoUpload = true
+    uploadNativeSymbols = false
+    includeNativeSources = false
+}
+```
+
+```kotlin
+sentry {
+    autoUpload.set(true)
+    uploadNativeSymbols.set(false)
+    includeNativeSources.set(false)
+}
+```
+
+## Migrating from `io.sentry:sentry-android 4.3.0` to `io.sentry:sentry-android 5.0.0`
 
 You may remove `android:extractNativeLibs="true"` meta-data in the `AndroidManifest` file or `android.bundle.enableUncompressedNativeLibs=false` in the `gradle.properties` file if you're using the [Android Native Development Kit](/platforms/android/using-ndk/). Sentry can now symbolicate events with the default value of [extractNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#extractNativeLibs) and [android.bundle.enableUncompressedNativeLibs](https://developer.android.com/studio/releases/gradle-plugin#behavior-changes).
 
@@ -59,7 +138,7 @@ _New_:
 </application>
 ```
 
-## Migrating from `io.sentry:sentry` `4.1.0` to `io.sentry:sentry` `4.2.0`
+## Migrating from `io.sentry:sentry-android 4.1.0` to `io.sentry:sentry-android 4.2.0`
 
 `operation` is now a required property of the `SentryTransaction` and `SentrySpan`. Whenever a transaction or span is started, the value for `operation` must be provided:
 
@@ -67,7 +146,7 @@ _New_:
 Sentry.startTransaction("transaction-name", "operation-name");
 ```
 
-## Migrating from `sentry-android 2.x` to `sentry-android 3.x`
+## Migrating from `io.sentry:sentry-android 2.x` to `io.sentry:sentry-android 3.x`
 
 ### Package changes
 
@@ -81,9 +160,9 @@ Other than that, the APIs didn't change. Release Heath sets by default. If you p
 </application>
 ```
 
-## Migrating from `sentry-android 1.x` to `sentry-android 2.x`
+## Migrating from `io.sentry:sentry-android 1.x` to `io.sentry:sentry-android 2.x`
 
-With Sentry Android, we've updated the API to resemble the [Unified API](https://develop.sentry.dev/sdk/unified-api/) more closely. And now that the SDK isn't built on top of `sentry-java`, Sentry Android has more Android-specific features.
+With Sentry Android, we've updated the API to resemble the [Unified API](https://develop.sentry.dev/sdk/unified-api/) more closely. And now that the SDK isn't built on top of `io.sentry:sentry-java`, Sentry Android has more Android-specific features.
 
 If you want to upgrade from the previous version of the SDK, please check the following sections of changes that may need updating in your code.
 
@@ -333,7 +412,7 @@ Sentry.configureScope { it.clear() }
 
 ### Sentry Gradle Plugin
 
-Disable the `autoProguardConfig` flag from the Sentry Gradle Plugin, `sentry-android` >= v2.0 already does it automatically.
+Disable the `autoProguardConfig` flag from the Sentry Gradle Plugin since `io.sentry:sentry-android` >= `2.0.0` does this automatically.
 
 ```groovy
 sentry {
