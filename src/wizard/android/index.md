@@ -58,6 +58,7 @@ public class MyActivity extends AppCompatActivity {
 ```
 
 In **Kotlin**:
+
 ```kotlin
 class MyActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
