@@ -13,7 +13,9 @@ type: language
 
 Install the SDK via Gradle, Maven, or SBT:
 
-```groovy {filename:build.gradle}
+For **Gradle**, add to your `build.gradle` file:
+
+```groovy
 // Make sure mavenCentral is there.
 repositories {
     mavenCentral()
@@ -25,7 +27,9 @@ dependencies {
 }
 ```
 
-```xml {tabTitle:Maven}{filename:pom.xml}
+For **Maven**, add to your `pom.xml` file:
+
+```xml
 <dependency>
     <groupId>io.sentry</groupId>
     <artifactId>sentry</artifactId>
@@ -33,15 +37,18 @@ dependencies {
 </dependency>
 ```
 
-```scala {tabTitle:SBT}
+For **SBT**:
+
+```scala
 libraryDependencies += "io.sentry" % "sentry" % "{{ packages.version('sentry.java', '4.0.0') }}"
 ```
-
 ## Configure
 
-Configure Sentry as soon as possible in your application's lifecycle:
+Configure Sentry as soon as possible in your application's lifecycle, using either Java or Kotlin.
 
-```java {tabTitle: Java}
+In **Java**:
+
+```java
 import io.sentry.Sentry;
 
 Sentry.init(options -> {
@@ -49,7 +56,9 @@ Sentry.init(options -> {
 });
 ```
 
-```kotlin {tabTitle: Kotlin}
+In **Kotlin**:
+
+```kotlin
 import io.sentry.Sentry
 
 Sentry.init { options ->
@@ -59,10 +68,11 @@ Sentry.init { options ->
 
 ### Send First Event
 
-Trigger your first event from your development environment by intentionally creating an error with the `Sentry#captureException` method, to test that everything is working:
+Trigger your first event from your development environment by intentionally creating an error with the `Sentry#captureException` method, to test that everything is working, using either Java or Kotlin.
 
+In **Java**:
 
-```java {tabTitle: Java}
+```java
 import java.lang.Exception;
 import io.sentry.Sentry;
 
@@ -73,7 +83,9 @@ try {
 }
 ```
 
-```kotlin {tabTitle: Kotlin}
+In **Kotlin**:
+
+```kotlin
 import java.lang.Exception
 import io.sentry.Sentry
 
@@ -84,4 +96,6 @@ try {
 }
 ```
 
-To view and resolve the error, log in to <a href="https://sentry.io/">sentry.io</a> then open your project. Click the error's title to open a page with detailed information and mark it as resolved.
+If you're new to Sentry, use the email alert to access your account and complete a product tour.
+
+If you're an existing user and have disabled alerts, you won't receive this email.
