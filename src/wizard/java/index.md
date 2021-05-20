@@ -47,7 +47,8 @@ libraryDependencies += "io.sentry" % "sentry" % "{{ packages.version('sentry.jav
 Configure Sentry as soon as possible in your application's lifecycle, using either Java or Kotlin.
 
 In **Java**:
-```java {tabTitle: Java}
+
+```java
 import io.sentry.Sentry;
 
 Sentry.init(options -> {
