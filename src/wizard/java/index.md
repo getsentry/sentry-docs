@@ -14,6 +14,7 @@ type: language
 Install the SDK via Gradle, Maven, or SBT:
 
 For **Gradle**, add to your `build.gradle` file:
+
 ```groovy
 // Make sure mavenCentral is there.
 repositories {
