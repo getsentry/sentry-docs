@@ -84,7 +84,8 @@ try {
 ```
 
 In **Kotlin**:
-```kotlin {tabTitle: Kotlin}
+
+```kotlin
 import java.lang.Exception
 import io.sentry.Sentry
 
