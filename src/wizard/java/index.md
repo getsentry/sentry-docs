@@ -57,6 +57,7 @@ Sentry.init(options -> {
 ```
 
 In **Kotlin**:
+
 ```kotlin
 import io.sentry.Sentry
 
