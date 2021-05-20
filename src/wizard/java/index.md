@@ -71,7 +71,8 @@ Sentry.init { options ->
 Trigger your first event from your development environment by intentionally creating an error with the `Sentry#captureException` method, to test that everything is working, using either Java or Kotlin.
 
 In **Java**:
-```java {tabTitle: Java}
+
+```java
 import java.lang.Exception;
 import io.sentry.Sentry;
 
