@@ -48,6 +48,7 @@ Add your DSN to the manifest file.
 Great! Now that you’ve completed setting up the SDK, maybe you want to quickly test out how Sentry works. Start by capturing an exception:
 
 In **Java**:
+
 ```java
 public class MyActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
