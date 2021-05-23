@@ -1,5 +1,7 @@
 ---
 title: Vue
+sdk: sentry.javascript.vue
+fallbackPlatform: javascript
 sidebar_order: 6000
 redirect_from:
   - /platforms/javascript/vue/
@@ -7,15 +9,19 @@ redirect_from:
 description: "Learn how to use Sentry with your Vue application."
 ---
 
+## Install
+
 To use Sentry with your Vue application, you will need to use Sentry’s Vue SDK: `@sentry/vue`.
 
 ```bash {tabTitle:npm}
-npm install --save  @sentry/vue
+npm install --save  @sentry/vue @sentry/tracing
 ```
 
 ```bash {tabTitle:Yarn}
-yarn add  @sentry/vue
+yarn add  @sentry/vue @sentry/tracing
 ```
+
+## Configure
 
 On its own, `@sentry/vue` will report any uncaught exceptions triggered by your application.
 
@@ -26,10 +32,16 @@ Then add this to your `app.js`:
 ```javascript
 import Vue from "vue";
 import * as Sentry from "@sentry/vue";
+import { Integrations } from "@sentry/tracing";
 
 Sentry.init({
   Vue: Vue,
   dsn: "___PUBLIC_DSN___",
+  integrations: [new Integrations.BrowserTracing()],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
 });
 ```
 
@@ -64,40 +76,4 @@ like this:
 </script>
 ```
 
-## Monitor Performance
-
-```bash {tabTitle:npm}
-npm install --save @sentry/vue @sentry/tracing
-```
-
-```bash {tabTitle:Yarn}
-yarn add @sentry/vue @sentry/tracing
-```
-
-The most basic configuration for tracing your Vue app, which would track only the top-level component, looks like this:
-
-```js
-import Vue from "vue";
-import * as Sentry from "@sentry/vue";
-import { Integrations } from "@sentry/tracing";
-
-Sentry.init({
-  // ...
-  integrations: [new Integrations.BrowserTracing()],
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  tracesSampleRate: 1.0,
-});
-```
-
-If you want to track child components, and see more details about the rendering process, configure the integration to track them all:
-
-```js
-Sentry.init({
-  Vue,
-  tracingOptions: {
-    trackComponents: true,
-  },
-});
-```
+<PageGrid header="Next Steps" nextSteps />
