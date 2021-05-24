@@ -6,7 +6,8 @@ type Props = {
 };
 
 const Note = styled.div`
-  font-style: italic;
+  color: var(--light-text);
+  line-height: 1.65;
 `;
 
 const NoteBody = styled.div``;
