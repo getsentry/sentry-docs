@@ -1,0 +1,122 @@
+You should initialize the Sentry React SDK as soon as possible during your application load up, before initializing React:
+
+```JSX
+import React from "react";
+import ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
+import { Integrations } from "@sentry/tracing";
+import App from "./App";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___" ,
+  integrations: [new Integrations.BrowserTracing()],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+
+ReactDOM.render(<App />, document.getElementById("root"));
+
+// Can also use with React Concurrent Mode
+// ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+```
+
+Once this is done, all unhandled exceptions are automatically captured by Sentry.
+
+### Add React Error Boundary
+
+If you're using React 16 or above, Error Boundaries are an essential tool for defining your application's behavior in the face of errors. The `@sentry/react` package exposes an error boundary component that automatically sends JavaScript errors from inside a React component tree to Sentry. You can use the error boundary just like a regular React component.
+
+```JSX
+import React from "react";
+import * as Sentry from "@sentry/react";
+
+<Sentry.ErrorBoundary fallback={"An error has occurred"}>
+  <Example />
+</Sentry.ErrorBoundary>;
+```
+
+### Automatically Enrich Error Data
+
+Events sent by the React SDK to Sentry are enriched with data that helps identify the source of the event. Much of this data is sent automatically - including the error context and environment - as well as the trail of events that led up to the event, which we call breadcrumbs. You don't need to configure these, though you may modify them.
+
+Learn more about the data sent with events in [Enrich Event Data](enriching-events/context/).
+\
+
+Learn how to further configure and use the Sentry Error Boundary in [React Error Boundary](./components/errorboundary/)
+
+### React Router
+
+_(New in version 5.21.0)_
+
+Sentry's performance instrumentation includes support for React Router 3, 4, and 5.
+
+```JSX
+import { Router } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
+
+import * as Sentry from '@sentry/react';
+import { Integrations } from '@sentry/tracing';
+
+const history = createBrowserHistory();
+
+Sentry.init({
+  integrations: [
+    new Integrations.BrowserTracing({
+      // Can also use reactRouterV3Instrumentation or reactRouterV4Instrumentation
+      routingInstrumentation: Sentry.reactRouterV5Instrumentation(history),
+    });
+  ],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+
+// ...
+
+// In your App render:
+render() {
+  return (
+    // Use custom history with a Router component
+    <Router history={history}>
+      <Components />
+    </Router>
+  );
+}
+```
+
+Learn more about set up information for our [React Router Integration](configuration/integrations/react-router/).
+
+### Redux
+
+_(New in version 5.20.0)_
+
+Redux support is included in the `@sentry/react` package since version `5.20.0`. To apply Sentry to Redux, use `Sentry.createReduxEnhancer` at the same place that you initialize your Redux store.
+
+```JSX
+import { createStore, compose } from "redux";
+import * as Sentry from "@sentry/react";
+
+// ...
+
+const sentryReduxEnhancer = Sentry.createReduxEnhancer({
+  // Optionally pass options
+});
+
+const store = createStore(rootReducer, sentryReduxEnhancer);
+
+// ...
+```
+
+If you have other enhancers or middleware such as `thunk`:
+
+```javascript
+const store = createStore(
+  rootReducer,
+  compose(applyMiddleware(thunk), sentryReduxEnhancer)
+);
+```
+
+Learn more about the redux integration and its options in [Redux Integration](configuration/integrations/redux/)
