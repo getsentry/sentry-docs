@@ -5,4 +5,22 @@ Select your platform to get started:
 - [Java](/platforms/java)
 - [Android](/platforms/android)
 
+## Using Sentry SDK with Coroutines
+
+Sentry SDK for Java stores the scope and the context in a thread-local variable. To make sure that a coroutine has access to correct Sentry context, an instance of `SentryContext` must be provided when launching a coroutine:
+
+```kotlin
+import io.sentry.kotlin.SentryContext
+import io.sentry.Sentry
+
+launch(SentryContext()) {
+  // tag set in parent coroutine is visible to child coroutine
+  Sentry.setTag("parent-tag", "value")
+  launch() {
+    // tag set in child coroutine is not visible in parent coroutine
+    Sentry.setTag("child-tag", "value")
+  }
+}
+```
+
 We are also working on an [experimental SDK for Kotlin Multiplatform](https://github.com/getsentry/sentry-kotlin-multiplatform). Feedback welcome.
