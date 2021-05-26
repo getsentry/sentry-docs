@@ -66,6 +66,47 @@ If `instrument.js` displays in your console while debugging, add Sentry to your 
 
 ## Dealing with Ad-Blockers
 
+### Using `tunnel` Option
+
+Starting version `6.5.0` of the JavaScript SDK, it is possible to provide a `tunnel` option, which will tell the SDK to deliver the event to configured url, instead of using the DSN. This allows it to remove `sentry_key` from the query params, which is the main cause of being blocked by various ad-blockers, as well as not sending preflight requests, which was one of the requirements that forced us to send `sentry_key` this way.
+
+To enable it, provide either a relative, or absolute url as `tunnel` option in your `Sentry.init` call:
+
+```js
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  tunnel: "/tunnel",
+});
+```
+
+Once configured, all events will be sent to `/tunnel` endpoint. This solution however, requires an additional configuration on the server, as the events now need to be parsed and redirected to Sentry. Here is an example code written in PHP:
+
+```php
+<?php
+$envelope = stream_get_contents(STDIN);
+$pieces = explode("\n", $envelope, 2);
+$header = json_decode($pieces[0], true);
+if (isset($header["dsn"])) {
+    $dsn = parse_url($header["dsn"]);
+    $project_id = intval(trim($dsn["path"], "/"));
+    $options = array(
+        'http' => array(
+            'header'  => "Content-type: application/octet-stream\r\n",
+            'method'  => 'POST',
+            'content' => $envelope
+        )
+    );
+    echo file_get_contents(
+        "https://{$dsn['host']}/api/$project_id/envelope/",
+        false,
+        stream_context_create($options));
+}
+```
+
+With this setup, no events should ever get blocked by the ad-blocker, as they are never sent to 3rd party url.
+
+### Using JavaScript Proxy API
+
 When you are using our CDN, ad-blocking or script-blocking extensions may prevent our SDK from being fetched and initialized properly. Because of this, any call to SDKs API will fail and may cause your application to misbehave. If this applies to your use-case, any of the following solutions will mitigate this issue.
 
 The best way to deal with script-blocking extensions is to use the SDK package directly through the `npm` and bundle it with your application. This way, you can be sure that the code will be always be there as you expect it to be.
