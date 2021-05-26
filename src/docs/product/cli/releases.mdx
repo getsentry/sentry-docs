@@ -86,10 +86,23 @@ You can still use the `--auto` flag, and the CLI will automatically use the git 
 You can use the `--local` flag to enable this behavior by default.
 
 ```bash
-sentry-cli releases set-commits --local $VERSION
+sentry-cli releases set-commits "$VERSION" --local
 ```
 
 If you receive an "Unable to Fetch Commits" email, take a look at our [Help Center Article](https://help.sentry.io/hc/en-us/articles/360019866834-Why-am-I-receiving-the-email-Unable-to-Fetch-Commits-).
+
+### Dealing With Missing Commits
+
+There are scenarios in which your repositories may be missing commits previously used in the release.
+This can happen whenever you modify the commit in question by, for example, amending it, rebasing, or squashing multiple commits together.
+In this case, Sentry CLI will be unable to find it, and will throw an error that the commit cannot be found.
+
+When this happens, you can pass an additional `--ignore-missing` flag. This will allow the command to fall back to the default behavior,
+which is creating a release with a specified number of commits (see the section above).
+
+```bash
+sentry-cli releases set-commits "$VERSION" --auto --ignore-missing
+```
 
 ## Managing Release Artifacts
 
