@@ -32,7 +32,7 @@ const HIGHLIGHTED_PLATFORMS = [
   "java.spring-boot",
   "ruby.rails",
   "flutter",
-  "native.qt"
+  "unity"
 ];
 
 const IndexPage = () => {
