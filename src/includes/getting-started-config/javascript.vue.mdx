@@ -1,0 +1,29 @@
+To initialize Sentry in your Vue application, add this to your `app.js`:
+
+```javascript
+import Vue from "vue";
+import * as Sentry from "@sentry/vue";
+import { Integrations } from "@sentry/tracing";
+
+Sentry.init({
+  Vue: Vue,
+  dsn: "___PUBLIC_DSN___",
+  integrations: [new Integrations.BrowserTracing()],
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
+```
+
+Sentry's Vue SDK accepts a few different configuration options that let you change its behavior:
+
+- Passing in `Vue` is optional. If you do not pass it, `window.Vue` must be present.
+- Passing in `attachProps` is optional and is `true` if it is not provided. If set to `false`, Sentry will suppress sending all Vue components' props for logging.
+- Passing in `logErrors` is optional and is `false` if it is not provided. If set to `true`, Sentry will call original Vue's `logError` function as well.
+
+<Note>
+
+If you enable the SDK, Vue will not call its `logError` internally. As a result, errors occurring in the Vue renderer will not display in the developer console. To preserve this functionality, pass the `logErrors: true` option.
+
+</Note>
