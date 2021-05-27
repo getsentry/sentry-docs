@@ -1,6 +1,5 @@
 import React from "react";
 import styled from "@emotion/styled";
-import "../css/screen.scss";
 
 type Props = {
   children?: any;
