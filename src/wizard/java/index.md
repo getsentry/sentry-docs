@@ -44,33 +44,24 @@ libraryDependencies += "io.sentry" % "sentry" % "{{ packages.version('sentry.jav
 ```
 ## Configure
 
-Configure Sentry as soon as possible in your application's lifecycle, using either Java or Kotlin.
-
-In **Java**:
+Configure Sentry as soon as possible in your application's lifecycle:
 
 ```java
 import io.sentry.Sentry;
 
 Sentry.init(options -> {
   options.setDsn("___PUBLIC_DSN___");
+  // Set traces_sample_rate to 1.0 to capture 100% of transactions for performance monitoring.
+  // We recommend adjusting this value in production.
+  options.setTracesSampleRate(1.0);
+  // When first trying Sentry it's good to see what the SDK is doing:
+  options.setDebug(true);
 });
-```
-
-In **Kotlin**:
-
-```kotlin
-import io.sentry.Sentry
-
-Sentry.init { options ->
-  options.dsn = "___PUBLIC_DSN___"
-}
 ```
 
 ### Send First Event
 
-Trigger your first event from your development environment by intentionally creating an error with the `Sentry#captureException` method, to test that everything is working, using either Java or Kotlin.
-
-In **Java**:
+Trigger your first event from your development environment by intentionally creating an error with the `Sentry#captureException` method, to test that everything is working:
 
 ```java
 import java.lang.Exception;
@@ -83,19 +74,30 @@ try {
 }
 ```
 
-In **Kotlin**:
-
-```kotlin
-import java.lang.Exception
-import io.sentry.Sentry
-
-try {
-  throw Exception("This is a test.")
-} catch (e: Exception) {
-  Sentry.captureException(e)
-}
-```
-
 If you're new to Sentry, use the email alert to access your account and complete a product tour.
 
 If you're an existing user and have disabled alerts, you won't receive this email.
+
+### Measure performance
+
+You can capture transactions using the SDK. For example:
+
+```java
+import io.sentry.ITransaction;
+import io.sentry.Sentry;
+import io.sentry.SpanStatus;
+
+// A good name for the transaction is key, to help identify what this is about
+ITransaction transaction = Sentry.startTransaction("processOrderBatch()", "task");
+try {
+  processOrderBatch();
+} catch (Exception e) {
+  transaction.setThrowable(e);
+  transaction.setStatus(SpanStatus.INTERNAL_ERROR);
+  throw e;
+} finally {
+  transaction.finish();
+}
+```
+
+For more information about the API and automatic instrumentations included in the SDK, [visit the docs](https://docs.sentry.io/platforms/java/performance/instrumentation/custom-instrumentation/).
