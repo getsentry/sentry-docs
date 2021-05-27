@@ -16,9 +16,11 @@ Confirm the URL doesn't have a trailing whitespace at the end. The Unity Package
 
 ## Configuration
 
-Access the Sentry configuration window by going to Unity's top menu: `Tools` > `Sentry` and enter the [DSN](/product/sentry-basics/dsn-explainer/).
+Access the Sentry configuration window by going to Unity's top menu: `Tools` > `Sentry` and enter the following DSN:
 
-![Sentry window](../../includes/getting-started-config/sentry_window.png)
+```
+___PUBLIC_DSN___
+```
 
 And that's it! Now Sentry can capture errors automatically.
 
