@@ -48,7 +48,7 @@ To verify your set up, you can capture a message with the SDK:
 SentrySdk.CaptureMessage("Hello Sentry");
 ```
 
-If you prefer not to depend on the static class, the SDK registers a client in the DI container. [You can take `IHub` as a dependency.](https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/unit-testing/)
+If you don't want to depend on the static class, the SDK registers a client in the DI container. In this case, you can [take `IHub` as a dependency](https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/unit-testing/).
 
 ### Performance monitoring
 
@@ -82,7 +82,7 @@ public class Startup
 }
 ```
 
-You should see the performance of your actions automatically. To add additional spans to it, you can use the API:
+You'll be able to monitor the performance of your actions automatically. To add additional spans to it, you can use the API:
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
