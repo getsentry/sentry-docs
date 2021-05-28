@@ -101,3 +101,44 @@ attach any context information at all by calling `clear` on the scope, while the
 
 Keep in mind that `with-scope` will not capture any exceptions that happen inside its callback function,
 and every error that happens there will be silently ignored and *not* reported.
+
+<PlatformSection supported={["java", "android"]}>
+
+## Kotlin Coroutines
+
+Sentry SDK for Java stores the scope and the context in a thread-local variable. To make sure that a coroutine has access to correct Sentry context, an instance of `SentryContext` must be provided when launching a coroutine.
+
+### Installation
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-kotlin-extensions</artifactId>
+    <version>{{ packages.version('sentry.java.kotlin-extensions', '5.0.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-kotlin-extensions:{{ packages.version('sentry.java.kotlin-extensions', '5.0.0') }}'
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-kotlin-extensions" % "{{ packages.version('sentry.java.kotlin-extensions', '5.0.0') }}"
+```
+
+### Usage
+
+```kotlin
+import io.sentry.kotlin.SentryContext
+import io.sentry.Sentry
+
+launch(SentryContext()) {
+  // tag set in parent coroutine is visible to child coroutine
+  Sentry.setTag("parent-tag", "value")
+  launch() {
+    // tag set in child coroutine is not visible in parent coroutine
+    Sentry.setTag("child-tag", "value")
+  }
+}
+```
+</PlatformSection>
