@@ -100,4 +100,4 @@ try {
 }
 ```
 
-For more information about the API and automatic instrumentations included in the SDK, [visit the docs](https://docs.sentry.io/platforms/java/performance/instrumentation/custom-instrumentation/).
+For more information about the API and automatic instrumentations included in the SDK, [visit the docs](https://docs.sentry.io/platforms/java/performance/).
