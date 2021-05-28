@@ -49,9 +49,11 @@ if random() < sample_rate:
     transport.capture_event(event)
 ```
 
-## HTTP 429 Retry-After backoff
+## Rate Limiting
 
-Respect Sentry’s HTTP 429 Retry-After header when the user goes over their limits. Events should be dropped during backoff.
+Respect Sentry’s HTTP 429 `Retry-After` header, or, if the SDK supports multiple payload types (e.g. errors and transactions), the `X-Sentry-Rate-Limits` header. Outgoing SDK requests should be dropped during the backoff period.
+
+See <Link to="/sdk/rate-limiting">Rate Limiting</Link> for details.
 
 ## In-App frames
 
@@ -85,12 +87,12 @@ To see some examples of the API check out the user-facing docs for [Apple](https
 
 On mobile and desktop, it is common to prompt the user for feedback after a crash happened on the previous run of the application. Therefore the SDKs should
 implement the `onCrashedLastRun` callback on the options. This callback gets called shortly after the initialization of the SDK when the last program execution
-terminated with a crash. The SDK should execute the callback only once during the entire run of the program to avoid multiple callbacks if there are multiple 
+terminated with a crash. The SDK should execute the callback only once during the entire run of the program to avoid multiple callbacks if there are multiple
 crash events to send.
 
 ### Backend Platforms
 
-On backend platforms, SDKs should document how to use the [last event ID](#retrieve-last-event-id) to prompt the user for feedback themselves. 
+On backend platforms, SDKs should document how to use the [last event ID](#retrieve-last-event-id) to prompt the user for feedback themselves.
 
 ### Example implementations
 
@@ -104,7 +106,7 @@ Envelope item:
  * [Objective-C](https://github.com/getsentry/sentry-cocoa/blob/fd3e46efe59324e894d5601a7b3028824a588dda/Sources/Sentry/SentryEnvelope.m#L145-L162)
  * [Java](https://github.com/getsentry/sentry-java/blob/b2e8dd43ea2ef37201b215ec409655e49e3231c8/sentry/src/main/java/io/sentry/SentryEnvelopeItem.java#L131-L155)
  * [C#](https://github.com/getsentry/sentry-dotnet/blob/3bc6c66a14e653982a6a25df033d68d8ad12c4af/src/Sentry/Protocol/Envelopes/EnvelopeItem.cs#L170-L178)
- 
+
 ## Attachments
 
 Attachments are files stored alongside an event. To send an attachment, add it as an [envelope item](/sdk/envelopes/#attachment)
@@ -112,7 +114,7 @@ to the corresponding event.
 
 We recommend implementing two types of attachments, one with a path and another with a byte array.
 If the programming language allows it, create one class with multiple constructors to keep things simple and guess the content type
-of the attachment via the filename. 
+of the attachment via the filename.
 
 The overload that takes a `path` should consider:
 * The SDK should read the file when an event gets captured and not when the user adds an attachment to the scope.
