@@ -8,7 +8,7 @@ type: language
 <Alert level="info">
 Sentry supports Kotlin for both JVM and Android. This wizard guides you through set up in the JVM scenario. 
 
-If you're interested in <strong>Android</strong>, head over to the <a href="https://docs.sentry.io/platforms/android/">Getting Started</a> for that SDK instead. At its core, Sentry for Java provides a raw client for sending events to Sentry. If you use <strong>Spring Boot</strong>, <strong>Spring</strong>,<strong> Logback</strong>, or <strong>Log4j2</strong>, head over to our <a href="https://docs.sentry.io/platforms/java/">Getting Started for Sentry Java</a>.
+If you're interested in <strong>Android</strong>, head over to the <a href="https://docs.sentry.io/platforms/android/">Getting Started</a> for that SDK instead. At its core, Sentry for Java provides a raw client for sending events to Sentry. If you use <strong>Spring Boot</strong>, <strong>Spring</strong>, <strong>Logback</strong>, <strong>JUL</strong>, or <strong>Log4j2</strong>, head over to our <a href="https://docs.sentry.io/platforms/java/">Getting Started for Sentry Java</a>.
 </Alert>
 
 ## Install
