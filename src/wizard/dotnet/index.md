@@ -6,7 +6,7 @@ type: language
 ---
 
 <Alert level="info">
-    Sentry for .NET is a collection of NuGet packages provided by Sentry; it supports .NET Framework 4.6.1 and .NET Core 2.0 and above. At its core, Sentry for .NET provides a raw client for sending events to Sentry. If you use a framework such as <strong>ASP.NET</strong>, <strong>WinForms</strong>, <strong>WPF</strong>, <strong>Xamarin</strong>, <strong>Serilog</strong>, or similar, we recommend visiting our <a href="https://docs.sentry.io/platforms/dotnet/">Sentry .NET</a> documentation for installation instructions.
+Sentry for .NET is a collection of NuGet packages provided by Sentry; it supports .NET Framework 4.6.1 and .NET Core 2.0 and above. At its core, Sentry for .NET provides a raw client for sending events to Sentry. If you use a framework such as <strong>ASP.NET</strong>, <strong>WinForms</strong>, <strong>WPF</strong>, <strong>Xamarin</strong>, <strong>Serilog</strong>, or similar, we recommend visiting our <a href="https://docs.sentry.io/platforms/dotnet/">Sentry .NET</a> documentation for installation instructions.
 </Alert>
 
 Install the **NuGet** package:
@@ -42,7 +42,7 @@ Verify Sentry is correctly configured by sending a message:
 SentrySdk.CaptureMessage("Something went wrong");
 ```
 
-### Performance monitoring
+### Performance Monitoring
 
 You can measure the performance of your code by capturing transactions and spans.
 
@@ -70,7 +70,7 @@ Check out [the documentation](https://docs.sentry.io/platforms/dotnet/performanc
 
 You can find an example ASP.NET MVC 5 app with Sentry integrated [on this GitHub repository.](https://github.com/getsentry/examples/tree/master/dotnet/AspNetMvc5Ef6)
 
-See the following examples that demonstrate how to integrate Sentry with various frameworks.
+In addition, these examples demonstrate how to integrate Sentry with various frameworks:
 
 - [Multiple samples in the `dotnet` SDK repository](https://github.com/getsentry/sentry-dotnet/tree/main/samples) (**C#**)
 - [Basic F# sample](https://github.com/sentry-demos/fsharp) (**F#**)
