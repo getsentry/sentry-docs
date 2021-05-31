@@ -22,10 +22,8 @@ export default ({
   const location = useLocation();
   const isActive = location && location.pathname.indexOf(withPrefix(to)) === 0;
 
-  className += " toc-item";
-  if (isActive || collapsed === false) {
-    className += " toc-visible";
-  }
+  const showSubtree = isActive || collapsed === false;
+  className += "toc-item";
 
   return (
     <li className={className} data-sidebar-branch>
@@ -34,7 +32,7 @@ export default ({
       </SmartLink>
       {title && children && (
         <ul className="list-unstyled" data-sidebar-tree>
-          {children}
+          {showSubtree && children}
         </ul>
       )}
     </li>
