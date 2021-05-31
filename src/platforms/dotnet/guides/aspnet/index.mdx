@@ -76,51 +76,6 @@ public class MvcApplication : HttpApplication
 }
 ```
 
-To make use of Sentry's <PlatformLink to="/performance/">performance feature</PlatformLink>, add additional handlers for `BeginRequest` and `EndRequest` events:
-
-```csharp
-using Sentry;
-
-public class MvcApplication : System.Web.HttpApplication
-{
-    private IDisposable _sentry;
-
-    protected void Application_Start()
-    {
-        _sentry = SentrySdk.Init(o =>
-        {
-            o.AddAspNet();
-            o.Dsn = "___PUBLIC_DSN___";
-
-            // Collect 100% traces for testing purposes
-            // (consider using a smaller value when running in production)
-            o.TracesSampleRate = 1.0;
-        });
-    }
-
-    protected void Application_Error()
-    {
-        // ...
-    }
-
-    protected void Application_End()
-    {
-        // ...
-    }
-
-    protected void Application_BeginRequest()
-    {
-        // Start a transaction that encompasses the current request
-        Context.StartSentryTransaction();
-    }
-
-    protected void Application_EndRequest()
-    {
-        Context.FinishSentryTransaction();
-    }
-}
-```
-
 ### Capturing the affected user
 
 When opting-in to [SendDefaultPii](#senddefaultpii), the SDK will automatically read the user from the request by inspecting `HttpContext.User`. Default claim values like `NameIdentifier` for the _Id_ will be used.
