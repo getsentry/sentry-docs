@@ -28,8 +28,12 @@ Install-Package Sentry.EntityFramework -Version {{ packages.version('sentry.dotn
 You should `init` the Sentry SDK as soon as possible during your application load by adding Sentry to `Global.asax.cs`:
 
 ```csharp
-using System.Web;
+using System;
+using System.Configuration;
+using System.Web.Mvc;
+using System.Web.Routing;
 using Sentry;
+using Sentry.AspNet;
 using Sentry.EntityFramework; // if you installed Sentry.EntityFramework
 
 public class MvcApplication : HttpApplication
@@ -74,6 +78,17 @@ public class MvcApplication : HttpApplication
     {
         // Flushes out events before shutting down.
         _sentry?.Dispose();
+    }
+    
+    protected void Application_BeginRequest()
+    {
+        // Start a transaction that encompasses the current request
+        Context.StartSentryTransaction();
+    }
+
+    protected void Application_EndRequest()
+    {
+        Context.FinishSentryTransaction();
     }
 }
 ```
