@@ -21,7 +21,7 @@ information from the current scope. SDKs will typically automatically manage the
 for you in the framework integrations and you don't need to think about them. However,
 you should know what a scope is and how you can use it for your advantage.
 
-## What's a Scope, what's a Hub
+## What's a Scope, What's a Hub
 
 You can think of the hub as the central point that our SDKs use to route an
 event to Sentry. When you call `init()` a hub is created and a client and a
@@ -38,7 +38,7 @@ The default SDK integrations will push and pop scopes intelligently. For
 instance web framework integrations will create and destroy scopes around your
 routes or controllers.
 
-## How do the Scope and Hub Work
+## How the Scope and Hub Work
 
 As you start using an SDK a scope and hub are automatically created for you out
 of the box. The hub you are unlikely to be interacting with directly unless you
@@ -63,13 +63,23 @@ then merge the event with the topmost scope's data.
 
 ## Configuring the Scope
 
-The most useful operation when working with scopes is the `configure-scope` function. It can be used to reconfigure the current scope. This for instance can be used to add custom tags or to inform Sentry about the currently authenticated user.
+The most useful operation when working with scopes is the `configure-scope` function. It can be used to reconfigure the current scope.
 
-<PlatformContent includePath="configure-scope" />
+<PlatformSection supported={["javascript", "node"]}>
+
+You'll first need to import the SDK, as usual:
+
+<PlatformContent includePath="enriching-events/import" />
+
+</PlatformSection>
+
+You can, for instance, add custom tags or inform Sentry about the currently authenticated user.
+
+<PlatformContent includePath="enriching-events/scopes/configure-scope" />
 
 You can also apply this configuration when unsetting a user at logout:
 
-<PlatformContent includePath="unset-user" />
+<PlatformContent includePath="enriching-events/unset-user" />
 
 To learn what useful information can be associated with scopes see
 [the context documentation](../context/).
@@ -78,7 +88,7 @@ To learn what useful information can be associated with scopes see
 
 We also have support for pushing and configuring a scope in one go. This is typically called `with-scope` or `push-scope` which is also very helpful if you only want to send data with one specific event. In the following example we are using that function to attach a `level` and a `tag` to only one specific error:
 
-<PlatformContent includePath="with-scope" />
+<PlatformContent includePath="enriching-events/scopes/with-scope" />
 
 While this example looks similar to `configure-scope`, it's very different, in the sense that `configure-scope` actually changes the current active scope, all successive calls to `configure-scope`
 will keep the changes.
@@ -91,3 +101,50 @@ attach any context information at all by calling `clear` on the scope, while the
 
 Keep in mind that `with-scope` will not capture any exceptions that happen inside its callback function,
 and every error that happens there will be silently ignored and *not* reported.
+
+<PlatformSection supported={["java"]} notSupported={["android"]}>
+
+## Kotlin Coroutines
+
+<Note>
+
+Support for Kotlin Coroutines is available as a Beta. Features available in Beta are still in-progress and may have bugs. We recognize the irony.
+
+</Note>
+
+Sentry's SDK for Java stores the scope and the context in a thread-local variable. To make sure that a coroutine has access to the correct Sentry context, an instance of `SentryContext` must be provided when launching a coroutine.
+
+### Installation
+
+```xml {tabTitle:Maven}
+<dependency>
+    <groupId>io.sentry</groupId>
+    <artifactId>sentry-kotlin-extensions</artifactId>
+    <version>{{ packages.version('sentry.java.kotlin-extensions', '5.0.0') }}</version>
+</dependency>
+```
+
+```groovy {tabTitle:Gradle}
+implementation 'io.sentry:sentry-kotlin-extensions:{{ packages.version('sentry.java.kotlin-extensions', '5.0.0') }}'
+```
+
+```scala {tabTitle: SBT}
+libraryDependencies += "io.sentry" % "sentry-kotlin-extensions" % "{{ packages.version('sentry.java.kotlin-extensions', '5.0.0') }}"
+```
+
+### Usage
+
+```kotlin
+import io.sentry.kotlin.SentryContext
+import io.sentry.Sentry
+
+launch(SentryContext()) {
+  // tag set in parent coroutine is visible to child coroutine
+  Sentry.setTag("parent-tag", "value")
+  launch() {
+    // tag set in child coroutine is not visible in parent coroutine
+    Sentry.setTag("child-tag", "value")
+  }
+}
+```
+</PlatformSection>

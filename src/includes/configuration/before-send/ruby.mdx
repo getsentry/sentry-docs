@@ -1,9 +1,13 @@
 ```ruby
 Sentry.init do |config|
-  filter = ActiveSupport::ParameterFilter.new(Rails.application.config.filter_parameters)
   config.before_send = lambda do |event, hint|
-    # use Rails' parameter filter to sanitize the event
-    filter.filter(event.to_hash)
+    # skip ZeroDivisionError exceptions
+    # note: hint[:exception] would be a String if you use async callback
+    if hint[:exception].is_a?(ZeroDivisionError)
+      nil
+    else
+      event
+    end
   end
 end
 ```
