@@ -15,8 +15,13 @@ For the client configuration:
 ```javascript {filename:sentry.client.config.js}
 import * as Sentry from "@sentry/nextjs";
 
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: SENTRY_DSN || "___PUBLIC_DSN___",
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
   // ...
   // Note: if you want to override the automatic release value, do not set a
   // `release` value here - use the environment variable `SENTRY_RELEASE`, so
@@ -29,8 +34,13 @@ And the server configuration:
 ```javascript {filename:sentry.server.config.js}
 import * as Sentry from "@sentry/nextjs";
 
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+
 Sentry.init({
-  dsn: "___PUBLIC_DSN___",
+  dsn: SENTRY_DSN || "___PUBLIC_DSN___",
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
   // ...
   // Note: if you want to override the automatic release value, do not set a
   // `release` value here - use the environment variable `SENTRY_RELEASE`, so
@@ -52,9 +62,14 @@ export default withSentry(handler);
 
 You can include your DSN directly in these two files, or provide it in either of two environment variables, `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN`.
 
-## Extend Default Webpack Usage for Source Maps
+## Extend Default Webpack Usage
 
-Extend the default Next.js usage of Webpack to generate source maps and upload them to Sentry. Include the following in `next.config.js`:
+Use `withSentryConfig` to extend the default Next.js usage of Webpack. This will do two things:
+
+- Automatically call the code in `sentry.server.config.js` and `sentry.client.config.js`, at server start up and client page load, respectively. Using `withSentryConfig` is the only way to guarantee that the SDK is initialized early enough to catch all errors and start performance monitoring.
+- Generate and upload source maps to Sentry, so that your stacktraces contain original, demangled code.
+
+Include the following in your `next.config.js`:
 
 ```javascript {filename:next.config.js}
 // This file sets a custom webpack configuration to use your Next.js app
@@ -74,6 +89,8 @@ const SentryWebpackPluginOptions = {
   // recommended:
   //   release, url, org, project, authToken, configFile, stripPrefix,
   //   urlPrefix, include, ignore
+
+  silent: true, // Suppresses all logs
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options.
 };
@@ -88,7 +105,9 @@ Also keep in mind, by default we disable source map upload in `dev` mode when ru
 
 ## Configure sentry-cli
 
-Under the hood, the `SentryWebpackPlugin` uses `sentry-cli`, which can be configured in one of two ways - using a properties file, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](https://docs.sentry.io/product/cli/configuration/). (If you choose to combine the two approaches, the environment variables will take precedence over values set in the properties file.)
+The `SentryWebpackPlugin` uses `sentry-cli`, which can be configured in one of two ways - using a properties file, or with environment variables - both of which are discussed below. For full details, see [the CLI configuration docs](https://docs.sentry.io/product/cli/configuration/).
+
+If you choose to combine the two approaches, the environment variables will take precedence over values set in the properties file. One common approach is to set sensitive data (like tokens) in the environment and include everything else in a properties file, which can then be added to your VCS.
 
 ### Properties File
 

@@ -25,7 +25,7 @@ Initialize the SDK within your `config/initializers/sentry.rb`:
 ```ruby
 Sentry.init do |config|
   config.dsn = '___PUBLIC_DSN___'
-  config.breadcrumbs_logger = [:active_support_logger]
+  config.breadcrumbs_logger = [:active_support_logger, :http_logger]
 
   # Set tracesSampleRate to 1.0 to capture 100%
   # of transactions for performance monitoring.

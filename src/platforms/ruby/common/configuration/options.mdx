@@ -82,17 +82,21 @@ end
 
 `breadcrumbs_logger`
 
-: Sentry supports two breadcrumbs loggers in the Ruby SDK:
-- `SentryLogger` - A general breadcrumbs logger for all Ruby applications.
-- `ActiveSupportLogger` - Built on top of Rails ActiveSupport's instrumentation and provides many Rails-specific information.
+: Sentry supports different breadcrumbs loggers in the Ruby SDK:
+- `:sentry_logger` - A general breadcrumbs logger for all Ruby applications.
+- `:active_support_logger` - Built on top of Rails ActiveSupport's instrumentation and provides many Rails-specific information.
+- `:http_logger` - It captures requests made with the standard `net/http` library.
 
 And you can enable them with the `breadcrumbs_logger` option:
 
 ```ruby
-config.breadcrumbs_logger = [:sentry_logger]
 config.breadcrumbs_logger = [:active_support_logger]
-config.breadcrumbs_logger = [:sentry_logger, :active_support_logger]
+config.breadcrumbs_logger = [:active_support_logger, :http_logger]
 ```
+
+`debug`
+
+: Activation of debugging mode. When enabled, SDK errors will be logged with backtrace. Default is `false`.
 
 `enabled_environments`
 
@@ -148,6 +152,14 @@ Sentry respects logger levels.
 config.max_breadcrumbs = 30
 ```
 
+`propagate_traces`
+
+: By default, Sentry injects `sentry-trace` header to outgoing requests made with `Net::HTTP` to connect traces between services. You can disable this behavior with
+
+```ruby
+config.propagate_traces = false
+```
+
 `release`
 
 : Track the version of your application in Sentry.
@@ -193,6 +205,10 @@ config.send_default_pii = true
 config.send_modules = false # if you don't want to send all the dependency info
 ```
 
+`skip_rake_integration`
+
+: Determine whether to ignore exceptions caused by rake integrations. Default is `false`.
+
 `trusted_proxies`
 
 : These trusted proxies will be skipped when the SDK computing the user's ip address. `sentry-rails` will automatically inject the value of `Rails.application.config.action_dispatch.trusted_proxie` to this option.
@@ -216,7 +232,7 @@ config.trusted_proxies = ["2.2.2.2"]
 
 : You can gain more control on tracing event (transaction)'s sampling decision by providing a callable object (`Proc` or `Lambda`) as a `traces_sampler`:
 
-<PlatformContent includePath="performance/dynamic-sampling-function-intro" />
+<PlatformContent includePath="performance/traces-sampler-as-sampler" />
 
 ## Transport Options
 
