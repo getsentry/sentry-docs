@@ -16,21 +16,26 @@ The Android SDK ships with ProGuard rules automatically defined; no further conf
 
 Using Gradle (Android Studio) in your `app/build.gradle` add:
 
-```groovy {filename:app/build.gradle}
-apply plugin: 'io.sentry.android.gradle'
-```
+```groovy
+plugins {
+    id "io.sentry.android.gradle" version "{{ packages.version('sentry.java.android.gradle-plugin', '2.0.0') }}"
+}
 
-And declare a dependency in your top-level `build.gradle`:
-
-```groovy {filename:build.gradle}
 buildscript {
     repositories {
         mavenCentral()
     }
+}
+```
 
-    dependencies {
-        // https://github.com/getsentry/sentry-android-gradle-plugin/releases
-        classpath 'io.sentry:sentry-android-gradle-plugin:{{ packages.version('sentry.java.android.gradle-plugin', '1.7.36') }}'
+```kotlin
+plugins {
+    id("io.sentry.android.gradle") version "{{ packages.version('sentry.java.android.gradle-plugin', '2.0.0') }}"
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
     }
 }
 ```
@@ -54,36 +59,51 @@ You can find your authentication token [on the Sentry API page](https://sentry.i
 
 ### Gradle Configuration
 
-Additionally, we expose a few configuration values directly in Gradle:
+Additionally, we expose a few configuration values directly in your `app/build.gradle`:
 
-```groovy {filename:app/build.gradle}
+```groovy
 sentry {
-    // Disables or enables the automatic configuration of ProGuard
-    // for Sentry.  This injects a default config for ProGuard so
-    // you don't need to do it manually.
-
-    // Only enable it if you are using sentry-android <= v1.7,
-    // sentry-android >= v2.0 already does it automatically.
-    autoProguardConfig false
-
     // Enables or disables the automatic upload of mapping files
     // during a build.  If you disable this, you'll need to manually
     // upload the mapping files with sentry-cli when you do a release.
-    autoUpload true
+    autoUpload = true
 
     // Disables or enables the automatic configuration of Native Symbols
     // for Sentry. This executes sentry-cli automatically so
     // you don't need to do it manually.
     // Default is disabled.
-    uploadNativeSymbols false
+    uploadNativeSymbols = false
 
     // Does or doesn't include the source code of native code for Sentry.
     // This executes sentry-cli with the --include-sources param. automatically so
     // you don't need to do it manually.
     // Default is disabled.
-    includeNativeSources false
+    includeNativeSources = false
 }
 ```
+
+```kotlin
+sentry {
+    // Enables or disables the automatic upload of mapping files
+    // during a build.  If you disable this, you'll need to manually
+    // upload the mapping files with sentry-cli when you do a release.
+    autoUpload.set(true)
+
+    // Disables or enables the automatic configuration of Native Symbols
+    // for Sentry. This executes sentry-cli automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    uploadNativeSymbols.set(false)
+
+    // Does or doesn't include the source code of native code for Sentry.
+    // This executes sentry-cli with the --include-sources param. automatically so
+    // you don't need to do it manually.
+    // Default is disabled.
+    includeNativeSources.set(false)
+}
+```
+
+Those are already the default values, unless you want to change it, you don't have to set them.
 
 Now when you build your app, the plugin will upload the ProGuard/R8 mappings, source bundle, and native symbols as you configured them to Sentry.
 
