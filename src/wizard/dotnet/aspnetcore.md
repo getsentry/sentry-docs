@@ -107,7 +107,7 @@ public class HomeController : Controller
         }
         catch (Exception e)
         {
-            childSpan?.Finish(SpanStatus.InternalError);
+            childSpan?.Finish(e);
             throw;
         }
     }
