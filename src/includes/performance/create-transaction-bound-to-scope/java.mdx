@@ -1,8 +1,10 @@
-## Add More Spans to the Transaction
+## Create Transaction Bound to The Current Scope
 
-By default, transactions are not bound to the scope. Transaction has to be passed manually as a method parameter to enable attaching nested spans. When creating nested span, you can choose the value of `operation` and `description`.
+Our SDK can bind a transaction to the scope making it accessible to every method running within this scope by calling `Sentry#startTransaction` method with `bindToScope` parameter to `true`.
 
-```java {tabTitle:Java}
+In cases where you want to attach Spans to an already ongoing Transaction you can use `Sentry#getSpan`. This method will return a `SentryTransaction` in case there is a running Transaction or a `Span` in case there is already a running Span, otherwise it returns `null`.
+
+```java
 import java.io.FileNotFoundException;
 
 import io.sentry.ISpan;
@@ -11,9 +13,9 @@ import io.sentry.Sentry;
 import io.sentry.SpanStatus;
 
 // A good name for the transaction is key, to help identify what this is about
-ITransaction transaction = Sentry.startTransaction("processOrderBatch()", "task");
+ITransaction transaction = Sentry.startTransaction("processOrderBatch()", "task", true);
 try {
-  processOrderBatch(transaction);
+  processOrderBatch();
 } catch (Exception e) {
   transaction.setThrowable(e);
   transaction.setStatus(SpanStatus.INTERNAL_ERROR);
@@ -22,11 +24,11 @@ try {
   transaction.finish();
 }
 
-void processOrderBatch(ISpan span) {
+void processOrderBatch() {
+  ISpan span = Sentry.getSpan();
   if (span == null) {
     span = Sentry.startTransaction("processOrderBatch()", "task");
   }
-  // span operation: task, span description: operation
   ISpan innerSpan = span.startChild("task", "operation");
   try {
     // omitted code
@@ -46,9 +48,9 @@ import java.io.FileNotFoundException
 import io.sentry.Sentry
 import io.sentry.SpanStatus
 
-val transaction = Sentry.startTransaction("processOrderBatch()", "task")
+val transaction = Sentry.startTransaction("processOrderBatch()", "task", true)
 try {
-  processOrderBatch(transaction)
+  processOrderBatch()
 } catch (e: Exception) {
   transaction.throwable = e
   transaction.status = SpanStatus.INTERNAL_ERROR
@@ -57,8 +59,8 @@ try {
   transaction.finish()
 }
 
-fun processOrderBatch(span: ISpan) {
-  // span operation: task, span description: operation
+fun processOrderBatch(item: Item) {
+  val span = Sentry.getSpan() ?: Sentry.startTransaction("processOrderBatch()", "task")
   val innerSpan = it.startChild("task", "operation")
 
   try {
@@ -72,7 +74,3 @@ fun processOrderBatch(span: ISpan) {
   }
 }
 ```
-
-Keep in mind that each individual span also needs to be manually finished; otherwise, spans will not show up in the transaction.
-
-Spans are sent together with their parent transaction when the transaction is finished. Make sure to call `finish()` on transaction once all the child spans have finished.
