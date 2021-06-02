@@ -129,7 +129,7 @@ fun main() {
     options.shutdownTimeout = 5000
 
     // Enable SDK logging with Debug level
-    options.isDebug = true
+    options.setDebug(true)
     // To change the verbosity, use:
     options.setDiagnosticLevel(
       // By default it's DEBUG.
@@ -486,12 +486,14 @@ class MyClass {
     // Add an `EventProcessor` to the current scope. Note that
     // this helper will process *all* future events in this scope.
     Sentry.configureScope { scope ->
-      scope.addEventProcessor { event, hint ->
-        event.message = Message().apply {
-          message = "Overwritten by myEventBuilderHelper!"
+      scope.addEventProcessor(object: EventProcessor {
+        override fun process(event: SentryEvent, hint: Any?): SentryEvent? {
+          event.message = Message().apply {
+            message = "Overwritten by myEventBuilderHelper!"
+          }
+          return event
         }
-        event
-      }
+      })
     }
 
     // Send an event to Sentry. During construction of the event the message
